@@ -54,7 +54,7 @@ enum class AppTab(
     val hubIcon: ImageVector,
 ) {
     CHATS("chats", "chats", R.string.kachat, Icons.Default.Forum, Icons.Outlined.Forum),
-    WALLET("wallet", "wallet", R.string.tab_kapay, Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet),
+    WALLET("wallet", "wallet", R.string.wallet_title, Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet),
     // "Contacts" (iOS bc3e1ff3); the route keeps its old name.
     ADDRESS_BOOK("addressBook", "address_book", R.string.ab_address_book, com.kachat.app.ui.screens.ContactsFilledIcon, com.kachat.app.ui.screens.ContactsFilledIcon),
     // Your KaPost profile since 2026-11-21 (iOS `KaPostsView(rootMode: .myProfile)`).

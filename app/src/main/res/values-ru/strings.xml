@@ -146,7 +146,6 @@
     <string name="scan_qr_code">Сканировать QR-код</string>
     <string name="scroll_to_latest">Прокрутить к последнему</string>
     <string name="search_chats">Поиск чатов</string>
-    <string name="secure_messaging_on_kaspa_blockdag">Безопасные сообщения в Kaspa BlockDAG</string>
     <string name="security_warning">Предупреждение безопасности</string>
     <string name="seed_phrase">12 или 24 слова</string>
     <string name="select_chat">Выбрать чат</string>
@@ -1771,4 +1770,5 @@
     <string name="swipe_release_to_confirm">Отпустите, чтобы подтвердить</string>
     <string name="coins_combined">Монеты объединены</string>
     <string name="transaction_didnt_go_out">Транзакция не отправлена.</string>
+    <string name="k_motto">Цифровая свобода в сети Kaspa</string>
 </resources>

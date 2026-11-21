@@ -146,7 +146,6 @@
     <string name="scan_qr_code">مسح رمز QR</string>
     <string name="scroll_to_latest">التمرير إلى الأحدث</string>
     <string name="search_chats">البحث في المحادثات</string>
-    <string name="secure_messaging_on_kaspa_blockdag">مراسلة آمنة على Kaspa BlockDAG</string>
     <string name="security_warning">تحذير أمني</string>
     <string name="seed_phrase">12 أو 24 كلمة</string>
     <string name="select_chat">اختيار الدردشة</string>
@@ -1777,4 +1776,5 @@
     <string name="swipe_release_to_confirm">أفلت للتأكيد</string>
     <string name="coins_combined">تم دمج العملات</string>
     <string name="transaction_didnt_go_out">لم تخرج المعاملة.</string>
+    <string name="k_motto">الحرية الرقمية على شبكة Kaspa</string>
 </resources>

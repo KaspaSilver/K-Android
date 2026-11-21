@@ -147,7 +147,6 @@
     <string name="scan_qr_code">Pindai Kode QR</string>
     <string name="scroll_to_latest">Gulir ke terbaru</string>
     <string name="search_chats">Cari obrolan</string>
-    <string name="secure_messaging_on_kaspa_blockdag">Perpesanan aman di Kaspa BlockDAG</string>
     <string name="security_warning">Peringatan Keamanan</string>
     <string name="seed_phrase">12 atau 24 Kata</string>
     <string name="send">Kirim</string>
@@ -1761,4 +1760,5 @@
     <string name="swipe_release_to_confirm">Lepaskan untuk konfirmasi</string>
     <string name="coins_combined">Koin Digabungkan</string>
     <string name="transaction_didnt_go_out">Transaksi tidak terkirim.</string>
+    <string name="k_motto">Kebebasan digital di jaringan Kaspa</string>
 </resources>

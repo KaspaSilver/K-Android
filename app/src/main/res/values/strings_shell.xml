@@ -76,6 +76,4 @@
     <string name="shell_ks_fees_unavailable">Fees aren\'t available yet</string>
     <string name="shell_ks_fees_unavailable_body">Your indexer doesn\'t report them yet. They\'ll show here once it does.</string>
     <string name="shell_ks_fees">Fees</string>
-    <!-- The wallet tab and its screen (iOS 47ee52b1): "KaPay", like KaChat for chats. Settings keeps "Wallet". -->
-    <string name="tab_kapay" translatable="false">KaPay</string>
 </resources>

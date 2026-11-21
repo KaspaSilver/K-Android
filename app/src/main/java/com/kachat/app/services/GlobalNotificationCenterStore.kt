@@ -165,7 +165,7 @@ class GlobalNotificationCenterStore @Inject constructor(
 
         /** The source tag a row shows (iOS `Entry.Source.label`). */
         fun sourceLabel(source: String): String = when (source) {
-            "wallet" -> "KaPay"
+            "wallet" -> "Wallet"
             "token" -> "Tokens"
             "kachat" -> ".kachat"
             "group" -> "Group"

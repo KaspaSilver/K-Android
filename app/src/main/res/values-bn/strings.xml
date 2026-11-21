@@ -146,7 +146,6 @@
     <string name="scan_qr_code">QR কোড স্ক্যান করুন</string>
     <string name="scroll_to_latest">সর্বশেষে স্ক্রল করুন</string>
     <string name="search_chats">চ্যাট খুঁজুন</string>
-    <string name="secure_messaging_on_kaspa_blockdag">Kaspa BlockDAG-এ নিরাপদ মেসেজিং</string>
     <string name="security_warning">নিরাপত্তা সতর্কতা</string>
     <string name="seed_phrase">১২ বা ২৪টি শব্দ</string>
     <string name="select_chat">চ্যাট নির্বাচন করুন</string>
@@ -1765,4 +1764,5 @@
     <string name="swipe_release_to_confirm">নিশ্চিত করতে ছেড়ে দিন</string>
     <string name="coins_combined">কয়েন একত্র হয়েছে</string>
     <string name="transaction_didnt_go_out">লেনদেনটি পাঠানো হয়নি।</string>
+    <string name="k_motto">Kaspa নেটওয়ার্কে ডিজিটাল স্বাধীনতা</string>
 </resources>

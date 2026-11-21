@@ -146,7 +146,6 @@
     <string name="scan_qr_code">QR Kod Tara</string>
     <string name="scroll_to_latest">En sona kaydir</string>
     <string name="search_chats">Sohbet ara</string>
-    <string name="secure_messaging_on_kaspa_blockdag">Kaspa BlockDAG üzerinde güvenli mesajlaşma</string>
     <string name="security_warning">Güvenlik Uyarısı</string>
     <string name="seed_phrase">12 veya 24 Kelime</string>
     <string name="select_chat">Sohbet sec</string>
@@ -1765,4 +1764,5 @@
     <string name="swipe_release_to_confirm">Onaylamak için bırak</string>
     <string name="coins_combined">Coin’ler Birleştirildi</string>
     <string name="transaction_didnt_go_out">İşlem gönderilemedi.</string>
+    <string name="k_motto">Kaspa ağında dijital özgürlük</string>
 </resources>

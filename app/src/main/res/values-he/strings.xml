@@ -146,7 +146,6 @@
     <string name="scan_qr_code">סרוק קוד QR</string>
     <string name="scroll_to_latest">גלול לאחרון</string>
     <string name="search_chats">חפש צ\'אטים</string>
-    <string name="secure_messaging_on_kaspa_blockdag">הודעות מאובטחות על Kaspa BlockDAG</string>
     <string name="security_warning">אזהרת אבטחה</string>
     <string name="seed_phrase">12 או 24 מילים</string>
     <string name="select_chat">בחר צ\'אט</string>
@@ -1771,4 +1770,5 @@
     <string name="swipe_release_to_confirm">שחרר כדי לאשר</string>
     <string name="coins_combined">המטבעות אוחדו</string>
     <string name="transaction_didnt_go_out">העסקה לא יצאה.</string>
+    <string name="k_motto">חופש דיגיטלי ברשת Kaspa</string>
 </resources>

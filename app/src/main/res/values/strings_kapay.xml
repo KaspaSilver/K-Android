@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">Changes the name shown for this account.</string>
     <string name="kp_compound_utxos_description_kc">Combines all UTXOs at this address into a single one, to reduce the number of inputs a future send needs.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">Your other apps on the same words show the same kUSDT and can send it. Swapping happens here.</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">To swap KAS and kUSDT, or add to the pool, tap Swap Stablecoins on the KaPay tab and choose kUSDT. Trestly\'s own site opens inside K, connected to the address you pick.</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">To swap KAS and kUSDT, or add to the pool, tap Swap Stablecoins on the Wallet tab and choose kUSDT. Trestly\'s own site opens inside K, connected to the address you pick.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">More stablecoins will show here as K adds them.</string>
     <string name="kp_notifies_you_when_this_account_kc">Notifies you when this account receives Kaspa.</string>
     <string name="kp_on_trestly_inside_kachat_kc">On Trestly, inside K</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">Something Went Wrong</string>
     <string name="kp_stops_notifying_when_this_account_kc">Stops notifying when this account receives Kaspa. Other accounts keep theirs.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">This only removes it from K\'s watch list. It has no effect on the KasSigner device or any funds it holds.</string>
-    <string name="kp_token_empty_state_swap_kc">Receive it on a fresh address, or buy it with Swap Stablecoins on the KaPay tab.</string>
+    <string name="kp_token_empty_state_swap_kc">Receive it on a fresh address, or buy it with Swap Stablecoins on the Wallet tab.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly asks K to</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">Trestly\'s pool code couldn\'t start in K.</string>
     <string name="kp_trestly_pool_note_kc">Built and checked by Trestly\'s own code inside K. If the pool moves first and gives less, K asks you again; it never takes below 99% of this quote.</string>

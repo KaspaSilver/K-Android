@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">Ändert den Namen, der für dieses Konto angezeigt wird.</string>
     <string name="kp_compound_utxos_description_kc">Fasst alle UTXOs dieser Adresse zu einem zusammen, damit eine spätere Zahlung weniger Eingänge braucht.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">Deine anderen Apps mit denselben Wörtern zeigen dieselben kUSDT und können sie senden. Getauscht wird hier.</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">Um KAS und kUSDT zu tauschen oder in den Pool einzuzahlen, tippe im KaPay-Tab auf „Stablecoins tauschen“ und wähle kUSDT. Trestlys eigene Website öffnet sich in K, verbunden mit der Adresse, die du auswählst.</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">Um KAS und kUSDT zu tauschen oder in den Pool einzuzahlen, tippe im Wallet-Tab auf „Stablecoins tauschen“ und wähle kUSDT. Trestlys eigene Website öffnet sich in K, verbunden mit der Adresse, die du auswählst.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">Weitere Stablecoins erscheinen hier, sobald K sie hinzufügt.</string>
     <string name="kp_notifies_you_when_this_account_kc">Benachrichtigt dich, wenn dieses Konto Kaspa empfängt.</string>
     <string name="kp_on_trestly_inside_kachat_kc">Auf Trestly, in K</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">Etwas ist schiefgelaufen</string>
     <string name="kp_stops_notifying_when_this_account_kc">Keine Benachrichtigung mehr, wenn dieses Konto Kaspa empfängt. Andere Konten behalten ihre.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">Dies entfernt sie nur von Ks Beobachtungsliste. Es hat keine Auswirkung auf das KasSigner-Gerät oder darauf gehaltene Guthaben.</string>
-    <string name="kp_token_empty_state_swap_kc">Empfange es auf einer neuen Adresse oder kaufe es über „Stablecoins tauschen“ im KaPay-Tab.</string>
+    <string name="kp_token_empty_state_swap_kc">Empfange es auf einer neuen Adresse oder kaufe es über „Stablecoins tauschen“ im Wallet-Tab.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly bittet K:</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">Trestlys Pool-Code konnte in K nicht starten.</string>
     <string name="kp_trestly_pool_note_kc">Von Trestlys eigenem Code in K erstellt und geprüft. Bewegt sich der Pool vorher und gibt weniger, fragt K erneut; nie unter 99% dieses Angebots.</string>

@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">Đổi tên hiển thị cho tài khoản này.</string>
     <string name="kp_compound_utxos_description_kc">Gộp tất cả UTXO tại địa chỉ này thành một, để giảm số đầu vào mà lần gửi sau cần.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">Các ứng dụng khác của bạn dùng cùng bộ từ sẽ hiển thị cùng kUSDT và có thể gửi. Hoán đổi diễn ra ở đây.</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">Để hoán đổi KAS và kUSDT, hoặc thêm vào pool, hãy chạm Hoán đổi stablecoin ở tab KaPay và chọn kUSDT. Trang của Trestly mở ngay trong K, kết nối với địa chỉ bạn chọn.</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">Để hoán đổi KAS và kUSDT, hoặc thêm vào pool, hãy chạm Hoán đổi stablecoin ở tab Ví và chọn kUSDT. Trang của Trestly mở ngay trong K, kết nối với địa chỉ bạn chọn.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">Các stablecoin khác sẽ hiện ở đây khi K thêm vào.</string>
     <string name="kp_notifies_you_when_this_account_kc">Thông báo cho bạn khi tài khoản này nhận Kaspa.</string>
     <string name="kp_on_trestly_inside_kachat_kc">Trên Trestly, ngay trong K</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">Đã xảy ra lỗi</string>
     <string name="kp_stops_notifying_when_this_account_kc">Ngừng thông báo khi tài khoản này nhận Kaspa. Các tài khoản khác giữ nguyên.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">Điều này chỉ xóa nó khỏi danh sách theo dõi của K. Nó không ảnh hưởng đến thiết bị KasSigner hoặc bất kỳ khoản tiền nào nó nắm giữ.</string>
-    <string name="kp_token_empty_state_swap_kc">Nhận vào một địa chỉ mới, hoặc mua bằng Hoán đổi stablecoin ở tab KaPay.</string>
+    <string name="kp_token_empty_state_swap_kc">Nhận vào một địa chỉ mới, hoặc mua bằng Hoán đổi stablecoin ở tab Ví.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly yêu cầu K</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">Mã pool của Trestly không thể khởi động trong K.</string>
     <string name="kp_trestly_pool_note_kc">Được tạo và kiểm tra bởi chính mã của Trestly trong K. Nếu pool thay đổi trước và cho ít hơn, K sẽ hỏi lại; không bao giờ dưới 99% mức báo giá này.</string>

@@ -146,7 +146,6 @@
     <string name="scan_qr_code">Scanner le code QR</string>
     <string name="scroll_to_latest">Defiler jusqu\'au plus recent</string>
     <string name="search_chats">Rechercher dans les discussions</string>
-    <string name="secure_messaging_on_kaspa_blockdag">Messagerie sécurisée sur Kaspa BlockDAG</string>
     <string name="security_warning">Avertissement de sécurité</string>
     <string name="seed_phrase">12 ou 24 mots</string>
     <string name="select_chat">Selectionner la discussion</string>
@@ -1768,4 +1767,5 @@
     <string name="swipe_release_to_confirm">Relâchez pour confirmer</string>
     <string name="coins_combined">Pièces fusionnées</string>
     <string name="transaction_didnt_go_out">La transaction n\'est pas partie.</string>
+    <string name="k_motto">La liberté numérique sur le réseau Kaspa</string>
 </resources>

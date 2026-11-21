@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">इस खाते के लिए दिखने वाला नाम बदलता है।</string>
     <string name="kp_compound_utxos_description_kc">इस पते के सभी UTXO को एक में मिला देता है, ताकि आगे भेजने में कम इनपुट लगें।</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">उन्हीं शब्दों वाले आपके दूसरे ऐप वही kUSDT दिखाते हैं और भेज सकते हैं। स्वैप यहीं होता है।</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">KAS और kUSDT की अदला-बदली करने या पूल में जोड़ने के लिए KaPay टैब में स्टेबलकॉइन स्वैप करें पर टैप करें और kUSDT चुनें। Trestly की अपनी साइट K के अंदर, आपके चुने पते से जुड़ी हुई खुलती है।</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">KAS और kUSDT की अदला-बदली करने या पूल में जोड़ने के लिए वॉलेट टैब में स्टेबलकॉइन स्वैप करें पर टैप करें और kUSDT चुनें। Trestly की अपनी साइट K के अंदर, आपके चुने पते से जुड़ी हुई खुलती है।</string>
     <string name="kp_more_stablecoins_will_show_here_kc">K जैसे-जैसे और स्टेबलकॉइन जोड़ेगा, वे यहां दिखेंगे।</string>
     <string name="kp_notifies_you_when_this_account_kc">इस खाते में Kaspa आने पर आपको सूचित करता है।</string>
     <string name="kp_on_trestly_inside_kachat_kc">Trestly पर, K के अंदर</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">कुछ गलत हो गया</string>
     <string name="kp_stops_notifying_when_this_account_kc">इस खाते में Kaspa आने पर सूचना देना बंद करता है। बाकी खातों की सूचनाएं बनी रहती हैं।</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">यह इसे केवल K की वॉच सूची से हटाता है। इसका KasSigner डिवाइस या उसके पास मौजूद किसी भी फंड पर कोई प्रभाव नहीं पड़ता।</string>
-    <string name="kp_token_empty_state_swap_kc">इसे नए पते पर पाएं, या KaPay टैब में स्टेबलकॉइन स्वैप करें से खरीदें।</string>
+    <string name="kp_token_empty_state_swap_kc">इसे नए पते पर पाएं, या वॉलेट टैब में स्टेबलकॉइन स्वैप करें से खरीदें।</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly, K से कह रहा है:</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">Trestly का पूल कोड K में शुरू नहीं हो सका।</string>
     <string name="kp_trestly_pool_note_kc">K के अंदर Trestly के अपने कोड से बना और जांचा गया। अगर पूल पहले बदलकर कम देता है, तो K फिर पूछता है; इस भाव के 99% से कम कभी नहीं।</string>

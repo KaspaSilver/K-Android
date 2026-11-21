@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">Bu hesap için gösterilen adı değiştirir.</string>
     <string name="kp_compound_utxos_description_kc">Bu adresteki tüm UTXO\'ları tek bir UTXO\'da birleştirir; böylece sonraki bir gönderimin ihtiyaç duyduğu girdi sayısı azalır.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">Aynı kelimeleri kullanan diğer uygulamalarınız aynı kUSDT\'yi gösterir ve gönderebilir. Takas burada yapılır.</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">KAS ile kUSDT takası yapmak veya havuza eklemek için KaPay sekmesinde Stablecoin Takas Et\'a dokunup kUSDT\'yi seçin. Trestly\'nin kendi sitesi K içinde, seçtiğiniz adrese bağlı olarak açılır.</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">KAS ile kUSDT takası yapmak veya havuza eklemek için Cüzdan sekmesinde Stablecoin Takas Et\'a dokunup kUSDT\'yi seçin. Trestly\'nin kendi sitesi K içinde, seçtiğiniz adrese bağlı olarak açılır.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">K ekledikçe daha fazla stablecoin burada görünecek.</string>
     <string name="kp_notifies_you_when_this_account_kc">Bu hesap Kaspa aldığında seni bilgilendirir.</string>
     <string name="kp_on_trestly_inside_kachat_kc">Trestly\'de, K içinde</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">Bir Seyler Ters Gitti</string>
     <string name="kp_stops_notifying_when_this_account_kc">Bu hesap Kaspa aldığında artık bildirmez. Diğer hesaplar kendi bildirimlerini korur.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">Bu, yalnizca K\'in izleme listesinden kaldirir. KasSigner cihazi veya tuttugu fonlar uzerinde hicbir etkisi yoktur.</string>
-    <string name="kp_token_empty_state_swap_kc">Yeni bir adrese alın ya da KaPay sekmesindeki Stablecoin Takas Et ile satın alın.</string>
+    <string name="kp_token_empty_state_swap_kc">Yeni bir adrese alın ya da Cüzdan sekmesindeki Stablecoin Takas Et ile satın alın.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly, K\'den şunu istiyor:</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">Trestly\'nin havuz kodu K\'de başlatılamadı.</string>
     <string name="kp_trestly_pool_note_kc">K içinde Trestly\'nin kendi koduyla oluşturulup kontrol edildi. Havuz önce değişip daha az verirse K tekrar sorar; bu teklifin %99\'unun altını asla kabul etmez.</string>

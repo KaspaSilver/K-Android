@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">يغيّر الاسم الظاهر لهذا الحساب.</string>
     <string name="kp_compound_utxos_description_kc">يدمج كل UTXOs في هذا العنوان في واحد، لتقليل عدد المدخلات التي يحتاجها أي إرسال لاحق.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">تطبيقاتك الأخرى بنفس الكلمات تعرض نفس kUSDT ويمكنها إرساله. التبديل يتم هنا.</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">لمبادلة KAS وkUSDT أو الإضافة إلى المجمع، اضغط «مبادلة العملات المستقرة» في تبويب KaPay واختر kUSDT. يُفتح موقع Trestly نفسه داخل K، متصلًا بالعنوان الذي تختاره.</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">لمبادلة KAS وkUSDT أو الإضافة إلى المجمع، اضغط «مبادلة العملات المستقرة» في تبويب المحفظة واختر kUSDT. يُفتح موقع Trestly نفسه داخل K، متصلًا بالعنوان الذي تختاره.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">ستظهر عملات مستقرة أخرى هنا عندما يضيفها K.</string>
     <string name="kp_notifies_you_when_this_account_kc">يُعلمك عندما يستلم هذا الحساب Kaspa.</string>
     <string name="kp_on_trestly_inside_kachat_kc">على Trestly، داخل K</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">حدث خطأ ما</string>
     <string name="kp_stops_notifying_when_this_account_kc">يتوقف عن الإشعار عندما يستلم هذا الحساب Kaspa. تحتفظ الحسابات الأخرى بإشعاراتها.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">هذا يزيله فقط من قائمة مراقبة K. لا تأثير له على جهاز KasSigner أو أي أموال يحتفظ بها.</string>
-    <string name="kp_token_empty_state_swap_kc">استلمه على عنوان جديد، أو اشترِه من «مبادلة العملات المستقرة» في تبويب KaPay.</string>
+    <string name="kp_token_empty_state_swap_kc">استلمه على عنوان جديد، أو اشترِه من «مبادلة العملات المستقرة» في تبويب المحفظة.</string>
     <string name="kp_trestly_asks_kachat_to_kc">يطلب Trestly من K:</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">تعذّر تشغيل شيفرة مجمع Trestly في K.</string>
     <string name="kp_trestly_pool_note_kc">بُني وفُحص بشيفرة Trestly نفسها داخل K. إن تحرّك المجمع أولًا وأعطى أقل، يسألك K مجددًا؛ ولا يقبل أبدًا أقل من 99% من هذا السعر.</string>

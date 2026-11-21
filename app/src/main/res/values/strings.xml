@@ -174,7 +174,6 @@
     <string name="scan_qr_code">Scan QR Code</string>
     <string name="scroll_to_latest">Scroll to latest</string>
     <string name="search_chats">Search chats</string>
-    <string name="secure_messaging_on_kaspa_blockdag">Secure messaging on Kaspa BlockDAG</string>
     <string name="security_warning">Security Warning</string>
     <string name="seed_phrase">12 or 24 Words</string>
     <string name="select_all">Select All</string>
@@ -1804,4 +1803,5 @@
     <string name="swipe_release_to_confirm">Release to Confirm</string>
     <string name="coins_combined">Coins Combined</string>
     <string name="transaction_didnt_go_out">The transaction didn\'t go out.</string>
+    <string name="k_motto">Digital Freedom on the Kaspa Network</string>
 </resources>

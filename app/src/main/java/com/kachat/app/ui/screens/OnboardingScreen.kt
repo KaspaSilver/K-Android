@@ -35,6 +35,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.graphics.Color
@@ -244,11 +245,26 @@ fun WelcomeScreen(
     // dark set too - otherwise textPrimary renders near-black on near-black in light mode.
     // Scoped to this screen.
     CompositionLocalProvider(LocalAppColors provides DarkAppColors) {
+    // Smaller logo, glow higher up, when saved accounts share the page (iOS 58cfbf6f).
+    val hasSavedAccounts = viewModel.accounts.collectAsState().value.isNotEmpty()
     Surface(
         color = KaChatSignInBackground,
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                // the K icon's soft glow, centered on the logo's part of the page (iOS 58cfbf6f)
+                .drawBehind {
+                    drawRect(
+                        androidx.compose.ui.graphics.Brush.radialGradient(
+                            colors = listOf(KSignInLogoGlow.copy(alpha = 0.16f), Color.Transparent),
+                            center = androidx.compose.ui.geometry.Offset(size.width * 0.5f, size.height * (if (hasSavedAccounts) 0.16f else 0.3f)),
+                            radius = size.width * 0.75f,
+                        )
+                    )
+                }
+        ) {
         // Top-right gear (matches iOS OnboardingView's gearshape toolbar button): app-wide
         // settings that make sense with no account active - see AppSettingsHubScreen.
         SheetBarIconButton(
@@ -277,38 +293,41 @@ fun WelcomeScreen(
             val hasWallet by viewModel.hasWallet.collectAsState()
             val accounts by viewModel.accounts.collectAsState()
 
-            // Wordmark with the app mark beside it - the launcher icon itself, so the two never
-            // drift apart. Replaces the 160dp logo above the title: on a device with accounts
-            // saved, that block was most of why the list below had nowhere to go.
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Text(
-                    text = "K",
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 36.sp
-                    ),
-                    color = LocalAppColors.current.textPrimary
+            // The K globe (the app icon's mark), glowing like the icon, over the motto (iOS
+            // 58cfbf6f). Smaller when saved accounts share the page, so Create and Import keep
+            // their room. The motto stays either way: it is what the screen is.
+            val logoSize = if (hasSavedAccounts) 76.dp else 132.dp
+            val glowRadius = if (hasSavedAccounts) 16.dp else 28.dp
+            Box(contentAlignment = Alignment.Center) {
+                // iOS draws a shadow from the globe's own shape; the globe is round, so a soft
+                // circle behind it is the same glow on every Android version.
+                Box(
+                    Modifier
+                        .size(logoSize + glowRadius * 2)
+                        .drawBehind {
+                            val r = size.minDimension / 2f
+                            drawCircle(
+                                androidx.compose.ui.graphics.Brush.radialGradient(
+                                    0f to KSignInLogoGlow.copy(alpha = 0.45f),
+                                    (logoSize.toPx() / 2f) / r to KSignInLogoGlow.copy(alpha = 0.45f),
+                                    1f to Color.Transparent,
+                                    center = center,
+                                    radius = r,
+                                ),
+                                radius = r,
+                            )
+                        }
                 )
                 Image(
-                    // A PNG copy of the launcher artwork, NOT R.mipmap.ic_launcher: on API 26+
-                    // that id resolves to the adaptive-icon XML, which painterResource cannot
-                    // load - it throws "Only VectorDrawables and rasterized asset types are
-                    // supported" and takes the whole welcome screen down with it.
-                    painter = painterResource(id = R.drawable.kachat_app_mark),
-                    contentDescription = stringResource(R.string.kachat_logo),
-                    modifier = Modifier.size(40.dp).clip(RoundedCornerShape(9.dp))
+                    painter = painterResource(id = R.drawable.k_logo),
+                    contentDescription = "K",
+                    modifier = Modifier.size(logoSize)
                 )
             }
 
-            // Shown whether or not there are accounts saved: it is what the screen is, and
-            // hiding it on a returning device left the wordmark sitting on its own with nothing
-            // saying what it belongs to.
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(if (hasSavedAccounts) 12.dp else 20.dp))
             Text(
-                text = stringResource(R.string.secure_messaging_on_kaspa_blockdag),
+                text = stringResource(R.string.k_motto),
                 style = MaterialTheme.typography.bodyLarge,
                 color = KaspaSubtext,
                 textAlign = TextAlign.Center
@@ -2133,11 +2152,14 @@ private fun PassphraseInputField(
 }
 
 /**
- * The brand's near-black with a green cast, taken from the KaChat banner rather than the app's
- * usual true black. Scoped to the sign-in screen, and the same in both themes on purpose - it is
- * the one place the product introduces itself.
+ * The near-black of the K app icon's dark version, with its green cast, rather than the app's
+ * usual true black (iOS 58cfbf6f). Scoped to the sign-in screen, and the same in both themes on
+ * purpose - it is the one place the product introduces itself.
  */
-internal val KaChatSignInBackground = Color(0xFF0E1614)
+internal val KaChatSignInBackground = Color(0xFF070D0E)
+
+/** The globe's teal (its nodes), for the glow behind the sign-in logo (iOS 58cfbf6f). */
+internal val KSignInLogoGlow = Color(0xFF6BEDCC)
 
 /** One step up from [KaChatSignInBackground], same cast, for the saved-account rows. */
 internal val KaChatSignInCard = Color(0xFF1A2624)

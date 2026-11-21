@@ -85,7 +85,7 @@ import androidx.compose.material.icons.filled.CheckCircle
  */
 sealed class Screen(val route: String, @androidx.annotation.StringRes val labelRes: Int, val icon: ImageVector) {
     object Chats       : Screen(AppTab.CHATS.route,        R.string.kachat,          Icons.Default.Forum)
-    object Wallet      : Screen(AppTab.WALLET.route,       R.string.tab_kapay,      Icons.Filled.AccountBalanceWallet)
+    object Wallet      : Screen(AppTab.WALLET.route,       R.string.wallet_title,    Icons.Filled.AccountBalanceWallet)
     object AddressBook : Screen(AppTab.ADDRESS_BOOK.route, R.string.ab_address_book, ContactsFilledIcon)
     object Profile     : Screen(AppTab.PROFILE.route,      R.string.profile,         Icons.Default.AccountCircle)
     object Settings    : Screen(AppTab.SETTINGS.route,     R.string.settings_title,  Icons.Default.Settings)

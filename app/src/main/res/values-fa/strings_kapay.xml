@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">نامی را که برای این حساب نشان داده می‌شود تغییر می‌دهد.</string>
     <string name="kp_compound_utxos_description_kc">همه UTXOهای این آدرس را در یکی ادغام می‌کند تا تعداد ورودی‌های لازم برای ارسال‌های بعدی کمتر شود.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">برنامه‌های دیگر شما با همین کلمات همان kUSDT را نشان می‌دهند و می‌توانند آن را بفرستند. مبادله همین‌جا انجام می‌شود.</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">برای مبادلهٔ KAS و kUSDT یا افزودن به استخر، در زبانهٔ KaPay روی «سوآپ استیبل‌کوین» بزنید و kUSDT را انتخاب کنید. سایت خود Trestly درون K و متصل به نشانی انتخابی شما باز می‌شود.</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">برای مبادلهٔ KAS و kUSDT یا افزودن به استخر، در زبانهٔ کیف پول روی «سوآپ استیبل‌کوین» بزنید و kUSDT را انتخاب کنید. سایت خود Trestly درون K و متصل به نشانی انتخابی شما باز می‌شود.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">با اضافه شدن استیبل‌کوین‌های دیگر به K، اینجا نمایش داده می‌شوند.</string>
     <string name="kp_notifies_you_when_this_account_kc">وقتی این حساب Kaspa دریافت کند به شما اطلاع می‌دهد.</string>
     <string name="kp_on_trestly_inside_kachat_kc">در Trestly، درون K</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">مشکلی پیش آمد</string>
     <string name="kp_stops_notifying_when_this_account_kc">دیگر هنگام دریافت Kaspa در این حساب اعلان نمی‌دهد. حساب‌های دیگر اعلان‌های خود را دارند.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">این فقط آن را از فهرست نظارت K حذف می‌کند. هیچ تأثیری بر دستگاه KasSigner یا وجوهی که نگه می‌دارد ندارد.</string>
-    <string name="kp_token_empty_state_swap_kc">آن را روی یک نشانی تازه دریافت کنید، یا از «سوآپ استیبل‌کوین» در زبانهٔ KaPay بخرید.</string>
+    <string name="kp_token_empty_state_swap_kc">آن را روی یک نشانی تازه دریافت کنید، یا از «سوآپ استیبل‌کوین» در زبانهٔ کیف پول بخرید.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly از K می‌خواهد:</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">کد استخر Trestly در K اجرا نشد.</string>
     <string name="kp_trestly_pool_note_kc">با کد خود Trestly درون K ساخته و بررسی شده است. اگر استخر زودتر تغییر کند و کمتر بدهد، K دوباره می‌پرسد؛ هرگز کمتر از 99% این قیمت.</string>

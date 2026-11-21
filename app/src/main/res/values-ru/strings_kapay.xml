@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">Меняет имя, которое показывается для этого аккаунта.</string>
     <string name="kp_compound_utxos_description_kc">Объединяет все UTXO этого адреса в один, чтобы для будущей отправки требовалось меньше входов.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">Другие ваши приложения с теми же словами показывают те же kUSDT и могут их отправлять. Обмен — здесь.</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">Чтобы обменять KAS и kUSDT или добавить в пул, нажмите «Обменять стейблкоины» на вкладке «KaPay» и выберите kUSDT. Сайт Trestly откроется внутри K, подключённый к выбранному адресу.</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">Чтобы обменять KAS и kUSDT или добавить в пул, нажмите «Обменять стейблкоины» на вкладке «Кошелёк» и выберите kUSDT. Сайт Trestly откроется внутри K, подключённый к выбранному адресу.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">Другие стейблкоины появятся здесь, когда K их добавит.</string>
     <string name="kp_notifies_you_when_this_account_kc">Уведомляет, когда этот аккаунт получает Kaspa.</string>
     <string name="kp_on_trestly_inside_kachat_kc">На Trestly, внутри K</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">Что-то пошло не так</string>
     <string name="kp_stops_notifying_when_this_account_kc">Больше не уведомлять, когда этот аккаунт получает Kaspa. У других аккаунтов уведомления останутся.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">Это только удаляет его из списка отслеживания K. Это не влияет на устройство KasSigner или средства на нем.</string>
-    <string name="kp_token_empty_state_swap_kc">Получите его на новый адрес или купите через «Обменять стейблкоины» на вкладке «KaPay».</string>
+    <string name="kp_token_empty_state_swap_kc">Получите его на новый адрес или купите через «Обменять стейблкоины» на вкладке «Кошелёк».</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly просит K:</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">Код пула Trestly не удалось запустить в K.</string>
     <string name="kp_trestly_pool_note_kc">Собрано и проверено собственным кодом Trestly внутри K. Если пул изменится раньше и даст меньше, K спросит снова; никогда меньше 99% этой котировки.</string>

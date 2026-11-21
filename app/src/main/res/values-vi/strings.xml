@@ -146,7 +146,6 @@
     <string name="scan_qr_code">Quét mã QR</string>
     <string name="scroll_to_latest">Cuộn đến tin nhắn mới nhất</string>
     <string name="search_chats">Tìm kiếm cuộc trò chuyện</string>
-    <string name="secure_messaging_on_kaspa_blockdag">Nhắn tin bảo mật trên Kaspa BlockDAG</string>
     <string name="security_warning">Cảnh báo bảo mật</string>
     <string name="seed_phrase">12 hoặc 24 từ</string>
     <string name="select_chat">Chọn trò chuyện</string>
@@ -1762,4 +1761,5 @@
     <string name="swipe_release_to_confirm">Thả để xác nhận</string>
     <string name="coins_combined">Đã gộp đồng</string>
     <string name="transaction_didnt_go_out">Giao dịch chưa được gửi đi.</string>
+    <string name="k_motto">Tự do số trên mạng Kaspa</string>
 </resources>
