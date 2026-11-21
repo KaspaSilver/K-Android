@@ -224,7 +224,7 @@ fun WalletScreen(
         contentWindowInsets = WindowInsets(0),
         topBar = {
             MainPageHeader(
-                title = stringResource(R.string.wallet_title),
+                title = stringResource(R.string.tab_kapay),
                 balanceLabel = { BalanceLabelRow(knownChattingSompi?.let { KaspaUnit.amount(it) } ?: "-- ${KaspaUnit.symbol}") },
                 banner = { AccountBackupBanner(viewModel) { navController.navigate("account_backup") } },
             )

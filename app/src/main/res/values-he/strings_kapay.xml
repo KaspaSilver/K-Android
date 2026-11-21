@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">משנה את השם שמוצג לחשבון הזה.</string>
     <string name="kp_compound_utxos_description_kc">מאחד את כל ה-UTXO בכתובת הזו לאחד, כדי להפחית את מספר הקלטים שיידרשו בשליחה עתידית.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">האפליקציות האחרות שלך עם אותן מילים מציגות את אותם kUSDT ויכולות לשלוח אותם. ההחלפה נעשית כאן.</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">כדי להחליף KAS ו-kUSDT או להוסיף למאגר, הקישו על החלפת מטבעות יציבים בלשונית הארנק ובחרו kUSDT. האתר של Trestly עצמו נפתח בתוך K, מחובר לכתובת שבחרתם.</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">כדי להחליף KAS ו-kUSDT או להוסיף למאגר, הקישו על החלפת מטבעות יציבים בלשונית KaPay ובחרו kUSDT. האתר של Trestly עצמו נפתח בתוך K, מחובר לכתובת שבחרתם.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">מטבעות יציבים נוספים יופיעו כאן כש-K יוסיף אותם.</string>
     <string name="kp_notifies_you_when_this_account_kc">מתריע כשהחשבון הזה מקבל Kaspa.</string>
     <string name="kp_on_trestly_inside_kachat_kc">ב-Trestly, בתוך K</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">משהו השתבש</string>
     <string name="kp_stops_notifying_when_this_account_kc">מפסיק להתריע כשהחשבון הזה מקבל Kaspa. לשאר החשבונות ההתראות נשארות.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">זה רק מסיר אותו מרשימת המעקב של K. אין לכך השפעה על מכשיר KasSigner או על כל כספים שהוא מחזיק.</string>
-    <string name="kp_token_empty_state_swap_kc">קבלו אותו בכתובת חדשה, או קנו דרך החלפת מטבעות יציבים בלשונית הארנק.</string>
+    <string name="kp_token_empty_state_swap_kc">קבלו אותו בכתובת חדשה, או קנו דרך החלפת מטבעות יציבים בלשונית KaPay.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly מבקש מ-K:</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">קוד המאגר של Trestly לא הצליח לפעול ב-K.</string>
     <string name="kp_trestly_pool_note_kc">נבנה ונבדק בקוד של Trestly עצמו בתוך K. אם המאגר זז קודם ונותן פחות, K שואל שוב; אף פעם לא פחות מ-99% מההצעה הזו.</string>

@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">更改此账户显示的名称。</string>
     <string name="kp_compound_utxos_description_kc">把此地址上的所有 UTXO 合并成一个，以减少以后发送所需的输入数量。</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">使用相同助记词的其他应用会显示相同的 kUSDT，也能发送。兑换在这里进行。</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">要兑换 KAS 和 kUSDT，或向资金池添加，请在“钱包”标签页点按“兑换稳定币”并选择 kUSDT。Trestly 自己的网站会在 K 内打开，并连接到你选择的地址。</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">要兑换 KAS 和 kUSDT，或向资金池添加，请在“KaPay”标签页点按“兑换稳定币”并选择 kUSDT。Trestly 自己的网站会在 K 内打开，并连接到你选择的地址。</string>
     <string name="kp_more_stablecoins_will_show_here_kc">K 添加更多稳定币后，会显示在这里。</string>
     <string name="kp_notifies_you_when_this_account_kc">此账户收到 Kaspa 时通知你。</string>
     <string name="kp_on_trestly_inside_kachat_kc">在 K 内的 Trestly 上</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">出错了</string>
     <string name="kp_stops_notifying_when_this_account_kc">此账户收到 Kaspa 时不再通知。其他账户保持不变。</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">这只会将其从 K 的监视列表中移除。对 KasSigner 设备或其持有的任何资金没有任何影响。</string>
-    <string name="kp_token_empty_state_swap_kc">可在新地址接收，或在“钱包”标签页用“兑换稳定币”购买。</string>
+    <string name="kp_token_empty_state_swap_kc">可在新地址接收，或在“KaPay”标签页用“兑换稳定币”购买。</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly 请求 K：</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">Trestly 的资金池代码无法在 K 中启动。</string>
     <string name="kp_trestly_pool_note_kc">由 Trestly 自己的代码在 K 内构建和检查。如果资金池先变动且给出更少，K 会再次询问；绝不低于此报价的 99%。</string>

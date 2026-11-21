@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">এই অ্যাকাউন্টের জন্য দেখানো নাম বদলায়।</string>
     <string name="kp_compound_utxos_description_kc">এই ঠিকানার সব UTXO একটিতে মিলিয়ে দেয়, যাতে ভবিষ্যতে পাঠানোর সময় কম ইনপুট লাগে।</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">একই শব্দের আপনার অন্য অ্যাপগুলো একই kUSDT দেখায় ও পাঠাতে পারে। সোয়াপ এখানেই হয়।</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">KAS ও kUSDT অদলবদল করতে বা পুলে যোগ করতে ওয়ালেট ট্যাবে স্টেবলকয়েন সোয়াপ করুন ট্যাপ করে kUSDT বেছে নিন। Trestly-র নিজস্ব সাইট K-এর ভেতরে আপনার বেছে নেওয়া ঠিকানার সাথে যুক্ত হয়ে খোলে।</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">KAS ও kUSDT অদলবদল করতে বা পুলে যোগ করতে KaPay ট্যাবে স্টেবলকয়েন সোয়াপ করুন ট্যাপ করে kUSDT বেছে নিন। Trestly-র নিজস্ব সাইট K-এর ভেতরে আপনার বেছে নেওয়া ঠিকানার সাথে যুক্ত হয়ে খোলে।</string>
     <string name="kp_more_stablecoins_will_show_here_kc">K আরও স্টেবলকয়েন যোগ করলে সেগুলো এখানে দেখাবে।</string>
     <string name="kp_notifies_you_when_this_account_kc">এই অ্যাকাউন্টে Kaspa এলে আপনাকে জানায়।</string>
     <string name="kp_on_trestly_inside_kachat_kc">Trestly-তে, K-এর ভেতরে</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">কিছু ভুল হয়েছে</string>
     <string name="kp_stops_notifying_when_this_account_kc">এই অ্যাকাউন্টে Kaspa এলে আর জানাবে না। অন্য অ্যাকাউন্টগুলোর নোটিফিকেশন থাকবে।</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">এটি শুধুমাত্র K-এর ওয়াচ তালিকা থেকে এটি সরায়। এর KasSigner ডিভাইস বা এতে থাকা কোনো তহবিলের উপর কোনো প্রভাব নেই।</string>
-    <string name="kp_token_empty_state_swap_kc">নতুন ঠিকানায় নিন, অথবা ওয়ালেট ট্যাবের স্টেবলকয়েন সোয়াপ করুন থেকে কিনুন।</string>
+    <string name="kp_token_empty_state_swap_kc">নতুন ঠিকানায় নিন, অথবা KaPay ট্যাবের স্টেবলকয়েন সোয়াপ করুন থেকে কিনুন।</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly, K-কে বলছে:</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">Trestly-র পুল কোড K-তে চালু হতে পারেনি।</string>
     <string name="kp_trestly_pool_note_kc">K-এর ভেতরে Trestly-র নিজস্ব কোড দিয়ে তৈরি ও যাচাই। পুল আগে বদলে কম দিলে K আবার জিজ্ঞেস করে; এই দামের 99%-এর কম কখনো নয়।</string>

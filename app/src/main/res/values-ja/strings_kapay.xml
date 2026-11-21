@@ -283,7 +283,7 @@
     <string name="kp_changes_the_name_shown_for_this_account_kc">このアカウントに表示される名前を変更します。</string>
     <string name="kp_compound_utxos_description_kc">このアドレスのすべてのUTXOを1つにまとめ、今後の送信で必要な入力の数を減らします。</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">同じ単語を使う他のアプリにも同じ kUSDT が表示され、送ることもできます。スワップはここで行います。</string>
-    <string name="kp_kusdt_guide_swapping_detail_kc">KASとkUSDTのスワップやプールへの追加は、ウォレットタブの「ステーブルコインをスワップ」でkUSDTを選んでください。選んだアドレスにつながった状態で、Trestly自身のサイトがK内で開きます。</string>
+    <string name="kp_kusdt_guide_swapping_detail_kc">KASとkUSDTのスワップやプールへの追加は、KaPayタブの「ステーブルコインをスワップ」でkUSDTを選んでください。選んだアドレスにつながった状態で、Trestly自身のサイトがK内で開きます。</string>
     <string name="kp_more_stablecoins_will_show_here_kc">Kが追加すると、ほかのステーブルコインもここに表示されます。</string>
     <string name="kp_notifies_you_when_this_account_kc">このアカウントがKaspaを受け取ると通知します。</string>
     <string name="kp_on_trestly_inside_kachat_kc">K内のTrestlyで</string>
@@ -297,7 +297,7 @@
     <string name="kp_something_went_wrong_kc">問題が発生しました</string>
     <string name="kp_stops_notifying_when_this_account_kc">このアカウントがKaspaを受け取っても通知しなくなります。ほかのアカウントはそのままです。</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">これはKのウォッチリストから削除するだけです。KasSignerデバイスや保有する資金には影響しません。</string>
-    <string name="kp_token_empty_state_swap_kc">新しいアドレスで受け取るか、ウォレットタブの「ステーブルコインをスワップ」で購入してください。</string>
+    <string name="kp_token_empty_state_swap_kc">新しいアドレスで受け取るか、KaPayタブの「ステーブルコインをスワップ」で購入してください。</string>
     <string name="kp_trestly_asks_kachat_to_kc">TrestlyがKに依頼：</string>
     <string name="kp_trestly_pool_code_couldnt_start_kc">TrestlyのプールコードをKで起動できませんでした。</string>
     <string name="kp_trestly_pool_note_kc">K内でTrestly自身のコードが作成・確認します。先にプールが動いて減った場合はKが再確認します。この見積もりの99%を下回ることはありません。</string>
