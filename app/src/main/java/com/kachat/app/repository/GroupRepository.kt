@@ -825,6 +825,9 @@ class GroupRepository @Inject constructor(
      *  the blockchain). Used by GroupChatThreadScreen's message multi-select "Delete". */
     suspend fun deleteMessages(messageIds: Collection<String>) {
         val walletAddress = walletManager.getAddress()
+        // So a catch-up or a walk of the stream doesn't put them back (iOS d7c56280
+        // DeletedMessageLog). Expired membership lines are pruned elsewhere, unremembered.
+        com.kachat.app.services.DeletedMessageLog.add(context, messageIds, com.kachat.app.services.DeletedMessageLog.Kind.GROUP, walletAddress)
         messageIds.forEach { database.groupDao().deleteMessage(it, walletAddress) }
     }
 
@@ -872,7 +875,7 @@ class GroupRepository @Inject constructor(
         val contents = parts.mapIndexed { offset, data ->
             val tag = com.kachat.app.util.VoicePartTag.of(noteId, offset + 1, parts.size)!!
             com.kachat.app.util.ContextualMediaFrame.mediaFileJson(
-                name = if (isPhoto) tag.photoFileName else tag.fileName,
+                name = if (isPhoto) com.kachat.app.util.MediaPartName.photo(tag.index, tag.count, mimeType) else tag.fileName,
                 size = data.size,
                 mimeType = mimeType,
                 dataUrlContent = "data:$mimeType;base64,${android.util.Base64.encodeToString(data, android.util.Base64.NO_WRAP)}",
@@ -1499,6 +1502,12 @@ class GroupRepository @Inject constructor(
                 return
             }
 
+            // Deleted on this device: the stream still carries it (iOS d7c56280).
+            if (com.kachat.app.services.DeletedMessageLog.contains(context, txId, com.kachat.app.services.DeletedMessageLog.Kind.GROUP, walletAddress)) {
+                markGroupTxCompleted(walletAddress, txId)
+                return
+            }
+
             val isOutgoing = senderAddress == walletAddress
             val rowId = database.groupDao().insertMessage(
                 GroupMessageEntity(
@@ -1682,8 +1691,10 @@ class GroupRepository @Inject constructor(
                 if (senderAddress == walletAddress) return GroupMessagePush.Silent
                 // An edit changes an earlier bubble in place, and a member's answer only the list.
                 // Nor does a call message: KaChat has no calls (iOS 7c5c22e3 NotificationService).
+                // Nor a reaction whose emoji isn't one emoji: the app reads it as a removal
+                // (iOS 5b7c772c isInvalidReaction).
                 if (GroupMemberStatus.isHiddenEnvelope(plaintext) || com.kachat.app.util.MessageEdit.isEditEnvelope(plaintext) ||
-                    com.kachat.app.util.CallSignal.isCallSignal(plaintext)
+                    com.kachat.app.util.CallSignal.isCallSignal(plaintext) || MessageReaction.isInvalidReaction(plaintext)
                 ) {
                     return GroupMessagePush.Silent
                 }

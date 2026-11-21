@@ -368,6 +368,14 @@ class KachatNamesService @Inject constructor(
         return u
     }
 
+    /** Every live UTXO holding [script] (empty when none; throws when no node or REST API can be
+     *  asked) - a commit whichever of its sends landed (iOS `liveUtxos(script:)`). */
+    suspend fun liveUtxos(script: ByteArray): List<Utxo> {
+        requireLaunched()
+        val address = p2shAddress(script) ?: throw ServiceError.NotOnChain("a non-P2SH script")
+        return utxosByAddresses(listOf(address)).filter { it.entry.script.contentEquals(script) }
+    }
+
     /**
      * Whether [expected] signed [txId], from the transaction's own input signatures read from the
      * REST API, which takes a couple of seconds to list a new transaction (iOS
@@ -422,7 +430,7 @@ class KachatNamesService @Inject constructor(
             }
         }
         walletEngine.reserveSpentOutpoints(spent)
-        Log.i(TAG, "submitted $txId")
+        Log.i(TAG, "submitted ${txId.take(12)}…")
         if (txId.lowercase() != expected) throw ServiceError.SubmitMismatch(expected, txId)
         return txId
     }

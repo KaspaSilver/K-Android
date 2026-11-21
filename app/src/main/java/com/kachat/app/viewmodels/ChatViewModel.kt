@@ -670,7 +670,8 @@ class ChatViewModel @Inject constructor(
      *  recipient still has their own copy, and the underlying transaction is still permanently on
      *  the blockchain). Used by ChatThreadScreen's message multi-select "Delete". */
     fun deleteMessages(messageIds: Collection<String>) {
-        viewModelScope.launch { messageIds.forEach { chatRepository.deleteMessage(it) } }
+        // Remembered, so a sync or the open chat's poll doesn't bring them back (iOS d7c56280).
+        viewModelScope.launch { chatRepository.deleteMessagesOnThisDevice(messageIds) }
     }
 
     /**
@@ -946,6 +947,15 @@ class ChatViewModel @Inject constructor(
     /** A picked-but-not-yet-sent chat photo, staged for preview (thumbnail + fee) before the user confirms send. */
     val pendingPhotoUri: StateFlow<Uri?> = _pendingPhotoUri.asStateFlow()
 
+    /** The pending photo when it is an animation going on chain (a GIF, or an animated WebP, PNG
+     *  or HEIF sequence, [com.kachat.app.util.GifPrep.isAnimated]): its tiers are GIFs, not JPEGs,
+     *  and it goes as `image/gif` (iOS d7c56280 `pendingPhotoIsGIF`). Via Nextcloud it uploads as
+     *  it is. Only counts while it is still the pending photo. */
+    private val _pendingGifUri = MutableStateFlow<Uri?>(null)
+    val pendingPhotoIsGif: StateFlow<Boolean> = combine(_pendingPhotoUri, _pendingGifUri) { photo, gif -> photo != null && photo == gif }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    private val isPendingPhotoGif: Boolean get() = _pendingPhotoUri.value.let { it != null && it == _pendingGifUri.value }
+
     /**
      * The photo or voice note being composed was sent "via Nextcloud" from the "+" sheet's
      * second step (ComposerMediaRouteSheet). Everything else - the on-chain choice, a camera shot
@@ -1045,6 +1055,55 @@ class ChatViewModel @Inject constructor(
         _nextcloudPhotoRequested.value = viaNextcloud && uri != null
         _pendingPhotoUri.value = uri
         if (uri != null && photoViaNextcloud) nextcloudStager.start(uri, isVideo = false) {}
+        // An animation (picked with Photo, shared or pasted) goes on chain as a GIF (iOS d7c56280).
+        markIfAnimatedGif(uri, onChain = !photoViaNextcloud, _pendingPhotoUri, _pendingGifUri)
+    }
+
+    /** The "+" sheet's GIF (iOS d7c56280): always on chain, as a GIF. A pick that isn't animated
+     *  (a GIF, WebP, PNG or HEIF sequence of more than one frame) is turned away with "That isn't
+     *  an animated GIF. Please pick another." */
+    fun setPendingGif(contactId: String, uri: Uri) {
+        viewModelScope.launch {
+            when (readAnimatedGif(uri)) {
+                null -> reportSendFailure(contactId, "Couldn't load that photo. Please try another.")
+                false -> reportSendFailure(contactId, appContext.getString(com.kachat.app.R.string.that_isnt_an_animated_gif))
+                true -> {
+                    setPendingPhoto(uri)
+                    _pendingGifUri.value = uri
+                }
+            }
+        }
+    }
+
+    /** Whether [uri] is an animation that goes on chain as a GIF ([com.kachat.app.util.GifPrep.isAnimated]);
+     *  null when it can't be read. Only a file that starts like a GIF, WebP, PNG or HEIF is read whole. */
+    private suspend fun readAnimatedGif(uri: Uri): Boolean? = withContext(Dispatchers.IO) {
+        try {
+            val resolver = appContext.contentResolver
+            val head = ByteArray(com.kachat.app.util.GifPrep.SNIFF_BYTES)
+            var headLength = 0
+            resolver.openInputStream(uri)?.use { stream ->
+                while (headLength < head.size) {
+                    val read = stream.read(head, headLength, head.size - headLength)
+                    if (read < 0) break
+                    headLength += read
+                }
+            } ?: return@withContext null
+            if (!com.kachat.app.util.GifPrep.mayBeAnimated(head.copyOf(headLength))) return@withContext false
+            val bytes = resolver.openInputStream(uri)?.use { it.readBytes() } ?: return@withContext null
+            com.kachat.app.util.GifPrep.isAnimated(bytes)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** Marks [uri] in [gifUri] once it reads as an animation, while it is still [pending]. */
+    private fun markIfAnimatedGif(uri: Uri?, onChain: Boolean, pending: MutableStateFlow<Uri?>, gifUri: MutableStateFlow<Uri?>) {
+        gifUri.value = null
+        if (uri == null || !onChain) return
+        viewModelScope.launch {
+            if (readAnimatedGif(uri) == true && pending.value == uri) gifUri.value = uri
+        }
     }
 
     /** A video picked "via Nextcloud" waits in the composer like a photo and starts uploading
@@ -1052,12 +1111,14 @@ class ChatViewModel @Inject constructor(
     fun setPendingNextcloudVideo(contactId: String, uri: Uri) {
         nextcloudStager.cancel()
         _nextcloudPhotoRequested.value = true
+        _pendingGifUri.value = null
         _pendingPhotoUri.value = uri
         nextcloudStager.start(uri, isVideo = true) { reportSendFailure(contactId, it) }
     }
 
     fun cancelPendingPhoto() {
         nextcloudStager.discard()
+        _pendingGifUri.value = null
         photoTierPrep.clear()
     }
 
@@ -1070,6 +1131,12 @@ class ChatViewModel @Inject constructor(
     private val _groupPendingPhotoUri = MutableStateFlow<Uri?>(null)
     val groupPendingPhotoUri: StateFlow<Uri?> = _groupPendingPhotoUri.asStateFlow()
 
+    /** The group's [pendingPhotoIsGif]. */
+    private val _groupPendingGifUri = MutableStateFlow<Uri?>(null)
+    val groupPendingPhotoIsGif: StateFlow<Boolean> = combine(_groupPendingPhotoUri, _groupPendingGifUri) { photo, gif -> photo != null && photo == gif }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    private val isGroupPendingPhotoGif: Boolean get() = _groupPendingPhotoUri.value.let { it != null && it == _groupPendingGifUri.value }
+
     private val groupNextcloudStager = NextcloudStager(_groupPendingPhotoUri, _groupNextcloudPhotoRequested)
     /** The group composer's staged Nextcloud upload, if any. */
     val groupNextcloudStaged: StateFlow<NextcloudStagedMedia?> = groupNextcloudStager.staged.asStateFlow()
@@ -1079,6 +1146,21 @@ class ChatViewModel @Inject constructor(
         _groupNextcloudPhotoRequested.value = viaNextcloud && uri != null
         _groupPendingPhotoUri.value = uri
         if (uri != null && groupPhotoViaNextcloud) groupNextcloudStager.start(uri, isVideo = false) {}
+        markIfAnimatedGif(uri, onChain = !groupPhotoViaNextcloud, _groupPendingPhotoUri, _groupPendingGifUri)
+    }
+
+    /** The group "+" sheet's GIF, as [setPendingGif]; [onError] shows why a pick was turned away. */
+    fun setGroupPendingGif(uri: Uri, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            when (readAnimatedGif(uri)) {
+                null -> onError("Couldn't load that photo. Please try another.")
+                false -> onError(appContext.getString(com.kachat.app.R.string.that_isnt_an_animated_gif))
+                true -> {
+                    setGroupPendingPhoto(uri)
+                    _groupPendingGifUri.value = uri
+                }
+            }
+        }
     }
 
     /** The group composer's [setPendingNextcloudVideo]; [onError] shows a failed upload above the
@@ -1086,12 +1168,14 @@ class ChatViewModel @Inject constructor(
     fun setGroupPendingNextcloudVideo(uri: Uri, onError: (String) -> Unit) {
         groupNextcloudStager.cancel()
         _groupNextcloudPhotoRequested.value = true
+        _groupPendingGifUri.value = null
         _groupPendingPhotoUri.value = uri
         groupNextcloudStager.start(uri, isVideo = true, onError)
     }
 
     fun cancelGroupPendingPhoto() {
         groupNextcloudStager.discard()
+        _groupPendingGifUri.value = null
         groupPhotoTierPrep.clear()
     }
 
@@ -3272,11 +3356,11 @@ class ChatViewModel @Inject constructor(
 
     /** Starts compressing the 1:1 pending photo for every tier as the quality sheet opens. */
     fun preparePhotoTiers() {
-        _pendingPhotoUri.value?.let { photoTierPrep.prepare(it) }
+        _pendingPhotoUri.value?.let { photoTierPrep.prepare(it, gif = isPendingPhotoGif) }
     }
 
     fun prepareGroupPhotoTiers() {
-        _groupPendingPhotoUri.value?.let { groupPhotoTierPrep.prepare(it) }
+        _groupPendingPhotoUri.value?.let { groupPhotoTierPrep.prepare(it, gif = isGroupPendingPhotoGif) }
     }
 
     /** Mirrors [sendPendingPhoto] for the group's own staged photo, at the group tier budgets
@@ -3285,12 +3369,45 @@ class ChatViewModel @Inject constructor(
      *  Same Nextcloud route as 1:1's [sendPendingPhoto]: a photo or video staged "via Nextcloud"
      *  has been uploading since it was staged, and the group message is its share link once that
      *  is back; a photo whose upload failed goes on chain at [tier]. */
-    fun sendPendingGroupPhoto(groupId: String, tier: com.kachat.app.util.PhotoTier = com.kachat.app.util.PhotoTier.LOW) {
+    fun sendPendingGroupPhoto(
+        groupId: String,
+        tier: com.kachat.app.util.PhotoTier = com.kachat.app.util.PhotoTier.LOW,
+        onError: (String) -> Unit = { com.kachat.app.ui.screens.IosToasts.error(it) },
+    ) {
         val uri = _groupPendingPhotoUri.value ?: return
         val staged = groupNextcloudStager.staged.value
         // The send button spins until the share link is back.
         if (staged?.isUploading == true) return
         val shareUrl = (staged?.phase as? NextcloudStagedMedia.Phase.Ready)?.url
+        // An animated GIF on chain (iOS d7c56280): fitted to the tier first, and kept in the
+        // composer when no size of it fits ("This GIF is too long for that quality...").
+        if (shareUrl == null && isGroupPendingPhotoGif) {
+            viewModelScope.launch {
+                val bytes = try {
+                    groupPhotoTierPrep.dataFor(uri, tier, gif = true)
+                } catch (e: com.kachat.app.util.GifPrep.TooLongException) {
+                    onError(appContext.getString(com.kachat.app.R.string.gif_too_long_for_that_quality))
+                    return@launch
+                } catch (e: Exception) {
+                    Log.e("ChatViewModel", "Error preparing a group GIF", e)
+                    onError("Couldn't load that photo. Please try another.")
+                    return@launch
+                }
+                if (_groupPendingPhotoUri.value != uri) return@launch
+                groupNextcloudStager.cancel()
+                _groupPendingPhotoUri.value = null
+                _groupPendingGifUri.value = null
+                _groupNextcloudPhotoRequested.value = false
+                groupPhotoTierPrep.clear()
+                try {
+                    groupRepository.sendGroupImage(bytes, groupId, fileName = com.kachat.app.util.GifPrep.FILE_NAME, mimeType = com.kachat.app.util.GifPrep.MIME_TYPE)
+                } catch (e: Exception) {
+                    Log.e("ChatViewModel", "Error sending a group GIF", e)
+                    onError(UserFacingError.message(e, "Failed to send"))
+                }
+            }
+            return
+        }
         groupNextcloudStager.cancel()
         _groupPendingPhotoUri.value = null
         _groupNextcloudPhotoRequested.value = false
@@ -3311,7 +3428,7 @@ class ChatViewModel @Inject constructor(
                 groupRepository.sendGroupImage(bytes, groupId, fileName = "photo.jpg", mimeType = "image/jpeg")
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Error sending group photo message", e)
-                com.kachat.app.ui.screens.IosToasts.error(UserFacingError.message(e, "Failed to send"))
+                onError(UserFacingError.message(e, "Failed to send"))
             }
         }
     }
@@ -3329,6 +3446,30 @@ class ChatViewModel @Inject constructor(
         // The send button spins until the share link is back.
         if (staged?.isUploading == true) return
         val shareUrl = (staged?.phase as? NextcloudStagedMedia.Phase.Ready)?.url
+        // An animated GIF on chain (iOS d7c56280): fitted to the tier first, and kept in the
+        // composer when no size of it fits ("This GIF is too long for that quality...").
+        if (shareUrl == null && isPendingPhotoGif) {
+            viewModelScope.launch {
+                val bytes = try {
+                    photoTierPrep.dataFor(uri, tier, gif = true)
+                } catch (e: com.kachat.app.util.GifPrep.TooLongException) {
+                    reportSendFailure(contactId, appContext.getString(com.kachat.app.R.string.gif_too_long_for_that_quality))
+                    return@launch
+                } catch (e: Exception) {
+                    Log.e("ChatViewModel", "Error preparing a GIF", e)
+                    reportSendFailure(contactId, "Couldn't load that photo. Please try another.")
+                    return@launch
+                }
+                if (_pendingPhotoUri.value != uri) return@launch
+                nextcloudStager.cancel()
+                _pendingPhotoUri.value = null
+                _pendingGifUri.value = null
+                _nextcloudPhotoRequested.value = false
+                photoTierPrep.clear()
+                sendImageAwait(contactId, bytes, sendFailureAlert(contactId), gif = true)
+            }
+            return
+        }
         nextcloudStager.cancel()
         _pendingPhotoUri.value = null
         _nextcloudPhotoRequested.value = false
@@ -3439,12 +3580,15 @@ class ChatViewModel @Inject constructor(
     }
 
     /** A JPEG on chain (iOS 7c5c22e3 `sendImage`): one ordinary photo message when it fits one
-     *  transaction, else its chunks as one multi-part photo ([sendMediaPartsAwait]). */
-    private suspend fun sendImageAwait(contactId: String, bytes: ByteArray, onError: ((String) -> Unit)?, plain: Boolean = false): Boolean {
+     *  transaction, else its chunks as one multi-part photo ([sendMediaPartsAwait]). A [gif] goes
+     *  the same way as `image/gif`, "animation.gif" (iOS d7c56280, MESSAGING.md "GIFs"). */
+    private suspend fun sendImageAwait(contactId: String, bytes: ByteArray, onError: ((String) -> Unit)?, plain: Boolean = false, gif: Boolean = false): Boolean {
+        val mimeType = if (gif) com.kachat.app.util.GifPrep.MIME_TYPE else "image/jpeg"
         val chunks = com.kachat.app.util.PhotoPolicy.chunks(bytes, forGroup = false)
-        if (chunks.size > 1) return sendMediaPartsAwait(contactId, chunks, "image/jpeg", onError)
+        if (chunks.size > 1) return sendMediaPartsAwait(contactId, chunks, mimeType, onError)
         val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
-        return sendMessageAwait(contactId, ImageMessage.encode(fileName = "photo.jpg", sizeBytes = bytes.size.toLong(), base64Image = base64), onError, plain = plain, mediaSend = true)
+        val fileName = if (gif) com.kachat.app.util.GifPrep.FILE_NAME else "photo.jpg"
+        return sendMessageAwait(contactId, ImageMessage.encode(fileName = fileName, sizeBytes = bytes.size.toLong(), base64Image = base64, mimeType = mimeType), onError, plain = plain, mediaSend = true)
     }
 
     /**
@@ -3476,7 +3620,7 @@ class ChatViewModel @Inject constructor(
         val contents = parts.mapIndexed { offset, data ->
             val tag = com.kachat.app.util.VoicePartTag.of(noteId, offset + 1, parts.size)!!
             com.kachat.app.util.ContextualMediaFrame.mediaFileJson(
-                name = if (isPhoto) tag.photoFileName else tag.fileName,
+                name = if (isPhoto) com.kachat.app.util.MediaPartName.photo(tag.index, tag.count, mimeType) else tag.fileName,
                 size = data.size,
                 mimeType = mimeType,
                 dataUrlContent = "data:$mimeType;base64,${android.util.Base64.encodeToString(data, android.util.Base64.NO_WRAP)}",

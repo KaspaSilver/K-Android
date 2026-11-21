@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.ui.unit.Dp
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PersonAdd
@@ -278,6 +279,8 @@ fun GroupChatThreadScreen(
     val contactAvatarsByAddress by chatViewModel.groupMemberAvatarsByAddress.collectAsState()
     val contactAliasesByAddress by chatViewModel.groupMemberNamesByAddress.collectAsState()
     val pendingPhotoUri by chatViewModel.groupPendingPhotoUri.collectAsState()
+    // An animated GIF going on chain: "GIF Quality", its tiers GIFs, a GIF badge (iOS d7c56280).
+    val pendingPhotoIsGif by chatViewModel.groupPendingPhotoIsGif.collectAsState()
     val nextcloudStaged by chatViewModel.groupNextcloudStaged.collectAsState()
     val voiceRecordingState by chatViewModel.groupVoiceRecordingState.collectAsState()
     val groupVoiceNoteFee by chatViewModel.groupVoiceNoteFeeSompi.collectAsState()
@@ -288,6 +291,7 @@ fun GroupChatThreadScreen(
     if (showPhotoQualitySheet) {
         PhotoQualitySheet(
             fees = groupPhotoTierFees,
+            isGif = pendingPhotoIsGif,
             onChoose = { tier ->
                 showPhotoQualitySheet = false
                 chatViewModel.sendPendingGroupPhoto(groupId, tier)
@@ -471,6 +475,14 @@ fun GroupChatThreadScreen(
     // Photo on chain: images only - no on-chain path fits a video.
     val photoPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) chatViewModel.setGroupPendingPhoto(uri)
+    }
+    // The "+" sheet's GIF: the picker offers animated images (GIF, WebP, PNG, HEIF), and anything
+    // that isn't animated is turned away above the composer (iOS d7c56280). Always on chain, as a
+    // GIF.
+    val gifPickerLauncher = rememberLauncherForActivityResult(remember { com.kachat.app.util.PickAnimatedImage() }) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        errorMessage = null
+        chatViewModel.setGroupPendingGif(uri) { errorMessage = it }
     }
     // "Send Photo or Video via Nextcloud": videos too. A picked video waits in the composer like a
     // photo, uploading meanwhile (iOS a890102, 7abc06e).
@@ -709,6 +721,7 @@ fun GroupChatThreadScreen(
                             }
                             groupPhotoPreviewRow(
                                 pendingPhotoUri = pendingPhotoUri,
+                                isGif = pendingPhotoIsGif,
                                 staged = nextcloudStaged,
                                 onCancel = { chatViewModel.cancelGroupPendingPhoto() },
                                 onSend = {
@@ -960,8 +973,8 @@ fun GroupChatThreadScreen(
                                     TileActionSheet(
                                         title = stringResource(R.string.send),
                                         onDismiss = { showComposerMenu = false },
-                                        // iOS: camera, photo, voice, plus file with Nextcloud.
-                                        height = ActionSheetTileMetrics.sheetHeight(tiles = if (nextcloudAccount != null) 4 else 3),
+                                        // iOS: camera, photo, GIF, voice, plus file with Nextcloud.
+                                        height = ActionSheetTileMetrics.sheetHeight(tiles = if (nextcloudAccount != null) 5 else 4),
                                     ) {
                                             // Camera, Photo and Voice Message each ask on chain or via
                                             // Nextcloud when a server is connected (that choice
@@ -977,6 +990,16 @@ fun GroupChatThreadScreen(
                                                 title = stringResource(R.string.photo),
                                                 subtitle = stringResource(R.string.group_composer_photo_subtitle),
                                             ) { chooseMedia(ComposerMediaKind.PHOTO) }
+                                            // Always on chain: a GIF from your library, made to fit
+                                            // the quality you pick (iOS d7c56280).
+                                            ActionSheetRow(
+                                                icon = Icons.Default.VideoLibrary,
+                                                title = stringResource(R.string.gif),
+                                                subtitle = stringResource(R.string.group_composer_gif_subtitle),
+                                            ) {
+                                                showComposerMenu = false
+                                                gifPickerLauncher.launch(com.kachat.app.util.PickAnimatedImage.request())
+                                            }
                                             ActionSheetRow(
                                                 icon = Icons.Default.Mic,
                                                 title = stringResource(R.string.composer_voice_message),
@@ -1410,6 +1433,7 @@ private fun groupFeePill(feeSompi: Long?, modifier: Modifier = Modifier, estimat
 @Composable
 private fun groupPhotoPreviewRow(
     pendingPhotoUri: android.net.Uri?,
+    isGif: Boolean,
     staged: ChatViewModel.NextcloudStagedMedia?,
     onCancel: () -> Unit,
     onSend: () -> Unit,
@@ -1427,7 +1451,7 @@ private fun groupPhotoPreviewRow(
         IconButton(onClick = onCancel) {
             Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cancel_photo), tint = LocalAppColors.current.danger)
         }
-        PendingMediaThumbnail(pendingPhotoUri, isVideo = staged?.isVideo == true)
+        PendingMediaThumbnail(pendingPhotoUri, isVideo = staged?.isVideo == true, isGif = isGif)
         PendingMediaLabel(staged)
         PendingMediaSendButton(staged, size = 32.dp, onSend = onSend)
     }

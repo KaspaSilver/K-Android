@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's chess sentences, looked up by their English text (util/KaPlayText.kt: `kp_` and 12
+     hex of the SHA-1 of the English). Translations from KaPlay Android's strings_app_text.xml and,
+     for the sentences new in KaChat, iOS 148a5331's Localizable.strings. Generated. -->
+<resources>
+    <string name="kp_7e46be469deb" formatted="false">1v1 বোর্ডে #%d</string>
+    <string name="kp_cba1ee4eec72" formatted="false">টুর্নামেন্ট বোর্ডে #%d</string>
+    <string name="kp_3401831926d1" formatted="false">%d ড্র</string>
+    <string name="kp_f769c12fc2ee" formatted="false">%d হার</string>
+    <string name="kp_d9e1beae2f39" formatted="false">%d জয়</string>
+    <string name="kp_55fc776de141" formatted="false">%d জয়  %d হার</string>
+    <string name="kp_d8aa573c0e61" formatted="false">%d চাল</string>
+    <string name="kp_fbeb1207b441" formatted="false">%d/%d জন খেলোয়াড়</string>
+    <string name="kp_b70e7251ba0d" formatted="false">%d/%d জন খেলোয়াড় অপেক্ষায়</string>
+    <string name="kp_6dac15cf1ed7" formatted="false">%d/%d জন খেলোয়াড় · কোড %s</string>
+    <string name="kp_ba09ba042e31" formatted="false">আর %dটি সিট বাকি</string>
+    <string name="kp_d4cd664ac02d" formatted="false">%s %s-কে %d চালে হারিয়েছে। আপনি কি এর চেয়ে কম চালে পারবেন?</string>
+    <string name="kp_35f8f501300f" formatted="false">%s আপনাকে %s-কে হারানোর চ্যালেঞ্জ দিয়েছে।</string>
+    <string name="kp_8a3914693bee" formatted="false">%s পরের রাউন্ডে যাবে এবং আপনি টুর্নামেন্ট থেকে বাদ পড়বেন। লিডারবোর্ডে এটি হার হিসেবে গণ্য হবে। হার মানা একটি লেনদেন।</string>
+    <string name="kp_297da93b20fb" formatted="false">%s এখনো লক করা: সেখানে পৌঁছাতে সিঁড়ি বেয়ে উঠুন।</string>
+    <string name="kp_c7642c6d04be" formatted="false">%s ভাবছে…</string>
+    <string name="kp_00161fefc871" formatted="false">%s আনলক হয়েছে!</string>
+    <string name="kp_7ab092285767" formatted="false">%s প্রথম চাল দেবে।</string>
+    <string name="kp_207e56e21618" formatted="false">%s-এর চাল</string>
+    <string name="kp_4e56d26a3870" formatted="false">%s বনাম %s</string>
+    <string name="kp_fbb8239c09ba" formatted="false">%s জিতবে, এবং লিডারবোর্ডে এটি হার হিসেবে গণ্য হবে। হার মানা একটি লেনদেন।</string>
+    <string name="kp_a074e492574e" formatted="false">%s জিতেছে</string>
+    <string name="kp_03a71913fd6b" formatted="false">%s কিস্তিমাত করে জিতেছে</string>
+    <string name="kp_e2bdeaa4f9e5" formatted="false">%s কিস্তিমাত করে জিতেছে।</string>
+    <string name="kp_e510ea9dedf3" formatted="false">প্রতিপক্ষ হার মানায় %s জিতেছে</string>
+    <string name="kp_33cd4606c8c7" formatted="false">প্রতিপক্ষ হার মানায় %s জিতেছে।</string>
+    <string name="kp_405c5afa1901" formatted="false">ড্রয়ের পর ঘড়ির হিসাবে %s জিতেছে</string>
+    <string name="kp_4e683890d75e" formatted="false">অপর্যাপ্ত ঘুঁটিতে ড্রয়ের পর ঘড়ির হিসাবে %s জিতেছে</string>
+    <string name="kp_f2d9cffd2918" formatted="false">স্টেলমেটে ড্রয়ের পর ঘড়ির হিসাবে %s জিতেছে</string>
+    <string name="kp_3dae94d319ae" formatted="false">পঞ্চাশ চালের নিয়মে ড্রয়ের পর ঘড়ির হিসাবে %s জিতেছে</string>
+    <string name="kp_26b3a1b77b3b" formatted="false">তিনবার পুনরাবৃত্তিতে ড্রয়ের পর ঘড়ির হিসাবে %s জিতেছে</string>
+    <string name="kp_49680f535fab" formatted="false">সময় শেষ হওয়ায় %s জিতেছে</string>
+    <string name="kp_e27359cb1d1d" formatted="false">সময় শেষ হওয়ায় %s জিতেছে।</string>
+    <string name="kp_7fb322c0aa2a" formatted="false">%s টুর্নামেন্ট জিতেছে</string>
+    <string name="kp_683e17380d8a" formatted="false">1/%d জন খেলোয়াড়</string>
+    <string name="kp_a3a1e853bd57" formatted="false">1/%d জন খেলোয়াড় অপেক্ষায়</string>
+    <string name="kp_dcd9d9468141" formatted="false">1/%d জন খেলোয়াড় · কোড %s</string>
+    <string name="kp_f6dec9c77f35" formatted="false">আর 1টি সিট বাকি</string>
+    <string name="kp_d6db37efe259" formatted="false">1v1</string>
+    <string name="kp_1644dc818c09" formatted="false">1v1 গেম</string>
+    <string name="kp_7c71818a1ae0" formatted="false">1v1 লিডারবোর্ড</string>
+    <string name="kp_d8706f214713" formatted="false">1v1, টুর্নামেন্ট আর পাঁচটি বট। অনলাইন চাল আর বটের ফলাফল Kaspa-তে রেকর্ড হয়।</string>
+    <string name="kp_ba9cce8319d7" formatted="false">প্রাইভেট টুর্নামেন্ট বন্ধুদের জন্য: নির্মাতা এর আট অক্ষরের কোড শেয়ার করেন। তৈরি করতে ক্রিয়েটর কোড লাগে।</string>
+    <string name="kp_a733b809d2f1" formatted="false">সক্রিয়</string>
+    <string name="kp_d70f93df5e8f" formatted="false">ঠিকানা</string>
+    <string name="kp_4d064726954a" formatted="false">উন্নত</string>
+    <string name="kp_dbad49d89123" formatted="false">সর্বকালের</string>
+    <string name="kp_b52b36b7269f" formatted="false">ফিরে যান</string>
+    <string name="kp_c3065156b217" formatted="false">আনলক করতে %s-কে হারান</string>
+    <string name="kp_60575a6ebba9" formatted="false">শিক্ষানবিশ</string>
+    <string name="kp_489d32ce7dd9" formatted="false">সেরা: %d চাল</string>
+    <string name="kp_b406fb57b29f" formatted="false">কালো</string>
+    <string name="kp_b5807c6df986" formatted="false">কালোর চাল</string>
+    <string name="kp_4ca88ea465a9" formatted="false">বট</string>
+    <string name="kp_e42a1e70b400" formatted="false">ব্র্যাকেট</string>
+    <string name="kp_75e08341b41d" formatted="false">ব্র্যাকেট · দেখতে কোনো গেমে ট্যাপ করুন</string>
+    <string name="kp_cf76a9fe16a7" formatted="false">হার মানায়</string>
+    <string name="kp_2b246e0ff5ca" formatted="false">সাবধানে হিসাব করে আর ভুলের শাস্তি দেয়। পরিকল্পনা নিয়ে আসুন।</string>
+    <string name="kp_77dfd2135f4d" formatted="false">বাতিল করুন</string>
+    <string name="kp_5a2fc967d105" formatted="false">এই টুর্নামেন্ট বাতিল করবেন?</string>
+    <string name="kp_1fe710030fe9" formatted="false">টুর্নামেন্ট বাতিল করুন</string>
+    <string name="kp_5dc29b482d76" formatted="false">নির্মাতা বাতিল করেছেন।</string>
+    <string name="kp_7881bf71d2de" formatted="false">চ্যাম্পিয়ন</string>
+    <string name="kp_f3dffbf21ed5" formatted="false">কিস্তি। আপনার চাল।</string>
+    <string name="kp_933b750898fd" formatted="false">কিস্তিমাত</string>
+    <string name="kp_3226c18271e7" formatted="false">কিস্তিমাত। %s জিতেছে।</string>
+    <string name="kp_f95715a82ba2" formatted="false">দাবা</string>
+    <string name="kp_645b1b39f542" formatted="false">দাবা সার্ভারে পৌঁছানো যাচ্ছে না, যা আছে তা-ই দেখানো হচ্ছে। আপনার গেমগুলো নেটওয়ার্ক থেকে চলতে থাকবে। সার্ভার ফিরলে পাবলিক রুমে আবার যোগ দেওয়া যাবে।</string>
+    <string name="kp_b03bf0e29f1c" formatted="false">দাবা সার্ভারে পৌঁছানো যাচ্ছে না। চালগুলো নেটওয়ার্ক থেকে আসছে, তাই বোর্ড একটু পিছিয়ে থাকতে পারে।</string>
+    <string name="kp_ee9c98ac836b" formatted="false">দাবা সার্ভারে পৌঁছানো যাচ্ছে না। এই ফোনে যা আছে তা-ই দেখানো হচ্ছে, যা পুরো বোর্ডের চেয়ে কম হতে পারে।</string>
+    <string name="kp_cf9797eede60" formatted="false">দাবা সার্ভারে পৌঁছানো যাচ্ছে না। এই ফোনে যা আছে তা-ই দেখানো হচ্ছে।</string>
+    <string name="kp_9cba814a7f57" formatted="false">দাবা সার্ভারে পৌঁছানো যাচ্ছে না। খেলোয়াড়দের জন্য নেটওয়ার্কে নজর রাখা হচ্ছে, তাই অ্যাপ বন্ধ থাকার সময় কেউ যোগ দিলে হয়তো দেখা যাবে না।</string>
+    <string name="kp_2b26c543ead5" formatted="false">আপনার খেলা বেছে নিন</string>
+    <string name="kp_c47532edb2d7" formatted="false">জয় দাবি করুন</string>
+    <string name="kp_25b55e8298c7" formatted="false">দাবি করা হচ্ছে…</string>
+    <string name="kp_a546440f3f66" formatted="false">সিঁড়ি বেয়ে উঠুন</string>
+    <string name="kp_adac69379a62" formatted="false">কোড</string>
+    <string name="kp_d29d9fee5279" formatted="false">কোড: %s</string>
+    <string name="kp_8e3df45a49db" formatted="false">কপি হয়েছে</string>
+    <string name="kp_af74f7c5362a" formatted="false">কপি করুন</string>
+    <string name="kp_6d8d79e75952" formatted="false">Kaspa-তে ফলাফল রেকর্ড করা যায়নি</string>
+    <string name="kp_6e157c5da441" formatted="false">তৈরি করুন</string>
+    <string name="kp_1bf04f16edb7" formatted="false">প্রাইভেট 1v1 তৈরি করুন</string>
+    <string name="kp_7e92ffa83dfa" formatted="false">প্রাইভেট টুর্নামেন্ট তৈরি করুন</string>
+    <string name="kp_94d7d8ee473f" formatted="false">তৈরি হচ্ছে…</string>
+    <string name="kp_2775f5da8563" formatted="false">ক্রিয়েটর কোড</string>
+    <string name="kp_34660a5de9ae" formatted="false">পরাজয়</string>
+    <string name="kp_e9b450d14bc2" formatted="false">সম্পন্ন</string>
+    <string name="kp_bfa50c7a3838" formatted="false">ড্র</string>
+    <string name="kp_9af70e71546d" formatted="false">ড্র - ঘড়ির হিসাবে জয়</string>
+    <string name="kp_3ef901b7405f" formatted="false">অপর্যাপ্ত ঘুঁটিতে ড্র - ঘড়ির হিসাবে জয়</string>
+    <string name="kp_1f217e401459" formatted="false">অপর্যাপ্ত ঘুঁটির কারণে ড্র।</string>
+    <string name="kp_65647004462e" formatted="false">অপর্যাপ্ত ঘুঁটিতে ড্র। ঘড়ির হিসাবে %s জিতেছে।</string>
+    <string name="kp_8abd5d59fe79" formatted="false">স্টেলমেটে ড্র - ঘড়ির হিসাবে জয়</string>
+    <string name="kp_e7c73294f742" formatted="false">স্টেলমেটে ড্র।</string>
+    <string name="kp_0ee00fa48fcb" formatted="false">স্টেলমেটে ড্র। ঘড়ির হিসাবে %s জিতেছে।</string>
+    <string name="kp_c1f887545180" formatted="false">পঞ্চাশ চালের নিয়মে ড্র - ঘড়ির হিসাবে জয়</string>
+    <string name="kp_e0fa7fdfda5b" formatted="false">পঞ্চাশ চালের নিয়মে ড্র।</string>
+    <string name="kp_e18608aaaa1f" formatted="false">পঞ্চাশ চালের নিয়মে ড্র। ঘড়ির হিসাবে %s জিতেছে।</string>
+    <string name="kp_ca658ca2e441" formatted="false">তিনবার পুনরাবৃত্তিতে ড্র - ঘড়ির হিসাবে জয়</string>
+    <string name="kp_1bd0b8c9f833" formatted="false">তিনবার পুনরাবৃত্তিতে ড্র।</string>
+    <string name="kp_c328be341b0c" formatted="false">তিনবার পুনরাবৃত্তিতে ড্র। ঘড়ির হিসাবে %s জিতেছে।</string>
+    <string name="kp_fdd69537f848" formatted="false">ড্র।</string>
+    <string name="kp_cbefc612d55f" formatted="false">ড্র। ঘড়ির হিসাবে %s জিতেছে।</string>
+    <string name="kp_1861bf6c95a3" formatted="false">আটজন খেলোয়াড়, নকআউট: কোয়ার্টার ফাইনাল, সেমিফাইনাল, ফাইনাল। পাবলিক রুম খেলোয়াড় আসার সঙ্গে সঙ্গে ভরে; প্রাইভেটগুলো কোড দিয়ে।</string>
+    <string name="kp_d488ebb4b1db" formatted="false">যাঁরা যোগ দিয়েছেন সবাই মুক্ত হয়ে যাবেন। এটি একটি লেনদেন।</string>
+    <string name="kp_4788947ec3fe" formatted="false">%s-কে হারাতে সবচেয়ে কম চাল</string>
+    <string name="kp_672b22cc516e" formatted="false">ফাইনাল</string>
+    <string name="kp_355bcc577d71" formatted="false">শেষ হয়েছে</string>
+    <string name="kp_a8d435fecb0c" formatted="false">শেষ হওয়া 1v1 গেম</string>
+    <string name="kp_781b28d8c53d" formatted="false">শেষ হওয়া টুর্নামেন্ট</string>
+    <string name="kp_08ab1ad685e3" formatted="false">পাঁচটি বট, লেভেল 1 থেকে 5, Kaspa Silver থেকে Yonatan Sompolinsky পর্যন্ত। পরেরটি আনলক করতে একটিকে হারান। ফলাফল Kaspa-তে রেকর্ড হয়।</string>
+    <string name="kp_03e3c2d3a084" formatted="false">পাঁচটি বট, লেভেল 1 থেকে 5। পরেরটি আনলক করতে একটিকে হারান। প্রতিটি গেমের ফলাফল শেষ হলে Kaspa-তে রেকর্ড হয়।</string>
+    <string name="kp_e3e82846c325" formatted="false">গেম</string>
+    <string name="kp_94114a40a64a" formatted="false">জেতা ও হারা গেম - 1v1 ও টুর্নামেন্টের গেম দুটোই</string>
+    <string name="kp_7b1a1bfec003" formatted="false">আপনার গেমে যান</string>
+    <string name="kp_78722784381b" formatted="false">শুধু মজার জন্য খেলে। দ্রুত চাল দেয়, মাঝে মাঝে ঘুঁটি অরক্ষিত রেখে দেয়।</string>
+    <string name="kp_7f2a3bb304a4" formatted="false">বেরিয়ে গেলে আপনি গেমে হার মেনে নেবেন। %s পরের রাউন্ডে যাবে এবং আপনি টুর্নামেন্ট থেকে বাদ পড়বেন। লিডারবোর্ডে এটি হার হিসেবে গণ্য হবে। হার মানা একটি লেনদেন।</string>
+    <string name="kp_e998db197859" formatted="false">বেরিয়ে গেলে আপনি গেমে হার মেনে নেবেন। %s জিতবে, এবং লিডারবোর্ডে এটি হার হিসেবে গণ্য হবে। হার মানা একটি লেনদেন।</string>
+    <string name="kp_a4362588018d" formatted="false">বেরিয়ে গেলে আপনি গেমে হার মেনে নেবেন। এটি %s-এর বিরুদ্ধে হার হিসেবে গণ্য হবে, এবং ফলাফল একটি লেনদেনে Kaspa-তে রেকর্ড হবে।</string>
+    <string name="kp_03a2b6501787" formatted="false">খেলা চলছে</string>
+    <string name="kp_e24d4d212b7b" formatted="false">খেলা চলছে। লাইভ দেখতে যেকোনো গেমে ট্যাপ করুন।</string>
+    <string name="kp_b1cfe72fd271" formatted="false">মাঝারি</string>
+    <string name="kp_f63265478d76" formatted="false">এটি %s-এর বিরুদ্ধে হার হিসেবে গণ্য হবে, এবং ফলাফল একটি লেনদেনে Kaspa-তে রেকর্ড হবে।</string>
+    <string name="kp_e0d73143de80" formatted="false">যোগ দিন</string>
+    <string name="kp_c8155c3c34dc" formatted="false">যোগ দিন (ফি: %s)</string>
+    <string name="kp_df7b41919cb2" formatted="false">যোগ দিন, পরের যিনি যোগ দেবেন তাঁর সঙ্গে আপনার জুটি হবে। রুম ভরলে গেম শুরু হয় এবং পরের রুম খোলে। প্রত্যেকের পাঁচ মিনিট; প্রতিটি চাল একটি Kaspa লেনদেন (প্রতিটি প্রায় 0.0017 KAS)। এখানকার গেম লিডারবোর্ডে গণ্য হয়।</string>
+    <string name="kp_dacbf38d4e73" formatted="false">কোড দিয়ে যোগ দিন</string>
+    <string name="kp_f44c1e425996" formatted="false">যোগ দেওয়া হচ্ছে…</string>
+    <string name="kp_d9f369249799" formatted="false">ধরে রাখুন</string>
+    <string name="kp_bb76090ac54c" formatted="false">খেলা চালিয়ে যান</string>
+    <string name="kp_9be1abba9272" formatted="false">অপেক্ষা চালিয়ে যান</string>
+    <string name="kp_32bf913a5258" formatted="false">প্রতিটি ঘুঁটির চাল জানে আর বিনা মূল্যে ঘুঁটি নিতে ভালোবাসে। আপনার অরক্ষিত বোড়েগুলোর দিকে খেয়াল রাখুন।</string>
+    <string name="kp_35b13a38f422" formatted="false">লাইভ %s</string>
+    <string name="kp_0381247a6987" formatted="false">লিডারবোর্ড</string>
+    <string name="kp_7e3520a97331" formatted="false">ত্যাগ করুন</string>
+    <string name="kp_963593386268" formatted="false">তবুও বেরিয়ে যান</string>
+    <string name="kp_4bc79453df63" formatted="false">গেম ছেড়ে যাবেন?</string>
+    <string name="kp_baf82f7117b6" formatted="false">সারি ছেড়ে যাবেন?</string>
+    <string name="kp_b7aa749e18cb" formatted="false">ছেড়ে গেলে আপনি আর অন্য খেলোয়াড় খুঁজবেন না। ছেড়ে যাওয়া একটি লেনদেন; যেকোনো সময় আবার যোগ দিতে পারবেন।</string>
+    <string name="kp_3016bac3196c" formatted="false">বেরোনো হচ্ছে…</string>
+    <string name="kp_ec7cc1838f39" formatted="false">লেভেল %d</string>
+    <string name="kp_7780eacc49b8" formatted="false">5-এর মধ্যে লেভেল %d</string>
+    <string name="kp_0e50ccfcd686" formatted="false">লেভেল %d · %s</string>
+    <string name="kp_9f8465fad533" formatted="false">লেভেল %d · %s · আপনি কালো নিয়ে খেলছেন</string>
+    <string name="kp_fc9307e48365" formatted="false">লেভেল %d · %s · আপনি সাদা নিয়ে খেলছেন</string>
+    <string name="kp_6235bfaf9ecc" formatted="false">এখন লাইভ</string>
+    <string name="kp_39687e0a700d" formatted="false">রুম লোড হচ্ছে…</string>
+    <string name="kp_5daad3f809a8" formatted="false">অ্যারেনা থেকে টুর্নামেন্ট লোড হচ্ছে…</string>
+    <string name="kp_4d5e7c6d35ee" formatted="false">প্রতিপক্ষ খোঁজা হচ্ছে</string>
+    <string name="kp_98ea2c12eb7c" formatted="false">চাল দেওয়ার আগে কয়েক চাল এগিয়ে দেখে। স্থির, আর একে ফাঁদে ফেলা কঠিন।</string>
+    <string name="kp_0f9a484f1388" formatted="false">হার</string>
+    <string name="kp_78f3842f0201" formatted="false">মাস্টার</string>
+    <string name="kp_092664087974" formatted="false">প্রতিপক্ষ পাওয়া গেছে!</string>
+    <string name="kp_a7814b5ec744" formatted="false">চাল %d · কালোর চাল</string>
+    <string name="kp_9fe5cb670a4c" formatted="false">চাল %d · সাদার চাল</string>
+    <string name="kp_77fbed46e1be" formatted="false">পরবর্তী: %s-এর বিরুদ্ধে রাউন্ড 1</string>
+    <string name="kp_a2dad9a4e89c" formatted="false">পরবর্তী: %s-এর বিরুদ্ধে ফাইনাল</string>
+    <string name="kp_eceff125fbb4" formatted="false">পরবর্তী: %s-এর বিরুদ্ধে গেম</string>
+    <string name="kp_1337e1141b11" formatted="false">পরবর্তী: %s-এর বিরুদ্ধে সেমিফাইনাল</string>
+    <string name="kp_8506e1612593" formatted="false">এখন কোনো 1v1 গেম চলছে না। কোনোটি শুরু হলে দেখার জন্য এখানে দেখা যাবে।</string>
+    <string name="kp_3988da2d38ef" formatted="false">এখনো কোনো বটের সঙ্গে খেলা হয়নি।</string>
+    <string name="kp_77ebbb8e3de5" formatted="false">এখনো কোনো 1v1 খেলা শেষ হয়নি।</string>
+    <string name="kp_1597bcaeaaa1" formatted="false">এখনো কোনো টুর্নামেন্ট শেষ হয়নি।</string>
+    <string name="kp_682c0ad47cbe" formatted="false">সময়মতো কেউ যোগ দেয়নি। আপনি সারি থেকে বেরিয়ে গেছেন - যখন খুশি আবার যোগ দিন।</string>
+    <string name="kp_50385293d3d0" formatted="false">ওই কোডের কোনো খোলা টুর্নামেন্ট নেই। কোড আট অক্ষরের হয়; টুর্নামেন্টটি থাকতে হবে এবং তাতে সিট খালি থাকতে হবে।</string>
+    <string name="kp_581a01e739ba" formatted="false">এখন কোনো টুর্নামেন্ট চলছে না। কোনোটি শুরু হলে এর গেমগুলো দেখার জন্য এখানে দেখা যাবে।</string>
+    <string name="kp_2ee8ce15a9f7" formatted="false">এই মাসে এখনো কেউ %s-কে হারাতে পারেনি।</string>
+    <string name="kp_54460cd574b9" formatted="false">এখনো কেউ %s-কে হারাতে পারেনি।</string>
+    <string name="kp_4472179cd296" formatted="false">এখনো অপরাজিত</string>
+    <string name="kp_b9e09ae263fb" formatted="false">নিশ্চিত হয়নি</string>
+    <string name="kp_214bf807441e" formatted="false">আপনার চ্যাট ঠিকানায় যথেষ্ট KAS নেই। কিছু যোগ করে আবার চেষ্টা করুন।</string>
+    <string name="kp_16ca44702a9b" formatted="false">নবীন</string>
+    <string name="kp_fb58f3c56a8d" formatted="false">সময় শেষে</string>
+    <string name="kp_1cf2fc54ad9f" formatted="false">অনলাইন, প্রত্যেকের পাঁচ মিনিট আর প্রতিটি চাল একটি Kaspa লেনদেন। বটের গেম শেষ হলে ফলাফল Kaspa-তে রেকর্ড হয়।</string>
+    <string name="kp_6dca824588f3" formatted="false">খালি সিট</string>
+    <string name="kp_b84d3a372a18" formatted="false">%s-এর সঙ্গে খেলুন</string>
+    <string name="kp_0faa2e4de8b8" formatted="false">বন্ধুর সঙ্গে খেলুন: একটি 1v1 তৈরি করে এর কোড শেয়ার করুন। প্রাইভেট 1v1-ও লিডারবোর্ডে গণ্য হয়।</string>
+    <string name="kp_576766d387ec" formatted="false">আবার খেলুন</string>
+    <string name="kp_61441ace460e" formatted="false">কোন রঙে খেলবেন</string>
+    <string name="kp_8ba176164906" formatted="false">পরের যিনি যোগ দেবেন তাঁর সঙ্গে খেলুন, অথবা কোড দিয়ে বন্ধুর সঙ্গে। একটি গেম, বিজয়ী পাবে লিডারবোর্ডের পয়েন্ট।</string>
+    <string name="kp_e53407cfe1a5" formatted="false">খেলোয়াড়</string>
+    <string name="kp_9f33b8c73405" formatted="false">খেলোয়াড় (%d/%d)</string>
+    <string name="kp_237dfa0a21c8" formatted="false">প্রাইভেট</string>
+    <string name="kp_f61dccc2dba9" formatted="false">প্রাইভেট 1v1</string>
+    <string name="kp_ea951f3a34eb" formatted="false">প্রাইভেট টুর্নামেন্ট</string>
+    <string name="kp_79b0f9805c68" formatted="false">বোড়েকে বদলান</string>
+    <string name="kp_dc5eb704bbca" formatted="false">পাবলিক</string>
+    <string name="kp_37ea9a7673b4" formatted="false">পাবলিক 1v1</string>
+    <string name="kp_8b2cb0910a17" formatted="false">পাবলিক 1v1 #%d</string>
+    <string name="kp_236760772b5c" formatted="false">পাবলিক টুর্নামেন্ট</string>
+    <string name="kp_b4d6cee9742f" formatted="false">পাবলিক টুর্নামেন্ট #%d</string>
+    <string name="kp_58d888c08aa5" formatted="false">এলোমেলো</string>
+    <string name="kp_73ba76c46a4c" formatted="false">জিততে সবচেয়ে কম চালের ভিত্তিতে র‍্যাঙ্ক।</string>
+    <string name="kp_a3d558838b81" formatted="false">পরাজয় স্বীকার করুন</string>
+    <string name="kp_868d45f552a8" formatted="false">হার মেনে বেরিয়ে যান</string>
+    <string name="kp_a12f7f95331e" formatted="false">এই গেমে হার মানবেন?</string>
+    <string name="kp_65d7b143ae0f" formatted="false">ফলাফল Kaspa-তে রেকর্ড হয়েছে</string>
+    <string name="kp_9f5cd8a2e880" formatted="false">আবার চেষ্টা করুন</string>
+    <string name="kp_923287d2eeda" formatted="false">আবার রেকর্ড করুন</string>
+    <string name="kp_f7648d383499" formatted="false">রাউন্ড 1</string>
+    <string name="kp_d7418ba2e352" formatted="false">এখন সিট যাচাই করা যাচ্ছে না</string>
+    <string name="kp_33295d1667f4" formatted="false">বোর্ড দেখুন</string>
+    <string name="kp_af1cfadd9704" formatted="false">সিড %d</string>
+    <string name="kp_7d79eec3965c" formatted="false">সেমিফাইনাল</string>
+    <string name="kp_3abe921a63aa" formatted="false">সেমিফাইনাল</string>
+    <string name="kp_6f32706309e0" formatted="false">আপনার চাল পাঠানো হচ্ছে…</string>
+    <string name="kp_9cb2e112972e" formatted="false">পাঠানো হয়েছে, কিন্তু Kaspa এখনো নিশ্চিত করেনি।</string>
+    <string name="kp_09ca55ca52d2" formatted="false">শেয়ার করুন</string>
+    <string name="kp_d042790fe991" formatted="false">এই কোড শেয়ার করুন</string>
+    <string name="kp_1f3254d6ce59" formatted="false">KaPost-এ শেয়ার করুন</string>
+    <string name="kp_4401b9c3edce" formatted="false">কেউ একজন %s-কে %d চালে হারিয়েছে। আপনি কি এর চেয়ে কম চালে পারবেন?</string>
+    <string name="kp_c923aafae8bc" formatted="false">কেউ একজন আপনাকে %s-কে হারানোর চ্যালেঞ্জ দিয়েছে।</string>
+    <string name="kp_9a3ea0598e7f" formatted="false">কিছু একটা ভুল হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।</string>
+    <string name="kp_8aa38f374323" formatted="false">Kaspa-তে ফলাফল রেকর্ড হচ্ছে…</string>
+    <string name="kp_6959b5355760" formatted="false">ফলাফল রেকর্ড হচ্ছে…</string>
+    <string name="kp_ae768f766f75" formatted="false">থাকুন</string>
+    <string name="kp_f300737844cc" formatted="false">রুমগুলো এখনো লোড হচ্ছে - একটু পরে আবার চেষ্টা করুন।</string>
+    <string name="kp_fc55363a83bc" formatted="false">আপনাদের দুজনকে বোর্ডে নিয়ে যাওয়া হচ্ছে</string>
+    <string name="kp_ad30c2ff1d6e" formatted="false">সবাইকে তাঁদের বোর্ডে নিয়ে যাওয়া হচ্ছে</string>
+    <string name="kp_293d8f7d8030" formatted="false">আপনার সিট নেওয়া হচ্ছে - এটি একটি লেনদেন, তাই কয়েক সেকেন্ড লাগে।</string>
+    <string name="kp_8ad85cccbb0e" formatted="false">ফিরে যেতে ট্যাপ করুন</string>
+    <string name="kp_0e4268b5d759" formatted="false">ক্রিয়েটর কোডটি সঠিক নয়।</string>
+    <string name="kp_617a81cfb251" formatted="false">এটি নেটওয়ার্কে পৌঁছায়নি। আবার চেষ্টা করুন।</string>
+    <string name="kp_55720cd06fc4" formatted="false">ওই রুমটি আগেই ভরে গেছে - আপনার জন্য পরেরটি খোঁজা হচ্ছে।</string>
+    <string name="kp_d8501167e501" formatted="false">ওই রুমটি আগেই ভরে গেছে। পরেরটিতে চেষ্টা করতে যোগ দিন-এ ট্যাপ করুন।</string>
+    <string name="kp_9e663d4025b0" formatted="false">ওই টুর্নামেন্ট ইতিমধ্যে শুরু হয়ে গেছে।</string>
+    <string name="kp_1ee44a0bf66b" formatted="false">দাবা সার্ভারে পৌঁছানো যাচ্ছে না এবং নেটওয়ার্ক এখনো এটি নিশ্চিত করেনি। একটু পরে আবার চেষ্টা করুন।</string>
+    <string name="kp_0e3db8107f4d" formatted="false">দাবা সার্ভারে পৌঁছানো যাচ্ছে না, তাই খোলা রুম নিশ্চিত করা যাচ্ছে না। সার্ভার ফিরলে আবার চেষ্টা করুন।</string>
+    <string name="kp_3e86d5e865a8" formatted="false">দাবা সার্ভারে পৌঁছানো যাচ্ছে না, তাই ওই কোড খোঁজা যাচ্ছে না। সার্ভার ফিরলে আবার চেষ্টা করুন।</string>
+    <string name="kp_374e3b271476" formatted="false">নির্মাতার শেয়ার করা আট অক্ষরের কোড। যোগ দেওয়া একটি লেনদেন (ফি: %s)।</string>
+    <string name="kp_668f15ee8377" formatted="false">গেমটি নিজে বিনামূল্যে। শেষ হলে, জিতুন বা হারুন, এর ফলাফল Kaspa-তে রেকর্ড হয়: আপনার ওয়ালেট থেকে একটি লেনদেন, প্রায় %s।</string>
+    <string name="kp_056a66088f6c" formatted="false">গেমটি নিজে বিনামূল্যে। শেষ হলে, জিতুন বা হারুন, এর ফলাফল Kaspa-তে রেকর্ড হয়: আপনার ওয়ালেট থেকে একটি লেনদেন, সামান্য ফি।</string>
+    <string name="kp_a94070f3a397" formatted="false">নেটওয়ার্ক এখনো আপনার আগের পাঠানোটি নিশ্চিত করছে। অনুগ্রহ করে কয়েক সেকেন্ড পরে আবার চেষ্টা করুন।</string>
+    <string name="kp_5021101f57d6" formatted="false">গেম শেষ হলে ফলাফল Kaspa-তে রেকর্ড হয়</string>
+    <string name="kp_fb4fdd00f1ac" formatted="false">ফলাফল রেকর্ড করা যায়নি। এখন বেরিয়ে গেলে এটি আর পাঠানো যাবে না, এবং এই জয় লিডারবোর্ডে গণ্য হবে না।</string>
+    <string name="kp_2d72f92d9b82" formatted="false">ফলাফল হয়তো রেকর্ড হয়ে গেছে</string>
+    <string name="kp_30a77c98dc8a" formatted="false">আটটি সিটই ভরে গেলে টুর্নামেন্ট নিজে থেকে শুরু হবে।</string>
+    <string name="kp_693f8a669f1e" formatted="false">প্রতিপক্ষের চাল</string>
+    <string name="kp_3dd518e63c49" formatted="false">প্রতিপক্ষ</string>
+    <string name="kp_22a02413aebd" formatted="false">খেলোয়াড়দের জন্য সবসময় একটি পাবলিক রুম অপেক্ষা করে। ভরে গেলে এটি শুরু হয় এবং পরেরটি খোলে। আটজন খেলোয়াড়, নকআউট, প্রত্যেকের পাঁচ মিনিট। প্রতিটি চাল একটি Kaspa লেনদেন (প্রতিটি প্রায় 0.0017 KAS)।</string>
+    <string name="kp_6d45876eef92" formatted="false">গভীরভাবে ভাবে আর অনেক দূর দেখে। একে হারাতে পারলে আপনি পুরো সিঁড়ি পার করেছেন।</string>
+    <string name="kp_1085f4e7c41f" formatted="false">এই গেমটি অন্য একটি অ্যাকাউন্টে খেলা হয়েছিল। ফলাফল রেকর্ড করতে সেই অ্যাকাউন্টে সাইন ইন করুন।</string>
+    <string name="kp_9fa87800a939" formatted="false">এটি হয়তো চলে গেছে, কিন্তু নেটওয়ার্ক নিশ্চিত করেনি। আবার পাঠানোর আগে আপনার ব্যালেন্স দেখে নিন।</string>
+    <string name="kp_1b4785331db3" formatted="false">এই মাস</string>
+    <string name="kp_733696c12e3e" formatted="false">সময় শেষ। সময় শেষ হওয়ায় %s জিতেছে।</string>
+    <string name="kp_5a2e22ac873e" formatted="false">এখনো ঠিক হয়নি</string>
+    <string name="kp_a2c1d828e2d3" formatted="false">টুর্নামেন্ট</string>
+    <string name="kp_25670f61ff36" formatted="false">টুর্নামেন্ট পূর্ণ!</string>
+    <string name="kp_cd04af2db6f1" formatted="false">টুর্নামেন্ট লিডারবোর্ড</string>
+    <string name="kp_fee20df1963e" formatted="false">টুর্নামেন্ট</string>
+    <string name="kp_981d375a0f37" formatted="false">জেতা ও হারা টুর্নামেন্ট</string>
+    <string name="kp_e71f1539a41b" formatted="false">বিজয়</string>
+    <string name="kp_f3ec99569fbf" formatted="false">এক্সপ্লোরারে দেখুন</string>
+    <string name="kp_33d30632848d" formatted="false">অপেক্ষমাণ</string>
+    <string name="kp_a41118158853" formatted="false">আর %d জন খেলোয়াড়ের অপেক্ষা। অষ্টম জন যোগ দিলেই এটি নিজে থেকে শুরু হবে।</string>
+    <string name="kp_442da9df5c77" formatted="false">আর 1 জন খেলোয়াড়ের অপেক্ষা। অষ্টম জন যোগ দিলেই এটি নিজে থেকে শুরু হবে।</string>
+    <string name="kp_c26c33fa1c5a" formatted="false">খেলোয়াড়দের অপেক্ষা</string>
+    <string name="kp_0e6a21e02626" formatted="false">দাবা সার্ভারের অপেক্ষা</string>
+    <string name="kp_fbc3f16e4c19" formatted="false">প্রতিপক্ষের অপেক্ষা চলছে। তিনি যোগ দিলেই গেম নিজে থেকে শুরু হবে।</string>
+    <string name="kp_d91ebf5887cf" formatted="false">দেখুন</string>
+    <string name="kp_7ef5b5821c01" formatted="false">দেখা বিনামূল্যে - কিছুই পাঠানো হয় না। শুধু দুই খেলোয়াড় চাল দিতে পারেন।</string>
+    <string name="kp_37619fc13053" formatted="false">সাদা</string>
+    <string name="kp_c6ff9b47bd9e" formatted="false">সাদার চাল</string>
+    <string name="kp_79bcb3dd18f9" formatted="false">জয়ের হার</string>
+    <string name="kp_ffb136c1afe9" formatted="false">QF%d-এর বিজয়ী</string>
+    <string name="kp_3fe7ae15e42c" formatted="false">SF%d-এর বিজয়ী</string>
+    <string name="kp_b6c015d12e1b" formatted="false">জয়</string>
+    <string name="kp_b273fb287708" formatted="false">জিতেছে</string>
+    <string name="kp_ddf4e3735470" formatted="false">%s জিতেছে</string>
+    <string name="kp_905cb326c779" formatted="false">আপনি</string>
+    <string name="kp_70142233d6f3" formatted="false">আপনি এই টুর্নামেন্ট থেকে বাদ পড়েছেন। বাকি ব্র্যাকেট দেখুন।</string>
+    <string name="kp_07025e915e94" formatted="false">আপনি এই টুর্নামেন্ট থেকে বাদ পড়েছেন। বাকি ব্র্যাকেট দেখতে পারেন।</string>
+    <string name="kp_188b806432ca" formatted="false">আপনি একটি কোড পাবেন, যাঁর সঙ্গে খেলতে চান তাঁকে সেটি দিন। তিনি যোগ দিলেই গেম শুরু হবে। এটি তৈরি করা একটি লেনদেন।</string>
+    <string name="kp_e7c04dcae100" formatted="false">আপনি পরের রাউন্ডে উঠেছেন। প্রতিপক্ষ ঠিক হলেই আপনার পরের গেম নিজে থেকে খুলবে।</string>
+    <string name="kp_5279ac5901b8" formatted="false">আপনি হেরেছেন</string>
+    <string name="kp_db93b3d19f74" formatted="false">আপনি প্রথম চাল দেবেন।</string>
+    <string name="kp_7ec46c42f060" formatted="false">আপনি হার মেনেছেন। %s জিতেছে।</string>
+    <string name="kp_85b0b68af5f2" formatted="false">আপনি প্রথম সিট নেবেন এবং শেয়ার করার জন্য একটি কোড পাবেন। আটজন খেলোয়াড় যোগ দিলে এটি শুরু হবে। এটি তৈরি করা একটি লেনদেন।</string>
+    <string name="kp_3c2dfe0e1289" formatted="false">আপনি %d চালে কিস্তিমাত করে জিতেছেন।</string>
+    <string name="kp_8dfe694ea61b" formatted="false">আপনি 1 চালে কিস্তিমাত করে জিতেছেন।</string>
+    <string name="kp_8c75d5f7de98" formatted="false">আপনি রাউন্ড 1 জিতেছেন। পরের প্রতিপক্ষের অপেক্ষা - এর মধ্যে অন্য গেমটি দেখুন।</string>
+    <string name="kp_795115417df0" formatted="false">আপনি ফাইনাল জিতেছেন। পরের প্রতিপক্ষের অপেক্ষা - এর মধ্যে অন্য গেমটি দেখুন।</string>
+    <string name="kp_2987342bd41b" formatted="false">আপনি গেমটি জিতেছেন। পরের প্রতিপক্ষের অপেক্ষা - এর মধ্যে অন্য গেমটি দেখুন।</string>
+    <string name="kp_ba7e2d06a69c" formatted="false">আপনি সেমিফাইনাল জিতেছেন। পরের প্রতিপক্ষের অপেক্ষা - এর মধ্যে অন্য গেমটি দেখুন।</string>
+    <string name="kp_dc9807723538" formatted="false">আপনি টুর্নামেন্ট জিতেছেন।</string>
+    <string name="kp_e3a4b01eaca8" formatted="false">আপনি জিতেছেন!</string>
+    <string name="kp_2bd203ba381e" formatted="false">আপনি ইতিমধ্যে %s-এ অপেক্ষা করছেন।</string>
+    <string name="kp_a91633acc070" formatted="false">আপনি যুক্ত হয়েছেন। আর %d জনের অপেক্ষা…</string>
+    <string name="kp_ad79fa22e5b2" formatted="false">আপনি যুক্ত হয়েছেন। আর 1 জনের অপেক্ষা…</string>
+    <string name="kp_cfe84965f638" formatted="false">পরের যিনি যোগ দেবেন তাঁর সঙ্গে আপনার জুটি হবে। গেম নিজে থেকে শুরু হবে।</string>
+    <string name="kp_d80ca7163461" formatted="false">আপনি %s-এ খেলছেন</string>
+    <string name="kp_24bf6785a61b" formatted="false">আপনি এখনো %s-এ খেলছেন।</string>
+    <string name="kp_eec7f86a8bb7" formatted="false">আপনি %s-এ অপেক্ষা করছেন</string>
+    <string name="kp_61e7335f3c19" formatted="false">আপনার 1v1 রেকর্ড</string>
+    <string name="kp_48fd80af85de" formatted="false">চাল পাঠানোর আগেই আপনার ঘড়ির সময় শেষ হয়ে গেছে।</string>
+    <string name="kp_a8bc9c75a936" formatted="false">আপনার গেম শুরু হতে বাকি</string>
+    <string name="kp_32ec1dbd797a" formatted="false">আপনার যোগদান নেটওয়ার্কে পৌঁছায়নি। যখন খুশি আবার যোগ দিন।</string>
+    <string name="kp_44470e508a5d" formatted="false">আপনার চাল</string>
+    <string name="kp_d5b2c846e810" formatted="false">আপনার চাল গণ্য হয়নি। বোর্ডটি দেখুন।</string>
+    <string name="kp_5277d781ccc7" formatted="false">আপনার চাল নেটওয়ার্কে পৌঁছায়নি। আবার চালটি দিন।</string>
+    <string name="kp_63bbbf0226f5" formatted="false">আপনার রেকর্ড</string>
+    <string name="kp_4e15ba26e54d" formatted="false">আপনার সিট %s ধরে রাখা হয়েছে। এর মধ্যে রুম না ভরলে আপনি সারি থেকে বেরিয়ে যাবেন।</string>
+    <string name="kp_8774b9393565" formatted="false">আপনার সিট এতক্ষণ ধরে রাখা হয়। সময়মতো কেউ যোগ না দিলে আপনি সারি থেকে বেরিয়ে যাবেন।</string>
+    <string name="kp_94ad25364602" formatted="false">আপনার টুর্নামেন্ট রেকর্ড</string>
+    <string name="kp_114f3f6a8251" formatted="false">আপনার জয় এখনো Kaspa-তে ওঠেনি</string>
+    <string name="kp_f957097d7a22" formatted="false">শেষ</string>
+    <string name="kp_691a77cd21a3" formatted="false">বনাম</string>
+    <string name="kp_aa93adb4f65c" formatted="false">আমি K-তে %s (লেভেল %d)-কে %d চালে হারিয়েছি। আপনি কি এর চেয়ে কম চালে পারবেন?</string>
+    <string name="kp_f81826d956cc" formatted="false">K-তে আমার দাবা টুর্নামেন্টে যোগ দিন: KaPlay &gt; দাবা &gt; টুর্নামেন্ট &gt; কোড দিয়ে যোগ দিন খুলে %s লিখুন।</string>
+    <string name="kp_c2ecefef54c6" formatted="false">K-তে আমার সঙ্গে দাবা খেলুন: KaPlay &gt; দাবা &gt; 1v1 &gt; কোড দিয়ে যোগ দিন খুলে %s লিখুন।</string>
+    <string name="kp_f4fa709cb963" formatted="false">কোয়ার্টার ফাইনাল</string>
+    <string name="kp_3ce0ac6e9413" formatted="false">ফলাফল পাঠানো হয়নি।</string>
+    <string name="kaplay_leaderboard_all_time">সর্বকালের</string>
+    <string name="kaplay_leaderboard_counted_from">%1$s থেকে গণনা করা হচ্ছে।</string>
+    <string name="kaplay_leaderboard_period">লিডারবোর্ডের সময়কাল</string>
+    <string name="kaplay_leaderboard_resets_monthly">প্রতি মাসের ১ তারিখে রিসেট হয় (UTC)।</string>
+    <string name="kaplay_leaderboard_this_month">এই মাস</string>
+    <string name="kaplay_no_finished_duels">এখনো কোনো 1v1 খেলা শেষ হয়নি।</string>
+    <string name="kaplay_no_finished_duels_this_month">এই মাসে এখনো কোনো 1v1 খেলা শেষ হয়নি।</string>
+    <string name="kaplay_no_finished_tournaments">এখনো কোনো টুর্নামেন্ট শেষ হয়নি।</string>
+    <string name="kaplay_no_finished_tournaments_this_month">এই মাসে এখনো কোনো টুর্নামেন্ট শেষ হয়নি।</string>
+    <string name="kaplay_tab_leaderboard">লিডারবোর্ড</string>
+</resources>

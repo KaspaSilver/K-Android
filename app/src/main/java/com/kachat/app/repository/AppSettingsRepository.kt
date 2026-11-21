@@ -52,6 +52,10 @@ class AppSettingsRepository @Inject constructor(
         // names indexer can be run on its own. Unset = the message indexer, where names were read
         // before the field existed.
         val KEY_KACHAT_NAMES_INDEXER_URL = stringPreferencesKey("kachat_names_indexer_url")
+        // Trestly's API (kusdt-open's coordinator): where kUSDT balances are looked up
+        // (`/tokens?owner=`), each answer checked on the node (iOS 5b7c772c `trestlyAPIURL`).
+        // KaChat only reads it; buying and swapping happen in KaPay. Unset/blank = the network's.
+        val KEY_TRESTLY_API_URL = stringPreferencesKey("trestly_api_url")
         // A user-pinned "host:port" gRPC node - when non-blank, NodePoolManager stops
         // discovery (seeds/DNS/peer-gossip) entirely and only ever connects to this address,
         // Kaspium-style. Empty string = disabled (normal pool discovery).
@@ -132,26 +136,32 @@ class AppSettingsRepository @Inject constructor(
 
         fun defaultKaspaRestUrl(network: com.kachat.app.util.KaspaNetwork.Type) =
             if (network == com.kachat.app.util.KaspaNetwork.Type.MAINNET) DEFAULT_KASPA_REST_URL else DEFAULT_KASPA_TESTNET_REST_URL
+
+        /** Trestly's own deployments (kusdt-open `wallet/extension/src/config/defaults.ts`; iOS
+         *  `AppSettings.defaultTrestlyAPIURL(for:)`). */
+        const val DEFAULT_TRESTLY_API_URL = "https://api.trestly.io/api/v1"
+        const val DEFAULT_TRESTLY_TESTNET_API_URL = "https://testnet.trestly.io/api/v1"
+
+        fun defaultTrestlyApiUrl(network: com.kachat.app.util.KaspaNetwork.Type) =
+            if (network == com.kachat.app.util.KaspaNetwork.Type.MAINNET) DEFAULT_TRESTLY_API_URL else DEFAULT_TRESTLY_TESTNET_API_URL
         const val DEFAULT_PUSH_INDEXER_URL = DEFAULT_INDEXER_URL
         /**
-         * DataStore keys the retired features wrote: KaPosts (feeds, follows, mutes, notification
-         * switches, tips, the poller's last-seen), Public Chats (room indexers, the Popular and
-         * avatar switches) and the post translator. [removeRetiredFeatureKeys] deletes them once.
+         * Once deleted the DataStore keys of KaPosts, Public Chats and the post translator (they
+         * left on 2026-10-24). Since iOS 148a5331 KaChat is the all-in-one app again and those are
+         * back, so the pass deletes nothing: their keys are theirs to use. It only marks itself
+         * done.
          */
-        private val RETIRED_KEY_PREFIXES = listOf(
-            "kaposts_", "kapost_indexer_url", "broadcast_", "translation_service_url",
-        )
+        private val RETIRED_KEY_PREFIXES = emptyList<String>()
         private val KEY_RETIRED_FEATURES_CLEANED = booleanPreferencesKey("retired_features_cleaned_v1")
 
         /**
-         * DataStore keys the second cut retired (iOS d54ea87): the dock and Kaspa Hub layouts,
-         * per account and global, with their one-time migrations, and Portfolio's and Swap's own
-         * settings. [removeRetiredFeatureKeys] deletes them once.
+         * Once deleted the keys of the second cut (iOS d54ea87): the dock and Kaspa Hub layouts,
+         * and Portfolio's and Swap's settings. Since iOS 148a5331 the dock, the Hub and Portfolio
+         * are back, so it deletes only what stays retired: Swap's settings (iOS
+         * `defaultsPrefixesV2 = ["kachat_swap_"]`; the old dock keys are left alone, as the new
+         * dock's may match them). [removeRetiredFeatureKeys] runs it once.
          */
-        private val RETIRED_KEY_PREFIXES_V2 = listOf(
-            "tab_order", "dock_tabs", "hub_tabs", "hidden_tabs", "dock_placement_applied",
-            "tab_defaults_40", "portfolio_", "swap_",
-        )
+        private val RETIRED_KEY_PREFIXES_V2 = listOf("swap_")
         private val KEY_RETIRED_FEATURES_V2_CLEANED = booleanPreferencesKey("retired_features_cleaned_v2")
 
         /**
@@ -164,11 +174,20 @@ class AppSettingsRepository @Inject constructor(
         // KaChat ships pinned to Kaspium's public node out of the box, rather than defaulting
         // to full seed/DNS/peer-gossip discovery - the "Use Default" button in Connection
         // Settings resets back to this same address after a user has typed something else.
-        // This is Kaspium's own currently-live default (see their node_settings_notifier.dart's
-        // "temporary Toccata node override" - node.kaspium.io's cert had expired, so Kaspium's
-        // app itself now points here instead) - TLS-secured, hence "grpcs://" (see
-        // KaspadConnection.kt's parseNodeAddress).
-        const val DEFAULT_TRUSTED_NODE_ADDRESS = "grpcs://toccata.kaspium.io"
+        // This is Kaspium's own default again (iOS 148a5331, owner's call 2026-11-21: Kaspium
+        // moved back to it; a valid certificate, mainnet, synced, UTXO index on) - TLS-secured,
+        // hence "grpcs://" (see KaspadConnection.kt's parseNodeAddress).
+        const val DEFAULT_TRUSTED_NODE_ADDRESS = "grpcs://node.kaspium.io"
+
+        /** Earlier defaults, moved to [DEFAULT_TRUSTED_NODE_ADDRESS] when read (iOS 148a5331
+         *  `legacyDefaultTrustedNodeAddresses`): toccata.kaspium.io (Kaspium's stopgap while
+         *  node.kaspium.io's certificate had expired) no longer answers. */
+        private val LEGACY_DEFAULT_TRUSTED_NODE_ADDRESSES = setOf("grpcs://toccata.kaspium.io")
+
+        /** A retired default node becomes today's; anything the person typed is kept (iOS
+         *  148a5331 `replacingRetiredDefaultNode`). */
+        fun replacingRetiredDefaultNode(address: String): String =
+            if (address.trim().lowercase() in LEGACY_DEFAULT_TRUSTED_NODE_ADDRESSES) DEFAULT_TRUSTED_NODE_ADDRESS else address
 
         // Wallet (just a flag — actual keys live in Keystore)
         val KEY_HAS_WALLET       = booleanPreferencesKey("has_wallet")
@@ -278,6 +297,7 @@ class AppSettingsRepository @Inject constructor(
         kaspaRestUrl = prefs[KEY_KASPA_REST_URL],
         trustedNodeAddress = prefs[KEY_TRUSTED_NODE_ADDRESS],
         savedNodeAddresses = prefs[KEY_SAVED_NODE_ADDRESSES],
+        trestlyApiUrl = prefs[KEY_TRESTLY_API_URL],
     )
 
     /** [network]'s set-aside profile; null when there is none, or when it was written by a
@@ -357,8 +377,12 @@ class AppSettingsRepository @Inject constructor(
     // all (a fresh install) - once the user explicitly saves "" (clearing it via the Kaspa Node
     // field), that's a real stored value distinct from "never touched", so it correctly stays
     // empty (normal discovery) instead of snapping back to the default on every read.
+    /** Trestly's API: blank or unset (settings from before kUSDT) is the network's default. */
+    private fun resolveTrestlyApiUrl(profile: ConnectionProfile, network: KaspaNetwork.Type): String =
+        profile.trestlyApiUrl?.trim()?.takeIf { it.isNotEmpty() } ?: defaultTrestlyApiUrl(network)
+
     private fun resolveTrustedNodeAddress(profile: ConnectionProfile): String =
-        profile.trustedNodeAddress ?: DEFAULT_TRUSTED_NODE_ADDRESS
+        profile.trustedNodeAddress?.let { replacingRetiredDefaultNode(it) } ?: DEFAULT_TRUSTED_NODE_ADDRESS
 
     private fun resolveSavedNodeAddresses(profile: ConnectionProfile): List<com.kachat.app.models.SavedNodeAddress> =
         profile.savedNodeAddresses?.let { json ->
@@ -375,6 +399,8 @@ class AppSettingsRepository @Inject constructor(
     val knsApiUrl: Flow<String> = flow { emit(knsApiUrlFor(KaspaNetwork.launch)) }
     val kaspaRestUrl: Flow<String> = runningConnection.resolve(::resolveKaspaRestUrl)
     val pushIndexerUrl: Flow<String> = runningConnection.resolve { p, n -> indexerOrDefault(p.pushIndexerUrl, DEFAULT_PUSH_INDEXER_URL, n) }
+    /** Trestly's API, where kUSDT balances are looked up (Connection Settings' Trestly API URL). */
+    val trestlyApiUrl: Flow<String> = runningConnection.resolve(::resolveTrestlyApiUrl)
     val trustedNodeAddress: Flow<String> = runningConnection.resolve { p, _ -> resolveTrustedNodeAddress(p) }
     val savedNodeAddresses: Flow<List<com.kachat.app.models.SavedNodeAddress>> =
         runningConnection.map { (p, _) -> resolveSavedNodeAddresses(p) }.distinctUntilChanged()
@@ -386,6 +412,7 @@ class AppSettingsRepository @Inject constructor(
     val selectedKnsApiUrl: Flow<String> = KaspaNetwork.selected.map { knsApiUrlFor(it) }
     val selectedKaspaRestUrl: Flow<String> = selectedConnection.resolve(::resolveKaspaRestUrl)
     val selectedPushIndexerUrl: Flow<String> = selectedConnection.resolve { p, n -> indexerOrDefault(p.pushIndexerUrl, DEFAULT_PUSH_INDEXER_URL, n) }
+    val selectedTrestlyApiUrl: Flow<String> = selectedConnection.resolve(::resolveTrestlyApiUrl)
     val selectedTrustedNodeAddress: Flow<String> = selectedConnection.resolve { p, _ -> resolveTrustedNodeAddress(p) }
     val selectedSavedNodeAddresses: Flow<List<com.kachat.app.models.SavedNodeAddress>> =
         selectedConnection.map { (p, _) -> resolveSavedNodeAddresses(p) }.distinctUntilChanged()
@@ -640,6 +667,8 @@ class AppSettingsRepository @Inject constructor(
     suspend fun setIndexerUrl(value: String) = dataStore.edit { it[KEY_INDEXER_URL] = value }
     suspend fun setKaspaRestUrl(value: String) = dataStore.edit { it[KEY_KASPA_REST_URL] = value }
     suspend fun setPushIndexerUrl(value: String) = dataStore.edit { it[KEY_PUSH_INDEXER_URL] = value }
+    /** Connection Settings' Trestly API URL; blank goes back to the network's default. */
+    suspend fun setTrestlyApiUrl(value: String) = dataStore.edit { it[KEY_TRESTLY_API_URL] = value.trim() }
 
     /**
      * KaPosts, Public Chats and the post translator (iOS e2f6732), then the dock layouts,
@@ -702,6 +731,7 @@ class AppSettingsRepository @Inject constructor(
                 put(KEY_KASPA_REST_URL, next.kaspaRestUrl)
                 put(KEY_TRUSTED_NODE_ADDRESS, next.trustedNodeAddress)
                 put(KEY_SAVED_NODE_ADDRESSES, next.savedNodeAddresses)
+                put(KEY_TRESTLY_API_URL, next.trestlyApiUrl)
                 prefs[KEY_CONNECTION_KEYS_NETWORK] = to.raw
             }
             // The choice for the next launch, recorded inside the edit so the settings and the
@@ -806,6 +836,194 @@ class AppSettingsRepository @Inject constructor(
     private fun handshakeSyncCursorKey(address: String) = longPreferencesKey("handshake_sync_cursor_$address")
     private fun handshakeOutSyncCursorKey(address: String) = longPreferencesKey("handshake_out_sync_cursor_$address")
     private fun showSetupGuidesKey(address: String) = booleanPreferencesKey("show_setup_guides_$address")
+
+    // -------------------------------------------------------------------------
+    // KaPost (back 2026-11-21, iOS 148a5331; from KaPost's AppSettingsRepository). New members
+    // only. Stored under KaPost's own key names, so nothing here collides with KaChat's.
+    // -------------------------------------------------------------------------
+
+    /** KaPost, its notifications and post translation run on KaChat's own indexer (iOS
+     *  `AppSettings.kaPostIndexerURL` / `translationServiceURL` are `indexerURL`): blank on
+     *  testnet, where KaPost is off. */
+    val kapostIndexerUrl: Flow<String> get() = indexerUrl
+    val translationServiceUrl: Flow<String> get() = indexerUrl
+
+    private fun kapostsFollowingKey(walletAddress: String) = stringSetPreferencesKey("kaposts_following_$walletAddress")
+    private fun kapostsMutedKey(walletAddress: String) = stringSetPreferencesKey("kaposts_muted_$walletAddress")
+    private fun kapostsBlockedKey(walletAddress: String) = stringSetPreferencesKey("kaposts_blocked_$walletAddress")
+    private fun kaPostsTipSourceKey(walletAddress: String) =
+        androidx.datastore.preferences.core.intPreferencesKey("kaposts_tip_source_${walletAddress.trim().lowercase()}")
+
+    /** Who this account follows on KaPost, per account. */
+    fun kapostsFollowing(walletAddress: String): Flow<Set<String>> =
+        dataStore.data.map { it[kapostsFollowingKey(walletAddress)] ?: emptySet() }
+    suspend fun setKapostsFollowing(walletAddress: String, value: Set<String>) =
+        dataStore.edit { it[kapostsFollowingKey(walletAddress)] = value }
+    /** Deletes the old device-wide follow set (it leaked across accounts); the chain rebuilds it. */
+    suspend fun clearLegacyKapostsFollowing() = dataStore.edit { it.remove(KaPostKeys.FOLLOWING) }
+
+    /** Muted and blocked accounts, per account: hidden in KaPost and in Public Chats. */
+    fun kapostsMuted(walletAddress: String): Flow<Set<String>> =
+        dataStore.data.map { it[kapostsMutedKey(walletAddress)] ?: emptySet() }
+    fun kapostsBlocked(walletAddress: String): Flow<Set<String>> =
+        dataStore.data.map { it[kapostsBlockedKey(walletAddress)] ?: emptySet() }
+    suspend fun setKapostsMuted(walletAddress: String, value: Set<String>) =
+        dataStore.edit { it[kapostsMutedKey(walletAddress)] = value }
+    suspend fun setKapostsBlocked(walletAddress: String, value: Set<String>) =
+        dataStore.edit { it[kapostsBlockedKey(walletAddress)] = value }
+
+    /** Adopts the pre-scoping mute/block lists for [walletAddress] when it is the only account and
+     *  has no lists of its own yet. Idempotent. */
+    suspend fun migrateLegacyKapostsModeration(walletAddress: String, singleAccount: Boolean) {
+        dataStore.edit { prefs ->
+            val hasLegacy = prefs.contains(KaPostKeys.MUTED) || prefs.contains(KaPostKeys.BLOCKED)
+            if (!hasLegacy) return@edit
+            val hasScoped = prefs.contains(kapostsMutedKey(walletAddress)) || prefs.contains(kapostsBlockedKey(walletAddress))
+            if (hasScoped || !singleAccount) return@edit
+            prefs[kapostsMutedKey(walletAddress)] = prefs[KaPostKeys.MUTED] ?: emptySet()
+            prefs[kapostsBlockedKey(walletAddress)] = prefs[KaPostKeys.BLOCKED] ?: emptySet()
+            prefs.remove(KaPostKeys.MUTED)
+            prefs.remove(KaPostKeys.BLOCKED)
+        }
+    }
+
+    /** Delete Account: one account's KaPost follows, mutes, blocks and Tips From (iOS ee5ec98). */
+    suspend fun removeKaPostsAccountData(walletAddress: String) = dataStore.edit {
+        it.remove(kapostsFollowingKey(walletAddress))
+        it.remove(kapostsMutedKey(walletAddress))
+        it.remove(kapostsBlockedKey(walletAddress))
+        it.remove(kaPostsTipSourceKey(walletAddress))
+    }
+
+    /** KaPost Settings > Tips From: the spending address [walletAddress] tips from, by index;
+     *  null = the chatting address. */
+    fun kaPostsTipSourceIndex(walletAddress: String): Flow<Int?> =
+        dataStore.data.map { it[kaPostsTipSourceKey(walletAddress)] }
+    suspend fun setKaPostsTipSourceIndex(walletAddress: String, index: Int?) = dataStore.edit {
+        val key = kaPostsTipSourceKey(walletAddress)
+        if (index != null) it[key] = index else it.remove(key)
+    }
+
+    // Settings > KaPost > Notifications: which KaPost activity notifies (all on by default).
+    val kaPostsNotifyLikes: Flow<Boolean> = dataStore.data.map { it[KaPostKeys.NOTIFY_LIKES] ?: true }
+    val kaPostsNotifyReposts: Flow<Boolean> = dataStore.data.map { it[KaPostKeys.NOTIFY_REPOSTS] ?: true }
+    val kaPostsNotifyFollows: Flow<Boolean> = dataStore.data.map { it[KaPostKeys.NOTIFY_FOLLOWS] ?: true }
+    val kaPostsNotifyDislikes: Flow<Boolean> = dataStore.data.map { it[KaPostKeys.NOTIFY_DISLIKES] ?: true }
+    val kaPostsNotifyComments: Flow<Boolean> = dataStore.data.map { it[KaPostKeys.NOTIFY_COMMENTS] ?: true }
+    val kaPostsNotifyMentions: Flow<Boolean> = dataStore.data.map { it[KaPostKeys.NOTIFY_MENTIONS] ?: true }
+    suspend fun setKaPostsNotifyLikes(value: Boolean) = dataStore.edit { it[KaPostKeys.NOTIFY_LIKES] = value }
+    suspend fun setKaPostsNotifyReposts(value: Boolean) = dataStore.edit { it[KaPostKeys.NOTIFY_REPOSTS] = value }
+    suspend fun setKaPostsNotifyFollows(value: Boolean) = dataStore.edit { it[KaPostKeys.NOTIFY_FOLLOWS] = value }
+    suspend fun setKaPostsNotifyDislikes(value: Boolean) = dataStore.edit { it[KaPostKeys.NOTIFY_DISLIKES] = value }
+    suspend fun setKaPostsNotifyComments(value: Boolean) = dataStore.edit { it[KaPostKeys.NOTIFY_COMMENTS] = value }
+    suspend fun setKaPostsNotifyMentions(value: Boolean) = dataStore.edit { it[KaPostKeys.NOTIFY_MENTIONS] = value }
+
+    /** Whether a KaPost activity of this kind notifies (iOS `AppSettings.shouldNotifyKaPostsAction`):
+     *  vote + downvote = dislike, vote = like, reply = comment, quote = repost. Unknown kinds do. */
+    suspend fun shouldNotifyKaPostsAction(contentType: String?, voteType: String?): Boolean {
+        val prefs = dataStore.data.first()
+        return when (contentType) {
+            "vote" -> if (voteType == "downvote") prefs[KaPostKeys.NOTIFY_DISLIKES] ?: true
+                      else prefs[KaPostKeys.NOTIFY_LIKES] ?: true
+            "reply" -> prefs[KaPostKeys.NOTIFY_COMMENTS] ?: true
+            "quote" -> prefs[KaPostKeys.NOTIFY_REPOSTS] ?: true
+            "follow" -> prefs[KaPostKeys.NOTIFY_FOLLOWS] ?: true
+            "mention" -> prefs[KaPostKeys.NOTIFY_MENTIONS] ?: true
+            else -> true
+        }
+    }
+
+    /** The push twin of [shouldNotifyKaPostsAction]: the push's `kaposts_kind`, or failing that its
+     *  server-written (never localized) wording. */
+    suspend fun shouldNotifyKaPostsPush(kind: String?, body: String): Boolean {
+        val (contentType, voteType) = when (kind) {
+            "vote_up" -> "vote" to "upvote"
+            "vote_down" -> "vote" to "downvote"
+            "reply" -> "reply" to null
+            "quote", "repost" -> "quote" to null
+            "follow" -> "follow" to null
+            "mention" -> "mention" to null
+            null -> {
+                val lowered = body.lowercase()
+                when {
+                    lowered.contains("disliked your") -> "vote" to "downvote"
+                    lowered.contains("liked your") -> "vote" to "upvote"
+                    lowered.contains("replied to your") -> "reply" to null
+                    lowered.contains("quoted your") || lowered.contains("reposted your") -> "quote" to null
+                    lowered.contains("followed you") -> "follow" to null
+                    lowered.contains("mentioned you") -> "mention" to null
+                    else -> return true
+                }
+            }
+            else -> return true
+        }
+        return shouldNotifyKaPostsAction(contentType, voteType)
+    }
+
+    /** KaPost Settings' instant tip in sompi; null asks for an amount every time. */
+    val kaPostsDefaultTipSompi: Flow<Long?> = dataStore.data.map {
+        it[KaPostKeys.DEFAULT_TIP_SOMPI]?.takeIf { sompi -> sompi > 0 }
+    }
+
+    /** The same instant tip set in a currency instead: the amount and its lowercase code. */
+    val kaPostsDefaultTipFiat: Flow<Pair<Double, String>?> = dataStore.data.map { prefs ->
+        val amount = prefs[KaPostKeys.DEFAULT_TIP_FIAT]?.takeIf { it > 0 } ?: return@map null
+        amount to (prefs[KaPostKeys.DEFAULT_TIP_FIAT_CURRENCY] ?: prefs[KEY_CURRENCY] ?: "usd")
+    }
+
+    /** KaPost Settings > Tip In: ASK until Kaspa or kUSDT is picked. */
+    val kaPostsTipAsset: Flow<KaPostsTipAsset> = dataStore.data.map { KaPostsTipAsset.fromRaw(it[KaPostKeys.TIP_ASSET]) }
+
+    /** What a tap on Tip sends now: an instant tip amount means Kaspa (iOS `kaPostsTipAssetInUse`). */
+    val kaPostsTipAssetInUse: Flow<KaPostsTipAsset> =
+        combine(kaPostsTipAsset, kaPostsDefaultTipSompi, kaPostsDefaultTipFiat) { asset, sompi, fiat ->
+            KaPostsTipAsset.inUse(asset, sompi, fiat)
+        }.distinctUntilChanged()
+
+    /** KaPost Settings > Cool down before post: off by default (iOS `kaPostsCooldownEnabled`). */
+    val kaPostsCooldownEnabled: Flow<Boolean> = dataStore.data.map { it[KaPostKeys.COOLDOWN_ENABLED] ?: false }
+
+    /** Tip In; ASK removes the key. */
+    suspend fun setKaPostsTipAsset(value: KaPostsTipAsset) = dataStore.edit {
+        val raw = value.raw
+        if (raw == null) it.remove(KaPostKeys.TIP_ASSET) else it[KaPostKeys.TIP_ASSET] = raw
+    }
+
+    /** An instant tip in KAS; it replaces one set in a currency. Null clears both. */
+    suspend fun setKaPostsDefaultTipSompi(value: Long?) = dataStore.edit {
+        if (value != null && value > 0) it[KaPostKeys.DEFAULT_TIP_SOMPI] = value
+        else it.remove(KaPostKeys.DEFAULT_TIP_SOMPI)
+        it.remove(KaPostKeys.DEFAULT_TIP_FIAT)
+        it.remove(KaPostKeys.DEFAULT_TIP_FIAT_CURRENCY)
+    }
+
+    /** An instant tip in [currency] (lowercase code); it replaces one set in KAS. */
+    suspend fun setKaPostsDefaultTipFiat(amount: Double, currency: String) = dataStore.edit {
+        if (amount <= 0) return@edit
+        it[KaPostKeys.DEFAULT_TIP_FIAT] = amount
+        it[KaPostKeys.DEFAULT_TIP_FIAT_CURRENCY] = currency
+        it.remove(KaPostKeys.DEFAULT_TIP_SOMPI)
+    }
+
+    suspend fun setKaPostsCooldownEnabled(value: Boolean) = dataStore.edit { it[KaPostKeys.COOLDOWN_ENABLED] = value }
+
+    /** KaPost's DataStore keys, as KaPost named them. */
+    private object KaPostKeys {
+        val FOLLOWING = stringSetPreferencesKey("kaposts_following")
+        val MUTED = stringSetPreferencesKey("kaposts_muted")
+        val BLOCKED = stringSetPreferencesKey("kaposts_blocked")
+        val NOTIFY_LIKES = booleanPreferencesKey("kaposts_notify_likes")
+        val NOTIFY_REPOSTS = booleanPreferencesKey("kaposts_notify_reposts")
+        val NOTIFY_FOLLOWS = booleanPreferencesKey("kaposts_notify_follows")
+        val NOTIFY_DISLIKES = booleanPreferencesKey("kaposts_notify_dislikes")
+        val NOTIFY_COMMENTS = booleanPreferencesKey("kaposts_notify_comments")
+        val NOTIFY_MENTIONS = booleanPreferencesKey("kaposts_notify_mentions")
+        val DEFAULT_TIP_SOMPI = longPreferencesKey("kaposts_default_tip_sompi")
+        val DEFAULT_TIP_FIAT = androidx.datastore.preferences.core.doublePreferencesKey("kaposts_default_tip_fiat")
+        val DEFAULT_TIP_FIAT_CURRENCY = stringPreferencesKey("kaposts_default_tip_fiat_currency")
+        val TIP_ASSET = stringPreferencesKey("kaposts_tip_asset")
+        val COOLDOWN_ENABLED = booleanPreferencesKey("kaposts_cooldown_on")
+    }
 }
 
 /**
@@ -821,13 +1039,16 @@ data class ConnectionProfile(
     val trustedNodeAddress: String? = null,
     /** Gson list of SavedNodeAddress, as stored under KEY_SAVED_NODE_ADDRESSES. */
     val savedNodeAddresses: String? = null,
+    /** Trestly's API (iOS 5b7c772c); null = the network's default, so profiles set aside by
+     *  builds before kUSDT still read. */
+    val trestlyApiUrl: String? = null,
 ) {
     companion object {
         /** Every field name above, as Gson writes them. app/proguard-rules.pro keeps these names
          *  in release builds; ConnectionProfileStoreTest checks the set against the class. */
         internal val FIELDS = setOf(
             "indexerUrl", "pushIndexerUrl", "kachatNamesIndexerUrl", "kaspaRestUrl", "trustedNodeAddress",
-            "savedNodeAddresses",
+            "savedNodeAddresses", "trestlyApiUrl",
         )
 
         /** Fields a record written before 2026-10-24 still carries - the KaPosts, Public Chats and

@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's chess sentences, looked up by their English text (util/KaPlayText.kt: `kp_` and 12
+     hex of the SHA-1 of the English). Translations from KaPlay Android's strings_app_text.xml and,
+     for the sentences new in KaChat, iOS 148a5331's Localizable.strings. Generated. -->
+<resources>
+    <string name="kp_7e46be469deb" formatted="false">1v1ランキング %d位</string>
+    <string name="kp_cba1ee4eec72" formatted="false">トーナメントランキング %d位</string>
+    <string name="kp_3401831926d1" formatted="false">%d分</string>
+    <string name="kp_f769c12fc2ee" formatted="false">%d敗</string>
+    <string name="kp_d9e1beae2f39" formatted="false">%d勝</string>
+    <string name="kp_55fc776de141" formatted="false">%d勝 %d敗</string>
+    <string name="kp_d8aa573c0e61" formatted="false">%d手</string>
+    <string name="kp_fbeb1207b441" formatted="false">%d/%d人</string>
+    <string name="kp_b70e7251ba0d" formatted="false">%d/%d人が待機中</string>
+    <string name="kp_6dac15cf1ed7" formatted="false">%d/%d人 · コード %s</string>
+    <string name="kp_ba09ba042e31" formatted="false">残り%d席</string>
+    <string name="kp_d4cd664ac02d" formatted="false">%sが%sに%d手で勝ちました。もっと少ない手数で勝てますか？</string>
+    <string name="kp_35f8f501300f" formatted="false">%sから%sに勝てるか挑戦状が届きました。</string>
+    <string name="kp_8a3914693bee" formatted="false">%sが勝ち上がり、あなたはトーナメントから敗退します。ランキングでは負けとして記録されます。投了はトランザクション1回です。</string>
+    <string name="kp_297da93b20fb" formatted="false">%sはまだロックされています。はしごを登って挑戦しましょう。</string>
+    <string name="kp_c7642c6d04be" formatted="false">%sが考え中…</string>
+    <string name="kp_00161fefc871" formatted="false">%sのロックが解除されました！</string>
+    <string name="kp_7ab092285767" formatted="false">%sが先手です。</string>
+    <string name="kp_207e56e21618" formatted="false">%sの番</string>
+    <string name="kp_4e56d26a3870" formatted="false">%s vs %s</string>
+    <string name="kp_fbb8239c09ba" formatted="false">%sの勝ちとなり、ランキングでは負けとして記録されます。投了はトランザクション1回です。</string>
+    <string name="kp_a074e492574e" formatted="false">%sの勝ち</string>
+    <string name="kp_03a71913fd6b" formatted="false">%sのチェックメイト勝ち</string>
+    <string name="kp_e2bdeaa4f9e5" formatted="false">%sがチェックメイトで勝ちました。</string>
+    <string name="kp_e510ea9dedf3" formatted="false">%sの投了勝ち</string>
+    <string name="kp_33cd4606c8c7" formatted="false">%sが投了勝ちしました。</string>
+    <string name="kp_405c5afa1901" formatted="false">引き分け、残り時間で%sの勝ち</string>
+    <string name="kp_4e683890d75e" formatted="false">駒不足で引き分け、残り時間で%sの勝ち</string>
+    <string name="kp_f2d9cffd2918" formatted="false">ステイルメイトで引き分け、残り時間で%sの勝ち</string>
+    <string name="kp_3dae94d319ae" formatted="false">50手ルールで引き分け、残り時間で%sの勝ち</string>
+    <string name="kp_26b3a1b77b3b" formatted="false">3回同形反復で引き分け、残り時間で%sの勝ち</string>
+    <string name="kp_49680f535fab" formatted="false">%sの時間切れ勝ち</string>
+    <string name="kp_e27359cb1d1d" formatted="false">%sが時間切れ勝ちしました。</string>
+    <string name="kp_7fb322c0aa2a" formatted="false">%sがトーナメントで優勝しました</string>
+    <string name="kp_683e17380d8a" formatted="false">1/%d人</string>
+    <string name="kp_a3a1e853bd57" formatted="false">1/%d人が待機中</string>
+    <string name="kp_dcd9d9468141" formatted="false">1/%d人 · コード %s</string>
+    <string name="kp_f6dec9c77f35" formatted="false">残り1席</string>
+    <string name="kp_d6db37efe259" formatted="false">1v1</string>
+    <string name="kp_1644dc818c09" formatted="false">1v1の対局</string>
+    <string name="kp_7c71818a1ae0" formatted="false">1v1ランキング</string>
+    <string name="kp_d8706f214713" formatted="false">1v1、トーナメント、5体のボット。オンラインの指し手とボット戦の結果はKaspaに記録されます。</string>
+    <string name="kp_ba9cce8319d7" formatted="false">プライベートトーナメントは友達向けです。作成者が8文字のコードを共有します。作成には作成者コードが必要です。</string>
+    <string name="kp_a733b809d2f1" formatted="false">アクティブ</string>
+    <string name="kp_d70f93df5e8f" formatted="false">アドレス</string>
+    <string name="kp_4d064726954a" formatted="false">上級者</string>
+    <string name="kp_dbad49d89123" formatted="false">全期間</string>
+    <string name="kp_b52b36b7269f" formatted="false">戻る</string>
+    <string name="kp_c3065156b217" formatted="false">%sに勝つと解放</string>
+    <string name="kp_60575a6ebba9" formatted="false">ビギナー</string>
+    <string name="kp_489d32ce7dd9" formatted="false">最短: %d手</string>
+    <string name="kp_b406fb57b29f" formatted="false">黒</string>
+    <string name="kp_b5807c6df986" formatted="false">黒の番</string>
+    <string name="kp_4ca88ea465a9" formatted="false">ボット</string>
+    <string name="kp_e42a1e70b400" formatted="false">トーナメント表</string>
+    <string name="kp_75e08341b41d" formatted="false">トーナメント表 · 対局をタップして観戦</string>
+    <string name="kp_cf76a9fe16a7" formatted="false">投了</string>
+    <string name="kp_2b246e0ff5ca" formatted="false">慎重に読み、ミスを見逃しません。作戦を立てて挑みましょう。</string>
+    <string name="kp_77dfd2135f4d" formatted="false">キャンセル</string>
+    <string name="kp_5a2fc967d105" formatted="false">このトーナメントをキャンセルしますか？</string>
+    <string name="kp_1fe710030fe9" formatted="false">トーナメントをキャンセル</string>
+    <string name="kp_5dc29b482d76" formatted="false">作成者によってキャンセルされました。</string>
+    <string name="kp_7881bf71d2de" formatted="false">優勝</string>
+    <string name="kp_f3dffbf21ed5" formatted="false">チェック。あなたの番です。</string>
+    <string name="kp_933b750898fd" formatted="false">チェックメイト</string>
+    <string name="kp_3226c18271e7" formatted="false">チェックメイト。%sの勝ちです。</string>
+    <string name="kp_f95715a82ba2" formatted="false">チェス</string>
+    <string name="kp_645b1b39f542" formatted="false">チェスサーバーに接続できないため、手元の情報を表示しています。対局はネットワーク上で続きます。公開ルームには復旧後に再び参加できます。</string>
+    <string name="kp_b03bf0e29f1c" formatted="false">チェスサーバーに接続できません。指し手はネットワークから取得しているため、盤面が少し遅れることがあります。</string>
+    <string name="kp_ee9c98ac836b" formatted="false">チェスサーバーに接続できません。この端末にある情報を表示しているため、全体より少ない場合があります。</string>
+    <string name="kp_cf9797eede60" formatted="false">チェスサーバーに接続できません。この端末にある情報を表示しています。</string>
+    <string name="kp_9cba814a7f57" formatted="false">チェスサーバーに接続できません。ネットワークでプレイヤーを確認しているため、アプリを離れている間に参加した人は表示されないことがあります。</string>
+    <string name="kp_2b26c543ead5" formatted="false">対局を選ぶ</string>
+    <string name="kp_c47532edb2d7" formatted="false">勝利を確定</string>
+    <string name="kp_25b55e8298c7" formatted="false">確定中…</string>
+    <string name="kp_a546440f3f66" formatted="false">はしごを登ろう</string>
+    <string name="kp_adac69379a62" formatted="false">コード</string>
+    <string name="kp_d29d9fee5279" formatted="false">コード: %s</string>
+    <string name="kp_8e3df45a49db" formatted="false">コピーしました</string>
+    <string name="kp_af74f7c5362a" formatted="false">コピー</string>
+    <string name="kp_6d8d79e75952" formatted="false">結果をKaspaに記録できませんでした</string>
+    <string name="kp_6e157c5da441" formatted="false">作成</string>
+    <string name="kp_1bf04f16edb7" formatted="false">プライベート1v1を作成</string>
+    <string name="kp_7e92ffa83dfa" formatted="false">プライベートトーナメントを作成</string>
+    <string name="kp_94d7d8ee473f" formatted="false">作成中…</string>
+    <string name="kp_2775f5da8563" formatted="false">作成者コード</string>
+    <string name="kp_34660a5de9ae" formatted="false">敗北</string>
+    <string name="kp_e9b450d14bc2" formatted="false">完了</string>
+    <string name="kp_bfa50c7a3838" formatted="false">引き分け</string>
+    <string name="kp_9af70e71546d" formatted="false">引き分け - 残り時間で勝ち</string>
+    <string name="kp_3ef901b7405f" formatted="false">駒不足で引き分け - 残り時間で勝ち</string>
+    <string name="kp_1f217e401459" formatted="false">駒不足で引き分け。</string>
+    <string name="kp_65647004462e" formatted="false">駒不足で引き分け。残り時間で%sの勝ちです。</string>
+    <string name="kp_8abd5d59fe79" formatted="false">ステイルメイトで引き分け - 残り時間で勝ち</string>
+    <string name="kp_e7c73294f742" formatted="false">ステイルメイトで引き分け。</string>
+    <string name="kp_0ee00fa48fcb" formatted="false">ステイルメイトで引き分け。残り時間で%sの勝ちです。</string>
+    <string name="kp_c1f887545180" formatted="false">50手ルールで引き分け - 残り時間で勝ち</string>
+    <string name="kp_e0fa7fdfda5b" formatted="false">50手ルールで引き分け。</string>
+    <string name="kp_e18608aaaa1f" formatted="false">50手ルールで引き分け。残り時間で%sの勝ちです。</string>
+    <string name="kp_ca658ca2e441" formatted="false">3回同形反復で引き分け - 残り時間で勝ち</string>
+    <string name="kp_1bd0b8c9f833" formatted="false">3回同形反復で引き分け。</string>
+    <string name="kp_c328be341b0c" formatted="false">3回同形反復で引き分け。残り時間で%sの勝ちです。</string>
+    <string name="kp_fdd69537f848" formatted="false">引き分け。</string>
+    <string name="kp_cbefc612d55f" formatted="false">引き分け。残り時間で%sの勝ちです。</string>
+    <string name="kp_1861bf6c95a3" formatted="false">8人によるシングルエリミネーション：準々決勝、準決勝、決勝。公開ルームは参加者が集まり次第埋まり、プライベートはコードで参加します。</string>
+    <string name="kp_d488ebb4b1db" formatted="false">参加者は全員解放されます。トランザクション1回で行います。</string>
+    <string name="kp_4788947ec3fe" formatted="false">%sに勝つまでの最少手数</string>
+    <string name="kp_672b22cc516e" formatted="false">決勝</string>
+    <string name="kp_355bcc577d71" formatted="false">終了</string>
+    <string name="kp_a8d435fecb0c" formatted="false">終了した1v1</string>
+    <string name="kp_781b28d8c53d" formatted="false">終了したトーナメント</string>
+    <string name="kp_08ab1ad685e3" formatted="false">レベル1から5までの5体のボット。Kaspa SilverからYonatan Sompolinskyまで。1体に勝つと次が解放されます。結果はKaspaに記録されます。</string>
+    <string name="kp_03e3c2d3a084" formatted="false">レベル1から5までの5体のボット。1体に勝つと次が解放されます。各対局の結果は終了時にKaspaに記録されます。</string>
+    <string name="kp_e3e82846c325" formatted="false">対局</string>
+    <string name="kp_94114a40a64a" formatted="false">勝ち負けの数 - 1v1とトーナメントの対局の両方</string>
+    <string name="kp_7b1a1bfec003" formatted="false">自分の対局へ</string>
+    <string name="kp_78722784381b" formatted="false">楽しむために指しています。指し手は速く、ときどき駒をタダで取られます。</string>
+    <string name="kp_7f2a3bb304a4" formatted="false">退出すると投了になります。%sが勝ち上がり、あなたはトーナメントから敗退します。ランキングでは負けとして記録されます。投了はトランザクション1回です。</string>
+    <string name="kp_e998db197859" formatted="false">退出すると投了になります。%sの勝ちとなり、ランキングでは負けとして記録されます。投了はトランザクション1回です。</string>
+    <string name="kp_a4362588018d" formatted="false">退出すると投了になります。%sに対する負けとなり、結果は1回のトランザクションでKaspaに記録されます。</string>
+    <string name="kp_03a2b6501787" formatted="false">対局中</string>
+    <string name="kp_e24d4d212b7b" formatted="false">対局中。どの対局もタップするとライブで観戦できます。</string>
+    <string name="kp_b1cfe72fd271" formatted="false">中級者</string>
+    <string name="kp_f63265478d76" formatted="false">%sに対する負けとなり、結果は1回のトランザクションでKaspaに記録されます。</string>
+    <string name="kp_e0d73143de80" formatted="false">参加</string>
+    <string name="kp_c8155c3c34dc" formatted="false">参加（手数料: %s）</string>
+    <string name="kp_df7b41919cb2" formatted="false">参加すると、次に参加した人と対戦します。ルームが埋まると対局が始まり、次のルームが開きます。持ち時間は各5分で、すべての指し手がKaspaのトランザクションです（1手あたり約0.0017 KAS）。ここでの対局はランキングに反映されます。</string>
+    <string name="kp_dacbf38d4e73" formatted="false">コードで参加</string>
+    <string name="kp_f44c1e425996" formatted="false">参加中…</string>
+    <string name="kp_d9f369249799" formatted="false">維持する</string>
+    <string name="kp_bb76090ac54c" formatted="false">対局を続ける</string>
+    <string name="kp_9be1abba9272" formatted="false">待ち続ける</string>
+    <string name="kp_32bf913a5258" formatted="false">駒の動かし方はすべて知っていて、タダの駒を取るのが大好き。浮いたポーンに注意。</string>
+    <string name="kp_35b13a38f422" formatted="false">LIVE %s</string>
+    <string name="kp_0381247a6987" formatted="false">ランキング</string>
+    <string name="kp_7e3520a97331" formatted="false">退出</string>
+    <string name="kp_963593386268" formatted="false">それでも退出</string>
+    <string name="kp_4bc79453df63" formatted="false">対局を退出しますか？</string>
+    <string name="kp_baf82f7117b6" formatted="false">待機列から抜けますか？</string>
+    <string name="kp_b7aa749e18cb" formatted="false">抜けると、他のプレイヤーを探さなくなります。抜けるのはトランザクション1回で、いつでも再度参加できます。</string>
+    <string name="kp_3016bac3196c" formatted="false">退出中…</string>
+    <string name="kp_ec7cc1838f39" formatted="false">レベル%d</string>
+    <string name="kp_7780eacc49b8" formatted="false">レベル%d/5</string>
+    <string name="kp_0e50ccfcd686" formatted="false">レベル%d · %s</string>
+    <string name="kp_9f8465fad533" formatted="false">レベル%d · %s · あなたは黒番</string>
+    <string name="kp_fc9307e48365" formatted="false">レベル%d · %s · あなたは白番</string>
+    <string name="kp_6235bfaf9ecc" formatted="false">ライブ中</string>
+    <string name="kp_39687e0a700d" formatted="false">ルームを読み込み中…</string>
+    <string name="kp_5daad3f809a8" formatted="false">アリーナからトーナメントを読み込み中…</string>
+    <string name="kp_4d5e7c6d35ee" formatted="false">対戦相手を探しています</string>
+    <string name="kp_98ea2c12eb7c" formatted="false">指す前に数手先を読みます。堅実で、引っかけるのは難しい相手です。</string>
+    <string name="kp_0f9a484f1388" formatted="false">負け</string>
+    <string name="kp_78f3842f0201" formatted="false">マスター</string>
+    <string name="kp_092664087974" formatted="false">対戦相手が見つかりました！</string>
+    <string name="kp_a7814b5ec744" formatted="false">%d手目 · 黒の番</string>
+    <string name="kp_9fe5cb670a4c" formatted="false">%d手目 · 白の番</string>
+    <string name="kp_77fbed46e1be" formatted="false">次: %sとの1回戦</string>
+    <string name="kp_a2dad9a4e89c" formatted="false">次: %sとの決勝</string>
+    <string name="kp_eceff125fbb4" formatted="false">次: %sとの対局</string>
+    <string name="kp_1337e1141b11" formatted="false">次: %sとの準決勝</string>
+    <string name="kp_8506e1612593" formatted="false">現在進行中の1v1はありません。始まるとここで観戦できます。</string>
+    <string name="kp_3988da2d38ef" formatted="false">まだどのボットとも対局していません。</string>
+    <string name="kp_77ebbb8e3de5" formatted="false">まだ終了した1v1の対局がありません。</string>
+    <string name="kp_1597bcaeaaa1" formatted="false">まだ終了したトーナメントがありません。</string>
+    <string name="kp_682c0ad47cbe" formatted="false">時間内に誰も参加しませんでした。待機列から外れました。いつでも再度参加できます。</string>
+    <string name="kp_50385293d3d0" formatted="false">そのコードの募集中トーナメントはありません。コードは8文字で、トーナメントが存在し、まだ空席がある必要があります。</string>
+    <string name="kp_581a01e739ba" formatted="false">現在進行中のトーナメントはありません。始まるとその対局をここで観戦できます。</string>
+    <string name="kp_2ee8ce15a9f7" formatted="false">今月はまだ誰も%sに勝っていません。</string>
+    <string name="kp_54460cd574b9" formatted="false">まだ誰も%sに勝っていません。</string>
+    <string name="kp_4472179cd296" formatted="false">まだ誰も勝っていません</string>
+    <string name="kp_b9e09ae263fb" formatted="false">未確認</string>
+    <string name="kp_214bf807441e" formatted="false">チャットアドレスのKASが足りません。追加してからもう一度お試しください。</string>
+    <string name="kp_16ca44702a9b" formatted="false">初心者</string>
+    <string name="kp_fb58f3c56a8d" formatted="false">時間切れ</string>
+    <string name="kp_1cf2fc54ad9f" formatted="false">オンライン対局は持ち時間各5分で、すべての指し手がKaspaのトランザクションになります。ボット戦は終了時に結果をKaspaに記録します。</string>
+    <string name="kp_6dca824588f3" formatted="false">空席</string>
+    <string name="kp_b84d3a372a18" formatted="false">%sと対局</string>
+    <string name="kp_0faa2e4de8b8" formatted="false">友達と対局：1v1を作成して、コードを共有しましょう。プライベート1v1もランキングに反映されます。</string>
+    <string name="kp_576766d387ec" formatted="false">もう一度プレイ</string>
+    <string name="kp_61441ace460e" formatted="false">あなたの色</string>
+    <string name="kp_8ba176164906" formatted="false">次に参加した人か、コードで友達と対局します。1局勝負で、勝者がランキングのポイントを得ます。</string>
+    <string name="kp_e53407cfe1a5" formatted="false">プレイヤー</string>
+    <string name="kp_9f33b8c73405" formatted="false">プレイヤー（%d/%d）</string>
+    <string name="kp_237dfa0a21c8" formatted="false">プライベート</string>
+    <string name="kp_f61dccc2dba9" formatted="false">プライベート1v1</string>
+    <string name="kp_ea951f3a34eb" formatted="false">プライベートトーナメント</string>
+    <string name="kp_79b0f9805c68" formatted="false">昇格先</string>
+    <string name="kp_dc5eb704bbca" formatted="false">公開</string>
+    <string name="kp_37ea9a7673b4" formatted="false">公開1v1</string>
+    <string name="kp_8b2cb0910a17" formatted="false">公開1v1 #%d</string>
+    <string name="kp_236760772b5c" formatted="false">公開トーナメント</string>
+    <string name="kp_b4d6cee9742f" formatted="false">公開トーナメント #%d</string>
+    <string name="kp_58d888c08aa5" formatted="false">ランダム</string>
+    <string name="kp_73ba76c46a4c" formatted="false">勝つまでの手数が少ない順。</string>
+    <string name="kp_a3d558838b81" formatted="false">投了</string>
+    <string name="kp_868d45f552a8" formatted="false">投了して退出</string>
+    <string name="kp_a12f7f95331e" formatted="false">この対局を投了しますか？</string>
+    <string name="kp_65d7b143ae0f" formatted="false">結果をKaspaに記録しました</string>
+    <string name="kp_9f5cd8a2e880" formatted="false">再試行</string>
+    <string name="kp_923287d2eeda" formatted="false">記録を再試行</string>
+    <string name="kp_f7648d383499" formatted="false">1回戦</string>
+    <string name="kp_d7418ba2e352" formatted="false">現在、空席を確認できません</string>
+    <string name="kp_33295d1667f4" formatted="false">盤面を見る</string>
+    <string name="kp_af1cfadd9704" formatted="false">シード%d</string>
+    <string name="kp_7d79eec3965c" formatted="false">準決勝</string>
+    <string name="kp_3abe921a63aa" formatted="false">準決勝</string>
+    <string name="kp_6f32706309e0" formatted="false">指し手を送信中…</string>
+    <string name="kp_9cb2e112972e" formatted="false">送信しましたが、Kaspaでまだ承認されていません。</string>
+    <string name="kp_09ca55ca52d2" formatted="false">共有</string>
+    <string name="kp_d042790fe991" formatted="false">このコードを共有</string>
+    <string name="kp_1f3254d6ce59" formatted="false">KaPostでシェア</string>
+    <string name="kp_4401b9c3edce" formatted="false">誰かが%sに%d手で勝ちました。もっと少ない手数で勝てますか？</string>
+    <string name="kp_c923aafae8bc" formatted="false">%sに勝てるか挑戦状が届きました。</string>
+    <string name="kp_9a3ea0598e7f" formatted="false">問題が発生しました。もう一度お試しください。</string>
+    <string name="kp_8aa38f374323" formatted="false">結果をKaspaに記録中…</string>
+    <string name="kp_6959b5355760" formatted="false">結果を記録中…</string>
+    <string name="kp_ae768f766f75" formatted="false">留まる</string>
+    <string name="kp_f300737844cc" formatted="false">ルームを読み込み中です。少ししてからもう一度お試しください。</string>
+    <string name="kp_fc55363a83bc" formatted="false">2人を盤面へご案内します</string>
+    <string name="kp_ad30c2ff1d6e" formatted="false">全員をそれぞれの盤面へご案内します</string>
+    <string name="kp_293d8f7d8030" formatted="false">席を確保しています。トランザクション1回なので、数秒かかります。</string>
+    <string name="kp_8ad85cccbb0e" formatted="false">タップして戻る</string>
+    <string name="kp_0e4268b5d759" formatted="false">作成者コードが正しくありません。</string>
+    <string name="kp_617a81cfb251" formatted="false">ネットワークに届きませんでした。もう一度お試しください。</string>
+    <string name="kp_55720cd06fc4" formatted="false">そのルームは先に埋まりました。次のルームを探しています。</string>
+    <string name="kp_d8501167e501" formatted="false">そのルームは先に埋まりました。「参加」をタップして次のルームをお試しください。</string>
+    <string name="kp_9e663d4025b0" formatted="false">そのトーナメントはすでに始まっています。</string>
+    <string name="kp_1ee44a0bf66b" formatted="false">チェスサーバーに接続できず、ネットワークでもまだ承認されていません。少ししてからもう一度お試しください。</string>
+    <string name="kp_0e3db8107f4d" formatted="false">チェスサーバーに接続できないため、空いているルームを確認できません。復旧してからもう一度お試しください。</string>
+    <string name="kp_3e86d5e865a8" formatted="false">チェスサーバーに接続できないため、そのコードを照会できません。復旧してからもう一度お試しください。</string>
+    <string name="kp_374e3b271476" formatted="false">作成者が共有した8文字のコードです。参加はトランザクション1回です（手数料: %s）。</string>
+    <string name="kp_668f15ee8377" formatted="false">対局自体は無料です。終了時には勝ち負けにかかわらず、結果がKaspaに記録されます。ウォレットからのトランザクション1回分、約%sです。</string>
+    <string name="kp_056a66088f6c" formatted="false">対局自体は無料です。終了時には勝ち負けにかかわらず、結果がKaspaに記録されます。ウォレットからのトランザクション1回分、少額の手数料がかかります。</string>
+    <string name="kp_a94070f3a397" formatted="false">ネットワークが前回の送信をまだ承認中です。数秒後にもう一度お試しください。</string>
+    <string name="kp_5021101f57d6" formatted="false">対局が終わると結果がKaspaに記録されます</string>
+    <string name="kp_fb4fdd00f1ac" formatted="false">記録に失敗しました。今退出すると再送できず、この勝利はランキングに反映されません。</string>
+    <string name="kp_2d72f92d9b82" formatted="false">記録が完了している可能性があります</string>
+    <string name="kp_30a77c98dc8a" formatted="false">8席すべてが埋まると、トーナメントは自動で始まります。</string>
+    <string name="kp_693f8a669f1e" formatted="false">相手の番</string>
+    <string name="kp_3dd518e63c49" formatted="false">相手</string>
+    <string name="kp_22a02413aebd" formatted="false">公開ルームは常に参加者を待っています。埋まると始まり、次のルームが開きます。8人のシングルエリミネーションで、持ち時間は各5分。すべての指し手がKaspaのトランザクションです（1手あたり約0.0017 KAS）。</string>
+    <string name="kp_6d45876eef92" formatted="false">深く考え、遠くまで見通します。この相手に勝てば、はしごを登りきったことになります。</string>
+    <string name="kp_1085f4e7c41f" formatted="false">この対局は別のアカウントで行われました。結果を記録するには、そのアカウントにサインインしてください。</string>
+    <string name="kp_9fa87800a939" formatted="false">送信された可能性がありますが、ネットワークで確認できませんでした。再度送信する前に残高を確認してください。</string>
+    <string name="kp_1b4785331db3" formatted="false">今月</string>
+    <string name="kp_733696c12e3e" formatted="false">時間切れです。%sの時間切れ勝ちです。</string>
+    <string name="kp_5a2e22ac873e" formatted="false">未定</string>
+    <string name="kp_a2c1d828e2d3" formatted="false">トーナメント</string>
+    <string name="kp_25670f61ff36" formatted="false">トーナメントが満員になりました！</string>
+    <string name="kp_cd04af2db6f1" formatted="false">トーナメントランキング</string>
+    <string name="kp_fee20df1963e" formatted="false">トーナメント</string>
+    <string name="kp_981d375a0f37" formatted="false">トーナメントの優勝と敗退</string>
+    <string name="kp_e71f1539a41b" formatted="false">勝利</string>
+    <string name="kp_f3ec99569fbf" formatted="false">エクスプローラーで表示</string>
+    <string name="kp_33d30632848d" formatted="false">待機中</string>
+    <string name="kp_a41118158853" formatted="false">あと%d人を待っています。8人目が参加すると自動で始まります。</string>
+    <string name="kp_442da9df5c77" formatted="false">あと1人を待っています。8人目が参加すると自動で始まります。</string>
+    <string name="kp_c26c33fa1c5a" formatted="false">プレイヤーを待っています</string>
+    <string name="kp_0e6a21e02626" formatted="false">チェスサーバーを待っています</string>
+    <string name="kp_fbc3f16e4c19" formatted="false">対戦相手を待っています。相手が参加すると対局が自動で始まります。</string>
+    <string name="kp_d91ebf5887cf" formatted="false">観戦</string>
+    <string name="kp_7ef5b5821c01" formatted="false">観戦は無料で、何も送信されません。指せるのは対局者の2人だけです。</string>
+    <string name="kp_37619fc13053" formatted="false">白</string>
+    <string name="kp_c6ff9b47bd9e" formatted="false">白の番</string>
+    <string name="kp_79bcb3dd18f9" formatted="false">勝率</string>
+    <string name="kp_ffb136c1afe9" formatted="false">準々決勝%dの勝者</string>
+    <string name="kp_3fe7ae15e42c" formatted="false">準決勝%dの勝者</string>
+    <string name="kp_b6c015d12e1b" formatted="false">勝ち</string>
+    <string name="kp_b273fb287708" formatted="false">勝ち</string>
+    <string name="kp_ddf4e3735470" formatted="false">%sが優勝</string>
+    <string name="kp_905cb326c779" formatted="false">あなた</string>
+    <string name="kp_70142233d6f3" formatted="false">このトーナメントで敗退しました。残りのトーナメント表を観戦しましょう。</string>
+    <string name="kp_07025e915e94" formatted="false">このトーナメントで敗退しました。残りのトーナメント表を観戦できます。</string>
+    <string name="kp_188b806432ca" formatted="false">対局したい相手に共有するコードが発行されます。相手が参加すると対局が始まります。作成はトランザクション1回です。</string>
+    <string name="kp_e7c04dcae100" formatted="false">次のラウンドに進みます。対戦相手が決まると、次の対局が自動で始まります。</string>
+    <string name="kp_5279ac5901b8" formatted="false">負けました</string>
+    <string name="kp_db93b3d19f74" formatted="false">あなたが先手です。</string>
+    <string name="kp_7ec46c42f060" formatted="false">投了しました。%sの勝ちです。</string>
+    <string name="kp_85b0b68af5f2" formatted="false">最初の席に着き、共有用のコードが発行されます。8人が参加すると始まります。作成はトランザクション1回です。</string>
+    <string name="kp_3c2dfe0e1289" formatted="false">%d手でチェックメイトして勝ちました。</string>
+    <string name="kp_8dfe694ea61b" formatted="false">1手でチェックメイトして勝ちました。</string>
+    <string name="kp_8c75d5f7de98" formatted="false">1回戦に勝ちました。次の対戦相手を待っています。その間、もう一方の対局を観戦できます。</string>
+    <string name="kp_795115417df0" formatted="false">決勝に勝ちました。次の対戦相手を待っています。その間、もう一方の対局を観戦できます。</string>
+    <string name="kp_2987342bd41b" formatted="false">対局に勝ちました。次の対戦相手を待っています。その間、もう一方の対局を観戦できます。</string>
+    <string name="kp_ba7e2d06a69c" formatted="false">準決勝に勝ちました。次の対戦相手を待っています。その間、もう一方の対局を観戦できます。</string>
+    <string name="kp_dc9807723538" formatted="false">トーナメントで優勝しました。</string>
+    <string name="kp_e3a4b01eaca8" formatted="false">勝ちました！</string>
+    <string name="kp_2bd203ba381e" formatted="false">すでに%sで待機中です。</string>
+    <string name="kp_a91633acc070" formatted="false">参加しました。あと%d人を待っています…</string>
+    <string name="kp_ad79fa22e5b2" formatted="false">参加しました。あと1人を待っています…</string>
+    <string name="kp_cfe84965f638" formatted="false">次に参加した人と対戦します。対局は自動で始まります。</string>
+    <string name="kp_d80ca7163461" formatted="false">%sで対局中</string>
+    <string name="kp_24bf6785a61b" formatted="false">まだ%sで対局中です。</string>
+    <string name="kp_eec7f86a8bb7" formatted="false">%sで待機中</string>
+    <string name="kp_61e7335f3c19" formatted="false">あなたの1v1成績</string>
+    <string name="kp_48fd80af85de" formatted="false">指し手を送信する前に持ち時間が切れました。</string>
+    <string name="kp_a8bc9c75a936" formatted="false">あなたの対局開始まで</string>
+    <string name="kp_32ec1dbd797a" formatted="false">参加がネットワークに届きませんでした。いつでも再度参加できます。</string>
+    <string name="kp_44470e508a5d" formatted="false">あなたの番</string>
+    <string name="kp_d5b2c846e810" formatted="false">指し手は反映されませんでした。盤面を確認してください。</string>
+    <string name="kp_5277d781ccc7" formatted="false">指し手がネットワークに届きませんでした。もう一度指してください。</string>
+    <string name="kp_63bbbf0226f5" formatted="false">あなたの成績</string>
+    <string name="kp_4e15ba26e54d" formatted="false">席は%s確保されます。それまでにルームが埋まらなければ、待機列から外れます。</string>
+    <string name="kp_8774b9393565" formatted="false">席はこの時間だけ確保されます。時間内に誰も参加しなければ、待機列から外れます。</string>
+    <string name="kp_94ad25364602" formatted="false">あなたのトーナメント成績</string>
+    <string name="kp_114f3f6a8251" formatted="false">勝利はまだKaspaに記録されていません</string>
+    <string name="kp_f957097d7a22" formatted="false">終了</string>
+    <string name="kp_691a77cd21a3" formatted="false">vs</string>
+    <string name="kp_aa93adb4f65c" formatted="false">Kで%s（レベル%d）に%d手で勝ちました。もっと少ない手数で勝てる？</string>
+    <string name="kp_f81826d956cc" formatted="false">Kの私のチェストーナメントに参加しよう：KaPlay &gt; チェス &gt; トーナメント &gt; コードで参加 を開いて、%s を入力してね。</string>
+    <string name="kp_c2ecefef54c6" formatted="false">Kでチェスをしよう：KaPlay &gt; チェス &gt; 1v1 &gt; コードで参加 を開いて、%s を入力してね。</string>
+    <string name="kp_f4fa709cb963" formatted="false">準々決勝</string>
+    <string name="kp_3ce0ac6e9413" formatted="false">結果は送信されませんでした。</string>
+    <string name="kaplay_leaderboard_all_time">全期間</string>
+    <string name="kaplay_leaderboard_counted_from">%1$sから集計しています。</string>
+    <string name="kaplay_leaderboard_period">リーダーボードの期間</string>
+    <string name="kaplay_leaderboard_resets_monthly">毎月1日（UTC）にリセットされます。</string>
+    <string name="kaplay_leaderboard_this_month">今月</string>
+    <string name="kaplay_no_finished_duels">まだ終了した1v1の対局がありません。</string>
+    <string name="kaplay_no_finished_duels_this_month">今月はまだ終了した1v1の対局がありません。</string>
+    <string name="kaplay_no_finished_tournaments">まだ終了したトーナメントがありません。</string>
+    <string name="kaplay_no_finished_tournaments_this_month">今月はまだ終了したトーナメントがありません。</string>
+    <string name="kaplay_tab_leaderboard">ランキング</string>
+</resources>

@@ -44,6 +44,13 @@ enum class FeeTier(val label: String, val multiplier: Long) {
     PRIORITY("Priority", 5)
 }
 
+/** Reaches the coin labels ([com.kachat.app.services.WalletManager.getSpendingUtxoLabels]) from Coin Control. */
+@dagger.hilt.EntryPoint
+@dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
+interface CoinControlDeps {
+    fun walletManager(): com.kachat.app.services.WalletManager
+}
+
 /**
  * [CoinControlScreen] as iOS presents its `CoinControlView`: a sheet over the send that asked for
  * it, Cancel leading its bar. Confirm hands the pick to [onDone] and slides the sheet down; Cancel,
@@ -137,7 +144,20 @@ fun CoinControlScreen(
         return true
     }
 
+    // The names Rename UTXO gives coins: one store, WalletManager's spending UTXO labels, read
+    // here for whichever address the coins are on (iOS 5b7c772c, audit #24: Coin Control read a
+    // store nothing writes since Cold Storage left, so it never showed a label).
+    val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
+    var storedLabels by remember(fromAddress) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    val coinLabels = remember(utxoLabels, storedLabels) { utxoLabels + storedLabels }
+
     LaunchedEffect(fromAddress) {
+        storedLabels = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                dagger.hilt.android.EntryPointAccessors.fromApplication(appContext, CoinControlDeps::class.java)
+                    .walletManager().getSpendingUtxoLabels(fromAddress)
+            }.getOrDefault(emptyMap())
+        }
         loadUtxos()
         if (!initialSelection.isNullOrEmpty()) {
             // only coins still in the list and spendable: a pick that's gone isn't kept
@@ -289,7 +309,7 @@ fun CoinControlScreen(
                                 )
                                 Spacer(Modifier.width(12.dp))
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    utxoLabels["${utxo.outpoint.transactionId}:${utxo.outpoint.index}"]?.takeIf { it.isNotEmpty() }?.let { label ->
+                                    coinLabels["${utxo.outpoint.transactionId}:${utxo.outpoint.index}"]?.takeIf { it.isNotEmpty() }?.let { label ->
                                         Text(label, color = KaspaTeal, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                     }
                                     Text(

@@ -1041,6 +1041,12 @@ class WalletManager @Inject constructor(
             editor.remove(previousChattingKey(variant))
         }
         editor.apply()
+        // .kachat (iOS 148a5331 `deleteAllKachatCommitSalts`, `KachatNameReminders.removeAll`):
+        // the claims' commit salts and the names' local reminders go with the account
+        for (variant in owned.flatMap { com.kachat.app.util.KaspaNetwork.accountAddressVariants(it) }) {
+            runCatching { com.kachat.app.services.kachatnames.KachatNamesActions.deleteAllCommitSalts(context, variant) }
+            runCatching { com.kachat.app.services.kachatnames.KachatNameReminders.removeAllFor(context, variant) }
+        }
     }
 
     // --- Identity (chatting) derivation, family-aware -----------------------------------------

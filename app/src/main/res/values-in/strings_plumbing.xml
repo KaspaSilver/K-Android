@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">Siapa pun yang membukanya di K mendapat Kirim Kaspa yang sudah terisi, dan melihat bahwa ini dibuat oleh alamat chat-mu (ditandatangani dengan kuncinya).</string>
+    <string name="pl_tap_to_open_public_chat_room">Ketuk untuk membuka ruang obrolan publik ini.</string>
+    <string name="pl_tap_to_join_public_chat_room">Ketuk untuk bergabung ke ruang obrolan publik ini.</string>
+    <string name="pl_join_room_title">Gabung ke #%1$s?</string>
+    <string name="pl_join_room_message">Sebuah tautan ingin menambahkan ruang ini ke Obrolan Publik Anda.</string>
+    <string name="pl_join_room_mixed_scripts">Nama ini mencampur huruf dari alfabet yang berbeda, jadi mungkin meniru ruang lain.</string>
+</resources>

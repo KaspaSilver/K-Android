@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">K\'te açan herkes bu bilgilerle doldurulmuş Kaspa Gönder ekranını görür ve isteğin sohbet adresin tarafından yapıldığını (onun anahtarıyla imzalı) görür.</string>
+    <string name="pl_tap_to_open_public_chat_room">Bu herkese açık sohbet odasını açmak için dokun.</string>
+    <string name="pl_tap_to_join_public_chat_room">Bu herkese açık sohbet odasına katılmak için dokun.</string>
+    <string name="pl_join_room_title">#%1$s odasına katılınsın mı?</string>
+    <string name="pl_join_room_message">Bir bağlantı bu odayı Herkese Açık Sohbetlerinize eklemek istiyor.</string>
+    <string name="pl_join_room_mixed_scripts">Bu ad farklı alfabelerden harfleri karıştırıyor, bu yüzden başka bir odayı taklit ediyor olabilir.</string>
+</resources>

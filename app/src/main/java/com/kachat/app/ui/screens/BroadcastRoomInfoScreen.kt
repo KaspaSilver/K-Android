@@ -1,0 +1,455 @@
+package com.kachat.app.ui.screens
+
+import android.content.Intent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.kachat.app.R
+import androidx.compose.ui.res.stringResource
+import com.kachat.app.models.FeaturedBroadcastChannels
+import com.kachat.app.ui.theme.KaspaTeal
+import com.kachat.app.ui.theme.LocalAppColors
+import com.kachat.app.viewmodels.BroadcastViewModel
+
+/**
+ * Everything about one broadcast room that is not the messages: what it is, what is in it, how to
+ * share it, who you have hidden, and which indexer it reads from.
+ *
+ * Reached by tapping the `#name` title in the room. It replaced two toolbar glyphs (share and
+ * hidden users) that had no room to say what they were, and gave the per-room indexer somewhere
+ * to live that is not the app-wide Connection Settings. Mirrors iOS's BroadcastRoomInfoView.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BroadcastRoomInfoScreen(
+    channelName: String,
+    onBack: () -> Unit,
+    /** Pushes the room's hidden-users list, the way iOS pushes HiddenBroadcastSendersView. */
+    onOpenHiddenUsers: () -> Unit,
+    broadcastViewModel: BroadcastViewModel = hiltViewModel(),
+) {
+    val colors = LocalAppColors.current
+    val context = LocalContext.current
+    val normalized = remember(channelName) { channelName.trim().lowercase() }
+
+    // The room's window, as iOS counts it, and built once: a flow made inside composition would
+    // restart its query on every recomposition.
+    val windowFlow = remember(normalized) { broadcastViewModel.getMessageWindow(normalized) }
+    val messages = windowFlow
+        .collectAsState(initial = com.kachat.app.repository.BroadcastRepository.RoomWindow(emptyList(), false))
+        .value.messages
+    val joinedChannels by broadcastViewModel.joinedChannels.collectAsState()
+    val hiddenSenders by broadcastViewModel.hiddenSenders.collectAsState()
+    // The network's default when nothing is set: blank (no server) on testnet.
+    val appWideIndexer by broadcastViewModel.appWideBroadcastIndexer.collectAsState()
+    val storedOverrideFlow = remember(normalized) { broadcastViewModel.indexerOverrideFor(normalized) }
+    val storedOverride by storedOverrideFlow.collectAsState(initial = "")
+
+    val senderKnsNames by broadcastViewModel.senderKnsNames.collectAsState()
+    val contactAliases by broadcastViewModel.contactAliases.collectAsState()
+    val indexerCheck by broadcastViewModel.indexerCheck.collectAsState()
+    var indexerText by remember { mutableStateOf("") }
+    // Seeded once the stored value arrives, never on every emission - retyping would fight the
+    // user mid-edit.
+    var seeded by remember { mutableStateOf(false) }
+    LaunchedEffect(storedOverride) {
+        if (!seeded) { indexerText = storedOverride; seeded = true }
+    }
+
+    val isCurated = normalized in FeaturedBroadcastChannels.CURATED_NAMES
+    // Collected so "Kept for" follows the moment the indexer turns out to track this room.
+    val trackedRoomsVersion by com.kachat.app.services.IndexerTrackedRooms.changes.collectAsState()
+    val isTracked = remember(normalized, trackedRoomsVersion) { FeaturedBroadcastChannels.isIndexerTracked(normalized) }
+    val channel = joinedChannels.firstOrNull { it.channelName == normalized }
+    val participants = remember(messages) { messages.map { it.senderAddress }.distinct().size }
+    val hiddenHere = remember(hiddenSenders, normalized) {
+        com.kachat.app.repository.BroadcastRepository.hiddenAddressesIn(normalized, hiddenSenders).size
+    }
+
+    Scaffold(
+        containerColor = colors.background,
+        // Runs on under the dock, as iOS's content runs on under its tab bar.
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(stringResource(R.string.kpui_room_info), color = colors.textPrimary, fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    // Back never saves: only Save (or Done on the keyboard) does, as on iOS.
+                    SheetBarBackButton(onClick = onBack, modifier = Modifier.padding(start = 12.dp))
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = colors.background),
+            )
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "#$normalized",
+                color = colors.textPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                if (isCurated) {
+                    stringResource(R.string.kpui_room_curated_desc)
+                } else {
+                    stringResource(R.string.kpui_room_added_desc)
+                },
+                color = colors.textSecondary,
+                fontSize = 12.sp,
+            )
+
+            val is24Hour = com.kachat.app.util.is24HourClock()
+            InfoCard(title = stringResource(R.string.pc_l53_room_on_this_device)) {
+                FeaturedBroadcastChannels.languageDisplayName(normalized)?.let { InfoRow(stringResource(R.string.language), it) }
+                InfoRow(stringResource(R.string.kpui_kind), if (isCurated) stringResource(R.string.l53_feed_tab_popular) else stringResource(R.string.kpui_added_by_you))
+                channel?.joinedAt?.let { InfoRow(stringResource(R.string.kpui_joined), com.kachat.app.util.IosDateStyle.mediumDate(it)) }
+                InfoRow(stringResource(R.string.messages), messages.size.toString())
+                InfoRow(stringResource(R.string.kpui_people_who_posted), participants.toString())
+                messages.maxOfOrNull { it.blockTimestamp }?.let {
+                    InfoRow(stringResource(R.string.kpui_latest), com.kachat.app.util.IosDateStyle.mediumDateShortTime(it, is24Hour))
+                }
+                messages.minOfOrNull { it.blockTimestamp }?.let {
+                    InfoRow(stringResource(R.string.kpui_oldest_held), com.kachat.app.util.IosDateStyle.mediumDateShortTime(it, is24Hour))
+                }
+                // Only rooms the indexer tracks have history worth a number: the indexer keeps
+                // theirs, 30 days, which is what this phone keeps too. A room you made holds
+                // nothing for anyone who was not there (see its info button). iOS 21c480d.
+                if (isTracked) {
+                    val days = Math.round(com.kachat.app.models.BroadcastRetention.INDEXER_MILLIS / 86_400_000.0).toInt()
+                    // In the app's language (iOS 369794e `retentionDescription`).
+                    InfoRow(stringResource(R.string.pc_l53_room_kept_for), stringResource(if (days == 1) R.string.pc_rooms53_day_one else R.string.pc_rooms53_days, days))
+                }
+            }
+
+            ActionSheetRow(
+                icon = Icons.Default.Share,
+                title = stringResource(R.string.kpui_share_this_room),
+                subtitle = stringResource(R.string.kpui_share_room_subtitle),
+            ) {
+                // The https link only: it previews everywhere and opens the app when it is
+                // installed, which a bare kachat:// line does neither of.
+                val text = com.kachat.app.services.publicchats.PublicChatLink.shareText(normalized)
+                val send = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, text)
+                }
+                runCatching { context.startActivity(Intent.createChooser(send, null)) }
+            }
+
+            ActionSheetRow(
+                icon = Icons.Default.VisibilityOff,
+                title = if (hiddenHere == 0) stringResource(R.string.kpui_hidden_users) else "${stringResource(R.string.kpui_hidden_users)} ($hiddenHere)",
+                subtitle = stringResource(R.string.kpui_hidden_per_room_subtitle),
+                onClick = onOpenHiddenUsers,
+            )
+
+            InfoCard(title = stringResource(R.string.kpui_indexer_for_room)) {
+                com.kachat.app.ui.theme.IosTextField(
+                    value = indexerText,
+                    onValueChange = { indexerText = it },
+                    placeholder = {
+                        Text(
+                            appWideIndexer.ifBlank { stringResource(R.string.pc_no_testnet_indexer_yet) },
+                            color = colors.textSecondary,
+                            fontSize = 13.sp,
+                        )
+                    },
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri,
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                        autoCorrect = false,
+                    ),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                        // Saved even while the last Save is being checked (that check gives way);
+                        // the field then shows the address as saved (https:// on a bare host).
+                        onDone = { broadcastViewModel.saveIndexerOverride(normalized, indexerText, storedOverride)?.let { indexerText = it } },
+                    ),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = colors.textPrimary,
+                        unfocusedTextColor = colors.textPrimary,
+                        focusedBorderColor = KaspaTeal,
+                        unfocusedBorderColor = colors.textSecondary,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                // What the last Save found (iOS indexerCheckRow).
+                when (val check = indexerCheck) {
+                    BroadcastViewModel.IndexerCheck.Idle -> Unit
+                    BroadcastViewModel.IndexerCheck.Checking -> Row(
+                        modifier = Modifier.padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        androidx.compose.material3.CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            strokeWidth = 2.dp,
+                            color = colors.textSecondary,
+                        )
+                        Text(stringResource(R.string.kpui_checking_indexer), color = colors.textSecondary, fontSize = 12.sp)
+                    }
+                    is BroadcastViewModel.IndexerCheck.Reachable -> Row(
+                        modifier = Modifier.padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = colors.success, modifier = Modifier.size(14.dp))
+                        Text(
+                            if (check.count == 0) stringResource(R.string.kpui_indexer_connected_empty)
+                            else stringResource(R.string.kpui_indexer_connected_has),
+                            color = colors.success,
+                            fontSize = 12.sp,
+                        )
+                    }
+                    is BroadcastViewModel.IndexerCheck.Failed -> Row(
+                        modifier = Modifier.padding(top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = colors.warning, modifier = Modifier.size(14.dp))
+                        Text(check.reason, color = colors.warning, fontSize = 12.sp)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    // The honest explanation of why this is per room at all.
+                    // Testnet has none to follow (iOS KaPosts ae0b025).
+                    if (appWideIndexer.isNotBlank()) stringResource(R.string.kpui_room_indexer_footer_follow, appWideIndexer)
+                    else stringResource(R.string.kpui_room_indexer_footer),
+                    color = colors.textSecondary,
+                    fontSize = 12.sp,
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (indexerText.isNotBlank()) {
+                        TextButton(onClick = {
+                            indexerText = ""
+                            broadcastViewModel.saveIndexerOverride(normalized, "", storedOverride)
+                        }) {
+                            Text(stringResource(R.string.kpui_use_app_indexer), color = colors.textSecondary)
+                        }
+                    }
+                    Button(
+                        onClick = { broadcastViewModel.saveIndexerOverride(normalized, indexerText, storedOverride)?.let { indexerText = it } },
+                        // Not while the last Save is still being checked (iOS).
+                        enabled = indexerCheck != BroadcastViewModel.IndexerCheck.Checking &&
+                            indexerText.trim() != storedOverride.trim(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = KaspaTeal,
+                            contentColor = androidx.compose.ui.graphics.Color.Black,
+                        ),
+                    ) {
+                        Text(stringResourceSave(), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            // Room for the last card to scroll clear of the dock it runs under.
+            Spacer(Modifier.height(24.dp + LocalDockInset.current))
+        }
+    }
+}
+
+@Composable
+private fun stringResourceSave(): String =
+    androidx.compose.ui.res.stringResource(R.string.save)
+
+@Composable
+private fun InfoCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+    val colors = LocalAppColors.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.surface)
+            .padding(14.dp),
+    ) {
+        Text(title, color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(8.dp))
+        content()
+    }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String) {
+    val colors = LocalAppColors.current
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = colors.textSecondary, fontSize = 13.sp, modifier = Modifier.weight(1f))
+        Text(
+            value,
+            color = colors.textPrimary,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * Who you have hidden in ONE broadcast room. Reached from Room Info; mirrors iOS's pushed
+ * `HiddenBroadcastSendersView`.
+ *
+ * Its own screen rather than a sheet inside Room Info: unhiding is a list you work through, and
+ * a sheet stacked on a sheet gives it no room and no title of its own.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BroadcastHiddenUsersScreen(
+    channelName: String,
+    onBack: () -> Unit,
+    broadcastViewModel: BroadcastViewModel = hiltViewModel(),
+) {
+    val colors = LocalAppColors.current
+    val normalized = remember(channelName) { channelName.trim().lowercase() }
+    val hiddenSenders by broadcastViewModel.hiddenSenders.collectAsState()
+    val senderKnsNames by broadcastViewModel.senderKnsNames.collectAsState()
+    val contactAliases by broadcastViewModel.contactAliases.collectAsState()
+
+    // hiddenAddressesIn returns a Set; sorted into a stable list so rows do not reshuffle when
+    // one is unhidden.
+    val rows = remember(hiddenSenders, normalized) {
+        com.kachat.app.repository.BroadcastRepository
+            .hiddenAddressesIn(normalized, hiddenSenders)
+            .sorted()
+    }
+    LaunchedEffect(rows) { rows.forEach { broadcastViewModel.ensureSenderProfileFetched(it) } }
+
+    Scaffold(
+        containerColor = colors.background,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(stringResource(R.string.kpui_hidden_users_title, normalized), color = colors.textPrimary, fontWeight = FontWeight.Bold)
+                },
+                navigationIcon = {
+                    SheetBarBackButton(onClick = onBack, modifier = Modifier.padding(start = 12.dp))
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = colors.background),
+            )
+        },
+    ) { padding ->
+        if (rows.isEmpty()) {
+            Box(
+                Modifier.fillMaxSize().padding(padding).padding(32.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    // iOS HiddenPublicChatSendersView's words.
+                    stringResource(R.string.kpui_no_hidden_users_in, normalized),
+                    color = colors.textSecondary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            return@Scaffold
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            item { Spacer(Modifier.height(8.dp)) }
+            items(rows, key = { it }) { address ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(colors.surface)
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // The name over the full address, cut in the middle (iOS).
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            com.kachat.app.models.addressDisplayName(address, contactAliases[address], senderKnsNames[address]),
+                            color = colors.textPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        MiddleEllipsisText(
+                            address,
+                            color = colors.textSecondary,
+                            fontSize = 11.sp,
+                        )
+                    }
+                    TextButton(onClick = { broadcastViewModel.unhideSender(address, normalized) }) {
+                        Text(
+                            androidx.compose.ui.res.stringResource(R.string.unhide),
+                            color = KaspaTeal,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+            item { Spacer(Modifier.height(24.dp)) }
+        }
+    }
+}

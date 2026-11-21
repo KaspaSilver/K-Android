@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">K에서 열면 이 내용이 채워진 Kaspa 보내기 화면이 열리고, 내 채팅 주소가 만든 요청(그 키로 서명됨)임을 확인할 수 있습니다.</string>
+    <string name="pl_tap_to_open_public_chat_room">탭하여 이 공개 채팅 방을 엽니다.</string>
+    <string name="pl_tap_to_join_public_chat_room">탭하여 이 공개 채팅 방에 참여합니다.</string>
+    <string name="pl_join_room_title">#%1$s에 참여할까요?</string>
+    <string name="pl_join_room_message">링크에서 이 방을 공개 채팅에 추가하려고 합니다.</string>
+    <string name="pl_join_room_mixed_scripts">이 이름은 여러 문자 체계의 글자를 섞어 써서 다른 방을 사칭하는 것일 수 있습니다.</string>
+</resources>

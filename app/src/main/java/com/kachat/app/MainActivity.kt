@@ -67,8 +67,7 @@ class MainActivity : AppCompatActivity() {
 
     private var pendingContactId by mutableStateOf<String?>(null)
     private var pendingGroupId by mutableStateOf<String?>(null)
-    // "Open the Chats list" — a group notification with no resolvable local group id, or a stray
-    // KaPosts / public chat one (both left the app, iOS e2f6732).
+    // "Open the Chats list" — a group notification with no resolvable local group id.
     private var pendingOpenGroups by mutableStateOf(false)
     // "cold" / "spending" — which wallet screen an address-activity receipt tap opens.
     private var pendingWalletActivityKind by mutableStateOf<String?>(null)
@@ -166,6 +165,8 @@ class MainActivity : AppCompatActivity() {
         guarded("profile link") { handleProfileDeepLink(intent) }
         guarded("payment request link") { handlePaymentRequestDeepLink(intent) }
         guarded("KaPost link") { handleKaPostDeepLink(intent) }
+        guarded("public chat link") { handlePublicChatDeepLink(intent) }
+        guarded("KaPost, KaPay and KaPlay links") { handleRetiredAppLinks(intent) }
         guarded("share") { handleShareIntent(intent) }
         guarded("clear intent payload") { clearConsumedIntentPayload(intent) }
     }
@@ -346,11 +347,12 @@ class MainActivity : AppCompatActivity() {
         pendingOwnAddress = intent.getStringExtra(NotificationHelper.EXTRA_WALLET_ACTIVITY_ADDRESS)
             ?.takeIf { com.kachat.app.util.KaspaAddress.isValid(it) }
         if (pendingOwnAddress != null) pendingWalletActivityKind = null
-        // A .kachat name notification an older build posted: the market left the app (iOS
-        // d54ea87), so its tap only opens the app (the extra is stripped below).
+        // KaPost, Public Chats and the .kachat names are back in KaChat (iOS 148a5331): their own
+        // notifications open the post, the bell, the room or the name.
+        val ownFeatureTarget = consumeFeatureNotificationTarget(intent)
         if (pendingContactId == null &&
             pendingGroupId == null && !pendingOpenGroups && pendingWalletActivityKind == null &&
-            pendingOwnAddress == null
+            pendingOwnAddress == null && !ownFeatureTarget
         ) {
             applyFcmNotificationTarget(intent)
         }
@@ -362,8 +364,68 @@ class MainActivity : AppCompatActivity() {
             NotificationHelper.EXTRA_WALLET_ACTIVITY_KIND,
             NotificationHelper.EXTRA_WALLET_ACTIVITY_ADDRESS,
             NotificationHelper.EXTRA_KACHAT_NAME,
+            com.kachat.app.services.KaPostsIntents.EXTRA_OPEN_KAPOSTS,
+            com.kachat.app.services.KaPostsIntents.EXTRA_KAPOST_TXID,
+            com.kachat.app.services.KaPostsIntents.EXTRA_KAPOST_FOCUS_TXID,
+            com.kachat.app.services.KaPostsIntents.EXTRA_INTERNAL_TOKEN,
+            com.kachat.app.services.KaPostsScheduledReminder.EXTRA_OPEN_SCHEDULED,
+            com.kachat.app.services.publicchats.BroadcastNotifier.EXTRA_CHANNEL_NAME,
             FCM_KEY_TYPE,
         ).forEach(intent::removeExtra)
+    }
+
+    /**
+     * The app's own KaPost, room and .kachat notifications (iOS 148a5331 `didReceive`): true when
+     * one was routed. KaPost's carry a per-install token ([com.kachat.app.services.KaPostsIntents]),
+     * so another app can't open posts through them.
+     */
+    private fun consumeFeatureNotificationTarget(intent: Intent): Boolean {
+        val kaPostsInternal = com.kachat.app.services.KaPostsIntents.isInternalIntent(this, intent)
+        // The scheduled-post reminder (local fallback): into KaPost, which sends what is due and
+        // shows the Scheduled screen.
+        if (kaPostsInternal &&
+            intent.getBooleanExtra(com.kachat.app.services.KaPostsScheduledReminder.EXTRA_OPEN_SCHEDULED, false)
+        ) {
+            com.kachat.app.ui.screens.KaPostsDeepLink.pendingOpenScheduled.value = true
+            return true
+        }
+        // A KaPost notification: straight to the post (a reply's own id scrolls its parent's
+        // thread to it); naming no post, Profile's bell.
+        if (kaPostsInternal && intent.getBooleanExtra(com.kachat.app.services.KaPostsIntents.EXTRA_OPEN_KAPOSTS, false)) {
+            val postTxId = intent.getStringExtra(com.kachat.app.services.KaPostsIntents.EXTRA_KAPOST_TXID)
+                ?.takeIf { it.isNotBlank() }
+            if (postTxId == null) {
+                com.kachat.app.ui.screens.NotificationsRoute.pending.value = true
+            } else {
+                // The focus before the post id: the post id is what KaPost's screen keys on.
+                com.kachat.app.ui.screens.KaPostsDeepLink.pendingFocusReplyTxId.value =
+                    intent.getStringExtra(com.kachat.app.services.KaPostsIntents.EXTRA_KAPOST_FOCUS_TXID)
+                com.kachat.app.ui.screens.KaPostsDeepLink.pendingPostTxId.value = postTxId
+            }
+            return true
+        }
+        // A room banner: the room, while it is in the list.
+        intent.getStringExtra(com.kachat.app.services.publicchats.BroadcastNotifier.EXTRA_CHANNEL_NAME)
+            ?.takeIf { it.isNotBlank() }
+            ?.let {
+                com.kachat.app.ui.screens.PublicChatLinkRouter.openFromPush(this, it)
+                return true
+            }
+        // A .kachat name notification (a local renewal reminder, or the indexer's name_event
+        // push): that name on the .kachat tab.
+        intent.getStringExtra(NotificationHelper.EXTRA_KACHAT_NAME)?.takeIf { it.isNotBlank() }?.let {
+            openKachatName(it)
+            return true
+        }
+        return false
+    }
+
+    /** [raw] as the .kachat tab's pending name: bare, normalized, and a valid name or nothing. */
+    private fun openKachatName(raw: String) {
+        val name = runCatching {
+            com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(raw.trim().lowercase().removeSuffix(".kachat"))
+        }.getOrNull()?.takeIf { com.kachat.app.services.kachatnames.KachatNames.Codec.isValid(it) } ?: return
+        com.kachat.app.ui.screens.KachatDeepLink.pendingName.value = name
     }
 
     /**
@@ -389,14 +451,37 @@ class MainActivity : AppCompatActivity() {
             // local group needs the group secrets — not something this Activity can do. The Group
             // Chats list is the honest destination.
             "group_message", "group_control" -> pendingOpenGroups = true
-            // KaPosts, Public Chats and the .kachat market left the app (iOS e2f6732, d54ea87): a
-            // stray tap on one of their notifications only opens the app.
-            "broadcast", "kaposts", "name_event" -> Unit
+            // A room push: the room, while it is in the list (iOS 148a5331 `openRoomFromPush`).
+            "broadcast" -> intent.getStringExtra("channel")?.takeIf { it.isNotBlank() }?.let {
+                com.kachat.app.ui.screens.PublicChatLinkRouter.openFromPush(this, it)
+            }
+            // A KaPost push (iOS 148a5331): a reply or a quote opens itself, else the post it was
+            // made on, else Profile's bell. Only transaction ids: the payload is the push
+            // service's word, not ours.
+            "kaposts" -> {
+                val deepLink = com.kachat.app.ui.screens.KaPostsDeepLink
+                val actionTxId = intent.getStringExtra("tx_id")?.trim()?.takeIf {
+                    deepLink.isTxId(it) &&
+                        deepLink.pushOpensAction(intent.getStringExtra("kaposts_kind"), intent.getStringExtra("body"))
+                }?.lowercase()
+                val postId = FCM_KEYS_POST_ID.firstNotNullOfOrNull {
+                    intent.getStringExtra(it)?.trim()?.takeIf { value -> deepLink.isTxId(value) }
+                }?.lowercase()
+                val target = actionTxId ?: postId
+                deepLink.pendingFocusReplyTxId.value = null
+                if (target != null) {
+                    deepLink.pendingPostTxId.value = target
+                } else {
+                    com.kachat.app.ui.screens.NotificationsRoute.pending.value = true
+                }
+            }
+            // A .kachat name push (offers, sales, renewal): that name.
+            "name_event" -> intent.getStringExtra("name")?.takeIf { it.isNotBlank() }?.let { openKachatName(it) }
         }
         // A KaPosts push names its post under any of these; stripped with the rest.
         FCM_KEYS_POST_ID.forEach(intent::removeExtra)
         // Stripped once read, so a configuration change cannot route the same tap twice.
-        listOf("channel", "sender", "thread_id", "tx_id", "kaposts_kind", "body").forEach(intent::removeExtra)
+        listOf("channel", "sender", "thread_id", "tx_id", "kaposts_kind", "body", "name").forEach(intent::removeExtra)
     }
 
     /** The host a KaChat web link arrives on: kachat.app, the one the app writes. */
@@ -413,8 +498,9 @@ class MainActivity : AppCompatActivity() {
         if (intent.action != Intent.ACTION_VIEW) return
         val uri = intent.data ?: return
         val raw = when {
-            uri.scheme.equals("kachat", ignoreCase = true) &&
-                uri.host.equals("profile", ignoreCase = true) -> uri.lastPathSegment
+            // KaPay's own schemes too (registered here since KaPay retired, iOS 148a5331).
+            isKaChatAppScheme(uri.scheme) &&
+                uri.host.equals("profile", ignoreCase = true) -> uri.pathSegments.singleOrNull()
             uri.scheme.equals("https", ignoreCase = true) &&
                 isKaChatWebHost(uri.host) &&
                 uri.pathSegments.firstOrNull() == "u" -> uri.pathSegments.getOrNull(1)
@@ -434,7 +520,8 @@ class MainActivity : AppCompatActivity() {
         if (intent.action != Intent.ACTION_VIEW) return
         val uri = intent.data ?: return
         val isPayLink = when {
-            uri.scheme.equals("kachat", ignoreCase = true) -> uri.host.equals("pay", ignoreCase = true)
+            // kapay://pay/... an older KaPay or KaChat made opens here too (iOS 148a5331).
+            isKaChatAppScheme(uri.scheme) -> uri.host.equals("pay", ignoreCase = true)
             uri.scheme.equals("https", ignoreCase = true) || uri.scheme.equals("http", ignoreCase = true) ->
                 isKaChatWebHost(uri.host) && uri.pathSegments.firstOrNull() == "pay"
             else -> false
@@ -445,14 +532,15 @@ class MainActivity : AppCompatActivity() {
         com.kachat.app.ui.screens.PaymentRequestRouter.open(ref.request)
     }
 
-    /** kachat://kapost/<txid> or https://kachat.app/post/<txid> - a post on KaPost, opened from
-     *  outside the app: it goes straight to the post in KaPost, or its install page (iOS
-     *  a8a5807a). The id is checked before anything opens. */
+    /** kachat://kapost/<txid>, kaposts://kapost/<txid> or https://kachat.app/post/<txid> - a post on
+     *  KaPost, opened from outside the app: it opens in KaChat's own KaPost (iOS 148a5331). The id
+     *  is checked before anything opens. */
     private fun handleKaPostDeepLink(intent: Intent) {
         if (intent.action != Intent.ACTION_VIEW) return
         val uri = intent.data ?: return
         val isPostLink = when {
-            uri.scheme.equals("kachat", ignoreCase = true) -> uri.host.equals("kapost", ignoreCase = true)
+            uri.scheme.equals("kachat", ignoreCase = true) || uri.scheme.equals("kaposts", ignoreCase = true) ->
+                uri.host.equals("kapost", ignoreCase = true)
             uri.scheme.equals("https", ignoreCase = true) || uri.scheme.equals("http", ignoreCase = true) ->
                 isKaChatWebHost(uri.host) && uri.pathSegments.firstOrNull() == "post"
             else -> false
@@ -460,8 +548,47 @@ class MainActivity : AppCompatActivity() {
         if (!isPostLink) return
         val ref = com.kachat.app.ui.screens.KaChatLink.parse(uri.toString()) as? com.kachat.app.ui.screens.KaChatLinkRef.KaPost
             ?: return
-        com.kachat.app.ui.screens.KaPostHandoff.open(this, ref.txId)
+        com.kachat.app.ui.screens.openKaChatLink(this, ref)
     }
+
+    /** kachat://broadcast/<room>, kaposts://broadcast/<room> or https://kachat.app/broadcast/<room> -
+     *  a Public Chats room (iOS 148a5331): it opens, after asking, for one not yet in the list. The
+     *  name passes the room gate before anything routes. */
+    private fun handlePublicChatDeepLink(intent: Intent) {
+        if (intent.action != Intent.ACTION_VIEW) return
+        val uri = intent.data ?: return
+        val ref = com.kachat.app.ui.screens.KaChatLink.parse(uri.toString()) as? com.kachat.app.ui.screens.KaChatLinkRef.PublicChatRoom
+            ?: return
+        com.kachat.app.ui.screens.openKaChatLink(this, ref)
+    }
+
+    /**
+     * KaPost's, KaPay's and KaPlay's other links, their schemes registered here since they retired
+     * (iOS 148a5331 `handleIncomingURL`): `kaposts://compose?text=` opens KaPost's composer with
+     * the text, `kapay://market` the .kachat tab's Marketplace page, and a `kachatchess://bot/...`
+     * challenge the game in KaPlay.
+     */
+    private fun handleRetiredAppLinks(intent: Intent) {
+        if (intent.action != Intent.ACTION_VIEW) return
+        val uri = intent.data ?: return
+        com.kachat.app.ui.screens.KaChatLink.composeText(uri)?.let {
+            com.kachat.app.ui.screens.KaPostsDeepLink.pendingComposeText.value = it
+            return
+        }
+        if (com.kachat.app.ui.screens.KaChatLink.isMarketLink(uri)) {
+            com.kachat.app.ui.screens.KachatDeepLink.pendingMarketplace.value = true
+            return
+        }
+        if (com.kachat.app.services.chess.ChessBotLinks.challenge(uri) != null) {
+            com.kachat.app.services.chess.ChessBotLinks.open(uri)
+        }
+    }
+
+    /** KaChat's own scheme and KaPay's two (kachatwallet:// was KaPay's name before KaPay), whose
+     *  profile and payment request links open here since KaPay retired (iOS 148a5331). */
+    private fun isKaChatAppScheme(scheme: String?): Boolean =
+        scheme.equals("kachat", ignoreCase = true) || scheme.equals("kapay", ignoreCase = true) ||
+            scheme.equals("kachatwallet", ignoreCase = true)
 
     /**
      * System share sheet intake (ACTION_SEND / ACTION_SEND_MULTIPLE — text/plain and image MIME types).

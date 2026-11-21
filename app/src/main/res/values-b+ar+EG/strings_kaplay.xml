@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's chess sentences, looked up by their English text (util/KaPlayText.kt: `kp_` and 12
+     hex of the SHA-1 of the English). Translations from KaPlay Android's strings_app_text.xml and,
+     for the sentences new in KaChat, iOS 148a5331's Localizable.strings. Generated. -->
+<resources>
+    <string name="kp_7e46be469deb" formatted="false">المركز %d في لوحة 1v1</string>
+    <string name="kp_cba1ee4eec72" formatted="false">المركز %d في لوحة البطولات</string>
+    <string name="kp_3401831926d1" formatted="false">تعادل %d</string>
+    <string name="kp_f769c12fc2ee" formatted="false">خسارة %d</string>
+    <string name="kp_d9e1beae2f39" formatted="false">فوز %d</string>
+    <string name="kp_55fc776de141" formatted="false">فوز %d  خسارة %d</string>
+    <string name="kp_d8aa573c0e61" formatted="false">%d نقلة</string>
+    <string name="kp_fbeb1207b441" formatted="false">%d من %d لاعبين</string>
+    <string name="kp_b70e7251ba0d" formatted="false">%d من %d لاعبين مستنيين</string>
+    <string name="kp_6dac15cf1ed7" formatted="false">%d من %d لاعبين · الكود %s</string>
+    <string name="kp_ba09ba042e31" formatted="false">المقاعد المتبقية: %d</string>
+    <string name="kp_d4cd664ac02d" formatted="false">%s غلب %s في %d نقلة. تقدر تعملها في نقلات أقل؟</string>
+    <string name="kp_35f8f501300f" formatted="false">%s بيتحداك تغلب %s.</string>
+    <string name="kp_8a3914693bee" formatted="false">%s هيطلع وإنت هتخرج من البطولة. هتتحسب خسارة في لوحة المتصدرين. الاستسلام معاملة واحدة.</string>
+    <string name="kp_297da93b20fb" formatted="false">%s لسه مقفول: اطلع السلم عشان توصله.</string>
+    <string name="kp_c7642c6d04be" formatted="false">%s بيفكر…</string>
+    <string name="kp_00161fefc871" formatted="false">%s اتفتح!</string>
+    <string name="kp_7ab092285767" formatted="false">%s بيبدأ الأول.</string>
+    <string name="kp_207e56e21618" formatted="false">دور %s</string>
+    <string name="kp_4e56d26a3870" formatted="false">%s ضد %s</string>
+    <string name="kp_fbb8239c09ba" formatted="false">%s هيكسب، وهتتحسب خسارة في لوحة المتصدرين. الاستسلام معاملة واحدة.</string>
+    <string name="kp_a074e492574e" formatted="false">%s كسب</string>
+    <string name="kp_03a71913fd6b" formatted="false">%s كسب بكش مات</string>
+    <string name="kp_e2bdeaa4f9e5" formatted="false">%s كسب بكش مات.</string>
+    <string name="kp_e510ea9dedf3" formatted="false">%s كسب بالاستسلام</string>
+    <string name="kp_33cd4606c8c7" formatted="false">%s كسب بالاستسلام.</string>
+    <string name="kp_405c5afa1901" formatted="false">%s كسب بفرق الوقت بعد تعادل</string>
+    <string name="kp_4e683890d75e" formatted="false">%s كسب بفرق الوقت بعد تعادل لعدم كفاية القطع</string>
+    <string name="kp_f2d9cffd2918" formatted="false">%s كسب بفرق الوقت بعد تعادل بالجمود</string>
+    <string name="kp_3dae94d319ae" formatted="false">%s كسب بفرق الوقت بعد تعادل بقاعدة الخمسين نقلة</string>
+    <string name="kp_26b3a1b77b3b" formatted="false">%s كسب بفرق الوقت بعد تعادل بالتكرار الثلاثي</string>
+    <string name="kp_49680f535fab" formatted="false">%s كسب على الوقت</string>
+    <string name="kp_e27359cb1d1d" formatted="false">%s كسب على الوقت.</string>
+    <string name="kp_7fb322c0aa2a" formatted="false">%s كسب البطولة</string>
+    <string name="kp_683e17380d8a" formatted="false">1 من %d لاعبين</string>
+    <string name="kp_a3a1e853bd57" formatted="false">1 من %d لاعبين مستني</string>
+    <string name="kp_dcd9d9468141" formatted="false">1 من %d لاعبين · الكود %s</string>
+    <string name="kp_f6dec9c77f35" formatted="false">بقي مقعد واحد</string>
+    <string name="kp_d6db37efe259" formatted="false">1v1</string>
+    <string name="kp_1644dc818c09" formatted="false">ماتشات 1v1</string>
+    <string name="kp_7c71818a1ae0" formatted="false">لوحة متصدري 1v1</string>
+    <string name="kp_d8706f214713" formatted="false">1v1 وبطولات وخمس بوتات. النقلات الأونلاين ونتايج البوتات بتتسجل على Kaspa.</string>
+    <string name="kp_ba9cce8319d7" formatted="false">البطولة الخاصة للأصحاب: المُنشئ بيشارك الكود بتاعها اللي فيه تمن حروف. عشان تعمل واحدة محتاج كود المُنشئ.</string>
+    <string name="kp_a733b809d2f1" formatted="false">نشط</string>
+    <string name="kp_d70f93df5e8f" formatted="false">العنوان</string>
+    <string name="kp_4d064726954a" formatted="false">متقدم</string>
+    <string name="kp_dbad49d89123" formatted="false">كل الأوقات</string>
+    <string name="kp_b52b36b7269f" formatted="false">رجوع</string>
+    <string name="kp_c3065156b217" formatted="false">اغلب %s عشان تفتحه</string>
+    <string name="kp_60575a6ebba9" formatted="false">مبتدئ</string>
+    <string name="kp_489d32ce7dd9" formatted="false">الأفضل: %d نقلة</string>
+    <string name="kp_b406fb57b29f" formatted="false">الأسود</string>
+    <string name="kp_b5807c6df986" formatted="false">دور الأسود</string>
+    <string name="kp_4ca88ea465a9" formatted="false">البوتات</string>
+    <string name="kp_e42a1e70b400" formatted="false">الجدول</string>
+    <string name="kp_75e08341b41d" formatted="false">الجدول · دوس على ماتش عشان تتفرج عليه</string>
+    <string name="kp_cf76a9fe16a7" formatted="false">بالاستسلام</string>
+    <string name="kp_2b246e0ff5ca" formatted="false">بيحسبها كويس وبيعاقب على الغلطات. تعالى ومعاك خطة.</string>
+    <string name="kp_77dfd2135f4d" formatted="false">إلغاء</string>
+    <string name="kp_5a2fc967d105" formatted="false">تلغي البطولة دي؟</string>
+    <string name="kp_1fe710030fe9" formatted="false">إلغاء البطولة</string>
+    <string name="kp_5dc29b482d76" formatted="false">المُنشئ لغاها.</string>
+    <string name="kp_7881bf71d2de" formatted="false">البطل</string>
+    <string name="kp_f3dffbf21ed5" formatted="false">كش. دورك.</string>
+    <string name="kp_933b750898fd" formatted="false">كش مات</string>
+    <string name="kp_3226c18271e7" formatted="false">كش مات. %s كسب.</string>
+    <string name="kp_f95715a82ba2" formatted="false">الشطرنج</string>
+    <string name="kp_645b1b39f542" formatted="false">سيرفر الشطرنج مش متاح، بنعرض اللي عندنا. ماتشاتك مكملة من الشبكة. تقدر تدخل الأوض العامة تاني لما يرجع.</string>
+    <string name="kp_b03bf0e29f1c" formatted="false">سيرفر الشطرنج مش متاح. النقلات جاية من الشبكة، والرقعة ممكن تتأخر شوية.</string>
+    <string name="kp_ee9c98ac836b" formatted="false">سيرفر الشطرنج مش متاح. بنعرض اللي على الموبايل ده، وممكن يكون أقل من اللوحة كاملة.</string>
+    <string name="kp_cf9797eede60" formatted="false">سيرفر الشطرنج مش متاح. بنعرض اللي على الموبايل ده.</string>
+    <string name="kp_9cba814a7f57" formatted="false">سيرفر الشطرنج مش متاح. بنراقب الشبكة على لاعبين، فاللي انضم والتطبيق مقفول ممكن ميظهرش.</string>
+    <string name="kp_2b26c543ead5" formatted="false">اختار لعبتك</string>
+    <string name="kp_c47532edb2d7" formatted="false">اطلب الفوز</string>
+    <string name="kp_25b55e8298c7" formatted="false">جاري الطلب…</string>
+    <string name="kp_a546440f3f66" formatted="false">اطلع السلم</string>
+    <string name="kp_adac69379a62" formatted="false">الكود</string>
+    <string name="kp_d29d9fee5279" formatted="false">الكود: %s</string>
+    <string name="kp_8e3df45a49db" formatted="false">تم النسخ</string>
+    <string name="kp_af74f7c5362a" formatted="false">نسخ</string>
+    <string name="kp_6d8d79e75952" formatted="false">مقدرناش نسجل النتيجة على Kaspa</string>
+    <string name="kp_6e157c5da441" formatted="false">إنشاء</string>
+    <string name="kp_1bf04f16edb7" formatted="false">إنشاء 1v1 خاصة</string>
+    <string name="kp_7e92ffa83dfa" formatted="false">إنشاء بطولة خاصة</string>
+    <string name="kp_94d7d8ee473f" formatted="false">جاري الإنشاء…</string>
+    <string name="kp_2775f5da8563" formatted="false">كود المُنشئ</string>
+    <string name="kp_34660a5de9ae" formatted="false">هزيمة</string>
+    <string name="kp_e9b450d14bc2" formatted="false">تم</string>
+    <string name="kp_bfa50c7a3838" formatted="false">تعادل</string>
+    <string name="kp_9af70e71546d" formatted="false">تعادل - فوز بفرق الوقت</string>
+    <string name="kp_3ef901b7405f" formatted="false">تعادل لعدم كفاية القطع - فوز بفرق الوقت</string>
+    <string name="kp_1f217e401459" formatted="false">تعادل لعدم كفاية القطع.</string>
+    <string name="kp_65647004462e" formatted="false">تعادل لعدم كفاية القطع. %s كسب بفرق الوقت.</string>
+    <string name="kp_8abd5d59fe79" formatted="false">تعادل بالجمود - فوز بفرق الوقت</string>
+    <string name="kp_e7c73294f742" formatted="false">تعادل بالجمود.</string>
+    <string name="kp_0ee00fa48fcb" formatted="false">تعادل بالجمود. %s كسب بفرق الوقت.</string>
+    <string name="kp_c1f887545180" formatted="false">تعادل بقاعدة الخمسين نقلة - فوز بفرق الوقت</string>
+    <string name="kp_e0fa7fdfda5b" formatted="false">تعادل بقاعدة الخمسين نقلة.</string>
+    <string name="kp_e18608aaaa1f" formatted="false">تعادل بقاعدة الخمسين نقلة. %s كسب بفرق الوقت.</string>
+    <string name="kp_ca658ca2e441" formatted="false">تعادل بالتكرار الثلاثي - فوز بفرق الوقت</string>
+    <string name="kp_1bd0b8c9f833" formatted="false">تعادل بالتكرار الثلاثي.</string>
+    <string name="kp_c328be341b0c" formatted="false">تعادل بالتكرار الثلاثي. %s كسب بفرق الوقت.</string>
+    <string name="kp_fdd69537f848" formatted="false">تعادل.</string>
+    <string name="kp_cbefc612d55f" formatted="false">تعادل. %s كسب بفرق الوقت.</string>
+    <string name="kp_1861bf6c95a3" formatted="false">تمن لاعبين، خروج المغلوب: ربع النهائي، نصف النهائي، النهائي. الأوض العامة بتتملي لما اللاعبين يوصلوا، والخاصة بالكود.</string>
+    <string name="kp_d488ebb4b1db" formatted="false">كل اللي انضموا هيتفكّوا. دي معاملة واحدة.</string>
+    <string name="kp_4788947ec3fe" formatted="false">أقل عدد نقلات لهزيمة %s</string>
+    <string name="kp_672b22cc516e" formatted="false">النهائي</string>
+    <string name="kp_355bcc577d71" formatted="false">خلصت</string>
+    <string name="kp_a8d435fecb0c" formatted="false">ماتشات 1v1 اللي خلصت</string>
+    <string name="kp_781b28d8c53d" formatted="false">البطولات اللي خلصت</string>
+    <string name="kp_08ab1ad685e3" formatted="false">خمس بوتات، من المستوى 1 لـ 5، من Kaspa Silver لـ Yonatan Sompolinsky. اغلب واحد عشان تفتح اللي بعده. النتيجة بتتسجل على Kaspa.</string>
+    <string name="kp_03e3c2d3a084" formatted="false">خمس بوتات، من المستوى 1 لـ 5. اغلب واحد عشان تفتح اللي بعده. نتيجة كل ماتش بتتسجل على Kaspa لما يخلص.</string>
+    <string name="kp_e3e82846c325" formatted="false">الماتش</string>
+    <string name="kp_94114a40a64a" formatted="false">الماتشات اللي كسبتها وخسرتها - ماتشات 1v1 والبطولات زي بعض</string>
+    <string name="kp_7b1a1bfec003" formatted="false">روح لماتشك</string>
+    <string name="kp_78722784381b" formatted="false">بيلعب للتسلية. بيتحرك بسرعة وساعات بيسيب قطعة من غير حماية.</string>
+    <string name="kp_7f2a3bb304a4" formatted="false">لو مشيت، هتستسلم في الماتش. %s هيطلع وإنت هتخرج من البطولة. هتتحسب خسارة في لوحة المتصدرين. الاستسلام معاملة واحدة.</string>
+    <string name="kp_e998db197859" formatted="false">لو مشيت، هتستسلم في الماتش. %s هيكسب، وهتتحسب خسارة في لوحة المتصدرين. الاستسلام معاملة واحدة.</string>
+    <string name="kp_a4362588018d" formatted="false">لو مشيت، هتستسلم في الماتش. هتتحسب خسارة قدام %s، والنتيجة بتتسجل على Kaspa في معاملة واحدة.</string>
+    <string name="kp_03a2b6501787" formatted="false">شغال</string>
+    <string name="kp_e24d4d212b7b" formatted="false">شغال. دوس على أي ماتش عشان تتفرج عليه لايف.</string>
+    <string name="kp_b1cfe72fd271" formatted="false">متوسط</string>
+    <string name="kp_f63265478d76" formatted="false">هتتحسب خسارة قدام %s، والنتيجة بتتسجل على Kaspa في معاملة واحدة.</string>
+    <string name="kp_e0d73143de80" formatted="false">انضمام</string>
+    <string name="kp_c8155c3c34dc" formatted="false">انضمام (الرسوم: %s)</string>
+    <string name="kp_df7b41919cb2" formatted="false">انضم وهتتقابل مع أول حد ينضم بعدك. لما الأوضة تتملي، الماتش يبدأ والأوضة اللي بعدها تفتح. خمس دقايق لكل لاعب؛ كل نقلة معاملة على Kaspa (حوالي 0.0017 KAS للنقلة). الماتشات هنا بتتحسب في لوحة المتصدرين.</string>
+    <string name="kp_dacbf38d4e73" formatted="false">الانضمام بكود</string>
+    <string name="kp_f44c1e425996" formatted="false">جاري الانضمام…</string>
+    <string name="kp_d9f369249799" formatted="false">احتفظ به</string>
+    <string name="kp_bb76090ac54c" formatted="false">كمّل لعب</string>
+    <string name="kp_9be1abba9272" formatted="false">كمّل انتظار</string>
+    <string name="kp_32bf913a5258" formatted="false">عارف كل قطعة بتتحرك إزاي وبيحب ياخد القطع اللي ببلاش. خلي بالك من البيادق السايبة.</string>
+    <string name="kp_35b13a38f422" formatted="false">مباشر %s</string>
+    <string name="kp_0381247a6987" formatted="false">لوحة المتصدرين</string>
+    <string name="kp_7e3520a97331" formatted="false">مغادرة</string>
+    <string name="kp_963593386268" formatted="false">امشي برضه</string>
+    <string name="kp_4bc79453df63" formatted="false">تسيب الماتش؟</string>
+    <string name="kp_baf82f7117b6" formatted="false">تخرج من الطابور؟</string>
+    <string name="kp_b7aa749e18cb" formatted="false">الخروج معناه إنك مش هتدوّر على لاعب تاني. الخروج معاملة واحدة، وتقدر تنضم تاني في أي وقت.</string>
+    <string name="kp_3016bac3196c" formatted="false">جاري الخروج…</string>
+    <string name="kp_ec7cc1838f39" formatted="false">المستوى %d</string>
+    <string name="kp_7780eacc49b8" formatted="false">المستوى %d من 5</string>
+    <string name="kp_0e50ccfcd686" formatted="false">المستوى %d · %s</string>
+    <string name="kp_9f8465fad533" formatted="false">المستوى %d · %s · بتلعب بالأسود</string>
+    <string name="kp_fc9307e48365" formatted="false">المستوى %d · %s · بتلعب بالأبيض</string>
+    <string name="kp_6235bfaf9ecc" formatted="false">لايف دلوقتي</string>
+    <string name="kp_39687e0a700d" formatted="false">بنحمّل الأوض…</string>
+    <string name="kp_5daad3f809a8" formatted="false">بنحمّل البطولة من الساحة…</string>
+    <string name="kp_4d5e7c6d35ee" formatted="false">بندوّر على خصم</string>
+    <string name="kp_98ea2c12eb7c" formatted="false">بيبص كام نقلة لقدام قبل ما يقرر. ثابت وصعب تضحك عليه.</string>
+    <string name="kp_0f9a484f1388" formatted="false">الهزائم</string>
+    <string name="kp_78f3842f0201" formatted="false">أستاذ</string>
+    <string name="kp_092664087974" formatted="false">لقينا خصم!</string>
+    <string name="kp_a7814b5ec744" formatted="false">النقلة %d · دور الأسود</string>
+    <string name="kp_9fe5cb670a4c" formatted="false">النقلة %d · دور الأبيض</string>
+    <string name="kp_77fbed46e1be" formatted="false">اللي جاي: الجولة 1 ضد %s</string>
+    <string name="kp_a2dad9a4e89c" formatted="false">اللي جاي: النهائي ضد %s</string>
+    <string name="kp_eceff125fbb4" formatted="false">اللي جاي: الماتش ضد %s</string>
+    <string name="kp_1337e1141b11" formatted="false">اللي جاي: نصف النهائي ضد %s</string>
+    <string name="kp_8506e1612593" formatted="false">مفيش ماتشات 1v1 شغالة دلوقتي. لما ماتش يبدأ، هيظهر هنا عشان تتفرج عليه.</string>
+    <string name="kp_3988da2d38ef" formatted="false">لسه محدش لعب ضد أي بوت.</string>
+    <string name="kp_77ebbb8e3de5" formatted="false">لا توجد مباريات 1v1 منتهية بعد.</string>
+    <string name="kp_1597bcaeaaa1" formatted="false">لا توجد بطولات منتهية بعد.</string>
+    <string name="kp_682c0ad47cbe" formatted="false">محدش انضم في الوقت. خرجت من الطابور - انضم تاني وقت ما تحب.</string>
+    <string name="kp_50385293d3d0" formatted="false">مفيش بطولة مفتوحة بالكود ده. الكود تمن حروف، ولازم البطولة تكون موجودة ولسه فيها أماكن.</string>
+    <string name="kp_581a01e739ba" formatted="false">مفيش بطولة شغالة دلوقتي. لما واحدة تبدأ، ماتشاتها هتظهر هنا عشان تتفرج عليها.</string>
+    <string name="kp_2ee8ce15a9f7" formatted="false">لسه محدش غلب %s الشهر ده.</string>
+    <string name="kp_54460cd574b9" formatted="false">لسه محدش غلب %s.</string>
+    <string name="kp_4472179cd296" formatted="false">لسه محدش غلبه</string>
+    <string name="kp_b9e09ae263fb" formatted="false">ما اتأكدش</string>
+    <string name="kp_214bf807441e" formatted="false">مفيش KAS كفاية في عنوان الدردشة. ضيف شوية وجرب تاني.</string>
+    <string name="kp_16ca44702a9b" formatted="false">مستجد</string>
+    <string name="kp_fb58f3c56a8d" formatted="false">على الوقت</string>
+    <string name="kp_1cf2fc54ad9f" formatted="false">أونلاين، خمس دقايق لكل لاعب وكل نقلة معاملة على Kaspa. ماتشات البوتات بتسجل نتيجتها على Kaspa لما تخلص.</string>
+    <string name="kp_6dca824588f3" formatted="false">مكان فاضي</string>
+    <string name="kp_b84d3a372a18" formatted="false">العب ضد %s</string>
+    <string name="kp_0faa2e4de8b8" formatted="false">العب مع صاحبك: اعمل 1v1 وشارك الكود بتاعها. ماتشات 1v1 الخاصة بتتحسب في لوحة المتصدرين برضه.</string>
+    <string name="kp_576766d387ec" formatted="false">العب تاني</string>
+    <string name="kp_61441ace460e" formatted="false">لونك</string>
+    <string name="kp_8ba176164906" formatted="false">العب ضد أول حد ينضم، أو ضد صاحبك بكود. ماتش واحد، واللي يكسب ياخد نقطة لوحة المتصدرين.</string>
+    <string name="kp_e53407cfe1a5" formatted="false">اللاعب</string>
+    <string name="kp_9f33b8c73405" formatted="false">اللاعبون (%d من %d)</string>
+    <string name="kp_237dfa0a21c8" formatted="false">خاصة</string>
+    <string name="kp_f61dccc2dba9" formatted="false">1v1 خاصة</string>
+    <string name="kp_ea951f3a34eb" formatted="false">بطولة خاصة</string>
+    <string name="kp_79b0f9805c68" formatted="false">ترقية إلى</string>
+    <string name="kp_dc5eb704bbca" formatted="false">عامة</string>
+    <string name="kp_37ea9a7673b4" formatted="false">1v1 عامة</string>
+    <string name="kp_8b2cb0910a17" formatted="false">1v1 عامة #%d</string>
+    <string name="kp_236760772b5c" formatted="false">بطولة عامة</string>
+    <string name="kp_b4d6cee9742f" formatted="false">بطولة عامة #%d</string>
+    <string name="kp_58d888c08aa5" formatted="false">عشوائي</string>
+    <string name="kp_73ba76c46a4c" formatted="false">الترتيب حسب أقل عدد نقلات للفوز.</string>
+    <string name="kp_a3d558838b81" formatted="false">استسلام</string>
+    <string name="kp_868d45f552a8" formatted="false">استسلم وامشي</string>
+    <string name="kp_a12f7f95331e" formatted="false">تستسلم في اللعبة دي؟</string>
+    <string name="kp_65d7b143ae0f" formatted="false">النتيجة اتسجلت على Kaspa</string>
+    <string name="kp_9f5cd8a2e880" formatted="false">حاول تاني</string>
+    <string name="kp_923287d2eeda" formatted="false">جرّب التسجيل تاني</string>
+    <string name="kp_f7648d383499" formatted="false">الجولة 1</string>
+    <string name="kp_d7418ba2e352" formatted="false">مش هينفع نشوف الأماكن دلوقتي</string>
+    <string name="kp_33295d1667f4" formatted="false">شوف الرقعة</string>
+    <string name="kp_af1cfadd9704" formatted="false">المصنّف %d</string>
+    <string name="kp_7d79eec3965c" formatted="false">نصف النهائي</string>
+    <string name="kp_3abe921a63aa" formatted="false">نصف النهائي</string>
+    <string name="kp_6f32706309e0" formatted="false">بنبعت نقلتك…</string>
+    <string name="kp_9cb2e112972e" formatted="false">اتبعت، بس Kaspa لسه ما أكدتوش.</string>
+    <string name="kp_09ca55ca52d2" formatted="false">مشاركة</string>
+    <string name="kp_d042790fe991" formatted="false">شارك الكود ده</string>
+    <string name="kp_1f3254d6ce59" formatted="false">شارك على KaPost</string>
+    <string name="kp_4401b9c3edce" formatted="false">حد غلب %s في %d نقلة. تقدر تعملها في نقلات أقل؟</string>
+    <string name="kp_c923aafae8bc" formatted="false">حد بيتحداك تغلب %s.</string>
+    <string name="kp_9a3ea0598e7f" formatted="false">حصلت مشكلة. جرّب تاني.</string>
+    <string name="kp_8aa38f374323" formatted="false">بنسجل النتيجة على Kaspa…</string>
+    <string name="kp_6959b5355760" formatted="false">بنسجل النتيجة…</string>
+    <string name="kp_ae768f766f75" formatted="false">خليك</string>
+    <string name="kp_f300737844cc" formatted="false">الأوض لسه بتحمّل - جرّب تاني كمان شوية.</string>
+    <string name="kp_fc55363a83bc" formatted="false">بنوديكم إنتوا الاتنين للرقعة</string>
+    <string name="kp_ad30c2ff1d6e" formatted="false">بنودّي الكل لرقعهم</string>
+    <string name="kp_293d8f7d8030" formatted="false">بنحجزلك مكانك - دي معاملة واحدة، فبتاخد كام ثانية.</string>
+    <string name="kp_8ad85cccbb0e" formatted="false">دوس عشان ترجعله</string>
+    <string name="kp_0e4268b5d759" formatted="false">كود المُنشئ ده مش صح.</string>
+    <string name="kp_617a81cfb251" formatted="false">ده موصلش للشبكة. جرّب تاني.</string>
+    <string name="kp_55720cd06fc4" formatted="false">الأوضة دي اتملت الأول - بندورلك على اللي بعدها.</string>
+    <string name="kp_d8501167e501" formatted="false">الأوضة دي اتملت الأول. دوس انضمام عشان تجرب اللي بعدها.</string>
+    <string name="kp_9e663d4025b0" formatted="false">البطولة دي بدأت خلاص.</string>
+    <string name="kp_1ee44a0bf66b" formatted="false">سيرفر الشطرنج مش متاح والشبكة لسه ما أكدتش ده. جرّب تاني كمان شوية.</string>
+    <string name="kp_0e3db8107f4d" formatted="false">سيرفر الشطرنج مش متاح، فمش هنقدر نأكد الأوض المفتوحة. جرّب تاني لما يرجع.</string>
+    <string name="kp_3e86d5e865a8" formatted="false">سيرفر الشطرنج مش متاح، فمش هنقدر ندوّر على الكود ده. جرّب تاني لما يرجع.</string>
+    <string name="kp_374e3b271476" formatted="false">الكود اللي فيه تمن حروف اللي المُنشئ شاركه. الانضمام معاملة واحدة (الرسوم: %s).</string>
+    <string name="kp_668f15ee8377" formatted="false">اللعبة نفسها ببلاش. لما تخلص، كسبت أو خسرت، نتيجتها بتتسجل على Kaspa: معاملة واحدة من محفظتك برسوم حوالي %s.</string>
+    <string name="kp_056a66088f6c" formatted="false">اللعبة نفسها ببلاش. لما تخلص، كسبت أو خسرت، نتيجتها بتتسجل على Kaspa: معاملة واحدة من محفظتك برسوم صغيرة.</string>
+    <string name="kp_a94070f3a397" formatted="false">الشبكة لسه بتأكد اللي بعته قبل كده. جرّب تاني بعد كام ثانية.</string>
+    <string name="kp_5021101f57d6" formatted="false">النتيجة بتتسجل على Kaspa لما الماتش يخلص</string>
+    <string name="kp_fb4fdd00f1ac" formatted="false">التسجيل فشل. لو مشيت دلوقتي مش هينفع يتبعت تاني، والفوز ده مش هيتحسب في لوحة المتصدرين.</string>
+    <string name="kp_2d72f92d9b82" formatted="false">ممكن يكون التسجيل تم</string>
+    <string name="kp_30a77c98dc8a" formatted="false">البطولة هتبدأ لوحدها لما الأماكن التمانية تتملي.</string>
+    <string name="kp_693f8a669f1e" formatted="false">دور الخصم</string>
+    <string name="kp_3dd518e63c49" formatted="false">الخصم</string>
+    <string name="kp_22a02413aebd" formatted="false">دايمًا فيه أوضة عامة مستنية لاعبين. لما تتملي تبدأ واللي بعدها تفتح. تمن لاعبين، خروج المغلوب، خمس دقايق لكل لاعب. كل نقلة معاملة على Kaspa (حوالي 0.0017 KAS للنقلة).</string>
+    <string name="kp_6d45876eef92" formatted="false">بيفكر بعمق وبيشوف لبعيد. لو غلبته تبقى طلعت السلم كله.</string>
+    <string name="kp_1085f4e7c41f" formatted="false">الماتش ده اتلعب على حساب تاني. ادخل عليه عشان تسجّل النتيجة.</string>
+    <string name="kp_9fa87800a939" formatted="false">ممكن تكون العملية تمت، بس الشبكة ما أكدتهاش. راجع رصيدك قبل ما تبعت تاني.</string>
+    <string name="kp_1b4785331db3" formatted="false">هذا الشهر</string>
+    <string name="kp_733696c12e3e" formatted="false">الوقت خلص. %s كسب على الوقت.</string>
+    <string name="kp_5a2e22ac873e" formatted="false">لسه ما اتحددش</string>
+    <string name="kp_a2c1d828e2d3" formatted="false">البطولة</string>
+    <string name="kp_25670f61ff36" formatted="false">البطولة كملت!</string>
+    <string name="kp_cd04af2db6f1" formatted="false">لوحة متصدري البطولات</string>
+    <string name="kp_fee20df1963e" formatted="false">البطولات</string>
+    <string name="kp_981d375a0f37" formatted="false">البطولات اللي كسبتها وخسرتها</string>
+    <string name="kp_e71f1539a41b" formatted="false">فوز</string>
+    <string name="kp_f3ec99569fbf" formatted="false">عرض في المستكشف</string>
+    <string name="kp_33d30632848d" formatted="false">مستني</string>
+    <string name="kp_a41118158853" formatted="false">مستنيين %d لاعبين كمان. هتبدأ لوحدها لما التامن ينضم.</string>
+    <string name="kp_442da9df5c77" formatted="false">مستنيين لاعب كمان. هتبدأ لوحدها لما التامن ينضم.</string>
+    <string name="kp_c26c33fa1c5a" formatted="false">مستنيين لاعبين</string>
+    <string name="kp_0e6a21e02626" formatted="false">مستنيين سيرفر الشطرنج</string>
+    <string name="kp_fbc3f16e4c19" formatted="false">مستنيين خصمك. الماتش هيبدأ لوحده لما ينضم.</string>
+    <string name="kp_d91ebf5887cf" formatted="false">اتفرج</string>
+    <string name="kp_7ef5b5821c01" formatted="false">الفرجة ببلاش - مفيش حاجة بتتبعت. اللاعبين الاتنين بس يقدروا يحركوا.</string>
+    <string name="kp_37619fc13053" formatted="false">الأبيض</string>
+    <string name="kp_c6ff9b47bd9e" formatted="false">دور الأبيض</string>
+    <string name="kp_79bcb3dd18f9" formatted="false">نسبة الفوز</string>
+    <string name="kp_ffb136c1afe9" formatted="false">الفائز في ربع النهائي %d</string>
+    <string name="kp_3fe7ae15e42c" formatted="false">الفائز في نصف النهائي %d</string>
+    <string name="kp_b6c015d12e1b" formatted="false">الانتصارات</string>
+    <string name="kp_b273fb287708" formatted="false">كسب</string>
+    <string name="kp_ddf4e3735470" formatted="false">كسبها %s</string>
+    <string name="kp_905cb326c779" formatted="false">أنت</string>
+    <string name="kp_70142233d6f3" formatted="false">إنت خرجت من البطولة دي. اتفرج على باقي الجدول.</string>
+    <string name="kp_07025e915e94" formatted="false">إنت خرجت من البطولة دي. تقدر تتفرج على باقي الجدول.</string>
+    <string name="kp_188b806432ca" formatted="false">هتاخد كود تشاركه مع اللي عايز تلعب معاه. الماتش بيبدأ لما ينضم. الإنشاء معاملة واحدة.</string>
+    <string name="kp_e7c04dcae100" formatted="false">إنت طالع للدور الجاي. ماتشك الجاي هيفتح لوحده لما خصمك يتحدد.</string>
+    <string name="kp_5279ac5901b8" formatted="false">خسرت</string>
+    <string name="kp_db93b3d19f74" formatted="false">إنت بتبدأ الأول.</string>
+    <string name="kp_7ec46c42f060" formatted="false">استسلمت. %s كسب.</string>
+    <string name="kp_85b0b68af5f2" formatted="false">هتاخد أول مكان وكود تشاركه. هتبدأ لما تمن لاعبين ينضموا. الإنشاء معاملة واحدة.</string>
+    <string name="kp_3c2dfe0e1289" formatted="false">كسبت بكش مات في %d نقلة.</string>
+    <string name="kp_8dfe694ea61b" formatted="false">كسبت بكش مات في نقلة واحدة.</string>
+    <string name="kp_8c75d5f7de98" formatted="false">كسبت الجولة 1. مستنيين خصمك الجاي - اتفرج على الماتش التاني لحد ما ييجي.</string>
+    <string name="kp_795115417df0" formatted="false">كسبت النهائي. مستنيين خصمك الجاي - اتفرج على الماتش التاني لحد ما ييجي.</string>
+    <string name="kp_2987342bd41b" formatted="false">كسبت الماتش. مستنيين خصمك الجاي - اتفرج على الماتش التاني لحد ما ييجي.</string>
+    <string name="kp_ba7e2d06a69c" formatted="false">كسبت نصف النهائي. مستنيين خصمك الجاي - اتفرج على الماتش التاني لحد ما ييجي.</string>
+    <string name="kp_dc9807723538" formatted="false">كسبت البطولة.</string>
+    <string name="kp_e3a4b01eaca8" formatted="false">كسبت!</string>
+    <string name="kp_2bd203ba381e" formatted="false">إنت أصلًا مستني في %s.</string>
+    <string name="kp_a91633acc070" formatted="false">إنت جوه. مستنيين %d كمان…</string>
+    <string name="kp_ad79fa22e5b2" formatted="false">إنت جوه. مستنيين واحد كمان…</string>
+    <string name="kp_cfe84965f638" formatted="false">هتتقابل مع أول حد ينضم. الماتش هيبدأ لوحده.</string>
+    <string name="kp_d80ca7163461" formatted="false">إنت بتلعب في %s</string>
+    <string name="kp_24bf6785a61b" formatted="false">إنت لسه بتلعب في %s.</string>
+    <string name="kp_eec7f86a8bb7" formatted="false">إنت مستني في %s</string>
+    <string name="kp_61e7335f3c19" formatted="false">سجلّك في 1v1</string>
+    <string name="kp_48fd80af85de" formatted="false">وقتك خلص قبل ما النقلة تتبعت.</string>
+    <string name="kp_a8bc9c75a936" formatted="false">ماتشك هيبدأ بعد</string>
+    <string name="kp_32ec1dbd797a" formatted="false">انضمامك موصلش للشبكة. انضم تاني وقت ما تحب.</string>
+    <string name="kp_44470e508a5d" formatted="false">دورك</string>
+    <string name="kp_d5b2c846e810" formatted="false">نقلتك ما اتحسبتش. بص على الرقعة.</string>
+    <string name="kp_5277d781ccc7" formatted="false">نقلتك موصلتش للشبكة. العبها تاني.</string>
+    <string name="kp_63bbbf0226f5" formatted="false">سجلّك</string>
+    <string name="kp_4e15ba26e54d" formatted="false">مكانك محجوز لمدة %s. لو الأوضة ماتملتش لحد ساعتها، هتخرج من الطابور.</string>
+    <string name="kp_8774b9393565" formatted="false">مكانك محجوز المدة دي. لو محدش انضم في الوقت، هتخرج من الطابور.</string>
+    <string name="kp_94ad25364602" formatted="false">سجلّك في البطولات</string>
+    <string name="kp_114f3f6a8251" formatted="false">فوزك لسه ما اتسجلش على Kaspa</string>
+    <string name="kp_f957097d7a22" formatted="false">خلصت</string>
+    <string name="kp_691a77cd21a3" formatted="false">ضد</string>
+    <string name="kp_aa93adb4f65c" formatted="false">غلبت %s (المستوى %d) في %d نقلة على K. تفتكر تقدر تعملها في نقلات أقل؟</string>
+    <string name="kp_f81826d956cc" formatted="false">انضم لبطولة الشطرنج بتاعتي على K: افتح KaPlay &gt; الشطرنج &gt; البطولات &gt; الانضمام بكود، واكتب %s.</string>
+    <string name="kp_c2ecefef54c6" formatted="false">العب معايا شطرنج على K: افتح KaPlay &gt; الشطرنج &gt; 1v1 &gt; الانضمام بكود، واكتب %s.</string>
+    <string name="kp_f4fa709cb963" formatted="false">ربع النهائي</string>
+    <string name="kp_3ce0ac6e9413" formatted="false">النتيجة ما اتبعتتش.</string>
+    <string name="kaplay_leaderboard_all_time">كل الأوقات</string>
+    <string name="kaplay_leaderboard_counted_from">محسوبة منذ %1$s.</string>
+    <string name="kaplay_leaderboard_period">فترة لوحة المتصدرين</string>
+    <string name="kaplay_leaderboard_resets_monthly">يُعاد ضبطها في اليوم الأول من كل شهر (UTC).</string>
+    <string name="kaplay_leaderboard_this_month">هذا الشهر</string>
+    <string name="kaplay_no_finished_duels">لا توجد مباريات 1v1 منتهية بعد.</string>
+    <string name="kaplay_no_finished_duels_this_month">لا توجد مباريات 1v1 منتهية هذا الشهر بعد.</string>
+    <string name="kaplay_no_finished_tournaments">لا توجد بطولات منتهية بعد.</string>
+    <string name="kaplay_no_finished_tournaments_this_month">لا توجد بطولات منتهية هذا الشهر بعد.</string>
+    <string name="kaplay_tab_leaderboard">لوحة المتصدرين</string>
+</resources>

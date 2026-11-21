@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">מי שפותח אותה ב-K מקבל את שליחת קספה עם הפרטים האלה ממולאים, ורואה שהיא נוצרה על ידי כתובת הצ\'אט שלך (חתומה במפתח שלה).</string>
+    <string name="pl_tap_to_open_public_chat_room">הקש כדי לפתוח את חדר הצ\'אט הציבורי הזה.</string>
+    <string name="pl_tap_to_join_public_chat_room">הקש כדי להצטרף לחדר הצ\'אט הציבורי הזה.</string>
+    <string name="pl_join_room_title">להצטרף אל #%1$s?</string>
+    <string name="pl_join_room_message">קישור מבקש להוסיף את החדר הזה לצ\'אטים הציבוריים שלכם.</string>
+    <string name="pl_join_room_mixed_scripts">השם הזה משלב אותיות מאלפביתים שונים, ולכן ייתכן שהוא מתחזה לחדר אחר.</string>
+</resources>

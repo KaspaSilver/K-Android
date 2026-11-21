@@ -96,18 +96,38 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="kachat" android:host="pay" />
             </intent-filter>
-            <!-- KaPost posts: kachat://kapost/<txid> opens the post in KaPost, or its install page
-                 without it (iOS a8a5807a). The id is checked before anything opens. -->
+            <!-- KaPost posts: kachat://kapost/<txid> opens the post in KaChat's own KaPost (iOS
+                 148a5331). The id is checked before anything opens. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="kachat" android:host="kapost" />
             </intent-filter>
+            <!-- Public Chats rooms: kachat://broadcast/<room> opens the room, asking first for one
+                 not yet in the list (iOS 148a5331). The name is checked before anything routes. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kachat" android:host="broadcast" />
+            </intent-filter>
+            <!-- The retired apps' own schemes, registered here since KaChat is the all-in-one app
+                 again (iOS 148a5331 Info.plist): kaposts:// (KaPost: posts, rooms, compose),
+                 kapay:// and kachatwallet:// (KaPay: profiles, payment requests, the market) and
+                 kachatchess:// (KaPlay: bot challenges). Each link is validated in MainActivity. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kaposts" />
+                <data android:scheme="kapay" />
+                <data android:scheme="kachatwallet" />
+                <data android:scheme="kachatchess" />
+            </intent-filter>
             <!-- Universal-link form. autoVerify needs /.well-known/assetlinks.json served at
                  the domain (mirrors iOS's AASA file - see KACHAT_APP_LINKS.md). KaPosts posts
-                 (/post/) go on to the post in KaPost (iOS a8a5807a); public chat rooms
-                 (/broadcast/) left the app on 2026-10-24 (iOS e2f6732) and open in the browser. -->
+                 (/post/) and public chat rooms (/broadcast/) open in KaChat (iOS 148a5331). -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -116,8 +136,10 @@
                 <data android:scheme="https" android:host="kachat.app" android:pathPrefix="/u/" />
                 <!-- Payment requests (Chats > + > Request Payment, iOS c6851d6). -->
                 <data android:scheme="https" android:host="kachat.app" android:pathPrefix="/pay/" />
-                <!-- KaPosts share links, handed on to KaPost (iOS a8a5807a). -->
+                <!-- KaPosts share links, opened in KaChat's own KaPost (iOS 148a5331). -->
                 <data android:scheme="https" android:host="kachat.app" android:pathPrefix="/post/" />
+                <!-- Public chat room invites (iOS 148a5331). -->
+                <data android:scheme="https" android:host="kachat.app" android:pathPrefix="/broadcast/" />
             </intent-filter>
             <!-- System share sheet: text/links and images shared from any app land in a chat's
                  composer (see ShareShortcutsManager/ShareIntake + MainActivity.handleShareIntent).

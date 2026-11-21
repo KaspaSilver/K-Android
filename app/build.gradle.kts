@@ -236,6 +236,9 @@ dependencies {
     // Per-app language switching (AppCompatDelegate.setApplicationLocales) - the modern,
     // Google-recommended API, native on API 33+ and backported below it via this dependency.
     implementation(libs.androidx.appcompat)
+    // WebViewCompat (document-start scripts, web message listeners): every kUSDT send and the
+    // Trestly browser run through it (iOS 148a5331's KusdtCore and Trestly).
+    implementation(libs.androidx.webkit)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.process)

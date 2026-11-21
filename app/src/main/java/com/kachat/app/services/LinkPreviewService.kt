@@ -72,6 +72,7 @@ object LinkPreviewService {
         .connectTimeout(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .readTimeout(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .callTimeout(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .withRedirectRules()
         .build()
 
     // `null` value = "fetched, but no preview data found" - still worth caching so a bad/plain
@@ -145,6 +146,7 @@ object LinkPreviewService {
     fun previewImageLoader(context: Context): ImageLoader = previewLoader ?: synchronized(this) {
         previewLoader ?: context.applicationContext.imageLoader.newBuilder()
             .okHttpClient(client.newBuilder().addInterceptor(CappedBodyInterceptor(MAX_IMAGE_BYTES)).build())
+            .components { add(PixelCapDecoderFactory()) }
             .build()
             .also { previewLoader = it }
     }
@@ -152,7 +154,8 @@ object LinkPreviewService {
     /** [previewImageLoader] with the original file's higher cap, for the full-screen photo viewer. */
     fun fullImageLoader(context: Context): ImageLoader = fullLoader ?: synchronized(this) {
         fullLoader ?: context.applicationContext.imageLoader.newBuilder()
-            .okHttpClient(downloadClient.newBuilder().addInterceptor(CappedBodyInterceptor(MAX_FULL_IMAGE_BYTES)).build())
+            .okHttpClient(downloadClient.newBuilder().withRedirectRules().addInterceptor(CappedBodyInterceptor(MAX_FULL_IMAGE_BYTES)).build())
+            .components { add(PixelCapDecoderFactory()) }
             .build()
             .also { fullLoader = it }
     }
@@ -161,10 +164,110 @@ object LinkPreviewService {
      *  owner set, so the size is theirs too (iOS 4f8e14bb). Shares the app's caches. */
     fun profileImageLoader(context: Context): ImageLoader = profileLoader ?: synchronized(this) {
         profileLoader ?: context.applicationContext.imageLoader.newBuilder()
-            .okHttpClient(downloadClient.newBuilder().addInterceptor(CappedBodyInterceptor(MAX_PROFILE_IMAGE_BYTES)).build())
+            .okHttpClient(downloadClient.newBuilder().withRedirectRules().addInterceptor(CappedBodyInterceptor(MAX_PROFILE_IMAGE_BYTES)).build())
+            .components { add(PixelCapDecoderFactory()) }
             .build()
             .also { profileLoader = it }
     }
+
+    /** One site: the same host, or one a subdomain of the other (www.x.com and x.com, cdn.x.com
+     *  and x.com). iOS d7c56280 `isSameSite`. */
+    fun isSameSite(a: String?, b: String?): Boolean {
+        val ha = a?.let { hostOf(it) } ?: return false
+        val hb = b?.let { hostOf(it) } ?: return false
+        return ha == hb || ha.endsWith(".$hb") || hb.endsWith(".$ha")
+    }
+
+    /**
+     * Where a preview fetch may be redirected (iOS d7c56280 `isAllowedRedirect`): back to the same
+     * host (an http-only server moving a path), or to an https URL on a public name. Never to
+     * plain http elsewhere, an IP address or a local name, so a link can't bounce the reader's
+     * phone onto another server in the clear or into their own network.
+     */
+    fun isAllowedRedirect(from: String?, to: String): Boolean {
+        val host = hostOf(to) ?: return false
+        val scheme = to.substringBefore("://", missingDelimiterValue = "").lowercase()
+        val oldHost = from?.let { hostOf(it) }
+        if (oldHost != null && oldHost == host && (scheme == "https" || scheme == "http")) return true
+        if (scheme != "https") return false
+        if (host == "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || !host.contains('.')) return false
+        // IP literals: IPv6 carries colons, IPv4 is digits and dots only
+        if (host.contains(':') || host.all { it.isDigit() || it == '.' }) return false
+        return true
+    }
+
+    /** The lowercased host of [url], brackets of an IPv6 literal removed; null when it has none. */
+    private fun hostOf(url: String): String? =
+        runCatching { java.net.URI(url).host }.getOrNull()
+            ?.lowercase()?.removePrefix("[")?.removeSuffix("]")?.takeIf { it.isNotEmpty() }
+
+    /** Redirects followed only where [isAllowedRedirect] says, by [RedirectRulesInterceptor]
+     *  rather than OkHttp's own follow-up. */
+    private fun OkHttpClient.Builder.withRedirectRules(): OkHttpClient.Builder =
+        followRedirects(false).followSslRedirects(false).addInterceptor(RedirectRulesInterceptor())
+
+    /**
+     * Follows a redirect only where [isAllowedRedirect] says; refused, the call ends with the 3xx,
+     * which no caller takes as a preview. The Referer is dropped when the redirect leaves the
+     * referring site (iOS d7c56280 `CappedResponseReader`'s redirect delegate).
+     */
+    private class RedirectRulesInterceptor : Interceptor {
+        override fun intercept(chain: Interceptor.Chain): Response {
+            var request = chain.request()
+            var response = chain.proceed(request)
+            repeat(MAX_REDIRECTS) {
+                if (response.code !in REDIRECT_CODES) return response
+                val next = response.header("Location")?.let { request.url.resolve(it) } ?: return response
+                if (!isAllowedRedirect(request.url.toString(), next.toString())) return response
+                val builder = request.newBuilder().url(next)
+                // 303 always, and 301/302 for anything but GET or HEAD, go on as a GET (OkHttp's
+                // own rule); 307/308 keep the method and body.
+                if (response.code == 303 || (response.code in 301..302 && request.method != "GET" && request.method != "HEAD")) {
+                    builder.method("GET", null)
+                }
+                request.header("Referer")?.let { referer ->
+                    if (!isSameSite(next.toString(), referer)) builder.removeHeader("Referer")
+                }
+                request = builder.build()
+                response.close()
+                response = chain.proceed(request)
+            }
+            return response
+        }
+
+        private companion object {
+            val REDIRECT_CODES = setOf(300, 301, 302, 303, 307, 308)
+            const val MAX_REDIRECTS = 20
+        }
+    }
+
+    /**
+     * Refuses a picture past [MAX_SOURCE_PIXELS], or one whose size can't be read, before it is
+     * decoded (iOS 5b7c772c `ImageDownsampler`): a 48 MP camera photo is about the largest real
+     * one. Null, passing it to Coil's own decoder, for everything else.
+     */
+    private class PixelCapDecoderFactory : coil.decode.Decoder.Factory {
+        override fun create(
+            result: coil.fetch.SourceResult,
+            options: coil.request.Options,
+            imageLoader: ImageLoader,
+        ): coil.decode.Decoder? {
+            val bounds = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            runCatching {
+                android.graphics.BitmapFactory.decodeStream(result.source.source().peek().inputStream(), null, bounds)
+            }
+            val width = bounds.outWidth
+            val height = bounds.outHeight
+            if (width > 0 && height > 0 && width.toDouble() * height.toDouble() <= MAX_SOURCE_PIXELS) return null
+            return object : coil.decode.Decoder {
+                override suspend fun decode(): coil.decode.DecodeResult = throw IOException("Image size ${width}x$height refused")
+            }
+        }
+    }
+
+    /** Past this the source isn't a real picture (iOS 5b7c772c `maxSourcePixels`, matching chat
+     *  photos). */
+    private const val MAX_SOURCE_PIXELS = 50_000_000.0
 
     /** Fails a response whose body passes [limit], at the declared Content-Length when there is
      *  one, or as the bytes arrive, so it never all lands in memory first. */
@@ -315,7 +418,8 @@ object LinkPreviewService {
                 val body = response.body?.string() ?: return null
                 val json = JSONObject(body)
                 val title = json.optString("title").takeIf { it.isNotEmpty() }
-                val thumbnailUrl = json.optString("thumbnail_url").takeIf { it.isNotEmpty() }
+                // https only: a file:, data: or plain http: image never loads (iOS d7c56280)
+                val thumbnailUrl = json.optString("thumbnail_url").takeIf { it.isNotEmpty() && isHttps(it) }
                 if (title == null && thumbnailUrl == null) return null
 
                 LinkPreviewData(
@@ -466,6 +570,8 @@ object LinkPreviewService {
         // its signature - the CDN answers 403 and the card falls back to text only (iOS c97e78f:
         // raw 403, decoded 200).
         val imageUrl = metaContent("og:image", html, useProperty = true)?.let { resolveUrl(it.decodeHtmlEntities(), url) }
+            // https only: a file:, data: or plain http: image never loads (iOS d7c56280)
+            ?.takeIf { isHttps(it) }
         val siteName = metaContent("og:site_name", html, useProperty = true) ?: runCatching { java.net.URI(url).host }.getOrNull()
 
         if (title == null && description == null && imageUrl == null) return null
@@ -500,6 +606,9 @@ object LinkPreviewService {
         val raw = titleTagRegex.find(html)?.groupValues?.getOrNull(1)?.trim()
         return raw?.takeIf { it.isNotEmpty() }
     }
+
+    private fun isHttps(url: String): Boolean =
+        url.substringBefore("://", missingDelimiterValue = "").equals("https", ignoreCase = true)
 
     private fun resolveUrl(raw: String, base: String): String {
         return try {

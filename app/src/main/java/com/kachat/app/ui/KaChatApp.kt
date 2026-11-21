@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Forum
@@ -27,7 +26,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
@@ -58,6 +56,19 @@ import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import androidx.navigation.navArgument
 import com.kachat.app.ui.screens.*
+import com.kachat.app.ui.screens.chess.ChessLeaderboardScreen
+import com.kachat.app.ui.screens.chess.GamesScreen
+import com.kachat.app.ui.screens.chess.KaPlayRoutes
+import com.kachat.app.ui.screens.chess.kaPlayGraph
+import com.kachat.app.ui.screens.chess.kaPlayShowsDock
+import com.kachat.app.ui.screens.coldstorage.ColdStorageTab
+import com.kachat.app.ui.screens.coldstorage.isOwnColdAddress
+import com.kachat.app.ui.screens.portfolio.PortfolioHashrateChartScreen
+import com.kachat.app.ui.screens.portfolio.PortfolioPriceChartScreen
+import com.kachat.app.ui.screens.portfolio.PortfolioRoutes
+import com.kachat.app.ui.screens.portfolio.PortfolioTab
+import com.kachat.app.ui.screens.portfolio.PortfolioValueChartScreen
+import com.kachat.app.ui.screens.PublicChatRoutes
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
 import com.kachat.app.viewmodels.WalletViewModel
@@ -68,21 +79,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.filled.CheckCircle
 
 /**
- * The dock's tabs (iOS `AppTab`). Since 2026-10-24 KaChat is 1:1 and group chats, and the dock is
- * fixed - since 2026-11-04 a five: Contacts, Wallet, Chats, Profile, Settings (iOS d1844582,
- * bfe9f022): no Kaspa Hub, no Customize Dock. Group chats share the Chats list. The other wallet
- * features (Portfolio, Cold Storage, Swap, .kachat names) live in the KaChat wallet app.
+ * The routes of the five tabs the dock had before Kaspa Hub came back. The tabs themselves are
+ * [AppTab] now (dock or Kaspa Hub, iOS 148a5331); these names stay for the screens that check
+ * which route a reselect was for.
  */
 sealed class Screen(val route: String, @androidx.annotation.StringRes val labelRes: Int, val icon: ImageVector) {
-    object Chats       : Screen("chats",        R.string.chats,        Icons.Default.Forum)
-    // The account's money (iOS bfe9f022 WalletView): the balance, Send, Receive, Request.
-    object Wallet      : Screen("wallet",       R.string.wallet_title,       Icons.Filled.AccountBalanceWallet)
-    // Saved Kaspa addresses with names, per wallet (iOS 00767a4); "Contacts" with a contact-card
-    // icon since 2026-10-28 (iOS bc3e1ff3; "Addresses" before). The route keeps its old name.
-    object AddressBook : Screen("address_book", R.string.ab_address_book,     ContactsFilledIcon)
-    object Profile     : Screen("profile",      R.string.profile,      Icons.Default.AccountCircle)
-    // Its own tab since 2026-10-24 (it used to be a sheet behind Profile's settings row).
-    object Settings    : Screen("settings",     R.string.settings_title,     Icons.Default.Settings)
+    object Chats       : Screen(AppTab.CHATS.route,        R.string.kachat,          Icons.Default.Forum)
+    object Wallet      : Screen(AppTab.WALLET.route,       R.string.wallet_title,    Icons.Filled.AccountBalanceWallet)
+    object AddressBook : Screen(AppTab.ADDRESS_BOOK.route, R.string.ab_address_book, ContactsFilledIcon)
+    object Profile     : Screen(AppTab.PROFILE.route,      R.string.profile,         Icons.Default.AccountCircle)
+    object Settings    : Screen(AppTab.SETTINGS.route,     R.string.settings_title,  Icons.Default.Settings)
 }
 
 /**
@@ -99,32 +105,62 @@ private val settingsPushedRoutes = setOf(
     "notification_settings",
     "wallet_notification_settings",
     "quick_reaction_settings",
+    // Settings > Help (moved from the old Profile, iOS 148a5331) and its kUSDT Guide;
+    // Settings > Notifications > KaPost.
+    "help",
+    SettingsShellRoutes.TOKEN_GUIDE,
+    SettingsShellRoutes.KAPOSTS_NOTIFICATIONS,
 )
 
+/** Routes the shell adds for Settings' new rows (iOS 148a5331 SettingsView). */
+object SettingsShellRoutes {
+    /** Settings > Help > kUSDT Guide ([com.kachat.app.ui.screens.tokens.TokenGuideScreen]). */
+    const val TOKEN_GUIDE = "token_guide"
+    /** Settings > Help > .kachat Names Guide ([KachatSetupGuideScreen]), full screen. */
+    const val KACHAT_NAMES_GUIDE = "kachat_names_guide"
+    /** Settings > About > Terms of Use ([TermsOfUseScreen]). */
+    const val TERMS_OF_USE = "terms_of_use"
+    /** Settings > Notifications > KaPost ([KaPostsNotificationSettingsScreen]). */
+    const val KAPOSTS_NOTIFICATIONS = "kaposts_notification_settings"
+}
+
+/** Wallet's pushed pages (Manage Addresses and its address pages, Your Domains). */
+private val walletPushedRoutes = setOf(
+    "manage_addresses", "identity_address_detail", "spending_address_detail/{index}", "kns_domains",
+)
+
+/** Portfolio's chart pages (iOS NavigationLinks inside PortfolioView: the tab bar stays). */
+private val portfolioPushedRoutes = setOf(
+    PortfolioRoutes.PRICE_CHART, PortfolioRoutes.VALUE_CHART, PortfolioRoutes.HASHRATE_CHART,
+)
+
+/** A public room and its Room Info, pushed inside Chats with the dock kept (iOS). */
+private val roomPushedRoutes = setOf(PublicChatRoutes.ROOM, PublicChatRoutes.ROOM_INFO)
+
 /**
- * The tab a route belongs to, for the dock to light while you are on it: the route itself when
- * it is one of the tabs, the tab that opens it when it is a screen further in. Null for a route
- * the dock is not shown over, or one no tab owns.
+ * The tab a pushed route belongs to, for the dock to light while you are on it. Null for a route
+ * no tab owns. When that tab lives in Kaspa Hub, the Hub lights instead.
  */
-private fun dockOwnerRoute(route: String?): String? = when (route) {
+private fun dockOwnerTab(route: String?): AppTab? = when (route) {
     null -> null
-    "chat/{contactId}?paymentMode={paymentMode}" -> Screen.Chats.route
-    "group_chat/{groupId}" -> Screen.Chats.route
-    "manage_addresses", "identity_address_detail", "spending_address_detail/{index}" -> Screen.Wallet.route
-    "help", "kns_domains" -> Screen.Profile.route
-    in settingsPushedRoutes -> Screen.Settings.route
-    else -> route.takeIf { r -> bottomNavItems.any { it.route == r } }
+    "chat/{contactId}?paymentMode={paymentMode}", "group_chat/{groupId}",
+    PublicChatRoutes.ROOM, PublicChatRoutes.ROOM_INFO, PublicChatRoutes.HIDDEN_USERS -> AppTab.CHATS
+    in walletPushedRoutes -> AppTab.WALLET
+    in settingsPushedRoutes -> AppTab.SETTINGS
+    in portfolioPushedRoutes -> AppTab.PORTFOLIO
+    in KaPlayRoutes.DOCKED_ROUTES, in KaPlayRoutes.GAME_ROUTES -> AppTab.GAMES
+    else -> AppTab.fromRoute(route)
 }
 
 /**
- * Switches to [tab] the way a dock tap does: back to it when it is already on the back stack (a
- * navigate() + popUpTo to the start destination alone is a no-op for Chats in Navigation
- * Compose), else a first visit that keeps each tab's own stack.
+ * Switches to the tab at [route] the way a dock tap does: back to it when it is already on the
+ * back stack (a navigate() + popUpTo to the start destination alone is a no-op for the start
+ * destination in Navigation Compose), else a first visit that keeps each tab's own stack.
  */
-fun navigateToTab(navController: NavController, tab: Screen) {
-    val poppedToExisting = navController.popBackStack(route = tab.route, inclusive = false, saveState = true)
+fun navigateToTab(navController: NavController, route: String) {
+    val poppedToExisting = navController.popBackStack(route = route, inclusive = false, saveState = true)
     if (!poppedToExisting) {
-        navController.navigate(tab.route) {
+        navController.navigate(route) {
             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
             launchSingleTop = true
             restoreState = true
@@ -132,18 +168,11 @@ fun navigateToTab(navController: NavController, tab: Screen) {
     }
 }
 
-/** What the dock renders, in order (iOS `AppTab.dock`). The app opens on Chats. */
-val bottomNavItems = listOf(
-    Screen.AddressBook,
-    Screen.Wallet,
-    Screen.Chats,
-    Screen.Profile,
-    Screen.Settings,
-)
+fun navigateToTab(navController: NavController, tab: Screen) = navigateToTab(navController, tab.route)
 
 /**
- * Root composable: bottom nav + NavHost.
- * Wallet onboarding is shown instead when no wallet exists.
+ * Root composable: the Terms of Use until agreed (iOS 148a5331 `ContentView`), then onboarding
+ * when no wallet exists, else the dock and its tabs.
  */
 @Composable
 fun KaChatApp(
@@ -159,6 +188,18 @@ fun KaChatApp(
     pendingOwnAddress: String? = null,
     onPendingOwnAddressHandled: () -> Unit = {}
 ) {
+    // The Terms of Use (KaPost and Public Chats are back: App Store guideline 1.2 on iOS): the
+    // first screen until the current version is agreed to on this device, before any account.
+    val termsContext = androidx.compose.ui.platform.LocalContext.current
+    var termsAccepted by remember { mutableStateOf(KaChatTerms.isAccepted(termsContext)) }
+    if (!termsAccepted) {
+        TermsAcceptanceScreen(onAgree = {
+            KaChatTerms.accept(termsContext)
+            termsAccepted = true
+        })
+        return
+    }
+
     val isLoggedIn by walletViewModel.isLoggedIn.collectAsState()
     val startupResolved by walletViewModel.startupResolved.collectAsState()
 
@@ -189,6 +230,20 @@ fun KaChatApp(
     }
 }
 
+/**
+ * Portfolio's chart pages share the tab's [com.kachat.app.viewmodels.PortfolioViewModel]: the one
+ * scoped to the Portfolio tab's route when it sits in the dock, or to Kaspa Hub's when it opened
+ * there (KaPay: `hiltViewModel(navController.getBackStackEntry(<portfolio route>))`).
+ */
+@Composable
+private fun sharedPortfolioViewModel(navController: NavController): com.kachat.app.viewmodels.PortfolioViewModel {
+    val owner = remember(navController) {
+        runCatching { navController.getBackStackEntry(AppTab.PORTFOLIO.route) }.getOrNull()
+            ?: runCatching { navController.getBackStackEntry(AppTab.HUB.route) }.getOrNull()
+    }
+    return if (owner != null) hiltViewModel(owner) else hiltViewModel()
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MainShell(
@@ -210,20 +265,38 @@ fun MainShell(
     // The whole stack, for the dock to light the tab a pushed screen sits in.
     val dockBackStack by navController.currentBackStack.collectAsState()
     val currentDestination = navBackStackEntry?.destination
+
+    // The dock and Kaspa Hub's grid, as Customize Dock arranged them (iOS `DockLayout`).
+    val shellContext = androidx.compose.ui.platform.LocalContext.current
+    remember { DockLayout.init(shellContext) }
+    val dockTabs by DockLayout.dock.collectAsState()
+    val hubTabs by DockLayout.hub.collectAsState()
+    val hubOpenSection by HubRouter.openSection.collectAsState()
+    // The app opens on Chats (iOS `selectedTab = 1`): its dock slot, or open in Kaspa Hub.
+    val startRoute = remember {
+        if (AppTab.CHATS in DockLayout.dock.value) {
+            AppTab.CHATS.route
+        } else {
+            HubRouter.open(AppTab.CHATS)
+            AppTab.HUB.route
+        }
+    }
+    val tabRoutes = remember { AppTab.entries.map { it.route }.toSet() }
+
     val onTabRoute = currentDestination?.hierarchy?.any { dest ->
-        bottomNavItems.any { it.route == dest.route } ||
+        dest.route in tabRoutes ||
             // A chat keeps the tab bar too: iOS's ChatDetailView / GroupChatDetailView sit inside
-            // the Chats tab with its bar showing, the composer above it.
+            // the Chats tab with its bar showing, the composer above it. So do public rooms.
             dest.route == "chat/{contactId}?paymentMode={paymentMode}" ||
             dest.route == "group_chat/{groupId}" ||
-            // Help is pushed inside the Profile tab on iOS (ProfileHelpView): its tab bar stays.
-            dest.route == "help" ||
-            // So are Your Domains (Profile) and Manage Addresses with its address pages (Wallet) -
-            // NavigationLinks in ProfileView / WalletView, all keeping iOS's tab bar.
-            dest.route == "manage_addresses" ||
-            dest.route == "identity_address_detail" ||
-            dest.route == "spending_address_detail/{index}" ||
-            dest.route == "kns_domains" ||
+            dest.route in roomPushedRoutes ||
+            // Manage Addresses with its address pages and Your Domains (Wallet), Portfolio's
+            // charts - NavigationLinks on iOS, all keeping the tab bar.
+            dest.route in walletPushedRoutes ||
+            dest.route in portfolioPushedRoutes ||
+            // KaPlay's pages keep it, but a board the player is locked into and a player's card.
+            (dest.route in KaPlayRoutes.DOCKED_ROUTES) ||
+            (dest.route in KaPlayRoutes.GAME_ROUTES && kaPlayShowsDock(dest.route)) ||
             // Settings' pushed pages keep the bar too. Connection Settings only from Settings: the
             // connection dot's sheet opens the same page, and on iOS that push stays in the sheet.
             (dest.route in settingsPushedRoutes && (
@@ -233,9 +306,24 @@ fun MainShell(
     } == true
 
     val hideBottomBar by walletViewModel.hideBottomBar.collectAsState()
-    // The fixed five (iOS `AppTab.dock`).
-    val localTabOrder = bottomNavItems
+    val localTabOrder = dockTabs
     val currentTopRoute = currentDestination?.route
+
+    /**
+     * Puts [tab] on screen: its dock slot, or Kaspa Hub with it open there (iOS
+     * `MainTabView.show`). Reads the dock and the route as they are now, so a collector started
+     * once can call it.
+     */
+    fun show(tab: AppTab) {
+        val target = if (tab in DockLayout.dock.value) {
+            tab
+        } else {
+            HubRouter.open(tab)
+            AppTab.HUB
+        }
+        val onOwnRoute = navController.currentDestination?.hierarchy?.any { it.route == target.route } == true
+        if (!onOwnRoute) navigateToTab(navController, target.route)
+    }
 
     // Blocking progress for the account's first full sync, which the setup wizard deferred.
     // Escapable on purpose: a sync can stall on a slow indexer, and a dialog with no way out
@@ -319,7 +407,7 @@ fun MainShell(
     // group notification taps land on the list the groups share with the chats).
     LaunchedEffect(pendingGroupId) {
         if (pendingGroupId != null) {
-            navigateToTab(navController, Screen.Chats)
+            show(AppTab.CHATS)
             navController.navigate("group_chat/$pendingGroupId")
             onPendingGroupHandled()
         }
@@ -331,17 +419,130 @@ fun MainShell(
     // group_chat/<blinded id> route that resolves to an empty, unusable thread.
     LaunchedEffect(pendingOpenGroups) {
         if (pendingOpenGroups) {
-            navigateToTab(navController, Screen.Chats)
+            show(AppTab.CHATS)
             onPendingOpenGroupsHandled()
         }
     }
 
     // Wallet address-activity receipt ("Received X KAS" on a spending address) that names no one
-    // address: Wallet, which shows the addresses and balances (iOS bfe9f022 .openProfile).
+    // address: Wallet, which shows the addresses and balances (iOS `.openProfile` -> show(.wallet)).
     LaunchedEffect(pendingWalletActivityKind) {
-        if (pendingWalletActivityKind != null) {
-            navigateToTab(navController, Screen.Wallet)
+        val kind = pendingWalletActivityKind
+        if (kind != null) {
+            // "Received kUSDT": that token's Manage screen, on the Wallet tab (iOS 5b7c772c
+            // TokenRoute / .openToken). The Wallet screen opens it once it is up.
+            if (kind == com.kachat.app.services.tokens.TokenWallet.NOTIFICATION_KIND) {
+                walletViewModel.openTokenRoute(com.kachat.app.services.tokens.WalletToken.KUSDT.id)
+            }
+            show(AppTab.WALLET)
             onPendingWalletActivityHandled()
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Links and pushes for the features back since iOS 148a5331: each shows its tab wherever it
+    // lives, and the tab's screen consumes what is pending (iOS `KaPostsRoutes`,
+    // `consumePendingNotificationRoute`).
+    // ---------------------------------------------------------------------------------------
+
+    // KaPost: a post, a profile, a pre-written post or the scheduled list opens the KaPost tab.
+    val pendingKaPostTxId by com.kachat.app.ui.screens.KaPostsDeepLink.pendingPostTxId.collectAsState()
+    val pendingKaPostProfile by com.kachat.app.ui.screens.KaPostsDeepLink.pendingProfileAddress.collectAsState()
+    val pendingKaPostCompose by com.kachat.app.ui.screens.KaPostsDeepLink.pendingComposeText.collectAsState()
+    val pendingKaPostScheduled by com.kachat.app.ui.screens.KaPostsDeepLink.pendingOpenScheduled.collectAsState()
+    LaunchedEffect(pendingKaPostTxId, pendingKaPostProfile, pendingKaPostCompose, pendingKaPostScheduled) {
+        // "" is the tab-only sentinel (a notification with no post): Profile's bell takes those.
+        if (pendingKaPostTxId == "") com.kachat.app.ui.screens.KaPostsDeepLink.pendingPostTxId.value = null
+        val wantsKaPost = !pendingKaPostTxId.isNullOrEmpty() || pendingKaPostProfile != null ||
+            pendingKaPostCompose != null || pendingKaPostScheduled
+        if (wantsKaPost) {
+            // A thread or profile open over KaPost closes first, so the new one shows.
+            com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+            show(AppTab.KAPOSTS)
+        }
+    }
+    // Share to KaPost from KaPlay (iOS `KaPostsDeepLink.pendingComposeText` + `.openKaPost`): the
+    // KaPost composer with that text.
+    val pendingChessShare by com.kachat.app.services.chess.ChessBotLinks.pendingKaPostCompose.collectAsState()
+    LaunchedEffect(pendingChessShare) {
+        val text = pendingChessShare ?: return@LaunchedEffect
+        com.kachat.app.services.chess.ChessBotLinks.pendingKaPostCompose.value = null
+        com.kachat.app.ui.screens.KaPostsDeepLink.pendingComposeText.value = text
+    }
+    // A push naming no post, or a wallet row asking for the bell: Profile, whose bell opens.
+    val pendingBell by com.kachat.app.ui.screens.NotificationsRoute.pending.collectAsState()
+    val pendingKaPostBell by com.kachat.app.ui.screens.KaPostsDeepLink.pendingOpenNotifications.collectAsState()
+    LaunchedEffect(pendingBell, pendingKaPostBell) {
+        if (pendingBell || pendingKaPostBell) {
+            com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+            show(AppTab.PROFILE)
+        }
+    }
+    // A public room from a link, a banner or a push: Chats, whose list joins it if need be and
+    // opens it (`PublicRoomHandoffEffect`). Covers over KaPost close first (iOS `.openPublicChat`).
+    val pendingRoom by BroadcastDeepLink.pendingChannel.collectAsState()
+    LaunchedEffect(pendingRoom) {
+        if (pendingRoom != null) {
+            com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+            show(AppTab.CHATS)
+        }
+    }
+    // A bot challenge (a KaPost card, a kachatchess:// link): KaPlay, which opens Chess and the
+    // bot. Covers over KaPost close first (iOS `.openGames`). A challenge waiting from a cold
+    // start is taken the same way.
+    LaunchedEffect(Unit) {
+        if (com.kachat.app.services.chess.ChessBotLinkRouter.challenge.value != null) show(AppTab.GAMES)
+        com.kachat.app.services.chess.ChessBotLinks.openGames.collect {
+            com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+            show(AppTab.GAMES)
+        }
+    }
+    // The .kachat tab: Claim a Name / Get a .kachat name (the tab itself), kapay://market (its
+    // Marketplace) and a name from a notification (its page). The screen takes the last two.
+    val pendingKachatTab by KachatDeepLink.pendingTab.collectAsState()
+    val pendingKachatMarket by KachatDeepLink.pendingMarketplace.collectAsState()
+    val pendingKachatName by KachatDeepLink.pendingName.collectAsState()
+    LaunchedEffect(pendingKachatTab, pendingKachatMarket, pendingKachatName) {
+        if (pendingKachatTab) KachatDeepLink.pendingTab.value = false
+        val wantsNames = pendingKachatTab || pendingKachatMarket ||
+            (pendingKachatName != null && com.kachat.app.services.kachatnames.KachatNamesService.isLaunched)
+        if (wantsNames) {
+            com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+            show(AppTab.KACHAT_NAMES)
+        }
+    }
+    // A tab tapped on the dock copy over KaPost's full-screen screens (iOS `.kaPostsSelectDockTab`).
+    LaunchedEffect(Unit) {
+        com.kachat.app.ui.screens.KaPostsDock.tabRequests.collect { route ->
+            AppTab.fromRoute(route)?.let { show(it) }
+        }
+    }
+    // Done in Trestly: back to the top of the Wallet tab (iOS: Manage kUSDT, Manage Addresses and
+    // the sheet close). WalletScreen closes its own; a page pushed over Wallet goes here.
+    LaunchedEffect(Unit) {
+        com.kachat.app.ui.screens.tokens.TrestlyRoute.done.collect {
+            if (navController.currentDestination?.route in walletPushedRoutes) {
+                val home = if (AppTab.WALLET in DockLayout.dock.value) AppTab.WALLET.route else AppTab.HUB.route
+                navController.popBackStack(home, inclusive = false)
+            }
+        }
+    }
+    // KaPost is on screen (its dock slot, or open in Kaspa Hub): its background sweep pages only then.
+    LaunchedEffect(currentTopRoute, hubOpenSection) {
+        com.kachat.app.ui.screens.KaPostsDock.onScreen.value =
+            currentTopRoute == AppTab.KAPOSTS.route ||
+                (currentTopRoute == AppTab.HUB.route && hubOpenSection == AppTab.KAPOSTS)
+    }
+    // A game's Done falls back to the KaPlay tab, wherever it lives.
+    SideEffect {
+        KaPlayRoutes.gamesTabRoute = if (AppTab.GAMES in dockTabs) AppTab.GAMES.route else AppTab.HUB.route
+    }
+    // The tab on screen left the dock: Kaspa Hub, where it now lives (iOS `onChange(layout.dock)`).
+    LaunchedEffect(dockTabs) {
+        val onTab = AppTab.fromRoute(navController.currentDestination?.route) ?: return@LaunchedEffect
+        if (onTab !in dockTabs) {
+            HubRouter.open(onTab)
+            navigateToTab(navController, AppTab.HUB.route)
         }
     }
 
@@ -368,15 +569,30 @@ fun MainShell(
     ownAddressSheet?.let { address ->
         // keyed so a second tap on another address resolves afresh rather than reusing the first
         key(address) {
-            OwnAddressHistorySheet(
-                address = address,
-                walletViewModel = walletViewModel,
-                onOpenChat = { contact ->
-                    ownAddressSheet = null
-                    navController.navigate("chat/$contact")
-                },
-                onDismiss = { ownAddressSheet = null },
-            )
+            // One of a KasSigner account's addresses (Cold Storage, back from KaPay): its own
+            // History sheet; the chatting and spending addresses keep theirs.
+            val coldStorageVm: com.kachat.app.viewmodels.ColdStorageViewModel = hiltViewModel()
+            var isCold by remember { mutableStateOf<Boolean?>(null) }
+            LaunchedEffect(address) {
+                isCold = runCatching { coldStorageVm.isOwnColdAddress(address) }.getOrDefault(false)
+            }
+            when (isCold) {
+                true -> com.kachat.app.ui.screens.coldstorage.ColdStorageAddressHistorySheet(
+                    address = address,
+                    onDone = { ownAddressSheet = null },
+                    viewModel = coldStorageVm,
+                )
+                false -> OwnAddressHistorySheet(
+                    address = address,
+                    walletViewModel = walletViewModel,
+                    onOpenChat = { contact ->
+                        ownAddressSheet = null
+                        navController.navigate("chat/$contact")
+                    },
+                    onDismiss = { ownAddressSheet = null },
+                )
+                null -> Unit
+            }
         }
     }
 
@@ -403,7 +619,7 @@ fun MainShell(
         } else {
             // Untargeted: surface the Chats list wherever the user currently is; whichever chat
             // the user opens next hands the share to the same compose sheet.
-            navController.popBackStack(Screen.Chats.route, false)
+            show(AppTab.CHATS)
         }
     }
 
@@ -424,13 +640,15 @@ fun MainShell(
     // one tap away and their name and avatar to check who the link is for before writing to them
     // (iOS 81df734). Your own shows your own card, and you are never added as your own contact
     // (iOS 95f50ca); someone new gets an auto-added contact. A link from outside the app with
-    // `chat=1` (KaPosts' Chat button) opens the 1:1 chat itself, started if need be, the way the
+    // `chat=1` (KaPost's Chat button) opens the 1:1 chat itself, started if need be, the way the
     // Addresses screen's Chat does (iOS 724d477) - but not for your own address, which has no
     // chat with itself.
     val pendingProfile by com.kachat.app.ui.screens.ProfileDeepLink.pending.collectAsState()
     LaunchedEffect(pendingProfile) {
         val link = pendingProfile ?: return@LaunchedEffect
         com.kachat.app.ui.screens.ProfileDeepLink.consumePending()
+        // KaPost's screens are full-screen covers: they close so the chat or card shows.
+        com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
         val address = link.address
         val mine = walletViewModel.address.value
         when {
@@ -444,6 +662,12 @@ fun MainShell(
     // A payment request tapped, pasted or opened from outside the app (iOS c6851d6
     // PaymentRequestSheetPresenter): Send Kaspa with it filled in, or your own to copy or share.
     com.kachat.app.ui.screens.PaymentRequestSheetHost(walletViewModel = walletViewModel, chatViewModel = chatViewModel)
+
+    // Customize Dock, over the whole shell (iOS `.sheet(isPresented: $showCustomizeDock)`).
+    val customizeDockOpen by CustomizeDock.isOpen.collectAsState()
+    if (customizeDockOpen) {
+        CustomizeDockSheet(onDismiss = { CustomizeDock.isOpen.value = false })
+    }
 
     // Shows the Welcome Guide automatically the first time this shell renders after an account is
     // added — whether created or imported — see `WalletViewModel.pendingWelcomeGuide`. Always shown
@@ -494,483 +718,409 @@ fun MainShell(
         }
     }
 
+    // ---------------------------------------------------------------------------------------
+    // Badges (iOS `AppTabBadge`): Profile adds up every notification behind its bell (KaPost's
+    // and the wallet's), Chats its chats', groups' and belled rooms' unread messages, and Kaspa
+    // Hub what the tabs inside it hold. The rest show none. The app icon is Chats' count plus
+    // KaPost's unseen activity (iOS `ChatService.updateAppBadge`).
+    // ---------------------------------------------------------------------------------------
+    val badgesVm: ShellBadgesViewModel = hiltViewModel()
+    val profileBadge by badgesVm.profileCount.collectAsState()
+    val roomsBadge by badgesVm.roomsCount.collectAsState()
+    val kaPostsUnseen by badgesVm.kaPostsUnseen.collectAsState()
+    val dockChatsUnread by chatViewModel.chatListUnreadCount.collectAsState()
+    val dockGroupsUnread by chatViewModel.groupsUnreadCount.collectAsState()
+    // The wallet's notification store is a singleton keyed per wallet internally; reload whenever
+    // the active account changes so a switch never leaves the previous account's count showing.
+    val dockNotifVm: com.kachat.app.viewmodels.NotificationCenterViewModel = hiltViewModel()
+    val dockNotifAddress by walletViewModel.address.collectAsState()
+    LaunchedEffect(dockNotifAddress) {
+        dockNotifVm.store.reloadIfNeeded()
+    }
+    fun badgeCount(tab: AppTab): Int = when (tab) {
+        AppTab.PROFILE -> profileBadge
+        AppTab.CHATS -> dockChatsUnread + dockGroupsUnread + roomsBadge
+        AppTab.HUB -> hubTabs.sumOf { if (it == AppTab.HUB) 0 else badgeCount(it) }
+        else -> 0
+    }
+    val chatsBadgeTotal = dockChatsUnread + dockGroupsUnread + roomsBadge
+    LaunchedEffect(chatsBadgeTotal, kaPostsUnseen) {
+        AppIconBadge.update(chatsBadgeTotal + kaPostsUnseen)
+    }
+
+    // Which tab the glass pill sits under. The tab you are IN, the way iOS's tab bar keeps the tab
+    // that pushed a screen lit: a dock tab's own route lights itself; a pushed screen lights the
+    // nearest dock tab under it on the stack, else the tab it belongs to - and when that tab lives
+    // in Kaspa Hub, the Hub.
+    val selectedDockIndex = run {
+        val direct = localTabOrder.indexOfFirst { tab ->
+            currentDestination?.hierarchy?.any { it.route == tab.route } == true
+        }
+        if (direct >= 0) return@run direct
+        val underneath = dockBackStack.asReversed().drop(1).firstNotNullOfOrNull { entry ->
+            localTabOrder.indexOfFirst { it.route == entry.destination.route }.takeIf { it >= 0 }
+        }
+        if (underneath != null) return@run underneath
+        val owner = dockOwnerTab(currentTopRoute) ?: return@run -1
+        localTabOrder.indexOf(owner).takeIf { it >= 0 } ?: localTabOrder.indexOf(AppTab.HUB)
+    }
+
+    /** What a tap on a dock tab does (iOS `handleTabSelectionChange`) - shared by the dock, a
+     *  slide along it, and the copy of it over KaPost's screens. */
+    fun goToDockTab(tab: AppTab) {
+        // Every KaPost full-screen screen closes, so the tab is what shows.
+        com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+        // KaPost tapped: the feed back to its top.
+        com.kachat.app.ui.screens.KaPostsDock.tabTapped(kaPostsTab = tab == AppTab.KAPOSTS)
+        val onOwnRoute = navController.currentDestination?.hierarchy?.any { it.route == tab.route } == true
+        // Kaspa Hub tapped again: back to its grid, the way out of a section opened there.
+        if (tab == AppTab.HUB && (onOwnRoute || localTabOrder.getOrNull(selectedDockIndex) == AppTab.HUB)) {
+            HubRouter.close()
+        }
+        if (onOwnRoute) {
+            // Already there - let that screen know it was re-tapped (so it can dismiss its own
+            // transient UI) rather than navigating, which would land on the start destination.
+            walletViewModel.notifyTabReselected(tab.route)
+            return
+        }
+        navigateToTab(navController, tab.route)
+    }
+
     // Frosted glass under the floating dock: the NavHost below is the backdrop, and the dock
     // draws a blurred copy of whatever sits behind it (RenderEffect on Android 12+, a
     // translucent scrim below that) - the way iOS's bar is a material rather than a colour.
     val dockHaze = remember { HazeState() }
-    Scaffold(
-        containerColor = LocalAppColors.current.background,
-        bottomBar = {
-            // Over a white page (Profile's QR pages) iOS's tab bar glass turns light, in dark mode
-            // too: the glass takes on what is behind it.
-            CompositionLocalProvider(
-                LocalAppColors provides if (com.kachat.app.ui.screens.DockOverLightPage.active) com.kachat.app.ui.theme.LightAppColors else LocalAppColors.current
+    val dockShown = onTabRoute && !hideBottomBar && !com.kachat.app.ui.screens.DockCover.active
+
+    /** The dock itself: the floating glass bar with its tabs and badges. */
+    val dockBar: @Composable () -> Unit = {
+        // Over a white page (Profile's QR pages) iOS's tab bar glass turns light, in dark mode
+        // too: the glass takes on what is behind it.
+        CompositionLocalProvider(
+            LocalAppColors provides if (com.kachat.app.ui.screens.DockOverLightPage.active) com.kachat.app.ui.theme.LightAppColors else LocalAppColors.current
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // navigationBarsPadding() first so the visual margin sits above the system nav
+                    // bar (gesture pill or 3-button bar) rather than being eaten by it.
+                    .navigationBarsPadding()
+                    // iOS 26's tab bar: 21pt in from each side (measured on the iPhone).
+                    .padding(bottom = 12.dp, start = 21.dp, end = 21.dp),
+                contentAlignment = Alignment.BottomCenter
             ) {
-                // Only show the floating tab bar on the top-level tab destinations —
-                // "pushed" detail screens (chat thread, settings sub-screens, etc.) fill
-                // the whole screen with their own Scaffold and must not have this
-                // overlaid on top of them (it was blocking the chat input entirely).
-                if (onTabRoute && !hideBottomBar && !com.kachat.app.ui.screens.DockCover.active) {
-                    // Red dot on the Profile tab while the notification center (a row on the
-                    // Profile screen) holds unread entries; Chats shows its unread count.
-                    val dockNotifVm: com.kachat.app.viewmodels.NotificationCenterViewModel = hiltViewModel()
-                    // The store is a singleton keyed per wallet internally; reload whenever the
-                    // active account changes so a switch never leaves the previous account's unread
-                    // dot (and entries) showing until something else happens to poke it.
-                    val dockNotifAddress by walletViewModel.address.collectAsState()
-                    LaunchedEffect(dockNotifAddress) {
-                        dockNotifVm.store.reloadIfNeeded()
-                    }
-                    val dockNotifEntries by dockNotifVm.store.entries.collectAsState()
-                    val dockNotifLastSeen by dockNotifVm.store.lastSeenAt.collectAsState()
-                    val dockNotifUnread = dockNotifEntries.count { it.timestampMs > dockNotifLastSeen }
-                    // Chats shows the unread count of its chats and groups (iOS d1844582).
-                    val dockChatsUnread by chatViewModel.chatListUnreadCount.collectAsState()
-                    val dockGroupsUnread by chatViewModel.groupsUnreadCount.collectAsState()
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Sliding a finger along the bar carries the lens; releasing lands on the tab
+                // under it, the way the glass follows a finger on iOS. Null while nobody is
+                // dragging, so the lens follows the selection instead.
+                var dockDragIndex by remember { mutableStateOf<Int?>(null) }
+
+                // The slide handler below is created once and outlives every navigation; this
+                // always holds the current tap action.
+                val latestGoToDockTab by androidx.compose.runtime.rememberUpdatedState<(AppTab) -> Unit> {
+                    goToDockTab(it)
+                }
+
+                // A new dock arrangement builds a fresh bar (iOS keys its TabView by the
+                // arrangement), so every icon, label and the glass lens start from the tabs the bar
+                // now holds rather than from whichever tab held that slot before.
+                val dockArrangementKey = localTabOrder.joinToString(",") { it.key }
+                key(dockArrangementKey) {
+                // iOS's bar is 60pt tall (measured on the iPhone 17).
+                BoxWithConstraints(Modifier.fillMaxWidth().height(60.dp)) {
+                // The pill slides between tabs rather than appearing under the new one, the way
+                // iOS's glass tab bar moves: one piece of glass that travels.
+                val dockItemWidth = (maxWidth - 4.dp) / localTabOrder.size.coerceAtLeast(1)
+                val pillIndex = dockDragIndex ?: selectedDockIndex
+                val pillOffset by animateDpAsState(
+                    targetValue = 2.dp + dockItemWidth * pillIndex.coerceAtLeast(0),
+                    // Under a finger it keeps up; left to itself it settles with a spring.
+                    animationSpec = if (dockDragIndex != null) tween(90) else spring(dampingRatio = 0.75f, stiffness = 420f),
+                    label = "dockPill",
+                )
+                // The bar itself: the backdrop blurred, tinted with the surface colour.
+                Box(
+                    Modifier
+                        .height(60.dp)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(30.dp))
+                        .hazeChild(
+                            state = dockHaze,
+                            shape = RoundedCornerShape(30.dp),
+                            style = HazeStyle(
+                                // iOS's bar on black reads #191919 (the toolbar glass)
+                                tint = com.kachat.app.ui.screens.toolbarGlassFill().copy(alpha = 0.92f),
+                                blurRadius = 24.dp,
+                            ),
+                        )
+                        .border(0.5.dp, com.kachat.app.ui.screens.toolbarGlassEdge(), RoundedCornerShape(30.dp)),
+                )
+                if (dockDragIndex == null && selectedDockIndex >= 0) {
+                    // At rest iOS 26 marks the tab with a filled capsule - #3A3A3A on the #191919
+                    // bar, 4pt inside its height - and no rim.
+                    val restShape = RoundedCornerShape(percent = 50)
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            // navigationBarsPadding() first so the 24dp visual margin sits above
-                            // the system nav bar (gesture pill or 3-button bar) rather than being
-                            // eaten by it — its height isn't the same on every device, so a fixed
-                            // dp value alone left the tab bar sitting under/behind it on some phones.
-                            .navigationBarsPadding()
-                            // iOS 26's tab bar: 21pt in from each side (measured on the iPhone).
-                            .padding(bottom = 12.dp, start = 21.dp, end = 21.dp),
-                        contentAlignment = Alignment.BottomCenter
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        // Sliding a finger along the bar carries the lens; releasing lands on the
-                        // tab under it, the way the glass follows a finger on iOS. Null while nobody
-                        // is dragging, so the lens follows the selection instead.
-                        var dockDragIndex by remember { mutableStateOf<Int?>(null) }
-
-                        /** What a tap on a dock tab does - shared so a drag lands in the same place. */
-                        fun goToDockTab(screen: Screen) {
-                            val onOwnRoute = currentDestination?.hierarchy?.any { it.route == screen.route } == true
-                            if (onOwnRoute) {
-                                walletViewModel.notifyTabReselected(screen.route)
-                                return
-                            }
-                            navigateToTab(navController, screen)
-                        }
-
-                        // The slide handler below is keyed only on the tab order and the slot width,
-                        // so it is created once and outlives every navigation. Calling goToDockTab
-                        // from it directly used the closure from THAT first composition, whose
-                        // currentDestination was the tab you started on: sliding back onto that tab
-                        // later read as "already here" and did nothing. This always holds the current one.
-                        val latestGoToDockTab by androidx.compose.runtime.rememberUpdatedState<(Screen) -> Unit> {
-                            goToDockTab(it)
-                        }
-
-                        // Which tab the glass pill sits under - the same test each item makes for
-                        // itself below, so the pill and the lit icon can never disagree.
-                        // The tab you are IN, the way iOS's tab bar keeps the tab that pushed a screen
-                        // lit. A dock tab's own route lights itself. A screen that is not a dock tab
-                        // lights the tab it belongs to (a chat lights Chats, Manage Addresses Profile).
-                        val selectedDockIndex = run {
-                            val direct = localTabOrder.indexOfFirst { screen ->
-                                currentDestination?.hierarchy?.any { it.route == screen.route } == true
-                            }
-                            if (direct >= 0) return@run direct
-                            // The tab whose stack the screen was pushed onto: the nearest dock tab
-                            // under it. iOS keeps that tab lit.
-                            val underneath = dockBackStack.asReversed().drop(1).firstNotNullOfOrNull { entry ->
-                                localTabOrder.indexOfFirst { it.route == entry.destination.route }.takeIf { it >= 0 }
-                            }
-                            if (underneath != null) return@run underneath
-                            val owner = dockOwnerRoute(currentTopRoute) ?: return@run -1
-                            localTabOrder.indexOfFirst { it.route == owner }
-                        }
-                        // A new dock arrangement builds a fresh bar (iOS d7c3fcf keys its TabView the
-                        // same way), so every icon, label and the glass lens start from the tabs the
-                        // bar now holds rather than from whichever tab held that slot before. The key
-                        // changes only when the arrangement does.
-                        val dockArrangementKey = localTabOrder.joinToString(",") { it.route }
-                        key(dockArrangementKey) {
-                        // Fixed at the bar's own height so the lens can stand proud of it without
-                        // growing the dock or shifting it up the screen.
-                        // iOS's bar is 60pt tall (measured on the iPhone 17).
-                        BoxWithConstraints(Modifier.fillMaxWidth().height(60.dp)) {
-                        // The pill slides between tabs rather than appearing under the new one, the
-                        // way iOS's glass tab bar moves: one piece of glass that travels.
-                        val dockItemWidth = (maxWidth - 4.dp) / localTabOrder.size.coerceAtLeast(1)
-                        val pillIndex = dockDragIndex ?: selectedDockIndex
-                        val pillOffset by animateDpAsState(
-                            targetValue = 2.dp + dockItemWidth * pillIndex.coerceAtLeast(0),
-                            // Under a finger it keeps up; left to itself it settles with a spring.
-                            animationSpec = if (dockDragIndex != null) tween(90) else spring(dampingRatio = 0.75f, stiffness = 420f),
-                            label = "dockPill",
-                        )
-                        // The bar itself: the backdrop blurred, tinted with the surface colour so it
-                        // still reads as a bar in either theme. It holds no items - they are in the
-                        // Row below, over the pill.
-                        Box(
-                            Modifier
-                                .height(60.dp)
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(30.dp))
-                                // The shape goes to hazeChild itself: it paints the blurred backdrop
-                                // to the shape it is given, and its default is a rectangle - which is
-                                // what put a square panel behind the rounded bar.
-                                .hazeChild(
-                                    state = dockHaze,
-                                    shape = RoundedCornerShape(30.dp),
-                                    style = HazeStyle(
-                                        // iOS's bar on black reads #191919 (the toolbar glass)
-                                        tint = com.kachat.app.ui.screens.toolbarGlassFill().copy(alpha = 0.92f),
-                                        blurRadius = 24.dp,
+                        Modifier
+                            .offset(x = pillOffset)
+                            .padding(vertical = 4.dp)
+                            .width(dockItemWidth)
+                            .height(52.dp)
+                            .clip(restShape)
+                            .background(
+                                if (LocalAppColors.current.isDark) Color(0xFF3A3A3A)
+                                else Color.Black.copy(alpha = 0.07f)
+                            ),
+                    )
+                } else if (dockDragIndex != null) {
+                    // While a finger slides, the lens: a nearly clear bubble with a bright rim
+                    // that stands a little proud of the bar, as iOS's does.
+                    val pillShape = RoundedCornerShape(percent = 50)
+                    Box(
+                        Modifier
+                            .offset(x = pillOffset - 3.dp, y = (-4).dp)
+                            .width(dockItemWidth + 6.dp)
+                            .height(68.dp)
+                            .clip(pillShape)
+                            .hazeChild(
+                                state = dockHaze,
+                                shape = pillShape,
+                                style = HazeStyle(tint = Color.White.copy(alpha = 0.06f), blurRadius = 30.dp),
+                            )
+                            .border(
+                                width = 1.5.dp,
+                                brush = Brush.linearGradient(
+                                    listOf(
+                                        Color.White.copy(alpha = 0.55f),
+                                        KaspaTeal.copy(alpha = 0.55f),
+                                        Color.White.copy(alpha = 0.30f),
                                     ),
-                                )
-                                .border(0.5.dp, com.kachat.app.ui.screens.toolbarGlassEdge(), RoundedCornerShape(30.dp)),
-                        )
-                        // Drawn between the bar and its icons: a brighter pane of the same glass.
-                        // Also while a finger is sliding: on a screen that is not a dock tab nothing is
-                        // lit, and the slide used to carry no lens at all - it looked like it had not
-                        // registered, though releasing still went to the tab.
-                        if (dockDragIndex == null && selectedDockIndex >= 0) {
-                            // At rest iOS 26 marks the tab with a filled capsule - #3A3A3A on the
-                            // #191919 bar, 4pt inside its height (measured on the iPhone) - and no rim.
-                            val restShape = RoundedCornerShape(percent = 50)
+                                ),
+                                shape = pillShape,
+                            ),
+                    )
+                }
+                val dockDensity = LocalDensity.current
+                val dockIsRtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
+                Row(
+                    modifier = Modifier
+                        .height(60.dp)
+                        .fillMaxWidth()
+                        // Gesture navigation reserves a strip at each screen edge for Back; a slide
+                        // starting on the outermost tab began inside it, and Android took it.
+                        .systemGestureExclusion()
+                        .pointerInput(localTabOrder, dockItemWidth, dockIsRtl) {
+                            val slotPx = with(dockDensity) { dockItemWidth.toPx() }
+                            val startPadPx = with(dockDensity) { 2.dp.toPx() }
+                            awaitEachGesture {
+                                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                                var sliding = false
+                                try {
+                                while (true) {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                    if (!change.pressed) {
+                                        if (sliding) {
+                                            dockDragIndex?.let { index ->
+                                                localTabOrder.getOrNull(index)?.let { latestGoToDockTab(it) }
+                                            }
+                                        }
+                                        dockDragIndex = null
+                                        break
+                                    }
+                                    val movedX = kotlin.math.abs(change.position.x - down.position.x)
+                                    if (!sliding && movedX > viewConfiguration.touchSlop) sliding = true
+                                    if (sliding) {
+                                        change.consume()
+                                        // The tabs run from the leading edge, the right in RTL.
+                                        val fromLeadingX = if (dockIsRtl) size.width - change.position.x else change.position.x
+                                        dockDragIndex = (((fromLeadingX - startPadPx) / slotPx).toInt())
+                                            .coerceIn(0, localTabOrder.lastIndex.coerceAtLeast(0))
+                                    }
+                                }
+                                } finally {
+                                    // A slide the system takes away cancels this rather than
+                                    // delivering a release; the lens must not stay stranded.
+                                    dockDragIndex = null
+                                }
+                            }
+                        }
+                        .padding(horizontal = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    val hubPainter = rememberKaspaDockPainter()
+                    localTabOrder.forEach { tab ->
+                        // Keyed by tab, so a tab's own state stays with that tab when the
+                        // arrangement changes rather than with whichever slot renders it.
+                        key(tab.key) {
+                            // Lit by the same answer the glass pill sits under.
+                            val selected = localTabOrder.getOrNull(selectedDockIndex) == tab
+                            val label = stringResource(tab.labelRes)
                             Box(
-                                Modifier
-                                    .offset(x = pillOffset)
-                                    .padding(vertical = 4.dp)
-                                    .width(dockItemWidth)
+                                modifier = Modifier
                                     .height(52.dp)
-                                    .clip(restShape)
-                                    .background(
-                                        if (LocalAppColors.current.isDark) Color(0xFF3A3A3A)
-                                        else Color.Black.copy(alpha = 0.07f)
-                                    ),
-                            )
-                        } else if (dockDragIndex != null) {
-                            // While a finger slides, the lens: a nearly clear bubble with a bright
-                            // rim that stands a little proud of the bar, as iOS's does.
-                            val pillShape = RoundedCornerShape(percent = 50)
-                            Box(
-                                Modifier
-                                    .offset(x = pillOffset - 3.dp, y = (-4).dp)
-                                    .width(dockItemWidth + 6.dp)
-                                    .height(68.dp)
-                                    .clip(pillShape)
-                                    .hazeChild(
-                                        state = dockHaze,
-                                        shape = pillShape,
-                                        style = HazeStyle(
-                                            tint = Color.White.copy(alpha = 0.06f),
-                                            blurRadius = 30.dp,
-                                        ),
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(26.dp))
+                                    .clickable { goToDockTab(tab) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Box {
+                                        Icon(
+                                            painter = if (tab == AppTab.HUB) hubPainter else rememberVectorPainter(tab.dockIcon),
+                                            contentDescription = label,
+                                            tint = if (selected) KaspaTeal else LocalAppColors.current.textPrimary,
+                                            // the Kaspa mark at iOS's 24-point dock size
+                                            modifier = Modifier.size(if (tab == AppTab.HUB) 25.dp else 28.dp)
+                                        )
+                                        // How many are waiting, not just that some are (iOS
+                                        // AppTabBadge.dockLabel): "99+" past 99.
+                                        val badgeCount = badgeCount(tab)
+                                        if (badgeCount > 0) {
+                                            // A box with a minimum square size, so one digit is a
+                                            // circle and only a longer label stretches it into a pill.
+                                            Box(
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                                    .offset(x = 8.dp, y = (-6).dp)
+                                                    .defaultMinSize(minWidth = 16.dp, minHeight = 16.dp)
+                                                    .clip(RoundedCornerShape(50))
+                                                    .background(LocalAppColors.current.danger)
+                                                    .padding(horizontal = 4.dp),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Text(
+                                                    text = if (badgeCount > 99) "99+" else badgeCount.toString(),
+                                                    color = Color.White,
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = label,
+                                        color = if (selected) KaspaTeal else LocalAppColors.current.textPrimary,
+                                        // Longer labels ("Leaderboard", "Kaspa Hub") shrink in a
+                                        // five-tab dock rather than clip.
+                                        fontSize = when {
+                                            label.length > 11 -> 7.sp
+                                            label.length > 9 -> 8.sp
+                                            else -> 10.sp
+                                        },
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Ellipsis,
+                                        // iOS 26's tab labels are medium weight, selected or not.
+                                        fontWeight = FontWeight.Medium
                                     )
-                                    // The rim catches the light round its edge rather than being one
-                                    // flat stroke - iOS's is iridescent.
-                                    .border(
-                                        width = 1.5.dp,
-                                        brush = Brush.linearGradient(
-                                            listOf(
-                                                Color.White.copy(alpha = 0.55f),
-                                                KaspaTeal.copy(alpha = 0.55f),
-                                                Color.White.copy(alpha = 0.30f),
-                                            ),
-                                        ),
-                                        shape = pillShape,
-                                    ),
-                            )
-                        }
-                        val dockDensity = LocalDensity.current
-                        val dockIsRtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
-                        Row(
-                            modifier = Modifier
-                                .height(60.dp)
-                                .fillMaxWidth()
-                                // Watched on the INITIAL pass, so a slide can take over from the
-                                // items underneath. A press that never moves is left to their tap;
-                                // anything that travels carries the lens, whether it slides straight
-                                // away or is held first, as on the iPhone. Nothing else on the bar
-                                // wants this finger - tabs are arranged in Settings, not by dragging.
-                                // Gesture navigation reserves a strip at each screen edge for Back,
-                                // wider than the dock's side margin at higher Back sensitivity. A slide
-                                // starting on the outermost tab began inside it, and Android took it.
-                                .systemGestureExclusion()
-                                .pointerInput(localTabOrder, dockItemWidth, dockIsRtl) {
-                                    val slotPx = with(dockDensity) { dockItemWidth.toPx() }
-                                    val startPadPx = with(dockDensity) { 2.dp.toPx() }
-                                    awaitEachGesture {
-                                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                                        var sliding = false
-                                        try {
-                                        while (true) {
-                                            val event = awaitPointerEvent(PointerEventPass.Initial)
-                                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                            if (!change.pressed) {
-                                                if (sliding) {
-                                                    dockDragIndex?.let { index ->
-                                                        localTabOrder.getOrNull(index)?.let { latestGoToDockTab(it) }
-                                                    }
-                                                }
-                                                dockDragIndex = null
-                                                break
-                                            }
-                                            val movedX = kotlin.math.abs(change.position.x - down.position.x)
-                                            if (!sliding && movedX > viewConfiguration.touchSlop) sliding = true
-                                            if (sliding) {
-                                                change.consume()
-                                                // Touch x runs from the left; the tabs run from the
-                                                // leading edge, the right in RTL (Arabic, Persian,
-                                                // Hebrew), so measure from there for the lens to
-                                                // stay under the finger.
-                                                val fromLeadingX = if (dockIsRtl) size.width - change.position.x else change.position.x
-                                                dockDragIndex = (((fromLeadingX - startPadPx) / slotPx).toInt())
-                                                    .coerceIn(0, localTabOrder.lastIndex.coerceAtLeast(0))
-                                            }
-                                        }
-                                        } finally {
-                                            // A slide the system takes away - the back gesture, an
-                                            // incoming call - cancels this rather than delivering a
-                                            // release, and the lens used to stay stranded wherever the
-                                            // finger was until the next touch.
-                                            dockDragIndex = null
-                                        }
-                                    }
-                                }
-                                .padding(horizontal = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceAround
-                        ) {
-                            localTabOrder.forEach { screen ->
-                                // Keyed by route (not position), so a tab's own state stays with that
-                                // tab when the arrangement changes in Settings rather than with
-                                // whichever slot happens to render it.
-                                key(screen.route) {
-                                    // Standing ON this tab's own route, which is what the reselect
-                                    // gesture below keys off.
-                                    val onOwnRoute =
-                                        currentDestination?.hierarchy?.any { it.route == screen.route } == true
-                                    // Lit by the same answer the glass pill sits under - see
-                                    // selectedDockIndex - so the two can never disagree. Lit only: a
-                                    // tap from a screen below the tab still has to pop back up to it,
-                                    // so this must not feed the reselect check (onOwnRoute does).
-                                    val selected = localTabOrder.getOrNull(selectedDockIndex) == screen
-                                    Box(
-                                        modifier = Modifier
-                                            .height(52.dp)
-                                            .weight(1f)
-                                            .clip(RoundedCornerShape(26.dp))
-                                            .clickable {
-                                                // Already there — let that screen know it was re-tapped (so it can
-                                                // dismiss its own transient UI, e.g. a full-screen QR overlay) rather
-                                                // than running the popBackStack/navigate logic below, which for a tab
-                                                // with nothing "pushed" above it falls through to navigate() and
-                                                // lands back on the graph's start destination (Chats) instead of
-                                                // staying put.
-                                                if (onOwnRoute) {
-                                                    walletViewModel.notifyTabReselected(screen.route)
-                                                    return@clickable
-                                                }
-
-                                                // Tapping back to the graph's start destination (Chats) from a
-                                                // "pushed" screen like Broadcasts via navigate()+popUpTo alone is
-                                                // silently a no-op in Navigation Compose — popBackStack to the
-                                                // route directly first (it's already on the back stack) actually
-                                                // pops it. Only fall back to navigate() when the tab isn't already
-                                                // present on the stack (first visit to a peer tab).
-                                                val poppedToExisting = navController.popBackStack(
-                                                    route = screen.route,
-                                                    inclusive = false,
-                                                    saveState = true
-                                                )
-                                                if (!poppedToExisting) {
-                                                    navController.navigate(screen.route) {
-                                                        popUpTo(navController.graph.findStartDestination().id) {
-                                                            saveState = true
-                                                        }
-                                                        launchSingleTop = true
-                                                        restoreState = true
-                                                    }
-                                                }
-                                            },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                            Box {
-                                                Icon(
-                                                    painter = rememberVectorPainter(screen.icon),
-                                                    contentDescription = stringResource(screen.labelRes),
-                                                    tint = if (selected) KaspaTeal else LocalAppColors.current.textPrimary,
-                                                    modifier = Modifier.size(28.dp)
-                                                )
-                                                // How many are waiting, not just that some are. A
-                                                // bare dot said "something happened"; the number is
-                                                // the difference between deciding to look now and
-                                                // deciding to look later, and the dock is where that
-                                                // decision gets made.
-                                                val badgeCount = when (screen) {
-                                                    Screen.Profile -> dockNotifUnread
-                                                    Screen.Chats -> dockChatsUnread + dockGroupsUnread
-                                                    else -> 0
-                                                }
-                                                if (badgeCount > 0 && screen == Screen.Profile) {
-                                                    // Profile: a red DOT while the bell holds anything
-                                                    // unread - the bell itself is a dot, so the dock
-                                                    // says the same thing.
-                                                    // The entries/lastSeen flows above recompose this
-                                                    // from any tab, on tab switches and at launch.
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .align(Alignment.TopEnd)
-                                                            .offset(x = 4.dp, y = (-2).dp)
-                                                            .size(10.dp)
-                                                            .clip(RoundedCornerShape(50))
-                                                            // iOS AppTabBadge: .systemRed.
-                                                            .background(LocalAppColors.current.danger),
-                                                    )
-                                                } else if (badgeCount > 0) {
-                                                    // A BOX with a minimum square size, not a Text
-                                                    // with padding. Padding alone gave a one-digit
-                                                    // badge its text's width plus 8dp against its
-                                                    // height plus 2dp - wider than it was tall, which
-                                                    // is the oval. defaultMinSize floors both to the
-                                                    // same 16dp, so one digit is a circle and only a
-                                                    // longer label stretches it into a pill.
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .align(Alignment.TopEnd)
-                                                            // Offset out over the icon's corner so a
-                                                            // two- or three-character badge grows
-                                                            // outward instead of shoving the icon.
-                                                            .offset(x = 8.dp, y = (-6).dp)
-                                                            .defaultMinSize(minWidth = 16.dp, minHeight = 16.dp)
-                                                            .clip(RoundedCornerShape(50))
-                                                            .background(LocalAppColors.current.danger)
-                                                            .padding(horizontal = 4.dp),
-                                                        contentAlignment = Alignment.Center,
-                                                    ) {
-                                                        Text(
-                                                            // Capped in the LABEL, not in the stored
-                                                            // count: the real number survives a long
-                                                            // absence and only its rendering shortens.
-                                                            text = if (badgeCount > 99) "99+" else badgeCount.toString(),
-                                                            color = Color.White,
-                                                            fontSize = 9.sp,
-                                                            fontWeight = FontWeight.Bold,
-                                                            maxLines = 1,
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = stringResource(screen.labelRes),
-                                                color = if (selected) KaspaTeal else LocalAppColors.current.textPrimary,
-                                                // Longer labels ("Public Chats") don't fit at 10sp once there are
-                                                // enough tabs that each weight(1f) slot narrows below their natural
-                                                // width — shrink just those instead of letting them clip/wrap and
-                                                // get cut off by the fixed-height Box. Twelve characters need a third
-                                                // step: at six tabs on a 320dp screen a slot is ~53dp, which 8sp
-                                                // would run past, and softWrap = false clips rather than wraps.
-                                                fontSize = when {
-                                                    stringResource(screen.labelRes).length > 11 -> 7.sp
-                                                    stringResource(screen.labelRes).length > 9 -> 8.sp
-                                                    else -> 10.sp
-                                                },
-                                                maxLines = 1,
-                                                softWrap = false,
-                                                overflow = TextOverflow.Ellipsis,
-                                                // iOS 26's tab labels are medium weight, selected or not -
-                                                // only the colour marks the selected tab.
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        }
-                                    }
                                 }
                             }
-                        }
-                        }
-                        } // key(dockArrangementKey)
                         }
                     }
                 }
+                }
+                } // key(dockArrangementKey)
+                }
+            }
         }
+    }
+
+    // KaPost's full-screen screens draw the real dock over themselves (iOS `KaPostsDockCopy`).
+    val latestDockBar by rememberUpdatedState(dockBar)
+    DisposableEffect(Unit) {
+        com.kachat.app.ui.screens.KaPostsDock.dockContent.value = {
+            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) { latestDockBar() }
+        }
+        onDispose { com.kachat.app.ui.screens.KaPostsDock.dockContent.value = null }
+    }
+
+    /** A tab's screen, the same whether it sits in the dock or opens from Kaspa Hub (iOS
+     *  `AppTabContent`). */
+    val tabContent: @Composable (AppTab) -> Unit = { tab ->
+        when (tab) {
+            AppTab.CHATS -> ChatsScreen(navController, walletViewModel, chatViewModel = chatViewModel)
+            AppTab.WALLET -> WalletScreen(viewModel = walletViewModel, navController = navController, chatViewModel = chatViewModel)
+            AppTab.ADDRESS_BOOK -> AddressBookScreen(
+                onBack = null,
+                onOpenChat = { address -> navController.navigate("chat/$address") },
+                walletViewModel = walletViewModel,
+                headerBanner = { AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") } },
+            )
+            // Your KaPost profile (iOS `KaPostsView(rootMode: .myProfile)`); See All Posts shows the
+            // KaPost tab wherever it lives.
+            AppTab.PROFILE -> KaPostsMyProfileScreen(
+                navController = navController,
+                onSeeAllPosts = { show(AppTab.KAPOSTS) },
+                walletViewModel = walletViewModel,
+            )
+            AppTab.SETTINGS -> SettingsScreen(navController, walletViewModel = walletViewModel)
+            // drawn by the Hub's own route, around the other tabs' screens
+            AppTab.HUB -> {}
+            AppTab.PORTFOLIO -> PortfolioTab(navController = navController, walletViewModel = walletViewModel)
+            AppTab.COLD_STORAGE -> ColdStorageTab(
+                walletViewModel = walletViewModel,
+                onOpenAccountBackup = { navController.navigate("account_backup") },
+            )
+            AppTab.KACHAT_NAMES -> KachatMarketScreen(
+                onBack = null,
+                banner = { AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") } },
+            )
+            // The one KaPost instance that opens links and pushes (it is in one place at a time).
+            AppTab.KAPOSTS -> KaPostsScreen(navController = navController, walletViewModel = walletViewModel)
+            AppTab.GAMES -> GamesScreen(navController = navController, walletViewModel = walletViewModel)
+            AppTab.LEADERBOARD -> ChessLeaderboardScreen(navController = navController, walletViewModel = walletViewModel)
+            AppTab.KACHAT_STATS -> KaChatStatsScreen(onBack = null)
+            AppTab.APPS -> KaspaWebsitesScreen()
+        }
+    }
+
+    Scaffold(
+        containerColor = LocalAppColors.current.background,
+        bottomBar = {
+            // Only on the tabs and the screens pushed inside them that keep iOS's tab bar; other
+            // pushed screens fill the whole screen with their own Scaffold.
+            if (dockShown) dockBar()
         }
     ) { innerPadding ->
         // The green dot's half sheet, hosted once for the whole app rather than by each of the
-        // eight headers that draw a dot - so it comes up OVER whatever you were reading.
+        // headers that draw a dot - so it comes up OVER whatever you were reading.
         ConnectionStatusOverlayHost(onOpenConnectionSettings = { navController.navigate("connection_settings") })
 
-        // Only the bottom-tab destinations sit inside this shell's floating nav bar and need
-        // innerPadding reserved beneath them. "Pushed" detail screens (chat thread, settings
-        // sub-screens, etc.) fill the whole screen with their own Scaffold — applying innerPadding
-        // to the NavHost as a whole left permanent dead space at the bottom of every one of those,
-        // which became a visible gap once a Scaffold there also added imePadding().
+        val dockInset = innerPadding.calculateBottomPadding()
+        // Only the tabs and the pages that keep the dock reserve room for it (LocalDockInset);
+        // innerPadding is never applied to the NavHost as a whole.
         NavHost(
             navController = navController,
-            startDestination = Screen.Chats.route,
+            startDestination = startRoute,
             // What the dock's glass samples.
             modifier = Modifier.haze(state = dockHaze),
-            // NavHost's own default is a 700ms crossfade — noticeably sluggish for something
-            // that happens on every single tab switch/screen push. A short, snappy fade reads
-            // as instant without the jarring hard-cut of no animation at all.
+            // A short, snappy fade reads as instant without the jarring hard-cut of none.
             enterTransition = { fadeIn(animationSpec = tween(150)) },
             exitTransition = { fadeOut(animationSpec = tween(150)) },
             popEnterTransition = { fadeIn(animationSpec = tween(150)) },
             popExitTransition = { fadeOut(animationSpec = tween(150)) }
         ) {
-            // The four bottom-tab destinations get an instant swap, overriding the NavHost-level
-            // 150ms fade above just for these routes — that fade is a good fit for pushed detail
-            // screens, but a tab bar's own instant selected-tint feedback reads as sluggish when
-            // paired with any fade on the content behind it, however short.
-            composable(
-                Screen.Chats.route,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None }
-            ) {
-                // Runs on under the dock, as iOS's list runs on under its tab bar (LocalDockInset).
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
-                    ChatsScreen(navController, walletViewModel, chatViewModel = chatViewModel)
-                }
-            }
-            composable(
-                Screen.Wallet.route,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None }
-            ) {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
-                    com.kachat.app.ui.screens.WalletScreen(
-                        viewModel = walletViewModel,
-                        navController = navController,
-                        chatViewModel = chatViewModel,
-                    )
-                }
-            }
-            composable(
-                Screen.Profile.route,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None }
-            ) {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
-                    ProfileScreen(
-                        viewModel = walletViewModel,
-                        navController = navController
-                    )
-                }
-            }
-            // Its own tab since 2026-10-24 (iOS d54ea87): no Done button, the dock under it.
-            composable(
-                Screen.Settings.route,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None }
-            ) {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
-                    SettingsScreen(navController, walletViewModel = walletViewModel)
+            // Every tab has its route, used while it sits in the dock; an instant swap, as a tab
+            // bar's switch is. Kaspa Hub draws the tabs inside it with the same [tabContent].
+            AppTab.entries.forEach { tab ->
+                composable(
+                    tab.route,
+                    enterTransition = { EnterTransition.None },
+                    exitTransition = { ExitTransition.None },
+                    popEnterTransition = { EnterTransition.None },
+                    popExitTransition = { ExitTransition.None }
+                ) {
+                    // Runs on under the dock, as iOS's content runs on under its tab bar.
+                    CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
+                        if (tab == AppTab.HUB) {
+                            KaspaHubScreen(badgeCount = { badgeCount(it) }, content = { section -> tabContent(section) })
+                        } else {
+                            tabContent(tab)
+                        }
+                    }
                 }
             }
             composable("seed_phrase") {
@@ -998,6 +1148,83 @@ fun MainShell(
                 )
             }
 
+            // ---- Back since iOS 148a5331 -------------------------------------------------
+            // Portfolio's charts, on the tab's own view model.
+            composable(PortfolioRoutes.PRICE_CHART) {
+                val portfolioVm = sharedPortfolioViewModel(navController)
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
+                    PortfolioPriceChartScreen(navController, portfolioVm)
+                }
+            }
+            composable(PortfolioRoutes.VALUE_CHART) {
+                val portfolioVm = sharedPortfolioViewModel(navController)
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
+                    PortfolioValueChartScreen(navController, portfolioVm)
+                }
+            }
+            composable(PortfolioRoutes.HASHRATE_CHART) {
+                val portfolioVm = sharedPortfolioViewModel(navController)
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
+                    PortfolioHashrateChartScreen(navController, portfolioVm)
+                }
+            }
+            // A public room, pushed inside Chats with the dock kept and its composer just above it.
+            composable(PublicChatRoutes.ROOM) { entry ->
+                val channel = entry.arguments?.getString("channelName")
+                    ?.let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(android.net.Uri.decode(it)) }
+                    ?: return@composable
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides threadDockInset(dockInset)) {
+                    BroadcastChannelScreen(
+                        channelName = channel,
+                        onBack = { navController.popBackStack() },
+                        navController = navController,
+                        // A sender's View Profile: their KaPost profile.
+                        onOpenKaPostProfile = { address ->
+                            com.kachat.app.ui.screens.KaPostsDeepLink.pendingProfileAddress.value = address
+                            show(AppTab.KAPOSTS)
+                        },
+                    )
+                }
+            }
+            composable(PublicChatRoutes.ROOM_INFO) { entry ->
+                val channel = entry.arguments?.getString("channelName")
+                    ?.let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(android.net.Uri.decode(it)) }
+                    ?: return@composable
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
+                    BroadcastRoomInfoScreen(
+                        channelName = channel,
+                        onBack = { navController.popBackStack() },
+                        onOpenHiddenUsers = { navController.navigate(PublicChatRoutes.hiddenUsers(channel)) },
+                    )
+                }
+            }
+            composable(PublicChatRoutes.HIDDEN_USERS) { entry ->
+                val channel = entry.arguments?.getString("channelName")
+                    ?.let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(android.net.Uri.decode(it)) }
+                    ?: return@composable
+                BroadcastHiddenUsersScreen(channelName = channel, onBack = { navController.popBackStack() })
+            }
+            // KaPlay's and the Leaderboard tab's pages.
+            kaPlayGraph(navController, dockInset)
+            // Settings > Help's guides, Settings > About > Terms of Use, Settings > Notifications > KaPost.
+            composable(SettingsShellRoutes.TOKEN_GUIDE) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
+                    com.kachat.app.ui.screens.tokens.TokenGuideScreen(onBack = { navController.popBackStack() })
+                }
+            }
+            composable(SettingsShellRoutes.KACHAT_NAMES_GUIDE) {
+                KachatSetupGuideScreen(onClose = { navController.popBackStack() })
+            }
+            composable(SettingsShellRoutes.TERMS_OF_USE) {
+                TermsOfUseScreen(onBack = { navController.popBackStack() })
+            }
+            composable(SettingsShellRoutes.KAPOSTS_NOTIFICATIONS) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
+                    KaPostsNotificationSettingsScreen(onBack = { navController.popBackStack() })
+                }
+            }
+            // --------------------------------------------------------------------------------
+
             composable(
                 "spending_address_detail/{index}",
                 arguments = listOf(navArgument("index") { type = NavType.IntType })
@@ -1009,7 +1236,7 @@ fun MainShell(
                 // private key already lives in this wallet, so it needs direct signing via
                 // WalletViewModel.withdrawFromSpendingAddress instead. Index (not address) is the
                 // route arg since that's what withdrawFromSpendingAddress signs by.
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     SpendingAddressTxHistoryScreen(
                         index = backStackEntry.arguments?.getInt("index") ?: 0,
                         onBack = { navController.popBackStack() },
@@ -1019,14 +1246,10 @@ fun MainShell(
                 }
             }
 
-            // The chatting/identity address's "Manage Address" row (Profile > Chatting Address) -
-            // field-for-field the same screen as spending_address_detail, just for the single
-            // fixed identity address instead of a spending-chain index. Used to reuse
-            // "cold_storage_tx_history/{address}" (labeled "Transaction History"), which had the
-            // exact same watch-only-signer mismatch spending addresses had before getting their
-            // own route above.
+            // The chatting/identity address's "Manage Address" row - field-for-field the same
+            // screen as spending_address_detail, just for the single fixed identity address.
             composable("identity_address_detail") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     IdentityAddressDetailScreen(
                         onBack = { navController.popBackStack() },
                         viewModel = walletViewModel,
@@ -1036,7 +1259,7 @@ fun MainShell(
             }
 
             composable("manage_addresses") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     ManageAddressesScreen(
                         viewModel = walletViewModel,
                         onBack = { navController.popBackStack() },
@@ -1102,7 +1325,7 @@ fun MainShell(
             }
 
             composable("kns_domains") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     KnsDomainsScreen(
                         viewModel = walletViewModel,
                         onBack = { navController.popBackStack() },
@@ -1113,7 +1336,7 @@ fun MainShell(
             }
 
             composable("settings_section/{sectionKey}") { backStackEntry ->
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     SettingsScreen(
                         navController = navController,
                         sectionKey = backStackEntry.arguments?.getString("sectionKey"),
@@ -1127,24 +1350,28 @@ fun MainShell(
             // Settings > Storage sub-pages, one per backup provider (see StorageScreens.kt) -
             // the Storage section itself is just the hub of rows pointing here, like iOS.
             composable("storage_nextcloud") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     NextcloudStorageScreen(onBack = { navController.popBackStack() })
                 }
             }
 
+            // Settings > Help (moved from the old Profile, iOS 148a5331 `ProfileHelpView` in
+            // SettingsView): the Welcome Guide, the .kachat Names Guide and the kUSDT Guide.
             composable("help") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
                     HelpScreen(
                         onBack = { navController.popBackStack() },
                         onWelcomeGuide = { navController.navigate("welcome_guide") },
+                        onKachatNamesGuide = { navController.navigate(SettingsShellRoutes.KACHAT_NAMES_GUIDE) },
+                        onKusdtGuide = { navController.navigate(SettingsShellRoutes.TOKEN_GUIDE) },
                     )
                 }
             }
 
             composable("cache_settings") {
                 val cacheManager: com.kachat.app.services.CacheManager = hiltViewModel<com.kachat.app.viewmodels.CacheViewModel>().cacheManager
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     CacheSettingsScreen(
                         onBack = { navController.popBackStack() },
                         cacheManager = cacheManager,
@@ -1157,7 +1384,7 @@ fun MainShell(
             }
 
             composable("connection_settings") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     ConnectionSettingsScreen(
                         onBack = { navController.popBackStack() }
                     )
@@ -1177,7 +1404,7 @@ fun MainShell(
             }
 
             composable("kaspa_explorer_settings") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     KaspaExplorerSettingsScreen(
                         onBack = { navController.popBackStack() }
                     )
@@ -1185,7 +1412,7 @@ fun MainShell(
             }
 
             composable("notification_settings") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     NotificationSettingsScreen(
                         onBack = { navController.popBackStack() }
                     )
@@ -1193,7 +1420,7 @@ fun MainShell(
             }
 
             composable("wallet_notification_settings") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     WalletNotificationSettingsScreen(
                         onBack = { navController.popBackStack() }
                     )
@@ -1201,28 +1428,9 @@ fun MainShell(
             }
 
             composable("quick_reaction_settings") {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     QuickReactionSettingsScreen(
                         onBack = { navController.popBackStack() }
-                    )
-                }
-            }
-
-            composable(
-                Screen.AddressBook.route,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None }
-            ) {
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides innerPadding.calculateBottomPadding()) {
-                    com.kachat.app.ui.screens.AddressBookScreen(
-                        onBack = null,
-                        onOpenChat = { address -> navController.navigate("chat/$address") },
-                        walletViewModel = walletViewModel,
-                        headerBanner = {
-                            com.kachat.app.ui.screens.AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") }
-                        },
                     )
                 }
             }
@@ -1234,16 +1442,18 @@ fun MainShell(
                 arguments = listOf(navArgument("group") { type = NavType.BoolType; defaultValue = false })
             ) { backStackEntry ->
                 val startInGroupMode = backStackEntry.arguments?.getBoolean("group") ?: false
+                // Back to Chats underneath: its dock slot, or Kaspa Hub with Chats open there.
+                val chatsHome = if (AppTab.CHATS in DockLayout.dock.value) AppTab.CHATS.route else AppTab.HUB.route
                 CreateChatScreen(
                     onBack = { navController.popBackStack() },
                     onChatCreated = { address ->
                         navController.navigate("chat/$address") {
-                            popUpTo(Screen.Chats.route)
+                            popUpTo(chatsHome)
                         }
                     },
                     onGroupCreated = { groupId ->
                         navController.navigate("group_chat/$groupId") {
-                            popUpTo(Screen.Chats.route)
+                            popUpTo(chatsHome)
                         }
                     },
                     startInGroupMode = startInGroupMode,
@@ -1255,7 +1465,7 @@ fun MainShell(
                 val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
                 // The messages run on under the dock, as iOS's do under its tab bar; the composer
                 // sits just above it (LocalDockInset, see threadDockInset).
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides threadDockInset(innerPadding.calculateBottomPadding())) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides threadDockInset(dockInset)) {
                     GroupChatThreadScreen(navController = navController, groupId = groupId, chatViewModel = chatViewModel, walletViewModel = walletViewModel)
                 }
             }
@@ -1287,7 +1497,7 @@ fun MainShell(
                 val startInPaymentMode = backStackEntry.arguments?.getBoolean("paymentMode") ?: false
                 // The messages run on under the dock and the composer sits just above it, as the
                 // group thread's does (see there).
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides threadDockInset(innerPadding.calculateBottomPadding())) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides threadDockInset(dockInset)) {
                     ChatThreadScreen(
                         navController = navController,
                         contactId = contactId,
@@ -1350,9 +1560,8 @@ fun MainShell(
 
         // iOS's in-app toast for every screen: over a tab it sits above the dock, as iOS's sits
         // above the tab bar; a pushed screen has it above the navigation bar and keyboard.
-        val dockShown = onTabRoute && !hideBottomBar && !com.kachat.app.ui.screens.DockCover.active
         com.kachat.app.ui.screens.IosToastHost(
-            modifier = Modifier.padding(bottom = if (dockShown) innerPadding.calculateBottomPadding() else 0.dp),
+            modifier = Modifier.padding(bottom = if (dockShown) dockInset else 0.dp),
             bottomInsets = if (dockShown) {
                 androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0)
             } else {

@@ -348,7 +348,9 @@ class WalletService @Inject constructor(
         val api = readyApi() ?: return emptyList()
         val hiddenIndices = walletManager.getHiddenSpendingIndices(account.address)
         val labels = walletManager.getSpendingAddressLabels(account.address)
-        val addressByIndex = (0..maxIndex).associateWith { walletManager.deriveSpendingAddress(it) }.toMutableMap()
+        // One seed read for every miss, cache first (iOS 5b7c772c `cachedOrDerivedChainAddresses`).
+        val addressByIndex = walletManager.deriveSpendingAddresses(0..maxIndex).toMutableMap()
+        if (addressByIndex.size != maxIndex + 1) return emptyList()
         // Both chains (iOS getSpendingAddressList): the quantum-safe slots after the legacy ones,
         // derived with one seed computation for the whole range.
         val quantumMax = WalletManager.maxQuantumIndex(account)

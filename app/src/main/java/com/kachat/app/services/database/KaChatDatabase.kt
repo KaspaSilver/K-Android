@@ -4,6 +4,8 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.kachat.app.models.BroadcastChannelEntity
+import com.kachat.app.models.BroadcastMessageEntity
 import com.kachat.app.models.ContactEntity
 import com.kachat.app.models.DeletedContactEntity
 import com.kachat.app.models.GroupEntity
@@ -12,6 +14,9 @@ import com.kachat.app.models.GroupSyncCursorEntity
 import com.kachat.app.models.MessageEditEntity
 import com.kachat.app.models.MessageEntity
 import com.kachat.app.models.MessageSyncCursorEntity
+import com.kachat.app.models.HiddenBroadcastSenderEntity
+import com.kachat.app.models.PortfolioEntity
+import com.kachat.app.models.PortfolioTransactionEntity
 import com.kachat.app.models.ReactionEntity
 
 /**
@@ -32,8 +37,14 @@ import com.kachat.app.models.ReactionEntity
         GroupSyncCursorEntity::class,
         ReactionEntity::class,
         MessageEditEntity::class,
+        // v45: Public Chats and Portfolio are back (iOS 148a5331, KaChat is the all-in-one app again).
+        BroadcastChannelEntity::class,
+        BroadcastMessageEntity::class,
+        HiddenBroadcastSenderEntity::class,
+        PortfolioTransactionEntity::class,
+        PortfolioEntity::class,
     ],
-    version = 44,
+    version = 45,
     exportSchema = true
 )
 abstract class KaChatDatabase : RoomDatabase() {
@@ -42,6 +53,9 @@ abstract class KaChatDatabase : RoomDatabase() {
     abstract fun groupDao(): GroupDao
     abstract fun reactionDao(): ReactionDao
     abstract fun messageEditDao(): MessageEditDao
+    abstract fun broadcastDao(): BroadcastDao
+    abstract fun portfolioDao(): PortfolioDao
+    abstract fun portfolioDefinitionDao(): PortfolioDefinitionDao
 
     companion object {
         /**
@@ -552,6 +566,47 @@ abstract class KaChatDatabase : RoomDatabase() {
                 db.execSQL("DROP TABLE IF EXISTS `portfolio_transactions`")
                 db.execSQL("DROP TABLE IF EXISTS `portfolios`")
                 db.execSQL("DROP TABLE IF EXISTS `swap_transactions`")
+            }
+        }
+
+        /**
+         * v44 -> v45: KaChat is the all-in-one app again (iOS 148a5331), so Public Chats' three
+         * tables (dropped by v42 -> v43) and Portfolio's two (dropped by v43 -> v44) come back,
+         * empty, exactly as Room's schemas 42 and 43 had them. `IF NOT EXISTS` keeps a replay safe.
+         */
+        val MIGRATION_44_45 = object : Migration(44, 45) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `broadcast_channels` (`channelName` TEXT NOT NULL, " +
+                        "`walletAddress` TEXT NOT NULL, `joinedAt` INTEGER NOT NULL, `alwaysListen` INTEGER NOT NULL, " +
+                        "`notifyEnabled` INTEGER NOT NULL, `retentionMillis` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`channelName`, `walletAddress`))"
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `broadcast_messages` (`id` TEXT NOT NULL, `channelName` TEXT NOT NULL, " +
+                        "`senderAddress` TEXT NOT NULL, `content` TEXT NOT NULL, `blockTimestamp` INTEGER NOT NULL, " +
+                        "`deliveryStatus` TEXT NOT NULL, PRIMARY KEY(`id`))"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_broadcast_messages_channelName_blockTimestamp` " +
+                        "ON `broadcast_messages` (`channelName`, `blockTimestamp`)"
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `broadcast_hidden_senders` (`senderAddress` TEXT NOT NULL, " +
+                        "`walletAddress` TEXT NOT NULL, `channelName` TEXT NOT NULL, `hiddenAt` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`senderAddress`, `walletAddress`, `channelName`))"
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `portfolio_transactions` (`id` TEXT NOT NULL, `walletAddress` TEXT NOT NULL, " +
+                        "`portfolioId` TEXT NOT NULL, `type` TEXT NOT NULL, `amountSompi` INTEGER NOT NULL, " +
+                        "`fiatValue` REAL NOT NULL, `timestampMillis` INTEGER NOT NULL, `notes` TEXT, " +
+                        "`sourceAddress` TEXT, `sourceTxId` TEXT, `updatedAtMillis` INTEGER, PRIMARY KEY(`id`))"
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `portfolios` (`id` TEXT NOT NULL, `walletAddress` TEXT NOT NULL, " +
+                        "`name` TEXT NOT NULL, `sortOrder` INTEGER NOT NULL, `createdAtMillis` INTEGER NOT NULL, " +
+                        "`updatedAtMillis` INTEGER, PRIMARY KEY(`id`))"
+                )
             }
         }
 

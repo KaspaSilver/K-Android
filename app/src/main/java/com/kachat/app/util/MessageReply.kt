@@ -46,6 +46,7 @@ object MessageReply {
         MessageReaction.parseOrNull(unwrapped)?.let { return "Reacted ${it.emoji}" }
         val mime = InlineMediaSniff.mimeType(unwrapped)?.lowercase()
         if (mime?.startsWith("audio/") == true) return "🎤 Audio message"
+        if (mime == "image/gif") return "GIF"
         if (mime?.startsWith("image/") == true) return "📷 Photo"
         ChessMessage.parseOrNull(unwrapped)?.let { envelope ->
             if (envelope is ChessEnvelope.Invite) {

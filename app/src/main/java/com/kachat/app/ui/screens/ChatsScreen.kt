@@ -71,6 +71,8 @@ import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -100,6 +102,11 @@ private sealed interface ChatListEntry {
     data class Group(val convo: com.kachat.app.repository.GroupConversation) : ChatListEntry {
         override val id get() = "g:${convo.group.groupId}"
     }
+
+    /** A public room (iOS 148a5331: rooms are rows in the Chats list, by latest activity). */
+    data class Room(val channel: com.kachat.app.models.BroadcastChannelEntity) : ChatListEntry {
+        override val id get() = "r:${channel.channelName}"
+    }
 }
 
 /**
@@ -117,6 +124,8 @@ fun ChatsScreen(
     walletViewModel: WalletViewModel = hiltViewModel(),
     connectionViewModel: ConnectionViewModel = hiltViewModel(),
     chatViewModel: ChatViewModel = hiltViewModel(),
+    /** Public Chats: the rooms listed with the chats (iOS 148a5331 `PublicChatService`). */
+    broadcastViewModel: com.kachat.app.viewmodels.BroadcastViewModel = hiltViewModel(),
 ) {
     val balance by walletViewModel.fullBalance.collectAsState()
     val dotColorHex by connectionViewModel.dotColorHex.collectAsState()
@@ -150,6 +159,17 @@ fun ChatsScreen(
     val haptic = com.kachat.app.util.rememberHaptics()
     // The bottom-right + : New Chat or New Group Chat, in one sheet (iOS d1844582).
     var showNewSheet by remember { mutableStateOf(false) }
+    // Public rooms (iOS 148a5331 ChatListView): every default room listed from the start (switched
+    // off ones aside), by latest activity with the chats; a room handed over by a tapped
+    // notification or a room link opens here.
+    val listedRooms by broadcastViewModel.listedChannels.collectAsState()
+    val roomSummaries by broadcastViewModel.roomSummaries.collectAsState()
+    val roomSenderAliases by broadcastViewModel.contactAliases.collectAsState()
+    /** A room you added, waiting on its delete confirmation (a default room is only switched off). */
+    var roomToLeave by remember { mutableStateOf<String?>(null) }
+    /** Edit Default Public Chats, from the New sheet. */
+    var showPublicChatsSettings by remember { mutableStateOf(false) }
+    PublicRoomHandoffEffect(navController, broadcastViewModel)
 
     // What is pinned in the circles row, newest pin first, saved per wallet: bots ("b:<address>")
     // pinned to its front, and chats ("c:<address>") pinned up out of the list into the row (iOS
@@ -277,10 +297,14 @@ fun ChatsScreen(
     // The chats and groups, most recent message first (a group with none yet by when it was added).
     // Your own chat takes its place by date like any other (iOS d1844582 removed `pinningSelfChat`).
     // Shared by Select All and the bulk actions so they agree on what's visible.
-    val allEntries = remember(filteredConversations, displayedGroups) {
+    // Public rooms join them by their newest message (iOS 148a5331 `roomActivity`); ties keep
+    // their order (the sort is stable), so rooms nobody has written in don't swap places.
+    val displayedRooms = remember(listedRooms, searchQuery) { displayedPublicRooms(listedRooms, searchQuery) }
+    val allEntries = remember(filteredConversations, displayedGroups, displayedRooms, roomSummaries) {
         buildList<Pair<Long, ChatListEntry>> {
             filteredConversations.forEach { add((it.lastMessage?.blockTimestamp ?: 0L) to ChatListEntry.Chat(it)) }
             displayedGroups.forEach { add((it.lastMessage?.blockTimestamp ?: it.group.createdAt) to ChatListEntry.Group(it)) }
+            displayedRooms.forEach { add(publicRoomActivity(roomSummaries[it.channelName]) to ChatListEntry.Room(it)) }
         }.sortedByDescending { it.first }.map { it.second }
     }
 
@@ -397,7 +421,7 @@ fun ChatsScreen(
                 AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") }
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Text(
-                        stringResource(R.string.chats),
+                        stringResource(R.string.kachat),
                         color = LocalAppColors.current.textPrimary,
                         fontWeight = FontWeight.Bold,
                         fontSize = LargeTitleSize,
@@ -595,6 +619,31 @@ fun ChatsScreen(
                 if (allEntries.isNotEmpty()) {
                     items(allEntries, key = { it.id }) { entry ->
                         when (entry) {
+                        is ChatListEntry.Room -> {
+                            val roomName = entry.channel.channelName
+                            PublicRoomChatsRow(
+                                channel = entry.channel,
+                                summary = roomSummaries[roomName],
+                                myAddress = myAddress,
+                                contactAliases = roomSenderAliases,
+                                isSelectionMode = isSelectionMode,
+                                selected = entry.id in selectedEntryIds,
+                                openSwipeRow = openSwipeRow,
+                                onOpenSwipeRowChange = { openSwipeRow = it },
+                                entryId = entry.id,
+                                broadcastViewModel = broadcastViewModel,
+                                onOpen = {
+                                    haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                                    navController.navigate(PublicChatRoutes.room(roomName))
+                                },
+                                onToggleSelection = { toggleSelection(entry.id) },
+                                onDelete = {
+                                    if (deletePublicRoomNeedsConfirmation(context, roomName, broadcastViewModel)) {
+                                        roomToLeave = roomName
+                                    }
+                                },
+                            )
+                        }
                         is ChatListEntry.Group -> {
                             val convo = entry.convo
                             val groupId = convo.group.groupId
@@ -1060,9 +1109,32 @@ fun ChatsScreen(
     if (showNewSheet) {
         ChatsNewSheet(
             chatViewModel = chatViewModel,
+            broadcastViewModel = broadcastViewModel,
             onDismiss = { showNewSheet = false },
             onChatCreated = { address -> navController.navigate("chat/$address") },
             onGroupCreated = { groupId -> navController.navigate("group_chat/$groupId") },
+            onPublicRoomJoined = { room -> navController.navigate(PublicChatRoutes.room(room)) },
+            onEditDefaultPublicChats = { showPublicChatsSettings = true },
+        )
+    }
+    // Edit Default Public Chats (iOS `PublicChatsSettingsView`): each default room and the
+    // language rooms on or off.
+    if (showPublicChatsSettings) {
+        PublicChatsSettingsSheet(
+            onDismiss = { showPublicChatsSettings = false },
+            broadcastViewModel = broadcastViewModel,
+        )
+    }
+    // Deleting a room you added asks first (iOS `leaveRoomSheet`).
+    roomToLeave?.let { room ->
+        LeavePublicRoomSheet(
+            channelName = room,
+            onDelete = {
+                broadcastViewModel.leaveChannel(room)
+                selectedEntryIds = selectedEntryIds - "r:$room"
+                roomToLeave = null
+            },
+            onKeep = { roomToLeave = null },
         )
     }
 }
@@ -1404,6 +1476,8 @@ private fun messagePreviewText(message: MessageEntity?, context: android.content
             context.getString(R.string.pr_preview, link.request.amountText)
         )
         is KaChatLinkRef.KaPost -> return context.getString(R.string.shared_a_kapost)
+        // As iOS 148a5331's ConversationRow writes it (not localized there either).
+        is KaChatLinkRef.PublicChatRoom -> return "Public chat room #${link.channel}"
         null -> {}
     }
     val trimmed = unwrapped.trim()
@@ -1416,6 +1490,7 @@ private fun messagePreviewText(message: MessageEntity?, context: android.content
     // so the order changes nothing else.
     fileEnvelopeMimeType(trimmed)?.lowercase()?.let { mime ->
         return when {
+            mime == "image/gif" -> context.getString(R.string.gif)
             mime.startsWith("image/") -> context.getString(R.string.photo)
             mime.startsWith("audio/") -> context.getString(R.string.voice_message)
             mime.startsWith("video/") -> context.getString(R.string.video)
@@ -1968,7 +2043,7 @@ fun MessageRequestsScreen(
 
 /** What the Chats New sheet shows: its menu, or a create screen swapped in (iOS d1844582
  *  `CreateStep`). */
-private enum class ChatsNewPage { MENU, NEW_CHAT, NEW_GROUP }
+private enum class ChatsNewPage { MENU, NEW_CHAT, NEW_GROUP, NEW_PUBLIC_CHAT }
 
 /**
  * The Chats screen's New sheet (iOS d1844582 `createSheet`): a half sheet of two rows, New Chat and
@@ -1979,9 +2054,14 @@ private enum class ChatsNewPage { MENU, NEW_CHAT, NEW_GROUP }
 @Composable
 private fun ChatsNewSheet(
     chatViewModel: ChatViewModel,
+    broadcastViewModel: com.kachat.app.viewmodels.BroadcastViewModel,
     onDismiss: () -> Unit,
     onChatCreated: (String) -> Unit,
     onGroupCreated: (String) -> Unit,
+    /** New Public Chat joined a room: it opens (iOS 148a5331 `joinRoomFromCreateSheet`). */
+    onPublicRoomJoined: (String) -> Unit,
+    /** Edit Default Public Chats: the default rooms' switches (iOS `PublicChatsSettingsView`). */
+    onEditDefaultPublicChats: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -2029,6 +2109,13 @@ private fun ChatsNewSheet(
                             chatViewModel = chatViewModel,
                         )
                     }
+                    ChatsNewPage.NEW_PUBLIC_CHAT -> Box(Modifier.fillMaxHeight().padding(top = 10.dp)) {
+                        NewPublicChatPage(
+                            broadcastViewModel = broadcastViewModel,
+                            onBack = { page = ChatsNewPage.MENU },
+                            onJoined = { room -> close { onPublicRoomJoined(room) } },
+                        )
+                    }
                     ChatsNewPage.MENU -> Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -2055,6 +2142,18 @@ private fun ChatsNewSheet(
                             title = stringResource(R.string.chats_new_group_chat),
                             subtitle = stringResource(R.string.chats_new_group_subtitle),
                         ) { page = ChatsNewPage.NEW_GROUP }
+                        // Public Chats (iOS 148a5331): join or create a room, and the default
+                        // rooms' switches.
+                        ActionSheetRow(
+                            icon = Icons.Default.Tag,
+                            title = stringResource(R.string.pc_new_public_chat),
+                            subtitle = stringResource(R.string.pc_new_public_chat_subtitle),
+                        ) { page = ChatsNewPage.NEW_PUBLIC_CHAT }
+                        ActionSheetRow(
+                            icon = Icons.Default.Tune,
+                            title = stringResource(R.string.pc_edit_default_public_chats),
+                            subtitle = stringResource(R.string.pc_edit_default_public_chats_subtitle),
+                        ) { close { onEditDefaultPublicChats() } }
                     }
                 }
                 IosSheetGrabber(Modifier.align(Alignment.TopCenter))
@@ -2089,5 +2188,6 @@ internal fun ChatsSpendingSendLauncher(walletViewModel: WalletViewModel, onDone:
     }
 }
 
-/** New Chat and New Group Chat open at full height (iOS d1844582 `createMenuHeight`, 250 pt). */
-private val ChatsNewSheetHeight = 250.dp
+/** New Chat and New Group Chat open at full height (iOS d1844582 `createMenuHeight`: 410 pt
+ *  since 148a5331, with New Public Chat and Edit Default Public Chats). */
+private val ChatsNewSheetHeight = 410.dp

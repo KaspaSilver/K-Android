@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">Quiconque l\'ouvre dans K obtient Envoyer des Kaspa pré-rempli, et voit qu\'elle a été créée par votre adresse de chat (signée avec sa clé).</string>
+    <string name="pl_tap_to_open_public_chat_room">Touchez pour ouvrir ce salon de discussion public.</string>
+    <string name="pl_tap_to_join_public_chat_room">Touchez pour rejoindre ce salon de discussion public.</string>
+    <string name="pl_join_room_title">Rejoindre #%1$s ?</string>
+    <string name="pl_join_room_message">Un lien souhaite ajouter ce salon à vos discussions publiques.</string>
+    <string name="pl_join_room_mixed_scripts">Ce nom mélange des lettres de différents alphabets, il imite peut-être un autre salon.</string>
+</resources>

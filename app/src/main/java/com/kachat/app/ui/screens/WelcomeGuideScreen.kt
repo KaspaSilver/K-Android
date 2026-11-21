@@ -226,7 +226,7 @@ fun WelcomeGuideScreen(
             }
         }
     }
-    PushedQrPage(visible = showFundingQr, white = true, onBack = { showFundingQr = false }) {
+    PushedQrPage(visible = showFundingQr, white = false, onBack = { showFundingQr = false }) {
         ChattingAddressQrPage(
             address = chattingAddress.orEmpty(),
             balanceSompi = fundingBalanceSompi,

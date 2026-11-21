@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">Ai mở nó trong K sẽ thấy màn hình Gửi Kaspa đã điền sẵn và biết yêu cầu này do địa chỉ trò chuyện của bạn tạo (ký bằng khóa của nó).</string>
+    <string name="pl_tap_to_open_public_chat_room">Nhấn để mở phòng trò chuyện công khai này.</string>
+    <string name="pl_tap_to_join_public_chat_room">Nhấn để tham gia phòng trò chuyện công khai này.</string>
+    <string name="pl_join_room_title">Tham gia #%1$s?</string>
+    <string name="pl_join_room_message">Một liên kết muốn thêm phòng này vào Trò chuyện công khai của bạn.</string>
+    <string name="pl_join_room_mixed_scripts">Tên này trộn lẫn chữ cái từ nhiều bảng chữ cái khác nhau nên có thể đang giả mạo một phòng khác.</string>
+</resources>

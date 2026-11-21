@@ -1,0 +1,362 @@
+package com.kachat.app.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.MarkEmailRead
+import androidx.compose.material.icons.outlined.MarkEmailUnread
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.kachat.app.R
+import com.kachat.app.models.BroadcastChannelEntity
+import com.kachat.app.models.FeaturedBroadcastChannels
+import com.kachat.app.repository.BroadcastRepository
+import com.kachat.app.ui.theme.KaspaTeal
+import com.kachat.app.ui.theme.LocalAppColors
+import com.kachat.app.viewmodels.BroadcastViewModel
+
+/**
+ * Public Chats in the Chats list (iOS 148a5331 `ChatListView`, rooms moved in from their own tab
+ * on 2026-11-21): the room rows, their swipes, the leave confirmation, and the New sheet's New
+ * Public Chat page. The Chats screen only places them.
+ */
+object PublicChatRoutes {
+    /** A room's screen ([BroadcastChannelScreen]); the navigation registers "broadcast/{channelName}". */
+    const val ROOM = "broadcast/{channelName}"
+
+    /** Room Info ([BroadcastRoomInfoScreen]); the room screen navigates to it. */
+    const val ROOM_INFO = "broadcast_room_info/{channelName}"
+
+    /** A room's Hidden Users ([BroadcastHiddenUsersScreen]); Room Info pushes it. */
+    const val HIDDEN_USERS = "broadcast_hidden_users/{channelName}"
+
+    fun room(channelName: String): String = "broadcast/$channelName"
+
+    fun hiddenUsers(channelName: String): String = "broadcast_hidden_users/$channelName"
+
+    fun roomInfo(channelName: String): String = "broadcast_room_info/$channelName"
+}
+
+/**
+ * When a room last had a message: where it sits among the chats (iOS `roomActivity`). A room
+ * nobody has written in yet goes to the bottom - the default rooms are all joined at once, on
+ * first launch, and by their join time they sat above every chat.
+ */
+internal fun publicRoomActivity(summary: BroadcastRepository.RoomSummary?): Long =
+    summary?.lastMessage?.blockTimestamp ?: 0L
+
+/** The rooms the list shows, filtered by the search on the room's name (iOS `displayedRooms`). */
+internal fun displayedPublicRooms(rooms: List<BroadcastChannelEntity>, searchQuery: String): List<BroadcastChannelEntity> {
+    val query = searchQuery.trim()
+    if (query.isEmpty()) return rooms
+    return rooms.filter { it.channelName.contains(query, ignoreCase = true) }
+}
+
+/**
+ * One room in the Chats list (iOS `roomRow`): drawn like a chat ([PublicChatRow]), swipe left for
+ * Delete and Mute (no full swipe, so a long swipe can't start a delete), right for Mark as Read or
+ * Mark as Unread. In Select mode a tap picks it (the bar's actions leave rooms alone, as on iOS).
+ */
+@Composable
+internal fun PublicRoomChatsRow(
+    channel: BroadcastChannelEntity,
+    summary: BroadcastRepository.RoomSummary?,
+    myAddress: String?,
+    contactAliases: Map<String, String>,
+    isSelectionMode: Boolean,
+    selected: Boolean,
+    openSwipeRow: Any?,
+    onOpenSwipeRowChange: (Any?) -> Unit,
+    entryId: String,
+    broadcastViewModel: BroadcastViewModel,
+    onOpen: () -> Unit,
+    onToggleSelection: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val colors = LocalAppColors.current
+    val context = LocalContext.current
+    val name = channel.channelName
+    val unread = summary?.unreadCount ?: 0
+    val youLabel = stringResource(R.string.pc_you)
+    val yesterday = stringResource(R.string.pc_yesterday)
+    val last = summary?.lastMessage
+    val preview = last?.let { message ->
+        val sender = when {
+            myAddress != null && message.senderAddress.equals(myAddress, ignoreCase = true) -> youLabel
+            else -> com.kachat.app.models.addressDisplayName(message.senderAddress, contactAliases[message.senderAddress])
+        }
+        "$sender: ${publicRoomPreview(message.content)}"
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().background(colors.background),
+    ) {
+        if (isSelectionMode) {
+            Icon(
+                imageVector = if (selected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                contentDescription = stringResource(R.string.pc_select_room),
+                tint = if (selected) KaspaTeal else colors.textSecondary,
+                modifier = Modifier.padding(start = 16.dp).size(22.dp),
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            val muted = !channel.notifyEnabled
+            SwipeActionsRow(
+                key = entryId,
+                openKey = openSwipeRow,
+                onOpenKeyChange = onOpenSwipeRowChange,
+                enabled = !isSelectionMode,
+                leadingActions = listOf(
+                    if (unread > 0) {
+                        SwipeAction(Icons.Outlined.MarkEmailRead, stringResource(R.string.mark_as_read), KaspaTeal) {
+                            broadcastViewModel.markRoomRead(name)
+                        }
+                    } else {
+                        SwipeAction(Icons.Outlined.MarkEmailUnread, stringResource(R.string.mark_as_unread), KaspaTeal) {
+                            broadcastViewModel.markRoomUnread(name)
+                        }
+                    }
+                ),
+                trailingActions = listOf(
+                    SwipeAction(Icons.Outlined.Delete, stringResource(R.string.delete), colors.danger) { onDelete() },
+                    SwipeAction(
+                        icon = if (muted) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
+                        title = if (muted) stringResource(R.string.pc_unmute) else stringResource(R.string.pc_mute),
+                        tint = colors.warning,
+                    ) {
+                        val on = muted
+                        broadcastViewModel.setNotifyEnabled(name, on)
+                        val indexed = FeaturedBroadcastChannels.isIndexerTracked(name)
+                        IosToasts.show(
+                            context.getString(
+                                when {
+                                    !on -> R.string.pc_notifications_off_toast
+                                    indexed -> R.string.pc_notifications_on_closed_toast
+                                    else -> R.string.pc_notifications_on_open_toast
+                                }
+                            )
+                        )
+                    },
+                ),
+            ) {
+                PublicChatRow(
+                    channelName = name,
+                    notifyOff = muted,
+                    preview = preview,
+                    emptyText = stringResource(R.string.pc_no_messages_yet),
+                    timeText = last?.let { publicRoomTime(it.blockTimestamp, yesterday) },
+                    unread = unread,
+                    onClick = { if (isSelectionMode) onToggleSelection() else onOpen() },
+                    onLongClick = null,
+                )
+            }
+            // From the text's start (16 + 50 + 12) to 16 short of the edge, as the chat rows.
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 78.dp, end = 16.dp),
+                color = colors.textTertiary.copy(alpha = 0.5f),
+            )
+        }
+    }
+}
+
+/**
+ * Delete on a room (iOS `deleteRoom`): a default room is never really deleted - it is switched
+ * off, like its switch in Edit Default Public Chats, which brings it back; a room you added asks
+ * first ([LeavePublicRoomSheet]). Returns true when the caller should ask.
+ */
+internal fun deletePublicRoomNeedsConfirmation(
+    context: android.content.Context,
+    channelName: String,
+    broadcastViewModel: BroadcastViewModel,
+): Boolean {
+    if (channelName in FeaturedBroadcastChannels.CURATED_NAMES) {
+        broadcastViewModel.removeFromList(channelName)
+        IosToasts.show(context.getString(R.string.pc_default_room_off_toast, channelName))
+        return false
+    }
+    return true
+}
+
+/** "Delete #room?" (iOS `leaveRoomSheet`): every message cached for it on this device goes. */
+@Composable
+internal fun LeavePublicRoomSheet(
+    channelName: String,
+    onDelete: () -> Unit,
+    onKeep: () -> Unit,
+) {
+    ActionSheetContainer(
+        title = stringResource(R.string.pc_delete_room_title, channelName),
+        subtitle = stringResource(R.string.pc_delete_room_message),
+        onDismiss = onKeep,
+    ) {
+        ActionSheetRow(
+            icon = Icons.Default.Delete,
+            title = stringResource(R.string.delete),
+            subtitle = stringResource(R.string.pc_delete_room_row_subtitle),
+            tint = LocalAppColors.current.danger,
+        ) { onDelete() }
+        ActionSheetRow(
+            icon = Icons.Default.Close,
+            title = stringResource(R.string.pc_keep),
+            subtitle = stringResource(R.string.pc_keep_subtitle),
+        ) { onKeep() }
+    }
+}
+
+/**
+ * New Public Chat, in the Chats + sheet (iOS `createJoinRoom`): join or create a room by name -
+ * anyone who joins the same name sees and posts there. Joining opens the room ([onJoined]).
+ */
+@Composable
+internal fun NewPublicChatPage(
+    broadcastViewModel: BroadcastViewModel,
+    onBack: () -> Unit,
+    onJoined: (String) -> Unit,
+) {
+    val colors = LocalAppColors.current
+    var name by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    val focus = remember { FocusRequester() }
+    val haptic = com.kachat.app.util.rememberHaptics()
+    val isEmpty = name.trim().isEmpty()
+    fun join() {
+        if (isEmpty) return
+        broadcastViewModel.joinFromCreateSheet(
+            rawName = name,
+            onError = { error = it },
+            onJoined = { joined ->
+                haptic(com.kachat.app.util.IosHaptic.SUCCESS)
+                onJoined(joined)
+            },
+        )
+    }
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    Column(modifier = Modifier.fillMaxSize()) {
+        SheetNavBar(
+            title = stringResource(R.string.pc_new_public_chat),
+            leading = { SheetBarButton(stringResource(R.string.pc_back), onClick = onBack) },
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                stringResource(R.string.pc_new_public_chat_explainer),
+                color = colors.textSecondary,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(colors.surfaceVariant, RoundedCornerShape(16.dp))
+                    .padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("#", color = colors.textSecondary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
+                TextField(
+                    value = name,
+                    onValueChange = {
+                        name = it
+                        error = null
+                    },
+                    placeholder = { Text("channel-name", color = colors.textTertiary) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        autoCorrect = false,
+                        imeAction = ImeAction.Go,
+                    ),
+                    keyboardActions = KeyboardActions(onGo = { join() }),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = colors.textPrimary,
+                        unfocusedTextColor = colors.textPrimary,
+                        cursorColor = KaspaTeal,
+                    ),
+                    modifier = Modifier.weight(1f).focusRequester(focus),
+                )
+            }
+            error?.let {
+                Text(it, color = colors.danger, fontSize = 13.sp, textAlign = TextAlign.Center)
+            }
+            Text(
+                stringResource(R.string.pc_join),
+                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(KaspaTeal.copy(alpha = if (isEmpty) 0.4f else 1f), RoundedCornerShape(16.dp))
+                    .clickable(enabled = !isEmpty) { join() }
+                    .padding(vertical = 14.dp),
+            )
+            Spacer(Modifier.size(0.dp))
+        }
+    }
+}
+
+/**
+ * A room handed over from outside - a tapped room notification, or a room link - opens here, in
+ * the Chats list's navigation (iOS `openRoomFromHandoff`, `pendingPublicChatNavigation`): the
+ * name is checked again and a room with no row is joined first.
+ */
+@Composable
+internal fun PublicRoomHandoffEffect(navController: NavController, broadcastViewModel: BroadcastViewModel) {
+    val pending by BroadcastDeepLink.pendingChannel.collectAsState()
+    LaunchedEffect(pending) {
+        val raw = pending ?: return@LaunchedEffect
+        BroadcastDeepLink.consumePending()
+        broadcastViewModel.openRoomFromHandoff(raw) { name ->
+            navController.navigate(PublicChatRoutes.room(name)) { launchSingleTop = true }
+        }
+    }
+}

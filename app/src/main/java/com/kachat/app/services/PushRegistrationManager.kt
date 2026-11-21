@@ -53,8 +53,10 @@ import javax.inject.Singleton
  * triggers (PUSH_NOTIFICATIONS.md). The same observer unregisters when notifications are switched
  * off or the last account disappears.
  *
- * Public Chats and KaPosts left the app (iOS e2f6732): their registration fields are always sent
- * empty, so the service drops whatever an older build asked it for.
+ * Public Chats and KaPosts are back (iOS 148a5331): the registration carries the rooms whose bell
+ * is on (the ones the indexer tracks, service rooms never) with the senders hidden in them, and
+ * this account's KaPost key with its per-kind switches and watched authors, as KaPost registered
+ * them (PUSH_EXTENSIONS.md 2, 3, 3a). A change to any of them re-registers.
  *
  * [PushState.setActive] is flipped true only after a registration round-trip succeeds while
  * system notifications are deliverable, and false on failure/unregister — the pollers consult it
@@ -72,6 +74,10 @@ class PushRegistrationManager @Inject constructor(
     private val settings: AppSettingsRepository,
     private val pushState: PushState,
     private val peerAliasStore: PeerAliasStore,
+    // Public Chats' rooms and KaPost's watched authors (iOS 148a5331). Lazy: both are reached
+    // only from this manager's own coroutines.
+    private val broadcastRepository: dagger.Lazy<com.kachat.app.repository.BroadcastRepository>,
+    private val kaPostsWatchStore: dagger.Lazy<KaPostsWatchStore>,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.kachat.app.util.StartupSafety.logOnlyHandler("PushRegistrationManager"))
     // Serialize registrations so an account switch + a token refresh can't race.
@@ -105,7 +111,38 @@ class PushRegistrationManager @Inject constructor(
          *  keys coming back re-registers through this, or the next push for it only comes after a
          *  launch or account switch. */
         val watchedGroupKeys: Pair<Set<String>, Set<String>>,
+        /** The rooms and KaPost fields the registration carries (iOS 148a5331). */
+        val features: FeatureInputs = FeatureInputs(),
     )
+
+    /** What the Public Chats and KaPost fields are built from: the rooms with their bell on, the
+     *  hidden senders, which rooms the indexer tracks, KaPost's five push switches and whose new
+     *  posts this account watches. */
+    private data class FeatureInputs(
+        val rooms: Set<String> = emptySet(),
+        val hiddenSenders: Set<String> = emptySet(),
+        val trackedRoomsVersion: Long = 0L,
+        val kaPostsKinds: List<Boolean> = emptyList(),
+        val kaPostsWatching: Set<String> = emptySet(),
+    )
+
+    /** The five KaPost switches the push service filters on (likes, dislikes, comments,
+     *  reposts, follows), in the request's order. */
+    private val kaPostsKindsFlow = combine(
+        settings.kaPostsNotifyLikes,
+        settings.kaPostsNotifyDislikes,
+        settings.kaPostsNotifyComments,
+        settings.kaPostsNotifyReposts,
+        settings.kaPostsNotifyFollows,
+    ) { likes, dislikes, comments, reposts, follows -> listOf(likes, dislikes, comments, reposts, follows) }
+
+    private fun featureInputsFlow() = combine(
+        broadcastRepository.get().getNotifyEnabledChannelNames(),
+        broadcastRepository.get().getHiddenSenders().map { rows -> rows.map { "${it.channelName}|${it.senderAddress}" }.toSet() },
+        IndexerTrackedRooms.changes,
+        kaPostsKindsFlow,
+        kaPostsWatchStore.get().watching,
+    ) { rooms, hidden, tracked, kinds, watching -> FeatureInputs(rooms, hidden, tracked, kinds, watching) }
 
     init {
         scope.launch {
@@ -128,6 +165,7 @@ class PushRegistrationManager @Inject constructor(
                     watchedGroupKeys = watchedGroupKeys,
                 )
             }
+                .combine(featureInputsFlow()) { snapshot, features -> snapshot.copy(features = features) }
                 .distinctUntilChanged()
                 // Coalesce bursts (accepting a handshake touches contacts repeatedly, etc.) into
                 // one challenge/register round-trip.
@@ -444,15 +482,18 @@ class PushRegistrationManager @Inject constructor(
         // Blinded group ids to be pushed for (per group, per other non-muted member) — iOS parity.
         // Non-empty flips the registration to the TransitionalGroups auth shape.
         val watchedGroupIds = collectWatchedGroupIds(walletAddress)
+        // Public Chats and KaPost (iOS 148a5331): the rooms whose bell is on with who is hidden in
+        // them, and this account's KaPost key, switches and watched authors.
+        val features = collectFeatureFields(privateKey)
 
         // Skip the network round-trip entirely when the server-accepted snapshot is unchanged —
         // this is what collapses the startup trigger + init-observer + foreground triggers into
         // one actual registration.
-        val fingerprint = registrationFingerprint(token, walletAddress, watchedAddresses, aliases, watchedGroupIds)
+        val fingerprint = registrationFingerprint(token, walletAddress, watchedAddresses, aliases, watchedGroupIds, features)
         if (fingerprint == lastRegisteredFingerprint) return@withLock
 
         try {
-            submitRegistration(api, token, privateKey, walletAddress, watchedAddresses, aliases, watchedGroupIds)
+            submitRegistration(api, token, privateKey, walletAddress, watchedAddresses, aliases, watchedGroupIds, features)
         } catch (e: HttpException) {
             // Wallet-binding conflict: this token is still bound to a previously active wallet
             // (server keys registrations by token but binds them to a wallet). Mirror iOS's
@@ -461,7 +502,7 @@ class PushRegistrationManager @Inject constructor(
             if (!isWalletBindingConflict(e)) throw e
             Log.i(TAG, "push register hit wallet-binding conflict, attempting recovery unregister")
             unregisterForRecovery(api, token, privateKey, walletAddress)
-            submitRegistration(api, token, privateKey, walletAddress, watchedAddresses, aliases, watchedGroupIds)
+            submitRegistration(api, token, privateKey, walletAddress, watchedAddresses, aliases, watchedGroupIds, features)
         }
 
         lastRegisteredFingerprint = fingerprint
@@ -477,7 +518,7 @@ class PushRegistrationManager @Inject constructor(
         Log.i(
             TAG,
             "push registered (watched=${watchedAddresses.size}, aliases=${aliases.size}, groups=${watchedGroupIds.size}, " +
-                "active=${pushState.isActive})"
+                "rooms=${features.rooms.size}, active=${pushState.isActive})"
         )
     }
 
@@ -489,6 +530,7 @@ class PushRegistrationManager @Inject constructor(
         watchedAddresses: List<String>,
         aliases: List<String>,
         watchedGroupIds: List<String>,
+        features: FeatureFields,
     ) {
         try {
             val auth = buildAuth(
@@ -511,17 +553,18 @@ class PushRegistrationManager @Inject constructor(
                     watchedGroupIds = watchedGroupIds.ifEmpty { null },
                     primaryAddress = walletAddress,
                     aliases = aliases,
-                    // Public Chats and KaPosts left the app (iOS e2f6732): registered as empty,
-                    // so the service drops whatever an older build asked it for.
-                    watchedBroadcastChannels = emptyList(),
-                    hiddenBroadcastSenders = emptyMap(),
-                    kaPostsPubkey = null,
-                    kaPostsNotifyLikes = false,
-                    kaPostsNotifyDislikes = false,
-                    kaPostsNotifyComments = false,
-                    kaPostsNotifyReposts = false,
-                    kaPostsNotifyFollows = false,
-                    kaPostsWatchAuthors = emptyList(),
+                    // Public Chats and KaPosts (back since iOS 148a5331): the rooms whose bell is
+                    // on, and this account's KaPosts key with its per-kind switches, as KaPost
+                    // registers them.
+                    watchedBroadcastChannels = features.rooms,
+                    hiddenBroadcastSenders = features.hiddenSenders,
+                    kaPostsPubkey = features.kaPostsPubkey,
+                    kaPostsNotifyLikes = features.kinds.getOrElse(0) { true },
+                    kaPostsNotifyDislikes = features.kinds.getOrElse(1) { true },
+                    kaPostsNotifyComments = features.kinds.getOrElse(2) { true },
+                    kaPostsNotifyReposts = features.kinds.getOrElse(3) { true },
+                    kaPostsNotifyFollows = features.kinds.getOrElse(4) { true },
+                    kaPostsWatchAuthors = features.watchAuthors,
                     auth = auth,
                 )
             )
@@ -586,6 +629,7 @@ class PushRegistrationManager @Inject constructor(
         watchedAddresses: List<String>,
         aliases: List<String>,
         watchedGroupIds: List<String>,
+        features: FeatureFields,
     ): String = sha256Hex(
         listOf(
             token,
@@ -593,8 +637,54 @@ class PushRegistrationManager @Inject constructor(
             canonicalizeAddresses(watchedAddresses).joinToString(","),
             canonicalizeAliases(aliases).joinToString(","),
             canonicalizeAddresses(watchedGroupIds).joinToString(","),
+            // The rooms and KaPosts' key, switches and watched authors are part of what the
+            // service holds for this device, so a change is a change worth an update (iOS 148a5331).
+            features.rooms.joinToString(","),
+            features.hiddenSenders.entries.sortedBy { it.key }.joinToString(",") { "${it.key}:${it.value.joinToString("+")}" },
+            features.kaPostsPubkey.orEmpty(),
+            features.kinds.joinToString("") { if (it) "1" else "0" },
+            features.watchAuthors.sorted().joinToString("+"),
         ).joinToString("\n")
     )
+
+    /** The Public Chats and KaPosts fields of one registration (iOS 148a5331). */
+    private class FeatureFields(
+        val rooms: List<String>,
+        val hiddenSenders: Map<String, List<String>>,
+        val kaPostsPubkey: String?,
+        val kinds: List<Boolean>,
+        val watchAuthors: List<String>,
+    )
+
+    /**
+     * iOS 148a5331 `collectWatchedPublicChatChannels` / `collectHiddenPublicChatSenders` /
+     * `collectKaPostsPubkey` / `collectKaPostsWatchAuthors`: the indexer-tracked rooms whose bell
+     * is on (the push service sends room pushes for these while the app is closed; the chess
+     * arena never), each with the senders hidden in it (every-room hides included; rooms with
+     * none left out); the account's KaPosts identity, the compressed public key of its key; and
+     * the authors it asked to hear about when they post.
+     */
+    private suspend fun collectFeatureFields(privateKey: ByteArray): FeatureFields {
+        val repository = broadcastRepository.get()
+        val rooms = repository.getNotifyEnabledChannelNames().first()
+            .filter {
+                it !in com.kachat.app.models.FeaturedBroadcastChannels.SERVICE_CHANNELS &&
+                    com.kachat.app.models.FeaturedBroadcastChannels.isIndexerTracked(it)
+            }
+            .sorted()
+        val hiddenRows = if (rooms.isEmpty()) emptyList() else repository.getHiddenSenders().first()
+        val hiddenSenders = rooms.mapNotNull { room ->
+            val combined = com.kachat.app.repository.BroadcastRepository.hiddenAddressesIn(room, hiddenRows).toSortedSet()
+            if (combined.isEmpty()) null else room to combined.toList()
+        }.toMap()
+        val pubkey = runCatching {
+            com.kachat.app.util.Secp256k1.G.multiply(java.math.BigInteger(1, privateKey)).normalize()
+                .getEncoded(true).joinToString("") { "%02x".format(it) }
+        }.getOrNull()
+        val kinds = kaPostsKindsFlow.first()
+        val watchAuthors = if (pubkey == null) emptyList() else kaPostsWatchStore.get().watchedPubkeys()
+        return FeatureFields(rooms, hiddenSenders, pubkey, kinds, watchAuthors)
+    }
 
     /**
      * The aliases INCOMING messages from these contacts carry — the same set the message sync

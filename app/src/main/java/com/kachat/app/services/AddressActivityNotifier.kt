@@ -329,6 +329,16 @@ class AddressActivityNotifier @Inject constructor(
             .remove(chattingFloorKey(walletAddress))
             .remove(handledKey(walletAddress))
             .apply()
+        // and the copy in memory (iOS 5b7c772c `removeAllData(forWallet:)`)
+        scope.launch {
+            runMutex.withLock {
+                if (handledLoadedFor == walletAddress) {
+                    handledLoadedFor = null
+                    handledOrder = mutableListOf()
+                    handledSet = mutableSetOf()
+                }
+            }
+        }
     }
 
     private fun baselinesKey(walletAddress: String) = "baselines_$walletAddress"
@@ -374,8 +384,31 @@ class AddressActivityNotifier @Inject constructor(
     }
 
     private fun isHandled(txId: String, walletAddress: String): Boolean {
+        if (txId.lowercase() in ownTransactions) return true
         ensureHandledLoaded(walletAddress)
         return txId in handledSet
+    }
+
+    /** Transactions this phone sent itself ([markOwnTransaction]), lowercased: read by the diff
+     *  pass from the moment they're marked, before the persisted mark below lands. */
+    private val ownTransactions: MutableSet<String> = java.util.Collections.synchronizedSet(LinkedHashSet())
+
+    /**
+     * A transaction this phone sends whose KAS change lands on one of your addresses with no input
+     * from one of them (a kUSDT send or Combine Coins: its inputs are token coins at their own
+     * contract addresses), so the own-funds check can't tell it's yours: never "Received" (iOS
+     * 5b7c772c `markOwnTransaction`). Call it before the submit.
+     */
+    fun markOwnTransaction(txId: String) {
+        val id = txId.trim().lowercase()
+        if (id.isEmpty()) return
+        val walletAddress = walletAddressOrNull() ?: return
+        synchronized(ownTransactions) {
+            ownTransactions += id
+            // a session's worth, the persisted list below keeps them for good
+            while (ownTransactions.size > HANDLED_TX_ID_CAP) ownTransactions.remove(ownTransactions.first())
+        }
+        scope.launch { runMutex.withLock { markHandled(id, walletAddress) } }
     }
 
     private fun markHandled(txId: String, walletAddress: String) {

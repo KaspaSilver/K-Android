@@ -25,8 +25,8 @@ class GlobalNotificationCenterStore @Inject constructor(
 ) {
     data class Entry(
         val id: String,
-        /** "wallet" ([IN_BELL]) - older builds also stored "kaposts", "group", "broadcast" and
-         *  "kachat" rows. */
+        /** "wallet" or "token" ([IN_BELL]) - older builds also stored "kaposts", "group",
+         *  "broadcast" and "kachat" rows. */
         val source: String,
         val title: String,
         val body: String,
@@ -158,12 +158,15 @@ class GlobalNotificationCenterStore @Inject constructor(
     companion object {
         private const val TAG = "GlobalNotifCenter"
 
-        /** What the Profile bell lists (iOS `Entry.Source.inBell`, 4500ebc). */
-        val IN_BELL = setOf("wallet")
+        /** What the notifications list holds (iOS `Entry.Source.inBell`, 4500ebc): Kaspa received,
+         *  and a token received ("token", iOS 5b7c772c; its targetId is the token's id, "kusdt",
+         *  and a tap opens that token's Manage screen on the Wallet tab). */
+        val IN_BELL = setOf("wallet", "token")
 
         /** The source tag a row shows (iOS `Entry.Source.label`). */
         fun sourceLabel(source: String): String = when (source) {
             "wallet" -> "Wallet"
+            "token" -> "Tokens"
             "kachat" -> ".kachat"
             "group" -> "Group"
             else -> source

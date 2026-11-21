@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">هر کس آن را در K باز کند، صفحهٔ ارسال کاسپا را با همین اطلاعات پرشده می‌بیند و می‌فهمد که نشانی گفتگوی شما آن را ساخته است (با کلید آن امضا شده).</string>
+    <string name="pl_tap_to_open_public_chat_room">برای باز کردن این اتاق گفتگوی عمومی ضربه بزنید.</string>
+    <string name="pl_tap_to_join_public_chat_room">برای پیوستن به این اتاق گفتگوی عمومی ضربه بزنید.</string>
+    <string name="pl_join_room_title">به #%1$s می‌پیوندید؟</string>
+    <string name="pl_join_room_message">یک پیوند می‌خواهد این اتاق را به گفتگوهای عمومی شما اضافه کند.</string>
+    <string name="pl_join_room_mixed_scripts">این نام حروف الفباهای مختلف را با هم ترکیب کرده است، بنابراین ممکن است از اتاق دیگری تقلید کند.</string>
+</resources>

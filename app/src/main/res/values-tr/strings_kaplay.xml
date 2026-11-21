@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's chess sentences, looked up by their English text (util/KaPlayText.kt: `kp_` and 12
+     hex of the SHA-1 of the English). Translations from KaPlay Android's strings_app_text.xml and,
+     for the sentences new in KaChat, iOS 148a5331's Localizable.strings. Generated. -->
+<resources>
+    <string name="kp_7e46be469deb" formatted="false">1v1 tablosunda #%d</string>
+    <string name="kp_cba1ee4eec72" formatted="false">Turnuva tablosunda #%d</string>
+    <string name="kp_3401831926d1" formatted="false">%d B</string>
+    <string name="kp_f769c12fc2ee" formatted="false">%d M</string>
+    <string name="kp_d9e1beae2f39" formatted="false">%d G</string>
+    <string name="kp_55fc776de141" formatted="false">%d G  %d M</string>
+    <string name="kp_d8aa573c0e61" formatted="false">%d hamle</string>
+    <string name="kp_fbeb1207b441" formatted="false">%d / %d oyuncu</string>
+    <string name="kp_b70e7251ba0d" formatted="false">%d / %d oyuncu bekliyor</string>
+    <string name="kp_6dac15cf1ed7" formatted="false">%d / %d oyuncu · kod %s</string>
+    <string name="kp_ba09ba042e31" formatted="false">%d yer kaldı</string>
+    <string name="kp_d4cd664ac02d" formatted="false">%s, %s rakibini %d hamlede yendi. Daha azında yapabilir misin?</string>
+    <string name="kp_35f8f501300f" formatted="false">%s sana meydan okuyor: %s rakibini yen.</string>
+    <string name="kp_8a3914693bee" formatted="false">%s tur atlar ve sen turnuvadan elenirsin. Bu, lider tablosunda yenilgi sayılır. Pes etmek tek bir işlemdir.</string>
+    <string name="kp_297da93b20fb" formatted="false">%s hâlâ kilitli: ona ulaşmak için merdiveni tırman.</string>
+    <string name="kp_c7642c6d04be" formatted="false">%s düşünüyor…</string>
+    <string name="kp_00161fefc871" formatted="false">%s açıldı!</string>
+    <string name="kp_7ab092285767" formatted="false">İlk hamleyi %s yapar.</string>
+    <string name="kp_207e56e21618" formatted="false">Sıra: %s</string>
+    <string name="kp_4e56d26a3870" formatted="false">%s vs %s</string>
+    <string name="kp_fbb8239c09ba" formatted="false">%s kazanır ve bu, lider tablosunda yenilgi sayılır. Pes etmek tek bir işlemdir.</string>
+    <string name="kp_a074e492574e" formatted="false">%s kazandı</string>
+    <string name="kp_03a71913fd6b" formatted="false">%s şah mat ile kazandı</string>
+    <string name="kp_e2bdeaa4f9e5" formatted="false">%s şah mat ile kazandı.</string>
+    <string name="kp_e510ea9dedf3" formatted="false">%s rakibi pes edince kazandı</string>
+    <string name="kp_33cd4606c8c7" formatted="false">%s rakibi pes edince kazandı.</string>
+    <string name="kp_405c5afa1901" formatted="false">%s beraberlikten sonra süreyle kazandı</string>
+    <string name="kp_4e683890d75e" formatted="false">%s yetersiz materyal beraberliğinden sonra süreyle kazandı</string>
+    <string name="kp_f2d9cffd2918" formatted="false">%s pat ile beraberlikten sonra süreyle kazandı</string>
+    <string name="kp_3dae94d319ae" formatted="false">%s elli hamle kuralı beraberliğinden sonra süreyle kazandı</string>
+    <string name="kp_26b3a1b77b3b" formatted="false">%s üç kez tekrar beraberliğinden sonra süreyle kazandı</string>
+    <string name="kp_49680f535fab" formatted="false">%s süreden kazandı</string>
+    <string name="kp_e27359cb1d1d" formatted="false">%s süreden kazandı.</string>
+    <string name="kp_7fb322c0aa2a" formatted="false">%s turnuvayı kazandı</string>
+    <string name="kp_683e17380d8a" formatted="false">1 / %d oyuncu</string>
+    <string name="kp_a3a1e853bd57" formatted="false">1 / %d oyuncu bekliyor</string>
+    <string name="kp_dcd9d9468141" formatted="false">1 / %d oyuncu · kod %s</string>
+    <string name="kp_f6dec9c77f35" formatted="false">1 yer kaldı</string>
+    <string name="kp_d6db37efe259" formatted="false">1v1</string>
+    <string name="kp_1644dc818c09" formatted="false">1v1 oyunları</string>
+    <string name="kp_7c71818a1ae0" formatted="false">1v1 lider tablosu</string>
+    <string name="kp_d8706f214713" formatted="false">1v1, turnuvalar ve beş bot. Çevrimiçi hamleler ve bot sonuçları Kaspa\'ya kaydedilir.</string>
+    <string name="kp_ba9cce8319d7" formatted="false">Özel turnuva arkadaşlar içindir: oluşturan kişi sekiz karakterlik kodunu paylaşır. Oluşturmak için oluşturucu kodu gerekir.</string>
+    <string name="kp_a733b809d2f1" formatted="false">Aktif</string>
+    <string name="kp_d70f93df5e8f" formatted="false">Adres</string>
+    <string name="kp_4d064726954a" formatted="false">İleri</string>
+    <string name="kp_dbad49d89123" formatted="false">Tüm zamanlar</string>
+    <string name="kp_b52b36b7269f" formatted="false">Geri</string>
+    <string name="kp_c3065156b217" formatted="false">Kilidi açmak için %s rakibini yen</string>
+    <string name="kp_60575a6ebba9" formatted="false">Başlangıç</string>
+    <string name="kp_489d32ce7dd9" formatted="false">En iyi: %d hamle</string>
+    <string name="kp_b406fb57b29f" formatted="false">Siyah</string>
+    <string name="kp_b5807c6df986" formatted="false">Sıra siyahta</string>
+    <string name="kp_4ca88ea465a9" formatted="false">Botlar</string>
+    <string name="kp_e42a1e70b400" formatted="false">Eşleşme tablosu</string>
+    <string name="kp_75e08341b41d" formatted="false">Eşleşme tablosu · izlemek için bir oyuna dokun</string>
+    <string name="kp_cf76a9fe16a7" formatted="false">Pes etme</string>
+    <string name="kp_2b246e0ff5ca" formatted="false">Dikkatle hesaplar ve hataları cezalandırır. Bir planla gel.</string>
+    <string name="kp_77dfd2135f4d" formatted="false">İptal</string>
+    <string name="kp_5a2fc967d105" formatted="false">Bu turnuva iptal edilsin mi?</string>
+    <string name="kp_1fe710030fe9" formatted="false">Turnuvayı iptal et</string>
+    <string name="kp_5dc29b482d76" formatted="false">Oluşturan kişi tarafından iptal edildi.</string>
+    <string name="kp_7881bf71d2de" formatted="false">Şampiyon</string>
+    <string name="kp_f3dffbf21ed5" formatted="false">Şah. Sıra sende.</string>
+    <string name="kp_933b750898fd" formatted="false">Şah mat</string>
+    <string name="kp_3226c18271e7" formatted="false">Şah mat. %s kazandı.</string>
+    <string name="kp_f95715a82ba2" formatted="false">Satranc</string>
+    <string name="kp_645b1b39f542" formatted="false">Satranç sunucusuna ulaşılamıyor, elimizdekiler gösteriliyor. Oyunların ağ üzerinden devam ediyor. Sunucu geri geldiğinde herkese açık odalara yeniden katılabilirsin.</string>
+    <string name="kp_b03bf0e29f1c" formatted="false">Satranç sunucusuna ulaşılamıyor. Hamleler ağdan geliyor ve tahta biraz geriden gelebilir.</string>
+    <string name="kp_ee9c98ac836b" formatted="false">Satranç sunucusuna ulaşılamıyor. Bu telefondakiler gösteriliyor; tam tablodan eksik olabilir.</string>
+    <string name="kp_cf9797eede60" formatted="false">Satranç sunucusuna ulaşılamıyor. Bu telefondakiler gösteriliyor.</string>
+    <string name="kp_9cba814a7f57" formatted="false">Satranç sunucusuna ulaşılamıyor. Oyuncular için ağ izleniyor, bu yüzden uygulama kapalıyken katılan biri görünmeyebilir.</string>
+    <string name="kp_2b26c543ead5" formatted="false">Oyununu seç</string>
+    <string name="kp_c47532edb2d7" formatted="false">Galibiyeti al</string>
+    <string name="kp_25b55e8298c7" formatted="false">Alınıyor…</string>
+    <string name="kp_a546440f3f66" formatted="false">Merdiveni tırman</string>
+    <string name="kp_adac69379a62" formatted="false">Kod</string>
+    <string name="kp_d29d9fee5279" formatted="false">Kod: %s</string>
+    <string name="kp_8e3df45a49db" formatted="false">Kopyalandı</string>
+    <string name="kp_af74f7c5362a" formatted="false">Kopyala</string>
+    <string name="kp_6d8d79e75952" formatted="false">Sonuç Kaspa\'ya kaydedilemedi</string>
+    <string name="kp_6e157c5da441" formatted="false">Oluştur</string>
+    <string name="kp_1bf04f16edb7" formatted="false">Özel 1v1 oluştur</string>
+    <string name="kp_7e92ffa83dfa" formatted="false">Özel turnuva oluştur</string>
+    <string name="kp_94d7d8ee473f" formatted="false">Oluşturuluyor…</string>
+    <string name="kp_2775f5da8563" formatted="false">Oluşturucu kodu</string>
+    <string name="kp_34660a5de9ae" formatted="false">Yenilgi</string>
+    <string name="kp_e9b450d14bc2" formatted="false">Tamam</string>
+    <string name="kp_bfa50c7a3838" formatted="false">Berabere</string>
+    <string name="kp_9af70e71546d" formatted="false">Berabere - süreyle kazanıldı</string>
+    <string name="kp_3ef901b7405f" formatted="false">Yetersiz materyalle berabere - süreyle kazanıldı</string>
+    <string name="kp_1f217e401459" formatted="false">Yetersiz materyal nedeniyle berabere.</string>
+    <string name="kp_65647004462e" formatted="false">Yetersiz materyal nedeniyle berabere. %s süreyle kazandı.</string>
+    <string name="kp_8abd5d59fe79" formatted="false">Pat ile berabere - süreyle kazanıldı</string>
+    <string name="kp_e7c73294f742" formatted="false">Pat ile berabere.</string>
+    <string name="kp_0ee00fa48fcb" formatted="false">Pat ile berabere. %s süreyle kazandı.</string>
+    <string name="kp_c1f887545180" formatted="false">Elli hamle kuralıyla berabere - süreyle kazanıldı</string>
+    <string name="kp_e0fa7fdfda5b" formatted="false">Elli hamle kuralıyla berabere.</string>
+    <string name="kp_e18608aaaa1f" formatted="false">Elli hamle kuralıyla berabere. %s süreyle kazandı.</string>
+    <string name="kp_ca658ca2e441" formatted="false">Üç kez tekrarla berabere - süreyle kazanıldı</string>
+    <string name="kp_1bd0b8c9f833" formatted="false">Üç kez tekrarla berabere.</string>
+    <string name="kp_c328be341b0c" formatted="false">Üç kez tekrarla berabere. %s süreyle kazandı.</string>
+    <string name="kp_fdd69537f848" formatted="false">Berabere.</string>
+    <string name="kp_cbefc612d55f" formatted="false">Berabere. %s süreyle kazandı.</string>
+    <string name="kp_1861bf6c95a3" formatted="false">Sekiz oyuncu, tek eleme: çeyrek finaller, yarı finaller, final. Herkese açık odalar oyuncular geldikçe dolar; özel odalar kodla.</string>
+    <string name="kp_d488ebb4b1db" formatted="false">Katılan herkes serbest bırakılır. Bu tek bir işlemdir.</string>
+    <string name="kp_4788947ec3fe" formatted="false">%s rakibini en az hamlede yenenler</string>
+    <string name="kp_672b22cc516e" formatted="false">Final</string>
+    <string name="kp_355bcc577d71" formatted="false">Bitti</string>
+    <string name="kp_a8d435fecb0c" formatted="false">Biten 1v1 oyunları</string>
+    <string name="kp_781b28d8c53d" formatted="false">Biten turnuvalar</string>
+    <string name="kp_08ab1ad685e3" formatted="false">Kaspa Silver\'dan Yonatan Sompolinsky\'ye, seviye 1\'den 5\'e beş bot. Sonrakinin kilidini açmak için birini yen. Sonuç Kaspa\'ya kaydedilir.</string>
+    <string name="kp_03e3c2d3a084" formatted="false">Seviye 1\'den 5\'e beş bot. Sonrakinin kilidini açmak için birini yen. Her oyunun sonucu bittiğinde Kaspa\'ya kaydedilir.</string>
+    <string name="kp_e3e82846c325" formatted="false">Oyun</string>
+    <string name="kp_94114a40a64a" formatted="false">Kazanılan ve kaybedilen oyunlar - 1v1\'ler ve turnuva oyunları birlikte</string>
+    <string name="kp_7b1a1bfec003" formatted="false">Oyununa git</string>
+    <string name="kp_78722784381b" formatted="false">Eğlence için oynar. Hızlı hamle yapar ve bazen bir taşı korumasız bırakır.</string>
+    <string name="kp_7f2a3bb304a4" formatted="false">Ayrılırsan oyundan pes etmiş olursun. %s tur atlar ve sen turnuvadan elenirsin. Bu, lider tablosunda yenilgi sayılır. Pes etmek tek bir işlemdir.</string>
+    <string name="kp_e998db197859" formatted="false">Ayrılırsan oyundan pes etmiş olursun. %s kazanır ve bu, lider tablosunda yenilgi sayılır. Pes etmek tek bir işlemdir.</string>
+    <string name="kp_a4362588018d" formatted="false">Ayrılırsan oyundan pes etmiş olursun. Bu, %s karşısında yenilgi sayılır ve sonuç tek bir işlemle Kaspa\'ya kaydedilir.</string>
+    <string name="kp_03a2b6501787" formatted="false">Oynanıyor</string>
+    <string name="kp_e24d4d212b7b" formatted="false">Oyunlar sürüyor. Canlı izlemek için herhangi bir oyuna dokun.</string>
+    <string name="kp_b1cfe72fd271" formatted="false">Orta</string>
+    <string name="kp_f63265478d76" formatted="false">Bu, %s karşısında yenilgi sayılır ve sonuç tek bir işlemle Kaspa\'ya kaydedilir.</string>
+    <string name="kp_e0d73143de80" formatted="false">Katil</string>
+    <string name="kp_c8155c3c34dc" formatted="false">Katıl (Ücret: %s)</string>
+    <string name="kp_df7b41919cb2" formatted="false">Katıl ve katılan bir sonraki kişiyle eşleş. Bir oda dolduğunda oyun başlar ve sonraki oda açılır. Taraf başına beş dakika; her hamle bir Kaspa işlemidir (her biri yaklaşık 0,0017 KAS). Buradaki oyunlar lider tablosunda sayılır.</string>
+    <string name="kp_dacbf38d4e73" formatted="false">Kodla katıl</string>
+    <string name="kp_f44c1e425996" formatted="false">Katılınıyor…</string>
+    <string name="kp_d9f369249799" formatted="false">Koruyun</string>
+    <string name="kp_bb76090ac54c" formatted="false">Oynamaya devam et</string>
+    <string name="kp_9be1abba9272" formatted="false">Beklemeye devam et</string>
+    <string name="kp_32bf913a5258" formatted="false">Her taşın nasıl hareket ettiğini bilir ve bedava materyal almaya bayılır. Korumasız piyonlarına dikkat et.</string>
+    <string name="kp_35b13a38f422" formatted="false">CANLI %s</string>
+    <string name="kp_0381247a6987" formatted="false">Lider Tablosu</string>
+    <string name="kp_7e3520a97331" formatted="false">Ayril</string>
+    <string name="kp_963593386268" formatted="false">Yine de ayrıl</string>
+    <string name="kp_4bc79453df63" formatted="false">Oyundan ayrılıyor musun?</string>
+    <string name="kp_baf82f7117b6" formatted="false">Sıradan çıkılsın mı?</string>
+    <string name="kp_b7aa749e18cb" formatted="false">Ayrılırsan artık başka bir oyuncu aranmaz. Ayrılmak tek bir işlemdir; istediğin zaman tekrar katılabilirsin.</string>
+    <string name="kp_3016bac3196c" formatted="false">Ayrılınıyor…</string>
+    <string name="kp_ec7cc1838f39" formatted="false">Seviye %d</string>
+    <string name="kp_7780eacc49b8" formatted="false">Seviye %d / 5</string>
+    <string name="kp_0e50ccfcd686" formatted="false">Seviye %d · %s</string>
+    <string name="kp_9f8465fad533" formatted="false">Seviye %d · %s · Siyahla oynuyorsun</string>
+    <string name="kp_fc9307e48365" formatted="false">Seviye %d · %s · Beyazla oynuyorsun</string>
+    <string name="kp_6235bfaf9ecc" formatted="false">Şimdi canlı</string>
+    <string name="kp_39687e0a700d" formatted="false">Odalar yükleniyor…</string>
+    <string name="kp_5daad3f809a8" formatted="false">Turnuva arenadan yükleniyor…</string>
+    <string name="kp_4d5e7c6d35ee" formatted="false">Rakip aranıyor</string>
+    <string name="kp_98ea2c12eb7c" formatted="false">Karar vermeden önce birkaç hamle ilerisini düşünür. İstikrarlıdır ve kandırması zordur.</string>
+    <string name="kp_0f9a484f1388" formatted="false">Mağlubiyet</string>
+    <string name="kp_78f3842f0201" formatted="false">Usta</string>
+    <string name="kp_092664087974" formatted="false">Rakip bulundu!</string>
+    <string name="kp_a7814b5ec744" formatted="false">Hamle %d · sıra siyahta</string>
+    <string name="kp_9fe5cb670a4c" formatted="false">Hamle %d · sıra beyazda</string>
+    <string name="kp_77fbed46e1be" formatted="false">Sıradaki: %s ile 1. tur</string>
+    <string name="kp_a2dad9a4e89c" formatted="false">Sıradaki: %s ile final</string>
+    <string name="kp_eceff125fbb4" formatted="false">Sıradaki: %s ile oyun</string>
+    <string name="kp_1337e1141b11" formatted="false">Sıradaki: %s ile yarı final</string>
+    <string name="kp_8506e1612593" formatted="false">Şu anda oynanan 1v1 oyunu yok. Biri başladığında izlemek için burada görünür.</string>
+    <string name="kp_3988da2d38ef" formatted="false">Henüz hiçbir botla oynanmadı.</string>
+    <string name="kp_77ebbb8e3de5" formatted="false">Henüz biten 1v1 oyunu yok.</string>
+    <string name="kp_1597bcaeaaa1" formatted="false">Henüz biten turnuva yok.</string>
+    <string name="kp_682c0ad47cbe" formatted="false">Zamanında kimse katılmadı. Sıradan çıktın - istediğin zaman tekrar katıl.</string>
+    <string name="kp_50385293d3d0" formatted="false">Bu kodla açık bir turnuva yok. Kodlar sekiz karakterdir; turnuvanın var olması ve hâlâ boş yeri olması gerekir.</string>
+    <string name="kp_581a01e739ba" formatted="false">Şu anda oynanan turnuva yok. Biri başladığında oyunları izlemek için burada görünür.</string>
+    <string name="kp_2ee8ce15a9f7" formatted="false">Bu ay henüz kimse %s rakibini yenemedi.</string>
+    <string name="kp_54460cd574b9" formatted="false">Henüz kimse %s rakibini yenemedi.</string>
+    <string name="kp_4472179cd296" formatted="false">Henüz yenilmedi</string>
+    <string name="kp_b9e09ae263fb" formatted="false">Onaylanmadı</string>
+    <string name="kp_214bf807441e" formatted="false">Sohbet adresinizde yeterli KAS yok. Biraz ekleyip tekrar deneyin.</string>
+    <string name="kp_16ca44702a9b" formatted="false">Acemi</string>
+    <string name="kp_fb58f3c56a8d" formatted="false">Süre</string>
+    <string name="kp_1cf2fc54ad9f" formatted="false">Çevrimiçi, taraf başına beş dakika ve her hamle bir Kaspa işlemi. Bot oyunları bittiğinde sonuçlarını Kaspa\'ya kaydeder.</string>
+    <string name="kp_6dca824588f3" formatted="false">Boş yer</string>
+    <string name="kp_b84d3a372a18" formatted="false">%s ile oyna</string>
+    <string name="kp_0faa2e4de8b8" formatted="false">Bir arkadaşınla oyna: bir 1v1 oluştur, kodunu paylaş. Özel 1v1\'ler de lider tablosunda sayılır.</string>
+    <string name="kp_576766d387ec" formatted="false">Tekrar oyna</string>
+    <string name="kp_61441ace460e" formatted="false">Taraf</string>
+    <string name="kp_8ba176164906" formatted="false">Katılan bir sonraki kişiyle ya da kodla bir arkadaşınla oyna. Tek oyun; kazanan lider tablosu puanını alır.</string>
+    <string name="kp_e53407cfe1a5" formatted="false">Oyuncu</string>
+    <string name="kp_9f33b8c73405" formatted="false">Oyuncular (%d / %d)</string>
+    <string name="kp_237dfa0a21c8" formatted="false">Özel</string>
+    <string name="kp_f61dccc2dba9" formatted="false">Özel 1v1</string>
+    <string name="kp_ea951f3a34eb" formatted="false">Özel turnuva</string>
+    <string name="kp_79b0f9805c68" formatted="false">Piyonu terfi ettir</string>
+    <string name="kp_dc5eb704bbca" formatted="false">Herkese açık</string>
+    <string name="kp_37ea9a7673b4" formatted="false">Herkese açık 1v1</string>
+    <string name="kp_8b2cb0910a17" formatted="false">Herkese açık 1v1 #%d</string>
+    <string name="kp_236760772b5c" formatted="false">Herkese açık turnuva</string>
+    <string name="kp_b4d6cee9742f" formatted="false">Herkese açık turnuva #%d</string>
+    <string name="kp_58d888c08aa5" formatted="false">Rastgele</string>
+    <string name="kp_73ba76c46a4c" formatted="false">Kazanmak için gereken en az hamleye göre sıralanır.</string>
+    <string name="kp_a3d558838b81" formatted="false">Pes Et</string>
+    <string name="kp_868d45f552a8" formatted="false">Pes et ve ayrıl</string>
+    <string name="kp_a12f7f95331e" formatted="false">Pes edilsin mi?</string>
+    <string name="kp_65d7b143ae0f" formatted="false">Sonuç Kaspa\'ya kaydedildi</string>
+    <string name="kp_9f5cd8a2e880" formatted="false">Tekrar dene</string>
+    <string name="kp_923287d2eeda" formatted="false">Kaydı tekrar dene</string>
+    <string name="kp_f7648d383499" formatted="false">1. Tur</string>
+    <string name="kp_d7418ba2e352" formatted="false">Boş yerler şu anda kontrol edilemiyor</string>
+    <string name="kp_33295d1667f4" formatted="false">Tahtayı gör</string>
+    <string name="kp_af1cfadd9704" formatted="false">%d. sıra</string>
+    <string name="kp_7d79eec3965c" formatted="false">Yarı final</string>
+    <string name="kp_3abe921a63aa" formatted="false">Yarı finaller</string>
+    <string name="kp_6f32706309e0" formatted="false">Hamlen gönderiliyor…</string>
+    <string name="kp_9cb2e112972e" formatted="false">Gönderildi, ancak Kaspa henüz onaylamadı.</string>
+    <string name="kp_09ca55ca52d2" formatted="false">Paylaş</string>
+    <string name="kp_d042790fe991" formatted="false">Bu kodu paylaş</string>
+    <string name="kp_1f3254d6ce59" formatted="false">KaPost\'ta paylaş</string>
+    <string name="kp_4401b9c3edce" formatted="false">Biri %s rakibini %d hamlede yendi. Daha azında yapabilir misin?</string>
+    <string name="kp_c923aafae8bc" formatted="false">Biri sana meydan okuyor: %s rakibini yen.</string>
+    <string name="kp_9a3ea0598e7f" formatted="false">Bir şeyler ters gitti. Lütfen tekrar dene.</string>
+    <string name="kp_8aa38f374323" formatted="false">Sonuç Kaspa\'ya kaydediliyor…</string>
+    <string name="kp_6959b5355760" formatted="false">Sonuç kaydediliyor…</string>
+    <string name="kp_ae768f766f75" formatted="false">Kal</string>
+    <string name="kp_f300737844cc" formatted="false">Odalar hâlâ yükleniyor - birazdan tekrar dene.</string>
+    <string name="kp_fc55363a83bc" formatted="false">İkiniz de tahtaya götürülüyorsunuz</string>
+    <string name="kp_ad30c2ff1d6e" formatted="false">Herkes kendi tahtasına götürülüyor</string>
+    <string name="kp_293d8f7d8030" formatted="false">Yerin alınıyor - bu tek bir işlem, bu yüzden birkaç saniye sürer.</string>
+    <string name="kp_8ad85cccbb0e" formatted="false">Geri dönmek için dokun</string>
+    <string name="kp_0e4268b5d759" formatted="false">Bu oluşturucu kodu doğru değil.</string>
+    <string name="kp_617a81cfb251" formatted="false">Bu ağa ulaşmadı. Tekrar dene.</string>
+    <string name="kp_55720cd06fc4" formatted="false">O oda önce doldu - senin için sonrakini buluyoruz.</string>
+    <string name="kp_d8501167e501" formatted="false">O oda önce doldu. Sonrakini denemek için Katıl\'a dokun.</string>
+    <string name="kp_9e663d4025b0" formatted="false">Bu turnuva zaten başladı.</string>
+    <string name="kp_1ee44a0bf66b" formatted="false">Satranç sunucusuna ulaşılamıyor ve ağ bunu henüz onaylamadı. Birazdan tekrar dene.</string>
+    <string name="kp_0e3db8107f4d" formatted="false">Satranç sunucusuna ulaşılamıyor, bu yüzden açık odalar doğrulanamıyor. Sunucu geri geldiğinde tekrar dene.</string>
+    <string name="kp_3e86d5e865a8" formatted="false">Satranç sunucusuna ulaşılamıyor, bu yüzden bu kod sorgulanamıyor. Sunucu geri geldiğinde tekrar dene.</string>
+    <string name="kp_374e3b271476" formatted="false">Oluşturan kişinin paylaştığı sekiz karakterlik kod. Katılmak tek bir işlemdir (ücret: %s).</string>
+    <string name="kp_668f15ee8377" formatted="false">Oyunun kendisi ücretsiz. Bittiğinde, kazansan da kaybetsen de sonuç Kaspa\'ya kaydedilir: cüzdanından tek bir işlem, yaklaşık %s.</string>
+    <string name="kp_056a66088f6c" formatted="false">Oyunun kendisi ücretsiz. Bittiğinde, kazansan da kaybetsen de sonuç Kaspa\'ya kaydedilir: cüzdanından tek bir işlem, küçük bir ücret.</string>
+    <string name="kp_a94070f3a397" formatted="false">Ağ önceki gönderiminizi hâlâ onaylıyor. Lütfen birkaç saniye sonra tekrar deneyin.</string>
+    <string name="kp_5021101f57d6" formatted="false">Oyun bittiğinde sonuç Kaspa\'ya kaydedilir</string>
+    <string name="kp_fb4fdd00f1ac" formatted="false">Kayıt başarısız oldu. Şimdi ayrılırsan tekrar gönderilemez ve bu galibiyet lider tablosunda sayılmaz.</string>
+    <string name="kp_2d72f92d9b82" formatted="false">Kayıt gerçekleşmiş olabilir</string>
+    <string name="kp_30a77c98dc8a" formatted="false">Sekiz yerin hepsi dolduğunda turnuva kendiliğinden başlar.</string>
+    <string name="kp_693f8a669f1e" formatted="false">Sıra rakipte</string>
+    <string name="kp_3dd518e63c49" formatted="false">Rakip</string>
+    <string name="kp_22a02413aebd" formatted="false">Her zaman oyuncu bekleyen herkese açık bir oda vardır. Dolduğunda başlar ve sonraki açılır. Sekiz oyuncu, tek eleme, taraf başına beş dakika. Her hamle bir Kaspa işlemidir (her biri yaklaşık 0,0017 KAS).</string>
+    <string name="kp_6d45876eef92" formatted="false">Derin düşünür ve uzağı görür. Bunu yenersen tüm merdiveni tırmanmış olursun.</string>
+    <string name="kp_1085f4e7c41f" formatted="false">Bu oyun başka bir hesapla oynandı. Sonucu kaydetmek için o hesaba giriş yap.</string>
+    <string name="kp_9fa87800a939" formatted="false">Bu işlem gerçekleşmiş olabilir ancak ağ onaylamadı. Yeniden göndermeden önce bakiyenizi kontrol edin.</string>
+    <string name="kp_1b4785331db3" formatted="false">Bu ay</string>
+    <string name="kp_733696c12e3e" formatted="false">Süre doldu. %s süreden kazandı.</string>
+    <string name="kp_5a2e22ac873e" formatted="false">Belli olacak</string>
+    <string name="kp_a2c1d828e2d3" formatted="false">Turnuva</string>
+    <string name="kp_25670f61ff36" formatted="false">Turnuva doldu!</string>
+    <string name="kp_cd04af2db6f1" formatted="false">Turnuva lider tablosu</string>
+    <string name="kp_fee20df1963e" formatted="false">Turnuvalar</string>
+    <string name="kp_981d375a0f37" formatted="false">Kazanılan ve kaybedilen turnuvalar</string>
+    <string name="kp_e71f1539a41b" formatted="false">Zafer</string>
+    <string name="kp_f3ec99569fbf" formatted="false">Kesif Motorunda Goruntule</string>
+    <string name="kp_33d30632848d" formatted="false">Bekliyor</string>
+    <string name="kp_a41118158853" formatted="false">%d oyuncu daha bekleniyor. Sekizinci oyuncu katıldığında kendiliğinden başlar.</string>
+    <string name="kp_442da9df5c77" formatted="false">1 oyuncu daha bekleniyor. Sekizinci oyuncu katıldığında kendiliğinden başlar.</string>
+    <string name="kp_c26c33fa1c5a" formatted="false">Oyuncular bekleniyor</string>
+    <string name="kp_0e6a21e02626" formatted="false">Satranç sunucusu bekleniyor</string>
+    <string name="kp_fbc3f16e4c19" formatted="false">Rakibin bekleniyor. Katıldığında oyun kendiliğinden başlar.</string>
+    <string name="kp_d91ebf5887cf" formatted="false">İzle</string>
+    <string name="kp_7ef5b5821c01" formatted="false">İzlemek ücretsiz - hiçbir şey gönderilmez. Yalnızca iki oyuncu hamle yapabilir.</string>
+    <string name="kp_37619fc13053" formatted="false">Beyaz</string>
+    <string name="kp_c6ff9b47bd9e" formatted="false">Sıra beyazda</string>
+    <string name="kp_79bcb3dd18f9" formatted="false">Kazanma oranı</string>
+    <string name="kp_ffb136c1afe9" formatted="false">ÇF%d galibi</string>
+    <string name="kp_3fe7ae15e42c" formatted="false">YF%d galibi</string>
+    <string name="kp_b6c015d12e1b" formatted="false">Galibiyet</string>
+    <string name="kp_b273fb287708" formatted="false">Kazandı</string>
+    <string name="kp_ddf4e3735470" formatted="false">Kazanan: %s</string>
+    <string name="kp_905cb326c779" formatted="false">Siz</string>
+    <string name="kp_70142233d6f3" formatted="false">Bu turnuvadan elendin. Eşleşme tablosunun geri kalanını izle.</string>
+    <string name="kp_07025e915e94" formatted="false">Bu turnuvadan elendin. Eşleşme tablosunun geri kalanını izleyebilirsin.</string>
+    <string name="kp_188b806432ca" formatted="false">Oynamak istediğin kişiyle paylaşacağın bir kod alırsın. O katıldığında oyun başlar. Oluşturmak tek bir işlemdir.</string>
+    <string name="kp_e7c04dcae100" formatted="false">Bir sonraki tura çıktın. Rakibin belli olduğunda sıradaki oyunun kendiliğinden açılır.</string>
+    <string name="kp_5279ac5901b8" formatted="false">Kaybettin</string>
+    <string name="kp_db93b3d19f74" formatted="false">İlk hamleyi sen yaparsın.</string>
+    <string name="kp_7ec46c42f060" formatted="false">Pes ettin. Kazanan: %s.</string>
+    <string name="kp_85b0b68af5f2" formatted="false">İlk yeri sen alırsın ve paylaşacağın bir kod alırsın. Sekiz oyuncu katıldığında başlar. Oluşturmak tek bir işlemdir.</string>
+    <string name="kp_3c2dfe0e1289" formatted="false">%d hamlede şah mat yaparak kazandın.</string>
+    <string name="kp_8dfe694ea61b" formatted="false">1 hamlede şah mat yaparak kazandın.</string>
+    <string name="kp_8c75d5f7de98" formatted="false">1. turu kazandın. Sıradaki rakibin bekleniyor - bu arada diğer oyunu izle.</string>
+    <string name="kp_795115417df0" formatted="false">Finali kazandın. Sıradaki rakibin bekleniyor - bu arada diğer oyunu izle.</string>
+    <string name="kp_2987342bd41b" formatted="false">Oyunu kazandın. Sıradaki rakibin bekleniyor - bu arada diğer oyunu izle.</string>
+    <string name="kp_ba7e2d06a69c" formatted="false">Yarı finali kazandın. Sıradaki rakibin bekleniyor - bu arada diğer oyunu izle.</string>
+    <string name="kp_dc9807723538" formatted="false">Turnuvayı kazandın.</string>
+    <string name="kp_e3a4b01eaca8" formatted="false">Kazandın!</string>
+    <string name="kp_2bd203ba381e" formatted="false">Zaten bekliyorsun: %s.</string>
+    <string name="kp_a91633acc070" formatted="false">Katıldın. %d kişi daha bekleniyor…</string>
+    <string name="kp_ad79fa22e5b2" formatted="false">Katıldın. 1 kişi daha bekleniyor…</string>
+    <string name="kp_cfe84965f638" formatted="false">Katılan bir sonraki kişiyle eşleşeceksin. Oyun kendiliğinden başlar.</string>
+    <string name="kp_d80ca7163461" formatted="false">Oynuyorsun: %s</string>
+    <string name="kp_24bf6785a61b" formatted="false">Hâlâ oynuyorsun: %s.</string>
+    <string name="kp_eec7f86a8bb7" formatted="false">Bekliyorsun: %s</string>
+    <string name="kp_61e7335f3c19" formatted="false">1v1 sicilin</string>
+    <string name="kp_48fd80af85de" formatted="false">Hamle gönderilemeden süren doldu.</string>
+    <string name="kp_a8bc9c75a936" formatted="false">Oyunun başlamasına kalan süre</string>
+    <string name="kp_32ec1dbd797a" formatted="false">Katılımın ağa ulaşmadı. İstediğin zaman tekrar katıl.</string>
+    <string name="kp_44470e508a5d" formatted="false">Sıra sende</string>
+    <string name="kp_d5b2c846e810" formatted="false">Hamlen sayılmadı. Tahtayı kontrol et.</string>
+    <string name="kp_5277d781ccc7" formatted="false">Hamlen ağa ulaşmadı. Tekrar oyna.</string>
+    <string name="kp_63bbbf0226f5" formatted="false">Sicilin</string>
+    <string name="kp_4e15ba26e54d" formatted="false">Yerin %s boyunca tutulur. Oda o zamana kadar dolmazsa sıradan çıkarsın.</string>
+    <string name="kp_8774b9393565" formatted="false">Yerin bu kadar süre tutulur. Zamanında kimse katılmazsa sıradan çıkarsın.</string>
+    <string name="kp_94ad25364602" formatted="false">Turnuva sicilin</string>
+    <string name="kp_114f3f6a8251" formatted="false">Galibiyetin henüz Kaspa\'da değil</string>
+    <string name="kp_f957097d7a22" formatted="false">bitti</string>
+    <string name="kp_691a77cd21a3" formatted="false">vs</string>
+    <string name="kp_aa93adb4f65c" formatted="false">K\'te %s rakibini (Seviye %d) %d hamlede yendim. Daha azında yapabilir misin?</string>
+    <string name="kp_f81826d956cc" formatted="false">K\'teki satranç turnuvama katıl: KaPlay &gt; Satranç &gt; Turnuvalar &gt; Kodla katıl\'ı aç ve %s kodunu gir.</string>
+    <string name="kp_c2ecefef54c6" formatted="false">K\'te benimle satranç oyna: KaPlay &gt; Satranç &gt; 1v1 &gt; Kodla katıl\'ı aç ve %s kodunu gir.</string>
+    <string name="kp_f4fa709cb963" formatted="false">Çeyrek finaller</string>
+    <string name="kp_3ce0ac6e9413" formatted="false">Sonuç gönderilmedi.</string>
+    <string name="kaplay_leaderboard_all_time">Tüm zamanlar</string>
+    <string name="kaplay_leaderboard_counted_from">%1$s tarihinden beri sayılıyor.</string>
+    <string name="kaplay_leaderboard_period">Lider tablosu dönemi</string>
+    <string name="kaplay_leaderboard_resets_monthly">Her ayın 1\'inde sıfırlanır (UTC).</string>
+    <string name="kaplay_leaderboard_this_month">Bu ay</string>
+    <string name="kaplay_no_finished_duels">Henüz biten 1v1 oyunu yok.</string>
+    <string name="kaplay_no_finished_duels_this_month">Bu ay henüz biten 1v1 oyunu yok.</string>
+    <string name="kaplay_no_finished_tournaments">Henüz biten turnuva yok.</string>
+    <string name="kaplay_no_finished_tournaments_this_month">Bu ay henüz biten turnuva yok.</string>
+    <string name="kaplay_tab_leaderboard">Lider Tablosu</string>
+</resources>

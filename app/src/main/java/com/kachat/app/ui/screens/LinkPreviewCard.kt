@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.ui.res.stringResource
 import com.kachat.app.R
 import kotlinx.coroutines.flow.first
@@ -234,11 +235,11 @@ private fun NextcloudAudioBubble(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
                     .background(if (isOutgoing) LocalAppColors.current.surfaceVariant else LocalAppColors.current.surface)
-                    .pointerInput(failed) {
+                    .pointerInput(failed, onDoubleTap != null) {
                         detectTapGestures(
                             onTap = { if (failed) attempt++ },
                             onLongPress = { showMenu = true },
-                            onDoubleTap = { onDoubleTap?.invoke() },
+                            onDoubleTap = doubleTapIfSet(onDoubleTap),
                         )
                     }
                     .padding(horizontal = 12.dp, vertical = 10.dp)
@@ -310,10 +311,10 @@ private fun RevokedShareTile(
             .clip(RoundedCornerShape(14.dp))
             // iOS: Color.primary at 5% - a faint tint of the text colour, not a card.
             .background(LocalAppColors.current.textPrimary.copy(alpha = 0.05f))
-            .pointerInput(Unit) {
+            .pointerInput(Unit, onDoubleTap != null) {
                 detectTapGestures(
                     onLongPress = { showMenu = true },
-                    onDoubleTap = { onDoubleTap?.invoke() },
+                    onDoubleTap = doubleTapIfSet(onDoubleTap),
                 )
             }
             .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -420,10 +421,10 @@ private fun TapToLoadPreviewBubble(
         modifier = Modifier
             .widthIn(max = 260.dp)
             .sendKaspaGlass(14.dp)
-            .pointerInput(url) {
+            .pointerInput(url, onDoubleTap != null) {
                 detectTapGestures(
                     onLongPress = { showMenu = true },
-                    onDoubleTap = { onDoubleTap?.invoke() },
+                    onDoubleTap = doubleTapIfSet(onDoubleTap),
                     onTap = { onLoad() }
                 )
             }
@@ -473,10 +474,10 @@ private fun LinkPreviewFallbackBubble(text: String, url: String, txId: String, k
             .clip(RoundedCornerShape(16.dp))
             .background(LocalAppColors.current.incomingBubble) // iOS systemGray5
             .padding(horizontal = 12.dp, vertical = 8.dp)
-            .pointerInput(url) {
+            .pointerInput(url, onDoubleTap != null) {
                 detectTapGestures(
                     onLongPress = { showMenu = true },
-                    onDoubleTap = { onDoubleTap?.invoke() },
+                    onDoubleTap = doubleTapIfSet(onDoubleTap),
                     onTap = { uriHandler.openUri(url) }
                 )
             }
@@ -507,10 +508,10 @@ private fun NextcloudMediaBubble(data: LinkPreviewData, url: String, txId: Strin
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(18.dp))
-            .pointerInput(url) {
+            .pointerInput(url, onDoubleTap != null) {
                 detectTapGestures(
                     onLongPress = { showMenu = true },
-                    onDoubleTap = { onDoubleTap?.invoke() },
+                    onDoubleTap = doubleTapIfSet(onDoubleTap),
                     onTap = {
                         val download = data.mediaDownloadUrl
                         when {
@@ -624,10 +625,10 @@ private fun NextcloudAttachmentCard(data: LinkPreviewData, url: String, txId: St
             .widthIn(max = 260.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(LocalAppColors.current.surface)
-            .pointerInput(url) {
+            .pointerInput(url, onDoubleTap != null) {
                 detectTapGestures(
                     onLongPress = { showMenu = true },
-                    onDoubleTap = { onDoubleTap?.invoke() },
+                    onDoubleTap = doubleTapIfSet(onDoubleTap),
                     onTap = {
                         val download = data.mediaDownloadUrl
                         when {
@@ -700,10 +701,10 @@ private fun LinkPreviewCardContent(data: LinkPreviewData, url: String, txId: Str
             .widthIn(max = 260.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(LocalAppColors.current.surface)
-            .pointerInput(url) {
+            .pointerInput(url, onDoubleTap != null) {
                 detectTapGestures(
                     onLongPress = { showMenu = true },
-                    onDoubleTap = { onDoubleTap?.invoke() },
+                    onDoubleTap = doubleTapIfSet(onDoubleTap),
                     onTap = { uriHandler.openUri(url) }
                 )
             }
@@ -714,11 +715,13 @@ private fun LinkPreviewCardContent(data: LinkPreviewData, url: String, txId: Str
                 // Image CDNs like cdninstagram/fbcdn 403 the header-less request Coil sends by
                 // default, which is why Instagram previews showed no picture. Mirrors iOS's
                 // LinkPreviewService.imageData(referer:).
+                // The page's address goes only to the page's own site: an image on another server
+                // never learns which link was opened (iOS d7c56280).
                 val imageRequest = remember(data.imageUrl, data.url) {
                     ImageRequest.Builder(context)
                         .data(data.imageUrl)
                         .addHeader("User-Agent", LinkPreviewService.BROWSER_USER_AGENT)
-                        .addHeader("Referer", data.url)
+                        .apply { if (LinkPreviewService.isSameSite(data.imageUrl, data.url)) addHeader("Referer", data.url) }
                         .crossfade(true)
                         .build()
                 }
@@ -804,6 +807,10 @@ private fun LinkPreviewCardContent(data: LinkPreviewData, url: String, txId: Str
  *                  (see [com.kachat.app.models.PaymentRequest], iOS c6851d6 / 7c71a98)
  *   KaPost post    kachat://kapost/<txid>       https://kachat.app/post/<txid>
  *                  (or KaPost's own kaposts://kapost/<txid>; iOS a8a5807a)
+ *   Public chat    kachat://broadcast/<room>    https://kachat.app/broadcast/<room>
+ *                  (or kaposts://broadcast/<room>; iOS 148a5331)
+ *   KaPay's own    kapay://profile/<address>, kapay://pay/<address>?... (and kachatwallet://):
+ *                  registered here since KaPay retired (iOS 148a5331), same targets as kachat://
  *
  * A profile's `<address>` is a full Kaspa address; in the web form a mainnet address drops its
  * `kaspa:` prefix (the app writes it without, so the link reads cleanly) and a missing prefix
@@ -812,10 +819,12 @@ private fun LinkPreviewCardContent(data: LinkPreviewData, url: String, txId: Str
  * Only kachat.app opens in the app: links from before it, on kachat.duckdns.org, are ordinary
  * web links.
  *
- * A KaPost post link opens the post in KaPost ([KaPostHandoff]): KaPosts left KaChat on 2026-10-24
- * for its own app. Its card is the one internal link that reads the network - the post's author
- * and text, from the indexer ([com.kachat.app.services.KaPostPreviewLoader]), never the link's
- * host. Public chat room links (`/broadcast/`) are ordinary web links now (iOS e2f6732).
+ * A KaPost post link opens the post in KaPost, and a Public Chat room link the room: both are back
+ * in KaChat (iOS 148a5331, 2026-11-21). A post card is the one internal link that reads the
+ * network - the post's author and text, from the indexer
+ * ([com.kachat.app.services.KaPostPreviewLoader]), never the link's host. Room names are
+ * re-validated from scratch ([com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel]):
+ * a malformed or hostile name is rejected outright, never joined.
  */
 sealed class KaChatLinkRef {
     /** Someone's KaChat profile: opens their User Info, contact or not (iOS 81df734). Always a
@@ -825,8 +834,11 @@ sealed class KaChatLinkRef {
      *  your own, shows it to copy or share again (iOS c6851d6, 1fe8388). Every field validated,
      *  and a signed one only when its signature checks out. */
     data class PaymentRequest(val request: com.kachat.app.models.PaymentRequest) : KaChatLinkRef()
-    /** A post on KaPost: opens it in the KaPost app ([KaPostHandoff], iOS a8a5807a). */
+    /** A post on KaPost: opens it in the feed (iOS 148a5331; [KaPostsDeepLink]). */
     data class KaPost(val txId: String) : KaChatLinkRef()
+    /** A Public Chats room: opens it, joining it first once asked (iOS 148a5331
+     *  `KaChatInternalLink.publicChatRoom`, [PublicChatLinkRouter]). Always a validated name. */
+    data class PublicChatRoom(val channel: String) : KaChatLinkRef()
 }
 
 /** [raw] is the exact link substring as it appears in the message, [range] where it sits in it. */
@@ -839,6 +851,10 @@ object KaChatLink {
     const val WEB_HOST = "kachat.app"
 
     fun profileUrl(address: String) = "kachat://profile/$address"
+    /** A KaPost post's links (iOS 148a5331 `KaChatInternalLink.kaPost`): the in-app form, and the
+     *  kachat.app form a share writes. */
+    fun kaPostUrl(txId: String) = "kachat://kapost/$txId"
+    fun kaPostWebUrl(txId: String) = "https://$WEB_HOST/post/$txId"
     /** The one builder both share buttons use - your own Profile and anyone's User Info - so the
      *  two links cannot drift apart: kachat.app/u/<address>, trimmed and lowercased (iOS 44d5fa4). */
     fun profileWebUrl(address: String) =
@@ -847,13 +863,13 @@ object KaChatLink {
     // The trailing segment deliberately excludes '/', '?' and '#' so a link can never carry a
     // second path component, a query string or a fragment into the app.
     private val LINK_REGEX = Regex(
-        """(?:kachat://(profile)/|https?://kachat\.app/(u)/)([^\s/?#]+)""",
+        """(?:(?:kachat|kapay)://(profile)/|https?://kachat\.app/(u)/)([^\s/?#]+)""",
         RegexOption.IGNORE_CASE
     )
     // A payment request carries a query, so it has its own pattern: everything up to whitespace
     // or a quote/angle bracket, as iOS matches it (the memo inside is percent-encoded).
     private val PAY_LINK_REGEX = Regex(
-        """(?:kachat://pay/|https?://(?:www\.)?kachat\.app/pay/)([^\s<>"']+)""",
+        """(?:(?:kachat|kapay)://pay/|https?://(?:www\.)?kachat\.app/pay/)([^\s<>"']+)""",
         RegexOption.IGNORE_CASE
     )
     // A KaPost post link: KaChat's form, KaPost's own scheme, or the kachat.app page (iOS a8a5807a).
@@ -861,11 +877,23 @@ object KaChatLink {
         """(?:kachat://kapost/|kaposts://kapost/|https?://(?:www\.)?kachat\.app/post/)([^\s<>"']+)""",
         RegexOption.IGNORE_CASE
     )
+    // A Public Chats room link (iOS 148a5331): the name is checked by PublicChatLink.parse.
+    private val ROOM_LINK_REGEX = Regex(
+        """(?:kachat://broadcast/|kaposts://broadcast/|https?://(?:www\.)?kachat\.app/broadcast/)[^\s<>"']+""",
+        RegexOption.IGNORE_CASE
+    )
     private val TRAILING_PUNCTUATION = setOf('.', ',', '!', '?', ';', ':', '\'', '"', ')', ']', '}', '>')
 
     /** True when [raw] is nothing but one of these links (no surrounding text). */
     fun parse(raw: String): KaChatLinkRef? {
-        val trimmed = raw.trim()
+        var trimmed = raw.trim()
+        // kachatwallet:// was KaPay's name before KaPay: the same targets as kapay://.
+        if (trimmed.startsWith("kachatwallet://", ignoreCase = true)) {
+            trimmed = "kapay://" + trimmed.substring("kachatwallet://".length)
+        }
+        if (ROOM_LINK_REGEX.matchEntire(trimmed) != null) {
+            return com.kachat.app.services.publicchats.PublicChatLink.parse(trimmed)?.let(KaChatLinkRef::PublicChatRoom)
+        }
         PAY_LINK_REGEX.matchEntire(trimmed)?.let { return paymentRequestRef(it.groupValues[1]) }
         KAPOST_LINK_REGEX.matchEntire(trimmed)?.let { return kaPostRef(it.groupValues[1]) }
         val match = LINK_REGEX.matchEntire(trimmed) ?: return null
@@ -874,11 +902,14 @@ object KaChatLink {
 
     /** The first valid KaChat link in [text], or null. Invalid ones are skipped, not accepted. */
     fun findFirst(text: String): KaChatLinkMatch? {
-        // No form can appear without "kachat" or "kaposts://" - the cheap bail-out for nearly
-        // every message.
-        if (!text.contains("kachat", ignoreCase = true) && !text.contains("kaposts://", ignoreCase = true)) return null
+        // No form can appear without "kachat", "kaposts://" or "kapay://" - the cheap bail-out
+        // for nearly every message.
+        if (!text.contains("kachat", ignoreCase = true) && !text.contains("kaposts://", ignoreCase = true) &&
+            !text.contains("kapay://", ignoreCase = true)
+        ) return null
         // Every pattern, in the order the links appear in the text (iOS scans with one).
-        val candidates = (LINK_REGEX.findAll(text) + PAY_LINK_REGEX.findAll(text) + KAPOST_LINK_REGEX.findAll(text))
+        val candidates = (LINK_REGEX.findAll(text) + PAY_LINK_REGEX.findAll(text) + KAPOST_LINK_REGEX.findAll(text) +
+            ROOM_LINK_REGEX.findAll(text))
             .sortedBy { it.range.first }
         for (match in candidates) {
             var end = match.range.last
@@ -939,6 +970,40 @@ object KaChatLink {
         if (trimmed.length > 100) return null
         return runCatching { com.kachat.app.util.KaspaAddress.onActiveNetwork(trimmed) }.getOrNull()
     }
+
+    /**
+     * `kaposts://compose?text=...`: a pre-written post from another app (KaPost's link, registered
+     * here since KaPost retired - iOS 148a5331 `KaChatInternalLink.composeText`), for the KaPost
+     * composer. Control and format characters go (a newline stays), and it is cut to a post's
+     * length.
+     */
+    fun composeText(uri: android.net.Uri): String? {
+        if (!uri.scheme.equals("kaposts", ignoreCase = true) || !uri.host.equals("compose", ignoreCase = true)) return null
+        if (!uri.isHierarchical || uri.pathSegments.isNotEmpty()) return null
+        val raw = uri.getQueryParameter("text") ?: return null
+        val kept = buildString {
+            var index = 0
+            while (index < raw.length) {
+                val point = raw.codePointAt(index)
+                val type = Character.getType(point).toByte()
+                val bidiOrZeroWidth = point in 0x200B..0x200F || point in 0x202A..0x202E ||
+                    point in 0x2066..0x2069 || point == 0xFEFF
+                if (point == '\n'.code || (type != Character.CONTROL && type != Character.FORMAT && !bidiOrZeroWidth)) {
+                    appendCodePoint(point)
+                }
+                index += Character.charCount(point)
+            }
+        }.trim()
+        return kept.takeIf { it.isNotEmpty() }?.take(com.kachat.app.models.KaPostDraft.POST_CHARACTER_LIMIT)
+    }
+
+    /** `kapay://market` (or `kachatwallet://market`): KaPay's .kachat Marketplace, the .kachat
+     *  tab's Marketplace page here (iOS 148a5331 `KaChatInternalLink.isMarketLink`). */
+    fun isMarketLink(uri: android.net.Uri): Boolean {
+        val scheme = uri.scheme?.lowercase() ?: return false
+        if (scheme != "kapay" && scheme != "kachatwallet") return false
+        return uri.host.equals("market", ignoreCase = true) && uri.pathSegments.isEmpty()
+    }
 }
 
 /**
@@ -949,12 +1014,15 @@ object KaChatLink {
 fun openKaChatLink(context: android.content.Context, ref: KaChatLinkRef, fromChat: Boolean = false) {
     when (ref) {
         is KaChatLinkRef.Profile -> ProfileDeepLink.request(ref.address)
-        // Tapped in a chat ([fromChat], iOS bfe9f022), Send Kaspa filled in. From anywhere else,
-        // someone else's is paid in KaPay, a chat payment opens Send Kaspa filled in. Your own
-        // shows it (MainShell's PaymentRequestSheetHost).
+        // Every request is paid here since KaPay retired (iOS 148a5331): Send Kaspa filled in.
+        // Your own shows it (MainShell's PaymentRequestSheetHost).
         is KaChatLinkRef.PaymentRequest -> PaymentRequestRouter.open(ref.request, fromChat)
-        // Straight to the post in KaPost, or its install page (iOS a8a5807a).
-        is KaChatLinkRef.KaPost -> KaPostHandoff.open(context, ref.txId)
+        // KaPost is back in KaChat (iOS 148a5331): the post opens in the feed.
+        is KaChatLinkRef.KaPost -> {
+            if (ref.txId.isNotEmpty()) KaPostsDeepLink.pendingPostTxId.value = ref.txId
+        }
+        // The room, joining it first once asked (iOS 148a5331 `openPublicChatRoom`).
+        is KaChatLinkRef.PublicChatRoom -> PublicChatLinkRouter.open(context, ref.channel)
     }
 }
 
@@ -1057,6 +1125,16 @@ fun KaChatInternalLinkCard(
     }
     val kaPostFallbackTitle = stringResource(R.string.a_post_on_kapost)
     val kaPostFallbackSubtitle = stringResource(R.string.tap_to_open_it_in_kapost)
+    // A room link: curated rooms and rooms already in the list just open; anything else is
+    // joined on tap (after asking), so the card says so first (iOS 148a5331).
+    val roomChannel = (ref as? KaChatLinkRef.PublicChatRoom)?.channel
+    val roomKnown by androidx.compose.runtime.produceState(
+        initialValue = roomChannel != null && roomChannel in com.kachat.app.models.FeaturedBroadcastChannels.CURATED_NAMES,
+        roomChannel,
+    ) {
+        if (roomChannel != null && !value) value = PublicChatLinkRouter.isListed(context, roomChannel)
+    }
+    val roomSubtitle = stringResource(if (roomKnown) R.string.pl_tap_to_open_public_chat_room else R.string.pl_tap_to_join_public_chat_room)
 
     val payEyebrow = stringResource(R.string.pr_payment_request)
     val payFrom = payCreatorName?.let { stringResource(R.string.pr_from_name, it) }
@@ -1066,20 +1144,23 @@ fun KaChatInternalLinkCard(
         is KaChatLinkRef.Profile -> Icons.Default.AccountCircle
         is KaChatLinkRef.PaymentRequest -> Icons.Outlined.ArrowCircleUp
         is KaChatLinkRef.KaPost -> Icons.AutoMirrored.Outlined.Chat
+        is KaChatLinkRef.PublicChatRoom -> Icons.Default.Tag
     }
     val eyebrow = when (ref) {
         is KaChatLinkRef.Profile -> "KaChat Profile"
         is KaChatLinkRef.PaymentRequest -> payEyebrow
         is KaChatLinkRef.KaPost -> "KaPost"
+        is KaChatLinkRef.PublicChatRoom -> "Public Chat Room"
     }
     val title = when (ref) {
         is KaChatLinkRef.Profile -> profileName ?: com.kachat.app.util.KaspaAddress.shortDisplay(ref.address)
         is KaChatLinkRef.PaymentRequest -> "${ref.request.amountText} ${com.kachat.app.util.KaspaUnit.symbol}"
         is KaChatLinkRef.KaPost -> kaPostAuthorName ?: kaPostFallbackTitle
+        is KaChatLinkRef.PublicChatRoom -> "#${ref.channel}"
     }
     val subtitle = when (ref) {
         is KaChatLinkRef.Profile ->
-            if (profileIsContact) "Tap to open your chat." else "Tap to start a chat on KaChat."
+            if (profileIsContact) "Tap to open your chat." else "Tap to start a chat on K."
         // The memo, the maker as the signature in the link proves - their name, not the payment
         // address - and what a tap does (iOS c6851d6, 7c71a98, 1fe8388).
         is KaChatLinkRef.PaymentRequest -> listOfNotNull(
@@ -1088,6 +1169,7 @@ fun KaChatInternalLinkCard(
             payAction,
         ).joinToString("\n")
         is KaChatLinkRef.KaPost -> kaPostPreview?.text ?: kaPostFallbackSubtitle
+        is KaChatLinkRef.PublicChatRoom -> roomSubtitle
     }
     val subtitleMaxLines = 3
 
@@ -1096,10 +1178,10 @@ fun KaChatInternalLinkCard(
             .widthIn(max = 280.dp)
             .fillMaxWidth()
             .sendKaspaGlass(14.dp)
-            .pointerInput(url) {
+            .pointerInput(url, onDoubleTap != null) {
                 detectTapGestures(
                     onLongPress = { showMenu = true },
-                    onDoubleTap = { onDoubleTap?.invoke() },
+                    onDoubleTap = doubleTapIfSet(onDoubleTap),
                     // This card only ever sits in a chat's bubble.
                     onTap = { openKaChatLink(context, ref, fromChat = true) }
                 )
@@ -1151,11 +1233,11 @@ fun KaChatInternalLinkCard(
 
     if (showMenu) {
         MessageActionsSheet(title = stringResource(R.string.kachat_link_menu_title), preview = url, onDismiss = { showMenu = false }) {
-            val isKaPost = ref is KaChatLinkRef.KaPost
+            // KaPost posts open in the app too since iOS 148a5331.
             ActionSheetRow(
                 icon = Icons.AutoMirrored.Filled.OpenInNew,
-                title = stringResource(if (isKaPost) R.string.open_in_kapost else R.string.open_in_kachat),
-                subtitle = stringResource(if (isKaPost) R.string.opens_the_post_in_the_kapost_app else R.string.opens_it_right_here_in_the_app),
+                title = stringResource(R.string.open_in_kachat),
+                subtitle = stringResource(R.string.opens_it_right_here_in_the_app),
             ) {
                 showMenu = false
                 openKaChatLink(context, ref, fromChat = true)
@@ -1189,3 +1271,11 @@ fun KaChatInternalLinkCard(
         }
     }
 }
+
+/**
+ * The double-tap only when there's something for it to do (iOS d7c56280 `onDoubleTapIfSet`):
+ * installed, it makes every single tap on the card wait to see whether a second one follows.
+ * The cards' gesture blocks are keyed on whether it is set, so they restart when that changes.
+ */
+private fun doubleTapIfSet(action: (() -> Unit)?): ((androidx.compose.ui.geometry.Offset) -> Unit)? =
+    if (action == null) null else { _: androidx.compose.ui.geometry.Offset -> action() }

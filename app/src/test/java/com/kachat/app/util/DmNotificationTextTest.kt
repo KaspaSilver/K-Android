@@ -86,4 +86,19 @@ class DmNotificationTextTest {
         org.junit.Assert.assertEquals("♟️ Lost on time", dmNotificationText("""{"type":"chess_resign","gameId":"g","reason":"timeout"}"""))
         org.junit.Assert.assertEquals("♟️ Resigned the chess game", dmNotificationText("""{"type":"chess_resign","gameId":"g"}"""))
     }
+
+    @Test
+    fun `a token payment notice reads Received payment, without the amount`() {
+        val notice = """{"type":"token_payment_notice","token":"kusdt","txId":"${"a".repeat(64)}","index":0,"amount":12500000,"address":"kaspa:qr"}"""
+        assertEquals("Received payment", dmNotificationText(notice))
+    }
+
+    @Test
+    fun `a reaction says what it was, as iOS's notification service does`() {
+        val target = "b".repeat(64)
+        assertEquals("Reacted 👍 to your message", dmNotificationText("""{"type":"reaction","targetTxId":"$target","emoji":"👍","action":"add"}"""))
+        assertEquals("Removed their 👍 reaction", dmNotificationText("""{"type":"reaction","targetTxId":"$target","emoji":"👍","action":"remove"}"""))
+        // never its JSON, even one the push handler should have kept silent
+        assertEquals("New message", dmNotificationText("""{"type":"reaction","targetTxId":"$target","emoji":"not an emoji","action":"add"}"""))
+    }
 }

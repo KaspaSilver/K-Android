@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">من يفتحه في K يحصل على إرسال كاسبا معبأً بهذه البيانات، ويرى أنه صادر عن عنوان الدردشة الخاص بك (موقّع بمفتاحه).</string>
+    <string name="pl_tap_to_open_public_chat_room">اضغط لفتح غرفة المحادثة العامة هذه.</string>
+    <string name="pl_tap_to_join_public_chat_room">اضغط للانضمام إلى غرفة المحادثة العامة هذه.</string>
+    <string name="pl_join_room_title">الانضمام إلى #%1$s؟</string>
+    <string name="pl_join_room_message">يريد رابط إضافة هذه الغرفة إلى محادثاتك العامة.</string>
+    <string name="pl_join_room_mixed_scripts">يمزج هذا الاسم بين حروف من أبجديات مختلفة، لذا قد يكون انتحالًا لغرفة أخرى.</string>
+</resources>

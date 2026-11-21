@@ -38,7 +38,7 @@ object KachatNames {
              * the registry is being set up (iOS 3ef2ec2, 0ed15e9, 6f18475).
              */
             val OUTDATED_REGISTRY = Failure("manifest: an earlier registry; this app needs a registry v4 or v5 manifest")
-            val NEWER_REGISTRY = Failure("manifest: a later registry version than this app builds for; update KaChat")
+            val NEWER_REGISTRY = Failure("manifest: a later registry version than this app builds for; update K")
 
             /** Registry v5: `register` is refused until the migration deadline (unix ms; iOS 6f18475). */
             fun registrationNotOpen(deadlineMs: Long): Failure =
@@ -92,6 +92,18 @@ object KachatNames {
     val ZERO32: ByteArray get() = ByteArray(32)
     val FF32: ByteArray get() = ByteArray(32) { 0xff.toByte() }
     const val SIGHASH_ALL: Byte = 0x01
+
+    /** [a] + [b], held at Long's ends instead of wrapping: times from an indexer, a REST server or
+     *  the chain can be anything (iOS `clampedSum`, the .kachat market's name for
+     *  [Codec.saturatingAdd]). */
+    fun clampedSum(a: Long, b: Long): Long = Codec.saturatingAdd(a, b)
+
+    /** [a] * [b], held at Long's ends instead of wrapping (iOS `clampedProduct`). */
+    fun clampedProduct(a: Long, b: Long): Long = try {
+        Math.multiplyExact(a, b)
+    } catch (_: ArithmeticException) {
+        if ((a < 0) != (b < 0)) Long.MIN_VALUE else Long.MAX_VALUE
+    }
 
     // Hex
 

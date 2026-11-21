@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's chess sentences, looked up by their English text (util/KaPlayText.kt: `kp_` and 12
+     hex of the SHA-1 of the English). Translations from KaPlay Android's strings_app_text.xml and,
+     for the sentences new in KaChat, iOS 148a5331's Localizable.strings. Generated. -->
+<resources>
+    <string name="kp_7e46be469deb" formatted="false">1v1 排行榜第 %d 名</string>
+    <string name="kp_cba1ee4eec72" formatted="false">锦标赛排行榜第 %d 名</string>
+    <string name="kp_3401831926d1" formatted="false">%d 和</string>
+    <string name="kp_f769c12fc2ee" formatted="false">%d 负</string>
+    <string name="kp_d9e1beae2f39" formatted="false">%d 胜</string>
+    <string name="kp_55fc776de141" formatted="false">%d 胜  %d 负</string>
+    <string name="kp_d8aa573c0e61" formatted="false">%d 步</string>
+    <string name="kp_fbeb1207b441" formatted="false">%d/%d 名玩家</string>
+    <string name="kp_b70e7251ba0d" formatted="false">%d/%d 名玩家等待中</string>
+    <string name="kp_6dac15cf1ed7" formatted="false">%d/%d 名玩家 · 代码 %s</string>
+    <string name="kp_ba09ba042e31" formatted="false">剩余 %d 个席位</string>
+    <string name="kp_d4cd664ac02d" formatted="false">%s 战胜了 %s，只用了 %d 步。你能用更少的步数做到吗？</string>
+    <string name="kp_35f8f501300f" formatted="false">%s 向你发起挑战：战胜 %s。</string>
+    <string name="kp_8a3914693bee" formatted="false">%s 晋级，你被淘汰出锦标赛。排行榜上记为负局。认输需要一笔交易。</string>
+    <string name="kp_297da93b20fb" formatted="false">%s 尚未解锁：沿着天梯往上爬才能挑战它。</string>
+    <string name="kp_c7642c6d04be" formatted="false">%s 正在思考…</string>
+    <string name="kp_00161fefc871" formatted="false">%s 已解锁！</string>
+    <string name="kp_7ab092285767" formatted="false">%s 先走。</string>
+    <string name="kp_207e56e21618" formatted="false">轮到 %s 走</string>
+    <string name="kp_4e56d26a3870" formatted="false">%s vs %s</string>
+    <string name="kp_fbb8239c09ba" formatted="false">%s 获胜，并在排行榜上记为你的负局。认输需要一笔交易。</string>
+    <string name="kp_a074e492574e" formatted="false">%s 获胜</string>
+    <string name="kp_03a71913fd6b" formatted="false">%s 将死获胜</string>
+    <string name="kp_e2bdeaa4f9e5" formatted="false">%s 将死获胜。</string>
+    <string name="kp_e510ea9dedf3" formatted="false">%s 因对方认输获胜</string>
+    <string name="kp_33cd4606c8c7" formatted="false">%s 因对方认输获胜。</string>
+    <string name="kp_405c5afa1901" formatted="false">和棋后，%s 凭剩余时间获胜</string>
+    <string name="kp_4e683890d75e" formatted="false">子力不足和棋后，%s 凭剩余时间获胜</string>
+    <string name="kp_f2d9cffd2918" formatted="false">逼和后，%s 凭剩余时间获胜</string>
+    <string name="kp_3dae94d319ae" formatted="false">五十回合规则和棋后，%s 凭剩余时间获胜</string>
+    <string name="kp_26b3a1b77b3b" formatted="false">三次重复局面和棋后，%s 凭剩余时间获胜</string>
+    <string name="kp_49680f535fab" formatted="false">%s 超时获胜</string>
+    <string name="kp_e27359cb1d1d" formatted="false">%s 超时获胜。</string>
+    <string name="kp_7fb322c0aa2a" formatted="false">%s 赢得了锦标赛</string>
+    <string name="kp_683e17380d8a" formatted="false">1/%d 名玩家</string>
+    <string name="kp_a3a1e853bd57" formatted="false">1/%d 名玩家等待中</string>
+    <string name="kp_dcd9d9468141" formatted="false">1/%d 名玩家 · 代码 %s</string>
+    <string name="kp_f6dec9c77f35" formatted="false">剩余 1 个席位</string>
+    <string name="kp_d6db37efe259" formatted="false">1v1</string>
+    <string name="kp_1644dc818c09" formatted="false">1v1 对局</string>
+    <string name="kp_7c71818a1ae0" formatted="false">1v1 排行榜</string>
+    <string name="kp_d8706f214713" formatted="false">1v1、锦标赛和五个机器人。在线着法和机器人对局结果都会记录在 Kaspa 上。</string>
+    <string name="kp_ba9cce8319d7" formatted="false">私人锦标赛适合好友之间：创建者分享 8 位代码。创建需要创建者代码。</string>
+    <string name="kp_a733b809d2f1" formatted="false">活跃</string>
+    <string name="kp_d70f93df5e8f" formatted="false">地址</string>
+    <string name="kp_4d064726954a" formatted="false">高级</string>
+    <string name="kp_dbad49d89123" formatted="false">总榜</string>
+    <string name="kp_b52b36b7269f" formatted="false">返回</string>
+    <string name="kp_c3065156b217" formatted="false">战胜 %s 即可解锁</string>
+    <string name="kp_60575a6ebba9" formatted="false">入门</string>
+    <string name="kp_489d32ce7dd9" formatted="false">最佳：%d 步</string>
+    <string name="kp_b406fb57b29f" formatted="false">黑方</string>
+    <string name="kp_b5807c6df986" formatted="false">黑方走</string>
+    <string name="kp_4ca88ea465a9" formatted="false">机器人</string>
+    <string name="kp_e42a1e70b400" formatted="false">对阵表</string>
+    <string name="kp_75e08341b41d" formatted="false">对阵表 · 点按对局即可观战</string>
+    <string name="kp_cf76a9fe16a7" formatted="false">对方认输</string>
+    <string name="kp_2b246e0ff5ca" formatted="false">计算细致，抓住失误就不放。带着计划来吧。</string>
+    <string name="kp_77dfd2135f4d" formatted="false">取消</string>
+    <string name="kp_5a2fc967d105" formatted="false">取消此锦标赛？</string>
+    <string name="kp_1fe710030fe9" formatted="false">取消锦标赛</string>
+    <string name="kp_5dc29b482d76" formatted="false">已被创建者取消。</string>
+    <string name="kp_7881bf71d2de" formatted="false">冠军</string>
+    <string name="kp_f3dffbf21ed5" formatted="false">将军。轮到你走。</string>
+    <string name="kp_933b750898fd" formatted="false">将死</string>
+    <string name="kp_3226c18271e7" formatted="false">将死。%s 获胜。</string>
+    <string name="kp_f95715a82ba2" formatted="false">国际象棋</string>
+    <string name="kp_645b1b39f542" formatted="false">无法连接国际象棋服务器，正在显示已有的内容。你的对局会继续在网络上进行。服务器恢复后可以再次加入公开房间。</string>
+    <string name="kp_b03bf0e29f1c" formatted="false">无法连接国际象棋服务器。着法来自网络，棋盘可能会稍有延迟。</string>
+    <string name="kp_ee9c98ac836b" formatted="false">无法连接国际象棋服务器。正在显示此手机上已有的内容，可能少于完整排行榜。</string>
+    <string name="kp_cf9797eede60" formatted="false">无法连接国际象棋服务器。正在显示此手机上已有的内容。</string>
+    <string name="kp_9cba814a7f57" formatted="false">无法连接国际象棋服务器。正在通过网络查看玩家，因此你离开 App 期间加入的人可能不会显示。</string>
+    <string name="kp_2b26c543ead5" formatted="false">选择对局</string>
+    <string name="kp_c47532edb2d7" formatted="false">确认胜利</string>
+    <string name="kp_25b55e8298c7" formatted="false">正在确认…</string>
+    <string name="kp_a546440f3f66" formatted="false">攀登天梯</string>
+    <string name="kp_adac69379a62" formatted="false">代码</string>
+    <string name="kp_d29d9fee5279" formatted="false">代码：%s</string>
+    <string name="kp_8e3df45a49db" formatted="false">已复制</string>
+    <string name="kp_af74f7c5362a" formatted="false">复制</string>
+    <string name="kp_6d8d79e75952" formatted="false">无法将结果记录到 Kaspa</string>
+    <string name="kp_6e157c5da441" formatted="false">创建</string>
+    <string name="kp_1bf04f16edb7" formatted="false">创建私人 1v1</string>
+    <string name="kp_7e92ffa83dfa" formatted="false">创建私人锦标赛</string>
+    <string name="kp_94d7d8ee473f" formatted="false">正在创建…</string>
+    <string name="kp_2775f5da8563" formatted="false">创建者代码</string>
+    <string name="kp_34660a5de9ae" formatted="false">失败</string>
+    <string name="kp_e9b450d14bc2" formatted="false">完成</string>
+    <string name="kp_bfa50c7a3838" formatted="false">和棋</string>
+    <string name="kp_9af70e71546d" formatted="false">和棋 - 凭剩余时间获胜</string>
+    <string name="kp_3ef901b7405f" formatted="false">子力不足和棋 - 凭剩余时间获胜</string>
+    <string name="kp_1f217e401459" formatted="false">子力不足，和棋。</string>
+    <string name="kp_65647004462e" formatted="false">子力不足，和棋。%s 凭剩余时间获胜。</string>
+    <string name="kp_8abd5d59fe79" formatted="false">逼和 - 凭剩余时间获胜</string>
+    <string name="kp_e7c73294f742" formatted="false">逼和。</string>
+    <string name="kp_0ee00fa48fcb" formatted="false">逼和。%s 凭剩余时间获胜。</string>
+    <string name="kp_c1f887545180" formatted="false">五十回合规则和棋 - 凭剩余时间获胜</string>
+    <string name="kp_e0fa7fdfda5b" formatted="false">五十回合规则，和棋。</string>
+    <string name="kp_e18608aaaa1f" formatted="false">五十回合规则，和棋。%s 凭剩余时间获胜。</string>
+    <string name="kp_ca658ca2e441" formatted="false">三次重复局面和棋 - 凭剩余时间获胜</string>
+    <string name="kp_1bd0b8c9f833" formatted="false">三次重复局面，和棋。</string>
+    <string name="kp_c328be341b0c" formatted="false">三次重复局面，和棋。%s 凭剩余时间获胜。</string>
+    <string name="kp_fdd69537f848" formatted="false">和棋。</string>
+    <string name="kp_cbefc612d55f" formatted="false">和棋。%s 凭剩余时间获胜。</string>
+    <string name="kp_1861bf6c95a3" formatted="false">八名玩家，单败淘汰：四分之一决赛、半决赛、决赛。公开房间随玩家加入而坐满；私人房间凭代码加入。</string>
+    <string name="kp_d488ebb4b1db" formatted="false">所有已加入的玩家都会被释放。这需要一笔交易。</string>
+    <string name="kp_4788947ec3fe" formatted="false">战胜 %s 的最少步数</string>
+    <string name="kp_672b22cc516e" formatted="false">决赛</string>
+    <string name="kp_355bcc577d71" formatted="false">已结束</string>
+    <string name="kp_a8d435fecb0c" formatted="false">已结束的 1v1 对局</string>
+    <string name="kp_781b28d8c53d" formatted="false">已结束的锦标赛</string>
+    <string name="kp_08ab1ad685e3" formatted="false">五个机器人，等级 1 到 5，从 Kaspa Silver 到 Yonatan Sompolinsky。战胜一个即可解锁下一个。结果记录在 Kaspa 上。</string>
+    <string name="kp_03e3c2d3a084" formatted="false">五个机器人，等级 1 到 5。战胜一个即可解锁下一个。每局结束时，结果都会记录到 Kaspa。</string>
+    <string name="kp_e3e82846c325" formatted="false">对局</string>
+    <string name="kp_94114a40a64a" formatted="false">胜负局数——1v1 和锦标赛对局都算</string>
+    <string name="kp_7b1a1bfec003" formatted="false">前往你的对局</string>
+    <string name="kp_78722784381b" formatted="false">下棋只为好玩。走得很快，有时会白白丢子。</string>
+    <string name="kp_7f2a3bb304a4" formatted="false">如果离开，就等于认输。%s 晋级，你被淘汰出锦标赛。排行榜上记为负局。认输需要一笔交易。</string>
+    <string name="kp_e998db197859" formatted="false">如果离开，就等于认输。%s 获胜，并在排行榜上记为你的负局。认输需要一笔交易。</string>
+    <string name="kp_a4362588018d" formatted="false">如果离开，就等于认输。这盘棋会记为你对 %s 的负局，结果将以一笔交易记录到 Kaspa。</string>
+    <string name="kp_03a2b6501787" formatted="false">进行中</string>
+    <string name="kp_e24d4d212b7b" formatted="false">进行中。点按任意对局即可实时观战。</string>
+    <string name="kp_b1cfe72fd271" formatted="false">中级</string>
+    <string name="kp_f63265478d76" formatted="false">这盘棋会记为你对 %s 的负局，结果将以一笔交易记录到 Kaspa。</string>
+    <string name="kp_e0d73143de80" formatted="false">加入</string>
+    <string name="kp_c8155c3c34dc" formatted="false">加入（手续费：%s）</string>
+    <string name="kp_df7b41919cb2" formatted="false">加入后，你会与下一位加入的人配对。房间满员后对局开始，并开放下一个房间。每方 5 分钟；每一步都是一笔 Kaspa 交易（每步约 0.0017 KAS）。这里的对局计入排行榜。</string>
+    <string name="kp_dacbf38d4e73" formatted="false">用代码加入</string>
+    <string name="kp_f44c1e425996" formatted="false">正在加入…</string>
+    <string name="kp_d9f369249799" formatted="false">保留它</string>
+    <string name="kp_bb76090ac54c" formatted="false">继续对弈</string>
+    <string name="kp_9be1abba9272" formatted="false">继续等待</string>
+    <string name="kp_32bf913a5258" formatted="false">懂得每个棋子怎么走，最爱吃白送的子。小心你没保护的兵。</string>
+    <string name="kp_35b13a38f422" formatted="false">直播 %s</string>
+    <string name="kp_0381247a6987" formatted="false">排行榜</string>
+    <string name="kp_7e3520a97331" formatted="false">离开</string>
+    <string name="kp_963593386268" formatted="false">仍然离开</string>
+    <string name="kp_4bc79453df63" formatted="false">离开对局？</string>
+    <string name="kp_baf82f7117b6" formatted="false">退出队列？</string>
+    <string name="kp_b7aa749e18cb" formatted="false">离开后将不再为你寻找其他玩家。离开需要一笔交易；你可以随时再次加入。</string>
+    <string name="kp_3016bac3196c" formatted="false">正在离开…</string>
+    <string name="kp_ec7cc1838f39" formatted="false">等级 %d</string>
+    <string name="kp_7780eacc49b8" formatted="false">等级 %d/5</string>
+    <string name="kp_0e50ccfcd686" formatted="false">等级 %d · %s</string>
+    <string name="kp_9f8465fad533" formatted="false">等级 %d · %s · 你执黑</string>
+    <string name="kp_fc9307e48365" formatted="false">等级 %d · %s · 你执白</string>
+    <string name="kp_6235bfaf9ecc" formatted="false">正在直播</string>
+    <string name="kp_39687e0a700d" formatted="false">正在加载房间…</string>
+    <string name="kp_5daad3f809a8" formatted="false">正在从竞技场加载锦标赛…</string>
+    <string name="kp_4d5e7c6d35ee" formatted="false">正在寻找对手</string>
+    <string name="kp_98ea2c12eb7c" formatted="false">落子前会先看几步。稳健，不容易上当。</string>
+    <string name="kp_0f9a484f1388" formatted="false">负</string>
+    <string name="kp_78f3842f0201" formatted="false">大师</string>
+    <string name="kp_092664087974" formatted="false">找到对手了！</string>
+    <string name="kp_a7814b5ec744" formatted="false">第 %d 步 · 黑方走</string>
+    <string name="kp_9fe5cb670a4c" formatted="false">第 %d 步 · 白方走</string>
+    <string name="kp_77fbed46e1be" formatted="false">下一局：第 1 轮对阵 %s</string>
+    <string name="kp_a2dad9a4e89c" formatted="false">下一局：决赛对阵 %s</string>
+    <string name="kp_eceff125fbb4" formatted="false">下一局：对阵 %s</string>
+    <string name="kp_1337e1141b11" formatted="false">下一局：半决赛对阵 %s</string>
+    <string name="kp_8506e1612593" formatted="false">目前没有正在进行的 1v1 对局。对局开始后会显示在这里供观战。</string>
+    <string name="kp_3988da2d38ef" formatted="false">还没有和任何机器人下过棋。</string>
+    <string name="kp_77ebbb8e3de5" formatted="false">还没有已结束的 1v1 对局。</string>
+    <string name="kp_1597bcaeaaa1" formatted="false">还没有已结束的锦标赛。</string>
+    <string name="kp_682c0ad47cbe" formatted="false">没有人及时加入。你已退出队列——随时可以再次加入。</string>
+    <string name="kp_50385293d3d0" formatted="false">没有使用该代码的开放锦标赛。代码为 8 个字符；锦标赛必须存在且仍有空位。</string>
+    <string name="kp_581a01e739ba" formatted="false">目前没有正在进行的锦标赛。锦标赛开始后，其对局会显示在这里供观战。</string>
+    <string name="kp_2ee8ce15a9f7" formatted="false">本月还没有人战胜 %s。</string>
+    <string name="kp_54460cd574b9" formatted="false">还没有人战胜 %s。</string>
+    <string name="kp_4472179cd296" formatted="false">尚未被击败</string>
+    <string name="kp_b9e09ae263fb" formatted="false">未确认</string>
+    <string name="kp_214bf807441e" formatted="false">你的聊天地址上 KAS 不足。请添加一些后重试。</string>
+    <string name="kp_16ca44702a9b" formatted="false">新手</string>
+    <string name="kp_fb58f3c56a8d" formatted="false">超时</string>
+    <string name="kp_1cf2fc54ad9f" formatted="false">在线对局每方 5 分钟，每一步都是一笔 Kaspa 交易。机器人对局在结束时将结果记录到 Kaspa。</string>
+    <string name="kp_6dca824588f3" formatted="false">空位</string>
+    <string name="kp_b84d3a372a18" formatted="false">挑战 %s</string>
+    <string name="kp_0faa2e4de8b8" formatted="false">与好友对弈：创建 1v1，分享它的代码。私人 1v1 同样计入排行榜。</string>
+    <string name="kp_576766d387ec" formatted="false">再来一局</string>
+    <string name="kp_61441ace460e" formatted="false">执子颜色</string>
+    <string name="kp_8ba176164906" formatted="false">与下一位加入的人对弈，或通过代码与好友对弈。一局定胜负，胜者获得排行榜积分。</string>
+    <string name="kp_e53407cfe1a5" formatted="false">玩家</string>
+    <string name="kp_9f33b8c73405" formatted="false">玩家（%d/%d）</string>
+    <string name="kp_237dfa0a21c8" formatted="false">私人</string>
+    <string name="kp_f61dccc2dba9" formatted="false">私人 1v1</string>
+    <string name="kp_ea951f3a34eb" formatted="false">私人锦标赛</string>
+    <string name="kp_79b0f9805c68" formatted="false">升变为</string>
+    <string name="kp_dc5eb704bbca" formatted="false">公开</string>
+    <string name="kp_37ea9a7673b4" formatted="false">公开 1v1</string>
+    <string name="kp_8b2cb0910a17" formatted="false">公开 1v1 #%d</string>
+    <string name="kp_236760772b5c" formatted="false">公开锦标赛</string>
+    <string name="kp_b4d6cee9742f" formatted="false">公开锦标赛 #%d</string>
+    <string name="kp_58d888c08aa5" formatted="false">随机</string>
+    <string name="kp_73ba76c46a4c" formatted="false">按获胜所用步数从少到多排名。</string>
+    <string name="kp_a3d558838b81" formatted="false">认输</string>
+    <string name="kp_868d45f552a8" formatted="false">认输并离开</string>
+    <string name="kp_a12f7f95331e" formatted="false">要认输吗？</string>
+    <string name="kp_65d7b143ae0f" formatted="false">结果已记录到 Kaspa</string>
+    <string name="kp_9f5cd8a2e880" formatted="false">重试</string>
+    <string name="kp_923287d2eeda" formatted="false">重试记录</string>
+    <string name="kp_f7648d383499" formatted="false">第 1 轮</string>
+    <string name="kp_d7418ba2e352" formatted="false">目前无法查看席位</string>
+    <string name="kp_33295d1667f4" formatted="false">查看棋盘</string>
+    <string name="kp_af1cfadd9704" formatted="false">%d 号种子</string>
+    <string name="kp_7d79eec3965c" formatted="false">半决赛</string>
+    <string name="kp_3abe921a63aa" formatted="false">半决赛</string>
+    <string name="kp_6f32706309e0" formatted="false">正在发送你的着法…</string>
+    <string name="kp_9cb2e112972e" formatted="false">已发送，但 Kaspa 尚未确认。</string>
+    <string name="kp_09ca55ca52d2" formatted="false">分享</string>
+    <string name="kp_d042790fe991" formatted="false">分享此代码</string>
+    <string name="kp_1f3254d6ce59" formatted="false">分享到 KaPost</string>
+    <string name="kp_4401b9c3edce" formatted="false">有人战胜了 %s，只用了 %d 步。你能用更少的步数做到吗？</string>
+    <string name="kp_c923aafae8bc" formatted="false">有人向你发起挑战：战胜 %s。</string>
+    <string name="kp_9a3ea0598e7f" formatted="false">出了点问题。请重试。</string>
+    <string name="kp_8aa38f374323" formatted="false">正在将结果记录到 Kaspa…</string>
+    <string name="kp_6959b5355760" formatted="false">正在记录结果…</string>
+    <string name="kp_ae768f766f75" formatted="false">留下</string>
+    <string name="kp_f300737844cc" formatted="false">房间仍在加载中，请稍后重试。</string>
+    <string name="kp_fc55363a83bc" formatted="false">正在带你们双方进入棋盘</string>
+    <string name="kp_ad30c2ff1d6e" formatted="false">正在带所有人进入各自的棋盘</string>
+    <string name="kp_293d8f7d8030" formatted="false">正在为你占座——这需要一笔交易，所以要几秒钟。</string>
+    <string name="kp_8ad85cccbb0e" formatted="false">点按返回该对局</string>
+    <string name="kp_0e4268b5d759" formatted="false">创建者代码不正确。</string>
+    <string name="kp_617a81cfb251" formatted="false">没有到达网络。请重试。</string>
+    <string name="kp_55720cd06fc4" formatted="false">该房间已先满员——正在为你寻找下一个房间。</string>
+    <string name="kp_d8501167e501" formatted="false">该房间已先满员。点按“加入”尝试下一个房间。</string>
+    <string name="kp_9e663d4025b0" formatted="false">该锦标赛已经开始。</string>
+    <string name="kp_1ee44a0bf66b" formatted="false">无法连接国际象棋服务器，网络也尚未确认。请稍后重试。</string>
+    <string name="kp_0e3db8107f4d" formatted="false">无法连接国际象棋服务器，因此无法确认开放的房间。请在服务器恢复后重试。</string>
+    <string name="kp_3e86d5e865a8" formatted="false">无法连接国际象棋服务器，因此无法查询该代码。请在服务器恢复后重试。</string>
+    <string name="kp_374e3b271476" formatted="false">创建者分享的 8 位代码。加入需要一笔交易（手续费：%s）。</string>
+    <string name="kp_668f15ee8377" formatted="false">对局本身免费。无论输赢，对局结束时结果都会记录到 Kaspa：从你的钱包发出一笔交易，约 %s。</string>
+    <string name="kp_056a66088f6c" formatted="false">对局本身免费。无论输赢，对局结束时结果都会记录到 Kaspa：从你的钱包发出一笔交易，只需少量手续费。</string>
+    <string name="kp_a94070f3a397" formatted="false">网络仍在确认你上一次的发送。请几秒钟后重试。</string>
+    <string name="kp_5021101f57d6" formatted="false">对局结束时，结果会记录到 Kaspa</string>
+    <string name="kp_fb4fdd00f1ac" formatted="false">记录失败。如果现在离开，将无法再次发送，这场胜利也不会计入排行榜。</string>
+    <string name="kp_2d72f92d9b82" formatted="false">记录可能已经成功</string>
+    <string name="kp_30a77c98dc8a" formatted="false">八个席位全部坐满后，锦标赛会自动开始。</string>
+    <string name="kp_693f8a669f1e" formatted="false">对方走</string>
+    <string name="kp_3dd518e63c49" formatted="false">对方</string>
+    <string name="kp_22a02413aebd" formatted="false">总有一个公开房间在等待玩家。满员后开始，并开放下一个房间。八名玩家，单败淘汰，每方 5 分钟。每一步都是一笔 Kaspa 交易（每步约 0.0017 KAS）。</string>
+    <string name="kp_6d45876eef92" formatted="false">想得深，看得远。赢下它，你就爬完了整个天梯。</string>
+    <string name="kp_1085f4e7c41f" formatted="false">这盘棋是用另一个账户下的。请登录该账户来记录结果。</string>
+    <string name="kp_9fa87800a939" formatted="false">这笔交易可能已发送，但网络未确认。再次发送前请先查看余额。</string>
+    <string name="kp_1b4785331db3" formatted="false">本月</string>
+    <string name="kp_733696c12e3e" formatted="false">时间到。%s 超时获胜。</string>
+    <string name="kp_5a2e22ac873e" formatted="false">待定</string>
+    <string name="kp_a2c1d828e2d3" formatted="false">锦标赛</string>
+    <string name="kp_25670f61ff36" formatted="false">锦标赛已满员！</string>
+    <string name="kp_cd04af2db6f1" formatted="false">锦标赛排行榜</string>
+    <string name="kp_fee20df1963e" formatted="false">锦标赛</string>
+    <string name="kp_981d375a0f37" formatted="false">锦标赛的胜负</string>
+    <string name="kp_e71f1539a41b" formatted="false">胜利</string>
+    <string name="kp_f3ec99569fbf" formatted="false">在浏览器中查看</string>
+    <string name="kp_33d30632848d" formatted="false">等待中</string>
+    <string name="kp_a41118158853" formatted="false">还差 %d 名玩家。第八名玩家加入后自动开始。</string>
+    <string name="kp_442da9df5c77" formatted="false">还差 1 名玩家。第八名玩家加入后自动开始。</string>
+    <string name="kp_c26c33fa1c5a" formatted="false">正在等待玩家</string>
+    <string name="kp_0e6a21e02626" formatted="false">正在等待国际象棋服务器</string>
+    <string name="kp_fbc3f16e4c19" formatted="false">正在等待对手。对手加入后，对局会自动开始。</string>
+    <string name="kp_d91ebf5887cf" formatted="false">观战</string>
+    <string name="kp_7ef5b5821c01" formatted="false">观战免费——不会发送任何内容。只有两位棋手可以走棋。</string>
+    <string name="kp_37619fc13053" formatted="false">白方</string>
+    <string name="kp_c6ff9b47bd9e" formatted="false">白方走</string>
+    <string name="kp_79bcb3dd18f9" formatted="false">胜率</string>
+    <string name="kp_ffb136c1afe9" formatted="false">四分之一决赛 %d 胜者</string>
+    <string name="kp_3fe7ae15e42c" formatted="false">半决赛 %d 胜者</string>
+    <string name="kp_b6c015d12e1b" formatted="false">胜</string>
+    <string name="kp_b273fb287708" formatted="false">获胜</string>
+    <string name="kp_ddf4e3735470" formatted="false">%s 夺冠</string>
+    <string name="kp_905cb326c779" formatted="false">你</string>
+    <string name="kp_70142233d6f3" formatted="false">你已被淘汰出本次锦标赛。观看对阵表中剩余的对局吧。</string>
+    <string name="kp_07025e915e94" formatted="false">你已被淘汰出本次锦标赛。你可以观看对阵表中剩余的对局。</string>
+    <string name="kp_188b806432ca" formatted="false">你会得到一个代码，分享给想对弈的人。对方加入后对局开始。创建需要一笔交易。</string>
+    <string name="kp_e7c04dcae100" formatted="false">你晋级下一轮。对手确定后，你的下一局会自动开始。</string>
+    <string name="kp_5279ac5901b8" formatted="false">你输了</string>
+    <string name="kp_db93b3d19f74" formatted="false">你先走。</string>
+    <string name="kp_7ec46c42f060" formatted="false">你认输了。%s 获胜。</string>
+    <string name="kp_85b0b68af5f2" formatted="false">你将占据第一个席位并获得一个代码用于分享。八名玩家加入后开始。创建需要一笔交易。</string>
+    <string name="kp_3c2dfe0e1289" formatted="false">你用 %d 步将死对手获胜。</string>
+    <string name="kp_8dfe694ea61b" formatted="false">你用 1 步将死对手获胜。</string>
+    <string name="kp_8c75d5f7de98" formatted="false">你赢下了第 1 轮。正在等待下一位对手——这期间可以观看另一场对局。</string>
+    <string name="kp_795115417df0" formatted="false">你赢下了决赛。正在等待下一位对手——这期间可以观看另一场对局。</string>
+    <string name="kp_2987342bd41b" formatted="false">你赢下了这一局。正在等待下一位对手——这期间可以观看另一场对局。</string>
+    <string name="kp_ba7e2d06a69c" formatted="false">你赢下了半决赛。正在等待下一位对手——这期间可以观看另一场对局。</string>
+    <string name="kp_dc9807723538" formatted="false">你赢得了锦标赛。</string>
+    <string name="kp_e3a4b01eaca8" formatted="false">你赢了！</string>
+    <string name="kp_2bd203ba381e" formatted="false">你已经在 %s 中等待。</string>
+    <string name="kp_a91633acc070" formatted="false">你已加入。还在等待 %d 人…</string>
+    <string name="kp_ad79fa22e5b2" formatted="false">你已加入。还在等待 1 人…</string>
+    <string name="kp_cfe84965f638" formatted="false">你将与下一位加入的人配对。对局会自动开始。</string>
+    <string name="kp_d80ca7163461" formatted="false">你正在 %s 中对弈</string>
+    <string name="kp_24bf6785a61b" formatted="false">你仍在 %s 中对弈。</string>
+    <string name="kp_eec7f86a8bb7" formatted="false">你正在 %s 中等待</string>
+    <string name="kp_61e7335f3c19" formatted="false">你的 1v1 战绩</string>
+    <string name="kp_48fd80af85de" formatted="false">着法发出前你的时间已用完。</string>
+    <string name="kp_a8bc9c75a936" formatted="false">距你的对局开始还有</string>
+    <string name="kp_32ec1dbd797a" formatted="false">你的加入请求没有到达网络。随时可以再次加入。</string>
+    <string name="kp_44470e508a5d" formatted="false">轮到你走</string>
+    <string name="kp_d5b2c846e810" formatted="false">你的着法未生效。请查看棋盘。</string>
+    <string name="kp_5277d781ccc7" formatted="false">你的着法没有到达网络。请再走一次。</string>
+    <string name="kp_63bbbf0226f5" formatted="false">你的战绩</string>
+    <string name="kp_4e15ba26e54d" formatted="false">你的席位会保留 %s。如果届时房间仍未满员，你将退出队列。</string>
+    <string name="kp_8774b9393565" formatted="false">你的席位会保留这么久。如果没有人及时加入，你将退出队列。</string>
+    <string name="kp_94ad25364602" formatted="false">你的锦标赛战绩</string>
+    <string name="kp_114f3f6a8251" formatted="false">你的胜利尚未记录到 Kaspa</string>
+    <string name="kp_f957097d7a22" formatted="false">已结束</string>
+    <string name="kp_691a77cd21a3" formatted="false">vs</string>
+    <string name="kp_aa93adb4f65c" formatted="false">我在 K 上战胜了 %s（等级 %d），只用了 %d 步。你能用更少的步数做到吗？</string>
+    <string name="kp_f81826d956cc" formatted="false">来 K 参加我的国际象棋锦标赛吧：打开 KaPlay &gt; 国际象棋 &gt; 锦标赛 &gt; 用代码加入，然后输入 %s。</string>
+    <string name="kp_c2ecefef54c6" formatted="false">来 K 和我下棋吧：打开 KaPlay &gt; 国际象棋 &gt; 1v1 &gt; 用代码加入，然后输入 %s。</string>
+    <string name="kp_f4fa709cb963" formatted="false">四分之一决赛</string>
+    <string name="kp_3ce0ac6e9413" formatted="false">结果未发送。</string>
+    <string name="kaplay_leaderboard_all_time">总榜</string>
+    <string name="kaplay_leaderboard_counted_from">自 %1$s 起计算。</string>
+    <string name="kaplay_leaderboard_period">排行榜周期</string>
+    <string name="kaplay_leaderboard_resets_monthly">每月 1 日（UTC）重置。</string>
+    <string name="kaplay_leaderboard_this_month">本月</string>
+    <string name="kaplay_no_finished_duels">还没有已结束的 1v1 对局。</string>
+    <string name="kaplay_no_finished_duels_this_month">本月还没有已结束的 1v1 对局。</string>
+    <string name="kaplay_no_finished_tournaments">还没有已结束的锦标赛。</string>
+    <string name="kaplay_no_finished_tournaments_this_month">本月还没有已结束的锦标赛。</string>
+    <string name="kaplay_tab_leaderboard">排行榜</string>
+</resources>

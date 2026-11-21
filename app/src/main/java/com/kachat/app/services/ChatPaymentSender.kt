@@ -67,6 +67,12 @@ class ChatPaymentSender @Inject constructor(
          *  held to it too, as the swipe was (iOS 83806b3d `paymentExpectedFeeSompi`). Null holds it
          *  to nothing. */
         val expectedFeeSompi: Long? = null,
+        /** A KaPost tip (iOS 148a5331 `sendPayment(tip:)`, KAPOSTS_INDEXER.md 5.11): from the
+         *  chatting address the payment carries [tipPayload] of the sealed note - a signed
+         *  `kchat:1:tip:` payload naming the post - instead of `kchat:1:pay:`. A retry keeps it,
+         *  as the request does. From a spending address it's a private tip, a plain payment. */
+        val tip: com.kachat.app.models.KaPostTip? = null,
+        val tipPayload: ((sealedHex: String) -> ByteArray)? = null,
     )
 
     sealed class Outcome {
@@ -205,7 +211,18 @@ class ChatPaymentSender @Inject constructor(
             // chat about it right after ([sendSpendingPaymentNotice]): the payee has never seen
             // that address, so a chat payment from it would open a stranger's Message Request on
             // their side instead of landing in this chat (iOS 927322b, XP-022).
-            val payload = if (!fromChattingAddress) null else MessageProtocol.paymentMemoPayload(
+            val tipPayload = request.tipPayload
+            val payload = if (!fromChattingAddress) null else if (request.tip != null && tipPayload != null) {
+                // A KaPost tip: the same sealed note, inside a signed payload naming the post.
+                tipPayload(
+                    MessageProtocol.sealedPaymentHex(
+                        note = request.memo.trim(),
+                        amountSompi = request.amountSompi,
+                        recipientXOnlyPubKey = KaspaAddress.decode(request.contactId).second,
+                        senderPrivateKey = walletManager.getPrivateKeyBytes()
+                    )
+                )
+            } else MessageProtocol.paymentMemoPayload(
                 memo = request.memo,
                 amountSompi = request.amountSompi,
                 recipientXOnlyPubKey = KaspaAddress.decode(request.contactId).second,
@@ -393,8 +410,15 @@ class ChatPaymentSender @Inject constructor(
         )
         scope.launch(NonCancellable) {
             try {
-                // Queued under the account that paid: never signed by another (iOS 4f8e14bb).
-                if (walletManager.getAddress() != owner) return@launch
+                // Queued under the account that paid: never signed by another (iOS 4f8e14bb). An
+                // account switched meanwhile keeps it under the payer, for when it's back (iOS 5b7c772c).
+                if (walletManager.getAddress() != owner) {
+                    paymentNoticeOutbox.keep(
+                        PaymentNoticeOutbox.UnsentPaymentNotice(contactAddress = contactId, payload = payload, txId = txId),
+                        owner = owner,
+                    )
+                    return@launch
+                }
                 // Untagged, like iOS sendEnvelopeInternal: kchat:1:comm:, never a first-contact dm.
                 walletService.sendKasiaMessage(contactId, payload, firstContactTag = false)
                 Log.i(TAG, "Sent payment_notice for ${txId.take(12)}")
@@ -404,7 +428,8 @@ class ChatPaymentSender @Inject constructor(
                 paymentNoticeOutbox.keep(
                     PaymentNoticeOutbox.UnsentPaymentNotice(
                         contactAddress = contactId, payload = payload, txId = txId
-                    )
+                    ),
+                    owner = owner,
                 )
             }
         }

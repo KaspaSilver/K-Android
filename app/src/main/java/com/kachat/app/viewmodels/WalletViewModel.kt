@@ -72,6 +72,13 @@ class WalletViewModel @Inject constructor(
     private val paymentNoticeOutbox: dagger.Lazy<com.kachat.app.services.PaymentNoticeOutbox>,
     private val addressActivityNotifier: dagger.Lazy<com.kachat.app.services.AddressActivityNotifier>,
     private val notificationHelper: dagger.Lazy<com.kachat.app.services.NotificationHelper>,
+    /** Delete Account empties the profile image and record caches too (iOS 5b7c772c). */
+    private val cacheManager: dagger.Lazy<com.kachat.app.services.CacheManager>,
+    /** Delete Account forgets the account's kUSDT too (iOS 5b7c772c `TokenWallet.forgetLocalData`). */
+    private val tokenWallet: dagger.Lazy<com.kachat.app.services.tokens.TokenWallet>,
+    /** Delete Account removes KaPost's, Public Chats', KaPlay's, Cold Storage's, the Portfolio's
+     *  and Trestly's data too (iOS 148a5331 `removeLocalData`). */
+    private val accountFeatureCleanup: dagger.Lazy<com.kachat.app.services.AccountFeatureCleanup>,
 ) : ViewModel() {
 
     /** Refreshes what the active account owns on .k and .kaspa. */
@@ -219,13 +226,32 @@ class WalletViewModel @Inject constructor(
 
     fun refreshSpendingAddress() {
         _spendingAddress.value = try { walletManager.currentSpendingAddress() } catch (e: Exception) { null }
-        viewModelScope.launch { walletService.refreshSpendingBalance() }
+        viewModelScope.launch {
+            warmSpendingAddressCache()
+            walletService.refreshSpendingBalance()
+        }
+    }
+
+    /**
+     * Every revealed address of the active account in the derivation cache, worked out off the
+     * main thread with one seed read per chain for whatever is missing (iOS 5b7c772c
+     * `cachedOrDerivedChainAddresses`, audit #20). The full address lists after it - the spending
+     * total, Manage Addresses - then read the cache and decrypt nothing on the main thread.
+     */
+    private suspend fun warmSpendingAddressCache() = withContext(Dispatchers.Default) {
+        val account = walletManager.getActiveAccount() ?: return@withContext
+        val base = WalletManager.QUANTUM_INDEX_BASE
+        val indices = (0..WalletManager.legacyMaxSpendingIndex(account)) +
+            (base until base + WalletManager.maxQuantumIndex(account) + 1)
+        runCatching { walletManager.deriveSpendingAddresses(indices) }
+        Unit
     }
 
     /** Suspend variant of [refreshSpendingAddress]'s balance refresh - awaits the actual fetch
      *  instead of firing it into [viewModelScope], for callers (the Profile screen's pull-to-
      *  refresh) that need to know when it's actually done before dismissing a refresh spinner. */
     suspend fun refreshSpendingBalanceAndAwait() {
+        warmSpendingAddressCache()
         walletService.refreshSpendingBalance()
     }
 
@@ -351,7 +377,7 @@ class WalletViewModel @Inject constructor(
                 if (cached.isNotEmpty()) _manageAddressesRaw.value = cached
             }
             _manageAddressesLoading.value = _manageAddressesRaw.value.isEmpty()
-            val live = try { walletService.getSpendingAddressList() } catch (e: Exception) { emptyList() }
+            val live = try { warmSpendingAddressCache(); walletService.getSpendingAddressList() } catch (e: Exception) { emptyList() }
             // Stale-load fence: a newer load (or the post-rotation reconcile) superseded this one
             // while its network round trip ran — its rows are pre-rotation, drop them.
             if (generation == manageAddressesLoadGeneration &&
@@ -412,20 +438,18 @@ class WalletViewModel @Inject constructor(
     }
 
     /**
-     * The address to show on the Receive QR: one that has never been used, on the quantum-safe
-     * chain (KIP-22).
+     * The address to show on the Receive QR: one that has never been used, on the regular chain
+     * (iOS 5b7c772c: a regular address takes kUSDT as well as Kaspa).
      *
      * Reusing an address across payments links them to each other and to you, so the QR must
      * never hand out one that has already appeared on chain. Two rules, in order:
      *
-     * 1. The address it handed out last time, while that is still unused - and quantum. It does
+     * 1. The address it handed out last time, while that is still unused - and regular. It does
      *    NOT mint a new address per tap - an unused address is still unused the second time you
      *    open it, and minting one per tap would balloon the address list and lengthen every
-     *    future gap-limit scan for no privacy gained. A legacy pointer, even unused, carries its
-     *    key in the address itself (P2PK), so the QR moves to the quantum chain the first time it
-     *    is opened after the upgrade.
-     * 2. Otherwise the lowest quantum slot never used: the lowest hidden, live-confirmed unused
-     *    one (recycling it), else a brand-new slot past the quantum chain's end - remembered as
+     *    future gap-limit scan for no privacy gained.
+     * 2. Otherwise the lowest regular slot never used: the lowest hidden, live-confirmed unused
+     *    one (recycling it), else a brand-new slot past the regular chain's end - remembered as
      *    the receive pointer for next time.
      *
      * Picking has no side effects (iOS 24c2094): nothing is un-hidden or revealed, and the chain
@@ -457,7 +481,7 @@ class WalletViewModel @Inject constructor(
             // belongs to the other account and is dropped, nothing written (iOS fb2323e, IOS-109
             // / AND-056 follow-up).
             fun switched() = walletManager.getActiveAccount()?.address != walletAddress
-            val entries = try { walletService.getSpendingAddressList() } catch (e: Exception) { emptyList() }
+            val entries = try { warmSpendingAddressCache(); walletService.getSpendingAddressList() } catch (e: Exception) { emptyList() }
             // Unknown (list failed, or the row was not live-checked) counts as "not used" here,
             // so a network wobble never rotates the pointer. A slot the list doesn't hold yet (a
             // pointer never revealed) asks the chain, as iOS's spendingAddressUsedState does.
@@ -469,32 +493,28 @@ class WalletViewModel @Inject constructor(
 
             val storedIndex = walletManager.getReceiveAddressIndex(walletAddress)
             val stored = storedIndex?.let { try { walletManager.deriveSpendingAddress(it) } catch (e: Exception) { null } }
+            // Receive hands out REGULAR addresses (iOS 5b7c772c, as in KaPay): a regular address
+            // takes kUSDT as well as Kaspa, and a quantum-resistant one can't trade it, so nobody
+            // ends up with tokens on one by mistake. Quantum-resistant addresses are made on
+            // purpose, in Manage Addresses' Address Actions. Change only ever goes to quantum
+            // slots, so a regular one is never a send's change.
             val chosen: Pair<Int, String> = if (storedIndex != null && stored != null &&
-                WalletManager.isQuantumIndex(storedIndex) && !walletManager.isQuantumAddressSpentLocally(stored) &&
-                !confirmedUsed(stored) && !walletManager.isQuantumSlotHandedOut(walletAddress, storedIndex)
+                !WalletManager.isQuantumIndex(storedIndex) && !confirmedUsed(stored)
             ) {
-                // Rule 1: the pointer from last time, while it is still untouched - its key
-                // unrevealed, no send's change given it - and quantum (iOS 4f8e14bb).
+                // Rule 1: the pointer from last time, while it is still untouched - and regular.
                 storedIndex to stored
             } else {
-                // Rule 2: the lowest quantum slot never used (iOS lowestUnusedQuantumAddress,
-                // side-effect free): a hidden, live-confirmed unused quantum row, else a brand-new
-                // slot past the chain's end - answered without extending the chain, and checked on
-                // chain first (iOS da2c8e2 `verifiedFreshQuantumIndex`, IOS-101 / AND-049). Never
-                // a slot a send still in flight picked for its change (Android's own guarantee).
-                val inFlight = walletManager.inFlightQuantumChange()
-                var index = entries.sortedBy { it.index }.firstOrNull { entry ->
-                    entry.isQuantum && entry.hidden && entry.liveChecked && !entry.isCurrent &&
-                        entry.index != account.spendingAddressIndex &&
-                        entry.balanceSompi == 0L && !entry.everUsed && entry.index !in inFlight &&
-                        !walletManager.isQuantumAddressSpentLocally(entry.address)
-                }?.index ?: walletManager.verifyFreshQuantumIndex(owner = walletAddress) { walletService.spendingAddressUsedState(it) }
+                // Rule 2: the lowest regular slot never used (iOS lowestUnusedRegularAddress): a
+                // hidden, live-confirmed unused regular row (recycling it), else a brand-new slot
+                // past the regular chain's end.
+                val index = entries.sortedBy { it.index }.firstOrNull { entry ->
+                    !entry.isQuantum && entry.hidden && entry.liveChecked && !entry.isCurrent &&
+                        entry.balanceSompi == 0L && !entry.everUsed
+                }?.index ?: (WalletManager.legacyMaxSpendingIndex(account) + 1)
                 if (switched()) {
                     onResult(null)
                     return@launch
                 }
-                // a send picked this same slot while the probe above was out (iOS 4f8e14bb)
-                while (walletManager.isQuantumSlotHandedOut(walletAddress, index)) index += 1
                 val address = try { walletManager.deriveSpendingAddress(index) } catch (e: Exception) { null }
                 if (address == null) {
                     onResult(current)
@@ -539,7 +559,7 @@ class WalletViewModel @Inject constructor(
             // every send), which is exactly how a used, funded, or even the primary index could
             // be re-offered as "fresh".
             val primaryIndex = walletManager.getActiveAccount()?.spendingAddressIndex
-            val entries = try { walletService.getSpendingAddressList() } catch (e: Exception) { emptyList() }
+            val entries = try { warmSpendingAddressCache(); walletService.getSpendingAddressList() } catch (e: Exception) { emptyList() }
             // A real wallet always lists at least index 0, so an empty live list means the check
             // FAILED (offline, unreachable or throttled API), never a wallet with no addresses.
             // Refuse instead of deriving from nothing.
@@ -1189,6 +1209,114 @@ class WalletViewModel @Inject constructor(
         }
     }
 
+    // MARK: - Wallet tab (iOS 5b7c772c)
+
+    private val _isScanningAddresses = MutableStateFlow(false)
+    /** Wallet's pull sweep is still going: it runs on after the pull's spinner ends, shown as
+     *  "Scanning your addresses for balances…" under the balance card (iOS 5b7c772c
+     *  `WalletView.isScanningAddresses`). Kept here so leaving the tab mid-sweep keeps the line. */
+    val isScanningAddresses: StateFlow<Boolean> = _isScanningAddresses.asStateFlow()
+
+    /**
+     * The sweep half of pulling Wallet (iOS 5b7c772c `WalletView.scanAndRefresh`, audit #18): the
+     * caller reads the balances first and ends the spinner; then this runs Kaspa's Discover (the
+     * spending chain swept for balances and domains, any found put on Manage Addresses) and
+     * kUSDT's Discover side by side, and reads the balances again when both finish - if the
+     * account is still the one it started for. A sweep already going is left to finish.
+     */
+    fun scanAddressesForBalances() {
+        if (_isScanningAddresses.value) return
+        _isScanningAddresses.value = true
+        val account = walletManager.getActiveAccount()?.address
+        viewModelScope.launch {
+            try {
+                kotlinx.coroutines.coroutineScope {
+                    launch {
+                        // One already going (Manage Addresses' Discover) is waited for instead.
+                        if (!_discoveringAddresses.value) {
+                            val done = kotlinx.coroutines.CompletableDeferred<Unit>()
+                            discoverSpendingAddresses { done.complete(Unit) }
+                            // until it has started (or already answered; at most 2 s), then
+                            // until it has ended
+                            var waits = 0
+                            while (!done.isCompleted && !_discoveringAddresses.value && waits++ < 40) delay(50L)
+                        }
+                        discoveringAddresses.first { !it }
+                    }
+                    launch {
+                        // An address that doesn't answer is skipped, not the whole sweep (#18).
+                        val tokens = tokenWallet.get()
+                        for (token in tokens.tokens) {
+                            runCatching { tokens.discoverHoldings(token) }
+                        }
+                    }
+                }
+                if (walletManager.getActiveAccount()?.address == account) {
+                    refreshBalanceAndAwait()
+                    refreshSpendingBalanceAndAwait()
+                }
+            } finally {
+                _isScanningAddresses.value = false
+            }
+        }
+    }
+
+    private val _pendingTokenRoute = MutableStateFlow<String?>(null)
+    /** The token a tapped "Received kUSDT" notification or Notifications row asked to open: its
+     *  Manage screen, on the Wallet tab (iOS 5b7c772c `TokenRoute.pending`). */
+    val pendingTokenRoute: StateFlow<String?> = _pendingTokenRoute.asStateFlow()
+
+    fun openTokenRoute(tokenId: String) {
+        _pendingTokenRoute.value = tokenId
+    }
+
+    /** The pending token route, taken once (iOS `WalletView.takeTokenRoute`). */
+    fun takeTokenRoute(): String? = _pendingTokenRoute.value.also { _pendingTokenRoute.value = null }
+
+    /** The spending slots Manage kUSDT lists (iOS 5b7c772c `TokenWallet.listedSpendingIndices`):
+     *  Manage Addresses always shows them. Derives addresses, so off the main thread. */
+    suspend fun kusdtListedSpendingIndices(): Set<Int> = withContext(Dispatchers.Default) {
+        runCatching { tokenWallet.get().listedSpendingIndices() }.getOrDefault(emptySet())
+    }
+
+    /**
+     * Every address Manage kUSDT lists is shown in Manage Addresses too (iOS 5b7c772c
+     * `ManageAddressesView.showKusdtListedAddresses`): one hidden there (Hide, Hide All, an older
+     * choice) is shown again. Its own coroutine, started after the list's load, so the Used /
+     * Unused probes never wait on Trestly (audit #19).
+     */
+    fun showKusdtListedAddresses() {
+        val owner = walletManager.getActiveAccount()?.address ?: return
+        viewModelScope.launch {
+            runCatching { tokenWallet.get().refreshIfStale() }
+            val listed = kusdtListedSpendingIndices()
+            if (listed.isEmpty() || walletManager.getActiveAccount()?.address != owner) return@launch
+            val hidden = walletManager.getHiddenSpendingIndices(owner)
+            val toShow = listed.filter { it in hidden }.toSet()
+            if (toShow.isEmpty()) return@launch
+            toShow.forEach { walletManager.setSpendingAddressHidden(owner, it, false) }
+            _manageAddressesRaw.value = _manageAddressesRaw.value.map {
+                if (it.index in toShow) it.copy(hidden = false) else it
+            }
+        }
+    }
+
+    /** Address Visibility > Hide All (iOS 5b7c772c `hideAll`): every revealed address hidden,
+     *  except what Manage kUSDT lists ([listed]), which stays shown. */
+    fun hideAllSpendingAddressesKeeping(listed: Set<Int>) {
+        hideAllSpendingAddresses()
+        val owner = walletManager.getActiveAccount()?.address ?: return
+        listed.forEach { walletManager.setSpendingAddressHidden(owner, it, false) }
+        _manageAddressesRaw.value = _manageAddressesRaw.value.map { it.copy(hidden = it.index !in listed) }
+    }
+
+    /** "Address #4", its name, or "Chatting Address" for one of this wallet's own addresses, else
+     *  null (iOS `walletManager.ownAddressLabel(for:)`): Receive Kaspa's address name (iOS
+     *  5b7c772c). Off the main thread: a first call may derive the spending addresses. */
+    suspend fun ownAddressLabel(address: String): String? = withContext(Dispatchers.Default) {
+        runCatching { walletManager.ownAddressLabel(address) }.getOrNull()
+    }
+
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
 
@@ -1509,8 +1637,37 @@ class WalletViewModel @Inject constructor(
                 nextcloudService.revokeAndPurgeStoredState(variant)
                 nextcloudSyncService.get().purgeStoredState(variant)
             }.onFailure { android.util.Log.w("WalletViewModel", "Nextcloud state purge failed for a deleted account", it) }
+            runCatching { removeUnownedAccountKeys(variant) }
+                .onFailure { android.util.Log.w("WalletViewModel", "Per-account settings wipe failed for a deleted account", it) }
+            // KaPost, Public Chats, KaPlay, Cold Storage, Portfolio, Trestly (iOS 148a5331).
+            runCatching { accountFeatureCleanup.get().removeAccount(variant, addresses) }
+                .onFailure { android.util.Log.w("WalletViewModel", "Feature data wipe failed for a deleted account", it) }
             walletManager.removePendingAccountWipe(variant)
         }
+        // Profile images, profile records and the web responses hold who this account looked at.
+        // Only caches (other accounts fetch theirs again), so all of it goes (iOS 5b7c772c
+        // CacheManager.clearAll in removeLocalData).
+        runCatching { cacheManager.get().clearAll() }
+            .onFailure { android.util.Log.w("WalletViewModel", "Cache clear failed for a deleted account", it) }
+    }
+
+    /**
+     * What a deleted account leaves in stores that have no remover of their own, in their exact
+     * formats (iOS 5b7c772c `removeLocalData`, audit #15): when its contacts' profiles were last
+     * rescanned, its Address Book migration mark, when each group's photo was last applied, and
+     * its testnet faucet claim. Re-importing the seed then starts these over.
+     */
+    private fun removeUnownedAccountKeys(variant: String) {
+        appContext.getSharedPreferences("kachat_profile_rescan", Context.MODE_PRIVATE)
+            .edit().remove(variant).apply()
+        appContext.getSharedPreferences("kachat_address_book", Context.MODE_PRIVATE).edit()
+            .remove("kachat_address_book_migrated_v1_wallet_" + com.kachat.app.services.AddressBookManager.normalize(variant))
+            .apply()
+        val groupPhotos = appContext.getSharedPreferences("kachat_group_photo_applied_at", Context.MODE_PRIVATE)
+        val photoKeys = groupPhotos.all.keys.filter { it.startsWith("$variant|") }
+        if (photoKeys.isNotEmpty()) groupPhotos.edit().apply { photoKeys.forEach { remove(it) } }.apply()
+        appContext.getSharedPreferences("kachat_tn10_faucet", Context.MODE_PRIVATE)
+            .edit().remove("claimed_${variant.lowercase()}").apply()
     }
 
     /** A deleted account's wipe the app was closed in the middle of, finished now - unless that
@@ -1570,6 +1727,8 @@ class WalletViewModel @Inject constructor(
             notificationFeed.get().removeAllData(variant)
             paymentNoticeOutbox.get().removeAllData(variant)
             addressActivityNotifier.get().removeAllData(variant)
+            // its kUSDT balances, history and Address Visibility (iOS 5b7c772c)
+            tokenWallet.get().forgetLocalData(variant)
         }
         accountBackupStatus.forget(address)
         // Marked before the record goes: if the process dies before the wipe below is done, the

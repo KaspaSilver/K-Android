@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's chess sentences, looked up by their English text (util/KaPlayText.kt: `kp_` and 12
+     hex of the SHA-1 of the English). Translations from KaPlay Android's strings_app_text.xml and,
+     for the sentences new in KaChat, iOS 148a5331's Localizable.strings. Generated. -->
+<resources>
+    <string name="kp_7e46be469deb" formatted="false">№%d в рейтинге 1v1</string>
+    <string name="kp_cba1ee4eec72" formatted="false">№%d в рейтинге турниров</string>
+    <string name="kp_3401831926d1" formatted="false">%d Н</string>
+    <string name="kp_f769c12fc2ee" formatted="false">%d П</string>
+    <string name="kp_d9e1beae2f39" formatted="false">%d В</string>
+    <string name="kp_55fc776de141" formatted="false">%d В  %d П</string>
+    <string name="kp_d8aa573c0e61" formatted="false">Ходов: %d</string>
+    <string name="kp_fbeb1207b441" formatted="false">Игроков: %d из %d</string>
+    <string name="kp_b70e7251ba0d" formatted="false">Ожидают игроков: %d из %d</string>
+    <string name="kp_6dac15cf1ed7" formatted="false">Игроков: %d из %d · код %s</string>
+    <string name="kp_ba09ba042e31" formatted="false">Свободных мест: %d</string>
+    <string name="kp_d4cd664ac02d" formatted="false">%s побеждает %s за %d ходов. Сможете за меньшее число ходов?</string>
+    <string name="kp_35f8f501300f" formatted="false">%s бросает вам вызов: обыграйте %s.</string>
+    <string name="kp_8a3914693bee" formatted="false">%s проходит дальше, а вы выбываете из турнира. В рейтинге это поражение. Сдаться — это одна транзакция.</string>
+    <string name="kp_297da93b20fb" formatted="false">%s пока недоступен: поднимайтесь по лестнице, чтобы дойти до него.</string>
+    <string name="kp_c7642c6d04be" formatted="false">%s думает…</string>
+    <string name="kp_00161fefc871" formatted="false">%s теперь доступен!</string>
+    <string name="kp_7ab092285767" formatted="false">Первым ходит %s.</string>
+    <string name="kp_207e56e21618" formatted="false">Ход: %s</string>
+    <string name="kp_4e56d26a3870" formatted="false">%s vs %s</string>
+    <string name="kp_fbb8239c09ba" formatted="false">Побеждает %s, а вам засчитывается поражение в рейтинге. Сдаться — это одна транзакция.</string>
+    <string name="kp_a074e492574e" formatted="false">Победа: %s</string>
+    <string name="kp_03a71913fd6b" formatted="false">%s — победа матом</string>
+    <string name="kp_e2bdeaa4f9e5" formatted="false">Мат. Побеждает %s.</string>
+    <string name="kp_e510ea9dedf3" formatted="false">%s — победа: соперник сдался</string>
+    <string name="kp_33cd4606c8c7" formatted="false">Соперник сдался. Побеждает %s.</string>
+    <string name="kp_405c5afa1901" formatted="false">%s — победа по часам после ничьей</string>
+    <string name="kp_4e683890d75e" formatted="false">%s — победа по часам после ничьей (недостаточно материала)</string>
+    <string name="kp_f2d9cffd2918" formatted="false">%s — победа по часам после ничьей (пат)</string>
+    <string name="kp_3dae94d319ae" formatted="false">%s — победа по часам после ничьей по правилу 50 ходов</string>
+    <string name="kp_26b3a1b77b3b" formatted="false">%s — победа по часам после ничьей (троекратное повторение)</string>
+    <string name="kp_49680f535fab" formatted="false">%s — победа по времени</string>
+    <string name="kp_e27359cb1d1d" formatted="false">Время вышло. Побеждает %s.</string>
+    <string name="kp_7fb322c0aa2a" formatted="false">%s — победитель турнира</string>
+    <string name="kp_683e17380d8a" formatted="false">Игроков: 1 из %d</string>
+    <string name="kp_a3a1e853bd57" formatted="false">Ожидает игроков: 1 из %d</string>
+    <string name="kp_dcd9d9468141" formatted="false">Игроков: 1 из %d · код %s</string>
+    <string name="kp_f6dec9c77f35" formatted="false">Осталось 1 место</string>
+    <string name="kp_d6db37efe259" formatted="false">1v1</string>
+    <string name="kp_1644dc818c09" formatted="false">Партии 1v1</string>
+    <string name="kp_7c71818a1ae0" formatted="false">Рейтинг 1v1</string>
+    <string name="kp_d8706f214713" formatted="false">1v1, турниры и пять ботов. Онлайн-ходы и результаты партий с ботами записываются в Kaspa.</string>
+    <string name="kp_ba9cce8319d7" formatted="false">Приватный турнир — для друзей: создатель делится его восьмизначным кодом. Для создания нужен код создателя.</string>
+    <string name="kp_a733b809d2f1" formatted="false">Активные</string>
+    <string name="kp_d70f93df5e8f" formatted="false">Адрес</string>
+    <string name="kp_4d064726954a" formatted="false">Продвинутый</string>
+    <string name="kp_dbad49d89123" formatted="false">За всё время</string>
+    <string name="kp_b52b36b7269f" formatted="false">Назад</string>
+    <string name="kp_c3065156b217" formatted="false">Обыграйте %s, чтобы открыть</string>
+    <string name="kp_60575a6ebba9" formatted="false">Начинающий</string>
+    <string name="kp_489d32ce7dd9" formatted="false">Лучший результат — ходов: %d</string>
+    <string name="kp_b406fb57b29f" formatted="false">Чёрные</string>
+    <string name="kp_b5807c6df986" formatted="false">Ход чёрных</string>
+    <string name="kp_4ca88ea465a9" formatted="false">Боты</string>
+    <string name="kp_e42a1e70b400" formatted="false">Сетка</string>
+    <string name="kp_75e08341b41d" formatted="false">Сетка · нажмите на партию, чтобы смотреть</string>
+    <string name="kp_cf76a9fe16a7" formatted="false">Соперник сдался</string>
+    <string name="kp_2b246e0ff5ca" formatted="false">Считает внимательно и наказывает за ошибки. Приходите с планом.</string>
+    <string name="kp_77dfd2135f4d" formatted="false">Отмена</string>
+    <string name="kp_5a2fc967d105" formatted="false">Отменить этот турнир?</string>
+    <string name="kp_1fe710030fe9" formatted="false">Отменить турнир</string>
+    <string name="kp_5dc29b482d76" formatted="false">Отменён создателем.</string>
+    <string name="kp_7881bf71d2de" formatted="false">Чемпион</string>
+    <string name="kp_f3dffbf21ed5" formatted="false">Шах. Ваш ход.</string>
+    <string name="kp_933b750898fd" formatted="false">Мат</string>
+    <string name="kp_3226c18271e7" formatted="false">Мат. Побеждает %s.</string>
+    <string name="kp_f95715a82ba2" formatted="false">Шахматы</string>
+    <string name="kp_645b1b39f542" formatted="false">Шахматный сервер недоступен, показываем то, что есть. Ваши партии продолжаются через сеть. К публичным комнатам можно будет снова присоединиться, когда он заработает.</string>
+    <string name="kp_b03bf0e29f1c" formatted="false">Шахматный сервер недоступен. Ходы приходят из сети, и доска может немного отставать.</string>
+    <string name="kp_ee9c98ac836b" formatted="false">Шахматный сервер недоступен. Показываем то, что есть на этом телефоне, — это может быть не весь рейтинг.</string>
+    <string name="kp_cf9797eede60" formatted="false">Шахматный сервер недоступен. Показываем то, что есть на этом телефоне.</string>
+    <string name="kp_9cba814a7f57" formatted="false">Шахматный сервер недоступен. Следим за сетью в поиске игроков, поэтому тот, кто присоединился, пока приложение было закрыто, может не отображаться.</string>
+    <string name="kp_2b26c543ead5" formatted="false">Выберите игру</string>
+    <string name="kp_c47532edb2d7" formatted="false">Забрать победу</string>
+    <string name="kp_25b55e8298c7" formatted="false">Забираем…</string>
+    <string name="kp_a546440f3f66" formatted="false">Поднимайтесь по лестнице</string>
+    <string name="kp_adac69379a62" formatted="false">Код</string>
+    <string name="kp_d29d9fee5279" formatted="false">Код: %s</string>
+    <string name="kp_8e3df45a49db" formatted="false">Скопировано</string>
+    <string name="kp_af74f7c5362a" formatted="false">Скопировать</string>
+    <string name="kp_6d8d79e75952" formatted="false">Не удалось записать результат в Kaspa</string>
+    <string name="kp_6e157c5da441" formatted="false">Создать</string>
+    <string name="kp_1bf04f16edb7" formatted="false">Создать приватный 1v1</string>
+    <string name="kp_7e92ffa83dfa" formatted="false">Создать приватный турнир</string>
+    <string name="kp_94d7d8ee473f" formatted="false">Создаём…</string>
+    <string name="kp_2775f5da8563" formatted="false">Код создателя</string>
+    <string name="kp_34660a5de9ae" formatted="false">Поражение</string>
+    <string name="kp_e9b450d14bc2" formatted="false">Готово</string>
+    <string name="kp_bfa50c7a3838" formatted="false">Ничья</string>
+    <string name="kp_9af70e71546d" formatted="false">Ничья — победа по часам</string>
+    <string name="kp_3ef901b7405f" formatted="false">Ничья (недостаточно материала) — победа по часам</string>
+    <string name="kp_1f217e401459" formatted="false">Ничья: недостаточно материала.</string>
+    <string name="kp_65647004462e" formatted="false">Ничья: недостаточно материала. %s побеждает по часам.</string>
+    <string name="kp_8abd5d59fe79" formatted="false">Ничья (пат) — победа по часам</string>
+    <string name="kp_e7c73294f742" formatted="false">Ничья: пат.</string>
+    <string name="kp_0ee00fa48fcb" formatted="false">Ничья: пат. %s побеждает по часам.</string>
+    <string name="kp_c1f887545180" formatted="false">Ничья по правилу 50 ходов — победа по часам</string>
+    <string name="kp_e0fa7fdfda5b" formatted="false">Ничья по правилу 50 ходов.</string>
+    <string name="kp_e18608aaaa1f" formatted="false">Ничья по правилу 50 ходов. %s побеждает по часам.</string>
+    <string name="kp_ca658ca2e441" formatted="false">Ничья (троекратное повторение) — победа по часам</string>
+    <string name="kp_1bd0b8c9f833" formatted="false">Ничья: троекратное повторение позиции.</string>
+    <string name="kp_c328be341b0c" formatted="false">Ничья: троекратное повторение. %s побеждает по часам.</string>
+    <string name="kp_fdd69537f848" formatted="false">Ничья.</string>
+    <string name="kp_cbefc612d55f" formatted="false">Ничья. %s побеждает по часам.</string>
+    <string name="kp_1861bf6c95a3" formatted="false">Восемь игроков, олимпийская система: четвертьфиналы, полуфиналы, финал. Публичные комнаты заполняются по мере прихода игроков, приватные — по коду.</string>
+    <string name="kp_d488ebb4b1db" formatted="false">Все присоединившиеся освобождаются. Это одна транзакция.</string>
+    <string name="kp_4788947ec3fe" formatted="false">Меньше всего ходов до победы над %s</string>
+    <string name="kp_672b22cc516e" formatted="false">Финал</string>
+    <string name="kp_355bcc577d71" formatted="false">Завершённые</string>
+    <string name="kp_a8d435fecb0c" formatted="false">Завершённые партии 1v1</string>
+    <string name="kp_781b28d8c53d" formatted="false">Завершённые турниры</string>
+    <string name="kp_08ab1ad685e3" formatted="false">Пять ботов, уровни с 1 по 5, от Kaspa Silver до Yonatan Sompolinsky. Обыграйте одного, чтобы открыть следующего. Результат записывается в Kaspa.</string>
+    <string name="kp_03e3c2d3a084" formatted="false">Пять ботов, уровни с 1 по 5. Обыграйте одного, чтобы открыть следующего. Результат каждой партии записывается в Kaspa, когда она заканчивается.</string>
+    <string name="kp_e3e82846c325" formatted="false">Партия</string>
+    <string name="kp_94114a40a64a" formatted="false">Выигранные и проигранные партии — и 1v1, и турнирные</string>
+    <string name="kp_7b1a1bfec003" formatted="false">К вашей партии</string>
+    <string name="kp_78722784381b" formatted="false">Играет ради удовольствия. Ходит быстро и иногда оставляет фигуру под боем.</string>
+    <string name="kp_7f2a3bb304a4" formatted="false">Если выйти, вы сдаёте партию. %s проходит дальше, а вы выбываете из турнира. В рейтинге это поражение. Сдаться — это одна транзакция.</string>
+    <string name="kp_e998db197859" formatted="false">Если выйти, вы сдаёте партию. Побеждает %s, а вам засчитывается поражение в рейтинге. Сдаться — это одна транзакция.</string>
+    <string name="kp_a4362588018d" formatted="false">Если выйти, вы сдаёте партию. Это поражение в игре с %s, и результат записывается в Kaspa одной транзакцией.</string>
+    <string name="kp_03a2b6501787" formatted="false">Идёт игра</string>
+    <string name="kp_e24d4d212b7b" formatted="false">Идёт игра. Нажмите на любую партию, чтобы смотреть в прямом эфире.</string>
+    <string name="kp_b1cfe72fd271" formatted="false">Средний</string>
+    <string name="kp_f63265478d76" formatted="false">Это поражение в игре с %s, и результат записывается в Kaspa одной транзакцией.</string>
+    <string name="kp_e0d73143de80" formatted="false">Присоединиться</string>
+    <string name="kp_c8155c3c34dc" formatted="false">Присоединиться (комиссия: %s)</string>
+    <string name="kp_df7b41919cb2" formatted="false">Присоединитесь — и вас сведут со следующим присоединившимся. Когда комната заполняется, партия начинается и открывается следующая комната. По пять минут каждому; каждый ход — транзакция Kaspa (около 0,0017 KAS). Партии здесь идут в рейтинг.</string>
+    <string name="kp_dacbf38d4e73" formatted="false">Войти по коду</string>
+    <string name="kp_f44c1e425996" formatted="false">Присоединяемся…</string>
+    <string name="kp_d9f369249799" formatted="false">Сохраните его</string>
+    <string name="kp_bb76090ac54c" formatted="false">Продолжить игру</string>
+    <string name="kp_9be1abba9272" formatted="false">Ждать дальше</string>
+    <string name="kp_32bf913a5258" formatted="false">Знает, как ходит каждая фигура, и обожает забирать бесплатный материал. Следите за незащищёнными пешками.</string>
+    <string name="kp_35b13a38f422" formatted="false">LIVE %s</string>
+    <string name="kp_0381247a6987" formatted="false">Рейтинг</string>
+    <string name="kp_7e3520a97331" formatted="false">Покинуть</string>
+    <string name="kp_963593386268" formatted="false">Всё равно выйти</string>
+    <string name="kp_4bc79453df63" formatted="false">Выйти из партии?</string>
+    <string name="kp_baf82f7117b6" formatted="false">Выйти из очереди?</string>
+    <string name="kp_b7aa749e18cb" formatted="false">Если выйти, поиск соперника прекратится. Выход — это одна транзакция; присоединиться снова можно в любой момент.</string>
+    <string name="kp_3016bac3196c" formatted="false">Выходим…</string>
+    <string name="kp_ec7cc1838f39" formatted="false">Уровень %d</string>
+    <string name="kp_7780eacc49b8" formatted="false">Уровень %d из 5</string>
+    <string name="kp_0e50ccfcd686" formatted="false">Уровень %d · %s</string>
+    <string name="kp_9f8465fad533" formatted="false">Уровень %d · %s · Вы играете чёрными</string>
+    <string name="kp_fc9307e48365" formatted="false">Уровень %d · %s · Вы играете белыми</string>
+    <string name="kp_6235bfaf9ecc" formatted="false">Сейчас в эфире</string>
+    <string name="kp_39687e0a700d" formatted="false">Загружаем комнаты…</string>
+    <string name="kp_5daad3f809a8" formatted="false">Загружаем турнир с арены…</string>
+    <string name="kp_4d5e7c6d35ee" formatted="false">Ищем соперника</string>
+    <string name="kp_98ea2c12eb7c" formatted="false">Просчитывает пару ходов вперёд, прежде чем решиться. Играет надёжно, его трудно обмануть.</string>
+    <string name="kp_0f9a484f1388" formatted="false">Поражения</string>
+    <string name="kp_78f3842f0201" formatted="false">Мастер</string>
+    <string name="kp_092664087974" formatted="false">Соперник найден!</string>
+    <string name="kp_a7814b5ec744" formatted="false">Ход %d · ход чёрных</string>
+    <string name="kp_9fe5cb670a4c" formatted="false">Ход %d · ход белых</string>
+    <string name="kp_77fbed46e1be" formatted="false">Далее: раунд 1 против %s</string>
+    <string name="kp_a2dad9a4e89c" formatted="false">Далее: финал против %s</string>
+    <string name="kp_eceff125fbb4" formatted="false">Далее: партия против %s</string>
+    <string name="kp_1337e1141b11" formatted="false">Далее: полуфинал против %s</string>
+    <string name="kp_8506e1612593" formatted="false">Сейчас нет партий 1v1. Когда какая-нибудь начнётся, её можно будет смотреть здесь.</string>
+    <string name="kp_3988da2d38ef" formatted="false">Вы ещё не играли ни с одним ботом.</string>
+    <string name="kp_77ebbb8e3de5" formatted="false">Ещё нет завершённых партий 1v1.</string>
+    <string name="kp_1597bcaeaaa1" formatted="false">Ещё нет завершённых турниров.</string>
+    <string name="kp_682c0ad47cbe" formatted="false">Никто не присоединился вовремя. Вы вышли из очереди — присоединяйтесь снова, когда захотите.</string>
+    <string name="kp_50385293d3d0" formatted="false">Нет открытого турнира с этим кодом. Код состоит из восьми символов; турнир должен существовать и иметь свободные места.</string>
+    <string name="kp_581a01e739ba" formatted="false">Сейчас нет идущих турниров. Когда какой-нибудь начнётся, его партии можно будет смотреть здесь.</string>
+    <string name="kp_2ee8ce15a9f7" formatted="false">В этом месяце %s ещё никто не обыграл.</string>
+    <string name="kp_54460cd574b9" formatted="false">%s ещё никто не обыграл.</string>
+    <string name="kp_4472179cd296" formatted="false">Ещё не побеждён</string>
+    <string name="kp_b9e09ae263fb" formatted="false">Не подтверждено</string>
+    <string name="kp_214bf807441e" formatted="false">На вашем Адресе для чата недостаточно KAS. Пополните его и попробуйте снова.</string>
+    <string name="kp_16ca44702a9b" formatted="false">Новичок</string>
+    <string name="kp_fb58f3c56a8d" formatted="false">По времени</string>
+    <string name="kp_1cf2fc54ad9f" formatted="false">Онлайн, по пять минут на партию каждому, и каждый ход — транзакция Kaspa. Партии с ботами записывают результат в Kaspa, когда заканчиваются.</string>
+    <string name="kp_6dca824588f3" formatted="false">Свободное место</string>
+    <string name="kp_b84d3a372a18" formatted="false">Играть с %s</string>
+    <string name="kp_0faa2e4de8b8" formatted="false">Сыграйте с другом: создайте 1v1 и поделитесь его кодом. Приватные 1v1 тоже идут в рейтинг.</string>
+    <string name="kp_576766d387ec" formatted="false">Сыграть ещё</string>
+    <string name="kp_61441ace460e" formatted="false">Играть за</string>
+    <string name="kp_8ba176164906" formatted="false">Сыграйте со следующим присоединившимся или с другом по коду. Одна партия, победитель получает очко рейтинга.</string>
+    <string name="kp_e53407cfe1a5" formatted="false">Игрок</string>
+    <string name="kp_9f33b8c73405" formatted="false">Игроки (%d из %d)</string>
+    <string name="kp_237dfa0a21c8" formatted="false">Приватные</string>
+    <string name="kp_f61dccc2dba9" formatted="false">Приватный 1v1</string>
+    <string name="kp_ea951f3a34eb" formatted="false">Приватный турнир</string>
+    <string name="kp_79b0f9805c68" formatted="false">Превратить в</string>
+    <string name="kp_dc5eb704bbca" formatted="false">Публичные</string>
+    <string name="kp_37ea9a7673b4" formatted="false">Публичный 1v1</string>
+    <string name="kp_8b2cb0910a17" formatted="false">Публичный 1v1 №%d</string>
+    <string name="kp_236760772b5c" formatted="false">Публичный турнир</string>
+    <string name="kp_b4d6cee9742f" formatted="false">Публичный турнир №%d</string>
+    <string name="kp_58d888c08aa5" formatted="false">Случайно</string>
+    <string name="kp_73ba76c46a4c" formatted="false">По наименьшему числу ходов до победы.</string>
+    <string name="kp_a3d558838b81" formatted="false">Сдаться</string>
+    <string name="kp_868d45f552a8" formatted="false">Сдаться и выйти</string>
+    <string name="kp_a12f7f95331e" formatted="false">Сдаться в этой партии?</string>
+    <string name="kp_65d7b143ae0f" formatted="false">Результат записан в Kaspa</string>
+    <string name="kp_9f5cd8a2e880" formatted="false">Повторить</string>
+    <string name="kp_923287d2eeda" formatted="false">Повторить запись</string>
+    <string name="kp_f7648d383499" formatted="false">Раунд 1</string>
+    <string name="kp_d7418ba2e352" formatted="false">Сейчас нельзя проверить места</string>
+    <string name="kp_33295d1667f4" formatted="false">Посмотреть доску</string>
+    <string name="kp_af1cfadd9704" formatted="false">Посев %d</string>
+    <string name="kp_7d79eec3965c" formatted="false">Полуфинал</string>
+    <string name="kp_3abe921a63aa" formatted="false">Полуфиналы</string>
+    <string name="kp_6f32706309e0" formatted="false">Отправляем ваш ход…</string>
+    <string name="kp_9cb2e112972e" formatted="false">Отправлено, но сеть Kaspa ещё не подтвердила.</string>
+    <string name="kp_09ca55ca52d2" formatted="false">Поделиться</string>
+    <string name="kp_d042790fe991" formatted="false">Поделитесь этим кодом</string>
+    <string name="kp_1f3254d6ce59" formatted="false">Поделиться в KaPost</string>
+    <string name="kp_4401b9c3edce" formatted="false">Кто-то обыграл %s за %d ходов. Сможете за меньшее число ходов?</string>
+    <string name="kp_c923aafae8bc" formatted="false">Кто-то бросает вам вызов: обыграйте %s.</string>
+    <string name="kp_9a3ea0598e7f" formatted="false">Что-то пошло не так. Попробуйте снова.</string>
+    <string name="kp_8aa38f374323" formatted="false">Записываем результат в Kaspa…</string>
+    <string name="kp_6959b5355760" formatted="false">Записываем результат…</string>
+    <string name="kp_ae768f766f75" formatted="false">Остаться</string>
+    <string name="kp_f300737844cc" formatted="false">Комнаты ещё загружаются — попробуйте чуть позже.</string>
+    <string name="kp_fc55363a83bc" formatted="false">Переходим к доске</string>
+    <string name="kp_ad30c2ff1d6e" formatted="false">Все переходят к своим доскам</string>
+    <string name="kp_293d8f7d8030" formatted="false">Занимаем ваше место — это одна транзакция, поэтому нужно несколько секунд.</string>
+    <string name="kp_8ad85cccbb0e" formatted="false">Нажмите, чтобы вернуться</string>
+    <string name="kp_0e4268b5d759" formatted="false">Неверный код создателя.</string>
+    <string name="kp_617a81cfb251" formatted="false">Это не дошло до сети. Попробуйте снова.</string>
+    <string name="kp_55720cd06fc4" formatted="false">Эта комната заполнилась раньше — ищем для вас следующую.</string>
+    <string name="kp_d8501167e501" formatted="false">Эта комната заполнилась раньше. Нажмите «Присоединиться», чтобы попробовать следующую.</string>
+    <string name="kp_9e663d4025b0" formatted="false">Этот турнир уже начался.</string>
+    <string name="kp_1ee44a0bf66b" formatted="false">Шахматный сервер недоступен, а сеть это ещё не подтвердила. Попробуйте чуть позже.</string>
+    <string name="kp_0e3db8107f4d" formatted="false">Шахматный сервер недоступен, поэтому открытые комнаты нельзя подтвердить. Попробуйте снова, когда он заработает.</string>
+    <string name="kp_3e86d5e865a8" formatted="false">Шахматный сервер недоступен, поэтому этот код нельзя проверить. Попробуйте снова, когда он заработает.</string>
+    <string name="kp_374e3b271476" formatted="false">Восьмизначный код, которым поделился создатель. Присоединение — это одна транзакция (комиссия: %s).</string>
+    <string name="kp_668f15ee8377" formatted="false">Сама игра бесплатна. Когда она заканчивается, независимо от исхода, результат записывается в Kaspa: одна транзакция из вашего кошелька, около %s.</string>
+    <string name="kp_056a66088f6c" formatted="false">Сама игра бесплатна. Когда она заканчивается, независимо от исхода, результат записывается в Kaspa: одна транзакция из вашего кошелька, одна небольшая комиссия.</string>
+    <string name="kp_a94070f3a397" formatted="false">Сеть ещё подтверждает вашу предыдущую отправку. Попробуйте снова через несколько секунд.</string>
+    <string name="kp_5021101f57d6" formatted="false">Результат записывается в Kaspa, когда партия заканчивается</string>
+    <string name="kp_fb4fdd00f1ac" formatted="false">Запись не удалась. Если выйти сейчас, её уже нельзя будет отправить снова, и эта победа не попадёт в рейтинг.</string>
+    <string name="kp_2d72f92d9b82" formatted="false">Возможно, запись прошла</string>
+    <string name="kp_30a77c98dc8a" formatted="false">Турнир начнётся сам, когда все восемь мест будут заняты.</string>
+    <string name="kp_693f8a669f1e" formatted="false">Ход соперника</string>
+    <string name="kp_3dd518e63c49" formatted="false">Соперник</string>
+    <string name="kp_22a02413aebd" formatted="false">Всегда есть публичная комната, ожидающая игроков. Когда она заполняется, турнир начинается и открывается следующая. Восемь игроков, олимпийская система, по пять минут каждому. Каждый ход — транзакция Kaspa (около 0,0017 KAS).</string>
+    <string name="kp_6d45876eef92" formatted="false">Думает глубоко и видит далеко. Обыграйте его — и вы прошли всю лестницу.</string>
+    <string name="kp_1085f4e7c41f" formatted="false">Эта партия сыграна в другом аккаунте. Войдите в него, чтобы записать результат.</string>
+    <string name="kp_9fa87800a939" formatted="false">Возможно, отправка прошла, но сеть её не подтвердила. Проверьте баланс, прежде чем отправлять снова.</string>
+    <string name="kp_1b4785331db3" formatted="false">Этот месяц</string>
+    <string name="kp_733696c12e3e" formatted="false">Время вышло. %s побеждает по времени.</string>
+    <string name="kp_5a2e22ac873e" formatted="false">Определяется</string>
+    <string name="kp_a2c1d828e2d3" formatted="false">Турнир</string>
+    <string name="kp_25670f61ff36" formatted="false">Турнир заполнен!</string>
+    <string name="kp_cd04af2db6f1" formatted="false">Рейтинг турниров</string>
+    <string name="kp_fee20df1963e" formatted="false">Турниры</string>
+    <string name="kp_981d375a0f37" formatted="false">Выигранные и проигранные турниры</string>
+    <string name="kp_e71f1539a41b" formatted="false">Победа</string>
+    <string name="kp_f3ec99569fbf" formatted="false">Открыть в обозревателе</string>
+    <string name="kp_33d30632848d" formatted="false">Ожидание</string>
+    <string name="kp_a41118158853" formatted="false">Ждём ещё игроков: %d. Турнир начнётся сам, когда присоединится восьмой.</string>
+    <string name="kp_442da9df5c77" formatted="false">Ждём ещё 1 игрока. Турнир начнётся сам, когда присоединится восьмой.</string>
+    <string name="kp_c26c33fa1c5a" formatted="false">Ждём игроков</string>
+    <string name="kp_0e6a21e02626" formatted="false">Ждём шахматный сервер</string>
+    <string name="kp_fbc3f16e4c19" formatted="false">Ждём соперника. Партия начнётся сама, когда он присоединится.</string>
+    <string name="kp_d91ebf5887cf" formatted="false">Смотреть</string>
+    <string name="kp_7ef5b5821c01" formatted="false">Смотреть бесплатно — ничего не отправляется. Ходить могут только два игрока.</string>
+    <string name="kp_37619fc13053" formatted="false">Белые</string>
+    <string name="kp_c6ff9b47bd9e" formatted="false">Ход белых</string>
+    <string name="kp_79bcb3dd18f9" formatted="false">Доля побед</string>
+    <string name="kp_ffb136c1afe9" formatted="false">Победитель ЧФ%d</string>
+    <string name="kp_3fe7ae15e42c" formatted="false">Победитель ПФ%d</string>
+    <string name="kp_b6c015d12e1b" formatted="false">Победы</string>
+    <string name="kp_b273fb287708" formatted="false">Победа</string>
+    <string name="kp_ddf4e3735470" formatted="false">Победитель: %s</string>
+    <string name="kp_905cb326c779" formatted="false">Вы</string>
+    <string name="kp_70142233d6f3" formatted="false">Вы выбыли из этого турнира. Следите за остальной сеткой.</string>
+    <string name="kp_07025e915e94" formatted="false">Вы выбыли из этого турнира. Можете следить за остальной сеткой.</string>
+    <string name="kp_188b806432ca" formatted="false">Вы получите код, которым нужно поделиться с тем, с кем хотите сыграть. Партия начнётся, когда он присоединится. Создание — это одна транзакция.</string>
+    <string name="kp_e7c04dcae100" formatted="false">Вы проходите в следующий раунд. Следующая партия откроется сама, когда определится соперник.</string>
+    <string name="kp_5279ac5901b8" formatted="false">Вы проиграли</string>
+    <string name="kp_db93b3d19f74" formatted="false">Вы ходите первым.</string>
+    <string name="kp_7ec46c42f060" formatted="false">Вы сдались. Побеждает %s.</string>
+    <string name="kp_85b0b68af5f2" formatted="false">Вы занимаете первое место и получаете код, которым можно поделиться. Турнир начнётся, когда присоединятся восемь игроков. Создание — это одна транзакция.</string>
+    <string name="kp_3c2dfe0e1289" formatted="false">Вы победили матом. Ходов: %d.</string>
+    <string name="kp_8dfe694ea61b" formatted="false">Вы победили: мат в 1 ход.</string>
+    <string name="kp_8c75d5f7de98" formatted="false">Вы выиграли раунд 1. Ждём вашего следующего соперника — пока посмотрите другую партию.</string>
+    <string name="kp_795115417df0" formatted="false">Вы выиграли финал. Ждём вашего следующего соперника — пока посмотрите другую партию.</string>
+    <string name="kp_2987342bd41b" formatted="false">Вы выиграли партию. Ждём вашего следующего соперника — пока посмотрите другую партию.</string>
+    <string name="kp_ba7e2d06a69c" formatted="false">Вы выиграли полуфинал. Ждём вашего следующего соперника — пока посмотрите другую партию.</string>
+    <string name="kp_dc9807723538" formatted="false">Вы выиграли турнир.</string>
+    <string name="kp_e3a4b01eaca8" formatted="false">Вы победили!</string>
+    <string name="kp_2bd203ba381e" formatted="false">Вы уже в очереди: %s.</string>
+    <string name="kp_a91633acc070" formatted="false">Вы в игре. Ждём ещё игроков: %d…</string>
+    <string name="kp_ad79fa22e5b2" formatted="false">Вы в игре. Ждём ещё 1…</string>
+    <string name="kp_cfe84965f638" formatted="false">Вас сведут со следующим присоединившимся. Партия начнётся сама.</string>
+    <string name="kp_d80ca7163461" formatted="false">Вы играете: %s</string>
+    <string name="kp_24bf6785a61b" formatted="false">Вы ещё играете: %s.</string>
+    <string name="kp_eec7f86a8bb7" formatted="false">Вы в очереди: %s</string>
+    <string name="kp_61e7335f3c19" formatted="false">Ваша статистика 1v1</string>
+    <string name="kp_48fd80af85de" formatted="false">Ваше время истекло до отправки хода.</string>
+    <string name="kp_a8bc9c75a936" formatted="false">Ваша партия начнётся через</string>
+    <string name="kp_32ec1dbd797a" formatted="false">Ваше присоединение не дошло до сети. Присоединяйтесь снова, когда захотите.</string>
+    <string name="kp_44470e508a5d" formatted="false">Ваш ход</string>
+    <string name="kp_d5b2c846e810" formatted="false">Ваш ход не засчитан. Проверьте доску.</string>
+    <string name="kp_5277d781ccc7" formatted="false">Ваш ход не дошёл до сети. Сделайте его ещё раз.</string>
+    <string name="kp_63bbbf0226f5" formatted="false">Ваша статистика</string>
+    <string name="kp_4e15ba26e54d" formatted="false">Место за вами держится %s. Если комната к тому времени не заполнится, вы выйдете из очереди.</string>
+    <string name="kp_8774b9393565" formatted="false">Столько времени за вами держится место. Если никто не присоединится вовремя, вы выйдете из очереди.</string>
+    <string name="kp_94ad25364602" formatted="false">Ваша статистика в турнирах</string>
+    <string name="kp_114f3f6a8251" formatted="false">Ваша победа ещё не в Kaspa</string>
+    <string name="kp_f957097d7a22" formatted="false">завершена</string>
+    <string name="kp_691a77cd21a3" formatted="false">vs</string>
+    <string name="kp_aa93adb4f65c" formatted="false">Победа над %s (уровень %d) за %d ходов в K. Сможете за меньшее число ходов?</string>
+    <string name="kp_f81826d956cc" formatted="false">Присоединяйся к моему шахматному турниру в K: открой «KaPlay» &gt; «Шахматы» &gt; «Турниры» &gt; «Войти по коду» и введи %s.</string>
+    <string name="kp_c2ecefef54c6" formatted="false">Сыграй со мной в шахматы в K: открой «KaPlay» &gt; «Шахматы» &gt; 1v1 &gt; «Войти по коду» и введи %s.</string>
+    <string name="kp_f4fa709cb963" formatted="false">Четвертьфиналы</string>
+    <string name="kp_3ce0ac6e9413" formatted="false">Результат не отправлен.</string>
+    <string name="kaplay_leaderboard_all_time">За всё время</string>
+    <string name="kaplay_leaderboard_counted_from">Считается с %1$s.</string>
+    <string name="kaplay_leaderboard_period">Период таблицы лидеров</string>
+    <string name="kaplay_leaderboard_resets_monthly">Обнуляется 1-го числа каждого месяца (UTC).</string>
+    <string name="kaplay_leaderboard_this_month">Этот месяц</string>
+    <string name="kaplay_no_finished_duels">Ещё нет завершённых партий 1v1.</string>
+    <string name="kaplay_no_finished_duels_this_month">В этом месяце ещё нет завершённых партий 1v1.</string>
+    <string name="kaplay_no_finished_tournaments">Ещё нет завершённых турниров.</string>
+    <string name="kaplay_no_finished_tournaments_this_month">В этом месяце ещё нет завершённых турниров.</string>
+    <string name="kaplay_tab_leaderboard">Рейтинг</string>
+</resources>

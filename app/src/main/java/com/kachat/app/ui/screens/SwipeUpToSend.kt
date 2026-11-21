@@ -130,6 +130,12 @@ fun SwipeUpToSendScreen(
     onBack: (() -> Unit)? = null,
     /** False: only Back in the header (a step pushed inside another sheet, which Back leaves). */
     showsCancel: Boolean = true,
+    /** Wording for a transaction that isn't a Kaspa send (Combine Coins, iOS 5b7c772c
+     *  `SwipeUpLabels.transaction(done:)`): "Release to Confirm", its done title, and the fallback
+     *  failure line. Null keeps the send's own ("Release to Send", "Sent", "The send didn't go out."). */
+    releaseLabel: String? = null,
+    doneLabel: String? = null,
+    failedFallback: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalAppColors.current
@@ -247,6 +253,7 @@ fun SwipeUpToSendScreen(
             val threshold = max(with(density) { 120.dp.toPx() }, heightPx * 0.3f)
             SwipeUpBar(
                 title = title,
+                releaseLabel = releaseLabel,
                 armed = armed,
                 isEnabled = isEnabled,
                 onActivate = { if (latestActive && phase == SwipePhase.FORM) startSending() },
@@ -295,13 +302,15 @@ fun SwipeUpToSendScreen(
                 recipient = recipient,
                 sent = if (dagShown) sent else null,
                 done = dagShown && sent != null,
-                failure = if (failed && dagShown) failureMessage ?: stringResource(R.string.swipe_send_failed_fallback) else null,
+                failure = if (failed && dagShown) failureMessage ?: failedFallback ?: stringResource(R.string.swipe_send_failed_fallback) else null,
                 isSending = phase == SwipePhase.SENDING,
                 armed = armed,
                 explorer = explorer,
                 onDone = onDone,
                 onTryAgain = ::returnToForm,
                 outcomeUnknown = outcomeUnknown,
+                releaseLabel = releaseLabel,
+                doneLabel = doneLabel,
                 modifier = Modifier
                     .fillMaxSize()
                     .offset { IntOffset(0, max(0f, heightPx - lift).roundToInt()) },
@@ -316,12 +325,13 @@ fun SwipeUpToSendScreen(
 @Composable
 private fun SwipeUpBar(
     title: String,
+    releaseLabel: String?,
     armed: Boolean,
     isEnabled: Boolean,
     onActivate: () -> Unit,
     modifier: Modifier,
 ) {
-    val releaseText = stringResource(R.string.swipe_release_to_send)
+    val releaseText = releaseLabel ?: stringResource(R.string.swipe_release_to_send)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -376,6 +386,8 @@ private fun SendProgressScreen(
     explorer: KaspaExplorer,
     onDone: () -> Unit,
     onTryAgain: () -> Unit,
+    releaseLabel: String?,
+    doneLabel: String?,
     modifier: Modifier,
 ) {
     val colors = LocalAppColors.current
@@ -418,16 +430,20 @@ private fun SendProgressScreen(
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
-                stringResource(
-                    when {
-                        done -> R.string.sent
-                        failure != null && outcomeUnknown -> R.string.swipe_not_confirmed
-                        failure != null -> R.string.swipe_failed
-                        isSending -> R.string.swipe_sending
-                        armed -> R.string.swipe_release_to_send
-                        else -> R.string.swipe_keep_swiping
-                    }
-                ),
+                when {
+                    done && doneLabel != null -> doneLabel
+                    armed && releaseLabel != null && !done && failure == null && !isSending -> releaseLabel
+                    else -> stringResource(
+                        when {
+                            done -> R.string.sent
+                            failure != null && outcomeUnknown -> R.string.swipe_not_confirmed
+                            failure != null -> R.string.swipe_failed
+                            isSending -> R.string.swipe_sending
+                            armed -> R.string.swipe_release_to_send
+                            else -> R.string.swipe_keep_swiping
+                        }
+                    )
+                },
                 color = colors.textPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 34.sp,

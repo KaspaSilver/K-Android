@@ -157,6 +157,12 @@ data class NameResolution(
      *  first as always, but nothing can resolve there (iOS 6ac48a7). */
     val notLive: Boolean = false,
 ) {
+    /** The name with its ending always, for text other people read later (a KaPost @mention): a
+     *  bare name there wouldn't say which service it means, whatever this phone shows (iOS
+     *  148a5331 `NameResolution.fullName`). */
+    val fullName: String
+        get() = if (tld == NameServiceTLD.KACHAT && !display.endsWith(tld.suffix)) display + tld.suffix else display
+
     companion object {
         /**
          * A service's answer is outside data (iOS 83806b3d `NameResolution.init`): an address
@@ -219,6 +225,7 @@ class NameServicesClient @Inject constructor(
     suspend fun refresh(address: String) {
         val normalized = address.trim().lowercase()
         if (normalized.isEmpty()) return
+        lastRefreshed = normalized to System.currentTimeMillis()
         if (ownerAddress != normalized) {
             ownerAddress = normalized
             _owned.value = emptyMap()
@@ -234,6 +241,18 @@ class NameServicesClient @Inject constructor(
         apply(k, NameServiceTLD.K)
         apply(kaspa, NameServiceTLD.KASPA)
         _loading.value = _loading.value - setOf(NameServiceTLD.K, NameServiceTLD.KASPA)
+    }
+
+    /** When which address was last asked about ([refresh]). */
+    @Volatile private var lastRefreshed: Pair<String, Long>? = null
+
+    /** [refresh], unless this address was asked about in the last [maxAgeMs] and nothing failed
+     *  (the Wallet tab shows Your Domains on every visit; iOS 5b7c772c `refreshIfStale(for:)`). */
+    suspend fun refreshIfStale(address: String, maxAgeMs: Long = 300_000L) {
+        val key = address.trim().lowercase()
+        val last = lastRefreshed
+        if (last != null && last.first == key && _failed.value.isEmpty() && System.currentTimeMillis() - last.second < maxAgeMs) return
+        refresh(address)
     }
 
     /** How many names the address owns across these services (for the "Your Domains" count). */

@@ -70,6 +70,9 @@ class KachatNamesRegistry @Inject constructor(
     private val service: KachatNamesService,
     private val meteredNetwork: com.kachat.app.services.MeteredNetwork,
     okHttpClient: OkHttpClient,
+    /** The .kachat news for this wallet's names and offers, run after every good refresh (iOS
+     *  86471dd `KachatNamesNotifier.check`). Lazy: it reads the registry itself. */
+    private val notifier: dagger.Lazy<KachatNamesNotifier>,
 ) {
     sealed class Source {
         data class Indexer(val base: String) : Source()
@@ -319,6 +322,8 @@ class KachatNamesRegistry @Inject constructor(
             }
             _lastError.value = null
             _refreshedAt.value = System.currentTimeMillis()
+            // what changed for this wallet's names and offers (iOS 86471dd)
+            scope.launch { notifier.get().check() }
             val quiet = !announce && !walkedChanges && _source.value == previousSource && previousError == null &&
                 System.currentTimeMillis() - revisionBumpedAt < 300_000L
             if (!quiet) {
@@ -571,6 +576,25 @@ class KachatNamesRegistry @Inject constructor(
     }
 
     // Reads
+
+    /**
+     * Whether a registry answer right now reflects the chain as it stands. The indexer's does (it
+     * was checked to be keeping up); the chain copy's only just after a walk reached the live
+     * UTXOs. Anything that spends or withdraws on a registry answer asks this first: a copy
+     * minutes old can say a name is free that has since been taken (iOS 2da5f4b
+     * `answersAreCurrent`, back with the .kachat market).
+     */
+    val answersAreCurrent: Boolean
+        get() {
+            // no source picked yet (a cold start, before [prepare]): a read would come from the
+            // saved chain copy, which can be days old, so nothing is current until one is
+            val src = _source.value ?: return false
+            if (src != Source.Chain) return true
+            val st = _chainState.value ?: return false
+            if (st.reachedTip != true) return false
+            val at = st.verifiedAt ?: return false
+            return System.currentTimeMillis() - at < 120_000L
+        }
 
     /**
      * Before Kaspa goes to the owner a record names, a node has to hold that exact record: the

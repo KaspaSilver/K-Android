@@ -12,6 +12,7 @@ import com.kachat.app.util.KasiaCipher
 import com.kachat.app.util.MessageProtocol
 import com.kachat.app.util.MessageReaction
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.util.Base64
 import javax.inject.Inject
@@ -21,9 +22,9 @@ import javax.inject.Inject
  *
  * Two shapes arrive from the server (`kasia-indexer` `push.rs`):
  *  - **Public content** (broadcast / KaPosts) is sent WITH a `notification` block, so the OS shows
- *    it even when the app is dead. Both features left the app (iOS e2f6732) and the device
- *    registers for neither, so one that still arrives here is dropped; a tap on one the OS drew
- *    lands on the Chats list (MainActivity).
+ *    it even when the app is dead. Both are back in the app (iOS 148a5331): while it runs, a room
+ *    push shows for a room still joined with its bell on, and a KaPost push by the KaPost
+ *    switches and block list; a tap on one the OS drew opens the room or the post (MainActivity).
  *  - **Encrypted DM/group content** is sent **data-only** (no `notification` block) so this handler
  *    runs and can DECRYPT the body locally with the wallet key — mirroring iOS's Notification
  *    Service Extension. (Data-only needs the app wake-able; a force-closed app under OEM battery
@@ -45,6 +46,11 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
     @Inject lateinit var chatRepositoryLazy: dagger.Lazy<ChatRepository>
     @Inject lateinit var groupRepositoryLazy: dagger.Lazy<com.kachat.app.repository.GroupRepository>
     @Inject lateinit var settingsRepositoryLazy: dagger.Lazy<com.kachat.app.repository.AppSettingsRepository>
+    // Public Chats and KaPost (iOS 148a5331).
+    @Inject lateinit var broadcastRepositoryLazy: dagger.Lazy<com.kachat.app.repository.BroadcastRepository>
+    @Inject lateinit var broadcastNotifierLazy: dagger.Lazy<com.kachat.app.services.publicchats.BroadcastNotifier>
+    @Inject lateinit var kaPostsNotifierLazy: dagger.Lazy<KaPostsNotifier>
+    @Inject lateinit var kaPostsNotificationPollerLazy: dagger.Lazy<KaPostsNotificationPoller>
     private val notificationHelper: NotificationHelper get() = notificationHelperLazy.get()
     private val pushRegistrationManager: PushRegistrationManager get() = pushRegistrationManagerLazy.get()
     private val walletManager: WalletManager get() = walletManagerLazy.get()
@@ -118,19 +124,18 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                     return@runBlocking
                 }
                 when (type) {
-                    // .kachat name events left with the .kachat market (iOS d54ea87): one that
-                    // still arrives is never shown; KaChat Wallet carries them.
+                    // .kachat name events (offers, sales, renewal): iPhone 148a5331 still
+                    // delivers them silently (its NotificationService), with the .kachat tab back
+                    // or not - the name's news shows in the app (KachatNamesNotifier and its
+                    // reminders). A tap on one the OS drew opens the name (MainActivity).
                     "name_event" -> {
                         data["tx_id"]?.takeIf { it.isNotBlank() }?.let { notificationHelper.claimWithoutNotifying(it) }
-                        Log.i(TAG, "Dropped a name_event push: names live in KaChat Wallet")
+                        Log.i(TAG, "Delivered a name_event push silently, as iOS does")
                     }
 
-                    // KaPosts and Public Chats left the app (iOS e2f6732): one that races the
-                    // re-registration is never shown.
-                    "broadcast", "kaposts" -> {
-                        data["tx_id"]?.takeIf { it.isNotBlank() }?.let { notificationHelper.claimWithoutNotifying(it) }
-                        Log.i(TAG, "Dropped a $type push: the feature left the app")
-                    }
+                    "broadcast" -> handleRoomPush(data, body)
+
+                    "kaposts" -> handleKaPostPush(data, body)
 
                     "group_message" -> handleGroupMessagePush(data)
 
@@ -154,12 +159,100 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                         )
                     }
 
-                    else -> Log.d(TAG, "Ignoring push of unknown type: $type")
+                    // A KaPosts push with no type still carries thread_id "kaposts" (iOS's thread).
+                    else -> if (data["thread_id"] == "kaposts") {
+                        handleKaPostPush(data, body)
+                    } else {
+                        Log.d(TAG, "Ignoring push of unknown type: $type")
+                    }
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to handle push (type=$type): ${e.message}")
             }
         }
+    }
+
+    /**
+     * A Public Chats room push (PUSH_EXTENSIONS.md 2; iOS 148a5331 `kaPostsOrRoomPresentation` and
+     * NotificationService): nothing for a room deleted, muted or switched off (the push service
+     * can still send for it until the registration update lands), nothing for an edit (it changes
+     * an earlier message in place), and the room's raw on-chain body shown as a friendly preview.
+     * The banner itself stays down for the room on screen ([com.kachat.app.services.publicchats.BroadcastNotifier]).
+     */
+    private suspend fun handleRoomPush(data: Map<String, String>, body: String) {
+        val txId = data["tx_id"]?.takeIf { it.isNotBlank() }
+        // Through the same gate as a room link's name, before it can show anything.
+        val channel = data["channel"]
+            ?.let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(it) }
+            ?: return
+        if (!broadcastRepositoryLazy.get().wantsRoomPush(channel)) {
+            txId?.let { notificationHelper.claimWithoutNotifying(it) }
+            Log.i(TAG, "Room push dropped: the room isn't joined, or its bell is off")
+            return
+        }
+        if (com.kachat.app.util.BroadcastPushPreview.isEditEnvelope(body)) {
+            txId?.let { notificationHelper.claimWithoutNotifying(it) }
+            Log.i(TAG, "Edit push dropped: an edit is never announced")
+            return
+        }
+        // A long voice note's (or multi-part photo's) later parts while the app is open (iOS
+        // 148a5331 `RoomVoicePushBursts`): the indexer pushes every part as its own "Voice
+        // message", so a media push from the same sender in the same room within a minute of the
+        // last is a later part - no new banner or sound; the room's banner from the first stays.
+        if (notificationHelper.isAppInForeground && body.trim() in ROOM_MEDIA_PREVIEWS &&
+            !notificationHelper.claimPartBurst("room:$channel|${data["subtitle"].orEmpty().lowercase()}")
+        ) {
+            txId?.let { notificationHelper.claimWithoutNotifying(it) }
+            return
+        }
+        broadcastNotifierLazy.get().showBroadcast(
+            channelName = channel,
+            title = "#$channel",
+            text = com.kachat.app.util.BroadcastPushPreview.clean(body),
+            dedupeTxId = txId,
+        )
+    }
+
+    /**
+     * A KaPosts push (PUSH_EXTENSIONS.md 3; iOS 148a5331): nothing from someone muted or blocked
+     * when the push names who acted (`actor_pubkey`), nothing a KaPost switch turned off, and no
+     * banner while KaPost's notifications are on screen. A reply or a quote opens itself, else the
+     * post it was made on (only transaction ids: the payload is the push service's word), else
+     * Profile's bell.
+     */
+    private suspend fun handleKaPostPush(data: Map<String, String>, body: String) {
+        val title = data["title"].orEmpty()
+        val text = body.ifEmpty { title }
+        val txId = data["tx_id"].orEmpty()
+        val actorHidden = data["actor_pubkey"]
+            ?.let { KaPostsService.kaspaAddressFromPubkey(it) }
+            ?.let { actor ->
+                val wallet = runCatching { walletManager.getAddress() }.getOrNull()
+                wallet != null && (actor in settingsRepository.kapostsMuted(wallet).first() ||
+                    actor in settingsRepository.kapostsBlocked(wallet).first())
+            } ?: false
+        if (actorHidden) {
+            Log.i(TAG, "KaPosts push from a muted or blocked account dropped")
+            return
+        }
+        if (!settingsRepository.shouldNotifyKaPostsPush(data["kaposts_kind"], text)) {
+            Log.i(TAG, "KaPosts push suppressed by notification settings")
+            return
+        }
+        // KaPost's notifications on screen show it already: no banner, but the action is claimed
+        // so the poller doesn't draw it later.
+        if (notificationHelper.isAppInForeground && kaPostsNotificationPollerLazy.get().isNotificationsScreenVisible) {
+            kaPostsNotifierLazy.get().claim(txId)
+            return
+        }
+        val deepLink = com.kachat.app.ui.screens.KaPostsDeepLink
+        val postTxId = POST_ID_KEYS.firstNotNullOfOrNull { key -> data[key]?.trim()?.takeIf { deepLink.isTxId(it) } }?.lowercase()
+        val actionTarget = txId.trim().takeIf { deepLink.isTxId(it) && deepLink.pushOpensAction(data["kaposts_kind"], body) }?.lowercase()
+        kaPostsNotifierLazy.get().showKaPosts(
+            text = text,
+            actionTxId = txId,
+            postTxId = actionTarget ?: postTxId,
+        )
     }
 
     /**
@@ -389,8 +482,11 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             return
         }
         val plaintext = pushedPlaintext ?: (chainRead as? ChatRepository.ContextualRead.Message)?.text
-        if (plaintext != null && MessageReaction.parseOrNull(plaintext) != null) {
-            // Reactions are never shown as their own notification (matches ChatRepository).
+        // A 1:1 reaction rings as "Reacted 👍 to your message" (dmNotificationText), as iOS's
+        // notification service shows it; one whose emoji isn't one emoji is dropped silently, as
+        // the app reads it as a removal (iOS 5b7c772c NotificationService.isInvalidReaction).
+        if (plaintext != null && MessageReaction.isInvalidReaction(plaintext)) {
+            data["tx_id"]?.takeIf { it.isNotBlank() }?.let { notificationHelper.claimWithoutNotifying(it) }
             return
         }
         // Nor is an edit: it changes an earlier bubble in place (MESSAGING.md "Message Edits").
@@ -408,6 +504,11 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         val silentPoolEnvelope = when (val pool = com.kachat.app.util.PaymentPoolProtocol.parse(plaintext)) {
             null -> false
             is com.kachat.app.util.PaymentPoolProtocol.Envelope.Notice -> {
+                val myAddress = runCatching { walletManager.getAddress() }.getOrNull()
+                myAddress.isNullOrBlank() || !pool.content.address.trim().equals(myAddress, ignoreCase = true)
+            }
+            // a token payment's notice (Send Dollars) is announced the same way (iOS 5b7c772c)
+            is com.kachat.app.util.PaymentPoolProtocol.Envelope.TokenNotice -> {
                 val myAddress = runCatching { walletManager.getAddress() }.getOrNull()
                 myAddress.isNullOrBlank() || !pool.content.address.trim().equals(myAddress, ignoreCase = true)
             }
@@ -553,6 +654,15 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         // Same tag as PushRegistrationManager: `adb logcat -s KaChatPush` shows registrations,
         // token rotations, and every received push in one stream.
         private const val TAG = PushRegistrationManager.TAG
+
+        /** Every spelling the KaPosts push has used for "the content that was acted on" (the
+         *  published contract's `postId`, and `post_id` / `content_id`). Kept in sync with
+         *  MainActivity.FCM_KEYS_POST_ID, which reads the same payload when FCM drew it. */
+        private val POST_ID_KEYS = listOf("post_id", "postId", "content_id")
+
+        /** The indexer's previews for a room media envelope (kachat-indexer
+         *  docs/ROOM_VOICE_PART_PUSHES.md; iOS `RoomVoicePushBursts.mediaPreviews`). */
+        private val ROOM_MEDIA_PREVIEWS = setOf("Voice message", "Photo")
 
         /** How long a push may spend on a group catch-up before the generic banner posts. */
         private const val GROUP_SYNC_BUDGET_MS = 8_000L

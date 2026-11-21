@@ -82,9 +82,9 @@ import androidx.compose.runtime.getValue
 /**
  * The payment request waiting to be shown - a tapped request card, a pasted link, a link opened
  * from outside the app (iOS `PaymentRequestRouter`). [PaymentRequestSheetHost], in MainShell,
- * presents it: tapped in a chat ([Pending.fromChat]), Send Kaspa filled in; otherwise KaPay for
- * someone else's, Send Kaspa filled in for a chat payment. The request itself for your own. Every
- * opening is its own sheet, even of the same request.
+ * presents it: someone else's, from a chat or anywhere else, opens Send Kaspa filled in (iOS
+ * 148a5331: KaPay is retired); your own shows the request itself. Every opening is its own sheet,
+ * even of the same request.
  */
 object PaymentRequestRouter {
     data class Pending(val request: PaymentRequest, val id: Long, val fromChat: Boolean = false)
@@ -146,82 +146,26 @@ object PaymentRequestPaste {
     }
 }
 
-/**
- * Payment requests from outside a chat are paid in KaPay, KaChat's wallet app (iOS 3a7ddcf9,
- * 63c2ee1c `KaPayHandoff`; one tapped in a chat stays here, bfe9f022 [PaymentRequestRouter.open]):
- * someone else's request opens there on Send, filled in, through KaPay's own scheme
- * (`kapay://pay/...`, the same tail as `kachat://pay/`). Two stay here: your own (nothing to pay -
- * [OwnPaymentRequestSheet]), and one asking for a chat payment ([PaymentRequest.toChattingAddress],
- * made from a 1:1 chat), which KaChat pays as an encrypted chat payment so it lands in your chat
- * with them - KaPay can't. Without KaPay installed, KaChat's install page opens to get it.
- */
-object KaPayHandoff {
-    const val SCHEME = "kapay"
-    /** Where a request goes when KaPay isn't installed: the install page all the apps share
-     *  (iOS d23e6f7a `installURL`). */
-    const val INSTALL_URL = "https://home.kachat.app/install/"
-
-    /** True when the request belongs in KaPay; not your own, and not a chat payment. */
-    fun paysInKaPay(request: PaymentRequest, isOwn: Boolean): Boolean = !isOwn && !request.toChattingAddress
-
-    /** Opens [request] in KaPay, or the install page when KaPay isn't installed. */
-    fun pay(context: android.content.Context, request: PaymentRequest) {
-        val opened = open(context, "$SCHEME://pay/${request.linkTail}")
-        if (!opened) open(context, INSTALL_URL)
-    }
-
-    private fun open(context: android.content.Context, url: String): Boolean = try {
-        context.startActivity(
-            Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-        true
-    } catch (_: android.content.ActivityNotFoundException) {
-        false
-    }
-}
-
-/**
- * A KaPost post link ([KaChatLinkRef.KaPost]), tapped in a chat or opened from outside the app,
- * goes straight to that post in KaPost through its own scheme (iOS a8a5807a `KaPostHandoff`).
- * Without KaPost installed, the install page all the apps share opens to get it.
- */
-object KaPostHandoff {
-    fun open(context: android.content.Context, txId: String) {
-        if (!launch(context, "kaposts://kapost/$txId")) launch(context, KaPayHandoff.INSTALL_URL)
-    }
-
-    private fun launch(context: android.content.Context, url: String): Boolean = try {
-        context.startActivity(
-            Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-        true
-    } catch (_: android.content.ActivityNotFoundException) {
-        false
-    }
-}
+// Every payment request is paid here since KaPay retired (iOS 148a5331): someone else's opens
+// Send Kaspa filled in, your own shows itself ([PaymentRequestSheetHost]). `kapay://pay/...`
+// links an older KaPay or KaChat made still open, in KaChat (MainActivity's link handling). A
+// KaPost post link opens in KaChat's own KaPost too ([openKaChatLink]).
 
 /**
  * Presents the payment request waiting in [PaymentRequestRouter] (iOS
  * `PaymentRequestSheetPresenter`): your own shows it ([OwnPaymentRequestSheet]); someone else's,
- * from outside a chat, is paid in KaPay ([KaPayHandoff]); one tapped in a chat, or a chat-payment
- * one, opens Send Kaspa from the chatting address with the address locked and the amount and memo
- * filled in - every send check as always, and nothing goes out until slide to send.
+ * from a chat or anywhere else (iOS 148a5331), opens Send Kaspa from the chatting address with the
+ * address locked and the amount and memo filled in - every send check as always, and nothing goes
+ * out until slide to send.
  */
 @Composable
 fun PaymentRequestSheetHost(walletViewModel: WalletViewModel, chatViewModel: ChatViewModel) {
     val pending by PaymentRequestRouter.pending.collectAsState()
     val current = pending ?: return
-    val context = LocalContext.current
     key(current.id) {
         var isOwn by remember { mutableStateOf<Boolean?>(null) }
         LaunchedEffect(Unit) {
-            val own = withContext(Dispatchers.Default) { current.request.isOwn }
-            if (!current.fromChat && KaPayHandoff.paysInKaPay(current.request, own)) {
-                KaPayHandoff.pay(context, current.request)
-                PaymentRequestRouter.dismiss(current.id)
-            } else {
-                isOwn = own
-            }
+            isOwn = withContext(Dispatchers.Default) { current.request.isOwn }
         }
         when (isOwn) {
             null -> Unit
@@ -450,7 +394,9 @@ fun CreatePaymentRequestSheet(
             }
         }
 
-        val copyRequest: () -> Unit = {
+        val copyRequest: () -> Unit = copy@{
+            // two taps in one frame would each reserve a fresh address (iOS d7c56280)
+            if (isWorking) return@copy
             isWorking = true
             sendError = null
             scope.launch {
@@ -465,7 +411,9 @@ fun CreatePaymentRequestSheet(
             }
         }
         /** Show Request As QR: the same signed request, as a code to scan with a phone's camera. */
-        val showQr: () -> Unit = {
+        val showQr: () -> Unit = qr@{
+            // two taps in one frame would each reserve a fresh address (iOS d7c56280)
+            if (isWorking) return@qr
             isWorking = true
             sendError = null
             scope.launch {
@@ -479,7 +427,9 @@ fun CreatePaymentRequestSheet(
                 }
             }
         }
-        val sendRequest: () -> Unit = {
+        val sendRequest: () -> Unit = send@{
+            // two taps in one frame would each reserve a fresh address (iOS d7c56280)
+            if (isWorking) return@send
             val contactId = recipientContactId
             val chat = chatViewModel
             if (contactId != null && chat != null) {
@@ -694,7 +644,9 @@ fun CreatePaymentRequestSheet(
 
                         if (!isForChat) {
                             // Share waits for the fresh address before the share sheet opens.
-                            PaymentRequestShareButton(enabled = canMake && !isWorking) {
+                            PaymentRequestShareButton(enabled = canMake && !isWorking) share@{
+                                // two taps in one frame would each reserve a fresh address (iOS d7c56280)
+                                if (isWorking) return@share
                                 isWorking = true
                                 sendError = null
                                 scope.launch {
@@ -709,7 +661,7 @@ fun CreatePaymentRequestSheet(
                         }
 
                         Text(
-                            stringResource(R.string.pr_anyone_note),
+                            stringResource(R.string.pl_pr_anyone_note),
                             color = colors.textSecondary,
                             fontSize = 13.sp,
                             textAlign = TextAlign.Center,
@@ -723,10 +675,10 @@ fun CreatePaymentRequestSheet(
 }
 
 /**
- * A payment request as a QR (iOS 413f6d6d `PaymentRequestQRSheet`). Scanned with a phone's camera
- * it opens KaPay on Send, filled in (`kapay://pay/...`, the link KaChat hands requests to KaPay
- * with - [KaPayHandoff]). A request to your chatting address is paid as a chat payment, which only
- * KaChat can make, so that one holds the kachat.app link instead, which opens KaChat.
+ * A payment request as a QR (iOS 413f6d6d `PaymentRequestQRSheet`): its kachat.app link, so a
+ * phone's camera opens KaChat on Send, filled in. (Until iOS 148a5331 a request to a spending
+ * address held a `kapay://pay/` link for KaPay; KaPay is retired and KaChat pays every request
+ * itself, and still opens those links.)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -734,7 +686,7 @@ private fun PaymentRequestQrSheet(request: PaymentRequest, onDismissed: () -> Un
     IosFullSheet(onDismissed = onDismissed, swipeToDismiss = true) { close ->
         BackHandler(onBack = close)
         val colors = LocalAppColors.current
-        val payload = if (request.toChattingAddress) request.shareUrlString else "${KaPayHandoff.SCHEME}://pay/${request.linkTail}"
+        val payload = request.shareUrlString
         Scaffold(
             containerColor = colors.background,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -791,7 +743,7 @@ private fun PaymentRequestQrSheet(request: PaymentRequest, onDismissed: () -> Un
                 // Says "a phone's camera" where iOS says "an iPhone's camera": on purpose, so the
                 // caption doesn't read oddly on Android (the user's call, 2026-11-18).
                 Text(
-                    stringResource(if (request.toChattingAddress) R.string.pr_qr_scan_to_pay_in_kachat else R.string.pr_qr_scan_to_pay_in_kapay),
+                    stringResource(R.string.pr_qr_scan_to_pay_in_kachat),
                     color = colors.textSecondary,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center,

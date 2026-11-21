@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's chess sentences, looked up by their English text (util/KaPlayText.kt: `kp_` and 12
+     hex of the SHA-1 of the English). Translations from KaPlay Android's strings_app_text.xml and,
+     for the sentences new in KaChat, iOS 148a5331's Localizable.strings. Generated. -->
+<resources>
+    <string name="kp_7e46be469deb" formatted="false">Hạng #%d trên bảng 1v1</string>
+    <string name="kp_cba1ee4eec72" formatted="false">Hạng #%d trên bảng giải đấu</string>
+    <string name="kp_3401831926d1" formatted="false">%d hòa</string>
+    <string name="kp_f769c12fc2ee" formatted="false">%d thua</string>
+    <string name="kp_d9e1beae2f39" formatted="false">%d thắng</string>
+    <string name="kp_55fc776de141" formatted="false">%d thắng  %d thua</string>
+    <string name="kp_d8aa573c0e61" formatted="false">%d nước</string>
+    <string name="kp_fbeb1207b441" formatted="false">%d/%d người chơi</string>
+    <string name="kp_b70e7251ba0d" formatted="false">%d/%d người chơi đang chờ</string>
+    <string name="kp_6dac15cf1ed7" formatted="false">%d/%d người chơi · mã %s</string>
+    <string name="kp_ba09ba042e31" formatted="false">Còn %d chỗ</string>
+    <string name="kp_d4cd664ac02d" formatted="false">%s đã thắng %s trong %d nước. Bạn có làm được với ít nước hơn không?</string>
+    <string name="kp_35f8f501300f" formatted="false">%s thách bạn đánh bại %s.</string>
+    <string name="kp_8a3914693bee" formatted="false">%s đi tiếp và bạn bị loại khỏi giải đấu. Ván này được tính là thua trên bảng xếp hạng. Đầu hàng là một giao dịch.</string>
+    <string name="kp_297da93b20fb" formatted="false">%s vẫn đang bị khóa: hãy leo thang để mở khóa.</string>
+    <string name="kp_c7642c6d04be" formatted="false">%s đang suy nghĩ…</string>
+    <string name="kp_00161fefc871" formatted="false">%s đã được mở khóa!</string>
+    <string name="kp_7ab092285767" formatted="false">%s đi trước.</string>
+    <string name="kp_207e56e21618" formatted="false">Lượt của %s</string>
+    <string name="kp_4e56d26a3870" formatted="false">%s vs %s</string>
+    <string name="kp_fbb8239c09ba" formatted="false">%s thắng, và ván này được tính là thua trên bảng xếp hạng. Đầu hàng là một giao dịch.</string>
+    <string name="kp_a074e492574e" formatted="false">%s thắng</string>
+    <string name="kp_03a71913fd6b" formatted="false">%s thắng bằng chiếu hết</string>
+    <string name="kp_e2bdeaa4f9e5" formatted="false">%s thắng bằng chiếu hết.</string>
+    <string name="kp_e510ea9dedf3" formatted="false">%s thắng do đối thủ đầu hàng</string>
+    <string name="kp_33cd4606c8c7" formatted="false">%s thắng do đối thủ đầu hàng.</string>
+    <string name="kp_405c5afa1901" formatted="false">%s thắng theo đồng hồ sau khi hòa</string>
+    <string name="kp_4e683890d75e" formatted="false">%s thắng theo đồng hồ sau khi hòa do không đủ quân chiếu hết</string>
+    <string name="kp_f2d9cffd2918" formatted="false">%s thắng theo đồng hồ sau khi hòa do hết nước đi</string>
+    <string name="kp_3dae94d319ae" formatted="false">%s thắng theo đồng hồ sau khi hòa theo luật 50 nước</string>
+    <string name="kp_26b3a1b77b3b" formatted="false">%s thắng theo đồng hồ sau khi hòa do lặp lại ba lần</string>
+    <string name="kp_49680f535fab" formatted="false">%s thắng do đối thủ hết giờ</string>
+    <string name="kp_e27359cb1d1d" formatted="false">%s thắng do đối thủ hết giờ.</string>
+    <string name="kp_7fb322c0aa2a" formatted="false">%s đã vô địch giải đấu</string>
+    <string name="kp_683e17380d8a" formatted="false">1/%d người chơi</string>
+    <string name="kp_a3a1e853bd57" formatted="false">1/%d người chơi đang chờ</string>
+    <string name="kp_dcd9d9468141" formatted="false">1/%d người chơi · mã %s</string>
+    <string name="kp_f6dec9c77f35" formatted="false">Còn 1 chỗ</string>
+    <string name="kp_d6db37efe259" formatted="false">1v1</string>
+    <string name="kp_1644dc818c09" formatted="false">Ván 1v1</string>
+    <string name="kp_7c71818a1ae0" formatted="false">Bảng xếp hạng 1v1</string>
+    <string name="kp_d8706f214713" formatted="false">1v1, giải đấu và năm bot. Nước đi trực tuyến và kết quả với bot được ghi lên Kaspa.</string>
+    <string name="kp_ba9cce8319d7" formatted="false">Giải đấu riêng tư dành cho bạn bè: người tạo chia sẻ mã tám ký tự. Để tạo giải cần có mã người tạo.</string>
+    <string name="kp_a733b809d2f1" formatted="false">Đang hoạt động</string>
+    <string name="kp_d70f93df5e8f" formatted="false">Địa chỉ</string>
+    <string name="kp_4d064726954a" formatted="false">Nâng cao</string>
+    <string name="kp_dbad49d89123" formatted="false">Mọi thời đại</string>
+    <string name="kp_b52b36b7269f" formatted="false">Quay lại</string>
+    <string name="kp_c3065156b217" formatted="false">Thắng %s để mở khóa</string>
+    <string name="kp_60575a6ebba9" formatted="false">Mới bắt đầu</string>
+    <string name="kp_489d32ce7dd9" formatted="false">Tốt nhất: %d nước</string>
+    <string name="kp_b406fb57b29f" formatted="false">Đen</string>
+    <string name="kp_b5807c6df986" formatted="false">Đen đi</string>
+    <string name="kp_4ca88ea465a9" formatted="false">Bot</string>
+    <string name="kp_e42a1e70b400" formatted="false">Nhánh đấu</string>
+    <string name="kp_75e08341b41d" formatted="false">Nhánh đấu · nhấn vào một ván để xem</string>
+    <string name="kp_cf76a9fe16a7" formatted="false">Do đầu hàng</string>
+    <string name="kp_2b246e0ff5ca" formatted="false">Tính toán cẩn thận và trừng phạt sai lầm. Hãy đến với một kế hoạch.</string>
+    <string name="kp_77dfd2135f4d" formatted="false">Hủy</string>
+    <string name="kp_5a2fc967d105" formatted="false">Hủy giải đấu này?</string>
+    <string name="kp_1fe710030fe9" formatted="false">Hủy giải đấu</string>
+    <string name="kp_5dc29b482d76" formatted="false">Người tạo đã hủy.</string>
+    <string name="kp_7881bf71d2de" formatted="false">Nhà vô địch</string>
+    <string name="kp_f3dffbf21ed5" formatted="false">Chiếu. Đến lượt bạn.</string>
+    <string name="kp_933b750898fd" formatted="false">Chiếu hết</string>
+    <string name="kp_3226c18271e7" formatted="false">Chiếu hết. %s thắng.</string>
+    <string name="kp_f95715a82ba2" formatted="false">Cờ vua</string>
+    <string name="kp_645b1b39f542" formatted="false">Không kết nối được máy chủ cờ vua, đang hiển thị dữ liệu hiện có. Các ván của bạn vẫn tiếp tục qua mạng. Có thể tham gia lại phòng công khai khi máy chủ hoạt động trở lại.</string>
+    <string name="kp_b03bf0e29f1c" formatted="false">Không kết nối được máy chủ cờ vua. Các nước đi đang lấy từ mạng nên bàn cờ có thể chậm một chút.</string>
+    <string name="kp_ee9c98ac836b" formatted="false">Không kết nối được máy chủ cờ vua. Đang hiển thị dữ liệu có trên điện thoại này, có thể không đầy đủ bằng bảng chính.</string>
+    <string name="kp_cf9797eede60" formatted="false">Không kết nối được máy chủ cờ vua. Đang hiển thị dữ liệu có trên điện thoại này.</string>
+    <string name="kp_9cba814a7f57" formatted="false">Không kết nối được máy chủ cờ vua. Đang theo dõi người chơi trên mạng, nên người tham gia trong lúc ứng dụng không mở có thể không hiện.</string>
+    <string name="kp_2b26c543ead5" formatted="false">Chọn trò chơi</string>
+    <string name="kp_c47532edb2d7" formatted="false">Nhận chiến thắng</string>
+    <string name="kp_25b55e8298c7" formatted="false">Đang nhận…</string>
+    <string name="kp_a546440f3f66" formatted="false">Leo thang</string>
+    <string name="kp_adac69379a62" formatted="false">Mã</string>
+    <string name="kp_d29d9fee5279" formatted="false">Mã: %s</string>
+    <string name="kp_8e3df45a49db" formatted="false">Đã sao chép</string>
+    <string name="kp_af74f7c5362a" formatted="false">Sao chép</string>
+    <string name="kp_6d8d79e75952" formatted="false">Không ghi được kết quả lên Kaspa</string>
+    <string name="kp_6e157c5da441" formatted="false">Tạo</string>
+    <string name="kp_1bf04f16edb7" formatted="false">Tạo 1v1 riêng tư</string>
+    <string name="kp_7e92ffa83dfa" formatted="false">Tạo giải đấu riêng tư</string>
+    <string name="kp_94d7d8ee473f" formatted="false">Đang tạo…</string>
+    <string name="kp_2775f5da8563" formatted="false">Mã người tạo</string>
+    <string name="kp_34660a5de9ae" formatted="false">Thất bại</string>
+    <string name="kp_e9b450d14bc2" formatted="false">Xong</string>
+    <string name="kp_bfa50c7a3838" formatted="false">Hòa</string>
+    <string name="kp_9af70e71546d" formatted="false">Hòa - thắng theo đồng hồ</string>
+    <string name="kp_3ef901b7405f" formatted="false">Hòa do không đủ quân chiếu hết - thắng theo đồng hồ</string>
+    <string name="kp_1f217e401459" formatted="false">Hòa do không đủ quân chiếu hết.</string>
+    <string name="kp_65647004462e" formatted="false">Hòa do không đủ quân chiếu hết. %s thắng theo đồng hồ.</string>
+    <string name="kp_8abd5d59fe79" formatted="false">Hòa do hết nước đi - thắng theo đồng hồ</string>
+    <string name="kp_e7c73294f742" formatted="false">Hòa do hết nước đi.</string>
+    <string name="kp_0ee00fa48fcb" formatted="false">Hòa do hết nước đi. %s thắng theo đồng hồ.</string>
+    <string name="kp_c1f887545180" formatted="false">Hòa theo luật 50 nước - thắng theo đồng hồ</string>
+    <string name="kp_e0fa7fdfda5b" formatted="false">Hòa theo luật 50 nước.</string>
+    <string name="kp_e18608aaaa1f" formatted="false">Hòa theo luật 50 nước. %s thắng theo đồng hồ.</string>
+    <string name="kp_ca658ca2e441" formatted="false">Hòa do lặp lại ba lần - thắng theo đồng hồ</string>
+    <string name="kp_1bd0b8c9f833" formatted="false">Hòa do lặp lại thế cờ ba lần.</string>
+    <string name="kp_c328be341b0c" formatted="false">Hòa do lặp lại ba lần. %s thắng theo đồng hồ.</string>
+    <string name="kp_fdd69537f848" formatted="false">Hòa.</string>
+    <string name="kp_cbefc612d55f" formatted="false">Hòa. %s thắng theo đồng hồ.</string>
+    <string name="kp_1861bf6c95a3" formatted="false">Tám người chơi, loại trực tiếp: tứ kết, bán kết, chung kết. Phòng công khai đầy dần khi người chơi đến; phòng riêng tư qua mã.</string>
+    <string name="kp_d488ebb4b1db" formatted="false">Mọi người đã tham gia sẽ được giải phóng. Đây là một giao dịch.</string>
+    <string name="kp_4788947ec3fe" formatted="false">Ít nước nhất để thắng %s</string>
+    <string name="kp_672b22cc516e" formatted="false">Chung kết</string>
+    <string name="kp_355bcc577d71" formatted="false">Đã kết thúc</string>
+    <string name="kp_a8d435fecb0c" formatted="false">Ván 1v1 đã kết thúc</string>
+    <string name="kp_781b28d8c53d" formatted="false">Giải đấu đã kết thúc</string>
+    <string name="kp_08ab1ad685e3" formatted="false">Năm bot, cấp 1 đến 5, từ Kaspa Silver đến Yonatan Sompolinsky. Thắng một bot để mở khóa bot tiếp theo. Kết quả được ghi lên Kaspa.</string>
+    <string name="kp_03e3c2d3a084" formatted="false">Năm bot, cấp 1 đến 5. Thắng một bot để mở khóa bot tiếp theo. Kết quả mỗi ván được ghi lên Kaspa khi kết thúc.</string>
+    <string name="kp_e3e82846c325" formatted="false">Ván đấu</string>
+    <string name="kp_94114a40a64a" formatted="false">Số ván thắng và thua - gồm cả ván 1v1 lẫn ván trong giải đấu</string>
+    <string name="kp_7b1a1bfec003" formatted="false">Đến ván của bạn</string>
+    <string name="kp_78722784381b" formatted="false">Chơi cho vui. Đi nhanh và đôi khi để quân bị treo.</string>
+    <string name="kp_7f2a3bb304a4" formatted="false">Nếu rời đi, bạn sẽ đầu hàng ván này. %s đi tiếp và bạn bị loại khỏi giải đấu. Ván này được tính là thua trên bảng xếp hạng. Đầu hàng là một giao dịch.</string>
+    <string name="kp_e998db197859" formatted="false">Nếu rời đi, bạn sẽ đầu hàng ván này. %s thắng, và ván này được tính là thua trên bảng xếp hạng. Đầu hàng là một giao dịch.</string>
+    <string name="kp_a4362588018d" formatted="false">Nếu rời đi, bạn sẽ đầu hàng ván này. Ván đấu được tính là thua %s, và kết quả được ghi lên Kaspa trong một giao dịch.</string>
+    <string name="kp_03a2b6501787" formatted="false">Đang thi đấu</string>
+    <string name="kp_e24d4d212b7b" formatted="false">Đang thi đấu. Nhấn vào bất kỳ ván nào để xem trực tiếp.</string>
+    <string name="kp_b1cfe72fd271" formatted="false">Trung cấp</string>
+    <string name="kp_f63265478d76" formatted="false">Ván đấu được tính là thua %s, và kết quả được ghi lên Kaspa trong một giao dịch.</string>
+    <string name="kp_e0d73143de80" formatted="false">Tham gia</string>
+    <string name="kp_c8155c3c34dc" formatted="false">Tham gia (Phí: %s)</string>
+    <string name="kp_df7b41919cb2" formatted="false">Tham gia và bạn sẽ được ghép với người tham gia tiếp theo. Khi phòng đầy, ván đấu bắt đầu và phòng tiếp theo mở ra. Mỗi bên năm phút; mỗi nước đi là một giao dịch Kaspa (khoảng 0.0017 KAS mỗi nước). Các ván ở đây được tính vào bảng xếp hạng.</string>
+    <string name="kp_dacbf38d4e73" formatted="false">Tham gia bằng mã</string>
+    <string name="kp_f44c1e425996" formatted="false">Đang tham gia…</string>
+    <string name="kp_d9f369249799" formatted="false">Giữ lấy</string>
+    <string name="kp_bb76090ac54c" formatted="false">Tiếp tục chơi</string>
+    <string name="kp_9be1abba9272" formatted="false">Tiếp tục chờ</string>
+    <string name="kp_32bf913a5258" formatted="false">Biết cách đi của mọi quân và thích ăn quân miễn phí. Coi chừng những con tốt không được bảo vệ.</string>
+    <string name="kp_35b13a38f422" formatted="false">TRỰC TIẾP %s</string>
+    <string name="kp_0381247a6987" formatted="false">Bảng xếp hạng</string>
+    <string name="kp_7e3520a97331" formatted="false">Rời khỏi</string>
+    <string name="kp_963593386268" formatted="false">Vẫn rời đi</string>
+    <string name="kp_4bc79453df63" formatted="false">Rời ván đấu?</string>
+    <string name="kp_baf82f7117b6" formatted="false">Rời hàng chờ?</string>
+    <string name="kp_b7aa749e18cb" formatted="false">Rời đi nghĩa là bạn sẽ không còn tìm người chơi khác. Rời đi là một giao dịch; bạn có thể tham gia lại bất cứ lúc nào.</string>
+    <string name="kp_3016bac3196c" formatted="false">Đang rời…</string>
+    <string name="kp_ec7cc1838f39" formatted="false">Cấp %d</string>
+    <string name="kp_7780eacc49b8" formatted="false">Cấp %d trên 5</string>
+    <string name="kp_0e50ccfcd686" formatted="false">Cấp %d · %s</string>
+    <string name="kp_9f8465fad533" formatted="false">Cấp %d · %s · Bạn cầm quân Đen</string>
+    <string name="kp_fc9307e48365" formatted="false">Cấp %d · %s · Bạn cầm quân Trắng</string>
+    <string name="kp_6235bfaf9ecc" formatted="false">Đang trực tiếp</string>
+    <string name="kp_39687e0a700d" formatted="false">Đang tải phòng…</string>
+    <string name="kp_5daad3f809a8" formatted="false">Đang tải giải đấu từ đấu trường…</string>
+    <string name="kp_4d5e7c6d35ee" formatted="false">Đang tìm đối thủ</string>
+    <string name="kp_98ea2c12eb7c" formatted="false">Tính trước vài nước rồi mới đi. Chắc chắn và khó bị lừa.</string>
+    <string name="kp_0f9a484f1388" formatted="false">Thua</string>
+    <string name="kp_78f3842f0201" formatted="false">Kiện tướng</string>
+    <string name="kp_092664087974" formatted="false">Đã tìm thấy đối thủ!</string>
+    <string name="kp_a7814b5ec744" formatted="false">Nước %d · Đen đi</string>
+    <string name="kp_9fe5cb670a4c" formatted="false">Nước %d · Trắng đi</string>
+    <string name="kp_77fbed46e1be" formatted="false">Tiếp theo: vòng 1 với %s</string>
+    <string name="kp_a2dad9a4e89c" formatted="false">Tiếp theo: chung kết với %s</string>
+    <string name="kp_eceff125fbb4" formatted="false">Tiếp theo: ván với %s</string>
+    <string name="kp_1337e1141b11" formatted="false">Tiếp theo: bán kết với %s</string>
+    <string name="kp_8506e1612593" formatted="false">Hiện không có ván 1v1 nào đang diễn ra. Khi có ván bắt đầu, nó sẽ hiện ở đây để bạn xem.</string>
+    <string name="kp_3988da2d38ef" formatted="false">Chưa chơi với bot nào.</string>
+    <string name="kp_77ebbb8e3de5" formatted="false">Chưa có ván 1v1 nào kết thúc.</string>
+    <string name="kp_1597bcaeaaa1" formatted="false">Chưa có giải đấu nào kết thúc.</string>
+    <string name="kp_682c0ad47cbe" formatted="false">Không ai tham gia kịp. Bạn đã rời hàng chờ - hãy tham gia lại bất cứ lúc nào.</string>
+    <string name="kp_50385293d3d0" formatted="false">Không có giải đấu nào đang mở với mã đó. Mã gồm tám ký tự; giải đấu phải tồn tại và còn chỗ trống.</string>
+    <string name="kp_581a01e739ba" formatted="false">Hiện không có giải đấu nào đang diễn ra. Khi có giải bắt đầu, các ván của giải sẽ hiện ở đây để bạn xem.</string>
+    <string name="kp_2ee8ce15a9f7" formatted="false">Tháng này chưa ai đánh bại %s.</string>
+    <string name="kp_54460cd574b9" formatted="false">Chưa ai đánh bại %s.</string>
+    <string name="kp_4472179cd296" formatted="false">Chưa bị đánh bại</string>
+    <string name="kp_b9e09ae263fb" formatted="false">Chưa xác nhận</string>
+    <string name="kp_214bf807441e" formatted="false">Không đủ KAS trong Địa chỉ trò chuyện. Hãy nạp thêm rồi thử lại.</string>
+    <string name="kp_16ca44702a9b" formatted="false">Tập sự</string>
+    <string name="kp_fb58f3c56a8d" formatted="false">Do hết giờ</string>
+    <string name="kp_1cf2fc54ad9f" formatted="false">Trực tuyến, mỗi bên năm phút và mỗi nước đi là một giao dịch Kaspa. Ván với bot được ghi kết quả lên Kaspa khi kết thúc.</string>
+    <string name="kp_6dca824588f3" formatted="false">Chỗ trống</string>
+    <string name="kp_b84d3a372a18" formatted="false">Chơi với %s</string>
+    <string name="kp_0faa2e4de8b8" formatted="false">Đấu với bạn bè: tạo một ván 1v1 rồi chia sẻ mã. Ván 1v1 riêng tư cũng được tính vào bảng xếp hạng.</string>
+    <string name="kp_576766d387ec" formatted="false">Chơi lại</string>
+    <string name="kp_61441ace460e" formatted="false">Cầm quân</string>
+    <string name="kp_8ba176164906" formatted="false">Đấu với người tham gia tiếp theo, hoặc với bạn bè qua mã. Một ván, người thắng nhận điểm bảng xếp hạng.</string>
+    <string name="kp_e53407cfe1a5" formatted="false">Người chơi</string>
+    <string name="kp_9f33b8c73405" formatted="false">Người chơi (%d/%d)</string>
+    <string name="kp_237dfa0a21c8" formatted="false">Riêng tư</string>
+    <string name="kp_f61dccc2dba9" formatted="false">1v1 riêng tư</string>
+    <string name="kp_ea951f3a34eb" formatted="false">Giải đấu riêng tư</string>
+    <string name="kp_79b0f9805c68" formatted="false">Phong cấp thành</string>
+    <string name="kp_dc5eb704bbca" formatted="false">Công khai</string>
+    <string name="kp_37ea9a7673b4" formatted="false">1v1 công khai</string>
+    <string name="kp_8b2cb0910a17" formatted="false">1v1 công khai #%d</string>
+    <string name="kp_236760772b5c" formatted="false">Giải đấu công khai</string>
+    <string name="kp_b4d6cee9742f" formatted="false">Giải đấu công khai #%d</string>
+    <string name="kp_58d888c08aa5" formatted="false">Ngẫu nhiên</string>
+    <string name="kp_73ba76c46a4c" formatted="false">Xếp hạng theo số nước thắng ít nhất.</string>
+    <string name="kp_a3d558838b81" formatted="false">Đầu hàng</string>
+    <string name="kp_868d45f552a8" formatted="false">Đầu hàng và rời đi</string>
+    <string name="kp_a12f7f95331e" formatted="false">Đầu hàng ván này?</string>
+    <string name="kp_65d7b143ae0f" formatted="false">Đã ghi kết quả lên Kaspa</string>
+    <string name="kp_9f5cd8a2e880" formatted="false">Thử lại</string>
+    <string name="kp_923287d2eeda" formatted="false">Ghi lại kết quả</string>
+    <string name="kp_f7648d383499" formatted="false">Vòng 1</string>
+    <string name="kp_d7418ba2e352" formatted="false">Hiện không kiểm tra được chỗ trống</string>
+    <string name="kp_33295d1667f4" formatted="false">Xem bàn cờ</string>
+    <string name="kp_af1cfadd9704" formatted="false">Hạt giống %d</string>
+    <string name="kp_7d79eec3965c" formatted="false">Bán kết</string>
+    <string name="kp_3abe921a63aa" formatted="false">Bán kết</string>
+    <string name="kp_6f32706309e0" formatted="false">Đang gửi nước đi…</string>
+    <string name="kp_9cb2e112972e" formatted="false">Đã gửi, nhưng Kaspa chưa xác nhận.</string>
+    <string name="kp_09ca55ca52d2" formatted="false">Chia sẻ</string>
+    <string name="kp_d042790fe991" formatted="false">Chia sẻ mã này</string>
+    <string name="kp_1f3254d6ce59" formatted="false">Chia sẻ lên KaPost</string>
+    <string name="kp_4401b9c3edce" formatted="false">Có người đã thắng %s trong %d nước. Bạn có làm được với ít nước hơn không?</string>
+    <string name="kp_c923aafae8bc" formatted="false">Có người thách bạn đánh bại %s.</string>
+    <string name="kp_9a3ea0598e7f" formatted="false">Đã có lỗi xảy ra. Vui lòng thử lại.</string>
+    <string name="kp_8aa38f374323" formatted="false">Đang ghi kết quả lên Kaspa…</string>
+    <string name="kp_6959b5355760" formatted="false">Đang ghi kết quả…</string>
+    <string name="kp_ae768f766f75" formatted="false">Ở lại</string>
+    <string name="kp_f300737844cc" formatted="false">Vẫn đang tải các phòng - hãy thử lại sau giây lát.</string>
+    <string name="kp_fc55363a83bc" formatted="false">Đang đưa cả hai bạn vào bàn cờ</string>
+    <string name="kp_ad30c2ff1d6e" formatted="false">Đang đưa mọi người vào bàn cờ của mình</string>
+    <string name="kp_293d8f7d8030" formatted="false">Đang lấy chỗ cho bạn - đây là một giao dịch nên mất vài giây.</string>
+    <string name="kp_8ad85cccbb0e" formatted="false">Nhấn để quay lại</string>
+    <string name="kp_0e4268b5d759" formatted="false">Mã người tạo không đúng.</string>
+    <string name="kp_617a81cfb251" formatted="false">Thao tác chưa tới được mạng. Hãy thử lại.</string>
+    <string name="kp_55720cd06fc4" formatted="false">Phòng đó đã đầy trước - đang tìm phòng tiếp theo cho bạn.</string>
+    <string name="kp_d8501167e501" formatted="false">Phòng đó đã đầy trước. Nhấn Tham gia để thử phòng tiếp theo.</string>
+    <string name="kp_9e663d4025b0" formatted="false">Giải đấu đó đã bắt đầu.</string>
+    <string name="kp_1ee44a0bf66b" formatted="false">Không kết nối được máy chủ cờ vua và mạng chưa xác nhận việc này. Hãy thử lại sau giây lát.</string>
+    <string name="kp_0e3db8107f4d" formatted="false">Không kết nối được máy chủ cờ vua nên không thể xác nhận các phòng đang mở. Hãy thử lại khi máy chủ hoạt động trở lại.</string>
+    <string name="kp_3e86d5e865a8" formatted="false">Không kết nối được máy chủ cờ vua nên không thể tra mã đó. Hãy thử lại khi máy chủ hoạt động trở lại.</string>
+    <string name="kp_374e3b271476" formatted="false">Mã tám ký tự mà người tạo đã chia sẻ. Tham gia là một giao dịch (phí: %s).</string>
+    <string name="kp_668f15ee8377" formatted="false">Bản thân ván cờ miễn phí. Khi kết thúc, dù thắng hay thua, kết quả được ghi lên Kaspa: một giao dịch từ ví của bạn, khoảng %s.</string>
+    <string name="kp_056a66088f6c" formatted="false">Bản thân ván cờ miễn phí. Khi kết thúc, dù thắng hay thua, kết quả được ghi lên Kaspa: một giao dịch từ ví của bạn, một khoản phí nhỏ.</string>
+    <string name="kp_a94070f3a397" formatted="false">Mạng vẫn đang xác nhận lần gửi trước của bạn. Vui lòng thử lại sau vài giây.</string>
+    <string name="kp_5021101f57d6" formatted="false">Kết quả được ghi lên Kaspa khi ván đấu kết thúc</string>
+    <string name="kp_fb4fdd00f1ac" formatted="false">Ghi kết quả thất bại. Nếu bạn rời đi bây giờ, kết quả sẽ không thể gửi lại và chiến thắng này sẽ không được tính trên bảng xếp hạng.</string>
+    <string name="kp_2d72f92d9b82" formatted="false">Kết quả có thể đã được ghi</string>
+    <string name="kp_30a77c98dc8a" formatted="false">Giải đấu tự bắt đầu khi đủ cả tám chỗ.</string>
+    <string name="kp_693f8a669f1e" formatted="false">Lượt đối thủ</string>
+    <string name="kp_3dd518e63c49" formatted="false">Đối thủ</string>
+    <string name="kp_22a02413aebd" formatted="false">Luôn có một phòng công khai chờ người chơi. Khi đầy, giải bắt đầu và phòng tiếp theo mở ra. Tám người chơi, loại trực tiếp, mỗi bên năm phút. Mỗi nước đi là một giao dịch Kaspa (khoảng 0.0017 KAS mỗi nước).</string>
+    <string name="kp_6d45876eef92" formatted="false">Suy nghĩ sâu và nhìn xa. Thắng được đối thủ này là bạn đã leo hết cả thang.</string>
+    <string name="kp_1085f4e7c41f" formatted="false">Ván này được chơi trên một tài khoản khác. Hãy đăng nhập vào tài khoản đó để ghi kết quả.</string>
+    <string name="kp_9fa87800a939" formatted="false">Giao dịch có thể đã đi, nhưng mạng chưa xác nhận. Hãy kiểm tra số dư trước khi gửi lại.</string>
+    <string name="kp_1b4785331db3" formatted="false">Tháng này</string>
+    <string name="kp_733696c12e3e" formatted="false">Hết giờ. %s thắng do đối thủ hết giờ.</string>
+    <string name="kp_5a2e22ac873e" formatted="false">Chưa xác định</string>
+    <string name="kp_a2c1d828e2d3" formatted="false">Giải đấu</string>
+    <string name="kp_25670f61ff36" formatted="false">Giải đấu đã đủ người!</string>
+    <string name="kp_cd04af2db6f1" formatted="false">Bảng xếp hạng giải đấu</string>
+    <string name="kp_fee20df1963e" formatted="false">Giải đấu</string>
+    <string name="kp_981d375a0f37" formatted="false">Số giải đấu thắng và thua</string>
+    <string name="kp_e71f1539a41b" formatted="false">Chiến thắng</string>
+    <string name="kp_f3ec99569fbf" formatted="false">Xem trong trình khám phá</string>
+    <string name="kp_33d30632848d" formatted="false">Đang chờ</string>
+    <string name="kp_a41118158853" formatted="false">Đang chờ thêm %d người chơi. Giải tự bắt đầu khi người thứ tám tham gia.</string>
+    <string name="kp_442da9df5c77" formatted="false">Đang chờ thêm 1 người chơi. Giải tự bắt đầu khi người thứ tám tham gia.</string>
+    <string name="kp_c26c33fa1c5a" formatted="false">Đang chờ người chơi</string>
+    <string name="kp_0e6a21e02626" formatted="false">Đang chờ máy chủ cờ vua</string>
+    <string name="kp_fbc3f16e4c19" formatted="false">Đang chờ đối thủ. Ván đấu tự bắt đầu khi họ tham gia.</string>
+    <string name="kp_d91ebf5887cf" formatted="false">Xem</string>
+    <string name="kp_7ef5b5821c01" formatted="false">Xem miễn phí - không gửi gì cả. Chỉ hai người chơi mới đi được.</string>
+    <string name="kp_37619fc13053" formatted="false">Trắng</string>
+    <string name="kp_c6ff9b47bd9e" formatted="false">Trắng đi</string>
+    <string name="kp_79bcb3dd18f9" formatted="false">Tỷ lệ thắng</string>
+    <string name="kp_ffb136c1afe9" formatted="false">Thắng TK%d</string>
+    <string name="kp_3fe7ae15e42c" formatted="false">Thắng BK%d</string>
+    <string name="kp_b6c015d12e1b" formatted="false">Thắng</string>
+    <string name="kp_b273fb287708" formatted="false">Thắng</string>
+    <string name="kp_ddf4e3735470" formatted="false">%s thắng</string>
+    <string name="kp_905cb326c779" formatted="false">Bạn</string>
+    <string name="kp_70142233d6f3" formatted="false">Bạn đã bị loại khỏi giải đấu này. Hãy xem phần còn lại của nhánh đấu.</string>
+    <string name="kp_07025e915e94" formatted="false">Bạn đã bị loại khỏi giải đấu này. Bạn có thể xem phần còn lại của nhánh đấu.</string>
+    <string name="kp_188b806432ca" formatted="false">Bạn nhận được một mã để chia sẻ với người bạn muốn đấu. Ván đấu bắt đầu khi họ tham gia. Tạo ván là một giao dịch.</string>
+    <string name="kp_e7c04dcae100" formatted="false">Bạn vào vòng tiếp theo. Ván kế tiếp sẽ tự mở khi xác định được đối thủ.</string>
+    <string name="kp_5279ac5901b8" formatted="false">Bạn đã thua</string>
+    <string name="kp_db93b3d19f74" formatted="false">Bạn đi trước.</string>
+    <string name="kp_7ec46c42f060" formatted="false">Bạn đã đầu hàng. %s thắng.</string>
+    <string name="kp_85b0b68af5f2" formatted="false">Bạn chiếm chỗ đầu tiên và nhận một mã để chia sẻ. Giải bắt đầu khi đủ tám người chơi tham gia. Tạo giải là một giao dịch.</string>
+    <string name="kp_3c2dfe0e1289" formatted="false">Bạn thắng bằng chiếu hết sau %d nước.</string>
+    <string name="kp_8dfe694ea61b" formatted="false">Bạn thắng bằng chiếu hết sau 1 nước.</string>
+    <string name="kp_8c75d5f7de98" formatted="false">Bạn đã thắng vòng 1. Đang chờ đối thủ tiếp theo - trong lúc đó hãy xem ván còn lại.</string>
+    <string name="kp_795115417df0" formatted="false">Bạn đã thắng trận chung kết. Đang chờ đối thủ tiếp theo - trong lúc đó hãy xem ván còn lại.</string>
+    <string name="kp_2987342bd41b" formatted="false">Bạn đã thắng ván này. Đang chờ đối thủ tiếp theo - trong lúc đó hãy xem ván còn lại.</string>
+    <string name="kp_ba7e2d06a69c" formatted="false">Bạn đã thắng trận bán kết. Đang chờ đối thủ tiếp theo - trong lúc đó hãy xem ván còn lại.</string>
+    <string name="kp_dc9807723538" formatted="false">Bạn đã vô địch giải đấu.</string>
+    <string name="kp_e3a4b01eaca8" formatted="false">Bạn đã thắng!</string>
+    <string name="kp_2bd203ba381e" formatted="false">Bạn đang chờ trong %s.</string>
+    <string name="kp_a91633acc070" formatted="false">Bạn đã vào. Đang chờ thêm %d người…</string>
+    <string name="kp_ad79fa22e5b2" formatted="false">Bạn đã vào. Đang chờ thêm 1 người…</string>
+    <string name="kp_cfe84965f638" formatted="false">Bạn sẽ được ghép với người tham gia tiếp theo. Ván đấu tự bắt đầu.</string>
+    <string name="kp_d80ca7163461" formatted="false">Bạn đang chơi trong %s</string>
+    <string name="kp_24bf6785a61b" formatted="false">Bạn vẫn đang chơi trong %s.</string>
+    <string name="kp_eec7f86a8bb7" formatted="false">Bạn đang chờ trong %s</string>
+    <string name="kp_61e7335f3c19" formatted="false">Thành tích 1v1 của bạn</string>
+    <string name="kp_48fd80af85de" formatted="false">Đồng hồ của bạn đã hết giờ trước khi nước đi kịp gửi.</string>
+    <string name="kp_a8bc9c75a936" formatted="false">Ván của bạn bắt đầu sau</string>
+    <string name="kp_32ec1dbd797a" formatted="false">Yêu cầu tham gia của bạn chưa tới được mạng. Hãy tham gia lại bất cứ lúc nào.</string>
+    <string name="kp_44470e508a5d" formatted="false">Lượt của bạn</string>
+    <string name="kp_d5b2c846e810" formatted="false">Nước đi của bạn không được tính. Hãy xem bàn cờ.</string>
+    <string name="kp_5277d781ccc7" formatted="false">Nước đi của bạn chưa tới được mạng. Hãy đi lại.</string>
+    <string name="kp_63bbbf0226f5" formatted="false">Thành tích của bạn</string>
+    <string name="kp_4e15ba26e54d" formatted="false">Chỗ của bạn được giữ trong %s. Nếu đến lúc đó phòng chưa đầy, bạn sẽ rời hàng chờ.</string>
+    <string name="kp_8774b9393565" formatted="false">Chỗ của bạn được giữ trong thời gian này. Nếu không ai tham gia kịp, bạn sẽ rời hàng chờ.</string>
+    <string name="kp_94ad25364602" formatted="false">Thành tích giải đấu của bạn</string>
+    <string name="kp_114f3f6a8251" formatted="false">Chiến thắng của bạn chưa được ghi lên Kaspa</string>
+    <string name="kp_f957097d7a22" formatted="false">đã kết thúc</string>
+    <string name="kp_691a77cd21a3" formatted="false">vs</string>
+    <string name="kp_aa93adb4f65c" formatted="false">Tôi đã thắng %s (Cấp %d) trong %d nước trên K. Bạn có làm được với ít nước hơn không?</string>
+    <string name="kp_f81826d956cc" formatted="false">Tham gia giải cờ vua của tôi trên K: mở KaPlay &gt; Cờ vua &gt; Giải đấu &gt; Tham gia bằng mã, rồi nhập %s.</string>
+    <string name="kp_c2ecefef54c6" formatted="false">Chơi cờ vua với tôi trên K: mở KaPlay &gt; Cờ vua &gt; 1v1 &gt; Tham gia bằng mã, rồi nhập %s.</string>
+    <string name="kp_f4fa709cb963" formatted="false">Tứ kết</string>
+    <string name="kp_3ce0ac6e9413" formatted="false">Kết quả chưa được gửi.</string>
+    <string name="kaplay_leaderboard_all_time">Mọi thời đại</string>
+    <string name="kaplay_leaderboard_counted_from">Tính từ %1$s.</string>
+    <string name="kaplay_leaderboard_period">Khoảng thời gian bảng xếp hạng</string>
+    <string name="kaplay_leaderboard_resets_monthly">Đặt lại vào ngày 1 mỗi tháng (UTC).</string>
+    <string name="kaplay_leaderboard_this_month">Tháng này</string>
+    <string name="kaplay_no_finished_duels">Chưa có ván 1v1 nào kết thúc.</string>
+    <string name="kaplay_no_finished_duels_this_month">Chưa có ván 1v1 nào kết thúc trong tháng này.</string>
+    <string name="kaplay_no_finished_tournaments">Chưa có giải đấu nào kết thúc.</string>
+    <string name="kaplay_no_finished_tournaments_this_month">Chưa có giải đấu nào kết thúc trong tháng này.</string>
+    <string name="kaplay_tab_leaderboard">Bảng xếp hạng</string>
+</resources>

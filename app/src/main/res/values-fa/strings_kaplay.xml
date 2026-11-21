@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's chess sentences, looked up by their English text (util/KaPlayText.kt: `kp_` and 12
+     hex of the SHA-1 of the English). Translations from KaPlay Android's strings_app_text.xml and,
+     for the sentences new in KaChat, iOS 148a5331's Localizable.strings. Generated. -->
+<resources>
+    <string name="kp_7e46be469deb" formatted="false">رتبه %d در جدول 1v1</string>
+    <string name="kp_cba1ee4eec72" formatted="false">رتبه %d در جدول تورنمنت</string>
+    <string name="kp_3401831926d1" formatted="false">%d تساوی</string>
+    <string name="kp_f769c12fc2ee" formatted="false">%d باخت</string>
+    <string name="kp_d9e1beae2f39" formatted="false">%d برد</string>
+    <string name="kp_55fc776de141" formatted="false">%d برد  %d باخت</string>
+    <string name="kp_d8aa573c0e61" formatted="false">%d حرکت</string>
+    <string name="kp_fbeb1207b441" formatted="false">%d از %d بازیکن</string>
+    <string name="kp_b70e7251ba0d" formatted="false">%d از %d بازیکن در انتظار</string>
+    <string name="kp_6dac15cf1ed7" formatted="false">%d از %d بازیکن · کد %s</string>
+    <string name="kp_ba09ba042e31" formatted="false">%d جای خالی مانده</string>
+    <string name="kp_d4cd664ac02d" formatted="false">%1$s در %3$d حرکت %2$s را شکست داد. می‌توانید با حرکت‌های کمتری این کار را بکنید؟</string>
+    <string name="kp_35f8f501300f" formatted="false">%s شما را به شکست دادن %s دعوت می‌کند.</string>
+    <string name="kp_8a3914693bee" formatted="false">%s صعود می‌کند و شما از تورنمنت حذف می‌شوید. در جدول امتیازات یک باخت حساب می‌شود. تسلیم شدن یک تراکنش است.</string>
+    <string name="kp_297da93b20fb" formatted="false">%s هنوز قفل است: برای رسیدن به آن از نردبان بالا بروید.</string>
+    <string name="kp_c7642c6d04be" formatted="false">%s در حال فکر کردن است…</string>
+    <string name="kp_00161fefc871" formatted="false">%s باز شد!</string>
+    <string name="kp_7ab092285767" formatted="false">%s اول حرکت می‌کند.</string>
+    <string name="kp_207e56e21618" formatted="false">نوبت %s</string>
+    <string name="kp_4e56d26a3870" formatted="false">%s در برابر %s</string>
+    <string name="kp_fbb8239c09ba" formatted="false">%s می‌برد و در جدول امتیازات یک باخت حساب می‌شود. تسلیم شدن یک تراکنش است.</string>
+    <string name="kp_a074e492574e" formatted="false">%s برد</string>
+    <string name="kp_03a71913fd6b" formatted="false">%s با کیش و مات برد</string>
+    <string name="kp_e2bdeaa4f9e5" formatted="false">%s با کیش و مات برد.</string>
+    <string name="kp_e510ea9dedf3" formatted="false">%s با تسلیم حریف برد</string>
+    <string name="kp_33cd4606c8c7" formatted="false">%s با تسلیم حریف برد.</string>
+    <string name="kp_405c5afa1901" formatted="false">%s پس از تساوی، با زمان ساعت برد</string>
+    <string name="kp_4e683890d75e" formatted="false">%s پس از تساوی به دلیل کمبود مهره، با زمان ساعت برد</string>
+    <string name="kp_f2d9cffd2918" formatted="false">%s پس از تساوی با پات، با زمان ساعت برد</string>
+    <string name="kp_3dae94d319ae" formatted="false">%s پس از تساوی با قانون ۵۰ حرکت، با زمان ساعت برد</string>
+    <string name="kp_26b3a1b77b3b" formatted="false">%s پس از تساوی با تکرار سه‌باره، با زمان ساعت برد</string>
+    <string name="kp_49680f535fab" formatted="false">%s با اتمام وقت برد</string>
+    <string name="kp_e27359cb1d1d" formatted="false">%s با اتمام وقت برد.</string>
+    <string name="kp_7fb322c0aa2a" formatted="false">%s تورنمنت را برد</string>
+    <string name="kp_683e17380d8a" formatted="false">۱ از %d بازیکن</string>
+    <string name="kp_a3a1e853bd57" formatted="false">۱ از %d بازیکن در انتظار</string>
+    <string name="kp_dcd9d9468141" formatted="false">۱ از %d بازیکن · کد %s</string>
+    <string name="kp_f6dec9c77f35" formatted="false">۱ جای خالی مانده</string>
+    <string name="kp_d6db37efe259" formatted="false">1v1</string>
+    <string name="kp_1644dc818c09" formatted="false">بازی‌های 1v1</string>
+    <string name="kp_7c71818a1ae0" formatted="false">جدول امتیازات 1v1</string>
+    <string name="kp_d8706f214713" formatted="false">1v1، تورنمنت و پنج ربات. حرکت‌های آنلاین و نتایج بازی با ربات‌ها روی Kaspa ثبت می‌شوند.</string>
+    <string name="kp_ba9cce8319d7" formatted="false">تورنمنت خصوصی برای دوستان است: سازنده کد هشت‌نویسه‌ای آن را به اشتراک می‌گذارد. ساختن آن به کد سازنده نیاز دارد.</string>
+    <string name="kp_a733b809d2f1" formatted="false">فعال</string>
+    <string name="kp_d70f93df5e8f" formatted="false">آدرس</string>
+    <string name="kp_4d064726954a" formatted="false">پیشرفته</string>
+    <string name="kp_dbad49d89123" formatted="false">همه زمان‌ها</string>
+    <string name="kp_b52b36b7269f" formatted="false">بازگشت</string>
+    <string name="kp_c3065156b217" formatted="false">برای باز شدن، %s را شکست دهید</string>
+    <string name="kp_60575a6ebba9" formatted="false">مبتدی</string>
+    <string name="kp_489d32ce7dd9" formatted="false">بهترین: %d حرکت</string>
+    <string name="kp_b406fb57b29f" formatted="false">سیاه</string>
+    <string name="kp_b5807c6df986" formatted="false">نوبت سیاه</string>
+    <string name="kp_4ca88ea465a9" formatted="false">ربات‌ها</string>
+    <string name="kp_e42a1e70b400" formatted="false">جدول</string>
+    <string name="kp_75e08341b41d" formatted="false">جدول · برای تماشا روی یک بازی بزنید</string>
+    <string name="kp_cf76a9fe16a7" formatted="false">با تسلیم</string>
+    <string name="kp_2b246e0ff5ca" formatted="false">با دقت محاسبه می‌کند و اشتباه‌ها را تنبیه می‌کند. با برنامه بیایید.</string>
+    <string name="kp_77dfd2135f4d" formatted="false">لغو</string>
+    <string name="kp_5a2fc967d105" formatted="false">این تورنمنت لغو شود؟</string>
+    <string name="kp_1fe710030fe9" formatted="false">لغو تورنمنت</string>
+    <string name="kp_5dc29b482d76" formatted="false">سازنده لغو کرد.</string>
+    <string name="kp_7881bf71d2de" formatted="false">قهرمان</string>
+    <string name="kp_f3dffbf21ed5" formatted="false">کیش. نوبت شماست.</string>
+    <string name="kp_933b750898fd" formatted="false">کیش و مات</string>
+    <string name="kp_3226c18271e7" formatted="false">کیش و مات. %s برد.</string>
+    <string name="kp_f95715a82ba2" formatted="false">شطرنج</string>
+    <string name="kp_645b1b39f542" formatted="false">سرور شطرنج در دسترس نیست، آنچه داریم نمایش داده می‌شود. بازی‌های شما از طریق شبکه ادامه دارند. وقتی برگشت، می‌توانید دوباره به اتاق‌های عمومی بپیوندید.</string>
+    <string name="kp_b03bf0e29f1c" formatted="false">سرور شطرنج در دسترس نیست. حرکت‌ها از شبکه می‌آیند و ممکن است صفحه کمی عقب باشد.</string>
+    <string name="kp_ee9c98ac836b" formatted="false">سرور شطرنج در دسترس نیست. آنچه روی این گوشی هست نمایش داده می‌شود که ممکن است کمتر از جدول کامل باشد.</string>
+    <string name="kp_cf9797eede60" formatted="false">سرور شطرنج در دسترس نیست. آنچه روی این گوشی هست نمایش داده می‌شود.</string>
+    <string name="kp_9cba814a7f57" formatted="false">سرور شطرنج در دسترس نیست. شبکه برای یافتن بازیکنان بررسی می‌شود، پس ممکن است کسی که هنگام بسته بودن برنامه پیوسته نمایش داده نشود.</string>
+    <string name="kp_2b26c543ead5" formatted="false">بازی خود را انتخاب کنید</string>
+    <string name="kp_c47532edb2d7" formatted="false">دریافت برد</string>
+    <string name="kp_25b55e8298c7" formatted="false">در حال دریافت…</string>
+    <string name="kp_a546440f3f66" formatted="false">از نردبان بالا بروید</string>
+    <string name="kp_adac69379a62" formatted="false">کد</string>
+    <string name="kp_d29d9fee5279" formatted="false">کد: %s</string>
+    <string name="kp_8e3df45a49db" formatted="false">کپی شد</string>
+    <string name="kp_af74f7c5362a" formatted="false">کپی</string>
+    <string name="kp_6d8d79e75952" formatted="false">ثبت نتیجه روی Kaspa ممکن نشد</string>
+    <string name="kp_6e157c5da441" formatted="false">ایجاد</string>
+    <string name="kp_1bf04f16edb7" formatted="false">ساخت 1v1 خصوصی</string>
+    <string name="kp_7e92ffa83dfa" formatted="false">ساخت تورنمنت خصوصی</string>
+    <string name="kp_94d7d8ee473f" formatted="false">در حال ساخت…</string>
+    <string name="kp_2775f5da8563" formatted="false">کد سازنده</string>
+    <string name="kp_34660a5de9ae" formatted="false">شکست</string>
+    <string name="kp_e9b450d14bc2" formatted="false">انجام شد</string>
+    <string name="kp_bfa50c7a3838" formatted="false">تساوی</string>
+    <string name="kp_9af70e71546d" formatted="false">تساوی - برد با زمان ساعت</string>
+    <string name="kp_3ef901b7405f" formatted="false">تساوی به دلیل کمبود مهره - برد با زمان ساعت</string>
+    <string name="kp_1f217e401459" formatted="false">تساوی به دلیل کمبود مهره.</string>
+    <string name="kp_65647004462e" formatted="false">تساوی به دلیل کمبود مهره. %s با زمان ساعت برد.</string>
+    <string name="kp_8abd5d59fe79" formatted="false">تساوی با پات - برد با زمان ساعت</string>
+    <string name="kp_e7c73294f742" formatted="false">تساوی با پات.</string>
+    <string name="kp_0ee00fa48fcb" formatted="false">تساوی با پات. %s با زمان ساعت برد.</string>
+    <string name="kp_c1f887545180" formatted="false">تساوی با قانون ۵۰ حرکت - برد با زمان ساعت</string>
+    <string name="kp_e0fa7fdfda5b" formatted="false">تساوی با قانون ۵۰ حرکت.</string>
+    <string name="kp_e18608aaaa1f" formatted="false">تساوی با قانون ۵۰ حرکت. %s با زمان ساعت برد.</string>
+    <string name="kp_ca658ca2e441" formatted="false">تساوی با تکرار سه‌باره - برد با زمان ساعت</string>
+    <string name="kp_1bd0b8c9f833" formatted="false">تساوی با تکرار سه‌باره.</string>
+    <string name="kp_c328be341b0c" formatted="false">تساوی با تکرار سه‌باره. %s با زمان ساعت برد.</string>
+    <string name="kp_fdd69537f848" formatted="false">تساوی.</string>
+    <string name="kp_cbefc612d55f" formatted="false">تساوی. %s با زمان ساعت برد.</string>
+    <string name="kp_1861bf6c95a3" formatted="false">هشت بازیکن، حذفی: یک‌چهارم نهایی، نیمه‌نهایی، فینال. اتاق‌های عمومی با آمدن بازیکنان پر می‌شوند؛ خصوصی‌ها با کد.</string>
+    <string name="kp_d488ebb4b1db" formatted="false">همه کسانی که پیوسته‌اند آزاد می‌شوند. این یک تراکنش است.</string>
+    <string name="kp_4788947ec3fe" formatted="false">کمترین حرکت برای شکست %s</string>
+    <string name="kp_672b22cc516e" formatted="false">فینال</string>
+    <string name="kp_355bcc577d71" formatted="false">تمام شد</string>
+    <string name="kp_a8d435fecb0c" formatted="false">بازی‌های 1v1 تمام‌شده</string>
+    <string name="kp_781b28d8c53d" formatted="false">تورنمنت‌های تمام‌شده</string>
+    <string name="kp_08ab1ad685e3" formatted="false">پنج ربات، سطح ۱ تا ۵، از Kaspa Silver تا Yonatan Sompolinsky. یکی را شکست دهید تا بعدی باز شود. نتیجه روی Kaspa ثبت می‌شود.</string>
+    <string name="kp_03e3c2d3a084" formatted="false">پنج ربات، سطح ۱ تا ۵. یکی را شکست دهید تا بعدی باز شود. نتیجه هر بازی در پایان روی Kaspa ثبت می‌شود.</string>
+    <string name="kp_e3e82846c325" formatted="false">بازی</string>
+    <string name="kp_94114a40a64a" formatted="false">بازی‌های برده و باخته - هم 1v1 و هم بازی‌های تورنمنت</string>
+    <string name="kp_7b1a1bfec003" formatted="false">رفتن به بازی شما</string>
+    <string name="kp_78722784381b" formatted="false">برای سرگرمی بازی می‌کند. سریع حرکت می‌کند و گاهی مهره‌ای را بی‌دفاع رها می‌کند.</string>
+    <string name="kp_7f2a3bb304a4" formatted="false">اگر خارج شوید، در بازی تسلیم می‌شوید. %s صعود می‌کند و شما از تورنمنت حذف می‌شوید. در جدول امتیازات یک باخت حساب می‌شود. تسلیم شدن یک تراکنش است.</string>
+    <string name="kp_e998db197859" formatted="false">اگر خارج شوید، در بازی تسلیم می‌شوید. %s می‌برد و در جدول امتیازات یک باخت حساب می‌شود. تسلیم شدن یک تراکنش است.</string>
+    <string name="kp_a4362588018d" formatted="false">اگر خارج شوید، در بازی تسلیم می‌شوید. این یک باخت مقابل %s حساب می‌شود و نتیجه در یک تراکنش روی Kaspa ثبت می‌شود.</string>
+    <string name="kp_03a2b6501787" formatted="false">در جریان</string>
+    <string name="kp_e24d4d212b7b" formatted="false">در جریان. برای تماشای زنده روی هر بازی بزنید.</string>
+    <string name="kp_b1cfe72fd271" formatted="false">متوسط</string>
+    <string name="kp_f63265478d76" formatted="false">این یک باخت مقابل %s حساب می‌شود و نتیجه در یک تراکنش روی Kaspa ثبت می‌شود.</string>
+    <string name="kp_e0d73143de80" formatted="false">پیوستن</string>
+    <string name="kp_c8155c3c34dc" formatted="false">پیوستن (کارمزد: %s)</string>
+    <string name="kp_df7b41919cb2" formatted="false">بپیوندید تا با نفر بعدی که می‌پیوندد جفت شوید. وقتی اتاق پر شود، بازی شروع می‌شود و اتاق بعدی باز می‌شود. پنج دقیقه برای هر طرف؛ هر حرکت یک تراکنش Kaspa است (هر کدام حدود 0.0017 KAS). بازی‌های اینجا در جدول امتیازات حساب می‌شوند.</string>
+    <string name="kp_dacbf38d4e73" formatted="false">پیوستن با کد</string>
+    <string name="kp_f44c1e425996" formatted="false">در حال پیوستن…</string>
+    <string name="kp_d9f369249799" formatted="false">نگهش دارید</string>
+    <string name="kp_bb76090ac54c" formatted="false">ادامه بازی</string>
+    <string name="kp_9be1abba9272" formatted="false">ادامه انتظار</string>
+    <string name="kp_32bf913a5258" formatted="false">حرکت همه مهره‌ها را بلد است و عاشق گرفتن مهره‌های مفت است. مراقب پیاده‌های بی‌دفاع خود باشید.</string>
+    <string name="kp_35b13a38f422" formatted="false">زنده %s</string>
+    <string name="kp_0381247a6987" formatted="false">جدول امتیازات</string>
+    <string name="kp_7e3520a97331" formatted="false">ترک کردن</string>
+    <string name="kp_963593386268" formatted="false">به‌هرحال خروج</string>
+    <string name="kp_4bc79453df63" formatted="false">از بازی خارج می‌شوید؟</string>
+    <string name="kp_baf82f7117b6" formatted="false">از صف خارج می‌شوید؟</string>
+    <string name="kp_b7aa749e18cb" formatted="false">خروج یعنی دیگر به دنبال بازیکن دیگری نخواهید بود. خروج یک تراکنش است؛ هر زمان می‌توانید دوباره بپیوندید.</string>
+    <string name="kp_3016bac3196c" formatted="false">در حال خروج…</string>
+    <string name="kp_ec7cc1838f39" formatted="false">سطح %d</string>
+    <string name="kp_7780eacc49b8" formatted="false">سطح %d از ۵</string>
+    <string name="kp_0e50ccfcd686" formatted="false">سطح %d · %s</string>
+    <string name="kp_9f8465fad533" formatted="false">سطح %d · %s · شما با سیاه بازی می‌کنید</string>
+    <string name="kp_fc9307e48365" formatted="false">سطح %d · %s · شما با سفید بازی می‌کنید</string>
+    <string name="kp_6235bfaf9ecc" formatted="false">زنده</string>
+    <string name="kp_39687e0a700d" formatted="false">در حال بارگیری اتاق‌ها…</string>
+    <string name="kp_5daad3f809a8" formatted="false">در حال بارگیری تورنمنت از میدان…</string>
+    <string name="kp_4d5e7c6d35ee" formatted="false">در جستجوی حریف</string>
+    <string name="kp_98ea2c12eb7c" formatted="false">پیش از تصمیم، چند حرکت جلوتر را می‌بیند. باثبات است و به‌سختی فریب می‌خورد.</string>
+    <string name="kp_0f9a484f1388" formatted="false">باخت‌ها</string>
+    <string name="kp_78f3842f0201" formatted="false">استاد</string>
+    <string name="kp_092664087974" formatted="false">حریف پیدا شد!</string>
+    <string name="kp_a7814b5ec744" formatted="false">حرکت %d · نوبت سیاه</string>
+    <string name="kp_9fe5cb670a4c" formatted="false">حرکت %d · نوبت سفید</string>
+    <string name="kp_77fbed46e1be" formatted="false">بعدی: دور ۱ با %s</string>
+    <string name="kp_a2dad9a4e89c" formatted="false">بعدی: فینال با %s</string>
+    <string name="kp_eceff125fbb4" formatted="false">بعدی: بازی با %s</string>
+    <string name="kp_1337e1141b11" formatted="false">بعدی: نیمه‌نهایی با %s</string>
+    <string name="kp_8506e1612593" formatted="false">الان هیچ بازی 1v1 در جریان نیست. وقتی یکی شروع شود، برای تماشا اینجا نمایش داده می‌شود.</string>
+    <string name="kp_3988da2d38ef" formatted="false">هنوز با هیچ رباتی بازی نشده است.</string>
+    <string name="kp_77ebbb8e3de5" formatted="false">هنوز بازی 1v1 تمام‌شده‌ای نیست.</string>
+    <string name="kp_1597bcaeaaa1" formatted="false">هنوز تورنمنت تمام‌شده‌ای نیست.</string>
+    <string name="kp_682c0ad47cbe" formatted="false">کسی به‌موقع نپیوست. از صف خارج شدید - هر وقت خواستید دوباره بپیوندید.</string>
+    <string name="kp_50385293d3d0" formatted="false">تورنمنت بازی با این کد وجود ندارد. کدها هشت نویسه‌ای هستند؛ تورنمنت باید وجود داشته باشد و هنوز جای خالی داشته باشد.</string>
+    <string name="kp_581a01e739ba" formatted="false">الان هیچ تورنمنتی در جریان نیست. وقتی یکی شروع شود، بازی‌هایش برای تماشا اینجا نمایش داده می‌شوند.</string>
+    <string name="kp_2ee8ce15a9f7" formatted="false">این ماه هنوز کسی %s را شکست نداده است.</string>
+    <string name="kp_54460cd574b9" formatted="false">هنوز کسی %s را شکست نداده است.</string>
+    <string name="kp_4472179cd296" formatted="false">هنوز شکست نخورده</string>
+    <string name="kp_b9e09ae263fb" formatted="false">تأیید نشد</string>
+    <string name="kp_214bf807441e" formatted="false">KAS کافی در آدرس گفتگوی شما نیست. مقداری اضافه کنید و دوباره امتحان کنید.</string>
+    <string name="kp_16ca44702a9b" formatted="false">تازه‌کار</string>
+    <string name="kp_fb58f3c56a8d" formatted="false">با اتمام وقت</string>
+    <string name="kp_1cf2fc54ad9f" formatted="false">آنلاین، پنج دقیقه برای هر طرف و هر حرکت یک تراکنش Kaspa است. نتیجه بازی با ربات‌ها در پایان روی Kaspa ثبت می‌شود.</string>
+    <string name="kp_6dca824588f3" formatted="false">جای خالی</string>
+    <string name="kp_b84d3a372a18" formatted="false">بازی با %s</string>
+    <string name="kp_0faa2e4de8b8" formatted="false">با یک دوست بازی کنید: یک 1v1 بسازید و کدش را به اشتراک بگذارید. 1v1های خصوصی هم در جدول امتیازات حساب می‌شوند.</string>
+    <string name="kp_576766d387ec" formatted="false">بازی دوباره</string>
+    <string name="kp_61441ace460e" formatted="false">بازی با</string>
+    <string name="kp_8ba176164906" formatted="false">با نفر بعدی که می‌پیوندد بازی کنید، یا با دوستی از طریق کد. یک بازی، و برنده امتیاز جدول را می‌گیرد.</string>
+    <string name="kp_e53407cfe1a5" formatted="false">بازیکن</string>
+    <string name="kp_9f33b8c73405" formatted="false">بازیکنان (%d از %d)</string>
+    <string name="kp_237dfa0a21c8" formatted="false">خصوصی</string>
+    <string name="kp_f61dccc2dba9" formatted="false">1v1 خصوصی</string>
+    <string name="kp_ea951f3a34eb" formatted="false">تورنمنت خصوصی</string>
+    <string name="kp_79b0f9805c68" formatted="false">ارتقا به</string>
+    <string name="kp_dc5eb704bbca" formatted="false">عمومی</string>
+    <string name="kp_37ea9a7673b4" formatted="false">1v1 عمومی</string>
+    <string name="kp_8b2cb0910a17" formatted="false">1v1 عمومی #%d</string>
+    <string name="kp_236760772b5c" formatted="false">تورنمنت عمومی</string>
+    <string name="kp_b4d6cee9742f" formatted="false">تورنمنت عمومی #%d</string>
+    <string name="kp_58d888c08aa5" formatted="false">تصادفی</string>
+    <string name="kp_73ba76c46a4c" formatted="false">رتبه‌بندی بر اساس کمترین تعداد حرکت برای برد.</string>
+    <string name="kp_a3d558838b81" formatted="false">تسلیم شدن</string>
+    <string name="kp_868d45f552a8" formatted="false">تسلیم و خروج</string>
+    <string name="kp_a12f7f95331e" formatted="false">در این بازی تسلیم می‌شوید؟</string>
+    <string name="kp_65d7b143ae0f" formatted="false">نتیجه روی Kaspa ثبت شد</string>
+    <string name="kp_9f5cd8a2e880" formatted="false">تلاش دوباره</string>
+    <string name="kp_923287d2eeda" formatted="false">تلاش دوباره برای ثبت</string>
+    <string name="kp_f7648d383499" formatted="false">دور ۱</string>
+    <string name="kp_d7418ba2e352" formatted="false">اکنون نمی‌توان جاها را بررسی کرد</string>
+    <string name="kp_33295d1667f4" formatted="false">دیدن صفحه</string>
+    <string name="kp_af1cfadd9704" formatted="false">رده %d</string>
+    <string name="kp_7d79eec3965c" formatted="false">نیمه‌نهایی</string>
+    <string name="kp_3abe921a63aa" formatted="false">نیمه‌نهایی</string>
+    <string name="kp_6f32706309e0" formatted="false">در حال ارسال حرکت شما…</string>
+    <string name="kp_9cb2e112972e" formatted="false">ارسال شد، اما Kaspa هنوز آن را تأیید نکرده است.</string>
+    <string name="kp_09ca55ca52d2" formatted="false">اشتراک‌گذاری</string>
+    <string name="kp_d042790fe991" formatted="false">این کد را به اشتراک بگذارید</string>
+    <string name="kp_1f3254d6ce59" formatted="false">اشتراک در KaPost</string>
+    <string name="kp_4401b9c3edce" formatted="false">کسی در %2$d حرکت %1$s را شکست داد. می‌توانید با حرکت‌های کمتری این کار را بکنید؟</string>
+    <string name="kp_c923aafae8bc" formatted="false">کسی شما را به شکست دادن %s دعوت می‌کند.</string>
+    <string name="kp_9a3ea0598e7f" formatted="false">مشکلی پیش آمد. لطفاً دوباره تلاش کنید.</string>
+    <string name="kp_8aa38f374323" formatted="false">در حال ثبت نتیجه روی Kaspa…</string>
+    <string name="kp_6959b5355760" formatted="false">در حال ثبت نتیجه…</string>
+    <string name="kp_ae768f766f75" formatted="false">ماندن</string>
+    <string name="kp_f300737844cc" formatted="false">اتاق‌ها هنوز در حال بارگیری‌اند - کمی بعد دوباره تلاش کنید.</string>
+    <string name="kp_fc55363a83bc" formatted="false">بردن هر دوی شما به صفحه</string>
+    <string name="kp_ad30c2ff1d6e" formatted="false">بردن همه به صفحه‌هایشان</string>
+    <string name="kp_293d8f7d8030" formatted="false">در حال گرفتن جای شما - این یک تراکنش است، پس چند ثانیه طول می‌کشد.</string>
+    <string name="kp_8ad85cccbb0e" formatted="false">برای بازگشت به آن بزنید</string>
+    <string name="kp_0e4268b5d759" formatted="false">این کد سازنده درست نیست.</string>
+    <string name="kp_617a81cfb251" formatted="false">به شبکه نرسید. دوباره تلاش کنید.</string>
+    <string name="kp_55720cd06fc4" formatted="false">آن اتاق زودتر پر شد - در حال یافتن اتاق بعدی برای شما.</string>
+    <string name="kp_d8501167e501" formatted="false">آن اتاق زودتر پر شد. برای امتحان اتاق بعدی روی پیوستن بزنید.</string>
+    <string name="kp_9e663d4025b0" formatted="false">این تورنمنت قبلاً شروع شده است.</string>
+    <string name="kp_1ee44a0bf66b" formatted="false">سرور شطرنج در دسترس نیست و شبکه هنوز این را تأیید نکرده است. کمی بعد دوباره تلاش کنید.</string>
+    <string name="kp_0e3db8107f4d" formatted="false">سرور شطرنج در دسترس نیست، پس اتاق‌های باز قابل تأیید نیستند. وقتی برگشت دوباره تلاش کنید.</string>
+    <string name="kp_3e86d5e865a8" formatted="false">سرور شطرنج در دسترس نیست، پس این کد قابل جستجو نیست. وقتی برگشت دوباره تلاش کنید.</string>
+    <string name="kp_374e3b271476" formatted="false">کد هشت‌نویسه‌ای که سازنده به اشتراک گذاشته است. پیوستن یک تراکنش است (کارمزد: %s).</string>
+    <string name="kp_668f15ee8377" formatted="false">خود بازی رایگان است. وقتی تمام شود، چه ببرید چه ببازید، نتیجه‌اش روی Kaspa ثبت می‌شود: یک تراکنش از کیف پول شما، حدود %s.</string>
+    <string name="kp_056a66088f6c" formatted="false">خود بازی رایگان است. وقتی تمام شود، چه ببرید چه ببازید، نتیجه‌اش روی Kaspa ثبت می‌شود: یک تراکنش از کیف پول شما، با یک کارمزد کوچک.</string>
+    <string name="kp_a94070f3a397" formatted="false">شبکه هنوز در حال تأیید ارسال قبلی شماست. لطفاً چند ثانیه دیگر دوباره امتحان کنید.</string>
+    <string name="kp_5021101f57d6" formatted="false">نتیجه پس از پایان بازی روی Kaspa ثبت می‌شود</string>
+    <string name="kp_fb4fdd00f1ac" formatted="false">ثبت ناموفق بود. اگر الان خارج شوید دیگر نمی‌توان آن را فرستاد و این برد در جدول امتیازات حساب نمی‌شود.</string>
+    <string name="kp_2d72f92d9b82" formatted="false">ممکن است ثبت انجام شده باشد</string>
+    <string name="kp_30a77c98dc8a" formatted="false">تورنمنت وقتی هر هشت جا پر شود خودبه‌خود شروع می‌شود.</string>
+    <string name="kp_693f8a669f1e" formatted="false">نوبت حریف</string>
+    <string name="kp_3dd518e63c49" formatted="false">حریف</string>
+    <string name="kp_22a02413aebd" formatted="false">همیشه یک اتاق عمومی منتظر بازیکنان است. وقتی پر شود، شروع می‌شود و بعدی باز می‌شود. هشت بازیکن، حذفی، پنج دقیقه برای هر طرف. هر حرکت یک تراکنش Kaspa است (هر کدام حدود 0.0017 KAS).</string>
+    <string name="kp_6d45876eef92" formatted="false">عمیق فکر می‌کند و دور را می‌بیند. اگر او را شکست دهید، کل نردبان را بالا رفته‌اید.</string>
+    <string name="kp_1085f4e7c41f" formatted="false">این بازی با حساب دیگری انجام شده است. برای ثبت نتیجه وارد آن حساب شوید.</string>
+    <string name="kp_9fa87800a939" formatted="false">ممکن است انجام شده باشد، اما شبکه آن را تأیید نکرد. پیش از ارسال دوباره، موجودی خود را بررسی کنید.</string>
+    <string name="kp_1b4785331db3" formatted="false">این ماه</string>
+    <string name="kp_733696c12e3e" formatted="false">وقت تمام شد. %s با اتمام وقت برد.</string>
+    <string name="kp_5a2e22ac873e" formatted="false">هنوز مشخص نشده</string>
+    <string name="kp_a2c1d828e2d3" formatted="false">تورنمنت</string>
+    <string name="kp_25670f61ff36" formatted="false">تورنمنت تکمیل شد!</string>
+    <string name="kp_cd04af2db6f1" formatted="false">جدول امتیازات تورنمنت</string>
+    <string name="kp_fee20df1963e" formatted="false">تورنمنت‌ها</string>
+    <string name="kp_981d375a0f37" formatted="false">تورنمنت‌های برده و باخته</string>
+    <string name="kp_e71f1539a41b" formatted="false">پیروزی</string>
+    <string name="kp_f3ec99569fbf" formatted="false">مشاهده در کاوشگر</string>
+    <string name="kp_33d30632848d" formatted="false">در انتظار</string>
+    <string name="kp_a41118158853" formatted="false">منتظر %d بازیکن دیگر. وقتی نفر هشتم بپیوندد خودبه‌خود شروع می‌شود.</string>
+    <string name="kp_442da9df5c77" formatted="false">منتظر ۱ بازیکن دیگر. وقتی نفر هشتم بپیوندد خودبه‌خود شروع می‌شود.</string>
+    <string name="kp_c26c33fa1c5a" formatted="false">در انتظار بازیکنان</string>
+    <string name="kp_0e6a21e02626" formatted="false">در انتظار سرور شطرنج</string>
+    <string name="kp_fbc3f16e4c19" formatted="false">منتظر حریف شما. وقتی بپیوندد، بازی خودبه‌خود شروع می‌شود.</string>
+    <string name="kp_d91ebf5887cf" formatted="false">تماشا</string>
+    <string name="kp_7ef5b5821c01" formatted="false">تماشا رایگان است - چیزی ارسال نمی‌شود. فقط دو بازیکن می‌توانند حرکت کنند.</string>
+    <string name="kp_37619fc13053" formatted="false">سفید</string>
+    <string name="kp_c6ff9b47bd9e" formatted="false">نوبت سفید</string>
+    <string name="kp_79bcb3dd18f9" formatted="false">درصد برد</string>
+    <string name="kp_ffb136c1afe9" formatted="false">برنده یک‌چهارم %d</string>
+    <string name="kp_3fe7ae15e42c" formatted="false">برنده نیمه‌نهایی %d</string>
+    <string name="kp_b6c015d12e1b" formatted="false">بردها</string>
+    <string name="kp_b273fb287708" formatted="false">برنده شد</string>
+    <string name="kp_ddf4e3735470" formatted="false">برنده: %s</string>
+    <string name="kp_905cb326c779" formatted="false">شما</string>
+    <string name="kp_70142233d6f3" formatted="false">از این تورنمنت حذف شدید. بقیه جدول را تماشا کنید.</string>
+    <string name="kp_07025e915e94" formatted="false">از این تورنمنت حذف شدید. می‌توانید بقیه جدول را تماشا کنید.</string>
+    <string name="kp_188b806432ca" formatted="false">کدی می‌گیرید تا با کسی که می‌خواهید با او بازی کنید به اشتراک بگذارید. بازی وقتی او بپیوندد شروع می‌شود. ساختن آن یک تراکنش است.</string>
+    <string name="kp_e7c04dcae100" formatted="false">به دور بعد می‌روید. بازی بعدی شما وقتی حریفتان مشخص شود خودبه‌خود باز می‌شود.</string>
+    <string name="kp_5279ac5901b8" formatted="false">باختید</string>
+    <string name="kp_db93b3d19f74" formatted="false">شما اول حرکت می‌کنید.</string>
+    <string name="kp_7ec46c42f060" formatted="false">تسلیم شدید. %s برد.</string>
+    <string name="kp_85b0b68af5f2" formatted="false">اولین جا را می‌گیرید و کدی برای اشتراک‌گذاری دریافت می‌کنید. وقتی هشت بازیکن بپیوندند شروع می‌شود. ساختن آن یک تراکنش است.</string>
+    <string name="kp_3c2dfe0e1289" formatted="false">با کیش و مات در %d حرکت بردید.</string>
+    <string name="kp_8dfe694ea61b" formatted="false">با کیش و مات در ۱ حرکت بردید.</string>
+    <string name="kp_8c75d5f7de98" formatted="false">دور ۱ را بردید. منتظر حریف بعدی - در این فاصله بازی دیگر را تماشا کنید.</string>
+    <string name="kp_795115417df0" formatted="false">فینال را بردید. منتظر حریف بعدی - در این فاصله بازی دیگر را تماشا کنید.</string>
+    <string name="kp_2987342bd41b" formatted="false">بازی را بردید. منتظر حریف بعدی - در این فاصله بازی دیگر را تماشا کنید.</string>
+    <string name="kp_ba7e2d06a69c" formatted="false">نیمه‌نهایی را بردید. منتظر حریف بعدی - در این فاصله بازی دیگر را تماشا کنید.</string>
+    <string name="kp_dc9807723538" formatted="false">تورنمنت را بردید.</string>
+    <string name="kp_e3a4b01eaca8" formatted="false">بردید!</string>
+    <string name="kp_2bd203ba381e" formatted="false">شما از قبل در %s منتظر هستید.</string>
+    <string name="kp_a91633acc070" formatted="false">وارد شدید. منتظر %d نفر دیگر…</string>
+    <string name="kp_ad79fa22e5b2" formatted="false">وارد شدید. منتظر ۱ نفر دیگر…</string>
+    <string name="kp_cfe84965f638" formatted="false">با نفر بعدی که می‌پیوندد جفت می‌شوید. بازی خودبه‌خود شروع می‌شود.</string>
+    <string name="kp_d80ca7163461" formatted="false">در %s بازی می‌کنید</string>
+    <string name="kp_24bf6785a61b" formatted="false">شما هنوز در %s بازی می‌کنید.</string>
+    <string name="kp_eec7f86a8bb7" formatted="false">در %s منتظر هستید</string>
+    <string name="kp_61e7335f3c19" formatted="false">کارنامه 1v1 شما</string>
+    <string name="kp_48fd80af85de" formatted="false">پیش از ارسال حرکت، وقت شما تمام شد.</string>
+    <string name="kp_a8bc9c75a936" formatted="false">بازی شما شروع می‌شود در</string>
+    <string name="kp_32ec1dbd797a" formatted="false">پیوستن شما به شبکه نرسید. هر وقت خواستید دوباره بپیوندید.</string>
+    <string name="kp_44470e508a5d" formatted="false">نوبت شما</string>
+    <string name="kp_d5b2c846e810" formatted="false">حرکت شما حساب نشد. صفحه را بررسی کنید.</string>
+    <string name="kp_5277d781ccc7" formatted="false">حرکت شما به شبکه نرسید. دوباره آن را بازی کنید.</string>
+    <string name="kp_63bbbf0226f5" formatted="false">کارنامه شما</string>
+    <string name="kp_4e15ba26e54d" formatted="false">جای شما به مدت %s نگه داشته می‌شود. اگر تا آن موقع اتاق پر نشود، از صف خارج می‌شوید.</string>
+    <string name="kp_8774b9393565" formatted="false">جای شما تا این مدت نگه داشته می‌شود. اگر کسی به‌موقع نپیوندد، از صف خارج می‌شوید.</string>
+    <string name="kp_94ad25364602" formatted="false">کارنامه تورنمنت شما</string>
+    <string name="kp_114f3f6a8251" formatted="false">برد شما هنوز روی Kaspa ثبت نشده است</string>
+    <string name="kp_f957097d7a22" formatted="false">تمام‌شده</string>
+    <string name="kp_691a77cd21a3" formatted="false">در برابر</string>
+    <string name="kp_aa93adb4f65c" formatted="false">%s (سطح %d) را در %d حرکت در K شکست دادم. فکر می‌کنید با حرکت‌های کمتری می‌توانید؟</string>
+    <string name="kp_f81826d956cc" formatted="false">به تورنمنت شطرنج من در K بپیوند: KaPlay &gt; شطرنج &gt; تورنمنت‌ها &gt; پیوستن با کد را باز کن و %s را وارد کن.</string>
+    <string name="kp_c2ecefef54c6" formatted="false">در K با من شطرنج بازی کن: KaPlay &gt; شطرنج &gt; 1v1 &gt; پیوستن با کد را باز کن و %s را وارد کن.</string>
+    <string name="kp_f4fa709cb963" formatted="false">یک‌چهارم نهایی</string>
+    <string name="kp_3ce0ac6e9413" formatted="false">نتیجه ارسال نشد.</string>
+    <string name="kaplay_leaderboard_all_time">همه زمان‌ها</string>
+    <string name="kaplay_leaderboard_counted_from">شمارش از %1$s.</string>
+    <string name="kaplay_leaderboard_period">دوره جدول امتیازات</string>
+    <string name="kaplay_leaderboard_resets_monthly">اول هر ماه بازنشانی می‌شود (UTC).</string>
+    <string name="kaplay_leaderboard_this_month">این ماه</string>
+    <string name="kaplay_no_finished_duels">هنوز بازی 1v1 تمام‌شده‌ای نیست.</string>
+    <string name="kaplay_no_finished_duels_this_month">هنوز بازی 1v1 تمام‌شده‌ای در این ماه نیست.</string>
+    <string name="kaplay_no_finished_tournaments">هنوز تورنمنت تمام‌شده‌ای نیست.</string>
+    <string name="kaplay_no_finished_tournaments_this_month">هنوز تورنمنت تمام‌شده‌ای در این ماه نیست.</string>
+    <string name="kaplay_tab_leaderboard">جدول امتیازات</string>
+</resources>

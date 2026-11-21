@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">KaChat</string>
+    <string name="app_name">K</string>
     <string name="n_12_words">12 kelime</string>
     <string name="n_24_words">24 kelime</string>
     <string name="a_kns_inscription_s_commit_transaction">Bir KNS yazitinin taahhut islemi gerceklesti, ancak acilma hicbir zaman tamamlanmadi. Tamamlamak icin simdi tekrar deneyin; bunu yapana kadar fonlar guvenle baglidir.</string>
@@ -28,11 +28,11 @@
     <string name="delivery_failed_tap_to_retry">Başarısız · Tekrar denemek için dokunun</string>
     <string name="delivery_needs_attention">İlgi gerekiyor</string>
     <string name="delivery_failed_retry_accessibility">Gönderilemedi. Tekrar denemek için dokun.</string>
-    <string name="battery_rationale_title">KaChat kapalıyken de bildirim al</string>
+    <string name="battery_rationale_title">K kapalıyken de bildirim al</string>
     <string name="battery_rationale_body">Bazı telefonlar pil tasarrufu için uygulamaları kapatır; bu da mesaj bildirimlerinin gelmesini durdurabilir.</string>
     <string name="battery_rationale_allow">İzin Ver</string>
-    <string name="battery_rationale_allow_detail">Yeni mesajların seni bilgilendirmek için KaChat\'i uyandırmasına izin verir.</string>
-    <string name="battery_rationale_not_now_detail">Bunu daha sonra Ayarlar > Uygulamalar > KaChat > Pil bölümünden değiştirebilirsin.</string>
+    <string name="battery_rationale_allow_detail">Yeni mesajların seni bilgilendirmek için K\'i uyandırmasına izin verir.</string>
+    <string name="battery_rationale_not_now_detail">Bunu daha sonra Ayarlar > Uygulamalar > K > Pil bölümünden değiştirebilirsin.</string>
     <string name="open_source_licenses">Açık Kaynak Lisansları</string>
     <string name="screen_lock_required">Ekran Kilidi Gerekli</string>
     <string name="cancel_photo">Fotografi iptal et</string>
@@ -90,8 +90,8 @@
     <string name="kns_domains">Alan Adların</string>
     <string name="contact_kns_domains">KNS Alan Adları</string>
     <string name="kachat">KaChat</string>
-    <string name="kachat_logo">KaChat Logosu</string>
-    <string name="kachat_needs_to_connect_to_a">KaChat\'in bir duguma baglanmasi gerekiyor. Nasil baglanmak istersiniz?</string>
+    <string name="kachat_logo">K Logosu</string>
+    <string name="kachat_needs_to_connect_to_a">K\'in bir duguma baglanmasi gerekiyor. Nasil baglanmak istersiniz?</string>
     <string name="kaspa_explorer">Kaspa Kesif Motoru</string>
     <string name="label_optional">Etiket (istege bagli)</string>
     <string name="last_message">Son Mesaj</string>
@@ -258,10 +258,10 @@
     <string name="x">X</string>
     <string name="language">Dil</string>
     <string name="system_default">Sistem</string>
-    <string name="welcome_to_kachat">KaChat\'e Hos Geldiniz</string>
+    <string name="welcome_to_kachat">K\'e Hos Geldiniz</string>
     <string name="lets_walk_through_the_basics_so">Ilk mesajinizi gondermeye hazir olmaniz icin temel bilgileri gozden gecirelim.</string>
-    <string name="how_kachat_uses_kaspa">KaChat, Kaspa\'yi Nasil Kullanir</string>
-    <string name="kachat_lets_you_send_and_receive">KaChat, mesajlarinizi dogrudan Kaspa agi uzerinden gondermenizi ve almanizi saglar. Mesajlarinizi gonderirken ucret odemek icin Kaspa gereklidir. Odediginiz ucret, agi guvence altina alan madencilere gider.</string>
+    <string name="how_kachat_uses_kaspa">K, Kaspa\'yi Nasil Kullanir</string>
+    <string name="kachat_lets_you_send_and_receive">K, mesajlarinizi dogrudan Kaspa agi uzerinden gondermenizi ve almanizi saglar. Mesajlarinizi gonderirken ucret odemek icin Kaspa gereklidir. Odediginiz ucret, agi guvence altina alan madencilere gider.</string>
     <string name="finish">Bitir</string>
     <string name="recommended">Onerilen</string>
     <string name="connect_your_own_node">Kendi Node\'unuzu Baglayin</string>
@@ -269,7 +269,7 @@
     <string name="auto_search_for_nodes">Node\'lari Otomatik Ara</string>
     <string name="most_taxing_on_the_device_not_as">Cihaz icin en yorucu olani, o kadar guvenilir degil - yasadiginiz yere bagli</string>
     <string name="choose_your_language">Dilinizi Secin</string>
-    <string name="select_the_language_youd_like_to">KaChat\'te kullanmak istediginiz dili secin.</string>
+    <string name="select_the_language_youd_like_to">K\'te kullanmak istediginiz dili secin.</string>
     <string name="best">En iyi</string>
     <string name="enter_as_host_port_or_grpcs_host">host:port veya grpcs://host olarak girin</string>
     <string name="receive_kaspa">Kaspa Al</string>
@@ -298,7 +298,7 @@
     <string name="none_yet">Henüz yok</string>
     <string name="customize_profile">Profili özelleştir</string>
     <string name="settling">Onaylanıyor</string>
-    <string name="kachat_profile_coming_body">.kachat adları geliyor. Bir tane aldığında avatarını, kapak görselini, biyografini ve bağlantılarını burada ayarlarsın; KaChat seni her yerde bununla gösterir.</string>
+    <string name="kachat_profile_coming_body">.kachat adları geliyor. Bir tane aldığında avatarını, kapak görselini, biyografini ve bağlantılarını burada ayarlarsın; K seni her yerde bununla gösterir.</string>
     <string name="kachat_name_section">.kachat adı</string>
     <string name="could_not_reach_service">%1$s ile bağlantı kurulamadı. Tekrar denemek için aşağı çek.</string>
     <string name="no_names_yet">Henüz %1$s adı yok.</string>
@@ -364,8 +364,8 @@
     <string name="welcome_fund_chatting_body">5 Kaspa yaklaşık 2500 mesaja yeter.</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">Testnet</string>
-    <string name="testnet_restart_to_testnet">Testnet\'e geçişi tamamlamak için KaChat\'i tamamen kapatıp yeniden aç.</string>
-    <string name="testnet_restart_to_mainnet">Mainnet\'e dönüşü tamamlamak için KaChat\'i tamamen kapatıp yeniden aç.</string>
+    <string name="testnet_restart_to_testnet">Testnet\'e geçişi tamamlamak için K\'i tamamen kapatıp yeniden aç.</string>
+    <string name="testnet_restart_to_mainnet">Mainnet\'e dönüşü tamamlamak için K\'i tamamen kapatıp yeniden aç.</string>
     <string name="nextcloud_off_on_testnet">Testnet açıkken Nextcloud kapalıdır.</string>
     <!-- Kaspa Hub > .kachat live on testnet (iOS 5df42b4) -->
     <string name="kn_ev_transferred">Devredildi</string>
@@ -544,8 +544,8 @@
     <string name="kn_err_accept_name_expired">Bu adın süresi doldu. Teklifler yalnızca ad etkinken kabul edilebilir. Önce yenileyin.</string>
     <!-- .kachat: expires-soon follows the period clock (iOS 24d673a, IOS-060) -->
     <!-- Addresses of the other network are refused (iOS ce20e87, IOS-003) -->
-    <string name="address_other_network_testnet">Bu bir Testnet adresi. KaChat Mainnet\'te.</string>
-    <string name="address_other_network_mainnet">Bu bir Mainnet adresi. KaChat Testnet\'te.</string>
+    <string name="address_other_network_testnet">Bu bir Testnet adresi. K Mainnet\'te.</string>
+    <string name="address_other_network_mainnet">Bu bir Mainnet adresi. K Testnet\'te.</string>
     <!-- Coin Control: the most coins one transaction may spend (AND-012 follow-up) -->
     <string name="coin_control_max_selection">Bir işlem en fazla %1$d UTXO harcayabilir, bu yüzden daha fazlası seçilemez.</string>
     <!-- Seed phrase screen: the passphrase is part of the backup (iOS 3076ab7, IOS-017) -->
@@ -619,7 +619,7 @@
     <string name="import_seed_length_detail">Kaç kelime içe aktarıyorsun?</string>
     <string name="what_is_a_seed_phrase">12 veya 24 kelimem nedir?</string>
     <string name="seed_phrase_explainer_master_key">12 veya 24 kelimen, hesabının ana anahtarı olarak çalışan sıradan kelimelerdir. Cüzdanın, sohbet adresin ve mesajların hepsi bunlardan gelir.</string>
-    <string name="seed_phrase_explainer_anyone">Bu kelimelere sahip olan herkes hesabınızdaki her şeyi alabilir. Onları kaybeder ve bu cihazı da kaybederseniz, hesabınızı kimse geri getiremez, KaChat bile.</string>
+    <string name="seed_phrase_explainer_anyone">Bu kelimelere sahip olan herkes hesabınızdaki her şeyi alabilir. Onları kaybeder ve bu cihazı da kaybederseniz, hesabınızı kimse geri getiremez, K bile.</string>
     <string name="seed_phrase_explainer_paper">Kelimeleri sırasıyla kağıda yazın ve güvenli, özel bir yerde saklayın. Onları asla bir web sitesine yazmayın, sohbette göndermeyin ve ekran görüntüsünde ya da bulut notlarında tutmayın.</string>
     <!-- Onboarding: the seed phrase explainer page's headings (iOS 712bb4d) -->
     <string name="seed_phrase_explainer_short_version">Kısaca</string>
@@ -642,7 +642,7 @@
     <string name="ab_address_book">Kişiler</string>
     <string name="ab_add_to_address_book">Kişilere Ekle</string>
     <string name="ab_search_prompt">Ad ve adres ara</string>
-    <string name="ab_empty_body">Kullandığın Kaspa adreslerini tanıyacağın bir adla kaydet. KaChat\'te, yalnızca bu cüzdan için kalırlar ve telefonunun Kişiler uygulamasına asla girmezler.</string>
+    <string name="ab_empty_body">Kullandığın Kaspa adreslerini tanıyacağın bir adla kaydet. K\'te, yalnızca bu cüzdan için kalırlar ve telefonunun Kişiler uygulamasına asla girmezler.</string>
     <string name="ab_add_address">Kişi Ekle</string>
     <string name="ab_copied">Kopyalandı</string>
     <string name="ab_share_address">Adresi Paylaş</string>
@@ -651,7 +651,7 @@
     <string name="ab_delete_confirm">%s kişilerinden silinsin mi?</string>
     <string name="ab_not_in_book">Kişilerinde yok</string>
     <string name="ab_note_optional">Not (isteğe bağlı)</string>
-    <string name="ab_editor_footer">Yalnızca bu cüzdan için KaChat\'te kaydedilir. Telefonunun Kişiler uygulamasına asla eklenmez.</string>
+    <string name="ab_editor_footer">Yalnızca bu cüzdan için K\'te kaydedilir. Telefonunun Kişiler uygulamasına asla eklenmez.</string>
     <string name="ab_edit_address">Kişiyi Düzenle</string>
     <string name="ab_picker_empty_body">Onları Kişiler\'e ekle.</string>
     <string name="ab_err_no_wallet">Önce bir cüzdan aç.</string>
@@ -697,18 +697,18 @@
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">Ağa gönderildi</string>
     <string name="kn_step_in_block">Bir blokta</string>
-    <string name="kn_step_updated">KaChat\'te güncellendi</string>
+    <string name="kn_step_updated">K\'te güncellendi</string>
     <string name="kn_tx_stage_waiting">Ağın onu bir bloğa koyması bekleniyor. Genelde birkaç saniye; yoğunken daha uzun.</string>
-    <string name="kn_tx_stage_in_block">Bir blokta. KaChat güncelleniyor...</string>
-    <string name="kn_tx_stage_done">Tamam. Artık KaChat\'te görünüyor.</string>
+    <string name="kn_tx_stage_in_block">Bir blokta. K güncelleniyor...</string>
+    <string name="kn_tx_stage_done">Tamam. Artık K\'te görünüyor.</string>
     <string name="kn_tx_stage_dropped">Ağ henüz almadı. Hiç girmezse hiçbir şey harcanmaz - daha hızlı bir ücretle yeniden dene.</string>
     <string name="kn_tap_tx_explorer">Gezginde açmak için işleme dokun.</string>
     <!-- .kachat offers: tiles and half sheet (iOS 7f50e84) -->
     <!-- .kachat fee re-check (iOS 7e2b6cd, IOS-061) -->
     <string name="kn_err_fee_changed">Onayladığınızdan beri ağ ücreti %1$s değerine çıktı. Hiçbir şey gönderilmedi. Yeni ücreti kontrol edip tekrar onaylayın.</string>
     <!-- Address Book: the active network only (iOS 218dc42, IOS-063) -->
-    <string name="ab_err_import_all_mainnet">Bu dosyadaki tüm adresler Mainnet adresi. KaChat Testnet\'te.</string>
-    <string name="ab_err_import_all_testnet">Bu dosyadaki tüm adresler Testnet adresi. KaChat Mainnet\'te.</string>
+    <string name="ab_err_import_all_mainnet">Bu dosyadaki tüm adresler Mainnet adresi. K Testnet\'te.</string>
+    <string name="ab_err_import_all_testnet">Bu dosyadaki tüm adresler Testnet adresi. K Mainnet\'te.</string>
     <string name="ab_import_skipped_other_network">Diğer ağdan %1$d adres atlandı.</string>
     <!-- .kachat registry v5 migration (iOS dd836cb) -->
     <string name="kn_registration_not_open">İsimler yeni kayıt defterine taşınıyor. Yeni isimler %1$s tarihinden itibaren alınabilir.</string>
@@ -758,7 +758,7 @@
     <string name="pr_chatting_footer">Ödeme, notla birlikte ödeyen kişiyle sohbetinize düşer.</string>
     <string name="pr_memo_placeholder">Ne için (isteğe bağlı)</string>
     <string name="pr_copy">Ödeme İsteğini Kopyala</string>
-    <string name="pr_anyone_note">KaPay veya KaChat\'te açan herkes bu bilgilerle doldurulmuş Kaspa Gönder ekranını görür ve isteğin sohbet adresin tarafından yapıldığını (onun anahtarıyla imzalı) görür.</string>
+    <string name="pr_anyone_note">K\'te açan herkes bu bilgilerle doldurulmuş Kaspa Gönder ekranını görür ve isteğin sohbet adresin tarafından yapıldığını (onun anahtarıyla imzalı) görür.</string>
     <string name="pr_requested">İstenen</string>
     <string name="pr_paid_as_chat_payment">Sohbet ödemesi olarak ödenir: onunla sohbetinizde görünür.</string>
     <string name="pr_paid_to_their_spending">Harcama adresine ödenir.</string>
@@ -811,7 +811,7 @@
     <string name="your_own_address_value">Kendi adresiniz: %1$s</string>
     <!-- User Info: look the person's avatar, banner and bio up again now -->
     <!-- Chat payment From a spending address while the chatting address is empty (%1$s = contact name) - iOS 710fdc0 -->
-    <string name="payment_notice_chatting_empty">Sohbet adresinizde %1$s kişisine bu ödemeyi bildirecek KAS yok, bu yüzden ödemeyi bilinmeyen bir adresten, not olmadan gelmiş olarak görür. Sohbet adresinize KAS gelince KaChat onlara bildirir.</string>
+    <string name="payment_notice_chatting_empty">Sohbet adresinizde %1$s kişisine bu ödemeyi bildirecek KAS yok, bu yüzden ödemeyi bilinmeyen bir adresten, not olmadan gelmiş olarak görür. Sohbet adresinize KAS gelince K onlara bildirir.</string>
     <!-- Customize Dock: dock list (red minus) and Kaspa Hub list (green plus) -->
     <!-- KaPosts: tip counter / tippers list, and the bell for a person's new posts (iOS a6bd60a) -->
     <!-- KaPosts: Post Activity cards (iOS 8ffa130) -->
@@ -930,7 +930,7 @@
     <string name="alias_copied">Takma ad panoya kopyalandı.</string>
     <string name="alias_unavailable">Takma ad kullanılamıyor.</string>
     <string name="reveal">Göster</string>
-    <string name="share_to_kachat">KaChat ile Paylaş</string>
+    <string name="share_to_kachat">K ile Paylaş</string>
     <string name="send_to">Şuraya Gönder</string>
     <string name="couldnt_send_saved_as_draft">Gönderilemedi. Bu sohbette taslak olarak kaydedildi.</string>
     <string name="wallet_title">Cüzdan</string>
@@ -946,7 +946,7 @@
     <string name="settings_account_name_placeholder">Hesap adı</string>
     <string name="settings_privacy_policy">Gizlilik Politikası</string>
     <string name="import_words_enter_recovery_phrase">12 veya 24 kelimeni gir</string>
-    <string name="welcome_chatting_address_phone_number">Bunu KaChat\'teki telefon numaran gibi düşün.</string>
+    <string name="welcome_chatting_address_phone_number">Bunu K\'teki telefon numaran gibi düşün.</string>
     <string name="welcome_how_people_reach_you">Sana nasıl ulaşılır</string>
     <string name="welcome_how_people_reach_you_caption">Bu adresi paylaş, sana mesaj gönderebilsinler. Gönderilenleri yalnızca sen okuyabilirsin.</string>
     <string name="welcome_paying_for_messages">Mesajların ödemesi</string>
@@ -967,7 +967,7 @@
     <string name="your_phone_cant_be_your_only_copy">Telefonun tek kopyan olamaz</string>
     <string name="if_you_lose_break_or_replace_this">Bu telefonu kaybedersen, kırarsan veya değiştirirsen, bu kelimeler hesabına geri dönmenin tek yoludur.</string>
     <string name="nobody_can_reset_them">Kimse sıfırlayamaz</string>
-    <string name="there_is_no_password_reset_kachat_never">Şifre sıfırlama yok. KaChat kelimelerini hiç görmez, bu yüzden onları senin için kurtaramayız.</string>
+    <string name="there_is_no_password_reset_kachat_never">Şifre sıfırlama yok. K kelimelerini hiç görmez, bu yüzden onları senin için kurtaramayız.</string>
     <string name="get_ready">Hazırlan</string>
     <string name="your_secret_words_are_next_before_you">Sıradaki gizli kelimelerin. Onları görmeden önce:</string>
     <string name="i_have_a_pen_and_paper">Kalemim ve kâğıdım var</string>
@@ -994,7 +994,7 @@
     <string name="never_keep_it_online">Asla internette tutma</string>
     <string name="no_photos_screenshots_cloud_storage_notes_apps">Fotoğraf, ekran görüntüsü, bulut depolama, not uygulaması, e-posta veya sohbet olmasın.</string>
     <string name="never_share_it">Asla paylaşma</string>
-    <string name="nobody_needs_your_words_kachat_and_real">Kelimelerine kimsenin ihtiyacı yok. KaChat ve gerçek destek ekibi onları asla istemez. Soran herkes fonlarını almaya çalışıyordur.</string>
+    <string name="nobody_needs_your_words_kachat_and_real">Kelimelerine kimsenin ihtiyacı yok. K ve gerçek destek ekibi onları asla istemez. Soran herkes fonlarını almaya çalışıyordur.</string>
     <string name="keep_your_passphrase_apart">Parola ifadeni ayrı tut</string>
     <string name="store_it_away_from_your_12_or">Bunu 12 veya 24 kelimenden ayrı sakla. İkisine de ihtiyacın var; birini kaybedersen hesabı kaybedersin.</string>
     <string name="you_can_see_it_again">Tekrar görebilirsin</string>
@@ -1092,7 +1092,7 @@
     <string name="back_up_to_nfc_card">NFC Karta Yedekle</string>
     <string name="notifications_disabled">Bildirimler Devre Dışı</string>
     <string name="to_receive_notifications_please_enable_them_in">Bildirim almak için lütfen Ayarlar\'dan etkinleştirin.</string>
-    <string name="kachat_is_having_trouble_syncing_right_now">KaChat şu anda senkronizasyonda sorun yaşıyor. Yeniden denemeye devam eder ve bağlantı geri geldiğinde mesajların kendiliğinden yetişir; bu yüzden silmen gerekmez.</string>
+    <string name="kachat_is_having_trouble_syncing_right_now">K şu anda senkronizasyonda sorun yaşıyor. Yeniden denemeye devam eder ve bağlantı geri geldiğinde mesajların kendiliğinden yetişir; bu yüzden silmen gerekmez.</string>
     <string name="select_chats">Sohbetleri Seç</string>
     <string name="no_chats_to_re_sync">Yeniden senkronize edilecek sohbet yok.</string>
     <string name="node_connections_appear_blocked_on_this_network">Bu ağda düğüm bağlantıları engellenmiş görünüyor. İndeksleyici üzerinden mesaj alıp okumaya devam edebilirsin, ancak mesaj ve ödeme göndermek için düğüm bağlantısı gerekir.</string>
@@ -1392,7 +1392,7 @@
     <string name="nfc_err_backup_too_large">Bu hesabın yedeği kart için çok büyük.</string>
     <string name="nfc_err_wrong_passphrase">Bu parola ifadesi yedekle eşleşmiyor. Büyük harfler ve boşluklar dahil birebir aynı olmalı.</string>
     <string name="nfc_err_no_passphrase">Bu hesabın parola ifadesi yok, bu yüzden karta yedeklenemez.</string>
-    <string name="nfc_err_unreadable_backup">Bu yedek okunamıyor. KaChat\'in daha yeni bir sürümüyle oluşturulmuş olabilir.</string>
+    <string name="nfc_err_unreadable_backup">Bu yedek okunamıyor. K\'in daha yeni bir sürümüyle oluşturulmuş olabilir.</string>
     <string name="nfc_err_save_not_confirmed">Kaydetme doğrulanamadı, bu yüzden bu karta güvenme. Tekrar dene.</string>
     <string name="nfc_err_seed_unavailable">Bu hesabın 12 veya 24 kelimesi bu cihazda okunamadı.</string>
     <string name="nfc_err_wrong_pin_one">Yanlış PIN. Bu kartın PIN\'i kalıcı olarak engellenmeden önce 1 deneme hakkın kaldı.</string>
@@ -1411,7 +1411,7 @@
     <string name="resync_select_chats">Sohbetleri Seç...</string>
     <string name="resync_select_chats_subtitle">Hangi sohbetlerin silinip yeniden senkronize edileceğini seçin. Geri kalanına dokunulmaz.</string>
     <string name="resync_cancel_subtitle">Mesajlarınızı olduğu gibi bırak.</string>
-    <string name="screen_lock_required_message">KaChat\'te hesap silmek veya gizli anahtarları görmek için bu telefonda bir ekran kilidi ayarla (Ayarlar &gt; Güvenlik).</string>
+    <string name="screen_lock_required_message">K\'te hesap silmek veya gizli anahtarları görmek için bu telefonda bir ekran kilidi ayarla (Ayarlar &gt; Güvenlik).</string>
     <string name="show_password">Şifreyi göster</string>
     <string name="hide_password">Şifreyi gizle</string>
     <string name="unlock_change_seed_phrase_lock">12 veya 24 kelimenin biyometrik kilidini değiştirmek için kilidi aç</string>
@@ -1422,7 +1422,7 @@
     <string name="nc_username">Kullanıcı adı</string>
     <string name="nc_app_password">Uygulama şifresi</string>
     <string name="nc_use_https">https kullan. Şifrelenmemiş bağlantılar desteklenmez.</string>
-    <string name="nc_app_password_footer">Nextcloud\'da Ayarlar → Güvenlik → Aygıtlar ve oturumlar altında bir uygulama şifresi oluştur — hesap şifreni kullanma. KaChat bunu cihazın şifreli depolamasında saklar.</string>
+    <string name="nc_app_password_footer">Nextcloud\'da Ayarlar → Güvenlik → Aygıtlar ve oturumlar altında bir uygulama şifresi oluştur — hesap şifreni kullanma. K bunu cihazın şifreli depolamasında saklar.</string>
     <string name="nc_connect">Bağlan</string>
     <string name="nc_connected_account">Bağlı Hesap</string>
     <string name="nc_start_folder">Başlangıç Klasörü</string>
@@ -1443,7 +1443,7 @@
     <string name="nc_disconnect_message">Uygulama şifresi bu cihazın şifreli depolamasından kaldırılır. İstediğin zaman yeniden bağlanabilirsin.</string>
     <string name="send_outcome_unknown">Bu gönderilmiş olabilir, ancak ağ onaylamadı. Yeniden göndermeden önce bakiyenizi kontrol edin.</string>
     <string name="swipe_not_confirmed">Onaylanmadı</string>
-    <string name="secure_store_title">KaChat hesaplarınızı açamıyor</string>
+    <string name="secure_store_title">K hesaplarınızı açamıyor</string>
     <string name="secure_store_message">Bu telefonun güvenli depolama alanı onları okuyamıyor. Bu durum yeni bir telefona geçtikten veya sistem değişikliğinden sonra olabilir. Önce yeniden deneyin. Devam ederse baştan başlayın ve her hesabı 12 veya 24 kelimesiyle geri yükleyin.</string>
     <string name="secure_store_start_over">Baştan Başla</string>
     <string name="secure_store_confirm_title">Baştan başlansın mı?</string>
@@ -1472,7 +1472,7 @@
     <string name="not_sent_you_switched_accounts">Gönderilmedi: bu gitmeden önce hesap değiştirdiniz.</string>
     <string name="play_it_again">Tekrar Oyna</string>
     <string name="couldnt_look_up_name_try_again">%1$s şu anda aranamadı. Birazdan tekrar deneyin.</string>
-    <string name="kns_reveal_will_finish_on_next_open">İki işlemden ilki gerçekleşti ama ikincisi gerçekleşmedi. KaChat bir sonraki açılışta tamamlayacak.</string>
+    <string name="kns_reveal_will_finish_on_next_open">İki işlemden ilki gerçekleşti ama ikincisi gerçekleşmedi. K bir sonraki açılışta tamamlayacak.</string>
     <string name="kns_transfer_fee_at_most_1_kas">Alan adı aktarım ücreti en fazla 1 KAS olabilir.</string>
     <string name="confirm_setting_this_primary_name">Bu birincil adı ayarlamayı onayla</string>
     <string name="this_is_the_public_half_of_this_address">Bu, bu adresin genel yarısıdır. Hiçbir şey harcayamaz.</string>
@@ -1505,7 +1505,7 @@
     <string name="clear_all_cache_title">Tüm önbellek temizlensin mi?</string>
     <string name="cache_frees_your_messages_are_not_touched">%1$s boşaltır. Mesajlarınıza, kişilerinize ve anahtarlarınıza dokunulmaz.</string>
     <string name="kachat_link_menu_title">KaChat Bağlantısı</string>
-    <string name="open_in_kachat">KaChat\'te Aç</string>
+    <string name="open_in_kachat">K\'te Aç</string>
     <string name="open_in_kapost">KaPost\'ta Aç</string>
     <string name="opens_it_right_here_in_the_app">Burada, uygulamanın içinde açar.</string>
     <string name="opens_the_post_in_the_kapost_app">Gönderiyi KaPost uygulamasında açar.</string>
@@ -1513,7 +1513,7 @@
     <string name="standard_kaspa_wallet">Standart Kaspa Cüzdanı</string>
     <string name="has_history">Geçmişi var</string>
     <string name="see_every_wallet_type">Tüm Cüzdan Türlerini Gör</string>
-    <string name="kachat_checks_your_words_against_every">KaChat kelimelerinizi her tür Kaspa cüzdanıyla karşılaştırır, bu yüzden hangi cüzdandan geldiklerini bilmeniz gerekmez.</string>
+    <string name="kachat_checks_your_words_against_every">K kelimelerinizi her tür Kaspa cüzdanıyla karşılaştırır, bu yüzden hangi cüzdandan geldiklerini bilmeniz gerekmez.</string>
     <string name="this_address_has_history_so_this_looks">Bu adresin geçmişi var, yani doğru hesap gibi görünüyor.</string>
     <string name="no_funds_or_history_on_this_address">Bu adreste bakiye veya geçmiş yok.</string>
     <string name="we_picked_the_most_likely_account">En olası hesabı seçtik. Kullandığınız bu değilse başka birine dokunun.</string>
@@ -1604,7 +1604,7 @@
         <item quantity="other">\"%1$s\" oluşturulsun ve %2$d üye davet edilsin mi?</item>
     </plurals>
     <string name="nc_revoke_failed_title">Uygulama Parolası Kaldırılamadı</string>
-    <string name="nc_revoke_failed_message">KaChat, %1$s üzerindeki uygulama parolasını kaldıramadı. Bu telefondan silindi ama orada hâlâ oturum açabilir: Nextcloud\'da Ayarlar &gt; Güvenlik &gt; Cihazlar ve oturumlar bölümünden silin.</string>
+    <string name="nc_revoke_failed_message">K, %1$s üzerindeki uygulama parolasını kaldıramadı. Bu telefondan silindi ama orada hâlâ oturum açabilir: Nextcloud\'da Ayarlar &gt; Güvenlik &gt; Cihazlar ve oturumlar bölümünden silin.</string>
     <string name="fee_too_high">Ücret Çok Yüksek</string>
     <string name="a_message_fee_can_be_at_most_1_kas">Bir mesaj ücreti en fazla 1 KAS olabilir.</string>
     <string name="use_a_high_fee">Yüksek Ücret Kullanılsın mı?</string>
@@ -1618,9 +1618,151 @@
     <string name="use_their_domain_name">Alan adını kullan</string>
     <string name="show_request_as_qr">İsteği QR olarak göster</string>
     <string name="pr_qr_scan_to_pay_in_kapay">Her şey doldurulmuş olarak KaPay\'de ödemek için telefon kamerasıyla tarayın.</string>
-    <string name="pr_qr_scan_to_pay_in_kachat">Her şey doldurulmuş olarak KaChat\'te ödemek için telefon kamerasıyla tarayın.</string>
+    <string name="pr_qr_scan_to_pay_in_kachat">Her şey doldurulmuş olarak K\'te ödemek için telefon kamerasıyla tarayın.</string>
     <string name="get_a_kachat_domain">.kachat alan adı al</string>
     <string name="set_as_name">Ad olarak ayarla</string>
     <string name="their_name">Adı</string>
     <string name="get_a_kachat_name">.kachat adı al</string>
+    <string name="composer_gif_subtitle">Arşivinizden hareketli bir GIF gönderin.</string>
+    <string name="group_composer_gif_subtitle">Arşivinizden gruba hareketli bir GIF gönderin.</string>
+    <string name="gif_quality">GIF Kalitesi</string>
+    <string name="that_isnt_an_animated_gif">Bu hareketli bir GIF değil. Lütfen başka birini seçin.</string>
+    <string name="gif_too_long_for_that_quality">Bu GIF bu kalite için çok uzun. Daha yüksek bir kalite ya da daha kısa bir GIF seçin.</string>
+    <string name="kusdt_template_missing">K’in kUSDT şablonu eksik, bu yüzden kUSDT kontrol edilemiyor.</string>
+    <string name="trestly_url_invalid">Bağlantı Ayarları’ndaki Trestly API adresi geçerli bir https adresi değil.</string>
+    <string name="trestly_no_answer">Trestly yanıt vermedi.</string>
+    <string name="trestly_http_status">Trestly HTTP %1$d ile yanıt verdi.</string>
+    <string name="trestly_answer_unreadable">Trestly’nin yanıtı okunamadı.</string>
+    <string name="kusdt_builder_couldnt_start">kUSDT işlem oluşturucusu başlatılamadı.</string>
+    <string name="kusdt_builder_no_answer">kUSDT işlem oluşturucusu yanıt vermedi.</string>
+    <string name="kusdt_builder_not_pinned">kUSDT işlem oluşturucusu sabitlenen değil, bu yüzden çalıştırılmayacak.</string>
+    <string name="kusdt_error_recipient">kUSDT yalnızca normal bir Kaspa adresine gidebilir.</string>
+    <string name="kusdt_error_not_enough_token">Bu adreste o kadar kUSDT yok.</string>
+    <string name="kusdt_error_merge_first">Bu tutar bu adreste 3’ten fazla kUSDT parasına dağılmış. Şimdilik daha küçük bir tutar gönder.</string>
+    <string name="kusdt_error_kas_for_change_coin">Bu adresin biraz KAS’a ihtiyacı var: ağ ücreti ve para üstü coin’in (sende kalan kUSDT) için 1,5 KAS. O 1,5 KAS senin kalır.</string>
+    <string name="kusdt_error_kas_for_fee">Bu adresin ağ ücreti için biraz KAS’a ihtiyacı var.</string>
+    <string name="kusdt_error_no_key">Bu adresin anahtarı bu telefonda yok.</string>
+    <string name="kusdt_error_fee_too_high">Ağ ücreti K’in güvenlik sınırının üzerinde. Hiçbir şey gönderilmedi.</string>
+    <string name="kusdt_error_check_failed">Oluşturulan işlem onayladığınla eşleşmedi, bu yüzden hiçbir şey gönderilmedi.</string>
+    <string name="kusdt_error_nothing_to_combine">Bu adres kUSDT’sini zaten tek coin’de tutuyor.</string>
+    <string name="kusdt_send_changed">Ekran açıkken bu gönderim değişti. Hiçbir şey gönderilmedi: tekrar kontrol edip kaydırın.</string>
+    <string name="kusdt_not_confirmed">Onaylanmadı: ağ yanıt vermedi. Yine de gerçekleşebilir. Tekrar Dene aynı işlemi gönderir, bu yüzden iki kez ödenemez.</string>
+    <string name="kusdt_build_failed">İşlem oluşturulamadı. Hiçbir şey gönderilmedi.</string>
+    <string name="token_held_on_addresses">%1$d Adres</string>
+    <string name="token_received_title">%1$s alındı</string>
+    <string name="token_received_on_one">%1$s adresine</string>
+    <string name="token_received_on_many">%1$d adresine</string>
+    <string name="address_tab_domains">Alan Adlari</string>
+    <string name="address_domains_none">Bu adreste %1$s adı yok.</string>
+    <string name="address_domains_one">1 alan adı</string>
+    <string name="address_domains_couldnt_load">Yüklenemedi</string>
+    <string name="connection_not_set">Ayarlanmadı</string>
+    <string name="connection_trestly">Trestly</string>
+    <string name="copy_share_link">Paylaşım Bağlantısını Kopyala</string>
+    <string name="share_link_copied">Paylaşım bağlantısı kopyalandı.</string>
+    <string name="generate_non_quantum_address">Kuantum Olmayan Adres Oluştur</string>
+    <string name="generate_non_quantum_address_subtitle">Al’ın verdiği gibi normal bir adres. kUSDT dahil her şeyle çalışır.</string>
+    <string name="generate_quantum_resistant_address">Kuantuma Dayanıklı Adres Oluştur</string>
+    <string name="generate_quantum_resistant_address_subtitle">Harcayana kadar anahtarını gizli tutar. Yalnızca Kaspa için: buradan kUSDT işlem yapılamaz.</string>
+    <string name="kaspa">Kaspa</string>
+    <string name="kusdt_balances">kUSDT Bakiyeleri</string>
+    <string name="kusdt_listed_stays_here">Bu adres kUSDT listenizde, bu yüzden burada kalır. Önce kUSDT Yönet ekranından gizleyin.</string>
+    <string name="shown_for_kusdt">kUSDT için gösteriliyor</string>
+    <string name="moves_kaspa_to_your_chatting_address">Bu adresteki Kaspa’yı Sohbet Adresine taşır.</string>
+    <string name="send_to_chatting_address">Sohbet Adresine Gönder</string>
+    <string name="receive_note_fresh_address">Hiç kullanılmamış ve kimseye verilmemiş yepyeni bir adresin: bu ödeme adınla ilişkilendirilemez.</string>
+    <string name="receive_note_spending_address">Bir harcama adresin: buraya yapılan ödeme adınla ilişkilendirilmez.</string>
+    <string name="receive_note_chatting_address">Sohbet adresin .kachat adını ve kimliğini gösterir: buraya ödeme yapan kişi senin olduğunu görebilir.</string>
+    <string name="receive_note_quantum_address">Kuantuma dayanıklı bir adres: harcayana kadar anahtarı gizli kalır.</string>
+    <string name="receive_note_kaspa_and_kusdt">Buraya Kaspa ve Kaspa üzerindeki kUSDT gönderilebilir.</string>
+    <string name="receive_note_kaspa_only">Buraya yalnızca Kaspa gönderilebilir.</string>
+    <string name="receive_note_no_kusdt_on_quantum">Buraya kUSDT gönderme: kuantuma dayanıklı bir adresten işlem yapılamaz. Normal bir adres için Al’ı kullan.</string>
+    <string name="receive_note_lands_in_this_account">Bu hesaba gelir ve harcama toplamında görünür. .kachat adları dışında her şey için kullan.</string>
+    <string name="trestly_api_url">Trestly API URL’si</string>
+    <string name="trestly_url_footer">K’in kUSDT’ni sorguladığı yer. Listelediği her coin sayılmadan önce Kaspa düğümünde kontrol edilir. Bu ağın varsayılanı için boş bırak.</string>
+    <string name="wallet_scanning_addresses">Adresleriniz bakiye için taranıyor…</string>
+    <string name="bridged_usdt">Köprülenmiş USDT</string>
+    <string name="composer_send_dollars_subtitle">Bu kişiye dolar (kUSDT) gönderin.</string>
+    <string name="generate_new_address">Yeni Adres Olustur</string>
+    <string name="get_kapay">KaPay\'i Edin</string>
+    <string name="send_dollars">Dolar Gönder</string>
+    <string name="tap_to_manage">Yönetmek için dokun</string>
+    <string name="token_about_kusdt">kUSDT, Ethereum ve BNB Chain’den gelen, Trestly’nin kasasında 1:1 tutulan ve Kaspa üzerinde token olarak çıkarılan USDT’dir. Tether tarafından çıkarılmaz ve onu yeniden USDT’ye yalnızca Trestly çevirebilir.</string>
+    <string name="token_about_title">%1$s Hakkında</string>
+    <string name="token_actions_title">%1$s İşlemleri</string>
+    <string name="token_activity_bridged_in">Köprüyle Geldi</string>
+    <string name="token_activity_combined_coins">Coin’ler Birleştirildi</string>
+    <string name="token_activity_swapped">Takas Edildi</string>
+    <string name="token_add_for_fee_and_change">Ücret ve Para Üstü Coin İçin %1$s Ekle</string>
+    <string name="token_add_for_network_fee">Ağ Ücreti İçin %1$s Ekle</string>
+    <string name="token_add_more">%1$s Daha Ekle</string>
+    <string name="token_address_visibility_subtitle">kUSDT tutan hangi adreslerin listede olacağını işaretle.</string>
+    <string name="token_address_visibility_title">%1$s Adres Görünürlüğü</string>
+    <string name="token_amount_accessibility">Tutar (%1$s)</string>
+    <string name="token_available">Kullanılabilir: %1$s</string>
+    <string name="token_back_to_this_address">Bu Adrese Dönen</string>
+    <string name="token_balance_title">%1$s Bakiyesi</string>
+    <string name="token_bridged_by">Köprü: %1$s</string>
+    <string name="token_building_transaction">İşlem oluşturuluyor…</string>
+    <string name="token_check_again">Tekrar Kontrol Et</string>
+    <string name="token_checking_addresses_for">Adreslerinizde %1$s kontrol ediliyor…</string>
+    <string name="token_checking_your">%1$s kontrol ediliyor…</string>
+    <string name="token_coins_into_one">%1$d coin 1 oldu</string>
+    <string name="token_combine_coins">Coin’leri Birleştir</string>
+    <string name="token_combine_coins_subtitle">Coin’lerini tek bir coin’de birleştirir ve fazla KAS’ı geri verir.</string>
+    <string name="token_combine_explainer">Her %1$s coin’i %2$s tutar. Onları tek coin’de birleştirince fazla KAS, ağ ücreti düşülerek bu adrese normal KAS olarak döner. %3$s miktarın aynı kalır.</string>
+    <string name="token_combine_limit">Bir seferde en fazla %1$d coin birleşir. Kalanlar için yeniden birleştir.</string>
+    <string name="token_combined">Birleştirilen</string>
+    <string name="token_couldnt_check">%1$@ şu an kontrol edilemedi: %2$@ Yeniden denemek için aşağı çek.</string>
+    <string name="token_discover_addresses">kUSDT Adreslerini Bul</string>
+    <string name="token_discover_addresses_subtitle">kUSDT tutan adreslerini bulur.</string>
+    <string name="token_empty_state_message">Kendi yeni bir adresinde al. kUSDT alıp takas etmek KaPay’de yapılır.</string>
+    <string name="token_every_coin_goes_to_recipient">Her %1$s coini %2$s içerir. Bu KAS, %3$s ile birlikte alıcıya gider, böylece kaybolmaz.</string>
+    <string name="token_every_coin_holds_kas">Her kUSDT coini 1.5 KAS içerir. Gönderdiğinde kUSDT ile birlikte gider.</string>
+    <string name="token_fee">Ücret %1$s</string>
+    <string name="token_fee_from_token_kas">Bu adreste KAS yoktu, bu yüzden ağ ücreti kUSDT ile giden KAS’tan alındı.</string>
+    <string name="token_fee_same_address_note">Ücretin KAS’ı aynı adresten gelir, böylece gönderim onu diğer adreslerine bağlamaz.</string>
+    <string name="token_found_addresses">%2$@ olan %1$d adres bulundu.</string>
+    <string name="token_fund_hint">KAS’ın hangi adresinden geleceğini seç, yukarı kaydır, sonra buraya dönersin.</string>
+    <string name="token_generate_new_address_subtitle">Bu listeye yepyeni, normal bir adresini ekler.</string>
+    <string name="token_goes_with_it">Birlikte Gider</string>
+    <string name="token_held_on">Tutulduğu Yer</string>
+    <string name="token_held_with_it">Yanında %1$s var</string>
+    <string name="token_hidden_count">%1$d gizli: yine de toplama dahil.</string>
+    <string name="token_hide_address_subtitle">Bu listeden kaldırır. %1$s Adres Görünürlüğü’nden yeniden aç.</string>
+    <string name="token_hide_all_message">%1$@ Yönet yalnızca sohbet adresinle yeniden başlar. Hiçbir şey kaybolmaz: istediğin adresi buradan geri getir, %2$@ toplamında sayılmaya devam eder.</string>
+    <string name="token_history_from_now_on">Bu telefondaki gönderimler, alımlar ve birleştirmeler bundan sonra burada görünür.</string>
+    <string name="token_history_title">%1$s Geçmişi</string>
+    <string name="token_kas_for_send">Bir %1$s gönderimi için KAS</string>
+    <string name="token_kas_held_with_it">İçindeki KAS</string>
+    <string name="token_kas_not_arrived">Gönderdiğin KAS henüz bu adreste görünmüyor. Genellikle birkaç saniye sürer.</string>
+    <string name="token_kas_paid_from">KAS’ın Ödendiği Adres</string>
+    <string name="token_manage_title">%1$s Yönet</string>
+    <string name="token_more_than_your">%1$s bakiyenden fazla.</string>
+    <string name="token_no_activity_yet">Henüz %1$s hareketi yok.</string>
+    <string name="token_no_addresses_found">%1$s olan adres bulunamadı.</string>
+    <string name="token_no_addresses_yet">Henüz %1$s olan adres yok</string>
+    <string name="token_no_token_yet">Henüz %1$s yok</string>
+    <string name="token_none_of_your_addresses">Adreslerinizin hiçbirinde henüz %1$s yok.</string>
+    <string name="token_not_audited">Henüz bağımsız olarak denetlenmedi. Yalnızca kaybetmeyi göze alabileceğin kadarını tut.</string>
+    <string name="token_pending">Beklemede</string>
+    <string name="token_receive_no_usdt_warning">Bu adrese Ethereum, BNB Chain ya da bir borsadan USDT gönderme: kaybolur. Önce Trestly’de Kaspa’ya köprüle.</string>
+    <string name="token_receive_only">Buraya yalnızca Kaspa üzerindeki %1$s veya KAS gönderilebilir.</string>
+    <string name="token_receive_title">%1$s Al</string>
+    <string name="token_rename_label_placeholder">Etiket</string>
+    <string name="token_rename_message">Tanimaniza yardimci olmasi icin bu adrese bir etiket verin.</string>
+    <string name="token_script_address_error">%1$s yalnızca normal bir Kaspa adresine gidebilir; kuantum güvenli veya başka bir betik adresine gidemez.</string>
+    <string name="token_send_title">%1$s Gönder</string>
+    <string name="token_send_to_chatting_subtitle">Bu adresteki kUSDT’yı Sohbet Adresine taşır.</string>
+    <string name="token_swipe_up_to_combine">Birleştirmek için yukarı kaydır</string>
+    <string name="token_total_kas">Toplam KAS</string>
+    <string name="token_view_address_in_explorer_subtitle">Bu adres Kaspa gezgininde.</string>
+    <string name="token_view_the_vault">Kasayı Görüntüle</string>
+    <string name="token_visibility_derive_failed">Bu adresler şu anda türetilemedi. Bir sayfa geri git veya tekrar denemek için bu ekranı yeniden aç.</string>
+    <string name="token_waiting_for_kas">KAS’ının gelmesi bekleniyor…</string>
+    <string name="token_what_are_you_sending">Ne gönderiyorsun?</string>
+    <string name="token_which_stablecoin">Hangi stablecoin\'i gönderiyorsunuz?</string>
+    <string name="swipe_release_to_confirm">Onaylamak için bırak</string>
+    <string name="coins_combined">Coin’ler Birleştirildi</string>
+    <string name="transaction_didnt_go_out">İşlem gönderilemedi.</string>
 </resources>

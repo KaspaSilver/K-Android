@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">任何人在 K 中打开它，都会看到已填好的“发送 Kaspa”，并看到它由你的聊天地址创建（用其密钥签名）。</string>
+    <string name="pl_tap_to_open_public_chat_room">点按以打开此公共聊天房间。</string>
+    <string name="pl_tap_to_join_public_chat_room">点按以加入此公共聊天房间。</string>
+    <string name="pl_join_room_title">加入 #%1$s？</string>
+    <string name="pl_join_room_message">有链接想将此房间添加到你的公共聊天。</string>
+    <string name="pl_join_room_mixed_scripts">此名称混用了不同字母表的字母，可能在冒充其他房间。</string>
+</resources>

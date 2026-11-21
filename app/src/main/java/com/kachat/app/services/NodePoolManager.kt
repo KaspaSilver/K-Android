@@ -844,6 +844,28 @@ class NodePoolManager @Inject constructor(
     }
 
     /**
+     * The UTXOs at [addresses] from a node, never REST (iOS `getUtxosByAddresses(_:allowRestFallback:
+     * false)`): only a node's answer carries each coin's covenant id, which is what tells a kUSDT
+     * coin from a look-alike. Throws when the node can't answer.
+     */
+    suspend fun getUtxosByAddressesFromNode(addresses: List<String>): List<UtxoEntry> {
+        if (addresses.isEmpty()) return emptyList()
+        return getBroadcastConnection().getUtxosByAddresses(addresses).map { entry ->
+            UtxoEntry(
+                address = entry.address,
+                outpoint = Outpoint(transactionId = entry.outpoint.transactionId, index = entry.outpoint.index),
+                utxoEntry = UtxoData(
+                    amount = entry.utxoEntry.amount,
+                    scriptPublicKey = ScriptPublicKey(entry.utxoEntry.scriptPublicKey.scriptPublicKey),
+                    blockDaaScore = entry.utxoEntry.blockDaaScore,
+                    isCoinbase = entry.utxoEntry.isCoinbase,
+                    covenantId = entry.utxoEntry.covenantId.ifEmpty { null }
+                )
+            )
+        }
+    }
+
+    /**
      * Submits through [submit] and, if it throws, checks whether the network has [txId] anyway
      * before passing the error on - see [SubmitConfirmation] (iOS ad29da9, audit IOS-014). The id
      * is [transaction]'s, computed locally ([com.kachat.app.util.KaspaTransactionId]); should that
@@ -852,7 +874,7 @@ class NodePoolManager @Inject constructor(
      */
     suspend fun submitConfirmingKnown(transaction: RawTransaction, rest: KaspaRestApi?, submit: suspend () -> String): String {
         val txId = runCatching { com.kachat.app.util.KaspaTransactionId.compute(transaction) }.getOrDefault("")
-        return submitConfirmingKnown(txId, rest, spent = transaction.inputs.map { it.previousOutpoint }, submit = submit)
+        return submitConfirmingKnown(txId, rest, spent = transaction.inputs.map { it.previousOutpoint }, rememberUnknownOutcome = false, submit = submit)
     }
 
     /**
@@ -869,6 +891,10 @@ class NodePoolManager @Inject constructor(
          *  one whose outcome is unknown, gives them back: a resend then picks the same coins, so at
          *  most one of the two can land. */
         spent: List<Outpoint> = emptyList(),
+        /** A version-1 submit (iOS `submitRpcTransaction`): when its outcome is unknown, its coins
+         *  are remembered ([com.kachat.app.services.tokens.UnknownOutcomeOutpoints]) so the next
+         *  kUSDT send from them spends one again. The v0 sends above don't (as on iOS). */
+        rememberUnknownOutcome: Boolean = true,
         submit: suspend () -> String,
     ): String {
         val txId = expectedTxId.lowercase()
@@ -889,6 +915,11 @@ class NodePoolManager @Inject constructor(
             )
         } catch (e: Throwable) {
             OutpointReservations.shared.release(hold)
+            // not held, as above; remembered, so the next kUSDT send from these coins spends one
+            // of them again and at most one of the two can land (iOS 5b7c772c `markUnknownOutcome`)
+            if (rememberUnknownOutcome && e is SendOutcomeUnknownException) {
+                com.kachat.app.services.tokens.UnknownOutcomeOutpoints.shared.mark(spent)
+            }
             throw e
         }
         OutpointReservations.shared.reserve(spent)

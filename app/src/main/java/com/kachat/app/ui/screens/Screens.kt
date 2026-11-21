@@ -59,6 +59,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.Dock
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.Brush
@@ -77,6 +79,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.MonetizationOn
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.EmojiEmotions
 import androidx.compose.material.icons.outlined.Delete
@@ -336,6 +339,8 @@ fun ChatThreadScreen(
     val voiceRecordingState by chatViewModel.voiceRecordingState.collectAsState()
     val voiceNoteFee by chatViewModel.voiceNoteFeeSompi.collectAsState()
     val pendingPhotoUri by chatViewModel.pendingPhotoUri.collectAsState()
+    // An animated GIF going on chain: "GIF Quality", its tiers GIFs, a GIF badge (iOS d7c56280).
+    val pendingPhotoIsGif by chatViewModel.pendingPhotoIsGif.collectAsState()
     val nextcloudStaged by chatViewModel.nextcloudStaged.collectAsState()
     // Send on an on-chain photo asks High / Medium / Low first (iOS 7c5c22e3 PhotoQualitySheet).
     var showPhotoQualitySheet by remember { mutableStateOf(false) }
@@ -343,6 +348,7 @@ fun ChatThreadScreen(
     if (showPhotoQualitySheet) {
         PhotoQualitySheet(
             fees = photoTierFees,
+            isGif = pendingPhotoIsGif,
             onChoose = { tier ->
                 showPhotoQualitySheet = false
                 chatViewModel.sendPendingPhoto(contactId, tier)
@@ -440,6 +446,11 @@ fun ChatThreadScreen(
     // Second-step menu after tapping "Play Chess": pick a time control (3|2, 2|1, 1|1) or a
     // casual untimed game (the pre-timer behavior).
     var showChessTimeControlMenu by remember { mutableStateOf(false) }
+    /** + > Send Dollars: which dollar token (kUSDT today), a step of the same sheet (iOS 5b7c772c
+     *  `ComposerSheetStep.dollars`). */
+    var showDollarChooser by remember { mutableStateOf(false) }
+    /** Send Dollars' pick: the token's send sheet, to this chat (iOS `dollarSendToken`). */
+    var dollarSendToken by remember { mutableStateOf<com.kachat.app.services.tokens.WalletToken?>(null) }
     /** + > Request Payment: a payment request made for this contact and sent into this chat
      *  (iOS 6594936). */
     var showPaymentRequestSheet by remember { mutableStateOf(false) }
@@ -491,6 +502,12 @@ fun ChatThreadScreen(
     // Photo on chain: images only - no on-chain path fits a video.
     val photoPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) chatViewModel.setPendingPhoto(uri)
+    }
+    // The "+" sheet's GIF: the picker offers animated images (GIF, WebP, PNG, HEIF), and anything
+    // that isn't animated is turned away (iOS d7c56280, PHPickerFilter imageAnimated). Always on
+    // chain, as a GIF.
+    val gifPickerLauncher = rememberLauncherForActivityResult(remember { com.kachat.app.util.PickAnimatedImage() }) { uri ->
+        if (uri != null) chatViewModel.setPendingGif(contactId, uri)
     }
     // "Send Photo or Video via Nextcloud": the library picker offers videos too. A picked video
     // waits in the composer like a photo, uploading meanwhile (iOS a890102, 7abc06e).
@@ -858,7 +875,7 @@ fun ChatThreadScreen(
                             IconButton(onClick = { chatViewModel.cancelPendingPhoto() }) {
                                 Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.cancel_photo), tint = LocalAppColors.current.danger)
                             }
-                            PendingMediaThumbnail(pendingPhotoUri, isVideo = nextcloudStaged?.isVideo == true)
+                            PendingMediaThumbnail(pendingPhotoUri, isVideo = nextcloudStaged?.isVideo == true, isGif = pendingPhotoIsGif)
                             PendingMediaLabel(nextcloudStaged)
                             PendingMediaSendButton(nextcloudStaged, size = 32.dp) {
                                 if (chatViewModel.pendingPhotoGoesOnChain) {
@@ -966,6 +983,8 @@ fun ChatThreadScreen(
                                         com.kachat.app.util.InlineMediaSniff.mimeType(body)?.let { mime ->
                                             when {
                                                 mime.startsWith("audio/") -> "🎤 Audio message"
+                                                // iOS d7c56280 MessageReplyCodec.previewText
+                                                mime.lowercase() == com.kachat.app.util.GifPrep.MIME_TYPE -> "GIF"
                                                 mime.startsWith("image/") -> "📷 Photo"
                                                 mime.startsWith("video/") -> "🎬 Video"
                                                 else -> "📎 File"
@@ -1088,7 +1107,7 @@ fun ChatThreadScreen(
                                 }
                                 // Not while the chess or media step is up: they are steps of
                                 // ONE sheet, and rendering both would stack two sheets on screen.
-                                if (showComposerMenu && !showChessTimeControlMenu && composerMediaStep == null) {
+                                if (showComposerMenu && !showChessTimeControlMenu && composerMediaStep == null && !showDollarChooser) {
                                     // A sheet, not a popup. Matches iOS's composerPlusSheet: five
                                     // to seven square tiles, three to a row, each one's line its
                                     // TalkBack hint (iOS d645d78). ActionSheetContainer opens
@@ -1097,10 +1116,11 @@ fun ChatThreadScreen(
                                     TileActionSheet(
                                         title = stringResource(R.string.send),
                                         onDismiss = { showComposerMenu = false },
-                                        // iOS composerPlusSheetHeight: pay, camera, photo, voice,
-                                        // request and chess, plus file and a handshake when they apply.
+                                        // iOS composerPlusSheetHeight: Kaspa, dollars, camera,
+                                        // photo, GIF, voice, request and chess, plus file and a
+                                        // handshake when they apply.
                                         height = ActionSheetTileMetrics.sheetHeight(
-                                            tiles = if (isBotChat) 1 else 6 + (if (nextcloudAccount != null) 1 else 0) +
+                                            tiles = if (isBotChat) 1 else 8 + (if (nextcloudAccount != null) 1 else 0) +
                                                 (if (contactId != myAddress && !inboxSupported) 1 else 0)
                                         ),
                                         // iOS: [.height(composerPlusSheetHeight), .large].
@@ -1119,6 +1139,14 @@ fun ChatThreadScreen(
                                             }
                                             // A bot only takes text and Kaspa.
                                             if (!isBotChat) {
+                                            // Dollars (stablecoins): picks which one (kUSDT today),
+                                            // then Send Kaspa's steps (iOS 5b7c772c). Stays in the
+                                            // SAME sheet, as Play Chess does.
+                                            ActionSheetRow(
+                                                icon = Icons.Outlined.MonetizationOn,
+                                                title = stringResource(R.string.send_dollars),
+                                                subtitle = stringResource(R.string.composer_send_dollars_subtitle),
+                                            ) { showDollarChooser = true }
                                             // Camera, Photo and Voice Message each ask on chain or via
                                             // Nextcloud when a server is connected (that choice replaced
                                             // the "Send Media via Nextcloud" setting), and go straight
@@ -1133,6 +1161,16 @@ fun ChatThreadScreen(
                                                 title = stringResource(R.string.photo),
                                                 subtitle = stringResource(R.string.composer_photo_subtitle),
                                             ) { chooseMedia(ComposerMediaKind.PHOTO) }
+                                            // Always on chain: a GIF from your library, made to fit
+                                            // the quality you pick (iOS d7c56280).
+                                            ActionSheetRow(
+                                                icon = Icons.Default.VideoLibrary,
+                                                title = stringResource(R.string.gif),
+                                                subtitle = stringResource(R.string.composer_gif_subtitle),
+                                            ) {
+                                                showComposerMenu = false
+                                                gifPickerLauncher.launch(com.kachat.app.util.PickAnimatedImage.request())
+                                            }
                                             ActionSheetRow(
                                                 icon = Icons.Default.Mic,
                                                 title = stringResource(R.string.composer_voice_message),
@@ -1212,6 +1250,22 @@ fun ChatThreadScreen(
                                         onBack = { composerMediaStep = null },
                                         onDismiss = {
                                             composerMediaStep = null
+                                            showComposerMenu = false
+                                        },
+                                    )
+                                }
+                                if (showDollarChooser) {
+                                    // The sheet's Send Dollars step: which stablecoin; the pick
+                                    // opens its send sheet to this chat once this one is gone.
+                                    com.kachat.app.ui.screens.tokens.DollarTokenChooser(
+                                        onPick = { token ->
+                                            showDollarChooser = false
+                                            showComposerMenu = false
+                                            dollarSendToken = token
+                                        },
+                                        onBack = { showDollarChooser = false },
+                                        onDismiss = {
+                                            showDollarChooser = false
                                             showComposerMenu = false
                                         },
                                     )
@@ -2093,6 +2147,18 @@ fun ChatThreadScreen(
             onDismiss = { paymentDetailMessage = null },
         )
     }
+
+    dollarSendToken?.let { token ->
+        // Send Dollars (iOS 5b7c772c): the token's send, the chat its recipient. The bubble here
+        // and the notice that puts it in their chat too come from TokenViewModel.send (iOS
+        // `recordTokenPayment`).
+        com.kachat.app.ui.screens.tokens.TokenSendScreen(
+            token = token,
+            chatRecipient = contactId,
+            name = conversation?.contact?.displayName ?: com.kachat.app.util.KaspaAddress.shortDisplay(contactId),
+            onDismiss = { dollarSendToken = null },
+        )
+    }
 }
 
 /**
@@ -2285,6 +2351,9 @@ internal fun PaymentCardBubble(
     note: String?,
     isSent: Boolean,
     isWarning: Boolean = false,
+    /** A token payment (Send Dollars): its icon and symbol in place of Kaspa's
+     *  ([com.kachat.app.ui.screens.tokens.paymentCardToken]). */
+    token: com.kachat.app.services.tokens.WalletToken? = null,
     /** A single tap - the payment's details sheet, where the host has one. */
     onClick: (() -> Unit)? = null,
     onLongPress: () -> Unit = {},
@@ -2313,18 +2382,22 @@ internal fun PaymentCardBubble(
             .combinedClickable(onClick = { onClick?.invoke() }, onLongClick = onLongPress, onDoubleClick = onDoubleClick)
             .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(46.dp)
-                .background(if (isSent) Color.White else KaspaTeal.copy(alpha = 0.12f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painterResource(R.drawable.ic_kaspa_logo),
-                contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(34.dp)
-            )
+        if (token != null) {
+            com.kachat.app.ui.screens.tokens.TokenIcon(token, size = 46.dp)
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .background(if (isSent) Color.White else KaspaTeal.copy(alpha = 0.12f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_kaspa_logo),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(34.dp)
+                )
+            }
         }
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
@@ -2334,7 +2407,8 @@ internal fun PaymentCardBubble(
                 color = if (isSent) Color.White.copy(alpha = 0.85f) else LocalAppColors.current.textSecondary
             )
             Text(
-                text = "$amountText ${KaspaUnit.symbol}",
+                // "12.50 kUSDT" or "2.5 KAS" (iOS `amountWithUnit`)
+                text = "$amountText ${token?.symbol ?: KaspaUnit.symbol}",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -2629,11 +2703,13 @@ fun MessageBubble(
                 // back to the old plain text bubble plus the orange "Payment" capsule — the
                 // capsule only shows in that fallback, never alongside the card.
                 val cardParts = remember(message.plaintextBody, isSent) { parsePaymentCardParts(message.plaintextBody) }
+                val cardToken = remember(message.plaintextBody) { com.kachat.app.ui.screens.tokens.paymentCardToken(message.plaintextBody) }
                 if (cardParts != null) {
                     PaymentCardBubble(
                         amountText = cardParts.first,
                         note = cardParts.second,
                         isSent = isSent,
+                        token = cardToken,
                         // only a received payment's unverified notice: our own unknown send says
                         // "Not confirmed" in its delivery label instead
                         isWarning = !isSent && message.deliveryStatus == "warning",
@@ -2645,7 +2721,9 @@ fun MessageBubble(
                 } else {
                     Column(horizontalAlignment = if (isSent) Alignment.End else Alignment.Start) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 4.dp)) {
-                            Icon(painterResource(R.drawable.ic_kaspa_logo), null, tint = Color.Unspecified, modifier = Modifier.size(14.dp))
+                            // iOS's capsule: dollarsign.circle.fill, never the Kaspa logo - an
+                            // "Unverified kUSDT payment" lands here and isn't KAS (5b7c772c)
+                            Icon(Icons.Default.MonetizationOn, null, tint = LocalAppColors.current.warning, modifier = Modifier.size(14.dp))
                             Spacer(Modifier.width(4.dp))
                             Text(stringResource(R.string.payment), color = LocalAppColors.current.warning, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
@@ -3697,6 +3775,18 @@ fun ImageBubble(
         }
         isDecoding = false
     }
+    // A real GIF within the play limits plays, in the bubble and full screen (iOS d7c56280
+    // AnimatedImageView, 5b7c772c isSafeToAnimate: whatever MIME type it was sent as, at most
+    // 1,024 px and 300 frames). Anything else - animated WebP / PNG included - keeps its still.
+    val animatedGif by produceState<ByteArray?>(initialValue = null, key1 = imageContent.content) {
+        value = withContext(Dispatchers.Default) {
+            val payload = ImageMessage.base64Payload(imageContent)
+            // "R0lGOD" is "GIF8" in base64: nothing else is a GIF, so nothing else is decoded here.
+            if (!payload.startsWith("R0lGOD")) return@withContext null
+            runCatching { android.util.Base64.decode(payload, android.util.Base64.DEFAULT) }.getOrNull()
+                ?.takeIf { com.kachat.app.util.GifPrep.isSafeToAnimate(it) }
+        }
+    }
 
     if (isDecoding) {
         Surface(
@@ -3739,12 +3829,23 @@ fun ImageBubble(
             .widthIn(max = 220.dp)
             .combinedClickable(onClick = { showFullScreen = true }, onLongClick = onLongPress, onDoubleClick = onDoubleClick)
     ) {
-        Image(
-            bitmap = resolvedBitmap.asImageBitmap(),
-            contentDescription = stringResource(R.string.photo_message),
-            modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-            contentScale = ContentScale.FillWidth
-        )
+        val gif = animatedGif
+        if (gif != null) {
+            AnimatedGifImage(
+                data = gif,
+                still = resolvedBitmap.asImageBitmap(),
+                contentDescription = stringResource(R.string.photo_message),
+                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                contentScale = ContentScale.FillWidth
+            )
+        } else {
+            Image(
+                bitmap = resolvedBitmap.asImageBitmap(),
+                contentDescription = stringResource(R.string.photo_message),
+                modifier = Modifier.clip(RoundedCornerShape(16.dp)),
+                contentScale = ContentScale.FillWidth
+            )
+        }
     }
 
     if (showFullScreen) {
@@ -3756,12 +3857,24 @@ fun ImageBubble(
                     .clickable { showFullScreen = false },
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    bitmap = resolvedBitmap.asImageBitmap(),
-                    contentDescription = stringResource(R.string.photo_message_full_screen),
-                    modifier = Modifier.fillMaxWidth(),
-                    contentScale = ContentScale.Fit
-                )
+                // A GIF plays here too (iOS d7c56280 ZoomableImageView animatedData).
+                val gif = animatedGif
+                if (gif != null) {
+                    AnimatedGifImage(
+                        data = gif,
+                        still = resolvedBitmap.asImageBitmap(),
+                        contentDescription = stringResource(R.string.photo_message_full_screen),
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Image(
+                        bitmap = resolvedBitmap.asImageBitmap(),
+                        contentDescription = stringResource(R.string.photo_message_full_screen),
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
         }
     }
@@ -3780,10 +3893,10 @@ fun ChatActionButton(icon: ImageVector, onClick: () -> Unit = {}, size: Dp = 40.
 }
 
 /**
- * Profile is only your profile (iOS d1844582, bfe9f022 `ProfileView`): the hero, then Your Domains,
- * Notifications, Chatting Address (its QR code), Share Profile and Log Out as square cards, with
- * Help at the top right. The account's money is on [WalletScreen]; the account name and About are
- * in Settings.
+ * Profile is only your profile (iOS d1844582, bfe9f022, 5b7c772c `ProfileView`): the hero, then
+ * Share Profile (QR and Copy Share Link) and Log Out as cards, with Help at the top right. The
+ * account's money, the Chatting Address, Your Domains and Notifications are on [WalletScreen]; the
+ * account name and About are in Settings.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -3798,8 +3911,9 @@ fun ProfileScreen(
     val balance by viewModel.fullBalance.collectAsState()
     val dotColorHex by connectionViewModel.dotColorHex.collectAsState()
     val scrollState = rememberScrollState()
-    var showChattingQr by remember { mutableStateOf(false) }
     var showLogoutConfirmation by remember { mutableStateOf(false) }
+    // Share Profile: the Chatting Address's QR and Copy Share Link, in a sheet (iOS 5b7c772c).
+    var showShareProfile by remember { mutableStateOf(false) }
 
     val knsInscribeState by viewModel.knsInscribeState.collectAsState()
     val pendingKnsCommit by viewModel.pendingKnsCommit.collectAsState()
@@ -3865,22 +3979,6 @@ fun ProfileScreen(
             pullRefreshState.endRefresh()
         }
     }
-
-    // Re-tapping the Profile tab while already on it (e.g. to back out of a full-screen QR
-    // overlay) doesn't re-navigate/recompose this screen — see WalletViewModel.notifyTabReselected.
-    val tabReselectSignal by viewModel.tabReselectSignal.collectAsState()
-    LaunchedEffect(tabReselectSignal) {
-        if (tabReselectSignal.second == "profile") {
-            showChattingQr = false
-        }
-    }
-
-    // The global notification center: group @mentions and wallet activity, with its unread count.
-    val notifCenterVm: com.kachat.app.viewmodels.NotificationCenterViewModel = hiltViewModel()
-    val notifEntries by notifCenterVm.store.entries.collectAsState()
-    val notifLastSeen by notifCenterVm.store.lastSeenAt.collectAsState()
-    var showNotifCenter by remember { mutableStateOf(false) }
-    val notifUnread = notifEntries.count { it.timestampMs > notifLastSeen }
 
     val dockInset = LocalDockInset.current
     Scaffold(
@@ -4066,72 +4164,20 @@ fun ProfileScreen(
                 }
             }
 
-            // Your domains are a thing you own, not a setting of the profile that happens to use
-            // one of them - so they sit here rather than two levels down inside Edit KNS Profile,
-            // where nothing on this screen suggested they existed.
-            // Every name the account owns: .kachat, KNS, .k and .kaspa (iOS df23b6f, 10e4a1a).
-            val ownedKnsDomains by viewModel.ownedDomains.collectAsState()
-            val ownedServiceNames by viewModel.nameServices.owned.collectAsState()
-            val kachatRevision by viewModel.kachatRegistryRevision.collectAsState()
-            var kachatOwnedCount by remember(address) { mutableStateOf(0) }
-            // The .k and .kaspa lookups, so the count includes them before the list opens.
-            LaunchedEffect(address) {
-                address?.let { viewModel.nameServices.refresh(it) }
-            }
-            // Reloads whenever the registry moves (a registration, sale or transfer lands).
-            LaunchedEffect(address, kachatRevision) {
-                val owner = address ?: return@LaunchedEffect
-                viewModel.watchKachatOwnedCount(owner) { kachatOwnedCount = it }
-            }
-            val domainsCount = kachatOwnedCount + ownedKnsDomains.size + ownedServiceNames.values.sumOf { it.size }
-            // iOS: each a card of its own (glassBackground 18) - a Label (white outline symbol,
-            // body text), the count for Your Domains, and a caption chevron, padded 16.
-            ProfileLinkRow(
-                label = stringResource(R.string.kns_domains),
-                icon = Icons.Default.AlternateEmail,
-                value = "$domainsCount",
-                onClick = { navController.navigate("kns_domains") },
-            )
-
-            // The notification center: its unread count, then the sheet (iOS d1844582 notificationsSection).
-            ProfileLinkRow(
-                label = stringResource(R.string.notifications),
-                // SF Symbols "bell" is an outline.
-                icon = Icons.Outlined.Notifications,
-                value = "$notifUnread",
-                onClick = {
-                    notifCenterVm.store.reloadIfNeeded()
-                    showNotifCenter = true
-                },
-            )
-
-            // The chatting address's QR code, and only that: the balance is Wallet's.
-            ProfileLinkRow(
-                label = stringResource(R.string.chatting_address),
-                icon = Icons.Default.QrCode,
-                onClick = { showChattingQr = true },
-            )
-
             // A kachat.app link to you (iOS 863b0e9). Pasted anywhere it previews with your KNS name
             // and avatar; tapped with KaChat installed it opens a chat with you, or the new-chat
             // screen for someone who has not got you as a contact; without KaChat the page offers
-            // the download.
-            address?.let { myAddress ->
-                val shareContext = LocalContext.current
+            // the download. Profile is Share Profile and Log Out since iOS 5b7c772c: Your Domains,
+            // Notifications and the Chatting Address are cards on Wallet. A sheet with your
+            // Chatting Address's QR and Copy Share Link, in place of the system share sheet.
+            if (address != null) {
+                val shareHaptic = com.kachat.app.util.rememberHaptics()
                 ProfileLinkRow(
                     label = stringResource(R.string.profile_share_profile),
                     icon = Icons.Default.IosShare,
                     onClick = {
-                        // The link and nothing else: it previews with your name and avatar on its
-                        // own (iOS 7ce35ef). EXTRA_TITLE only titles the share sheet's preview; it
-                        // is not part of what gets pasted.
-                        val link = KaChatLink.profileWebUrl(myAddress)
-                        val send = Intent(Intent.ACTION_SEND).apply {
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, link)
-                            putExtra(Intent.EXTRA_TITLE, activeProfileDomainName?.takeIf { com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY } ?: context.getString(R.string.my_kachat_profile))
-                        }
-                        runCatching { shareContext.startActivity(Intent.createChooser(send, null)) }
+                        shareHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                        showShareProfile = true
                     },
                 )
             }
@@ -4156,13 +4202,12 @@ fun ProfileScreen(
         }
     }
 
-    if (showNotifCenter) {
-        // A full-height sheet, as iOS presents GlobalNotificationListView.
-        GlobalNotificationSheet(
-            store = notifCenterVm.store,
-            walletViewModel = viewModel,
-            navController = navController,
-            onDismiss = { showNotifCenter = false },
+    val shareAddress = address
+    if (showShareProfile && shareAddress != null) {
+        ShareProfileSheet(
+            address = shareAddress,
+            shareUrl = KaChatLink.profileWebUrl(shareAddress),
+            onDismiss = { showShareProfile = false },
         )
     }
 
@@ -4176,18 +4221,6 @@ fun ProfileScreen(
             confirmIcon = Icons.AutoMirrored.Filled.Logout,
             onConfirm = { viewModel.logout() },
             onDismiss = { showLogoutConfirmation = false },
-        )
-    }
-
-    // Pushed as iOS's Profile pushes it (iOS ChattingAddressQRView with no balance): over the whole
-    // screen, bar included, the dock left in place, a back chevron to leave.
-    PushedQrPage(visible = showChattingQr, white = true, onBack = { showChattingQr = false }) {
-        ChattingAddressQrPage(
-            address = address ?: "",
-            balanceSompi = null,
-            showsBalance = false,
-            dismiss = QrPageDismiss.BACK,
-            onDismiss = { showChattingQr = false },
         )
     }
 
@@ -4215,12 +4248,19 @@ fun KnsDomainsScreen(viewModel: WalletViewModel, onBack: () -> Unit, onOpenChat:
     var selectedDomain by remember { mutableStateOf<com.kachat.app.services.KnsAsset?>(null) }
     var showSendScreen by remember { mutableStateOf(false) }
     var editingDomain by remember { mutableStateOf<com.kachat.app.services.KnsAsset?>(null) }
+    // A .kachat name opened from its card's list: its page, to renew, list, transfer (iOS 148a5331).
+    var selectedKachat by remember { mutableStateOf<com.kachat.app.services.kachatnames.NameInfo?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.refreshOwnedDomainsAndAwait()
     }
     LaunchedEffect(Unit) {
         viewModel.refreshServiceNamesAndAwait()
+    }
+
+    selectedKachat?.let { info ->
+        AboveDock { KachatLiveNameDetailScreen(info, onBack = { selectedKachat = null }) }
+        return
     }
 
     // A .kas domain's own profile, edited on its own (iOS 09e0403): .kas profiles are no longer
@@ -4307,10 +4347,14 @@ fun KnsDomainsScreen(viewModel: WalletViewModel, onBack: () -> Unit, onOpenChat:
                     )
                     com.kachat.app.services.NameServiceTLD.K, com.kachat.app.services.NameServiceTLD.KASPA ->
                         ServiceNameListTab(tld = tld, viewModel = viewModel)
-                    // Your names and when they expire, read-only: buying, renewing, selling and
-                    // transferring them happens in KaChat Wallet (iOS d63b29d).
+                    // KaPay's list, back with the .kachat market (iOS 148a5331 `KachatLiveDomainsTab`):
+                    // each name opens its page; Claim a Name opens the .kachat tab.
                     com.kachat.app.services.NameServiceTLD.KACHAT ->
-                        KachatOwnedNamesList(walletAddress = walletAddress ?: "")
+                        KachatLiveDomainsTab(
+                            walletAddress = walletAddress ?: "",
+                            onOpen = { selectedKachat = it },
+                            onInscribe = { KachatDeepLink.pendingTab.value = true },
+                        )
                 }
             }
         }
@@ -4331,18 +4375,18 @@ fun KnsDomainsScreen(viewModel: WalletViewModel, onBack: () -> Unit, onOpenChat:
             )
         },
     ) { padding ->
-        // One square card per name ending, KaChat's own first: .kachat, KNS (.kas), dotk (.k),
-        // Kaspa Names (.kaspa), two across (iOS debd6fd). The .kachat one lists your names;
-        // buying, renewing and selling them happens in KaChat Wallet (iOS d63b29d).
-        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
-            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(2),
-            modifier = Modifier.fillMaxSize().padding(padding),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp + LocalDockInset.current),
+        // One card per name ending, KaChat's own first: .kachat, KNS (.kas), dotk (.k), Kaspa Names
+        // (.kaspa), drawn like Connection Settings' cards (iOS 5b7c772c, as KaPay has it). The
+        // .kachat one lists your names, which are claimed, renewed and sold in the .kachat tab.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp + LocalDockInset.current),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(com.kachat.app.services.NameServiceTLD.entries.size) { i ->
-                val tld = com.kachat.app.services.NameServiceTLD.entries[i]
+            com.kachat.app.services.NameServiceTLD.entries.forEach { tld ->
                 // How many names this wallet has with each service, 0 included; null while the
                 // answer is not in yet (first load, or the service unreachable) - iOS 2ee667c.
                 val count = when (tld) {
@@ -4357,8 +4401,9 @@ fun KnsDomainsScreen(viewModel: WalletViewModel, onBack: () -> Unit, onOpenChat:
 }
 
 /**
- * A Kaspa Hub style square (iOS debd6fd `serviceCard`): the name ending big in the brand style,
- * who runs it under it. Same fill, 18 radius and 0.8 white hairline at 15% as the hub tiles.
+ * A card like Connection Settings' (iOS 5b7c772c `serviceCard`, as KaPay has it): the "at" symbol in
+ * its circle, the name ending with who runs it under it, how many you have there (0 included, a
+ * dash until the answer is in), and the chevron.
  */
 @Composable
 private fun DomainServiceCard(
@@ -4367,41 +4412,14 @@ private fun DomainServiceCard(
     count: Int?,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(18.dp)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clip(shape)
-            .background(LocalAppColors.current.surface)
-            .border(0.8.dp, Color.White.copy(alpha = 0.15f), shape)
-            .clickable { onClick() }
-            .padding(horizontal = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // iOS .title2 rounded, heavy, in the accent colour; one line, shrinking to 0.6.
-            KachatFitText(
-                tld.suffix,
-                color = KaspaTeal,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = IosRoundedFontFamily,
-                minScale = 0.6f,
-            )
-            // iOS .caption semibold, secondary.
-            Text(
-                tld.serviceName,
-                color = LocalAppColors.current.textSecondary,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            // How many you have there, 0 included; a dash until the answer is in.
+    ConnectionStyleCard(
+        icon = Icons.Default.AlternateEmail,
+        title = tld.suffix,
+        onClick = onClick,
+        subtitle = { ConnectionCardCaption(tld.serviceName) },
+        trailing = {
             Box(
                 modifier = Modifier
-                    .padding(top = 2.dp)
                     .defaultMinSize(minWidth = 28.dp, minHeight = 22.dp)
                     .clip(RoundedCornerShape(50))
                     .background(KaspaTeal.copy(alpha = 0.14f))
@@ -4416,8 +4434,8 @@ private fun DomainServiceCard(
                     maxLines = 1,
                 )
             }
-        }
-    }
+        },
+    )
 }
 
 /** A pull-to-refresh list of one service's domains. */
@@ -5026,9 +5044,17 @@ fun ManageAddressesScreen(
         )
     }
     val hiddenAddresses = remember(addresses) { addresses.filter { it.hidden } }
+    /** A row's ⋮ > Send to Chatting Address: Send Kaspa from that address, the Chatting Address
+     *  filled in as the recipient (iOS 5b7c772c `sendToChattingTarget`). */
+    var sendToChattingTarget by remember { mutableStateOf<com.kachat.app.services.WalletService.SpendingAddressEntry?>(null) }
+    /** The slots Manage kUSDT lists: they always show here, so Hide refuses them (iOS 5b7c772c). */
+    var kusdtListed by remember { mutableStateOf<Set<Int>>(emptySet()) }
 
     LaunchedEffect(Unit) {
         viewModel.loadManageAddresses()
+        // its own coroutine: the Used / Unused probes don't wait on Trestly (audit #19)
+        if (onAddressPicked == null) viewModel.showKusdtListedAddresses()
+        kusdtListed = viewModel.kusdtListedSpendingIndices()
     }
 
     // Pull-to-refresh owns its spinner end-to-end (same pattern as the Profile and Domains
@@ -5069,10 +5095,12 @@ fun ManageAddressesScreen(
                 isDiscovering = isDiscoveringAddresses,
                 progress = discoveryProgress,
                 summary = discoverySummary,
-                onGenerate = {
+                onGenerate = { quantum ->
                     showActionsMenu = false
                     isGeneratingAddress = true
-                    viewModel.generateNewSpendingAddress { index ->
+                    // A regular address or a quantum-resistant one, each chosen on purpose (iOS
+                    // 5b7c772c `generateNew(quantum:)`).
+                    viewModel.generateNewSpendingAddress(quantum = quantum) { index ->
                         isGeneratingAddress = false
                         // The chain-local number, never the raw public index (1000000+ for a quantum slot).
                         if (index != null) IosToasts.show(context.getString(R.string.address_number_is_ready, com.kachat.app.services.WalletManager.addressNumber(index)))
@@ -5116,60 +5144,16 @@ fun ManageAddressesScreen(
             modifier = Modifier.fillMaxSize(),
         ) {
             // The total is everything this account holds: the chatting address and every spending
-            // address, hidden ones too - the same total as Profile's Manage Addresses card (iOS
-            // 245a5d2). No card: iOS `accountSummary` sits straight on the list.
+            // address, hidden ones too (iOS 245a5d2) - in the same card as an address's own page,
+            // with its worth in your currency on mainnet; a dash until it's known (iOS 5b7c772c
+            // `accountSummary`). Notify on receive moved to Settings > Notifications > Wallet.
             if (onAddressPicked == null) {
                 item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(stringResource(R.string.total_balance), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                            Text(
-                                knownChattingSompi?.let { known ->
-                                    "%.8f ${KaspaUnit.symbol}".format(java.util.Locale.US, (known + addresses.sumOf { it.balanceSompi }) / 100_000_000.0)
-                                } ?: "-- ${KaspaUnit.symbol}",
-                                color = LocalAppColors.current.textPrimary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 22.sp
-                            )
-                        }
-                    }
-                }
-            }
-            run {
-                // This account's own switch (a cold-storage account has one in its own menu):
-                // the spending addresses' receives, not every address the wallet watches
-                // (iOS ba352a2). A plain list row under the summary, no card.
-                item {
-                    val spendingNotify by settingsViewModel.spendingReceiveNotifications.collectAsState()
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 11.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(
-                                stringResource(R.string.notify_on_receive),
-                                color = LocalAppColors.current.textPrimary,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp,
-                            )
-                            Text(
-                                stringResource(R.string.when_a_spending_address_receives_kaspa_from),
-                                color = LocalAppColors.current.textSecondary,
-                                fontSize = 12.sp,
-                            )
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        com.kachat.app.ui.theme.IosSwitch(
-                            checked = spendingNotify,
-                            onCheckedChange = { settingsViewModel.setSpendingReceiveNotifications(it) }
-                        )
+                    val known = knownChattingSompi
+                    if (known != null) {
+                        KaspaAddressBalanceCard(label = stringResource(R.string.total_balance), sompi = known + addresses.sumOf { it.balanceSompi })
+                    } else {
+                        AddressBalanceCard(label = stringResource(R.string.total_balance), amount = "-- ${KaspaUnit.symbol}", detail = null)
                     }
                 }
             }
@@ -5259,7 +5243,13 @@ fun ManageAddressesScreen(
                         },
                         onQrClick = { qrAddress = entry.address },
                         onRenameClick = { renamingEntry = entry; renameInput = entry.label ?: "" },
+                        onSendToChattingClick = { sendToChattingTarget = entry },
                         onHideClick = {
+                            // On Manage kUSDT's list: it stays here (iOS 5b7c772c).
+                            if (entry.index in kusdtListed) {
+                                IosToasts.show(context.getString(R.string.kusdt_listed_stays_here))
+                                return@ManageAddressRow
+                            }
                             // iOS hideAddress: any address, funded too - it comes back from
                             // Address Visibility (iOS 245a5d2).
                             viewModel.setManageAddressHidden(entry.index, true) { ok ->
@@ -5302,10 +5292,50 @@ fun ManageAddressesScreen(
             )
         }
 
+        // A row's Show QR Code: that address on the shared receive screen, in a sheet with Close
+        // (iOS 5b7c772c SpendingAddressQRView). A quantum-resistant one says it's for Kaspa only.
         qrAddress?.let { address ->
-            QrCodeOverlay(value = address, onDismiss = { qrAddress = null })
+            val qrEntry = addresses.firstOrNull { it.address == address }
+            val quantum = qrEntry?.isQuantum == true
+            QrPageSheet(onDismiss = { qrAddress = null }, white = false) {
+                AddressReceivePage(dismiss = QrPageDismiss.CLOSE, onDismiss = { qrAddress = null }) {
+                    AddressReceiveView(
+                        title = stringResource(R.string.receive_kaspa),
+                        address = address,
+                        addressLabel = qrEntry?.displayLabel,
+                        balanceLine = qrEntry?.let { KaspaUnit.groupedAmount(it.balanceSompi) },
+                        privacyNote = if (quantum) ReceiveNotes.quantumAddress() else ReceiveNotes.spendingAddress(),
+                        notes = if (quantum) listOf(ReceiveNotes.kaspaOnly(), ReceiveNotes.noKusdtOnQuantum()) else listOf(ReceiveNotes.kaspaAndKusdt()),
+                        icon = { KaspaLogoIcon() },
+                    )
+                }
+            }
         }
         }
+        }
+    }
+
+    // Send Kaspa from that address with the Chatting Address already the recipient (iOS 5b7c772c).
+    val sendChatting = chattingAddress
+    sendToChattingTarget?.let { entry ->
+        if (sendChatting != null) {
+            IosFullSheet(
+                onDismissed = {
+                    sendToChattingTarget = null
+                    viewModel.loadManageAddresses()
+                },
+                swipeToDismiss = false,
+            ) { close ->
+                SpendingAddressSendFlow(
+                    fromAddress = sendChatting,
+                    balanceSompi = entry.balanceSompi,
+                    title = stringResource(R.string.chats_send_kaspa),
+                    viewModel = viewModel,
+                    onDone = close,
+                    prefillAddress = sendChatting,
+                    lockedSource = SendSource.Spending(entry.index, entry.address, entry.displayLabel),
+                )
+            }
         }
     }
 
@@ -5515,6 +5545,7 @@ fun AddressVisibilityScreen(
     val chattingBalanceSompi by viewModel.balanceSompi.collectAsState()
     val loading by viewModel.manageAddressesLoading.collectAsState()
     var showHideAllConfirm by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     // The chain whose card was tapped (true = quantum), null on the cards themselves.
     var openedChain by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<Boolean?>(null) }
 
@@ -5546,16 +5577,12 @@ fun AddressVisibilityScreen(
             )
         }
     ) { padding ->
-        // Two Kaspa Hub style squares, quantum first (iOS d7e6dd1).
-        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
-            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(2),
-            modifier = Modifier.fillMaxSize().padding(padding),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp),
+        // A card per chain, quantum first, drawn like Connection Settings' cards (iOS 5b7c772c).
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(2) { i ->
-                val quantum = i == 0
+            listOf(true, false).forEach { quantum ->
                 // "n of m shown": m = this chain's revealed addresses (every row the loaded list
                 // holds for it), n = those Manage Addresses shows (not hidden). The Chatting
                 // Address is the legacy list's always-shown #0.
@@ -5583,8 +5610,9 @@ fun AddressVisibilityScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showHideAllConfirm = false
-                    // Every revealed address hidden, both chains.
-                    viewModel.hideAllSpendingAddresses()
+                    // Every revealed address hidden, both chains - what Manage kUSDT lists stays
+                    // shown (iOS 5b7c772c).
+                    scope.launch { viewModel.hideAllSpendingAddressesKeeping(viewModel.kusdtListedSpendingIndices()) }
                 }) {
                     Text(stringResource(R.string.hide_all), color = LocalAppColors.current.danger, fontWeight = FontWeight.Bold)
                 }
@@ -5599,9 +5627,9 @@ fun AddressVisibilityScreen(
 }
 
 /**
- * A Kaspa Hub style square (iOS d7e6dd1 `chainCard`): the chain's glyph, its name, and how many
- * of its addresses Manage Addresses shows. Same fill, 18 radius and 0.8 white hairline at 15% as
- * the hub tiles and the Your Domains cards.
+ * A card like Connection Settings' (iOS 5b7c772c `chainCard`): the chain's icon in its circle, its
+ * name with how many of its addresses Manage Addresses shows and what they hold under it, and the
+ * chevron.
  */
 @Composable
 private fun AddressVisibilityChainCard(
@@ -5612,60 +5640,35 @@ private fun AddressVisibilityChainCard(
     loading: Boolean,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(18.dp)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clip(shape)
-            .background(LocalAppColors.current.surface)
-            .border(0.8.dp, Color.White.copy(alpha = 0.15f), shape)
-            .clickable { onClick() }
-            .padding(horizontal = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (quantum) {
-                // "shield.fill"
-                Icon(Icons.Filled.Shield, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(26.dp))
-            } else {
-                // "circle.grid.2x2.fill": four dots in a square.
-                androidx.compose.foundation.Canvas(Modifier.size(26.dp)) {
-                    val r = size.minDimension * 0.2f
-                    for (cx in listOf(0.27f, 0.73f)) for (cy in listOf(0.27f, 0.73f)) {
-                        drawCircle(KaspaTeal, radius = r, center = Offset(size.width * cx, size.height * cy))
-                    }
-                }
-            }
-            // iOS .subheadline semibold, primary, up to two lines.
-            Text(
-                stringResource(if (quantum) R.string.quantum_addresses else R.string.non_quantum_addresses),
-                color = LocalAppColors.current.textPrimary,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+    ConnectionStyleCard(
+        // "shield.fill" / "circle.grid.2x2.fill"
+        icon = if (quantum) Icons.Filled.Shield else Icons.Filled.GridView,
+        title = stringResource(if (quantum) R.string.quantum_addresses else R.string.non_quantum_addresses),
+        onClick = onClick,
+        subtitle = {
             if (loading) {
                 com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(16.dp))
             } else {
-                // iOS .caption, secondary.
-                Text(
-                    stringResource(R.string.addresses_shown_count, shown, total),
-                    color = LocalAppColors.current.textSecondary,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                )
-                KachatFitText(
-                    "${KaspaUnit.plain(balanceSompi)} ${KaspaUnit.symbol}",
-                    color = if (balanceSompi > 0) KaspaTeal else LocalAppColors.current.textSecondary,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                )
+                // iOS .caption.monospaced(), one line, shrinking to 0.8.
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.addresses_shown_count, shown, total),
+                        color = LocalAppColors.current.textSecondary,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                        maxLines = 1,
+                    )
+                    KachatFitText(
+                        "${KaspaUnit.plain(balanceSompi)} ${KaspaUnit.symbol}",
+                        color = if (balanceSompi > 0) KaspaTeal else LocalAppColors.current.textSecondary,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                        minScale = 0.8f,
+                    )
+                }
             }
-        }
-    }
+        },
+    )
 }
 
 /**
@@ -5682,7 +5685,8 @@ private fun AddressVisibilityChainCard(
 private fun AddressVisibilityChainList(
     viewModel: WalletViewModel,
     quantum: Boolean,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    tokenViewModel: com.kachat.app.viewmodels.TokenViewModel = hiltViewModel(),
 ) {
     val addresses by viewModel.manageAddresses.collectAsState()
     val chattingAddress by viewModel.address.collectAsState()
@@ -5701,6 +5705,12 @@ private fun AddressVisibilityChainList(
     }
     // Lazily filled Used/Unused results for rows derived beyond the loaded list.
     val usedCache = remember { mutableStateMapOf<Int, Boolean>() }
+    // The slots Manage kUSDT lists, worked out once per page rather than per row, and again when
+    // the holdings change (iOS 5b7c772c): they stay shown here.
+    var kusdtListed by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    var showKusdtNote by remember { mutableStateOf(false) }
+    val kusdtHoldings by tokenViewModel.holdingsFlow.collectAsState()
+    LaunchedEffect(kusdtHoldings) { kusdtListed = viewModel.kusdtListedSpendingIndices() }
 
     // Chain-local offsets for the page's raw indices; the pager shows their numbers below.
     val localStart = page * pageSize
@@ -5830,9 +5840,15 @@ private fun AddressVisibilityChainList(
                 // rows each launching their own history probe fired fifty requests the moment a
                 // page appeared, which is the other half of what made this screen unusable.
                 val used = if (listedQuantum || entry.index <= listMax) entry.everUsed else usedCache[entry.index]
+                // on Manage kUSDT's list: it stays shown here
+                val locked = visible && entry.index in kusdtListed
+                val lockHaptic = com.kachat.app.util.rememberHaptics()
                 // The WHOLE row toggles, not just the checkmark.
                 val toggleVisibility: () -> Unit = {
-                    when {
+                    if (locked) {
+                        lockHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                        showKusdtNote = true
+                    } else when {
                         listedQuantum ->
                             viewModel.setManageAddressHidden(entry.index, !entry.hidden)
                         entry.index > listMax ->
@@ -5857,7 +5873,8 @@ private fun AddressVisibilityChainList(
                         Icon(
                             if (visible) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                             if (visible) stringResource(R.string.visible) else stringResource(R.string.hidden_2),
-                            tint = if (visible) KaspaTeal else LocalAppColors.current.textSecondary
+                            tint = if (visible) KaspaTeal else LocalAppColors.current.textSecondary,
+                            modifier = Modifier.alpha(if (locked) 0.45f else 1f),
                         )
                     }
                     Spacer(Modifier.width(8.dp))
@@ -5912,6 +5929,21 @@ private fun AddressVisibilityChainList(
                 }
             }
         }
+    }
+
+    // "Shown for kUSDT", after a tap on such a row (iOS 5b7c772c).
+    if (showKusdtNote) {
+        com.kachat.app.ui.theme.IosAlertDialog(
+            onDismissRequest = { showKusdtNote = false },
+            containerColor = LocalAppColors.current.surface,
+            title = { Text(stringResource(R.string.shown_for_kusdt), color = LocalAppColors.current.textPrimary) },
+            text = { Text(stringResource(R.string.kusdt_listed_stays_here), color = LocalAppColors.current.textSecondary) },
+            confirmButton = {
+                TextButton(onClick = { showKusdtNote = false }) {
+                    Text(stringResource(R.string.ok), color = KaspaTeal, fontWeight = FontWeight.Bold)
+                }
+            },
+        )
     }
 }
 
@@ -6014,6 +6046,9 @@ fun SpendingAddressSendFlow(
     /** Pays a chatting-address request as a chat payment (the memo encrypted to them inside it);
      *  null takes the app's own (the activity's), as every iOS send screen has ChatService. */
     chatViewModel: com.kachat.app.viewmodels.ChatViewModel? = null,
+    /** The send went out (iOS `WithdrawKaspaView(onComplete:)`): a kUSDT send's Fund This Address
+     *  builds its review again once the KAS lands (iOS 5b7c772c TokenSendView). */
+    onComplete: (() -> Unit)? = null,
     priceViewModel: com.kachat.app.viewmodels.KasPriceViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -6206,6 +6241,7 @@ fun SpendingAddressSendFlow(
         val result = sendResult ?: return@LaunchedEffect
         if (result.isSuccess) {
             result.getOrNull()?.let { txId ->
+                onComplete?.invoke()
                 sentTransaction = SentTransaction(
                     txId = txId,
                     amountSompi = KaspaUnit.sompiFromUserText(amountInput)?.takeIf { it > 0 },
@@ -6887,6 +6923,20 @@ fun SpendingAddressTxHistoryScreen(
     var utxoLabels by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var labelingUtxoKey by remember { mutableStateOf<String?>(null) }
     var labelInput by remember { mutableStateOf("") }
+    // The name service opened from the Domains tab (iOS 5b7c772c AddressDomainsTab).
+    var openedDomainService by remember { mutableStateOf<com.kachat.app.services.NameServiceTLD?>(null) }
+
+    // A name service opened from this address's Domains tab: its names.
+    openedDomainService?.let { tld ->
+        AboveDock {
+            AddressDomainServiceScreen(
+                address = address,
+                tld = tld,
+                onBack = { openedDomainService = null },
+            )
+        }
+        return
+    }
 
     LaunchedEffect(address) {
         if (address.isNotEmpty()) {
@@ -6987,16 +7037,17 @@ fun SpendingAddressTxHistoryScreen(
         // What Receive / Send and the dock cover: the lists scroll clear of it.
         val barInset = padding.calculateBottomPadding()
         Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
-            AddressPageBalanceHeader(entry?.balanceSompi ?: 0L)
-            // The app's tab look, not a segmented control; plain names - History, UTXOs (iOS
-            // b96d727/718b88c; the Domains tab went with the .kachat market, iOS d54ea87).
+            // The card an address's own page opens with (iOS 5b7c772c KaspaAddressBalanceCard).
+            KaspaAddressBalanceCard(label = entry?.displayLabel ?: displayName, sompi = entry?.balanceSompi ?: 0L, priceViewModel = priceViewModel)
+            // The app's tab look, not a segmented control; plain names - History, UTXOs, Domains
+            // (iOS b96d727/718b88c, 5b7c772c).
             UnderlineTabBar(
-                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos)),
+                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos), stringResource(R.string.address_tab_domains)),
                 selectedIndex = selectedTab,
                 onSelect = { selectedTab = it },
-                modifier = Modifier.padding(top = 4.dp),
             )
             when (selectedTab) {
+                2 -> AddressDomainsTab(address, onOpenService = { openedDomainService = it }, bottomPadding = barInset)
                 0 -> AddressHistoryList(
                     txHistory = txHistory,
                     isLoading = isLoadingTxHistory,
@@ -7022,8 +7073,23 @@ fun SpendingAddressTxHistoryScreen(
         }
     }
 
+    // Receive: this address on the shared receive screen, in a sheet with Close leading (iOS
+    // 5b7c772c SpendingAddressQRView). A quantum-resistant one says it's for Kaspa only.
     if (showQr && address.isNotEmpty()) {
-        QrCodeOverlay(value = address, onDismiss = { showQr = false })
+        val quantum = com.kachat.app.services.WalletManager.isQuantumIndex(index)
+        QrPageSheet(onDismiss = { showQr = false }, white = false) {
+            AddressReceivePage(dismiss = QrPageDismiss.CLOSE, onDismiss = { showQr = false }) {
+                AddressReceiveView(
+                    title = stringResource(R.string.receive_kaspa),
+                    address = address,
+                    addressLabel = entry?.displayLabel ?: displayName,
+                    balanceLine = KaspaUnit.groupedAmount(entry?.balanceSompi ?: 0L),
+                    privacyNote = if (quantum) ReceiveNotes.quantumAddress() else ReceiveNotes.spendingAddress(),
+                    notes = if (quantum) listOf(ReceiveNotes.kaspaOnly(), ReceiveNotes.noKusdtOnQuantum()) else listOf(ReceiveNotes.kaspaAndKusdt()),
+                    icon = { KaspaLogoIcon() },
+                )
+            }
+        }
     }
 
     if (showAddressActions) {
@@ -7170,6 +7236,20 @@ fun IdentityAddressDetailScreen(
     var utxoLabels by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var labelingUtxoKey by remember { mutableStateOf<String?>(null) }
     var labelInput by remember { mutableStateOf("") }
+    // The name service opened from the Domains tab (iOS 5b7c772c AddressDomainsTab).
+    var openedDomainService by remember { mutableStateOf<com.kachat.app.services.NameServiceTLD?>(null) }
+
+    // A name service opened from this address's Domains tab: its names.
+    openedDomainService?.let { tld ->
+        AboveDock {
+            AddressDomainServiceScreen(
+                address = address.orEmpty(),
+                tld = tld,
+                onBack = { openedDomainService = null },
+            )
+        }
+        return
+    }
 
     LaunchedEffect(address) {
         val addr = address
@@ -7259,16 +7339,18 @@ fun IdentityAddressDetailScreen(
         // What Receive / Send and the dock cover: the lists scroll clear of it.
         val barInset = padding.calculateBottomPadding()
         Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
-            AddressPageBalanceHeader(balanceSompi)
+            // The card an address's own page opens with (iOS 5b7c772c KaspaAddressBalanceCard):
+            // the wallet's own balance for this address, as Manage Addresses shows it.
+            KaspaAddressBalanceCard(label = stringResource(R.string.chatting_address), sompi = balanceSompi, priceViewModel = priceViewModel)
             // Right above what it switches, the way Chats has it: History, UTXOs, Domains
-            // (iOS b96d727/718b88c).
+            // (iOS b96d727/718b88c, 5b7c772c).
             UnderlineTabBar(
-                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos)),
+                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos), stringResource(R.string.address_tab_domains)),
                 selectedIndex = selectedTab,
                 onSelect = { selectedTab = it },
-                modifier = Modifier.padding(top = 8.dp),
             )
             when (selectedTab) {
+                2 -> AddressDomainsTab(address.orEmpty(), onOpenService = { openedDomainService = it }, bottomPadding = barInset)
                 0 -> AddressHistoryList(
                     txHistory = txHistory,
                     isLoading = isLoadingTxHistory,
@@ -7299,7 +7381,7 @@ fun IdentityAddressDetailScreen(
         // iOS ChattingAddressManageView shows ChattingAddressQRView with its default caption -
         // the chatting caption Profile uses (since 492aa53: "for chatting and domains only").
         // In a sheet with Close leading, as iOS's ChattingAddressManageView presents it.
-        QrPageSheet(onDismiss = { showQr = false }, white = true) {
+        QrPageSheet(onDismiss = { showQr = false }, white = false) {
             ChattingAddressQrPage(
                 address = qrAddress,
                 balanceSompi = balanceSompi,
@@ -7937,28 +8019,6 @@ private fun InsetGroupedSingleRowList(content: @Composable () -> Unit) {
     }
 }
 
-/** "Balance" over the amount at the top of an address's page (iOS: caption, then title3 semibold). */
-@Composable
-private fun AddressPageBalanceHeader(balanceSompi: Long) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            stringResource(R.string.balance),
-            color = LocalAppColors.current.textSecondary,
-            fontSize = 12.sp
-        )
-        Text(
-            "%.8f ${KaspaUnit.symbol}".format(java.util.Locale.US, balanceSompi / 100_000_000.0),
-            color = LocalAppColors.current.textPrimary,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp
-        )
-    }
-}
-
 /**
  * An address page's History tab - iOS `transactionsList`: one `.insetGrouped` card of
  * transactions, or the spinner, "Could not load transactions." with Try Again, or "No
@@ -8207,6 +8267,9 @@ private fun ManageAddressRow(
     onCopyClick: () -> Unit,
     onQrClick: () -> Unit,
     onRenameClick: () -> Unit,
+    /** Row-menu "Send to Chatting Address" (iOS 5b7c772c): Send Kaspa from this address, the
+     *  Chatting Address the recipient. Null leaves it out (the picker variant of this row). */
+    onSendToChattingClick: (() -> Unit)? = null,
     /** Row-menu "Hide Address" (iOS parity) — same flag the Address Visibility checklist edits.
      *  Null hides the menu entry (e.g. the picker variant of this row). */
     onHideClick: (() -> Unit)? = null,
@@ -8316,6 +8379,15 @@ private fun ManageAddressRow(
                 title = stringResource(R.string.show_qr_code),
                 subtitle = stringResource(R.string.full_screen_for_scanning_with_another_device),
             ) { showMenu = false; onQrClick() }
+            // Send Kaspa from this address with the Chatting Address already the recipient
+            if (onSendToChattingClick != null) {
+                ActionSheetRow(
+                    icon = Icons.Default.ArrowCircleUp,
+                    title = stringResource(R.string.send_to_chatting_address),
+                    subtitle = stringResource(R.string.moves_kaspa_to_your_chatting_address),
+                    enabled = entry.balanceSompi > 0L,
+                ) { showMenu = false; onSendToChattingClick() }
+            }
             // Hide straight from the row - same effect as unchecking it in Address Visibility,
             // without opening that screen. Any address, funded too: it comes back from there
             // (iOS 245a5d2).
@@ -9344,6 +9416,8 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    /** Settings > KaPost (iOS 148a5331 `KaPostsSettingsView(embedded: true)`). */
+    var showKaPostSettings by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val balance by walletViewModel.fullBalance.collectAsState()
     val dotColorHex by connectionViewModel.dotColorHex.collectAsState()
     val biometricSeedPhraseEnabled by walletViewModel.biometricSeedPhraseEnabled.collectAsState()
@@ -9488,6 +9562,9 @@ fun SettingsScreen(
             // A Form's first header sits 4 under the inline bar.
             if (sectionKey != null) Spacer(Modifier.height(4.dp))
             if (sectionKey == null) {
+                if (showKaPostSettings) {
+                    KaPostsSettingsScreen(onBack = { showKaPostSettings = false })
+                }
                 // Flat hub list (iOS d1844582): no section titles, alphabetical down to the wipe
                 // row, in one card. Delete Account stays apart below.
                 Spacer(Modifier.height(8.dp))
@@ -9510,6 +9587,12 @@ fun SettingsScreen(
                     SettingsNavigationItem(stringResource(R.string.customization), Icons.Outlined.Brush, onClick = { navController.navigate("settings_section/customization") })
                     SettingsDivider(inset = IosRowTextInset)
                     SettingsNavigationItem(stringResource(R.string.diagnostics), Icons.Outlined.MonitorHeart, onClick = { navController.navigate("settings_section/diagnostics") })
+                    SettingsDivider(inset = IosRowTextInset)
+                    // KaPost's own settings (tips, cool down), here since iOS 148a5331 rather than in
+                    // the feed's menu; then Help, moved from the old Profile screen.
+                    SettingsNavigationItem(stringResource(R.string.shell_tab_kapost), com.kachat.app.ui.AppTab.KAPOSTS.hubIcon, onClick = { showKaPostSettings = true })
+                    SettingsDivider(inset = IosRowTextInset)
+                    SettingsNavigationItem(stringResource(R.string.help), Icons.AutoMirrored.Outlined.HelpOutline, onClick = { navController.navigate("help") })
                     SettingsDivider(inset = IosRowTextInset)
                     // Chats / Wallet subpages (4.0, matches iOS).
                     SettingsNavigationItem(stringResource(R.string.notifications), Icons.Outlined.NotificationsActive, onClick = { navController.navigate("settings_section/notifications") })
@@ -9589,6 +9672,7 @@ fun SettingsScreen(
                 AccountAboutPage(
                     viewModel = walletViewModel,
                     onOpenLicenses = { navController.navigate("open_source_licenses") },
+                    onOpenTerms = { navController.navigate(com.kachat.app.ui.SettingsShellRoutes.TERMS_OF_USE) },
                 )
             }
 
@@ -9661,6 +9745,11 @@ fun SettingsScreen(
                     SettingsSwitchItem(stringResource(R.string.show_kachat_endings), showKachatNameEndings) { enabled ->
                         settingsViewModel.setShowKachatNameEndings(enabled)
                     }
+                }
+                // The dock and Kaspa Hub (iOS 148a5331): a sheet over the tabs, since each move
+                // rebuilds the dock this page sits above.
+                SettingsFormSection(title = null, footer = stringResource(R.string.shell_customize_dock_footer)) {
+                    SettingsNavigationItem(stringResource(R.string.shell_customize_dock), Icons.Outlined.Dock, onClick = { com.kachat.app.ui.CustomizeDock.open() })
                 }
             }
 
@@ -9747,6 +9836,11 @@ fun SettingsScreen(
                     SettingsDivider(inset = IosRowTextInset)
                     SettingsNavigationItem(stringResource(R.string.notifications_wallet), Icons.Outlined.Payments, onClick = {
                         navController.navigate("wallet_notification_settings")
+                    })
+                    // KaPost's kinds (iOS 148a5331); Public Chats rooms keep their own bells.
+                    SettingsDivider(inset = IosRowTextInset)
+                    SettingsNavigationItem(stringResource(R.string.shell_tab_kapost), com.kachat.app.ui.AppTab.KAPOSTS.hubIcon, onClick = {
+                        navController.navigate(com.kachat.app.ui.SettingsShellRoutes.KAPOSTS_NOTIFICATIONS)
                     })
                 }
             }
@@ -10048,7 +10142,7 @@ private fun AccountNamePage(viewModel: WalletViewModel) {
 /** Settings > About (iOS d1844582 `AccountAboutPage`): this account's created date, then the app's
  *  version, links and licenses. */
 @Composable
-private fun AccountAboutPage(viewModel: WalletViewModel, onOpenLicenses: () -> Unit) {
+private fun AccountAboutPage(viewModel: WalletViewModel, onOpenLicenses: () -> Unit, onOpenTerms: () -> Unit = {}) {
     val address by viewModel.address.collectAsState()
     val context = LocalContext.current
     fun open(url: String) {
@@ -10081,6 +10175,9 @@ private fun AccountAboutPage(viewModel: WalletViewModel, onOpenLicenses: () -> U
                 runCatching { context.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:kaspasilver@gmail.com"))) }
             },
         )
+        AccountAboutDivider()
+        // The Terms of Use agreed to before first use (iOS 148a5331 `TermsOfUseView`).
+        AccountAboutRow(stringResource(R.string.shell_terms_of_use), null, onClick = onOpenTerms)
         AccountAboutDivider()
         AccountAboutRow(stringResource(R.string.settings_privacy_policy), null, onClick = { open("https://home.kachat.app/privacy/") })
         AccountAboutDivider()
@@ -11417,17 +11514,48 @@ fun NotificationSettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel 
 }
 
 /**
- * Settings > Notifications > Wallet — the Address Activity toggle (default ON). Gates
+ * Settings > Notifications > Wallet — the Address Activity toggle (default ON), which gates
  * [com.kachat.app.services.AddressActivityNotifier]'s local notifications for external receipts
- * on any spending or cold storage address. Mirrors iOS's WalletNotificationSettingsView.
+ * on any spending or cold storage address, and this account's switch for its spending addresses'
+ * receives (moved here from Manage Addresses, iOS 5b7c772c). Mirrors iOS's
+ * WalletNotificationSettingsView.
  */
 @Composable
 fun WalletNotificationSettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
     val addressActivityEnabled by viewModel.addressActivityNotificationsEnabled.collectAsState()
+    val spendingNotify by viewModel.spendingReceiveNotifications.collectAsState()
     SettingsFormPage(title = stringResource(R.string.notifications_wallet), onBack = onBack) {
         SettingsFormSection(title = null) {
             SettingsSwitchItem(stringResource(R.string.address_activity), addressActivityEnabled) {
                 viewModel.setAddressActivityNotificationsEnabled(it)
+            }
+            // This account's own switch: the spending addresses' receives, not every address the
+            // wallet watches. Off while Address Activity is off.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .alpha(if (addressActivityEnabled) 1f else 0.5f),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f).padding(end = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        stringResource(R.string.notify_on_receive),
+                        color = LocalAppColors.current.textPrimary,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        stringResource(R.string.when_a_spending_address_receives_kaspa_from),
+                        color = LocalAppColors.current.textSecondary,
+                        fontSize = 12.sp,
+                    )
+                }
+                com.kachat.app.ui.theme.IosSwitch(
+                    checked = spendingNotify,
+                    onCheckedChange = { viewModel.setSpendingReceiveNotifications(it) },
+                    enabled = addressActivityEnabled,
+                )
             }
         }
     }
@@ -11761,43 +11889,156 @@ private fun AddressBookSection(viewModel: ConnectionViewModel) {
     }
 }
 
+/** A card per connection on Connection Settings, each opening its own screen (iOS 5b7c772c
+ *  `ConnectionSettingsView.Page`): Indexer, Node, Domains, Explorer and Trestly. */
+private enum class ConnectionPage {
+    INDEXER, NODE, DOMAINS, EXPLORER, TRESTLY;
+
+    val titleRes: Int
+        get() = when (this) {
+            INDEXER -> R.string.connection_tab_indexer
+            NODE -> R.string.connection_tab_node
+            DOMAINS -> R.string.connection_tab_domains
+            EXPLORER -> R.string.connection_tab_explorer
+            TRESTLY -> R.string.connection_trestly
+        }
+
+    /** SF Symbols bell.badge, server.rack, at, safari, dollarsign.circle. */
+    val icon: ImageVector
+        get() = when (this) {
+            INDEXER -> Icons.Outlined.NotificationsActive
+            NODE -> Icons.Default.Dns
+            DOMAINS -> Icons.Default.AlternateEmail
+            EXPLORER -> Icons.Default.Explore
+            TRESTLY -> Icons.Default.MonetizationOn
+        }
+
+    /** Only the node screen saves as you pick (the picker and the address book). */
+    val hasSave: Boolean get() = this != NODE
+}
+
+/** What a Connection Settings card shows (iOS `cardSummary`): the server's host, or "Not set". */
+private fun connectionHost(url: String, notSet: String): String {
+    val trimmed = url.trim()
+    if (trimmed.isEmpty()) return notSet
+    return runCatching { java.net.URI(trimmed).host }.getOrNull()?.takeIf { it.isNotEmpty() } ?: trimmed
+}
+
+/**
+ * Connection Settings (iOS 5b7c772c `ConnectionSettingsView`, as KaPay has it): a card per
+ * connection - the icon in its circle, what it's set to now, the chevron - each opening that
+ * connection's own screen with Save (the Node screen saves as you pick).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConnectionSettingsScreen(onBack: () -> Unit, viewModel: ConnectionViewModel = hiltViewModel()) {
+fun ConnectionSettingsScreen(
+    onBack: () -> Unit,
+    viewModel: ConnectionViewModel = hiltViewModel(),
+    trestlyViewModel: com.kachat.app.viewmodels.TrestlySettingsViewModel = hiltViewModel(),
+) {
     val network by viewModel.network.collectAsState()
     val indexerUrl by viewModel.indexerUrl.collectAsState()
     val kachatNamesIndexerUrl by viewModel.kachatNamesIndexerUrl.collectAsState()
     val knsApiUrl by viewModel.knsApiUrl.collectAsState()
     val kaspaRestApiUrl by viewModel.kaspaRestApiUrl.collectAsState()
     val pushIndexerUrl by viewModel.pushIndexerUrl.collectAsState()
+    val trustedNodeAddress by viewModel.trustedNodeAddress.collectAsState()
+    val savedNodeAddresses by viewModel.savedNodeAddresses.collectAsState()
+    val trestlyApiUrl by trestlyViewModel.selectedTrestlyApiUrl.collectAsState()
+    val selectedNetwork by com.kachat.app.util.KaspaNetwork.selected.collectAsState()
+    val context = LocalContext.current
+    // Nil: the cards. Set: that connection's own screen.
+    var openedPageName by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    val openedPage = openedPageName?.let { name -> ConnectionPage.entries.firstOrNull { it.name == name } }
+    // The Trestly field keeps its edit until Save; it starts from what's saved.
+    var trestlyField by remember(trestlyApiUrl) { mutableStateOf(trestlyApiUrl) }
+    // Trestly's site (iOS 148a5331 "Trestly Site"), kept per network until Save the same way.
+    var trestlySiteField by remember(selectedNetwork) {
+        mutableStateOf(com.kachat.app.services.tokens.TrestlySite.storedSiteUrl(context, selectedNetwork))
+    }
+
+    if (openedPage == null) {
+        val notSet = stringResource(R.string.connection_not_set)
+        val automaticScan = stringResource(R.string.automatic_scan)
+        Scaffold(
+            containerColor = LocalAppColors.current.background,
+            topBar = {
+                SettingsSubpageBar(title = stringResource(R.string.connection_settings), onBack = onBack)
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+                    .padding(bottom = LocalDockInset.current),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                ConnectionPage.entries.forEach { page ->
+                    // What each card is set to right now: the server's host, or the node in use.
+                    val summary = when (page) {
+                        ConnectionPage.INDEXER -> connectionHost(indexerUrl, notSet)
+                        ConnectionPage.NODE -> {
+                            val trusted = trustedNodeAddress.trim()
+                            if (trusted.isEmpty()) automaticScan
+                            else savedNodeAddresses.firstOrNull { it.address == trusted }?.label?.trim()?.takeIf { it.isNotEmpty() } ?: trusted
+                        }
+                        ConnectionPage.DOMAINS -> connectionHost(kachatNamesIndexerUrl, notSet)
+                        ConnectionPage.EXPLORER -> connectionHost(kaspaRestApiUrl, notSet)
+                        ConnectionPage.TRESTLY -> connectionHost(trestlyApiUrl, notSet)
+                    }
+                    ConnectionStyleCard(
+                        icon = page.icon,
+                        title = stringResource(page.titleRes),
+                        onClick = { openedPageName = page.name },
+                        subtitle = { ConnectionCardCaption(summary) },
+                    )
+                }
+            }
+        }
+        return
+    }
+
+    androidx.activity.compose.BackHandler { openedPageName = null }
     val scrollState = rememberScrollState()
+    /** Save keeps the page and goes back to the cards; an http:// address is refused (iOS
+     *  `saveSettings`, Decision 3A). */
+    fun save() {
+        if (openedPage == ConnectionPage.TRESTLY) {
+            if (com.kachat.app.viewmodels.TrestlySettingsViewModel.isCleartextHttp(trestlyField) ||
+                trestlySiteField.trim().lowercase().startsWith("http://")
+            ) {
+                IosToasts.error(context.getString(R.string.nc_use_https))
+                return
+            }
+            if (!com.kachat.app.ui.screens.tokens.saveTrestlySiteUrl(context, selectedNetwork, trestlySiteField)) {
+                IosToasts.error(context.getString(R.string.nc_use_https))
+                return
+            }
+            trestlyViewModel.setTrestlyApiUrl(
+                com.kachat.app.viewmodels.TrestlySettingsViewModel.normalizedOrDefault(
+                    trestlyField,
+                    com.kachat.app.repository.AppSettingsRepository.defaultTrestlyApiUrl(selectedNetwork),
+                )
+            )
+        }
+        openedPageName = null
+    }
 
     Scaffold(
         containerColor = LocalAppColors.current.background,
         topBar = {
             SettingsSubpageBar(
-                title = stringResource(R.string.connection_settings),
-                onBack = onBack,
-                trailing = { SheetBarButton(stringResource(R.string.save), onClick = onBack) },
+                title = stringResource(openedPage.titleRes),
+                onBack = { openedPageName = null },
+                trailing = {
+                    if (openedPage.hasSave) SheetBarButton(stringResource(R.string.save), onClick = { save() })
+                },
             )
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            // One tab per kind of connection, so the page stays short as the app talks to more
-            // services: indexers, the Kaspa node, name services, the block explorer (iOS ee01f81,
-            // e2f6732). Every field keeps its value while you switch between them.
-            val connectionTabs = listOf(
-                stringResource(R.string.connection_tab_indexer),
-                stringResource(R.string.connection_tab_node),
-                stringResource(R.string.connection_tab_domains),
-                stringResource(R.string.connection_tab_explorer),
-            )
-            var selectedConnectionTab by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(0) }
-            UnderlineTabBar(
-                titles = connectionTabs,
-                selectedIndex = selectedConnectionTab,
-                onSelect = { selectedConnectionTab = it },
-            )
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -11806,9 +12047,14 @@ fun ConnectionSettingsScreen(onBack: () -> Unit, viewModel: ConnectionViewModel 
         ) {
             // Each section spaces itself, its footer under the card (SettingsFormSection).
             Spacer(Modifier.height(16.dp))
-            when (selectedConnectionTab) {
-            0 -> {
-            SettingsFormSection(title = stringResource(R.string.message_indexer)) {
+            when (openedPage) {
+            ConnectionPage.INDEXER -> {
+            // KaPlay had its own Chess card for the arena's indexer; here the arena is a public
+            // room, and every room and KaPost follow this indexer (iOS 148a5331).
+            SettingsFormSection(
+                title = stringResource(R.string.message_indexer),
+                footer = stringResource(R.string.shell_message_indexer_footer),
+            ) {
                 ConnectionUrlField(label = stringResource(R.string.indexer_url), value = indexerUrl)
             }
 
@@ -11818,12 +12064,12 @@ fun ConnectionSettingsScreen(onBack: () -> Unit, viewModel: ConnectionViewModel 
 
             // Verbose API Logging lives in Settings > Diagnostics, as on iOS.
             }
-            1 -> {
+            ConnectionPage.NODE -> {
             KaspaNodeQuickAccessSection(viewModel)
             Spacer(Modifier.height(24.dp))
             AddressBookSection(viewModel)
             }
-            2 -> {
+            ConnectionPage.DOMAINS -> {
             // .kachat first: it is what every address field resolves before anything else (iOS 6ac48a7).
             SettingsFormSection(title = stringResource(R.string.kn_kachat_names)) {
                 // Its own field, apart from the message indexer (iOS 7abc06e). Names come from
@@ -11845,10 +12091,59 @@ fun ConnectionSettingsScreen(onBack: () -> Unit, viewModel: ConnectionViewModel 
                 }
             }
             }
-            else -> {
+            ConnectionPage.EXPLORER -> {
             SettingsFormSection(title = stringResource(R.string.kaspa_explorer_api)) {
                 ConnectionUrlField(label = stringResource(R.string.kaspa_rest_api_url), value = kaspaRestApiUrl)
             }
+            }
+            ConnectionPage.TRESTLY -> {
+            // Trestly's API: where kUSDT balances are looked up, each answer checked on the node.
+            SettingsFormSection(
+                title = stringResource(R.string.kusdt_balances),
+                footer = stringResource(R.string.trestly_url_footer),
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(R.string.trestly_api_url), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = trestlyField,
+                        onValueChange = { trestlyField = it },
+                        singleLine = true,
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            color = LocalAppColors.current.textPrimary,
+                            fontSize = 17.sp,
+                            fontFamily = FontFamily.Monospace,
+                        ),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(KaspaTeal),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri,
+                            autoCorrect = false,
+                            capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.None,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        decorationBox = { inner ->
+                            if (trestlyField.isEmpty()) {
+                                Text(
+                                    com.kachat.app.repository.AppSettingsRepository.defaultTrestlyApiUrl(selectedNetwork),
+                                    color = LocalAppColors.current.textTertiary,
+                                    fontSize = 17.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                )
+                            }
+                            inner()
+                        },
+                    )
+                    // Inline red caption while it holds an http:// value (iOS `httpsInlineError`).
+                    if (com.kachat.app.viewmodels.TrestlySettingsViewModel.isCleartextHttp(trestlyField)) {
+                        Text(stringResource(R.string.nc_use_https), color = LocalAppColors.current.danger, fontSize = 12.sp)
+                    }
+                }
+            }
+            // The site Swap Stablecoins shows inside KaChat (iOS 148a5331 "Trestly Site").
+            com.kachat.app.ui.screens.tokens.TrestlySiteUrlSection(
+                value = trestlySiteField,
+                onValueChange = { trestlySiteField = it },
+                network = selectedNetwork,
+            )
             }
             }
 
@@ -12053,7 +12348,7 @@ fun rememberQrBitmapPainter(
     return BitmapPainter(bitmap)
 }
 
-/** How an [AddressQrPage] is closed - iOS puts a different control in its bar for each way it
+/** How a receive page ([AddressReceivePage]) is closed - iOS puts a different control in its bar for each way it
  *  presents the page. */
 enum class QrPageDismiss {
     /** Pushed (Profile): a back chevron, leading. */
@@ -12065,115 +12360,10 @@ enum class QrPageDismiss {
 }
 
 /**
- * iOS's `ChattingAddressQRView`: the full white page with an address's QR code - the code in a
- * 3pt accent frame, the whole address under it, what the address is for, and "Tap anywhere to
- * copy" - placed a third of the way down. Its bar shows the address's balance in the title's
- * place (iOS's principal toolbar item, which takes precedence over the navigation title), or "—"
- * while it is unknown, with [dismiss]'s control. A tap anywhere copies the address.
- */
-@Composable
-fun AddressQrPage(
-    address: String,
-    balanceSompi: Long?,
-    caption: String,
-    dismiss: QrPageDismiss,
-    onDismiss: () -> Unit,
-    /** The balance in the bar. Off on Profile's Chatting Address and on Receive (iOS d1844582
-     *  `showsBalance`): the balance is Wallet's. */
-    showsBalance: Boolean = true,
-) {
-    val clipboardManager = LocalClipboardManager.current
-    val context = LocalContext.current
-    val haptic = com.kachat.app.util.rememberHaptics()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                clipboardManager.setText(AnnotatedString(address))
-                haptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                com.kachat.app.util.showAddressCopiedToast(context, address, haptic = false)
-            },
-    ) {
-        AddressQrPageBar(dismiss = dismiss, onDismiss = onDismiss) {
-            if (showsBalance) Text(
-                balanceSompi?.let { "%.8f %s".format(java.util.Locale.US, it / 100_000_000.0, KaspaUnit.symbol) } ?: "—",
-                // iOS's `.primary`, as iOS draws it: the page forces no colour scheme, so in dark
-                // mode the balance is the theme's white over the white page, as on the iPhone.
-                color = LocalAppColors.current.textPrimary,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"),
-            )
-        }
-        Column(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(28.dp),
-        ) {
-            Spacer(Modifier.weight(1f))
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color.White)
-                    // iOS strokes 3pt on the edge and clips it to the shape: 1.5 shows.
-                    .border(1.5.dp, KaspaTeal, RoundedCornerShape(20.dp))
-                    .padding(20.dp),
-            ) {
-                Image(
-                    painter = rememberQrBitmapPainter(address),
-                    contentDescription = stringResource(R.string.qr_code),
-                    modifier = Modifier.size(240.dp),
-                )
-            }
-            Text(
-                address,
-                color = Color.Black,
-                fontSize = 13.sp,
-                fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 28.dp),
-            )
-            Text(
-                caption,
-                color = Color.Black.copy(alpha = 0.6f),
-                fontSize = 15.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 40.dp),
-            )
-            Text(
-                stringResource(R.string.tap_anywhere_to_copy),
-                color = Color.Black.copy(alpha = 0.4f),
-                fontSize = 13.sp,
-            )
-            Spacer(Modifier.weight(1f))
-            Spacer(Modifier.weight(1f))
-        }
-    }
-}
-
-/** The page's navigation bar: [dismiss]'s control and [center] in the title's place. */
-@Composable
-private fun AddressQrPageBar(dismiss: QrPageDismiss, onDismiss: () -> Unit, center: @Composable () -> Unit) {
-    // A sheet's bar is 56 tall on iOS, a pushed page's 44.
-    // iOS 26: each control on its own glass, 16 in from the edge.
-    Box(Modifier.fillMaxWidth().height(if (dismiss == QrPageDismiss.BACK) 52.dp else 60.dp).padding(horizontal = 16.dp)) {
-        // iOS's glass takes on what is under it: over the white page the control is light glass
-        // with a black chevron, in dark mode too. (The balance keeps the theme's colour, below.)
-        CompositionLocalProvider(LocalAppColors provides com.kachat.app.ui.theme.LightAppColors) {
-            when (dismiss) {
-                QrPageDismiss.BACK -> SheetBarBackButton(onClick = onDismiss, modifier = Modifier.align(Alignment.CenterStart))
-                QrPageDismiss.CLOSE -> SheetBarButton(stringResource(R.string.close), onClick = onDismiss, modifier = Modifier.align(Alignment.CenterStart))
-                QrPageDismiss.DONE -> SheetBarButton(stringResource(R.string.done), onClick = onDismiss, modifier = Modifier.align(Alignment.CenterEnd))
-            }
-        }
-        Box(Modifier.align(Alignment.Center)) { center() }
-    }
-}
-
-/**
- * The chatting address's QR page ([AddressQrPage] with the chatting caption, iOS
- * `ChattingAddressQRView`'s default).
+ * The Chatting Address's receive page, on the shared receive screen ([AddressReceiveView], iOS
+ * 5b7c772c `ChattingAddressQRView`, as in KaPay): its QR on white, the note that it shows your
+ * .kachat name, what may be sent there, and what it's for. A tap anywhere copies it. With
+ * [showsBalance] its balance is under the title.
  */
 @Composable
 fun ChattingAddressQrPage(
@@ -12183,24 +12373,29 @@ fun ChattingAddressQrPage(
     onDismiss: () -> Unit,
     showsBalance: Boolean = true,
 ) {
-    AddressQrPage(
-        address = address,
-        balanceSompi = balanceSompi,
-        caption = stringResource(R.string.qr_chatting_address_subtitle),
-        dismiss = dismiss,
-        onDismiss = onDismiss,
-        showsBalance = showsBalance,
-    )
+    AddressReceivePage(dismiss = dismiss, onDismiss = onDismiss) {
+        AddressReceiveView(
+            title = stringResource(R.string.chatting_address),
+            address = address,
+            balanceLine = if (showsBalance) balanceSompi?.let { KaspaUnit.groupedAmount(it) } else null,
+            privacyNote = ReceiveNotes.chattingAddress(),
+            notes = listOf(
+                ReceiveNotes.kaspaAndKusdt(),
+                ReceiveNote(ReceiveNote.Kind.INFO, stringResource(R.string.qr_chatting_address_subtitle)),
+            ),
+            icon = { KaspaLogoIcon() },
+        )
+    }
 }
 
 /**
- * Receive Kaspa's page (iOS `ProfileView.ReceiveKaspaQRView`): a fresh, never-used receive address
- * ([address], resolved by the caller with WalletViewModel.resolveFreshReceiveAddress) on the white
- * QR page, with no balance (iOS d1844582 `showsBalance: false`). Until then the same page says
- * "Preparing a fresh address" under a spinner, on the app's own background - in place, not over everything -
- * or, once the lookup has finished with nothing, that the spending address is still unlocking.
- * Showing an old address for a frame and swapping it is worse, since a QR is scanned the instant
- * it appears. [title] is the bar's title while there is no code (the Chats sheet names it).
+ * Receive Kaspa's page (iOS 5b7c772c `ProfileView.ReceiveKaspaQRView`): a fresh, never-used REGULAR
+ * receive address ([address], resolved by the caller with WalletViewModel.resolveFreshReceiveAddress),
+ * which takes kUSDT as well as Kaspa, on the shared receive screen ([AddressReceiveView]) with its
+ * name ([addressLabel], "Address #4"). Until then the same page says "Preparing a fresh address"
+ * under a spinner - or, once the lookup has finished with nothing, that the spending address is
+ * still unlocking. Showing an old address for a frame and swapping it is worse, since a QR is
+ * scanned the instant it appears.
  */
 @Composable
 fun ReceiveKaspaQrPage(
@@ -12208,25 +12403,27 @@ fun ReceiveKaspaQrPage(
     resolving: Boolean,
     dismiss: QrPageDismiss,
     onDismiss: () -> Unit,
-    title: String? = null,
+    addressLabel: String? = null,
 ) {
     if (address != null) {
-        AddressQrPage(
-            address = address,
-            balanceSompi = null,
-            caption = stringResource(R.string.qr_receive_address_subtitle),
-            dismiss = dismiss,
-            onDismiss = onDismiss,
-            showsBalance = false,
-        )
+        AddressReceivePage(dismiss = dismiss, onDismiss = onDismiss) {
+            AddressReceiveView(
+                title = stringResource(R.string.receive_kaspa),
+                address = address,
+                addressLabel = addressLabel,
+                privacyNote = ReceiveNotes.freshAddress(),
+                notes = listOf(
+                    ReceiveNotes.kaspaAndKusdt(),
+                    ReceiveNote(ReceiveNote.Kind.INFO, stringResource(R.string.receive_note_lands_in_this_account)),
+                ),
+                icon = { KaspaLogoIcon() },
+            )
+        }
         return
     }
     val colors = LocalAppColors.current
-    Column(Modifier.fillMaxSize().background(colors.background)) {
-        AddressQrPageBar(dismiss = dismiss, onDismiss = onDismiss) {
-            if (title != null) Text(title, color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
-        }
-        Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+    AddressReceivePage(dismiss = dismiss, onDismiss = onDismiss) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (resolving) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -14802,7 +14999,8 @@ private fun ManageAddressesActionsSheet(
     isDiscovering: Boolean,
     progress: com.kachat.app.services.SpendingAddressDiscovery.DiscoveryProgress?,
     summary: String?,
-    onGenerate: () -> Unit,
+    /** Generate Non-Quantum (false) or Quantum-Resistant (true) Address (iOS 5b7c772c). */
+    onGenerate: (quantum: Boolean) -> Unit,
     onDiscover: () -> Unit,
     onVisibility: () -> Unit,
     onDismiss: () -> Unit,
@@ -14874,11 +15072,19 @@ private fun ManageAddressesActionsSheet(
                         }
                         Spacer(Modifier.height(8.dp))
                     } else {
+                        // A regular address (Receive's kind, the one that takes kUSDT too) or a
+                        // quantum-resistant one, each chosen on purpose (iOS 5b7c772c, as in KaPay).
                         ActionSheetRow(
                             icon = Icons.Default.AddCircleOutline,
-                            title = stringResource(R.string.generate_new_spending_address),
-                            subtitle = stringResource(R.string.reveals_the_next_unused_address_in_this_wallet),
-                            onClick = onGenerate,
+                            title = stringResource(R.string.generate_non_quantum_address),
+                            subtitle = stringResource(R.string.generate_non_quantum_address_subtitle),
+                            onClick = { onGenerate(false) },
+                        )
+                        ActionSheetRow(
+                            icon = Icons.Outlined.Shield,
+                            title = stringResource(R.string.generate_quantum_resistant_address),
+                            subtitle = stringResource(R.string.generate_quantum_resistant_address_subtitle),
+                            onClick = { onGenerate(true) },
                         )
                         ActionSheetRow(
                             icon = Icons.Default.Search,

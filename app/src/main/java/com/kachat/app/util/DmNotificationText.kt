@@ -23,6 +23,10 @@ data class DmNotificationLabels(
     val chessMove: (from: String, to: String) -> String = { from, to -> "♟️ Played $from → $to" },
     val chessLostOnTime: String = "♟️ Lost on time",
     val chessResigned: String = "♟️ Resigned the chess game",
+    /** A 1:1 reaction. English on every language, as iOS's notification service words it
+     *  (NotificationService.reactionPreviewText, not localized there). */
+    val reacted: (emoji: String) -> String = { "Reacted $it to your message" },
+    val removedReaction: (emoji: String) -> String = { "Removed their $it reaction" },
 ) {
     companion object {
         val ENGLISH = DmNotificationLabels(sentVideo = "Sent a video", sentFile = "Sent a file", newMessage = "New message")
@@ -61,7 +65,16 @@ fun dmNotificationText(plaintext: String, labels: DmNotificationLabels = DmNotif
     // it is only what the sender claims, and the app checks it against the chain before the chat
     // shows one (iOS paymentNoticePreviewText, IOS-080). One naming a payment to anything but our
     // chatting address never gets this far: both callers keep it silent (XP-023).
-    if (PaymentPoolProtocol.parse(plaintext) is PaymentPoolProtocol.Envelope.Notice) return labels.receivedPayment
+    // A token_payment_notice (Send Dollars) reads the same (iOS 5b7c772c paymentNoticePreviewText).
+    val pool = PaymentPoolProtocol.parse(plaintext)
+    if (pool is PaymentPoolProtocol.Envelope.Notice || pool is PaymentPoolProtocol.Envelope.TokenNotice) return labels.receivedPayment
+    // A reaction says what it was (iOS NotificationService.reactionPreviewText): "Reacted 👍 to
+    // your message", or "Removed their 👍 reaction". One whose emoji isn't one emoji is kept
+    // silent by the push handler before it gets here; if one does, it's never its JSON.
+    MessageReaction.parseOrNull(plaintext)?.let { reaction ->
+        if (reaction.emoji.isEmpty()) return labels.newMessage
+        return if (reaction.action == "remove") labels.removedReaction(reaction.emoji) else labels.reacted(reaction.emoji)
+    }
     // A reply says its own words, or "Sent a photo" when it is one, never what it quotes (iOS
     // MessageReplyCodec.unwrappedText in formatNotificationBody, NotificationService.unwrapReplyText).
     MessageReply.parseOrNull(plaintext)?.let { reply -> return dmNotificationText(reply.text, labels) }

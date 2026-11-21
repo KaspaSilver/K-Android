@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowCircleDown
 import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.MonetizationOn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Sensors
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,7 +54,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 
 /**
- * The Profile bell's sheet (iOS `GlobalNotificationListView`): a full-height sheet with Done on the
+ * The notifications sheet (iOS `GlobalNotificationListView`): a full-height sheet with Done on the
  * left, "Notifications" in the middle and Clear All on the right, then the newest-first feed - each
  * row its source's icon, the title, up to two lines of body and the source with how long ago - or,
  * with nothing in it, the bell and "No notifications yet". Opening it marks everything seen (clears
@@ -61,8 +62,8 @@ import androidx.compose.runtime.getValue
  *
  * Every row opens what it is about, the same way the matching notification's tap does: a wallet
  * receipt the History of the address that got the Kaspa (the own-address sheet a tapped banner
- * opens - iOS 95e2cba `.openOwnAddress`), or, for a receipt saved before rows carried their
- * address, Profile, where the bell already is (iOS d54ea87 `.openProfile`). Rows of the sources an
+ * opens - iOS 95e2cba `.openOwnAddress`), a token received its Manage screen on Wallet (iOS
+ * 5b7c772c), or, for a receipt saved before rows carried their address, just closes. Rows of the sources an
  * older build recorded (KaPosts, group mentions, public chats, .kachat news) are dropped on load.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,22 +88,8 @@ fun GlobalNotificationSheet(
         }
     }
 
-    fun open(entry: GlobalNotificationCenterStore.Entry) {
-        val target = entry.targetId.orEmpty()
-        when (entry.source) {
-            "group" -> {
-                if (target.isBlank()) return
-                dismiss { navController.navigate("group_chat/$target") }
-            }
-            // A receipt opens the History of the address that got the Kaspa (chatting or spending -
-            // MainShell's own-address sheet works out which), as a tapped banner does (iOS
-            // 95e2cba). Entries recorded before receipts carried their address just close the
-            // sheet: Profile, where the bell is, shows the wallet's addresses (iOS d54ea87).
-            "wallet" -> dismiss {
-                if (target.isNotEmpty()) com.kachat.app.ui.OwnAddressRoute.pending.value = target
-            }
-        }
-    }
+    fun open(entry: GlobalNotificationCenterStore.Entry) =
+        routeNotificationEntry(entry, walletViewModel, navController) { then -> dismiss(then) }
 
     com.kachat.app.ui.theme.IosSheetColors {
         val colors = LocalAppColors.current
@@ -136,49 +123,134 @@ fun GlobalNotificationSheet(
                             )
                         },
                     )
-                    if (entries.isEmpty()) {
-                        Column(
-                            Modifier.fillMaxSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-                        ) {
-                            Icon(
-                                Icons.Outlined.Notifications,
-                                contentDescription = null,
-                                tint = colors.textSecondary,
-                                // iOS's "bell" at 40pt draws about 36 wide and 38 tall; Material's
-                                // outlined bell fills 20/24 of its box, so 46.
-                                modifier = Modifier.size(46.dp),
-                            )
-                            Text(
-                                stringResource(R.string.notification_center_empty_title),
-                                color = colors.textPrimary,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 17.sp,
-                            )
-                            Text(
-                                stringResource(R.string.notification_center_wallet_empty),
-                                color = colors.textSecondary,
-                                fontSize = 15.sp,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 40.dp),
-                            )
-                        }
-                    } else {
-                        LazyColumn(Modifier.fillMaxSize()) {
-                            items(entries, key = { it.id }) { entry ->
-                                GlobalNotificationRow(entry, onClick = { open(entry) })
-                                // Plain-list separator: from where the text starts to the trailing edge.
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(start = 50.dp),
-                                    color = colors.divider,
-                                    thickness = 0.5.dp,
-                                )
-                            }
-                        }
-                    }
+                    NotificationEntriesList(entries, onOpen = { open(it) })
                 }
             }
+        }
+    }
+}
+
+/**
+ * Routes a tapped row to its subject, the same way the matching notification's tap does (iOS
+ * `GlobalNotificationListView.open`). [close] closes the list first, then runs what it is given.
+ */
+private fun routeNotificationEntry(
+    entry: GlobalNotificationCenterStore.Entry,
+    walletViewModel: WalletViewModel,
+    navController: NavController,
+    close: (then: () -> Unit) -> Unit,
+) {
+    val target = entry.targetId.orEmpty()
+    when (entry.source) {
+        "group" -> {
+            if (target.isBlank()) return
+            close { navController.navigate("group_chat/$target") }
+        }
+        // A receipt opens the History of the address that got the Kaspa (chatting or spending -
+        // MainShell's own-address sheet works out which), as a tapped banner does (iOS
+        // 95e2cba). Entries recorded before receipts carried their address just close the
+        // list, on Wallet, which shows the wallet's addresses.
+        "wallet" -> close {
+            if (target.isNotEmpty()) com.kachat.app.ui.OwnAddressRoute.pending.value = target
+        }
+        // A token received: that token's Manage screen, on the Wallet tab (iOS 5b7c772c TokenRoute).
+        "token" -> close {
+            walletViewModel.openTokenRoute(target.ifEmpty { com.kachat.app.services.tokens.WalletToken.KUSDT.id })
+            com.kachat.app.ui.navigateToTab(navController, com.kachat.app.ui.Screen.Wallet)
+        }
+    }
+}
+
+/** The feed, newest first, or the bell and "No notifications yet" with nothing in it. */
+@Composable
+private fun NotificationEntriesList(
+    entries: List<GlobalNotificationCenterStore.Entry>,
+    onOpen: (GlobalNotificationCenterStore.Entry) -> Unit,
+) {
+    val colors = LocalAppColors.current
+    if (entries.isEmpty()) {
+        Column(
+            Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+        ) {
+            Icon(
+                Icons.Outlined.Notifications,
+                contentDescription = null,
+                tint = colors.textSecondary,
+                // iOS's "bell" at 40pt draws about 36 wide and 38 tall; Material's
+                // outlined bell fills 20/24 of its box, so 46.
+                modifier = Modifier.size(46.dp),
+            )
+            Text(
+                stringResource(R.string.notification_center_empty_title),
+                color = colors.textPrimary,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 17.sp,
+            )
+            Text(
+                stringResource(R.string.notification_center_wallet_empty),
+                color = colors.textSecondary,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 40.dp),
+            )
+        }
+    } else {
+        LazyColumn(Modifier.fillMaxSize()) {
+            items(entries, key = { it.id }) { entry ->
+                GlobalNotificationRow(entry, onClick = { onOpen(entry) })
+                // Plain-list separator: from where the text starts to the trailing edge.
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 50.dp),
+                    color = colors.divider,
+                    thickness = 0.5.dp,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Notifications pushed from Wallet's Notifications card (iOS 5b7c772c `GlobalNotificationListView`
+ * with `isPushed`, as KaPay has it): Back, Clear All on the right, the large "Notifications" title,
+ * then the feed. Opening it marks everything seen (clears the Wallet tab's dot).
+ */
+@Composable
+fun GlobalNotificationPage(
+    store: GlobalNotificationCenterStore,
+    walletViewModel: WalletViewModel,
+    navController: NavController,
+    onBack: () -> Unit,
+) {
+    val entries by store.entries.collectAsState()
+    val colors = LocalAppColors.current
+    LaunchedEffect(Unit) { store.markAllSeen() }
+    androidx.activity.compose.BackHandler(onBack = onBack)
+    Column(Modifier.fillMaxSize().background(colors.background)) {
+        Box(Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 16.dp)) {
+            SheetBarBackButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterStart))
+            SheetBarButton(
+                stringResource(R.string.notification_center_clear_all),
+                onClick = { store.clearAll() },
+                enabled = entries.isNotEmpty(),
+                modifier = Modifier.align(Alignment.CenterEnd),
+            )
+        }
+        Text(
+            stringResource(R.string.notifications),
+            color = colors.textPrimary,
+            fontWeight = FontWeight.Bold,
+            fontSize = LargeTitleSize,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp),
+        )
+        Box(Modifier.fillMaxWidth().weight(1f)) {
+            NotificationEntriesList(entries, onOpen = { entry ->
+                routeNotificationEntry(entry, walletViewModel, navController) { then ->
+                    onBack()
+                    then()
+                }
+            })
         }
     }
 }
@@ -217,12 +289,26 @@ private fun GlobalNotificationRow(entry: GlobalNotificationCenterStore.Entry, on
 }
 
 /**
- * A row's icon (iOS `Entry.Source.icon`): arrow.down.circle for a wallet receipt; megaphone,
+ * A row's icon (iOS `Entry.Source.icon`): arrow.down.circle for a wallet receipt, dollarsign.circle
+ * for a token received; megaphone,
  * person.3 and dot.radiowaves.left.and.right for the sources older builds recorded.
  */
 private fun sourceIcon(source: String): ImageVector = when (source) {
     "wallet" -> Icons.Outlined.ArrowCircleDown
+    // dollarsign.circle (iOS 5b7c772c)
+    "token" -> Icons.Outlined.MonetizationOn
     "kaposts" -> Icons.Outlined.Campaign
     "group" -> Icons.Outlined.Groups
     else -> Icons.Outlined.Sensors
 }
+
+/**
+ * A wallet row tapped in Profile's bell ([AllNotificationsSheet], iOS 148a5331 `walletRow`): it
+ * opens what the Wallet's own list opened. [close] closes the bell first, then runs what it is given.
+ */
+fun openGlobalNotificationEntry(
+    entry: GlobalNotificationCenterStore.Entry,
+    walletViewModel: WalletViewModel,
+    navController: NavController,
+    close: (then: () -> Unit) -> Unit,
+) = routeNotificationEntry(entry, walletViewModel, navController, close)

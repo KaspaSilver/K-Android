@@ -94,10 +94,42 @@ object PaymentPoolProtocol {
         return txId
     }
 
+    /**
+     * A token payment in a 1:1 chat (Send Dollars, iOS 5b7c772c `TokenPaymentNoticeContent`;
+     * MESSAGING.md "Token Payments in a Chat"). A token transfer is a covenant transaction with no
+     * chat payload, so right after it the payer's chatting address sends this in the chat, and
+     * both sides show it as a payment bubble. The payee checks it on chain first
+     * (ChatRepository.handleTokenPaymentNotice): output [index] of [txId] must be the coin of
+     * exactly [amount] owned by [address], carrying the token's covenant id.
+     */
+    data class TokenPaymentNoticeContent(
+        val type: String = "token_payment_notice",
+        /** Which token: `WalletToken.id` ("kusdt"). */
+        val token: String,
+        val txId: String,
+        /** The output holding the payee's new coin (0 for a kUSDT send). */
+        val index: Int,
+        /** In the token's base units (kUSDT has 6 decimals). */
+        val amount: Long,
+        /** The address paid: the payee's chatting address. */
+        val address: String,
+    )
+
+    /** "Sent 12.50 kUSDT" / "Received 12.50 kUSDT": [plainAmount] with a dot and no grouping
+     *  (WalletToken.plainAmount), so the payment bubble reads it back (iOS `tokenPaymentText`).
+     *  Stored in English like [sentNoticeText]; the bubble localizes what it shows. */
+    fun tokenPaymentText(plainAmount: String, symbol: String, isOutgoing: Boolean): String =
+        (if (isOutgoing) "Sent " else "Received ") + "$plainAmount $symbol"
+
+    /** A received token notice the chain couldn't check yet: shown WITHOUT the claimed amount,
+     *  since anyone can make a look-alike coin with plain KAS (iOS "Unverified %@ payment", audit #3). */
+    fun tokenUnverifiedText(symbol: String): String = "Unverified $symbol payment"
+
     sealed class Envelope {
         data class Pool(val content: AddressPoolContent) : Envelope()
         data class Request(val content: AddressPoolRequestContent) : Envelope()
         data class Notice(val content: PaymentNoticeContent) : Envelope()
+        data class TokenNotice(val content: TokenPaymentNoticeContent) : Envelope()
     }
 
     private val gson = Gson()
@@ -105,6 +137,7 @@ object PaymentPoolProtocol {
     fun encode(content: AddressPoolContent): String = gson.toJson(content)
     fun encode(content: AddressPoolRequestContent): String = gson.toJson(content)
     fun encode(content: PaymentNoticeContent): String = gson.toJson(content)
+    fun encode(content: TokenPaymentNoticeContent): String = gson.toJson(content)
 
     /** Same `{`-prefix + size guard as the iOS codec, since this runs on every intercepted
      *  message's plaintext. Returns null for anything that isn't a well-formed pool envelope. */
@@ -131,6 +164,17 @@ object PaymentPoolProtocol {
                     val content = gson.fromJson(obj, PaymentNoticeContent::class.java)
                     @Suppress("SENSELESS_COMPARISON")
                     if (content.txId == null || content.address == null) null else Envelope.Notice(content)
+                }
+                "token_payment_notice" -> {
+                    // every field is required (iOS decodes it strictly): a missing number would
+                    // read as 0 here
+                    if (!obj.has("token") || !obj.has("txId") || !obj.has("index") || !obj.has("amount") || !obj.has("address")) null
+                    else {
+                        val content = gson.fromJson(obj, TokenPaymentNoticeContent::class.java)
+                        @Suppress("SENSELESS_COMPARISON")
+                        if (content.token == null || content.txId == null || content.address == null) null
+                        else Envelope.TokenNotice(content)
+                    }
                 }
                 else -> null
             }

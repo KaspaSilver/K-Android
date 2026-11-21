@@ -50,6 +50,12 @@ class KaChatApplication : Application(), Configuration.Provider {
         // [base], not `this`: inside attachBaseContext the Application's own applicationContext
         // is still null, and reading prefs through it crashed every launch.
         com.kachat.app.util.KaspaNetwork.init(base)
+        // The features back from KaPost, KaPay and KaPlay (iOS 148a5331): their text in the
+        // language picked in Settings, from services as well as screens, and which public chat
+        // rooms the message indexer tracks - each read before Hilt builds anything that asks.
+        com.kachat.app.util.AppText.init(base)
+        com.kachat.app.util.KaPlayText.init(base)
+        com.kachat.app.services.IndexerTrackedRooms.init(base)
     }
 
     // @Singleton instances are otherwise only created lazily the first time something actually
@@ -143,6 +149,36 @@ class KaChatApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var contactProfileRescanner: dagger.Lazy<com.kachat.app.services.ContactProfileRescanner>
 
+    /** kUSDT balances checked every 90 s while the app is open, so a token that arrives is
+     *  announced (iOS 5b7c772c `TokenWallet.startPolling`, MainTabView). */
+    @Inject
+    lateinit var tokenWallet: dagger.Lazy<com.kachat.app.services.tokens.TokenWallet>
+
+    // Public Chats (iOS 148a5331, from KaPost): built at startup so its observers - the
+    // always-listen scan, the foreground sweep and the chess arena's stream gate - run for the
+    // app's whole lifetime, not only once a room is opened.
+    @Inject
+    lateinit var broadcastScanningService: dagger.Lazy<com.kachat.app.services.BroadcastScanningService>
+
+    // KaPost's scheduled posts: built at startup so the coins every waiting post will spend are
+    // reserved before any send can pick them, and due posts go out on each foreground.
+    @Inject
+    lateinit var kaPostsScheduledStore: dagger.Lazy<com.kachat.app.services.KaPostsScheduledStore>
+
+    // KaPost activity (likes, replies, quotes on your posts) while the app is open; the push
+    // service covers it while closed (iOS 148a5331 `KaPostsNotificationService.start/stop`).
+    @Inject
+    lateinit var kaPostsNotificationPoller: dagger.Lazy<com.kachat.app.services.KaPostsNotificationPoller>
+
+    // Profile's bell count (KaPost's unseen plus the wallet's): built once so both stores load.
+    @Inject
+    lateinit var allNotificationsBadge: dagger.Lazy<com.kachat.app.ui.screens.AllNotificationsBadge>
+
+    // Portfolio rows still waiting for a price resume pricing whenever a wallet loads (its init
+    // follows the active wallet) - built just after launch, off the main thread.
+    @Inject
+    lateinit var portfolioRepository: dagger.Lazy<com.kachat.app.repository.PortfolioRepository>
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory()).build()
 
@@ -195,15 +231,36 @@ class KaChatApplication : Application(), Configuration.Provider {
         startupStep("Address Book") { addressBookManager.get() }
         startupStep("payment requests") { paymentRequestWallet.get() }
         startupStep("payment notices") { paymentNoticeOutbox.get() }
+        // KaPost and Public Chats (iOS 148a5331)
+        startupStep("public chat scanning") { broadcastScanningService.get() }
+        startupStep("scheduled KaPosts") { kaPostsScheduledStore.get() }
+        startupStep("KaPost notifications") { kaPostsNotificationPoller.get() }
+        startupStep("notification bell count") { allNotificationsBadge.get() }
+        // Reserve the coins every still-waiting scheduled post is going to spend, before any
+        // send can pick them.
+        startupStep("scheduled KaPosts reload") { kaPostsScheduledStore.get().reloadIfNeeded() }
+        // The portfolio's wallet-load price backfill: off the main thread, so a portfolio store
+        // that will not open can never keep the app from opening.
+        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.Default + logOnly) {
+            startupStep("portfolio price backfill") { portfolioRepository.get() }
+        }
 
-        // KaPosts, Public Chats, Chess Online, Portfolio, Cold Storage, Swap, the dock layouts and
-        // .kachat name reminders left the app (iOS e2f6732, d54ea87), and calls with them (iOS
-        // 7c5c22e3): what they kept on this phone is deleted once, off the main thread.
+        // Swap and Simple Mode left the app (iOS d54ea87, eb2ccac), and calls with them (iOS
+        // 7c5c22e3): what they kept on this phone is deleted once, off the main thread. KaPosts,
+        // Public Chats, Chess, Portfolio, Cold Storage and the .kachat names are back (iOS
+        // 148a5331), so nothing of theirs is deleted any more.
         ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO + logOnly) {
             startupStep("retired feature cleanup") {
                 com.kachat.app.services.RetiredFeatureCleanup.deleteLocalFiles(this@KaChatApplication)
             }
             appSettingsRepository.get().removeRetiredFeatureKeys()
+            // Payment notices a 5.3 b1 build stored as bubbles (Android only, once).
+            val prefs = getSharedPreferences("kachat_upgrade_repairs", MODE_PRIVATE)
+            if (!prefs.getBoolean("pool_envelope_rows_v1", false)) {
+                runCatching { chatRepository.get().repairStoredPoolEnvelopes() }
+                    .onSuccess { prefs.edit().putBoolean("pool_envelope_rows_v1", true).apply() }
+                    .onFailure { android.util.Log.w("KaChatApplication", "pool envelope repair failed", it) }
+            }
             // Temp files older than a day are nobody's any more (iOS 83806b3d `sweepStaleTempFiles`).
             runCatching { cacheManager.get().sweepStaleTempFiles() }
         }
@@ -281,6 +338,9 @@ class KaChatApplication : Application(), Configuration.Provider {
                 startupStep("notifications: background") { notificationHelper.get().setAppForeground(false) }
                 startupStep("address activity: background") { addressActivityNotifier.get().onAppBackground() }
                 startupStep("profile rescans: background") { contactProfileRescanner.get().stop() }
+                startupStep("kUSDT poll: background") { tokenWallet.get().stopPolling() }
+                // KaPost's in-app activity poller runs only while the app is active (iOS 148a5331).
+                startupStep("KaPost notifications: stop") { kaPostsNotificationPoller.get().stop() }
                 // Backgrounding is the natural "done chatting" moment — run the Nextcloud
                 // automatic sync then: a catch-up when the last upload is an hour old or the
                 // persisted dirty flag says a sync is owed (NEXTCLOUD_SYNC.md §6). autoBackupIfDue
@@ -301,6 +361,21 @@ class KaChatApplication : Application(), Configuration.Provider {
                 startupStep("address activity: foreground") { addressActivityNotifier.get().onAppForeground() }
                 // While the app is open, everyone's profile once an hour (iOS d1844582).
                 startupStep("profile rescans: foreground") { contactProfileRescanner.get().start() }
+                // kUSDT received while the app is open is announced (only with Address Activity on)
+                startupStep("kUSDT poll: foreground") { tokenWallet.get().startPolling() }
+                // KaPost activity while the app is active (iOS 148a5331).
+                startupStep("KaPost notifications: start") { kaPostsNotificationPoller.get().start() }
+                // A scheduled post only this phone holds goes out when its time has come, each
+                // time the app comes to the front (iOS KaPostsScheduledStore on didBecomeActive).
+                owner.lifecycleScope.launch(Dispatchers.IO + logOnly) {
+                    try {
+                        kaPostsScheduledStore.get().sendDueLocally()
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        android.util.Log.w("KaChatApplication", "Scheduled posts: local send failed", e)
+                    }
+                }
                 // A batch of gRPC connections can die silently while backgrounded/asleep (the OS
                 // tears down sockets, and each KaspadConnection's own self-reconnect can be
                 // suspended along with the rest of the app) - reconnect any that are dead right

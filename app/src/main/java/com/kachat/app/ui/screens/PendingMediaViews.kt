@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +34,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
 import com.kachat.app.R
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
@@ -42,11 +45,12 @@ import kotlinx.coroutines.withContext
 
 /**
  * The pending photo's thumbnail in a composer row; for a video "via Nextcloud", its first frame
- * with a play mark (iOS 7abc06e `VideoThumbnail`). Decoded off the main thread, display-only - the
- * real compression happens in the ViewModel when Send is tapped.
+ * with a play mark (iOS 7abc06e `VideoThumbnail`); for an animated GIF going on chain, a "GIF"
+ * badge (iOS d7c56280 `GIFBadge`). Decoded off the main thread, display-only - the real
+ * compression happens in the ViewModel when Send is tapped.
  */
 @Composable
-internal fun PendingMediaThumbnail(uri: Uri?, isVideo: Boolean) {
+internal fun PendingMediaThumbnail(uri: Uri?, isVideo: Boolean, isGif: Boolean = false) {
     val context = LocalContext.current
     val thumbnail by produceState<android.graphics.Bitmap?>(initialValue = null, uri, isVideo) {
         value = uri?.let {
@@ -79,8 +83,26 @@ internal fun PendingMediaThumbnail(uri: Uri?, isVideo: Boolean) {
         )
         if (isVideo) {
             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp).shadow(2.dp, CircleShape))
+        } else if (isGif) {
+            GifBadge()
         }
     }
+}
+
+/** "GIF" on a pending GIF's composer thumbnail (iOS d7c56280 `GIFBadge`): heavy rounded 10 pt
+ *  white on 55% black, corner 4. The same word in every language, as on iOS. */
+@Composable
+private fun GifBadge() {
+    Text(
+        text = "GIF",
+        color = Color.White,
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Black,
+        lineHeight = 12.sp,
+        modifier = Modifier
+            .background(Color.Black.copy(alpha = 0.55f), RoundedCornerShape(4.dp))
+            .padding(horizontal = 4.dp, vertical = 1.dp),
+    )
 }
 
 /**

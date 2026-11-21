@@ -488,6 +488,8 @@ fun PaymentDetailSheet(
     val clipboard = LocalClipboardManager.current
     val isSent = message.direction == "sent"
     val parts = remember(message.plaintextBody) { parsePaymentCardParts(message.plaintextBody) }
+    // A kUSDT payment shows its token, never KAS (iOS 5b7c772c).
+    val token = remember(message.plaintextBody) { com.kachat.app.ui.screens.tokens.paymentCardToken(message.plaintextBody) }
     val isOnChain = !message.id.startsWith("pending_") &&
         message.deliveryStatus != "pending" && message.deliveryStatus != "failed"
 
@@ -515,12 +517,16 @@ fun PaymentDetailSheet(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Icon(
-                            painterResource(R.drawable.ic_kaspa_logo),
-                            contentDescription = null,
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(40.dp),
-                        )
+                        if (token != null) {
+                            com.kachat.app.ui.screens.tokens.TokenIcon(token, size = 40.dp)
+                        } else {
+                            Icon(
+                                painterResource(R.drawable.ic_kaspa_logo),
+                                contentDescription = null,
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(40.dp),
+                            )
+                        }
                         Text(
                             stringResource(if (isSent) R.string.sent else R.string.payment_received),
                             color = colors.textSecondary,
@@ -530,7 +536,7 @@ fun PaymentDetailSheet(
                         if (parts != null) {
                             // iOS: one line, shrinking to 0.6 before it is cut.
                             KachatFitText(
-                                "${parts.first} ${KaspaUnit.symbol}",
+                                "${parts.first} ${token?.symbol ?: KaspaUnit.symbol}",
                                 color = colors.textPrimary,
                                 fontSize = 34.sp,
                                 fontWeight = FontWeight.Bold,

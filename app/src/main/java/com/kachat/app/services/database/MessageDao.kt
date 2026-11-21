@@ -80,6 +80,11 @@ interface MessageDao {
     @Query("SELECT contactId, plaintextBody FROM messages WHERE walletAddress = :walletAddress AND plaintextBody IS NOT NULL AND length(CAST(plaintextBody AS BLOB)) <= :maxBytes")
     suspend fun getShortMessageBodiesForWallet(walletAddress: String, maxBytes: Int): List<ContactMessageBody>
 
+    /** Rows that may be a payment-pool envelope stored as a bubble by a build that did not know
+     *  its type yet (a `token_payment_notice` before kUSDT): [ChatRepository.repairStoredPoolEnvelopes]. */
+    @Query("SELECT * FROM messages WHERE plaintextBody LIKE '{%' AND (plaintextBody LIKE '%payment_notice%' OR plaintextBody LIKE '%addr_pool%')")
+    suspend fun getPossiblePoolEnvelopeRows(): List<MessageEntity>
+
     /** Every message for this wallet, across all contacts — used by chat-history export, not the live UI. */
     @Query("SELECT * FROM messages WHERE walletAddress = :walletAddress ORDER BY blockTimestamp ASC")
     suspend fun getAllMessagesForWallet(walletAddress: String): List<MessageEntity>

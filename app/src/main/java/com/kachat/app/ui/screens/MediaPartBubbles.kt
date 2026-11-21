@@ -95,7 +95,8 @@ fun joinedPhotoContent(input: MediaPartsInput): VoiceMessageContent? {
     val bytes = joined.toByteArray()
     val mime = InlineMediaSniff.mimeType(input.parts.first().second) ?: "image/jpeg"
     return VoiceMessageContent(
-        name = "photo.jpg",
+        // A GIF's joined parts are one GIF (iOS d7c56280 PhotoPartsInput.joinedMedia).
+        name = if (mime.lowercase() == com.kachat.app.util.GifPrep.MIME_TYPE) com.kachat.app.util.GifPrep.FILE_NAME else "photo.jpg",
         size = bytes.size.toLong(),
         mimeType = mime,
         content = "data:$mime;base64,${java.util.Base64.getEncoder().encodeToString(bytes)}",

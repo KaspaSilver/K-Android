@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -115,13 +116,18 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
 }
 
 /**
- * Help hub - Profile > Help, matching iOS's ProfileHelpView: the Welcome Guide, replayable here.
+ * Help hub - Settings > Help since iOS 148a5331 (it was Profile > Help), matching iOS's
+ * ProfileHelpView: the Welcome Guide, replayable here, then the .kachat Names and kUSDT guides.
  */
 @androidx.compose.material3.ExperimentalMaterial3Api
 @Composable
 fun HelpScreen(
     onBack: () -> Unit,
     onWelcomeGuide: () -> Unit,
+    /** KaPay's .kachat Names Guide (iOS 148a5331 `KachatSetupGuideView`), full screen. */
+    onKachatNamesGuide: (() -> Unit)? = null,
+    /** KaPay's kUSDT Guide (iOS 148a5331 `TokenGuideView`), pushed. */
+    onKusdtGuide: (() -> Unit)? = null,
 ) {
     val colors = LocalAppColors.current
     androidx.compose.material3.Scaffold(
@@ -151,6 +157,26 @@ fun HelpScreen(
                         androidx.compose.ui.res.stringResource(com.kachat.app.R.string.kg_welcome_body),
                         onWelcomeGuide,
                     )
+                    // KaPay's two guides (iOS 148a5331, all-in-one), beside the Welcome Guide.
+                    if (onKachatNamesGuide != null) {
+                        androidx.compose.material3.HorizontalDivider(color = colors.divider, thickness = 0.5.dp, modifier = Modifier.padding(start = 60.dp))
+                        HelpRow(
+                            // iOS person.text.rectangle
+                            androidx.compose.material.icons.Icons.Outlined.Badge,
+                            androidx.compose.ui.res.stringResource(com.kachat.app.R.string.kg_names_help_title),
+                            androidx.compose.ui.res.stringResource(com.kachat.app.R.string.kg_names_help_body),
+                            onKachatNamesGuide,
+                        )
+                    }
+                    if (onKusdtGuide != null) {
+                        androidx.compose.material3.HorizontalDivider(color = colors.divider, thickness = 0.5.dp, modifier = Modifier.padding(start = 60.dp))
+                        HelpRow(
+                            com.kachat.app.ui.screens.tokens.KusdtGuideHelpRow.icon,
+                            com.kachat.app.ui.screens.tokens.KusdtGuideHelpRow.title(),
+                            com.kachat.app.ui.screens.tokens.KusdtGuideHelpRow.subtitle(),
+                            onKusdtGuide,
+                        )
+                    }
                 }
             }
         }

@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's chess sentences, looked up by their English text (util/KaPlayText.kt: `kp_` and 12
+     hex of the SHA-1 of the English). Translations from KaPlay Android's strings_app_text.xml and,
+     for the sentences new in KaChat, iOS 148a5331's Localizable.strings. Generated. -->
+<resources>
+    <string name="kp_7e46be469deb" formatted="false">#%d on the 1v1 board</string>
+    <string name="kp_cba1ee4eec72" formatted="false">#%d on the tournament board</string>
+    <string name="kp_3401831926d1" formatted="false">%d D</string>
+    <string name="kp_f769c12fc2ee" formatted="false">%d L</string>
+    <string name="kp_d9e1beae2f39" formatted="false">%d W</string>
+    <string name="kp_55fc776de141" formatted="false">%d W  %d L</string>
+    <string name="kp_d8aa573c0e61" formatted="false">%d moves</string>
+    <string name="kp_fbeb1207b441" formatted="false">%d of %d players</string>
+    <string name="kp_b70e7251ba0d" formatted="false">%d of %d players waiting</string>
+    <string name="kp_6dac15cf1ed7" formatted="false">%d of %d players · code %s</string>
+    <string name="kp_ba09ba042e31" formatted="false">%d seats left</string>
+    <string name="kp_d4cd664ac02d" formatted="false">%s beat %s in %d moves. Can you do it in fewer?</string>
+    <string name="kp_35f8f501300f" formatted="false">%s challenges you to beat %s.</string>
+    <string name="kp_8a3914693bee" formatted="false">%s goes through and you are out of the tournament. It counts as a loss on the leaderboard. Resigning is one transaction.</string>
+    <string name="kp_297da93b20fb" formatted="false">%s is still locked: climb the ladder to reach it.</string>
+    <string name="kp_c7642c6d04be" formatted="false">%s is thinking…</string>
+    <string name="kp_00161fefc871" formatted="false">%s is unlocked!</string>
+    <string name="kp_7ab092285767" formatted="false">%s moves first.</string>
+    <string name="kp_207e56e21618" formatted="false">%s to move</string>
+    <string name="kp_4e56d26a3870" formatted="false">%s vs %s</string>
+    <string name="kp_fbb8239c09ba" formatted="false">%s wins, and it counts as a loss on the leaderboard. Resigning is one transaction.</string>
+    <string name="kp_a074e492574e" formatted="false">%s won</string>
+    <string name="kp_03a71913fd6b" formatted="false">%s won by checkmate</string>
+    <string name="kp_e2bdeaa4f9e5" formatted="false">%s won by checkmate.</string>
+    <string name="kp_e510ea9dedf3" formatted="false">%s won by resignation</string>
+    <string name="kp_33cd4606c8c7" formatted="false">%s won by resignation.</string>
+    <string name="kp_405c5afa1901" formatted="false">%s won on clock after a draw</string>
+    <string name="kp_4e683890d75e" formatted="false">%s won on clock after a draw by insufficient material</string>
+    <string name="kp_f2d9cffd2918" formatted="false">%s won on clock after a draw by stalemate</string>
+    <string name="kp_3dae94d319ae" formatted="false">%s won on clock after a draw by the fifty-move rule</string>
+    <string name="kp_26b3a1b77b3b" formatted="false">%s won on clock after a draw by threefold repetition</string>
+    <string name="kp_49680f535fab" formatted="false">%s won on time</string>
+    <string name="kp_e27359cb1d1d" formatted="false">%s won on time.</string>
+    <string name="kp_7fb322c0aa2a" formatted="false">%s won the tournament</string>
+    <string name="kp_683e17380d8a" formatted="false">1 of %d players</string>
+    <string name="kp_a3a1e853bd57" formatted="false">1 of %d players waiting</string>
+    <string name="kp_dcd9d9468141" formatted="false">1 of %d players · code %s</string>
+    <string name="kp_f6dec9c77f35" formatted="false">1 seat left</string>
+    <string name="kp_d6db37efe259" formatted="false">1v1</string>
+    <string name="kp_1644dc818c09" formatted="false">1v1 games</string>
+    <string name="kp_7c71818a1ae0" formatted="false">1v1 leaderboard</string>
+    <string name="kp_d8706f214713" formatted="false">1v1, tournaments and five bots. Online moves and bot results go on Kaspa.</string>
+    <string name="kp_ba9cce8319d7" formatted="false">A private tournament is for friends: the creator shares its eight-character code. Creating one needs the creator code.</string>
+    <string name="kp_a733b809d2f1" formatted="false">Active</string>
+    <string name="kp_d70f93df5e8f" formatted="false">Address</string>
+    <string name="kp_4d064726954a" formatted="false">Advanced</string>
+    <string name="kp_dbad49d89123" formatted="false">All time</string>
+    <string name="kp_b52b36b7269f" formatted="false">Back</string>
+    <string name="kp_c3065156b217" formatted="false">Beat %s to unlock</string>
+    <string name="kp_60575a6ebba9" formatted="false">Beginner</string>
+    <string name="kp_489d32ce7dd9" formatted="false">Best: %d moves</string>
+    <string name="kp_b406fb57b29f" formatted="false">Black</string>
+    <string name="kp_b5807c6df986" formatted="false">Black to move</string>
+    <string name="kp_4ca88ea465a9" formatted="false">Bots</string>
+    <string name="kp_e42a1e70b400" formatted="false">Bracket</string>
+    <string name="kp_75e08341b41d" formatted="false">Bracket · tap a game to watch</string>
+    <string name="kp_cf76a9fe16a7" formatted="false">By resignation</string>
+    <string name="kp_2b246e0ff5ca" formatted="false">Calculates carefully and punishes mistakes. Come with a plan.</string>
+    <string name="kp_77dfd2135f4d" formatted="false">Cancel</string>
+    <string name="kp_5a2fc967d105" formatted="false">Cancel this tournament?</string>
+    <string name="kp_1fe710030fe9" formatted="false">Cancel tournament</string>
+    <string name="kp_5dc29b482d76" formatted="false">Cancelled by the creator.</string>
+    <string name="kp_7881bf71d2de" formatted="false">Champion</string>
+    <string name="kp_f3dffbf21ed5" formatted="false">Check. Your move.</string>
+    <string name="kp_933b750898fd" formatted="false">Checkmate</string>
+    <string name="kp_3226c18271e7" formatted="false">Checkmate. %s won.</string>
+    <string name="kp_f95715a82ba2" formatted="false">Chess</string>
+    <string name="kp_645b1b39f542" formatted="false">Chess server unreachable, showing what we have. Your games keep going from the network. Public rooms can be joined again when it\'s back.</string>
+    <string name="kp_b03bf0e29f1c" formatted="false">Chess server unreachable. Moves are coming from the network, and the board may be a moment behind.</string>
+    <string name="kp_ee9c98ac836b" formatted="false">Chess server unreachable. Showing what this phone has, which can be less than the full board.</string>
+    <string name="kp_cf9797eede60" formatted="false">Chess server unreachable. Showing what this phone has.</string>
+    <string name="kp_9cba814a7f57" formatted="false">Chess server unreachable. Watching the network for players, so someone who joined while the app was away may not show.</string>
+    <string name="kp_2b26c543ead5" formatted="false">Choose your game</string>
+    <string name="kp_c47532edb2d7" formatted="false">Claim win</string>
+    <string name="kp_25b55e8298c7" formatted="false">Claiming…</string>
+    <string name="kp_a546440f3f66" formatted="false">Climb the ladder</string>
+    <string name="kp_adac69379a62" formatted="false">Code</string>
+    <string name="kp_d29d9fee5279" formatted="false">Code: %s</string>
+    <string name="kp_8e3df45a49db" formatted="false">Copied</string>
+    <string name="kp_af74f7c5362a" formatted="false">Copy</string>
+    <string name="kp_6d8d79e75952" formatted="false">Couldn\'t stamp the result on Kaspa</string>
+    <string name="kp_6e157c5da441" formatted="false">Create</string>
+    <string name="kp_1bf04f16edb7" formatted="false">Create a private 1v1</string>
+    <string name="kp_7e92ffa83dfa" formatted="false">Create a private tournament</string>
+    <string name="kp_94d7d8ee473f" formatted="false">Creating…</string>
+    <string name="kp_2775f5da8563" formatted="false">Creator code</string>
+    <string name="kp_34660a5de9ae" formatted="false">Defeat</string>
+    <string name="kp_e9b450d14bc2" formatted="false">Done</string>
+    <string name="kp_bfa50c7a3838" formatted="false">Draw</string>
+    <string name="kp_9af70e71546d" formatted="false">Draw - won on clock</string>
+    <string name="kp_3ef901b7405f" formatted="false">Draw by insufficient material - won on clock</string>
+    <string name="kp_1f217e401459" formatted="false">Draw by insufficient material.</string>
+    <string name="kp_65647004462e" formatted="false">Draw by insufficient material. %s won on clock.</string>
+    <string name="kp_8abd5d59fe79" formatted="false">Draw by stalemate - won on clock</string>
+    <string name="kp_e7c73294f742" formatted="false">Draw by stalemate.</string>
+    <string name="kp_0ee00fa48fcb" formatted="false">Draw by stalemate. %s won on clock.</string>
+    <string name="kp_c1f887545180" formatted="false">Draw by the fifty-move rule - won on clock</string>
+    <string name="kp_e0fa7fdfda5b" formatted="false">Draw by the fifty-move rule.</string>
+    <string name="kp_e18608aaaa1f" formatted="false">Draw by the fifty-move rule. %s won on clock.</string>
+    <string name="kp_ca658ca2e441" formatted="false">Draw by threefold repetition - won on clock</string>
+    <string name="kp_1bd0b8c9f833" formatted="false">Draw by threefold repetition.</string>
+    <string name="kp_c328be341b0c" formatted="false">Draw by threefold repetition. %s won on clock.</string>
+    <string name="kp_fdd69537f848" formatted="false">Draw.</string>
+    <string name="kp_cbefc612d55f" formatted="false">Draw. %s won on clock.</string>
+    <string name="kp_1861bf6c95a3" formatted="false">Eight players, single elimination: quarterfinals, semifinals, final. Public rooms fill as players arrive; private ones by code.</string>
+    <string name="kp_d488ebb4b1db" formatted="false">Everyone who joined is released. This is one transaction.</string>
+    <string name="kp_4788947ec3fe" formatted="false">Fewest moves to beat %s</string>
+    <string name="kp_672b22cc516e" formatted="false">Final</string>
+    <string name="kp_355bcc577d71" formatted="false">Finished</string>
+    <string name="kp_a8d435fecb0c" formatted="false">Finished 1v1 games</string>
+    <string name="kp_781b28d8c53d" formatted="false">Finished tournaments</string>
+    <string name="kp_08ab1ad685e3" formatted="false">Five bots, level 1 to 5, from Kaspa Silver to Yonatan Sompolinsky. Beat one to unlock the next. The result goes on Kaspa.</string>
+    <string name="kp_03e3c2d3a084" formatted="false">Five bots, level 1 to 5. Beat one to unlock the next. Each game\'s result is stamped on Kaspa when it ends.</string>
+    <string name="kp_e3e82846c325" formatted="false">Game</string>
+    <string name="kp_94114a40a64a" formatted="false">Games won and lost - 1v1s and tournament games alike</string>
+    <string name="kp_7b1a1bfec003" formatted="false">Go to your game</string>
+    <string name="kp_78722784381b" formatted="false">Here for the fun of it. Moves fast and sometimes leaves a piece hanging.</string>
+    <string name="kp_7f2a3bb304a4" formatted="false">If you leave, you resign the game. %s goes through and you are out of the tournament. It counts as a loss on the leaderboard. Resigning is one transaction.</string>
+    <string name="kp_e998db197859" formatted="false">If you leave, you resign the game. %s wins, and it counts as a loss on the leaderboard. Resigning is one transaction.</string>
+    <string name="kp_a4362588018d" formatted="false">If you leave, you resign the game. It counts as a loss against %s, and the result goes on Kaspa in one transaction.</string>
+    <string name="kp_03a2b6501787" formatted="false">In play</string>
+    <string name="kp_e24d4d212b7b" formatted="false">In play. Tap any game to watch it live.</string>
+    <string name="kp_b1cfe72fd271" formatted="false">Intermediate</string>
+    <string name="kp_f63265478d76" formatted="false">It counts as a loss against %s, and the result goes on Kaspa in one transaction.</string>
+    <string name="kp_e0d73143de80" formatted="false">Join</string>
+    <string name="kp_c8155c3c34dc" formatted="false">Join (Fee: %s)</string>
+    <string name="kp_df7b41919cb2" formatted="false">Join and you are paired with the next person who joins. When a room fills, the game starts and the next room opens. Five minutes a side; every move is a Kaspa transaction (about 0.0017 KAS each). Games here count on the leaderboard.</string>
+    <string name="kp_dacbf38d4e73" formatted="false">Join with a code</string>
+    <string name="kp_f44c1e425996" formatted="false">Joining…</string>
+    <string name="kp_d9f369249799" formatted="false">Keep it</string>
+    <string name="kp_bb76090ac54c" formatted="false">Keep playing</string>
+    <string name="kp_9be1abba9272" formatted="false">Keep waiting</string>
+    <string name="kp_32bf913a5258" formatted="false">Knows how every piece moves and loves grabbing free material. Watch your loose pawns.</string>
+    <string name="kp_35b13a38f422" formatted="false">LIVE %s</string>
+    <string name="kp_0381247a6987" formatted="false">Leaderboard</string>
+    <string name="kp_7e3520a97331" formatted="false">Leave</string>
+    <string name="kp_963593386268" formatted="false">Leave anyway</string>
+    <string name="kp_4bc79453df63" formatted="false">Leave the game?</string>
+    <string name="kp_baf82f7117b6" formatted="false">Leave the queue?</string>
+    <string name="kp_b7aa749e18cb" formatted="false">Leaving means you will no longer be searching for another player. Leaving is one transaction; you can join again any time.</string>
+    <string name="kp_3016bac3196c" formatted="false">Leaving…</string>
+    <string name="kp_ec7cc1838f39" formatted="false">Level %d</string>
+    <string name="kp_7780eacc49b8" formatted="false">Level %d of 5</string>
+    <string name="kp_0e50ccfcd686" formatted="false">Level %d · %s</string>
+    <string name="kp_9f8465fad533" formatted="false">Level %d · %s · You play black</string>
+    <string name="kp_fc9307e48365" formatted="false">Level %d · %s · You play white</string>
+    <string name="kp_6235bfaf9ecc" formatted="false">Live now</string>
+    <string name="kp_39687e0a700d" formatted="false">Loading rooms…</string>
+    <string name="kp_5daad3f809a8" formatted="false">Loading the tournament from the arena…</string>
+    <string name="kp_4d5e7c6d35ee" formatted="false">Looking for an opponent</string>
+    <string name="kp_98ea2c12eb7c" formatted="false">Looks a couple of moves ahead before committing. Steady and hard to trick.</string>
+    <string name="kp_0f9a484f1388" formatted="false">Losses</string>
+    <string name="kp_78f3842f0201" formatted="false">Master</string>
+    <string name="kp_092664087974" formatted="false">Match found!</string>
+    <string name="kp_a7814b5ec744" formatted="false">Move %d · black to move</string>
+    <string name="kp_9fe5cb670a4c" formatted="false">Move %d · white to move</string>
+    <string name="kp_77fbed46e1be" formatted="false">Next: round 1 vs %s</string>
+    <string name="kp_a2dad9a4e89c" formatted="false">Next: the final vs %s</string>
+    <string name="kp_eceff125fbb4" formatted="false">Next: the game vs %s</string>
+    <string name="kp_1337e1141b11" formatted="false">Next: the semifinal vs %s</string>
+    <string name="kp_8506e1612593" formatted="false">No 1v1 games are being played right now. When one starts, it shows up here to watch.</string>
+    <string name="kp_3988da2d38ef" formatted="false">No bot has been played yet.</string>
+    <string name="kp_77ebbb8e3de5" formatted="false">No finished 1v1 games yet.</string>
+    <string name="kp_1597bcaeaaa1" formatted="false">No finished tournaments yet.</string>
+    <string name="kp_682c0ad47cbe" formatted="false">No one joined in time. You\'re out of the queue - join again whenever you like.</string>
+    <string name="kp_50385293d3d0" formatted="false">No open tournament with that code. Codes are eight characters; the tournament must exist and still have seats.</string>
+    <string name="kp_581a01e739ba" formatted="false">No tournament is being played right now. When one starts, its games show up here to watch.</string>
+    <string name="kp_2ee8ce15a9f7" formatted="false">Nobody has beaten %s this month yet.</string>
+    <string name="kp_54460cd574b9" formatted="false">Nobody has beaten %s yet.</string>
+    <string name="kp_4472179cd296" formatted="false">Not beaten yet</string>
+    <string name="kp_b9e09ae263fb" formatted="false">Not confirmed</string>
+    <string name="kp_214bf807441e" formatted="false">Not enough KAS on your Chatting Address. Add some and try again.</string>
+    <string name="kp_16ca44702a9b" formatted="false">Novice</string>
+    <string name="kp_fb58f3c56a8d" formatted="false">On time</string>
+    <string name="kp_1cf2fc54ad9f" formatted="false">Online, five minutes a side and every move is a Kaspa transaction. Bot games stamp their result on Kaspa when they end.</string>
+    <string name="kp_6dca824588f3" formatted="false">Open seat</string>
+    <string name="kp_b84d3a372a18" formatted="false">Play %s</string>
+    <string name="kp_0faa2e4de8b8" formatted="false">Play a friend: create a 1v1, share its code. Private 1v1s count on the leaderboard too.</string>
+    <string name="kp_576766d387ec" formatted="false">Play again</string>
+    <string name="kp_61441ace460e" formatted="false">Play as</string>
+    <string name="kp_8ba176164906" formatted="false">Play the next person who joins, or a friend by code. One game, winner takes the leaderboard point.</string>
+    <string name="kp_e53407cfe1a5" formatted="false">Player</string>
+    <string name="kp_9f33b8c73405" formatted="false">Players (%d of %d)</string>
+    <string name="kp_237dfa0a21c8" formatted="false">Private</string>
+    <string name="kp_f61dccc2dba9" formatted="false">Private 1v1</string>
+    <string name="kp_ea951f3a34eb" formatted="false">Private tournament</string>
+    <string name="kp_79b0f9805c68" formatted="false">Promote to</string>
+    <string name="kp_dc5eb704bbca" formatted="false">Public</string>
+    <string name="kp_37ea9a7673b4" formatted="false">Public 1v1</string>
+    <string name="kp_8b2cb0910a17" formatted="false">Public 1v1 #%d</string>
+    <string name="kp_236760772b5c" formatted="false">Public tournament</string>
+    <string name="kp_b4d6cee9742f" formatted="false">Public tournament #%d</string>
+    <string name="kp_58d888c08aa5" formatted="false">Random</string>
+    <string name="kp_73ba76c46a4c" formatted="false">Ranked by the fewest moves to win.</string>
+    <string name="kp_a3d558838b81" formatted="false">Resign</string>
+    <string name="kp_868d45f552a8" formatted="false">Resign and leave</string>
+    <string name="kp_a12f7f95331e" formatted="false">Resign this game?</string>
+    <string name="kp_65d7b143ae0f" formatted="false">Result stamped on Kaspa</string>
+    <string name="kp_9f5cd8a2e880" formatted="false">Retry</string>
+    <string name="kp_923287d2eeda" formatted="false">Retry the stamp</string>
+    <string name="kp_f7648d383499" formatted="false">Round 1</string>
+    <string name="kp_d7418ba2e352" formatted="false">Seats can\'t be checked right now</string>
+    <string name="kp_33295d1667f4" formatted="false">See the board</string>
+    <string name="kp_af1cfadd9704" formatted="false">Seed %d</string>
+    <string name="kp_7d79eec3965c" formatted="false">Semifinal</string>
+    <string name="kp_3abe921a63aa" formatted="false">Semifinals</string>
+    <string name="kp_6f32706309e0" formatted="false">Sending your move…</string>
+    <string name="kp_9cb2e112972e" formatted="false">Sent, but Kaspa hasn\'t confirmed it yet.</string>
+    <string name="kp_09ca55ca52d2" formatted="false">Share</string>
+    <string name="kp_d042790fe991" formatted="false">Share this code</string>
+    <string name="kp_1f3254d6ce59" formatted="false">Share to KaPost</string>
+    <string name="kp_4401b9c3edce" formatted="false">Someone beat %s in %d moves. Can you do it in fewer?</string>
+    <string name="kp_c923aafae8bc" formatted="false">Someone challenges you to beat %s.</string>
+    <string name="kp_9a3ea0598e7f" formatted="false">Something went wrong. Please try again.</string>
+    <string name="kp_8aa38f374323" formatted="false">Stamping the result on Kaspa…</string>
+    <string name="kp_6959b5355760" formatted="false">Stamping the result…</string>
+    <string name="kp_ae768f766f75" formatted="false">Stay</string>
+    <string name="kp_f300737844cc" formatted="false">Still loading the rooms - try again in a moment.</string>
+    <string name="kp_fc55363a83bc" formatted="false">Taking both of you to the board</string>
+    <string name="kp_ad30c2ff1d6e" formatted="false">Taking everyone to their boards</string>
+    <string name="kp_293d8f7d8030" formatted="false">Taking your seat - this is one transaction, so it takes a few seconds.</string>
+    <string name="kp_8ad85cccbb0e" formatted="false">Tap to go back to it</string>
+    <string name="kp_0e4268b5d759" formatted="false">That creator code is not right.</string>
+    <string name="kp_617a81cfb251" formatted="false">That didn\'t reach the network. Try again.</string>
+    <string name="kp_55720cd06fc4" formatted="false">That room filled first - finding you the next one.</string>
+    <string name="kp_d8501167e501" formatted="false">That room filled first. Tap Join to try the next one.</string>
+    <string name="kp_9e663d4025b0" formatted="false">That tournament has already started.</string>
+    <string name="kp_1ee44a0bf66b" formatted="false">The chess server is unreachable and the network hasn\'t confirmed this yet. Try again in a moment.</string>
+    <string name="kp_0e3db8107f4d" formatted="false">The chess server is unreachable, so open rooms can\'t be confirmed. Try again when it\'s back.</string>
+    <string name="kp_3e86d5e865a8" formatted="false">The chess server is unreachable, so that code can\'t be looked up. Try again when it\'s back.</string>
+    <string name="kp_374e3b271476" formatted="false">The eight-character code the creator shared. Joining is one transaction (fee: %s).</string>
+    <string name="kp_668f15ee8377" formatted="false">The game itself is free. When it ends, win or lose, its result is stamped on Kaspa: one transaction from your wallet, about %s.</string>
+    <string name="kp_056a66088f6c" formatted="false">The game itself is free. When it ends, win or lose, its result is stamped on Kaspa: one transaction from your wallet, one small fee.</string>
+    <string name="kp_a94070f3a397" formatted="false">The network is still confirming your previous send. Please try again in a few seconds.</string>
+    <string name="kp_5021101f57d6" formatted="false">The result goes on Kaspa when the game ends</string>
+    <string name="kp_fb4fdd00f1ac" formatted="false">The stamp failed. If you leave now it can\'t be sent again, and this win won\'t count on the leaderboard.</string>
+    <string name="kp_2d72f92d9b82" formatted="false">The stamp may have gone through</string>
+    <string name="kp_30a77c98dc8a" formatted="false">The tournament starts by itself when all eight seats are taken.</string>
+    <string name="kp_693f8a669f1e" formatted="false">Their move</string>
+    <string name="kp_3dd518e63c49" formatted="false">Them</string>
+    <string name="kp_22a02413aebd" formatted="false">There is always a public room waiting for players. When it fills, it starts and the next one opens. Eight players, single elimination, five minutes a side. Every move is a Kaspa transaction (about 0.0017 KAS each).</string>
+    <string name="kp_6d45876eef92" formatted="false">Thinks deep and sees far. Beat this one and you have climbed the whole ladder.</string>
+    <string name="kp_1085f4e7c41f" formatted="false">This game was played on another account. Sign in to it to stamp the result.</string>
+    <string name="kp_9fa87800a939" formatted="false">This may have gone through, but the network didn\'t confirm it. Check your balance before sending again.</string>
+    <string name="kp_1b4785331db3" formatted="false">This month</string>
+    <string name="kp_733696c12e3e" formatted="false">Time ran out. %s won on time.</string>
+    <string name="kp_5a2e22ac873e" formatted="false">To be decided</string>
+    <string name="kp_a2c1d828e2d3" formatted="false">Tournament</string>
+    <string name="kp_25670f61ff36" formatted="false">Tournament full!</string>
+    <string name="kp_cd04af2db6f1" formatted="false">Tournament leaderboard</string>
+    <string name="kp_fee20df1963e" formatted="false">Tournaments</string>
+    <string name="kp_981d375a0f37" formatted="false">Tournaments won and lost</string>
+    <string name="kp_e71f1539a41b" formatted="false">Victory</string>
+    <string name="kp_f3ec99569fbf" formatted="false">View in Explorer</string>
+    <string name="kp_33d30632848d" formatted="false">Waiting</string>
+    <string name="kp_a41118158853" formatted="false">Waiting for %d more players. It starts by itself when the eighth joins.</string>
+    <string name="kp_442da9df5c77" formatted="false">Waiting for 1 more player. It starts by itself when the eighth joins.</string>
+    <string name="kp_c26c33fa1c5a" formatted="false">Waiting for players</string>
+    <string name="kp_0e6a21e02626" formatted="false">Waiting for the chess server</string>
+    <string name="kp_fbc3f16e4c19" formatted="false">Waiting for your opponent. The game starts by itself when they join.</string>
+    <string name="kp_d91ebf5887cf" formatted="false">Watch</string>
+    <string name="kp_7ef5b5821c01" formatted="false">Watching is free - nothing is sent. Only the two players can move.</string>
+    <string name="kp_37619fc13053" formatted="false">White</string>
+    <string name="kp_c6ff9b47bd9e" formatted="false">White to move</string>
+    <string name="kp_79bcb3dd18f9" formatted="false">Win rate</string>
+    <string name="kp_ffb136c1afe9" formatted="false">Winner of QF%d</string>
+    <string name="kp_3fe7ae15e42c" formatted="false">Winner of SF%d</string>
+    <string name="kp_b6c015d12e1b" formatted="false">Wins</string>
+    <string name="kp_b273fb287708" formatted="false">Won</string>
+    <string name="kp_ddf4e3735470" formatted="false">Won by %s</string>
+    <string name="kp_905cb326c779" formatted="false">You</string>
+    <string name="kp_70142233d6f3" formatted="false">You are out of this tournament. Watch the rest of the bracket.</string>
+    <string name="kp_07025e915e94" formatted="false">You are out of this tournament. You can watch the rest of the bracket.</string>
+    <string name="kp_188b806432ca" formatted="false">You get a code to share with the person you want to play. The game starts when they join. Creating it is one transaction.</string>
+    <string name="kp_e7c04dcae100" formatted="false">You go through to the next round. Your next game opens by itself when your opponent is decided.</string>
+    <string name="kp_5279ac5901b8" formatted="false">You lost</string>
+    <string name="kp_db93b3d19f74" formatted="false">You move first.</string>
+    <string name="kp_7ec46c42f060" formatted="false">You resigned. %s wins.</string>
+    <string name="kp_85b0b68af5f2" formatted="false">You take the first seat and get a code to share. It starts when eight players have joined. Creating it is one transaction.</string>
+    <string name="kp_3c2dfe0e1289" formatted="false">You won by checkmate in %d moves.</string>
+    <string name="kp_8dfe694ea61b" formatted="false">You won by checkmate in 1 move.</string>
+    <string name="kp_8c75d5f7de98" formatted="false">You won round 1. Waiting for your next opponent - watch the other game meanwhile.</string>
+    <string name="kp_795115417df0" formatted="false">You won the final. Waiting for your next opponent - watch the other game meanwhile.</string>
+    <string name="kp_2987342bd41b" formatted="false">You won the game. Waiting for your next opponent - watch the other game meanwhile.</string>
+    <string name="kp_ba7e2d06a69c" formatted="false">You won the semifinal. Waiting for your next opponent - watch the other game meanwhile.</string>
+    <string name="kp_dc9807723538" formatted="false">You won the tournament.</string>
+    <string name="kp_e3a4b01eaca8" formatted="false">You won!</string>
+    <string name="kp_2bd203ba381e" formatted="false">You\'re already waiting in %s.</string>
+    <string name="kp_a91633acc070" formatted="false">You\'re in. Waiting for %d more…</string>
+    <string name="kp_ad79fa22e5b2" formatted="false">You\'re in. Waiting for 1 more…</string>
+    <string name="kp_cfe84965f638" formatted="false">You\'re paired with the next person who joins. The game starts by itself.</string>
+    <string name="kp_d80ca7163461" formatted="false">You\'re playing in %s</string>
+    <string name="kp_24bf6785a61b" formatted="false">You\'re still playing in %s.</string>
+    <string name="kp_eec7f86a8bb7" formatted="false">You\'re waiting in %s</string>
+    <string name="kp_61e7335f3c19" formatted="false">Your 1v1 record</string>
+    <string name="kp_48fd80af85de" formatted="false">Your clock ran out before the move could be sent.</string>
+    <string name="kp_a8bc9c75a936" formatted="false">Your game starts in</string>
+    <string name="kp_32ec1dbd797a" formatted="false">Your join didn\'t reach the network. Join again whenever you like.</string>
+    <string name="kp_44470e508a5d" formatted="false">Your move</string>
+    <string name="kp_d5b2c846e810" formatted="false">Your move didn\'t count. Check the board.</string>
+    <string name="kp_5277d781ccc7" formatted="false">Your move didn\'t reach the network. Play it again.</string>
+    <string name="kp_63bbbf0226f5" formatted="false">Your record</string>
+    <string name="kp_4e15ba26e54d" formatted="false">Your seat is held for %s. If the room hasn\'t filled by then, you\'re out of the queue.</string>
+    <string name="kp_8774b9393565" formatted="false">Your seat is held this long. If no one joins in time, you leave the queue.</string>
+    <string name="kp_94ad25364602" formatted="false">Your tournament record</string>
+    <string name="kp_114f3f6a8251" formatted="false">Your win isn\'t on Kaspa yet</string>
+    <string name="kp_f957097d7a22" formatted="false">finished</string>
+    <string name="kp_691a77cd21a3" formatted="false">vs</string>
+    <string name="kp_aa93adb4f65c" formatted="false">I beat %s (Level %d) in %d moves on K. Think you can do it in fewer?</string>
+    <string name="kp_f81826d956cc" formatted="false">Join my chess tournament in K: open KaPlay &gt; Chess &gt; Tournaments &gt; Join with a code, and enter %s.</string>
+    <string name="kp_c2ecefef54c6" formatted="false">Play me at chess in K: open KaPlay &gt; Chess &gt; 1v1 &gt; Join with a code, and enter %s.</string>
+    <string name="kp_f4fa709cb963" formatted="false">Quarterfinals</string>
+    <string name="kp_3ce0ac6e9413" formatted="false">The result was not sent.</string>
+    <string name="kaplay_leaderboard_all_time">All time</string>
+    <string name="kaplay_leaderboard_counted_from">Counted from %1$s.</string>
+    <string name="kaplay_leaderboard_period">Leaderboard period</string>
+    <string name="kaplay_leaderboard_resets_monthly">Resets on the 1st of every month (UTC).</string>
+    <string name="kaplay_leaderboard_this_month">This month</string>
+    <string name="kaplay_no_finished_duels">No finished 1v1 games yet.</string>
+    <string name="kaplay_no_finished_duels_this_month">No finished 1v1 games this month yet.</string>
+    <string name="kaplay_no_finished_tournaments">No finished tournaments yet.</string>
+    <string name="kaplay_no_finished_tournaments_this_month">No finished tournaments this month yet.</string>
+    <string name="kaplay_tab_games" translatable="false">KaPlay</string>
+    <string name="kaplay_tab_leaderboard">Leaderboard</string>
+</resources>

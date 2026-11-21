@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Integration (iOS 148a5331): payment requests paid in KaChat, room links in chats. -->
+<resources>
+    <string name="pl_pr_anyone_note">যে কেউ এটি K-এ খুললে এই তথ্য ভরা Kaspa পাঠান স্ক্রিন পাবে, এবং দেখবে এটি আপনার চ্যাট ঠিকানা তৈরি করেছে (এর কী দিয়ে স্বাক্ষরিত)।</string>
+    <string name="pl_tap_to_open_public_chat_room">এই পাবলিক চ্যাট রুম খুলতে ট্যাপ করুন।</string>
+    <string name="pl_tap_to_join_public_chat_room">এই পাবলিক চ্যাট রুমে যোগ দিতে ট্যাপ করুন।</string>
+    <string name="pl_join_room_title">#%1$s-এ যোগ দেবেন?</string>
+    <string name="pl_join_room_message">একটি লিংক এই রুমটি আপনার পাবলিক চ্যাটে যোগ করতে চায়।</string>
+    <string name="pl_join_room_mixed_scripts">এই নামে বিভিন্ন বর্ণমালার অক্ষর মেশানো আছে, তাই এটি অন্য কোনো রুমের অনুকরণ হতে পারে।</string>
+</resources>

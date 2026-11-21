@@ -26,14 +26,17 @@ import java.text.NumberFormat
  * "Photos: quality tiers and multi-part photos". Each row shows its budget until the photo has
  * been compressed for it, then the fee that photo will cost ([fees]). The Nextcloud route never
  * shows this.
+ *
+ * [isGif]: "GIF Quality" for an animated GIF, whose tiers are GIFs (iOS d7c56280 `title`).
  */
 @Composable
 fun PhotoQualitySheet(
     fees: Map<PhotoTier, Long>,
+    isGif: Boolean = false,
     onChoose: (PhotoTier) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    ActionSheetContainer(title = stringResource(R.string.photo_quality), subtitle = null, onDismiss = onDismiss) {
+    ActionSheetContainer(title = stringResource(if (isGif) R.string.gif_quality else R.string.photo_quality), subtitle = null, onDismiss = onDismiss) {
         for (tier in PhotoTier.values()) {
             ActionSheetRow(
                 icon = when (tier) {

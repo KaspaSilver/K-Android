@@ -71,14 +71,21 @@ class PaymentNoticeOutbox @Inject constructor(
         else prefs.edit().putString(key, gson.toJson(list)).apply()
     }
 
-    /** Keeps a notice that failed to send (usually an empty chatting address), for this wallet. */
     /** Everything kept for [walletAddress]: it's going off this device (iOS bfe9f022). */
     fun removeAllData(walletAddress: String) {
         synchronized(listLock) { prefs.edit().remove(keyFor(walletAddress)).apply() }
     }
 
-    fun keep(notice: UnsentPaymentNotice) {
-        val key = currentKey() ?: return
+    /**
+     * Keeps a notice that failed to send (usually an empty chatting address) under [owner], the
+     * account that made the payment - never the one active when the send failed: after a switch,
+     * sending it from the other account's chatting address would link the two accounts on chain
+     * (iOS 5b7c772c `keepUnsentNotice(_:owner:)`, audit #7). It goes out once [owner] is active
+     * again and its chatting address has KAS. Null: a caller that didn't say whose it is - the
+     * active account, as before.
+     */
+    fun keep(notice: UnsentPaymentNotice, owner: String? = null) {
+        val key = (owner?.takeIf { it.isNotBlank() }?.let(::keyFor) ?: currentKey()) ?: return
         synchronized(listLock) {
             val list = read(key)
             if (list.any { it.txId == notice.txId }) return

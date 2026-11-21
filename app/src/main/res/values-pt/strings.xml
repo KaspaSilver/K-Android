@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">KaChat</string>
+    <string name="app_name">K</string>
     <string name="n_12_words">12 palavras</string>
     <string name="n_24_words">24 palavras</string>
     <string name="a_kns_inscription_s_commit_transaction">A transacao de confirmacao de uma inscricao KNS foi concluida, mas a revelacao nunca terminou. Tente novamente agora para concluir; os fundos ficam seguros ate voce fazer isso.</string>
@@ -28,11 +28,11 @@
     <string name="delivery_failed_tap_to_retry">Falhou · Toque para tentar de novo</string>
     <string name="delivery_needs_attention">Requer atenção</string>
     <string name="delivery_failed_retry_accessibility">Falha no envio. Toque para tentar de novo.</string>
-    <string name="battery_rationale_title">Receba notificações com o KaChat fechado</string>
+    <string name="battery_rationale_title">Receba notificações com o K fechado</string>
     <string name="battery_rationale_body">Alguns telefones fecham apps para economizar bateria, o que pode interromper as notificações de mensagens.</string>
     <string name="battery_rationale_allow">Permitir</string>
-    <string name="battery_rationale_allow_detail">Permite que novas mensagens ativem o KaChat para notificar você.</string>
-    <string name="battery_rationale_not_now_detail">Altere depois em Configurações > Apps > KaChat > Bateria.</string>
+    <string name="battery_rationale_allow_detail">Permite que novas mensagens ativem o K para notificar você.</string>
+    <string name="battery_rationale_not_now_detail">Altere depois em Configurações > Apps > K > Bateria.</string>
     <string name="open_source_licenses">Licenças de código aberto</string>
     <string name="screen_lock_required">Bloqueio de tela necessário</string>
     <string name="cancel_photo">Cancelar foto</string>
@@ -90,8 +90,8 @@
     <string name="kns_domains">Seus domínios</string>
     <string name="contact_kns_domains">Dominios KNS</string>
     <string name="kachat">KaChat</string>
-    <string name="kachat_logo">Logo do KaChat</string>
-    <string name="kachat_needs_to_connect_to_a">O KaChat precisa se conectar a um no. Como voce gostaria de se conectar?</string>
+    <string name="kachat_logo">Logo do K</string>
+    <string name="kachat_needs_to_connect_to_a">O K precisa se conectar a um no. Como voce gostaria de se conectar?</string>
     <string name="kaspa_explorer">Kaspa Explorer</string>
     <string name="label_optional">Rotulo (opcional)</string>
     <string name="last_message">Última mensagem</string>
@@ -258,10 +258,10 @@
     <string name="x">X</string>
     <string name="language">Idioma</string>
     <string name="system_default">Sistema</string>
-    <string name="welcome_to_kachat">Bem-vindo ao KaChat</string>
+    <string name="welcome_to_kachat">Bem-vindo ao K</string>
     <string name="lets_walk_through_the_basics_so">Vamos revisar o basico para que voce esteja pronto para enviar sua primeira mensagem.</string>
-    <string name="how_kachat_uses_kaspa">Como o KaChat usa o Kaspa</string>
-    <string name="kachat_lets_you_send_and_receive">O KaChat permite enviar e receber mensagens diretamente na rede Kaspa. E necessario Kaspa para pagar as taxas ao enviar suas mensagens. A taxa que voce paga vai para os mineradores que protegem a rede.</string>
+    <string name="how_kachat_uses_kaspa">Como o K usa o Kaspa</string>
+    <string name="kachat_lets_you_send_and_receive">O K permite enviar e receber mensagens diretamente na rede Kaspa. E necessario Kaspa para pagar as taxas ao enviar suas mensagens. A taxa que voce paga vai para os mineradores que protegem a rede.</string>
     <string name="finish">Concluir</string>
     <string name="recommended">Recomendado</string>
     <string name="connect_your_own_node">Conectar seu proprio node</string>
@@ -269,7 +269,7 @@
     <string name="auto_search_for_nodes">Buscar nodes automaticamente</string>
     <string name="most_taxing_on_the_device_not_as">Mais exigente para o dispositivo, menos confiavel - depende de onde voce mora</string>
     <string name="choose_your_language">Escolha seu idioma</string>
-    <string name="select_the_language_youd_like_to">Selecione o idioma que voce gostaria de usar no KaChat.</string>
+    <string name="select_the_language_youd_like_to">Selecione o idioma que voce gostaria de usar no K.</string>
     <string name="best">Melhor</string>
     <string name="enter_as_host_port_or_grpcs_host">Insira como host:porta ou grpcs://host</string>
     <string name="receive_kaspa">Receber Kaspa</string>
@@ -298,7 +298,7 @@
     <string name="none_yet">Nenhum ainda</string>
     <string name="customize_profile">Personalizar perfil</string>
     <string name="settling">Confirmando</string>
-    <string name="kachat_profile_coming_body">Os nomes .kachat estão chegando. Quando você reivindicar um, define aqui seu avatar, banner, bio e links, e é isso que o KaChat mostra de você em todo lugar.</string>
+    <string name="kachat_profile_coming_body">Os nomes .kachat estão chegando. Quando você reivindicar um, define aqui seu avatar, banner, bio e links, e é isso que o K mostra de você em todo lugar.</string>
     <string name="kachat_name_section">Nome .kachat</string>
     <string name="could_not_reach_service">Não foi possível acessar %1$s. Puxe para baixo para tentar de novo.</string>
     <string name="no_names_yet">Nenhum nome %1$s ainda.</string>
@@ -364,8 +364,8 @@
     <string name="welcome_fund_chatting_body">5 Kaspa bastam para cerca de 2500 mensagens.</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">Testnet</string>
-    <string name="testnet_restart_to_testnet">Feche o KaChat completamente e abra de novo para concluir a mudança para a Testnet.</string>
-    <string name="testnet_restart_to_mainnet">Feche o KaChat completamente e abra de novo para concluir a volta para a Mainnet.</string>
+    <string name="testnet_restart_to_testnet">Feche o K completamente e abra de novo para concluir a mudança para a Testnet.</string>
+    <string name="testnet_restart_to_mainnet">Feche o K completamente e abra de novo para concluir a volta para a Mainnet.</string>
     <string name="nextcloud_off_on_testnet">O Nextcloud fica desligado enquanto a Testnet estiver ligada.</string>
     <!-- Kaspa Hub > .kachat live on testnet (iOS 5df42b4) -->
     <string name="kn_ev_transferred">Transferido</string>
@@ -544,8 +544,8 @@
     <string name="kn_err_accept_name_expired">Este nome venceu. As ofertas só podem ser aceitas enquanto o nome está ativo. Renove-o primeiro.</string>
     <!-- .kachat: expires-soon follows the period clock (iOS 24d673a, IOS-060) -->
     <!-- Addresses of the other network are refused (iOS ce20e87, IOS-003) -->
-    <string name="address_other_network_testnet">Este é um endereço da Testnet. O KaChat está na Mainnet.</string>
-    <string name="address_other_network_mainnet">Este é um endereço da Mainnet. O KaChat está na Testnet.</string>
+    <string name="address_other_network_testnet">Este é um endereço da Testnet. O K está na Mainnet.</string>
+    <string name="address_other_network_mainnet">Este é um endereço da Mainnet. O K está na Testnet.</string>
     <!-- Coin Control: the most coins one transaction may spend (AND-012 follow-up) -->
     <string name="coin_control_max_selection">Uma transação pode gastar no máximo %1$d UTXOs, por isso não é possível selecionar mais.</string>
     <!-- Seed phrase screen: the passphrase is part of the backup (iOS 3076ab7, IOS-017) -->
@@ -619,7 +619,7 @@
     <string name="import_seed_length_detail">Quantas palavras você está importando?</string>
     <string name="what_is_a_seed_phrase">O que são minhas 12 ou 24 palavras?</string>
     <string name="seed_phrase_explainer_master_key">Suas 12 ou 24 palavras são palavras comuns que funcionam como a chave mestra da sua conta. Sua carteira, seu endereço de chat e suas mensagens vêm todos delas.</string>
-    <string name="seed_phrase_explainer_anyone">Qualquer pessoa que tenha essas palavras pode levar tudo o que há na sua conta. Se você perdê-las e também perder este aparelho, ninguém consegue recuperar sua conta, nem mesmo o KaChat.</string>
+    <string name="seed_phrase_explainer_anyone">Qualquer pessoa que tenha essas palavras pode levar tudo o que há na sua conta. Se você perdê-las e também perder este aparelho, ninguém consegue recuperar sua conta, nem mesmo o K.</string>
     <string name="seed_phrase_explainer_paper">Escreva as palavras em papel, na ordem, e guarde-as em um lugar seguro e privado. Nunca as digite em um site, não as envie em um chat e não as guarde em uma captura de tela ou em notas na nuvem.</string>
     <!-- Onboarding: the seed phrase explainer page's headings (iOS 712bb4d) -->
     <string name="seed_phrase_explainer_short_version">Em resumo</string>
@@ -642,7 +642,7 @@
     <string name="ab_address_book">Contatos</string>
     <string name="ab_add_to_address_book">Adicionar aos contatos</string>
     <string name="ab_search_prompt">Buscar nomes e endereços</string>
-    <string name="ab_empty_body">Salve os endereços Kaspa que você usa com um nome que reconheça. Eles ficam no KaChat, só para esta carteira, e nunca vão para o app Contatos do seu telefone.</string>
+    <string name="ab_empty_body">Salve os endereços Kaspa que você usa com um nome que reconheça. Eles ficam no K, só para esta carteira, e nunca vão para o app Contatos do seu telefone.</string>
     <string name="ab_add_address">Adicionar contato</string>
     <string name="ab_copied">Copiado</string>
     <string name="ab_share_address">Compartilhar endereço</string>
@@ -651,7 +651,7 @@
     <string name="ab_delete_confirm">Excluir %s dos seus contatos?</string>
     <string name="ab_not_in_book">Não está nos seus contatos</string>
     <string name="ab_note_optional">Nota (opcional)</string>
-    <string name="ab_editor_footer">Salvo no KaChat só para esta carteira. Nunca adicionado ao app Contatos do seu telefone.</string>
+    <string name="ab_editor_footer">Salvo no K só para esta carteira. Nunca adicionado ao app Contatos do seu telefone.</string>
     <string name="ab_edit_address">Editar contato</string>
     <string name="ab_picker_empty_body">Adicione-os em Contatos.</string>
     <string name="ab_err_no_wallet">Abra uma carteira primeiro.</string>
@@ -697,18 +697,18 @@
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">Enviada à rede</string>
     <string name="kn_step_in_block">Em um bloco</string>
-    <string name="kn_step_updated">Atualizada no KaChat</string>
+    <string name="kn_step_updated">Atualizada no K</string>
     <string name="kn_tx_stage_waiting">Aguardando a rede colocá-la em um bloco. Geralmente alguns segundos; mais quando está congestionada.</string>
-    <string name="kn_tx_stage_in_block">Está em um bloco. Atualizando o KaChat...</string>
-    <string name="kn_tx_stage_done">Pronto. Já aparece no KaChat.</string>
+    <string name="kn_tx_stage_in_block">Está em um bloco. Atualizando o K...</string>
+    <string name="kn_tx_stage_done">Pronto. Já aparece no K.</string>
     <string name="kn_tx_stage_dropped">A rede ainda não a aceitou. Se nunca entrar, nada é gasto - tente de novo com uma taxa mais rápida.</string>
     <string name="kn_tap_tx_explorer">Toque na transação para abri-la no explorador.</string>
     <!-- .kachat offers: tiles and half sheet (iOS 7f50e84) -->
     <!-- .kachat fee re-check (iOS 7e2b6cd, IOS-061) -->
     <string name="kn_err_fee_changed">A taxa de rede subiu para %1$s desde que você confirmou. Nada foi enviado. Confira a nova taxa e confirme novamente.</string>
     <!-- Address Book: the active network only (iOS 218dc42, IOS-063) -->
-    <string name="ab_err_import_all_mainnet">Todos os endereços desse arquivo são de Mainnet. O KaChat está na Testnet.</string>
-    <string name="ab_err_import_all_testnet">Todos os endereços desse arquivo são de Testnet. O KaChat está na Mainnet.</string>
+    <string name="ab_err_import_all_mainnet">Todos os endereços desse arquivo são de Mainnet. O K está na Testnet.</string>
+    <string name="ab_err_import_all_testnet">Todos os endereços desse arquivo são de Testnet. O K está na Mainnet.</string>
     <string name="ab_import_skipped_other_network">%1$d da outra rede ignorados.</string>
     <!-- .kachat registry v5 migration (iOS dd836cb) -->
     <string name="kn_registration_not_open">Os nomes estão passando para o novo registro. Novos nomes podem ser reivindicados a partir de %1$s.</string>
@@ -758,7 +758,7 @@
     <string name="pr_chatting_footer">O pagamento chega à sua conversa com quem paga, com a nota.</string>
     <string name="pr_memo_placeholder">Para que é (opcional)</string>
     <string name="pr_copy">Copiar solicitação de pagamento</string>
-    <string name="pr_anyone_note">Quem abrir no KaPay ou no KaChat recebe Enviar Kaspa já preenchido e vê que foi criado pelo seu endereço de chat (assinado com a chave dele).</string>
+    <string name="pr_anyone_note">Quem abrir no K recebe Enviar Kaspa já preenchido e vê que foi criado pelo seu endereço de chat (assinado com a chave dele).</string>
     <string name="pr_requested">Solicitado</string>
     <string name="pr_paid_as_chat_payment">Pago como pagamento na conversa: aparece na sua conversa com a pessoa.</string>
     <string name="pr_paid_to_their_spending">Pago ao endereço de gastos da pessoa.</string>
@@ -811,7 +811,7 @@
     <string name="your_own_address_value">Seu próprio endereço: %1$s</string>
     <!-- User Info: look the person's avatar, banner and bio up again now -->
     <!-- Chat payment From a spending address while the chatting address is empty (%1$s = contact name) - iOS 710fdc0 -->
-    <string name="payment_notice_chatting_empty">Seu endereço de chat não tem KAS para avisar %1$s sobre este pagamento, então ele o verá como um pagamento de um endereço desconhecido, sem a nota. O KaChat avisa assim que seu endereço de chat tiver KAS.</string>
+    <string name="payment_notice_chatting_empty">Seu endereço de chat não tem KAS para avisar %1$s sobre este pagamento, então ele o verá como um pagamento de um endereço desconhecido, sem a nota. O K avisa assim que seu endereço de chat tiver KAS.</string>
     <!-- Customize Dock: dock list (red minus) and Kaspa Hub list (green plus) -->
     <!-- KaPosts: tip counter / tippers list, and the bell for a person's new posts (iOS a6bd60a) -->
     <!-- KaPosts: Post Activity cards (iOS 8ffa130) -->
@@ -930,7 +930,7 @@
     <string name="alias_copied">Alias copiado para a área de transferência.</string>
     <string name="alias_unavailable">Alias indisponível.</string>
     <string name="reveal">Mostrar</string>
-    <string name="share_to_kachat">Compartilhar no KaChat</string>
+    <string name="share_to_kachat">Compartilhar no K</string>
     <string name="send_to">Enviar para</string>
     <string name="couldnt_send_saved_as_draft">Não foi possível enviar. Salvo como rascunho nesta conversa.</string>
     <string name="wallet_title">Carteira</string>
@@ -946,7 +946,7 @@
     <string name="settings_account_name_placeholder">Nome da conta</string>
     <string name="settings_privacy_policy">Política de Privacidade</string>
     <string name="import_words_enter_recovery_phrase">Digite suas 12 ou 24 palavras</string>
-    <string name="welcome_chatting_address_phone_number">Pense nele como o seu número de telefone no KaChat.</string>
+    <string name="welcome_chatting_address_phone_number">Pense nele como o seu número de telefone no K.</string>
     <string name="welcome_how_people_reach_you">Como falam com você</string>
     <string name="welcome_how_people_reach_you_caption">Compartilhe este endereço e poderão enviar mensagens para você. Só você pode ler o que enviam.</string>
     <string name="welcome_paying_for_messages">Pagar pelas mensagens</string>
@@ -967,7 +967,7 @@
     <string name="your_phone_cant_be_your_only_copy">Seu celular não pode ser sua única cópia</string>
     <string name="if_you_lose_break_or_replace_this">Se você perder, quebrar ou trocar este celular, estas palavras são o único jeito de voltar à sua conta.</string>
     <string name="nobody_can_reset_them">Ninguém pode redefini-las</string>
-    <string name="there_is_no_password_reset_kachat_never">Não existe redefinição de senha. O KaChat nunca vê suas palavras, então não podemos recuperá-las para você.</string>
+    <string name="there_is_no_password_reset_kachat_never">Não existe redefinição de senha. O K nunca vê suas palavras, então não podemos recuperá-las para você.</string>
     <string name="get_ready">Prepare-se</string>
     <string name="your_secret_words_are_next_before_you">Suas palavras secretas vêm a seguir. Antes de vê-las:</string>
     <string name="i_have_a_pen_and_paper">Tenho papel e caneta</string>
@@ -994,7 +994,7 @@
     <string name="never_keep_it_online">Nunca guarde online</string>
     <string name="no_photos_screenshots_cloud_storage_notes_apps">Nada de fotos, capturas de tela, armazenamento na nuvem, apps de notas, e-mail ou chats.</string>
     <string name="never_share_it">Nunca compartilhe</string>
-    <string name="nobody_needs_your_words_kachat_and_real">Ninguém precisa das suas palavras. O KaChat e o suporte de verdade nunca vão pedi-las. Quem pedir está tentando tirar seus fundos.</string>
+    <string name="nobody_needs_your_words_kachat_and_real">Ninguém precisa das suas palavras. O K e o suporte de verdade nunca vão pedi-las. Quem pedir está tentando tirar seus fundos.</string>
     <string name="keep_your_passphrase_apart">Mantenha sua frase secreta separada</string>
     <string name="store_it_away_from_your_12_or">Guarde-a longe das suas 12 ou 24 palavras. Você precisa das duas, e perder qualquer uma significa perder a conta.</string>
     <string name="you_can_see_it_again">Você pode vê-las de novo</string>
@@ -1092,7 +1092,7 @@
     <string name="back_up_to_nfc_card">Fazer backup no cartão NFC</string>
     <string name="notifications_disabled">Notificações desativadas</string>
     <string name="to_receive_notifications_please_enable_them_in">Para receber notificações, ative-as nas Configurações.</string>
-    <string name="kachat_is_having_trouble_syncing_right_now">O KaChat está com dificuldade para sincronizar agora. Ele continua tentando e suas mensagens se atualizam sozinhas quando a conexão voltar, então você não deve precisar apagar nada.</string>
+    <string name="kachat_is_having_trouble_syncing_right_now">O K está com dificuldade para sincronizar agora. Ele continua tentando e suas mensagens se atualizam sozinhas quando a conexão voltar, então você não deve precisar apagar nada.</string>
     <string name="select_chats">Selecionar chats</string>
     <string name="no_chats_to_re_sync">Nenhum chat para re-sincronizar.</string>
     <string name="node_connections_appear_blocked_on_this_network">As conexões com nodes parecem bloqueadas nesta rede. Você ainda pode receber e ler mensagens pelo indexador, mas enviar mensagens e pagamentos exige conexão com um node.</string>
@@ -1392,7 +1392,7 @@
     <string name="nfc_err_backup_too_large">O backup desta conta é grande demais para o cartão.</string>
     <string name="nfc_err_wrong_passphrase">Essa frase secreta não corresponde a este backup. Ela precisa ser exata, incluindo maiúsculas e espaços.</string>
     <string name="nfc_err_no_passphrase">Esta conta não tem frase secreta, então não pode ter backup em cartão.</string>
-    <string name="nfc_err_unreadable_backup">Este backup não pode ser lido. Ele pode ter sido criado por uma versão mais recente do KaChat.</string>
+    <string name="nfc_err_unreadable_backup">Este backup não pode ser lido. Ele pode ter sido criado por uma versão mais recente do K.</string>
     <string name="nfc_err_save_not_confirmed">Não foi possível confirmar o salvamento, então não confie neste cartão. Tente novamente.</string>
     <string name="nfc_err_seed_unavailable">Não foi possível ler as 12 ou 24 palavras desta conta neste dispositivo.</string>
     <string name="nfc_err_wrong_pin_one">PIN errado. Resta 1 tentativa antes de o PIN deste cartão ser bloqueado para sempre.</string>
@@ -1411,7 +1411,7 @@
     <string name="resync_select_chats">Selecionar chats...</string>
     <string name="resync_select_chats_subtitle">Escolha quais chats apagar e sincronizar novamente. O resto não é afetado.</string>
     <string name="resync_cancel_subtitle">Deixa suas mensagens como estão.</string>
-    <string name="screen_lock_required_message">Defina um bloqueio de tela neste telefone (Configurações &gt; Segurança) para excluir uma conta ou ver chaves secretas no KaChat.</string>
+    <string name="screen_lock_required_message">Defina um bloqueio de tela neste telefone (Configurações &gt; Segurança) para excluir uma conta ou ver chaves secretas no K.</string>
     <string name="show_password">Mostrar senha</string>
     <string name="hide_password">Ocultar senha</string>
     <string name="unlock_change_seed_phrase_lock">Desbloqueie para alterar o bloqueio biométrico das 12 ou 24 palavras</string>
@@ -1422,7 +1422,7 @@
     <string name="nc_username">Nome de usuário</string>
     <string name="nc_app_password">Senha do app</string>
     <string name="nc_use_https">Use https. Conexões sem criptografia não são suportadas.</string>
-    <string name="nc_app_password_footer">Crie uma senha de app no Nextcloud em Configurações → Segurança → Dispositivos e sessões — não use a senha da sua conta. O KaChat a guarda no armazenamento criptografado do dispositivo.</string>
+    <string name="nc_app_password_footer">Crie uma senha de app no Nextcloud em Configurações → Segurança → Dispositivos e sessões — não use a senha da sua conta. O K a guarda no armazenamento criptografado do dispositivo.</string>
     <string name="nc_connect">Conectar</string>
     <string name="nc_connected_account">Conta conectada</string>
     <string name="nc_start_folder">Pasta inicial</string>
@@ -1443,7 +1443,7 @@
     <string name="nc_disconnect_message">A senha de app é removida do armazenamento criptografado deste dispositivo. Você pode reconectar a qualquer momento.</string>
     <string name="send_outcome_unknown">Isso pode ter sido enviado, mas a rede não confirmou. Verifique seu saldo antes de enviar novamente.</string>
     <string name="swipe_not_confirmed">Não confirmado</string>
-    <string name="secure_store_title">O KaChat não consegue abrir suas contas</string>
+    <string name="secure_store_title">O K não consegue abrir suas contas</string>
     <string name="secure_store_message">O armazenamento seguro deste telefone não consegue lê-las. Isso pode acontecer depois de mudar para um novo telefone ou de uma alteração no sistema. Tente novamente primeiro. Se continuar, comece de novo e restaure cada conta com suas 12 ou 24 palavras.</string>
     <string name="secure_store_start_over">Começar de novo</string>
     <string name="secure_store_confirm_title">Começar de novo?</string>
@@ -1473,7 +1473,7 @@
     <string name="not_sent_you_switched_accounts">Não enviado: você trocou de conta antes do envio.</string>
     <string name="play_it_again">Jogar novamente</string>
     <string name="couldnt_look_up_name_try_again">Não foi possível buscar %1$s agora. Tente novamente em instantes.</string>
-    <string name="kns_reveal_will_finish_on_next_open">A primeira de duas transações foi concluída, mas a segunda não. O KaChat vai concluí-la na próxima vez que abrir.</string>
+    <string name="kns_reveal_will_finish_on_next_open">A primeira de duas transações foi concluída, mas a segunda não. O K vai concluí-la na próxima vez que abrir.</string>
     <string name="kns_transfer_fee_at_most_1_kas">A taxa de uma transferência de domínio pode ser de no máximo 1 KAS.</string>
     <string name="confirm_setting_this_primary_name">Confirmar este nome principal</string>
     <string name="this_is_the_public_half_of_this_address">Esta é a parte pública deste endereço. Ela não pode gastar nada.</string>
@@ -1506,7 +1506,7 @@
     <string name="clear_all_cache_title">Limpar todo o cache?</string>
     <string name="cache_frees_your_messages_are_not_touched">Libera %1$s. Suas mensagens, contatos e chaves não são afetados.</string>
     <string name="kachat_link_menu_title">Link do KaChat</string>
-    <string name="open_in_kachat">Abrir no KaChat</string>
+    <string name="open_in_kachat">Abrir no K</string>
     <string name="open_in_kapost">Abrir no KaPost</string>
     <string name="opens_it_right_here_in_the_app">Abre aqui mesmo, no app.</string>
     <string name="opens_the_post_in_the_kapost_app">Abre a publicação no app KaPost.</string>
@@ -1514,7 +1514,7 @@
     <string name="standard_kaspa_wallet">Carteira Kaspa padrão</string>
     <string name="has_history">Tem histórico</string>
     <string name="see_every_wallet_type">Ver todos os tipos de carteira</string>
-    <string name="kachat_checks_your_words_against_every">O KaChat verifica suas palavras em todos os tipos de carteira Kaspa, então você não precisa saber de qual delas vieram.</string>
+    <string name="kachat_checks_your_words_against_every">O K verifica suas palavras em todos os tipos de carteira Kaspa, então você não precisa saber de qual delas vieram.</string>
     <string name="this_address_has_history_so_this_looks">Este endereço tem histórico, então parece ser a conta certa.</string>
     <string name="no_funds_or_history_on_this_address">Sem fundos ou histórico neste endereço.</string>
     <string name="we_picked_the_most_likely_account">Escolhemos a conta mais provável. Toque em outra se não for a que você usa.</string>
@@ -1607,7 +1607,7 @@
         <item quantity="other">Criar \"%1$s\" e convidar %2$d membros?</item>
     </plurals>
     <string name="nc_revoke_failed_title">Não foi possível remover a senha de app</string>
-    <string name="nc_revoke_failed_message">O KaChat não conseguiu remover a senha de app de %1$s. Ela saiu deste telefone, mas ainda pode entrar lá: apague-a no Nextcloud em Configurações &gt; Segurança &gt; Dispositivos e sessões.</string>
+    <string name="nc_revoke_failed_message">O K não conseguiu remover a senha de app de %1$s. Ela saiu deste telefone, mas ainda pode entrar lá: apague-a no Nextcloud em Configurações &gt; Segurança &gt; Dispositivos e sessões.</string>
     <string name="fee_too_high">Taxa alta demais</string>
     <string name="a_message_fee_can_be_at_most_1_kas">A taxa de uma mensagem pode ser no máximo 1 KAS.</string>
     <string name="use_a_high_fee">Usar uma taxa alta?</string>
@@ -1621,9 +1621,151 @@
     <string name="use_their_domain_name">Usar o nome de domínio</string>
     <string name="show_request_as_qr">Mostrar pedido como QR</string>
     <string name="pr_qr_scan_to_pay_in_kapay">Escaneie com a câmera de um celular para pagar no KaPay com tudo já preenchido.</string>
-    <string name="pr_qr_scan_to_pay_in_kachat">Escaneie com a câmera de um celular para pagar no KaChat com tudo já preenchido.</string>
+    <string name="pr_qr_scan_to_pay_in_kachat">Escaneie com a câmera de um celular para pagar no K com tudo já preenchido.</string>
     <string name="get_a_kachat_domain">Obter um domínio .kachat</string>
     <string name="set_as_name">Usar como nome</string>
     <string name="their_name">Nome dele</string>
     <string name="get_a_kachat_name">Obter um nome .kachat</string>
+    <string name="composer_gif_subtitle">Envie um GIF animado da sua biblioteca.</string>
+    <string name="group_composer_gif_subtitle">Envie um GIF animado da sua biblioteca para o grupo.</string>
+    <string name="gif_quality">Qualidade do GIF</string>
+    <string name="that_isnt_an_animated_gif">Isso não é um GIF animado. Escolha outro.</string>
+    <string name="gif_too_long_for_that_quality">Este GIF é longo demais para essa qualidade. Escolha uma maior ou um GIF mais curto.</string>
+    <string name="kusdt_template_missing">O modelo de kUSDT do K está faltando, então não dá para verificar kUSDT.</string>
+    <string name="trestly_url_invalid">O endereço da API da Trestly em Configurações de conexão não é um endereço https válido.</string>
+    <string name="trestly_no_answer">A Trestly não respondeu.</string>
+    <string name="trestly_http_status">A Trestly respondeu HTTP %1$d.</string>
+    <string name="trestly_answer_unreadable">Não foi possível ler a resposta da Trestly.</string>
+    <string name="kusdt_builder_couldnt_start">O gerador de transações do kUSDT não conseguiu iniciar.</string>
+    <string name="kusdt_builder_no_answer">O gerador de transações do kUSDT não respondeu.</string>
+    <string name="kusdt_builder_not_pinned">O gerador de transações do kUSDT não é o fixado, então não será executado.</string>
+    <string name="kusdt_error_recipient">kUSDT só pode ir para um endereço Kaspa normal.</string>
+    <string name="kusdt_error_not_enough_token">Este endereço não tem tanto kUSDT.</string>
+    <string name="kusdt_error_merge_first">Esse valor está dividido em mais de 3 moedas kUSDT neste endereço. Por enquanto, envie um valor menor.</string>
+    <string name="kusdt_error_kas_for_change_coin">Este endereço precisa de um pouco de KAS: a taxa de rede, mais 1,5 KAS para sua moeda de troco (o kUSDT que você fica). Esses 1,5 KAS continuam seus.</string>
+    <string name="kusdt_error_kas_for_fee">Este endereço precisa de um pouco de KAS para a taxa de rede.</string>
+    <string name="kusdt_error_no_key">A chave deste endereço não está disponível neste telefone.</string>
+    <string name="kusdt_error_fee_too_high">A taxa de rede está acima do limite de segurança do K. Nada foi enviado.</string>
+    <string name="kusdt_error_check_failed">A transação criada não correspondia ao que você aprovou, então nada foi enviado.</string>
+    <string name="kusdt_error_nothing_to_combine">Este endereço já guarda seu kUSDT numa só moeda.</string>
+    <string name="kusdt_send_changed">Este envio mudou enquanto a tela estava aberta. Nada foi enviado: confira de novo e deslize.</string>
+    <string name="kusdt_not_confirmed">Não confirmada: a rede não respondeu. Ela ainda pode passar. Tentar novamente reenvia a mesma transação, então não dá para pagar duas vezes.</string>
+    <string name="kusdt_build_failed">Não foi possível criar a transação. Nada foi enviado.</string>
+    <string name="token_held_on_addresses">%1$d endereços</string>
+    <string name="token_received_title">Recebido: %1$s</string>
+    <string name="token_received_on_one">No seu %1$s</string>
+    <string name="token_received_on_many">Em %1$d dos seus endereços</string>
+    <string name="address_tab_domains">Dominios</string>
+    <string name="address_domains_none">Nenhum nome %1$s neste endereço.</string>
+    <string name="address_domains_one">1 domínio</string>
+    <string name="address_domains_couldnt_load">Não foi possível carregar</string>
+    <string name="connection_not_set">Não definido</string>
+    <string name="connection_trestly">Trestly</string>
+    <string name="copy_share_link">Copiar link de compartilhamento</string>
+    <string name="share_link_copied">Link de compartilhamento copiado.</string>
+    <string name="generate_non_quantum_address">Gerar endereço não quântico</string>
+    <string name="generate_non_quantum_address_subtitle">Um endereço normal, como o que Receber dá. Funciona com tudo, inclusive kUSDT.</string>
+    <string name="generate_quantum_resistant_address">Gerar endereço resistente a quântica</string>
+    <string name="generate_quantum_resistant_address_subtitle">Mantém a chave oculta até gastar. Só para Kaspa: não dá para negociar kUSDT a partir dele.</string>
+    <string name="kaspa">Kaspa</string>
+    <string name="kusdt_balances">Saldos de kUSDT</string>
+    <string name="kusdt_listed_stays_here">Este endereço está na sua lista de kUSDT, então fica aqui. Oculte-o primeiro em Gerenciar kUSDT.</string>
+    <string name="shown_for_kusdt">Exibido por causa do kUSDT</string>
+    <string name="moves_kaspa_to_your_chatting_address">Move Kaspa deste endereço para o seu Endereco de chat.</string>
+    <string name="send_to_chatting_address">Enviar ao Endereco de chat</string>
+    <string name="receive_note_fresh_address">Um endereço seu novinho, nunca usado nem compartilhado: este pagamento não pode ser ligado ao seu nome.</string>
+    <string name="receive_note_spending_address">Um endereço de gastos seu: um pagamento aqui não fica ligado ao seu nome.</string>
+    <string name="receive_note_chatting_address">Seu endereço de chat mostra seu nome .kachat e sua identidade: quem pagar aqui pode ver que é você.</string>
+    <string name="receive_note_quantum_address">Um endereço resistente a quântica: a chave fica oculta até ele gastar.</string>
+    <string name="receive_note_kaspa_and_kusdt">Kaspa, e kUSDT na Kaspa, podem ser enviados aqui.</string>
+    <string name="receive_note_kaspa_only">Só Kaspa pode ser enviado aqui.</string>
+    <string name="receive_note_no_kusdt_on_quantum">Não envie kUSDT aqui: não dá para negociá-lo de um endereço resistente a quântica. Use Receber para um normal.</string>
+    <string name="receive_note_lands_in_this_account">Ele chega nesta conta e entra no seu total de gastos. Use-o para tudo, menos nomes .kachat.</string>
+    <string name="trestly_api_url">URL da API da Trestly</string>
+    <string name="trestly_url_footer">Onde o K consulta seus kUSDT. Cada moeda listada é verificada no nó Kaspa antes de contar. Deixe em branco para o padrão desta rede.</string>
+    <string name="wallet_scanning_addresses">Procurando saldos nos seus endereços…</string>
+    <string name="bridged_usdt">USDT via ponte</string>
+    <string name="composer_send_dollars_subtitle">Envie dólares (kUSDT) para este contato.</string>
+    <string name="generate_new_address">Gerar novo endereco</string>
+    <string name="get_kapay">Obter o KaPay</string>
+    <string name="send_dollars">Enviar dólares</string>
+    <string name="tap_to_manage">Toque para gerenciar</string>
+    <string name="token_about_kusdt">kUSDT é USDT da Ethereum e da BNB Chain, mantido 1:1 no cofre da Trestly e emitido como token na Kaspa. Não é emitido pela Tether, e só a Trestly pode convertê-lo de volta em USDT.</string>
+    <string name="token_about_title">Sobre o %1$s</string>
+    <string name="token_actions_title">Ações de %1$s</string>
+    <string name="token_activity_bridged_in">Recebido via ponte</string>
+    <string name="token_activity_combined_coins">Moedas juntadas</string>
+    <string name="token_activity_swapped">Trocado</string>
+    <string name="token_add_for_fee_and_change">Adicionar %1$s para taxa e moeda de troco</string>
+    <string name="token_add_for_network_fee">Adicionar %1$s para a taxa de rede</string>
+    <string name="token_add_more">Adicionar mais %1$s</string>
+    <string name="token_address_visibility_subtitle">Marque quais endereços com kUSDT aparecem na lista.</string>
+    <string name="token_address_visibility_title">Visibilidade de endereços %1$s</string>
+    <string name="token_amount_accessibility">Valor (%1$s)</string>
+    <string name="token_available">Disponível: %1$s</string>
+    <string name="token_back_to_this_address">De volta a este endereço</string>
+    <string name="token_balance_title">Saldo de %1$s</string>
+    <string name="token_bridged_by">Ponte da %1$s</string>
+    <string name="token_building_transaction">Criando a transação…</string>
+    <string name="token_check_again">Verificar novamente</string>
+    <string name="token_checking_addresses_for">Procurando %1$s nos seus endereços…</string>
+    <string name="token_checking_your">Verificando seus %1$s…</string>
+    <string name="token_coins_into_one">%1$d moedas em 1</string>
+    <string name="token_combine_coins">Juntar moedas</string>
+    <string name="token_combine_coins_subtitle">Junta as moedas numa só e devolve o KAS que sobra.</string>
+    <string name="token_combine_explainer">Cada moeda de %1$s guarda %2$s. Ao juntá-las numa só, o KAS que sobra volta para este endereço como KAS normal, menos a taxa de rede. Seu %3$s continua o mesmo.</string>
+    <string name="token_combine_limit">Até %1$d moedas se juntam por vez. Junte de novo para o restante.</string>
+    <string name="token_combined">Juntado</string>
+    <string name="token_couldnt_check">Não deu para verificar %1$@ agora: %2$@ Puxe para baixo para tentar de novo.</string>
+    <string name="token_discover_addresses">Descobrir endereços com kUSDT</string>
+    <string name="token_discover_addresses_subtitle">Encontra seus endereços que têm kUSDT.</string>
+    <string name="token_empty_state_message">Receba em um endereço novo seu. Comprar e trocar kUSDT acontece no KaPay.</string>
+    <string name="token_every_coin_goes_to_recipient">Cada moeda %1$s contém %2$s. Esse KAS vai para o destinatário junto com o %3$s, então não se perde.</string>
+    <string name="token_every_coin_holds_kas">Cada moeda kUSDT contém 1.5 KAS. Ele vai junto com o kUSDT quando você o envia.</string>
+    <string name="token_fee">Taxa %1$s</string>
+    <string name="token_fee_from_token_kas">Este endereço não tinha KAS, então a taxa de rede saiu do KAS que vai com o kUSDT.</string>
+    <string name="token_fee_same_address_note">O KAS da taxa sai do mesmo endereço, então o envio não o liga aos seus outros endereços.</string>
+    <string name="token_found_addresses">%1$d endereços com %2$s encontrados.</string>
+    <string name="token_fund_hint">Escolha de qual dos seus endereços vem o KAS, deslize para cima e você volta aqui.</string>
+    <string name="token_generate_new_address_subtitle">Adiciona a esta lista um endereço normal seu novinho.</string>
+    <string name="token_goes_with_it">Vai junto</string>
+    <string name="token_held_on">Mantido em</string>
+    <string name="token_held_with_it">%1$s guardados junto</string>
+    <string name="token_hidden_count">%1$d ocultos: ainda contam no total.</string>
+    <string name="token_hide_address_subtitle">Tira-o desta lista. Reative-o em Visibilidade de endereços %1$s.</string>
+    <string name="token_hide_all_message">Gerenciar %1$@ recomeça só com seu endereço de chat. Nada se perde: traga qualquer endereço de volta aqui, e o %2$@ dele ainda conta no seu total.</string>
+    <string name="token_history_from_now_on">Envios, recebimentos e junções feitos neste celular aparecem aqui a partir de agora.</string>
+    <string name="token_history_title">Histórico de %1$s</string>
+    <string name="token_kas_for_send">KAS para um envio de %1$s</string>
+    <string name="token_kas_held_with_it">KAS incluído</string>
+    <string name="token_kas_not_arrived">O KAS que você enviou ainda não apareceu neste endereço. Costuma levar alguns segundos.</string>
+    <string name="token_kas_paid_from">KAS pago de</string>
+    <string name="token_manage_title">Gerenciar %1$s</string>
+    <string name="token_more_than_your">Mais do que seu saldo de %1$s.</string>
+    <string name="token_no_activity_yet">Ainda não há atividade de %1$s.</string>
+    <string name="token_no_addresses_found">Nenhum endereço com %1$s encontrado.</string>
+    <string name="token_no_addresses_yet">Ainda sem endereços com %1$s</string>
+    <string name="token_no_token_yet">Ainda sem %1$s</string>
+    <string name="token_none_of_your_addresses">Nenhum dos seus endereços tem %1$s ainda.</string>
+    <string name="token_not_audited">Ainda não auditado de forma independente. Guarde só o que você pode se dar ao luxo de perder.</string>
+    <string name="token_pending">Pendente</string>
+    <string name="token_receive_no_usdt_warning">Não envie USDT da Ethereum, BNB Chain ou de uma corretora para este endereço: ele seria perdido. Faça antes o bridge para a Kaspa na Trestly.</string>
+    <string name="token_receive_only">Somente %1$s na Kaspa, ou KAS, pode ser enviado aqui.</string>
+    <string name="token_receive_title">Receber %1$s</string>
+    <string name="token_rename_label_placeholder">Rótulo</string>
+    <string name="token_rename_message">De um rotulo a este endereco para ajudar a reconhece-lo.</string>
+    <string name="token_script_address_error">%1$s só pode ir para um endereço Kaspa comum, não para um endereço resistente a quântica ou outro endereço de script.</string>
+    <string name="token_send_title">Enviar %1$s</string>
+    <string name="token_send_to_chatting_subtitle">Move kUSDT deste endereço para o seu Endereco de chat.</string>
+    <string name="token_swipe_up_to_combine">Deslize para cima para juntar</string>
+    <string name="token_total_kas">Total em KAS</string>
+    <string name="token_view_address_in_explorer_subtitle">Este endereço no explorador da Kaspa.</string>
+    <string name="token_view_the_vault">Ver o cofre</string>
+    <string name="token_visibility_derive_failed">Não foi possível obter estes endereços agora. Volte uma página ou reabra esta tela para tentar de novo.</string>
+    <string name="token_waiting_for_kas">Aguardando seu KAS chegar…</string>
+    <string name="token_what_are_you_sending">O que você vai enviar?</string>
+    <string name="token_which_stablecoin">Qual stablecoin você vai enviar?</string>
+    <string name="swipe_release_to_confirm">Solte para confirmar</string>
+    <string name="coins_combined">Moedas juntadas</string>
+    <string name="transaction_didnt_go_out">A transação não saiu.</string>
 </resources>

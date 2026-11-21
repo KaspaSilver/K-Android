@@ -919,8 +919,16 @@ class ChatRepository @Inject constructor(
             Log.i("ChatRepository", "Dropped a message from the other network")
             return
         }
+        // Deleted on this device: the chain still serves it, so syncs, the open chat's poll and
+        // an archive import keep offering it (iOS d7c56280 DeletedMessageLog).
+        if (isDeletedOnThisDevice(message)) return
         database.messageDao().insert(message)
     }
+
+    private fun isDeletedOnThisDevice(message: MessageEntity): Boolean =
+        com.kachat.app.services.DeletedMessageLog.contains(
+            appContext, message.id, com.kachat.app.services.DeletedMessageLog.Kind.CHAT, message.walletAddress
+        )
 
     /** [insertMessage] that never replaces a stored row ([MessageDao.insertIfAbsent]): false when
      *  nothing was filed - the id is stored already, or the row is from the other network. */
@@ -929,6 +937,7 @@ class ChatRepository @Inject constructor(
             Log.i("ChatRepository", "Dropped a message from the other network")
             return false
         }
+        if (isDeletedOnThisDevice(message)) return false
         if (database.messageDao().insertIfAbsent(message) == -1L) return false
         return true
     }
@@ -1196,6 +1205,18 @@ class ChatRepository @Inject constructor(
         database.messageDao().deleteById(id, walletManager.getAddress())
     }
 
+    /**
+     * Select, then Delete: [ids] go from this device only, never on chain. Remembered first
+     * ([com.kachat.app.services.DeletedMessageLog], iOS d7c56280): the chain still holds them, and
+     * the next sync or the open chat's poll would fetch them again and put them back.
+     */
+    suspend fun deleteMessagesOnThisDevice(ids: Collection<String>) {
+        if (ids.isEmpty()) return
+        val wallet = walletManager.getAddress()
+        com.kachat.app.services.DeletedMessageLog.add(appContext, ids, com.kachat.app.services.DeletedMessageLog.Kind.CHAT, wallet)
+        ids.forEach { database.messageDao().deleteById(it, wallet) }
+    }
+
     /** Replaces any previous reaction [reactorAddress] left on [targetTxId] with [emoji] - one reaction per (message, reactor).
      *  [walletAddress] pins which account's row this writes - sync paths MUST pass the address the
      *  sync cycle captured (see processContextualMessage's doc comment on mid-switch stamping);
@@ -1424,6 +1445,8 @@ class ChatRepository @Inject constructor(
         pushedMessageQueue.removeAllData(address)
         noticeBubbleStore.removeAllData(address)
         photoUnlockStore.removeAllData(address)
+        // The messages deleted on this device, 1:1 and group (iOS d7c56280 DeletedMessageLog.forget).
+        com.kachat.app.services.DeletedMessageLog.forget(appContext, address)
         contactNotesLazy.get().removeAllData(address)
         settingsRepository.removeWalletData(address)
         // What this process remembers of it too: a re-import in this same run reads it all again.
@@ -1878,7 +1901,7 @@ class ChatRepository @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                Log.w("ChatRepository", "Failed to process outgoing handshake ${handshake.txId}", e)
+                Log.w("ChatRepository", "Failed to process outgoing handshake ${handshake.txId.take(12)}…", e)
             }
         }
 
@@ -1917,7 +1940,7 @@ class ChatRepository @Inject constructor(
                     unresolvedFloor = minOf(unresolvedFloor ?: Long.MAX_VALUE, handshake.blockTime)
                 }
             } catch (e: Exception) {
-                Log.w("ChatRepository", "Failed to process handshake ${handshake.txId}", e)
+                Log.w("ChatRepository", "Failed to process handshake ${handshake.txId.take(12)}…", e)
             }
         }
 
@@ -2268,7 +2291,7 @@ class ChatRepository @Inject constructor(
                                 if (isTombstoned(deleted, message.txId, message.blockTime)) continue
                                 processContextualMessage(myAddress, contact, message, privateKey)
                             } catch (e: Exception) {
-                                Log.w("ChatRepository", "Failed to process message ${message.txId}", e)
+                                Log.w("ChatRepository", "Failed to process message ${message.txId.take(12)}…", e)
                             }
                         }
 
@@ -2433,7 +2456,7 @@ class ChatRepository @Inject constructor(
                         if (!isActiveWalletAddress(myAddress)) return
                         fileOwnSend(myAddress, contact, message.txId, message.blockTime, message.messagePayload, recipientKey, privateKey, alias in sharedLegacyAliases, deleted)
                     } catch (e: Exception) {
-                        Log.w("ChatRepository", "Failed to process own send ${message.txId}", e)
+                        Log.w("ChatRepository", "Failed to process own send ${message.txId.take(12)}…", e)
                     }
                 }
                 val maxBlockTime = messages.maxOf { it.blockTime }
@@ -2534,6 +2557,15 @@ class ChatRepository @Inject constructor(
                     blockTime = blockTime,
                     isOutgoing = true,
                     plaintext = plaintext,
+                )
+                // our own Send Dollars notice, read back: the bubble this device doesn't have
+                poolEnvelope is com.kachat.app.util.PaymentPoolProtocol.Envelope.TokenNotice -> handleTokenPaymentNotice(
+                    myAddress = myAddress,
+                    contact = contact,
+                    notice = poolEnvelope.content,
+                    noticeTxId = txId,
+                    blockTime = blockTime,
+                    isOutgoing = true,
                 )
             }
             return
@@ -2690,6 +2722,16 @@ class ChatRepository @Inject constructor(
                     // Self-chat aside, a notice arriving on this stream was sent by the contact.
                     isOutgoing = contact.id == myAddress,
                     plaintext = plaintext
+                )
+            } else if (poolEnvelope is com.kachat.app.util.PaymentPoolProtocol.Envelope.TokenNotice) {
+                // a contact's Send Dollars (iOS 5b7c772c, MESSAGING.md "Token Payments in a Chat")
+                handleTokenPaymentNotice(
+                    myAddress = myAddress,
+                    contact = contact,
+                    notice = poolEnvelope.content,
+                    noticeTxId = message.txId,
+                    blockTime = message.blockTime,
+                    isOutgoing = contact.id == myAddress,
                 )
             }
             return
@@ -2962,6 +3004,9 @@ class ChatRepository @Inject constructor(
             Log.i("ChatRepository", "Dropped a message from the other network")
             return
         }
+        // Deleted on this device stays deleted when the notice is read again (iOS d7c56280
+        // DeletedMessageLog; filed here, not through insertMessage).
+        if (com.kachat.app.services.DeletedMessageLog.contains(appContext, txId, com.kachat.app.services.DeletedMessageLog.Kind.CHAT, myAddress)) return
         val text = noticeBubbleText(notice.amountSompi, memo, isOutgoing)
         val backfill = isBackfill(blockTime)
         val isRead = isOutgoing || backfill || moving?.isRead == true || notificationHelper.isViewingContact(contact.id)
@@ -3056,6 +3101,285 @@ class ChatRepository @Inject constructor(
                 return NoticeCheck.Invalid("paid by another contact")
             }
         }
+        return NoticeCheck.Valid
+    }
+
+    // MARK: - Token payments in a chat (Send Dollars, iOS 5b7c772c)
+    //
+    // A token transfer (kUSDT) is a covenant transaction with no chat payload, so the payee can't
+    // tell which chat it belongs to. Right after it goes out, the payer's chatting address sends a
+    // `token_payment_notice` in the 1:1 chat; the payer's bubble is made by the send flow
+    // (TokenChatPayments.recordTokenPayment -> [insertOwnTokenBubble]), the payee's once the
+    // notice checks out on chain (MESSAGING.md, "Token Payments in a Chat").
+
+    /**
+     * Our own token payment bubble ("Sent 12.50 kUSDT"), straight into the chat (iOS
+     * `insertOwnTokenBubble`): a new row only, never one replacing another. A message deleted
+     * here stays deleted when our own notice is read back (audit #8), and so does anything from
+     * before a chat deletion. False when a row with [txId] was already stored (the payment was
+     * recorded once already: no second notice); true otherwise, even when it stays deleted.
+     */
+    suspend fun insertOwnTokenBubble(myAddress: String, contactId: String, txId: String, text: String, blockTime: Long): Boolean {
+        val dao = database.messageDao()
+        if (dao.getById(txId, myAddress) != null) return false
+        // deleted stays deleted, when our own notice is read back
+        if (com.kachat.app.services.DeletedMessageLog.contains(appContext, txId, com.kachat.app.services.DeletedMessageLog.Kind.CHAT, myAddress)) return true
+        if (isTombstoned(database.contactDao().getDeletedContact(contactId, myAddress), txId, blockTime)) return true
+        val inserted = dao.insertIfAbsent(
+            MessageEntity(
+                id = txId,
+                contactId = contactId,
+                walletAddress = myAddress,
+                type = "pay",
+                direction = "sent",
+                plaintextBody = text,
+                encryptedPayload = "",
+                // a token amount, never sompi: the bubble reads it from the text
+                amountSompi = null,
+                blockTimestamp = blockTime,
+                isRead = true,
+                deliveryStatus = "sent",
+            )
+        )
+        return inserted != -1L
+    }
+
+    /**
+     * A `token_payment_notice` in a 1:1 chat (iOS `handleTokenPaymentNotice`): theirs (they sent
+     * us dollars) or our own read back on another device. Like [handlePaymentNotice]: it must name
+     * the receiving side's chatting address, a received one is checked on chain before it shows
+     * ([checkTokenNoticeOnChain]), an unchecked one shows marked unverified and without its amount
+     * (audit #3), and nothing already stored under that txid is moved or overwritten. The chain
+     * check runs in the background.
+     */
+    /**
+     * Android only, once per install: KaChat 5.3 b1 knew no `token_payment_notice` (kUSDT came
+     * after it), so one it read was stored as a bubble showing its JSON. Every payment-pool
+     * envelope still stored as a row is removed and handled now as it would be today: a token
+     * notice files its payment in the chat, the retired pool messages are dropped. iOS never had
+     * such rows (it shipped the notice and its parsing together).
+     */
+    suspend fun repairStoredPoolEnvelopes() {
+        val dao = database.messageDao()
+        for (row in dao.getPossiblePoolEnvelopeRows()) {
+            val envelope = com.kachat.app.util.PaymentPoolProtocol.parse(row.plaintextBody) ?: continue
+            dao.deleteById(row.id, row.walletAddress)
+            val contact = database.contactDao().getContact(row.contactId, row.walletAddress) ?: continue
+            val isOutgoing = row.direction == "sent"
+            when (envelope) {
+                is com.kachat.app.util.PaymentPoolProtocol.Envelope.Notice -> handlePaymentNotice(
+                    myAddress = row.walletAddress, contact = contact, notice = envelope.content,
+                    noticeTxId = row.id, blockTime = row.blockTimestamp, isOutgoing = isOutgoing,
+                    plaintext = row.plaintextBody ?: "",
+                )
+                is com.kachat.app.util.PaymentPoolProtocol.Envelope.TokenNotice -> handleTokenPaymentNotice(
+                    myAddress = row.walletAddress, contact = contact, notice = envelope.content,
+                    noticeTxId = row.id, blockTime = row.blockTimestamp, isOutgoing = isOutgoing,
+                )
+                else -> Unit
+            }
+        }
+    }
+
+    private fun handleTokenPaymentNotice(
+        myAddress: String,
+        contact: ContactEntity,
+        notice: com.kachat.app.util.PaymentPoolProtocol.TokenPaymentNoticeContent,
+        noticeTxId: String,
+        blockTime: Long,
+        isOutgoing: Boolean,
+    ) {
+        val token = com.kachat.app.services.tokens.WalletToken.byId(notice.token) ?: return
+        val txId = com.kachat.app.util.PaymentPoolProtocol.noticeTxId(notice.txId) ?: return
+        if (notice.amount <= 0 || notice.index < 0) return
+        val paidAddress = if (isOutgoing) contact.id else myAddress
+        if (!notice.address.trim().equals(paidAddress, ignoreCase = true)) {
+            Log.i("ChatRepository", "Dropped token_payment_notice ${txId.take(12)} - not a payment to the chatting address")
+            return
+        }
+        scope.launch {
+            try {
+                fileCheckedTokenNotice(myAddress, contact, notice, token, txId, noticeTxId, blockTime, isOutgoing)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.d("ChatRepository", "token_payment_notice ${txId.take(12)} not filed: ${e.message}")
+            }
+        }
+    }
+
+    private suspend fun fileCheckedTokenNotice(
+        myAddress: String,
+        contact: ContactEntity,
+        notice: com.kachat.app.util.PaymentPoolProtocol.TokenPaymentNoticeContent,
+        token: com.kachat.app.services.tokens.WalletToken,
+        txId: String,
+        noticeTxId: String,
+        blockTime: Long,
+        isOutgoing: Boolean,
+    ) {
+        if (!isActiveWalletAddress(myAddress)) return
+        val dao = database.messageDao()
+        val text = com.kachat.app.util.PaymentPoolProtocol.tokenPaymentText(token.plainAmount(notice.amount), token.symbol, isOutgoing)
+        // this notice's own unverified bubble, still as it was filed
+        suspend fun ownUnverified(): MessageEntity? = dao.getById(txId, myAddress)?.takeIf {
+            it.type == "pay" && it.direction == "received" && it.deliveryStatus == "warning" &&
+                it.contactId.equals(contact.id, ignoreCase = true)
+        }
+        val existing = dao.getById(txId, myAddress)
+        if (existing != null) {
+            // only this notice's own unverified bubble is checked again; anything else stays
+            if (isOutgoing || ownUnverified() == null) return
+            when (val check = checkTokenNoticeOnChain(notice, token, txId, paidAddress = myAddress, payer = contact.id)) {
+                is NoticeCheck.Valid -> if (isActiveWalletAddress(myAddress)) {
+                    // confirmed: the amount shows now (the unverified bubble had none)
+                    val current = ownUnverified()
+                    if (current != null && dao.deleteUnverifiedPayment(txId, myAddress, current.contactId) > 0) {
+                        dao.insertIfAbsent(current.copy(plaintextBody = text, deliveryStatus = "sent", amountSompi = null))
+                    }
+                }
+                is NoticeCheck.Invalid -> if (isActiveWalletAddress(myAddress)) {
+                    // still this notice's unverified bubble after the await? (audit #11)
+                    val current = ownUnverified()
+                    if (current != null && dao.deleteUnverifiedPayment(txId, myAddress, current.contactId) > 0) {
+                        noticeBubbleStore.unmark(myAddress, txId)
+                        Log.i("ChatRepository", "Removed unverified token_payment_notice bubble ${txId.take(12)} - ${check.reason}")
+                    }
+                }
+                NoticeCheck.Unknown -> Unit
+            }
+            return
+        }
+        // A chat deleted since stays deleted for anything sent before the deletion.
+        if (isTombstoned(database.contactDao().getDeletedContact(contact.id, myAddress), txId, blockTime)) return
+        if (isOutgoing) {
+            // our own notice on another device: the bubble this device doesn't have
+            insertOwnTokenBubble(myAddress, contact.id, txId, text, blockTime)
+            return
+        }
+        val check = checkTokenNoticeOnChain(notice, token, txId, paidAddress = myAddress, payer = contact.id)
+        // after the await: still this wallet, and still nothing stored under that txid
+        if (!isActiveWalletAddress(myAddress) || dao.getById(txId, myAddress) != null) return
+        val status = when (check) {
+            is NoticeCheck.Valid -> "sent"
+            NoticeCheck.Unknown -> "warning"
+            is NoticeCheck.Invalid -> {
+                Log.i("ChatRepository", "Dropped token_payment_notice ${txId.take(12)} - ${check.reason}")
+                return
+            }
+        }
+        if (com.kachat.app.services.DeletedMessageLog.contains(appContext, txId, com.kachat.app.services.DeletedMessageLog.Kind.CHAT, myAddress)) return
+        if (!com.kachat.app.util.KaspaNetwork.isOnActiveNetwork(contact.id)) return
+        val backfill = isBackfill(blockTime)
+        // the generic payment code leaves it to this notice to confirm
+        noticeBubbleStore.mark(myAddress, txId)
+        val inserted = dao.insertIfAbsent(
+            MessageEntity(
+                id = txId,
+                contactId = contact.id,
+                walletAddress = myAddress,
+                type = "pay",
+                direction = "received",
+                // An unchecked claim shows without its amount: anyone can make a look-alike coin,
+                // and only the token's covenant id (checked once the chain answers) tells them apart.
+                plaintextBody = if (status == "warning") com.kachat.app.util.PaymentPoolProtocol.tokenUnverifiedText(token.symbol) else text,
+                encryptedPayload = "",
+                amountSompi = null,
+                blockTimestamp = blockTime,
+                isRead = backfill || notificationHelper.isViewingContact(contact.id),
+                deliveryStatus = status,
+            )
+        )
+        if (inserted == -1L) return
+        Log.i("ChatRepository", "Token payment ${txId.take(12)} filed in its chat from a token_payment_notice ($status)")
+        // "Received payment", without the claimed amount (MESSAGING.md); the remote push is the
+        // only banner source while push is active (see PushState)
+        if (!backfill && !pushState.isActive && !notifyAsMessageRequest(contact, myAddress, noticeTxId)) {
+            notificationHelper.show(
+                contactId = contact.id,
+                title = contact.displayName,
+                text = notificationHelper.dmNotificationLabels().receivedPayment,
+                notificationOverride = ContactNotificationMode.fromName(contact.notificationOverride),
+                dedupeTxId = noticeTxId
+            )
+        }
+    }
+
+    /**
+     * What the chain says about a received token notice (iOS `checkTokenNoticeOnChain`):
+     * - output `index` of the transaction is the coin of exactly `amount` owned by [paidAddress]
+     *   (its script worked out here from the pinned template), carrying the token's covenant id
+     *   (from the explorer, else from the node while the coin is unspent; audit #3);
+     * - no input is ours or another contact's: by address, and for a token coin being spent, by
+     *   the owner key in its state (a coin's input address is its P2SH, which matches nobody, so a
+     *   contact could otherwise claim our own Combine Coins or another contact's whole send; audit #1).
+     * A coin spent since still shows in the transaction, so this works for history too.
+     */
+    private suspend fun checkTokenNoticeOnChain(
+        notice: com.kachat.app.util.PaymentPoolProtocol.TokenPaymentNoticeContent,
+        token: com.kachat.app.services.tokens.WalletToken,
+        txId: String,
+        paidAddress: String,
+        payer: String,
+    ): NoticeCheck {
+        val kusdt = com.kachat.app.services.tokens.Kusdt
+        if (token != com.kachat.app.services.tokens.WalletToken.KUSDT) return NoticeCheck.Invalid("not a token this app can check")
+        val template = kusdt.template(appContext) ?: return NoticeCheck.Unknown
+        val owner = kusdt.schnorrOwner(paidAddress) ?: return NoticeCheck.Invalid("the chatting address can't hold tokens")
+        val script = kusdt.lockingScript(com.kachat.app.services.tokens.Kusdt.State.plain(owner, notice.amount), template)
+        val coinAddress = kusdt.address(script) ?: return NoticeCheck.Unknown
+        val api = networkService.kaspaRestApi.value ?: return NoticeCheck.Unknown
+        val tx = try { api.getTransactionWithInputAddresses(txId) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) { return NoticeCheck.Unknown }
+        val position = notice.index
+        val output = tx.outputs.firstOrNull { it.index == position }
+            ?: tx.outputs.getOrNull(position)?.takeIf { it.index == null }
+            ?: return NoticeCheck.Invalid("it has no output $position")
+        if (!output.scriptPublicKeyAddress.orEmpty().equals(coinAddress, ignoreCase = true)) {
+            return NoticeCheck.Invalid("output $position isn't a coin of that amount for this address")
+        }
+
+        // who paid
+        val rawInputs = tx.inputs
+        if (rawInputs.isEmpty() || rawInputs.any { it.previousOutpointAddress.isNullOrBlank() }) return NoticeCheck.Unknown
+        val own = ownAddressesForNotices(paidAddress)
+        val payerAddress = payer.trim().lowercase()
+        val ownKeys = own.mapNotNull { kusdt.schnorrOwner(it)?.let(kusdt::hex) }.toSet()
+        val payerKey = kusdt.schnorrOwner(payer)?.let(kusdt::hex)
+        val otherContactKeys = database.contactDao().getContacts(paidAddress).first()
+            .filter { !it.id.trim().equals(payerAddress, ignoreCase = true) }
+            .mapNotNull { kusdt.schnorrOwner(it.id)?.let(kusdt::hex) }
+            .toSet()
+        val prefixHex = kusdt.hex(template.prefix)
+        for (input in rawInputs) {
+            val address = input.previousOutpointAddress?.trim()?.lowercase() ?: return NoticeCheck.Unknown
+            if (address in own) return NoticeCheck.Invalid("paid by one of our own addresses")
+            if (address != payerAddress && isKnownContact(address, paidAddress)) return NoticeCheck.Invalid("paid by another contact")
+            // a script input: if it spends a token coin, its owner is in the coin's state
+            if (kusdt.schnorrOwner(address) != null) continue
+            val signatureScript = (input.signatureScript as String?)?.lowercase()?.takeIf { it.isNotEmpty() } ?: return NoticeCheck.Unknown
+            val coinOwner = kusdt.tokenCoinOwner(signatureScript, prefixHex)?.let(kusdt::hex) ?: continue
+            if (coinOwner in ownKeys) return NoticeCheck.Invalid("it spends one of our own coins")
+            if (coinOwner != payerKey && coinOwner in otherContactKeys) return NoticeCheck.Invalid("it spends another contact's coin")
+        }
+
+        // the real token: its covenant id, from the explorer or else the node
+        val covenantHex = kusdt.current.covenantIdHex
+        output.covenantId?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }?.let { covenant ->
+            return if (covenant == covenantHex) NoticeCheck.Valid else NoticeCheck.Invalid("the coin isn't ${token.symbol}")
+        }
+        val unspent = try {
+            nodePoolManagerLazy.get().getUtxosByAddressesFromNode(listOf(coinAddress))
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            emptyList()
+        }
+        // spent since, or no node answer: can't tell it from a look-alike
+        val coin = unspent.firstOrNull { it.outpoint.transactionId.lowercase() == txId && it.outpoint.index == position }
+            ?: return NoticeCheck.Unknown
+        if (!coin.utxoEntry.scriptPublicKey.scriptPublicKey.equals(kusdt.hex(script), ignoreCase = true) ||
+            coin.utxoEntry.covenantId?.lowercase() != covenantHex
+        ) return NoticeCheck.Invalid("the coin isn't ${token.symbol}")
         return NoticeCheck.Valid
     }
 
@@ -3258,7 +3582,7 @@ class ChatRepository @Inject constructor(
                     requestPaymentCatchUp(lookBackMs = 10 * 60 * 1000L)
                 }
             } catch (e: Exception) {
-                Log.w("ChatRepository", "Failed to process transaction ${tx.transactionId}", e)
+                Log.w("ChatRepository", "Failed to process transaction ${tx.transactionId.take(12)}…", e)
             }
         }
         if (since != null) Log.i("ChatRepository", "Payment catch-up: ${transactions.size} transaction(s), complete=$complete")
@@ -3304,7 +3628,7 @@ class ChatRepository @Inject constructor(
         val receivedSompi: Long
         when (direction) {
             PaymentTxDirection.Unresolved -> {
-                Log.w("ChatRepository", "Dropping payment ${tx.transactionId}: no input address resolved")
+                Log.w("ChatRepository", "Dropping payment ${tx.transactionId.take(12)}…: no input address resolved")
                 return false // transient — the next poll retries this tx
             }
             PaymentTxDirection.None -> return true
