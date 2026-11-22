@@ -20,7 +20,6 @@
     <string name="shell_customize_dock_footer">Pick what\'s in your dock. Everything else is in Kaspa Hub.</string>
     <string name="shell_terms_of_use">Terms of Use</string>
     <string name="shell_message_indexer_footer">KaPost, Public Chats and Chess are read from this indexer too.</string>
-    <string name="shell_ks_title">KaChat Stats</string>
     <string name="shell_ks_what_counts">What counts</string>
     <string name="shell_ks_range_day">24 Hours</string>
     <string name="shell_ks_range_week">7 Days</string>

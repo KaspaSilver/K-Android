@@ -20,12 +20,9 @@ datastore = "1.1.1"
 securityCrypto = "1.1.0"
 grpc = "1.64.0"
 grpcKotlin = "1.4.1"
-protobuf = "3.25.3"
+protobuf = "3.25.5"
 junit = "4.13.2"
-junitExt = "1.2.1"
-espresso = "3.6.1"
 bitcoinj = "0.17.1"
-kotlinBip39 = "1.0.9"
 zxing = "3.5.4"
 camerax = "1.5.3"
 coil = "2.7.0"
@@ -50,7 +47,6 @@ androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", versi
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
@@ -97,14 +93,10 @@ protobuf-kotlin-lite = { group = "com.google.protobuf", name = "protobuf-kotlin-
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitExt" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 
 # Crypto
 bitcoinj-core = { group = "org.bitcoinj", name = "bitcoinj-core", version.ref = "bitcoinj" }
-bip39-kotlin = { group = "cash.z.ecc.android", name = "kotlin-bip39", version.ref = "kotlinBip39" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 
 # Camera (QR scanning)

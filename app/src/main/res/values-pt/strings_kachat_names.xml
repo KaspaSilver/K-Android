@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">No momento nenhum nome está no período de carência.</string>
     <string name="kn_no_open_offers">Nenhuma oferta aberta.</string>
     <string name="kn_not_enough">Não há KAS suficiente no seu endereço de chat para este nome.</string>
+    <string name="kn_err_claim_in_progress">Você já está reivindicando %1$s.</string>
+    <string name="kn_err_not_enough_kas">Não há KAS suficiente para isso. Adicione e tente novamente.</string>
     <string name="kn_not_for_sale">Não está à venda</string>
     <string name="kn_not_valid_name">Não é um nome válido.</string>
     <string name="kn_nothing_yet">Nada ainda.</string>

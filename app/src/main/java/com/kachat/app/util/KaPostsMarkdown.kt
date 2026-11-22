@@ -54,13 +54,7 @@ object KaPostsMarkdown {
     /** [start], [end] are character offsets into [Rendered.text]. */
     data class Span(val start: Int, val end: Int, val style: Style)
 
-    data class Rendered(val text: String, val spans: List<Span>) {
-        /**
-         * True when the source actually contained formatting. Callers use it to skip the whole
-         * styling path for the overwhelmingly common plain post.
-         */
-        val hasFormatting: Boolean get() = spans.isNotEmpty()
-    }
+    data class Rendered(val text: String, val spans: List<Span>)
 
     /**
      * [text] without the bidi embedding, override and isolate controls. Anyone can post them, and
@@ -156,13 +150,15 @@ object KaPostsMarkdown {
     ) {
         var i = 0
         var runStart = out.length
+        // Built only when the text has a `[` at all: most posts have no link markup.
+        val linkIndex = if (source.indexOf('[') >= 0) LinkIndex(source) else null
 
         fun flushPlainRun() {
             if (!style.isPlain && out.length > runStart) spans += Span(runStart, out.length, style)
         }
 
         while (i < source.length) {
-            val link = matchLink(source, i)
+            val link = linkIndex?.let { matchLink(source, i, it) }
             if (link != null) {
                 flushPlainRun()
                 parseInline(link.label, style.copy(link = link.url), out, spans)
@@ -186,17 +182,39 @@ object KaPostsMarkdown {
 
     private data class LinkMatch(val label: String, val url: String, val next: Int)
 
+    /** Longest link label and link target the parser looks for. Past these a `[` is plain text.
+     *  Without a bound every unmatched `[` searched to the end of the line, so a long post of `[`s
+     *  cost the square of its length on the main thread (iOS audit 2026-11-21 #15). */
+    const val MAX_LINK_LABEL_LENGTH = 500
+    const val MAX_LINK_TARGET_LENGTH = 2_048
+
+    /** Where the next `]` and `)` are from each position (`source.length` when there is none),
+     *  worked out in one pass, so finding a link's ends is a lookup and the parse stays linear
+     *  (iOS `LinkIndex`). */
+    private class LinkIndex(source: String) {
+        val nextCloseBracket = IntArray(source.length + 1) { source.length }
+        val nextCloseParen = IntArray(source.length + 1) { source.length }
+
+        init {
+            for (i in source.length - 1 downTo 0) {
+                nextCloseBracket[i] = if (source[i] == ']') i else nextCloseBracket[i + 1]
+                nextCloseParen[i] = if (source[i] == ')') i else nextCloseParen[i + 1]
+            }
+        }
+    }
+
     /**
      * `[label](url)` at [i]. The target must carry a scheme we are willing to open, so a post
-     * cannot dress `javascript:` up as friendly link text.
+     * cannot dress `javascript:` up as friendly link text. The label and target are bounded
+     * ([MAX_LINK_LABEL_LENGTH], [MAX_LINK_TARGET_LENGTH]).
      */
-    private fun matchLink(source: String, i: Int): LinkMatch? {
+    private fun matchLink(source: String, i: Int, index: LinkIndex): LinkMatch? {
         if (source[i] != '[') return null
-        val labelEnd = source.indexOf(']', i + 1)
-        if (labelEnd <= i + 1) return null
+        val labelEnd = index.nextCloseBracket[i + 1]
+        if (labelEnd >= source.length || labelEnd <= i + 1 || labelEnd - (i + 1) > MAX_LINK_LABEL_LENGTH) return null
         if (labelEnd + 1 >= source.length || source[labelEnd + 1] != '(') return null
-        val urlEnd = source.indexOf(')', labelEnd + 2)
-        if (urlEnd <= labelEnd + 2) return null
+        val urlEnd = index.nextCloseParen[labelEnd + 2]
+        if (urlEnd >= source.length || urlEnd <= labelEnd + 2 || urlEnd - (labelEnd + 2) > MAX_LINK_TARGET_LENGTH) return null
 
         val label = source.substring(i + 1, labelEnd)
         val target = resolveLinkTarget(source.substring(labelEnd + 2, urlEnd)) ?: return null

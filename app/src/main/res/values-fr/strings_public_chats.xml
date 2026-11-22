@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">Encodage...</string>
     <string name="pc_room_voice_receiving">Réception… %1$d sur %2$d</string>
     <string name="pc_room_voice_recording">Enregistrement...</string>
-    <string name="pc_rooms53_channel_name_invalid">Les noms de canal doivent comporter de 1 à %1$d caractères, sans espaces ni deux-points.</string>
     <string name="pc_rooms53_day_one">%1$d jour</string>
     <string name="pc_rooms53_days">%1$d jours</string>
-    <string name="pc_rooms53_join_failed">Un problème est survenu en rejoignant ce canal.</string>
     <string name="pc_rooms54_failed_to_edit">Échec de la modification : %1$s</string>
     <string name="pc_rooms54_failed_to_send">Échec de l\'envoi : %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">Échec de l\'envoi du message vocal : %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">Leur profil KaPost : publications, réponses et abonnés.</string>
     <string name="pc_sender_send_kaspa_subtitle">Envoyer des Kaspa à leur adresse.</string>
     <string name="pc_sender_copy_address_subtitle">Copier son adresse Kaspa.</string>
-    <string name="pc_public_chats">Discussions publiques</string>
+    <string name="pc_original_message_not_loaded">Message d\'origine non chargé</string>
 </resources>

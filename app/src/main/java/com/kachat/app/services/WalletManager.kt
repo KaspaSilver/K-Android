@@ -1,8 +1,6 @@
 package com.kachat.app.services
 
 import android.content.Context
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.google.gson.Gson
@@ -13,14 +11,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.bitcoinj.crypto.ChildNumber
 import org.bitcoinj.crypto.DeterministicKey
 import org.bitcoinj.crypto.HDKeyDerivation
 import org.bitcoinj.crypto.MnemonicCode
-import java.security.KeyStore
 import java.security.SecureRandom
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -95,8 +91,6 @@ class WalletManager @Inject constructor(
                 }
             }
 
-        private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
-        private const val KEY_ALIAS = "kachat_wallet_key"
         private const val SECURE_PREFS_NAME = "kachat_secure_prefs"
         private const val PREF_ACCOUNTS = "accounts"
         private const val PREF_ACTIVE_ADDRESS = "active_address"
@@ -864,7 +858,20 @@ class WalletManager @Inject constructor(
             // Signed out: the identity key held in memory goes too (iOS `cachedPrivateKey = nil`).
             if (value) clearIdentityKeyCache()
             sharedPrefs.edit().putBoolean(PREF_LOGGED_OUT, value).apply()
+            _loggedOut.value = value
         }
+
+    private val _loggedOut = MutableStateFlow(sharedPrefs.getBoolean(PREF_LOGGED_OUT, false))
+
+    /** [isLoggedOut], observable: per-account stores follow sign-out and sign-in with it (iOS
+     *  `currentWallet` turning nil, 428a797b Profile bell). */
+    val loggedOutFlow: StateFlow<Boolean> = _loggedOut.asStateFlow()
+
+    /** The signed-in account's address: [activeAddressFlow], null while signed out. */
+    val signedInAddressFlow: kotlinx.coroutines.flow.Flow<String?> =
+        kotlinx.coroutines.flow.combine(activeAddressFlow, loggedOutFlow) { address, loggedOut ->
+            if (loggedOut) null else address
+        }.distinctUntilChanged()
 
     /**
      * Delivered banners (decrypted message text) and the badge they carry, when the signed-in
@@ -890,10 +897,6 @@ class WalletManager @Inject constructor(
 
     /** The BIP39 English wordlist (2048 words), for the in-app import keyboard's autocomplete. */
     fun bip39WordList(): List<String> = MnemonicCode.INSTANCE.wordList
-
-    /** True if [word] is an exact BIP39 English word. */
-    fun isValidMnemonicWord(word: String): Boolean =
-        MnemonicCode.INSTANCE.wordList.contains(word.lowercase())
 
     /**
      * Import an existing wallet from a BIP39 mnemonic phrase. Throws [org.bitcoinj.crypto.MnemonicException]
@@ -974,6 +977,7 @@ class WalletManager @Inject constructor(
         usedAddressesMemo = null
         quantumSpentMemo = null
         refreshActiveAddressFlow()
+        _loggedOut.value = false
     }
 
     /** Deleted accounts' addresses (each variant) whose local data is still being wiped: written
@@ -1175,10 +1179,6 @@ class WalletManager @Inject constructor(
         KaspaAddress.encode(com.kachat.app.util.KaspaNetwork.hrp, 0x00, com.kachat.app.util.Schnorr.publicKeyXOnly(privateKey))
 
     /**
-     * Identity (chatting) address for one seed at one index within one source family — the single
-     * place a chatting address is ever derived from.
-     */
-    /**
      * The chatting address a seed would produce with [passphrase], without committing anything.
      *
      * Exists for the passphrase step, where seeing address #0 change as you type is the only
@@ -1197,6 +1197,10 @@ class WalletManager @Inject constructor(
         null
     }
 
+    /**
+     * Identity (chatting) address for one seed at one index within one source family — the single
+     * place a chatting address is ever derived from.
+     */
     private fun deriveIdentityAddress(
         mnemonic: List<String>,
         passphrase: String,
@@ -1373,6 +1377,13 @@ class WalletManager @Inject constructor(
      *  ones too, whose seeds aren't decrypted) - what a payment_notice may never claim as a
      *  contact's payment (IOS-083, iOS `cachedSpendingAddresses(ofAccount:)`). */
     fun allCachedSpendingAddresses(): List<String> = getAllCachedSpendingAddresses().map { it.address }
+
+    /** The spending addresses this phone derived for one account (either network's form of
+     *  [account]) - iOS `cachedSpendingAddresses(ofAccount:)`. */
+    fun cachedSpendingAddresses(ofAccount: String): List<String> =
+        getAllCachedSpendingAddresses()
+            .filter { com.kachat.app.util.KaspaNetwork.isSameAccount(it.walletAddress, ofAccount) }
+            .map { it.address }
 
     private fun cacheSpendingAddresses(walletAddress: String, byIndex: Map<Int, String>) {
         if (byIndex.isEmpty()) return
@@ -1836,11 +1847,6 @@ class WalletManager @Inject constructor(
 
     private fun handedOutKey(owner: String, index: Int): String = "$owner:$index"
 
-    /** Whether [index] was given to a send's change or a payment request in this run. */
-    fun isQuantumSlotHandedOut(owner: String, index: Int): Boolean = synchronized(spendingIndexAllocationLock) {
-        handedOutKey(owner, index) in quantumSlotsHandedOut
-    }
-
     /**
      * Picks the fresh quantum-safe (KIP-22) slot a send's change goes to (iOS
      * `nextFreshQuantumIndex`), WITHOUT revealing it: the send reveals it once the network takes
@@ -1988,12 +1994,6 @@ class WalletManager @Inject constructor(
         return deriveSpendingAddress(index)
     }
 
-    /** Signing key for [currentSpendingAddress] — same index, so callers always get a matching pair. */
-    fun currentSpendingPrivateKeyBytes(): ByteArray {
-        val index = getActiveAccount()?.spendingAddressIndex ?: throw IllegalStateException("No active account")
-        return getSpendingPrivateKeyBytes(index)
-    }
-
     /** Sets an explicit index as the one "Pay in Kaspa" sources from — used by the wallet-import
      *  gap-limit scan, by manually activating an address from the Manage Addresses screen, and by
      *  a send's primary following its change. A quantum index extends its own chain; the legacy
@@ -2038,29 +2038,6 @@ class WalletManager @Inject constructor(
     }
 
     // --- Chatting-address scanning + switching (import wizard) --------------------------------
-
-    /**
-     * Derives a contiguous range of the ACTIVE account's identity chain, within its own source
-     * family, reusing a single base node so the expensive PBKDF2 + hardened chain runs once for
-     * the whole batch (rather than once per index). Returns (index, address) pairs in order;
-     * empty when there is no active account or derivation fails outright.
-     */
-    fun previewIdentityAddresses(
-        mnemonic: List<String>,
-        passphrase: String,
-        family: WalletSourceFamily,
-        indices: IntRange,
-    ): List<Pair<Int, String>> {
-        val baseNode = try {
-            identityBaseNode(mnemonic, passphrase, family, PassphraseForm.NFKD)
-        } catch (e: Exception) {
-            return emptyList()
-        }
-        return indices.mapNotNull { index ->
-            val privateKey = identityPrivateKeyBytes(baseNode, index, family) ?: return@mapNotNull null
-            index to addressFromPrivateKeyBytes(privateKey)
-        }
-    }
 
     /**
      * Every wallet type's addresses for these words, before there's an account: each family over
@@ -2194,15 +2171,6 @@ class WalletManager @Inject constructor(
             else editor.putString(previousChattingKey(variant), gson.toJson(addresses))
         }
         editor.apply()
-    }
-
-    /**
-     * Derives the shared symmetric key (ECDH + HKDF-SHA256) with a contact's
-     * x-only secp256k1 public key. See [com.kachat.app.util.KasiaCipher].
-     */
-    fun deriveSharedSecret(contactPublicKeyHex: String): ByteArray {
-        val peerPubKey = contactPublicKeyHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-        return com.kachat.app.util.KasiaCipher.deriveSymmetricKey(getPrivateKeyBytes(), peerPubKey)
     }
 
     /** The alias I watch for incoming deterministic-alias messages from this contact. Throws

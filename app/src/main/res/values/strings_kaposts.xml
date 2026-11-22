@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">Dislike removed on the network</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">Follow posted to the network</string>
-    <string name="feed54_help_welcome_guide">Welcome Guide</string>
-    <string name="feed54_help_welcome_guide_subtitle">The first-run tour: your feed, rooms, tips and your address.</string>
     <string name="feed54_like_posted">Like posted to the network</string>
     <string name="feed54_like_removed">Like removed on the network</string>
     <string name="feed54_post_not_found">Post not found - it may be older than the current feed</string>

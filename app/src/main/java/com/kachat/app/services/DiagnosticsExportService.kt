@@ -56,7 +56,6 @@ class DiagnosticsExportService @Inject constructor(
         data class DeviceInfo(val manufacturer: String, val model: String, val androidRelease: String, val sdkInt: Int)
         data class MessageStoreDiagnostics(val contactCount: Int, val totalMessages: Int, val outgoingCount: Int, val incomingCount: Int, val pendingCount: Int)
         data class NodePoolSummary(val counts: Map<String, Int>, val totalRecords: Int, val activeRecords: Int)
-        data class NodeRecordSummary(val ip: String, val type: String, val status: String, val latency: String, val daaScore: String)
     }
 
     /** Builds the diagnostics zip in app-private cache and returns a content:// URI ready for a share sheet. */

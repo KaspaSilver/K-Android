@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.kachat.app.repository.AppSettingsRepository
 import com.kachat.app.repository.KaPostsTipAsset
 import com.kachat.app.repository.KasPriceRepository
-import com.kachat.app.services.KaPostsScheduledStore
-import com.kachat.app.services.KaspaWalletEngine
 import com.kachat.app.services.WalletManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +26,6 @@ import javax.inject.Inject
 class KaPostsSettingsViewModel @Inject constructor(
     private val settings: AppSettingsRepository,
     private val walletManager: WalletManager,
-    private val walletEngine: KaspaWalletEngine,
     private val priceRepository: KasPriceRepository,
 ) : ViewModel() {
 
@@ -107,14 +104,6 @@ class KaPostsSettingsViewModel @Inject constructor(
             index <= WalletManager.legacyMaxSpendingIndex(account)
         }
     }
-
-    /** What [address] can tip with right now: its coins less those scheduled posts hold. Null when
-     *  the read failed - unknown, never shown as 0. */
-    suspend fun tipSpendableSompi(address: String): Long? = runCatching {
-        com.kachat.app.util.UtxoMath.checkedTotal(
-            KaPostsScheduledStore.filterReserved(walletEngine.fetchUtxosOrThrow(address)).map { it.utxoEntry.amount }
-        )
-    }.getOrNull()
 
     // MARK: - KAS price in a currency (iOS `KasPriceModel.freshPrice(in:)`)
 

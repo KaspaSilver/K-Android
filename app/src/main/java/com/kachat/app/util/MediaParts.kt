@@ -2,7 +2,6 @@ package com.kachat.app.util
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
-import com.google.gson.JsonObject
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import java.io.StringReader
@@ -116,12 +115,6 @@ class VoicePartTag private constructor(val id: String, val index: Int, val count
             val close = head.indexOf('}', open)
             if (close < 0) return null
             return fromJson(parseStrictObject(head.substring(open, close + 1)))
-        }
-
-        /** The tag of a frame header or media-file JSON object, under the key its mime type takes. */
-        fun fromEnvelope(obj: JsonObject, mimeType: String): VoicePartTag? {
-            val key = keyForMimeType(mimeType) ?: return null
-            return fromJson(obj.get(key))
         }
 
         private fun parseStrictObject(text: String): JsonElement? = try {

@@ -314,6 +314,14 @@ class AddressBookManager @Inject constructor(
         return bitmap
     }
 
+    /** [photo] when it is already decoded in memory, else null - never touches the disk, so a
+     *  row can show it on its first frame and leave the decode to a background thread. */
+    fun cachedPhoto(address: String?): android.graphics.Bitmap? {
+        if (address.isNullOrBlank()) return null
+        val file = photoFile(normalize(address)) ?: return null
+        return photoCache.get(file.path)
+    }
+
     /**
      * Reads a stored photo with its header checked first and the decode sampled down to at most
      * [PHOTO_DECODE_MAX_SIDE] px (AND-032): a photo saved before imports were scaled, or put

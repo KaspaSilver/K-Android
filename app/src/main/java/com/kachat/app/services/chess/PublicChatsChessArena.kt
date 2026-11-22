@@ -35,9 +35,11 @@ class PublicChatsChessArena @Inject constructor(
 
     override fun startLiveViewing(channel: String): AutoCloseable = scanning.startLiveViewing(channel)
 
-    /** Every stored row, oldest first: the reducer needs the whole room, as KaPlay read it. */
+    /** Every stored row of the running network, oldest first: the reducer needs the whole room,
+     *  as KaPlay read it (the room table holds both networks' rows, audit M2). */
     override fun messages(channel: String): Flow<List<ChessArenaRow>> =
-        database.broadcastDao().getMessagesForChannel(channel).map { rows -> rows.map { it.toArenaRow() } }
+        database.broadcastDao().getMessagesForChannel(channel, repository.networkSenderPattern())
+            .map { rows -> rows.map { it.toArenaRow() } }
 
     override suspend fun message(txId: String): ChessArenaRow? =
         database.broadcastDao().getMessage(txId)?.toArenaRow()

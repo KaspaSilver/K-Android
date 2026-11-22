@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">No me gusta quitado en la red</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">Seguimiento publicado en la red</string>
-    <string name="feed54_help_welcome_guide">Guia de bienvenida</string>
-    <string name="feed54_help_welcome_guide_subtitle">El recorrido inicial: tu feed, salas, propinas y tu dirección.</string>
     <string name="feed54_like_posted">Me gusta publicado en la red</string>
     <string name="feed54_like_removed">Me gusta quitado en la red</string>
     <string name="feed54_post_not_found">No se encontró la publicación - puede ser más antigua que el feed actual</string>

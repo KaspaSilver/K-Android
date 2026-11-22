@@ -193,16 +193,6 @@ object KasiaCipher {
     class UnreadablePlaintextException : IllegalStateException("Decrypted bytes are not text or a media frame")
 
     /**
-     * Derives the raw 32-byte symmetric key (post-HKDF) for a given peer's
-     * x-only public key — exposed for [com.kachat.app.services.WalletManager.deriveSharedSecret].
-     */
-    fun deriveSymmetricKey(privateKey: ByteArray, peerXOnlyPubKey: ByteArray): ByteArray {
-        val peerPoint = decodePoint(peerXOnlyPubKey)
-        val sharedX = ecdhX(BigInteger(1, privateKey), peerPoint)
-        return hkdfSha256(sharedX, ByteArray(0), 32)
-    }
-
-    /**
      * Deterministic per-conversation alias — derived purely from both parties' public
      * keys via ECDH + HKDF-SHA256, so two contacts can find each other's self-stashed
      * messages without ever exchanging a handshake. Matches iOS KaChat's

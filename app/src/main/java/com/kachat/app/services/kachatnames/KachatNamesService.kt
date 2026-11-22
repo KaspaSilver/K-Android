@@ -80,10 +80,6 @@ class KachatNamesService @Inject constructor(
     /** The verified registry manifest, once loaded. */
     val manifest: StateFlow<Manifest?> = _manifest.asStateFlow()
 
-    private val _manifestSource = MutableStateFlow<String?>(null)
-    /** Where the manifest came from: "bundle" or the indexer URL. */
-    val manifestSource: StateFlow<String?> = _manifestSource.asStateFlow()
-
     private val _registryUpgrading = MutableStateFlow(false)
     /**
      * The manifest describes an earlier registry (v1 or v2): names wait for the v3 genesis
@@ -182,7 +178,6 @@ class KachatNamesService @Inject constructor(
         if (m.isDryRun && !allowDryRun) throw ServiceError.DryRunManifest()
         _registryUpgrading.value = false
         _manifest.value = m
-        _manifestSource.value = source
         m
     }
 
@@ -196,7 +191,6 @@ class KachatNamesService @Inject constructor(
     /** Forget the cached manifest (indexer change). */
     fun resetManifest() {
         _manifest.value = null
-        _manifestSource.value = null
         bundleFailure = null
         _registryUpgrading.value = false
     }
@@ -211,7 +205,8 @@ class KachatNamesService @Inject constructor(
             ?: throw ServiceError.NoManifest("bad indexer URL")
         http.newCall(request).execute().use { response ->
             if (response.code != 200) throw ServiceError.NoManifest("the indexer answered ${response.code}")
-            (response.body?.bytes() ?: ByteArray(0)) to url
+            // capped: a manifest is a few KB (security audit L6)
+            response.body.readCapped(4L * 1024 * 1024) to url
         }
     }
 

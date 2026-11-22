@@ -16,9 +16,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
@@ -64,7 +62,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -84,10 +81,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Newspaper
-import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FormatBold
@@ -101,26 +96,18 @@ import androidx.compose.material.icons.filled.StrikethroughS
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.NotificationsNone
-import androidx.compose.material.icons.filled.PersonAddAlt1
-import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Surface
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.Button
@@ -133,9 +120,6 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.PhoneIphone
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.SwapVert
 import com.kachat.app.util.currencySymbolFor
@@ -143,10 +127,8 @@ import com.kachat.app.util.formatFiatAmount
 import com.kachat.app.util.formatKasAmount
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.ThumbDown
 import androidx.compose.material.icons.outlined.ThumbDownOffAlt
-import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.outlined.Notifications
@@ -161,15 +143,12 @@ import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -208,11 +187,8 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Lock
-import com.kachat.app.repository.ChatRepository
 import com.kachat.app.services.kachatnames.KachatNamesService
 import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.ThumbDown
@@ -232,10 +208,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import com.kachat.app.util.authenticateWithDeviceCredential
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalView
@@ -254,13 +227,11 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.kachat.app.util.KaspaAddress
 import com.kachat.app.viewmodels.ChatViewModel
 import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
@@ -275,6 +246,7 @@ import com.kachat.app.viewmodels.WalletViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -455,11 +427,13 @@ private fun EndlessScroll(
 private fun LazyListScope.pagingFooter(
     state: KaPostsViewModel.PagingState,
     keySuffix: String,
+    /** A profile's footer slides with its posts (iOS 804cbcb7). */
+    modifier: Modifier = Modifier,
     onRetry: () -> Unit,
 ) {
     if (!state.isLoadingMore && state.error == null && !state.stalled) return
     item(key = "paging-footer-$keySuffix") {
-        PagingFooterContent(state = state, onLoadMore = onRetry)
+        Box(modifier) { PagingFooterContent(state = state, onLoadMore = onRetry) }
     }
 }
 
@@ -520,6 +494,72 @@ private fun PagingFooterContent(
 // iOS twin had the identical bug). These helpers subscribe a composable to ONE derived slice,
 // so a cell recomposes only when ITS value actually changes.
 
+/** What a post's text draws as cards, and the text left without them ([kaPostTextParts]). */
+private data class KaPostTextParts(
+    val paymentRequestLink: KaChatLinkMatch?,
+    val botChallengeLink: KaPlayBotChallenge.Match?,
+    val siteLink: KaChatSiteLink.Match?,
+    val webLink: com.kachat.app.services.KaPostLinkPreviewPolicy.Match?,
+    val bodyText: String,
+)
+
+/** The newest answers of [kaPostTextParts], by text and whether the poster has a .kachat name. */
+private val kaPostTextPartsCache = android.util.LruCache<Pair<String, Boolean>, KaPostTextParts>(256)
+
+/**
+ * The links a post's [displayedText] draws as cards, and the text as drawn without them. Kept per
+ * text, so the link, site and challenge matchers run over a post once, not each time its row
+ * scrolls back in (audit M11).
+ */
+private fun kaPostTextParts(displayedText: String, posterHasKachatName: Boolean): KaPostTextParts {
+    val key = displayedText to posterHasKachatName
+    val parts = kaPostTextPartsCache.get(key) ?: run {
+        // A payment request link in the post: drawn as a card (KaPostPaymentRequestCard) under the
+        // text, and left out of the text itself (iOS KaPosts 0b9fd28).
+        val paymentRequestLink = KaChatLink.findFirst(displayedText)?.takeIf { it.ref is KaChatLinkRef.PaymentRequest }
+        // A KaPlay bot challenge link in the post: drawn as a card (KaPostBotChallengeCard) under the
+        // text, and left out of the text itself (iOS 9e22075).
+        val botChallengeLink = KaPlayBotChallenge.match(displayedText)
+        // A link to KaChat's own site in the post: drawn as a preview card under the text, and left
+        // out of the text itself (iOS f81c467). Only for a poster with a .kachat name: anyone else's
+        // links never preview.
+        val siteLink = if (posterHasKachatName) KaChatSiteLink.match(displayedText) else null
+        // The post's first web link, drawn as its preview card in place of the link's text when the
+        // poster has a .kachat name and the site is on the allowed list (KaPostLinkPreviewPolicy); a
+        // preview that can't load shows the link itself. Links KaPost draws its own way (posts, rooms,
+        // payment requests) and KaChat's site are left to their own cards (iOS b78fdb0 `webLink`).
+        val webLink = if (!posterHasKachatName || siteLink != null) null else {
+            com.kachat.app.services.KaPostLinkPreviewPolicy.firstLink(displayedText)?.takeIf {
+                KaChatLink.parse(it.url) == null && com.kachat.app.services.KaPostLinkPreviewPolicy.allows(it.url)
+            }
+        }
+        // The text as drawn: the post without the links drawn as cards.
+        var text = displayedText
+        paymentRequestLink?.let { text = text.replace(it.raw, "") }
+        botChallengeLink?.let { text = text.replace(it.matchedText, "") }
+        // Only this one: the same text can also be the start of a longer link to another page.
+        siteLink?.let { text = text.replaceFirst(it.matchedText, "") }
+        // the previewed link: its card stands in for it
+        webLink?.let { text = text.replaceFirst(it.matchedText, "") }
+        val bodyText = if (paymentRequestLink != null || botChallengeLink != null || siteLink != null || webLink != null) text.trim() else displayedText
+        KaPostTextParts(paymentRequestLink, botChallengeLink, siteLink, webLink, bodyText).also { kaPostTextPartsCache.put(key, it) }
+    }
+    // Its card's fetch, redirects and image are then held to the allow-lists (iOS); marked on
+    // every use, as the marked set keeps only the newest links.
+    parts.webLink?.let { com.kachat.app.services.KaPostLinkPreviewPolicy.markForPreview(it.url) }
+    return parts
+}
+
+/** How long a post's row stays on screen before its language is checked for Translate (audit M11). */
+private const val TRANSLATION_CHECK_VISIBLE_MS = 300L
+
+/** How long a feed row stays on screen before it asks whether it heads a thread (audit M13; 0.6 s
+ *  as iOS `ThreadProbeClaims.probeDwellNanos`, its audit 2026-11-21 #35). */
+private const val THREAD_PROBE_VISIBLE_MS = 600L
+
+/** A cell's undo countdowns (deadline ms, null when none), as one value so it can be one collector. */
+private data class KaPostCellDeadlines(val repost: Long?, val like: Long?, val dislike: Long?, val pollVote: Long?)
+
 /** The three translation flags a cell reads, as one value so it can be one collector. */
 private data class KaPostTranslationSlice(
     val state: com.kachat.app.services.PostTranslationService.TranslationState?,
@@ -544,12 +584,30 @@ private fun <T, R> StateFlow<T>.collectSelectedAsState(vararg keys: Any?, select
 @Composable
 private fun posterDisplayNameState(viewModel: KaPostsViewModel, address: String): String {
     val alias by viewModel.contactAliases.collectSelectedAsState(address) { it[address] }
-    val kns by viewModel.senderKnsNames.collectSelectedAsState(address) { it[address] }
+    // a KNS name isn't shown (SHOWS_SENDER_KNS): no collector per row for it (audit H5/M12)
+    val kns by senderKnsState(viewModel.senderKnsNames, address)
     val kachat = if (address.isEmpty()) null else com.kachat.app.services.kachatnames.KachatNamesRegistry.kachatName(address)
     return remember(alias, kachat, kns, address) {
         KaPostsViewModel.posterName(address, alias, kachat, kns)
     }
 }
+
+/** Nothing: what a row reads in place of a KNS map nothing shows ([KaPostsViewModel.SHOWS_SENDER_KNS]). */
+private val NoSenderKns: State<String?> = object : State<String?> { override val value: String? = null }
+
+/**
+ * [address]'s KNS avatar from the poster lookups, as live state - or, while nothing shows it
+ * ([KaPostsViewModel.SHOWS_SENDER_KNS]: every avatar is the `.kachat` one), a constant null with
+ * no collector, so a row doesn't start one for nothing (audit H5/M12).
+ */
+@Composable
+private fun senderAvatarState(viewModel: KaPostsViewModel, address: String): State<String?> =
+    senderKnsState(viewModel.senderProfiles, address)
+
+/** One address's entry of a KNS-lookup map ([senderAvatarState]). */
+@Composable
+private fun senderKnsState(map: kotlinx.coroutines.flow.StateFlow<Map<String, String?>>, address: String): State<String?> =
+    if (KaPostsViewModel.SHOWS_SENDER_KNS) map.collectSelectedAsState(address) { it[address] } else NoSenderKns
 
 /** The live paging state for one surface, as Compose state - sliced per key, so a page load on
  *  one surface no longer recomposes every other open surface (feed tabs, thread, profile tabs). */
@@ -836,13 +894,18 @@ private fun KaPostsFeedScreen(
         val fiatText = fiat?.let { formatFiatAmount(it.first, it.second) }
         // Only a recent price: a tip that goes out without asking can't rest on an old one.
         val fiatPrice = fiat?.let { settingsViewModel.freshPriceIn(it.second) }?.takeIf { it > 0 }
+        // Checked conversion: a huge saved amount at a tiny price is no real amount (iOS audit
+        // 2026-11-21 #10).
+        val converted = if (fiat != null && fiatPrice != null) kaPostTipSompi(fiat.first, fiatPrice) else null
         val amount = when {
-            fiat != null && fiatPrice != null -> Math.round(fiat.first / fiatPrice * 100_000_000.0)
+            fiat != null && fiatPrice != null -> converted
             fiat != null -> null
             else -> defaultTipSompi
         }
         if (fiat != null && fiatPrice == null) {
             instantTipFailed(tipFailedContext.getString(R.string.feed54_tip_no_price, fiatText.orEmpty()))
+        } else if (fiat != null && converted == null) {
+            tipTarget = KaPostTipTarget(address, name, target, failure = KAPOST_INSTANT_TIP_LIMIT_NOTICE)
         } else if (amount == null || amount <= 0) {
             tipTarget = KaPostTipTarget(address, name, target)
         } else if (amount < KAPOST_INSTANT_TIP_MINIMUM_SOMPI) {
@@ -924,8 +987,6 @@ private fun KaPostsFeedScreen(
     var moderationKind by remember { mutableStateOf<Boolean?>(null) } // true = blocked
     var showBookmarks by remember { mutableStateOf(false) }
     var showKaPostsSettings by remember { mutableStateOf(false) }
-    /** Profile > Help (iOS b78fdb0 `ProfileHelpView`). */
-    var showProfileHelp by remember { mutableStateOf(false) }
     var showDrafts by remember { mutableStateOf(false) }
     var showScheduled by remember { mutableStateOf(false) }
     var editingDraft by remember { mutableStateOf<KaPostSavedDraft?>(null) }
@@ -935,7 +996,11 @@ private fun KaPostsFeedScreen(
     val draftsAccount by viewModel.activeAddress.collectAsState()
     var drafts by remember { mutableStateOf(emptyList<KaPostSavedDraft>()) }
     fun reloadDrafts() { drafts = KaPostDraftStore.load(draftContext, viewModel.myAddress().orEmpty()) }
-    LaunchedEffect(draftsAccount) { reloadDrafts() }
+    // read off the main thread when the screen opens (audit L12)
+    LaunchedEffect(draftsAccount) {
+        val account = viewModel.myAddress().orEmpty()
+        drafts = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { KaPostDraftStore.load(draftContext, account) }
+    }
 
     val posterProfile by viewModel.posterProfile.collectAsState()
     val deepLinkTxId by KaPostsDeepLink.pendingPostTxId.collectAsState()
@@ -1224,7 +1289,28 @@ private fun KaPostsFeedScreen(
                     KaPostsOverlayStatusBar(
                         trailing = { AllNotificationsBell(onClick = { showAllNotifications = true }) },
                     )
-                    KaPostsFixedTitle(stringResource(R.string.profile), onOpenBackup = { navController.navigate("account_backup") })
+                    // Share Profile beside the title (owner's call, iOS 804cbcb7); Edit Profile and
+                    // Log Out stay under your name
+                    var showTitleShare by remember { mutableStateOf(false) }
+                    val myAddress = viewModel.myAddress() ?: ""
+                    KaPostsFixedTitle(
+                        stringResource(R.string.profile),
+                        onOpenBackup = { navController.navigate("account_backup") },
+                        accessory = if (myAddress.isEmpty()) null else ({
+                            val titleHaptic = androidx.compose.ui.platform.LocalView.current
+                            KaPostsProfileHeaderButton(stringResource(R.string.profile_share_profile), Icons.Outlined.IosShare) {
+                                titleHaptic.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                                showTitleShare = true
+                            }
+                        }),
+                    )
+                    if (showTitleShare && myAddress.isNotEmpty()) {
+                        ShareProfileSheet(
+                            address = myAddress,
+                            shareUrl = KaChatLink.profileWebUrl(myAddress),
+                            onDismiss = { showTitleShare = false },
+                        )
+                    }
                     KaPostsProfilePage(
                         address = viewModel.myAddress() ?: "",
                         pubkey = null,
@@ -1240,6 +1326,7 @@ private fun KaPostsFeedScreen(
                         onReply = { replyComposerTarget = it },
                         bottomInset = dockInset,
                         onSeeAllPosts = onSeeAllPosts,
+                        shareInHeaderRow = false,
                     )
                 }
             } else Column(modifier = Modifier.fillMaxSize()) {
@@ -1478,15 +1565,21 @@ private fun KaPostsFeedScreen(
                             contentPadding = PaddingValues(bottom = dockInset),
                         ) {
                             items(pageFeed, key = { it.id }) { post ->
-                                LaunchedEffect(post.posterAddress) {
+                                if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(post.posterAddress) {
                                     viewModel.ensureSenderProfileFetched(post.posterAddress)
                                 }
                                 // Thread-root probe: once per commented post, so "View thread"
                                 // can appear on other people's threads too. Only in the feed being
-                                // read: the pages beside it are drawn too (iOS e5a9b11).
-                                val isReadFeed = selectedFeed == tab
-                                LaunchedEffect(post.remoteId, isReadFeed) {
-                                    if (isReadFeed) viewModel.probeThreadRoot(post)
+                                // read: the pages beside it are drawn too (iOS e5a9b11). The tab is
+                                // watched here, not read in the row, so switching tabs doesn't
+                                // redraw every row (audit L14); and only a row that stays on
+                                // screen half a second asks, so a fling past sends nothing (M13).
+                                LaunchedEffect(post.remoteId) {
+                                    viewModel.selectedFeed.map { it == tab }.distinctUntilChanged().collectLatest { isReadFeed ->
+                                        if (!isReadFeed) return@collectLatest
+                                        delay(THREAD_PROBE_VISIBLE_MS)
+                                        viewModel.probeThreadRoot(post)
+                                    }
                                 }
                                 KaPostCell(
                                     post = post,
@@ -2466,8 +2559,9 @@ private fun KaPostPollCard(
     ) {
         poll.options.forEachIndexed { index, option ->
             if (showsResults) {
-                val count = poll.counts.getOrElse(index) { 0 }
-                val share = if (poll.total > 0) count.toFloat() / poll.total.toFloat() else 0f
+                val count = KaPostDraft.KaPostPoll.clampedCount(poll.counts.getOrElse(index) { 0 })
+                val total = poll.total
+                val share = if (total > 0) minOf(1f, count.toFloat() / total.toFloat()) else 0f
                 val mine = poll.myVote == index
                 Box(
                     modifier = Modifier
@@ -2604,7 +2698,7 @@ fun KaPostCell(
     // collectSelectedAsState): this cell recomposes only when ITS avatar, name, follow state
     // or countdowns change. Collecting the whole maps here subscribed every visible cell to
     // every entry, so each author profile arriving mid-scroll re-ran the entire viewport.
-    val avatarUrl by viewModel.senderProfiles.collectSelectedAsState(post.posterAddress) { it[post.posterAddress] }
+    val avatarUrl by senderAvatarState(viewModel, post.posterAddress)
     val contactPhoto by viewModel.contactPhotos.collectSelectedAsState(post.posterAddress) { it[post.posterAddress] }
     val name = posterDisplayNameState(viewModel, post.posterAddress)
     val isFollowingPoster by viewModel.following.collectSelectedAsState(post.posterAddress) { post.posterAddress in it }
@@ -2622,13 +2716,13 @@ fun KaPostCell(
     var showTippers by remember(post.id) { mutableStateOf(false) }
     val hapticView = LocalView.current
     fun lightHaptic() { hapticView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP) }
-    val cellDeadlines by viewModel.undoDeadlines.collectSelectedAsState(post.id) {
-        Triple(it["repost:${post.id}"], it["like:${post.id}"], it["dislike:${post.id}"])
+    // The cell's countdowns as one collector, not two (audit M12). A poll vote rides the same
+    // five-second countdown; the card shows a clock until it goes.
+    val cellDeadlineSlice by viewModel.undoDeadlines.collectSelectedAsState(post.id) {
+        KaPostCellDeadlines(it["repost:${post.id}"], it["like:${post.id}"], it["dislike:${post.id}"], it["pollvote:${post.id}"])
     }
-    // A poll vote rides the same five-second countdown; the card shows a clock until it goes.
-    val cellPollVoteDeadline by viewModel.undoDeadlines.collectSelectedAsState(post.id) {
-        it["pollvote:${post.id}"]
-    }
+    val cellDeadlines = Triple(cellDeadlineSlice.repost, cellDeadlineSlice.like, cellDeadlineSlice.dislike)
+    val cellPollVoteDeadline = cellDeadlineSlice.pollVote
     var showOverflow by remember { mutableStateOf(false) }
     // The edit composer is opened from the cell itself, so editing works wherever a post is
     // shown: the feed, a thread, your profile, bookmarks.
@@ -2676,48 +2770,25 @@ fun KaPostCell(
     val translationState = translationSlice.state
     val showingOriginal = translationSlice.showingOriginal
     val canTranslate = translationSlice.canTranslate
-    LaunchedEffect(translationKey) { viewModel.considerTranslation(post) }
-    val displayedText = viewModel.displayText(post, translationState, showingOriginal)
-    // A payment request link in the post: drawn as a card (KaPostPaymentRequestCard) under the
-    // text, and left out of the text itself (iOS KaPosts 0b9fd28).
-    val paymentRequestLink = remember(displayedText) {
-        KaChatLink.findFirst(displayedText)?.takeIf { it.ref is KaChatLinkRef.PaymentRequest }
+    // Only for a row that stays on screen a moment: a fling past doesn't run the language
+    // check on every post it passes (audit M11).
+    LaunchedEffect(translationKey) {
+        delay(TRANSLATION_CHECK_VISIBLE_MS)
+        viewModel.considerTranslation(post)
     }
-    // A KaPlay bot challenge link in the post: drawn as a card (KaPostBotChallengeCard) under the
-    // text, and left out of the text itself (iOS 9e22075).
-    val botChallengeLink = remember(displayedText) { KaPlayBotChallenge.match(displayedText) }
+    val displayedText = viewModel.displayText(post, translationState, showingOriginal)
     // The poster has a .kachat name: only then do the post's links preview (owner's call,
     // 2026-11-18; iOS b78fdb0 `posterHasKachatName`). Snapshot state, so a name landing redraws.
     val posterHasKachatName = post.posterAddress.isNotEmpty() &&
         com.kachat.app.services.kachatnames.KachatNamesRegistry.kachatName(post.posterAddress) != null
-    // A link to KaChat's own site in the post: drawn as a preview card under the text, and left
-    // out of the text itself (iOS f81c467). Only for a poster with a .kachat name: anyone else's
-    // links never preview.
-    val siteLink = remember(displayedText, posterHasKachatName) {
-        if (posterHasKachatName) KaChatSiteLink.match(displayedText) else null
-    }
-    // The post's first web link, drawn as its preview card in place of the link's text when the
-    // poster has a .kachat name and the site is on the allowed list (KaPostLinkPreviewPolicy); a
-    // preview that can't load shows the link itself. Links KaPost draws its own way (posts, rooms,
-    // payment requests) and KaChat's site are left to their own cards (iOS b78fdb0 `webLink`).
-    val webLink = remember(displayedText, posterHasKachatName, siteLink) {
-        if (!posterHasKachatName || siteLink != null) return@remember null
-        val link = com.kachat.app.services.KaPostLinkPreviewPolicy.firstLink(displayedText) ?: return@remember null
-        link.takeIf {
-            KaChatLink.parse(it.url) == null && com.kachat.app.services.KaPostLinkPreviewPolicy.allows(it.url)
-        }
-    }
-    // The text as drawn: the post without the links drawn as cards.
-    val bodyText = remember(displayedText, paymentRequestLink, botChallengeLink, siteLink, webLink) {
-        var text = displayedText
-        paymentRequestLink?.let { text = text.replace(it.raw, "") }
-        botChallengeLink?.let { text = text.replace(it.matchedText, "") }
-        // Only this one: the same text can also be the start of a longer link to another page.
-        siteLink?.let { text = text.replaceFirst(it.matchedText, "") }
-        // the previewed link: its card stands in for it
-        webLink?.let { text = text.replaceFirst(it.matchedText, "") }
-        if (paymentRequestLink != null || botChallengeLink != null || siteLink != null || webLink != null) text.trim() else displayedText
-    }
+    // The links drawn as cards, and the text left: worked out once per text and kept, so a row
+    // scrolling back in doesn't run the link matchers over the whole post again (audit M11).
+    val textParts = remember(displayedText, posterHasKachatName) { kaPostTextParts(displayedText, posterHasKachatName) }
+    val paymentRequestLink = textParts.paymentRequestLink
+    val botChallengeLink = textParts.botChallengeLink
+    val siteLink = textParts.siteLink
+    val webLink = textParts.webLink
+    val bodyText = textParts.bodyText
 
     // Measured on what is actually rendered, so a translation that runs longer than its original
     // still folds. Same numbers as iOS's KaPostCellView.isLongPost.
@@ -3079,8 +3150,7 @@ fun KaPostCell(
                         )
                     } else {
                         // Same per-address slices for the quoted author as for the cell's own.
-                        val quotedAvatarUrl by viewModel.senderProfiles
-                            .collectSelectedAsState(quoted.posterAddress) { it[quoted.posterAddress] }
+                        val quotedAvatarUrl by senderAvatarState(viewModel, quoted.posterAddress)
                         val quotedName = posterDisplayNameState(viewModel, quoted.posterAddress)
                         Box(
                             modifier = Modifier.clickable(enabled = quoted.remoteId != null) {
@@ -3162,13 +3232,19 @@ fun KaPostCell(
     }
 }
 
+/** How much of a quoted post's text a quote card renders (iOS `markdownPreviewMaxCharacters`). */
+private const val MARKDOWN_PREVIEW_MAX_CHARACTERS = 1_200
+
 /**
  * A quoted post's text as the reader should see it: bold, italic, underline, strikethrough and
  * subtext kept, links inert and unstyled - the card is itself tappable through to the quoted
  * post, and a live link inside it would compete with that (iOS markdownPreview).
  */
 private fun markdownPreview(source: String): androidx.compose.ui.text.AnnotatedString {
-    val rendered = KaPostsMarkdown.render(source)
+    // A card shows five lines at most, so only the start of the text is rendered: a 25,000-
+    // character quoted post isn't parsed in full on the main thread for every card (iOS audit
+    // 2026-11-21 #15 `markdownPreviewMaxCharacters`).
+    val rendered = KaPostsMarkdown.render(source.take(MARKDOWN_PREVIEW_MAX_CHARACTERS))
     return androidx.compose.ui.text.buildAnnotatedString {
         append(rendered.text)
         for (span in rendered.spans) {
@@ -3877,11 +3953,13 @@ fun KaPostComposerDialog(
     }
 
     // Warm the KNS caches so typing @ has domains to offer.
-    LaunchedEffect(Unit) { viewModel?.prefetchMentionCandidates() }
+    if (com.kachat.app.util.MentionsFeature.ENABLED) LaunchedEffect(Unit) { viewModel?.prefetchMentionCandidates() }
     // The editor is what this screen is for: it takes focus as it appears (iOS isFocused = true).
     LaunchedEffect(Unit) { runCatching { editorFocus.requestFocus() } }
     // The @token being typed at the END of the text ("" right after "@"), or null.
+    // Only with mentions on: off, there are no suggestions to look anything up for (audit M15).
     val mentionQuery = remember(text.text) {
+        if (!com.kachat.app.util.MentionsFeature.ENABLED) return@remember null
         MENTION_QUERY_REGEX
             .find(text.text)?.groupValues?.get(2)?.lowercase()
     }
@@ -3896,7 +3974,10 @@ fun KaPostComposerDialog(
     }
     // Keyed on the KNS name map too, so a contact whose domain resolves after the @ was typed
     // appears without another keystroke (iOS observes KNSService).
-    val knsNames by (viewModel?.senderKnsNames?.collectAsState() ?: remember { mutableStateOf(emptyMap<String, String?>()) })
+    // Collected only while mentions are on: each KNS answer redrew the composer, text field and
+    // all, while typing (audit M15).
+    val knsNames by (viewModel?.takeIf { com.kachat.app.util.MentionsFeature.ENABLED }?.senderKnsNames?.collectAsState()
+        ?: remember { mutableStateOf(emptyMap<String, String?>()) })
     val mentionSuggestions = remember(text.text, resolvedAnyDomain, knsNames) {
         val query = mentionQuery
         if (query == null || viewModel == null) emptyList()
@@ -4947,7 +5028,7 @@ fun KaPostThreadOverlay(
                         }
                     }
                     items(threadChain, key = { "chain-${it.id}" }) { segment ->
-                        LaunchedEffect(segment.posterAddress) {
+                        if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(segment.posterAddress) {
                             viewModel.ensureSenderProfileFetched(segment.posterAddress)
                         }
                         // The chain rule is drawn behind the segment, not sized with
@@ -5003,7 +5084,7 @@ fun KaPostThreadOverlay(
                     }
                 }
                 items(visibleComments, key = { it.id }) { comment ->
-                    LaunchedEffect(comment.posterAddress) {
+                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(comment.posterAddress) {
                         viewModel.ensureSenderProfileFetched(comment.posterAddress)
                     }
                     ThreadCommentNode(
@@ -5369,8 +5450,10 @@ private fun ThreadReplyComposer(
             // @mention autocomplete for COMMENTS - identical machinery to the post composer:
             // KNS domains of everyone you've chatted with, plus a live any-KNS resolve of the
             // typed query. Shown above the input so the keyboard can never hide it.
-            LaunchedEffect(Unit) { viewModel.prefetchMentionCandidates() }
+            if (com.kachat.app.util.MentionsFeature.ENABLED) LaunchedEffect(Unit) { viewModel.prefetchMentionCandidates() }
+            // only with mentions on (audit M15), as in the post composer
             val replyMentionQuery = remember(replyText) {
+                if (!com.kachat.app.util.MentionsFeature.ENABLED) return@remember null
                 MENTION_QUERY_REGEX
                     .find(replyText)?.groupValues?.get(2)?.lowercase()
             }
@@ -5382,7 +5465,8 @@ private fun ThreadReplyComposer(
                 kotlinx.coroutines.delay(400)
                 replyResolvedAnyDomain = viewModel.resolveMentionQuery(query)
             }
-            val knsNames by viewModel.senderKnsNames.collectAsState()
+            val knsNames by (if (com.kachat.app.util.MentionsFeature.ENABLED) viewModel.senderKnsNames.collectAsState()
+                else remember { mutableStateOf(emptyMap<String, String?>()) })
             val replyMentionSuggestions = remember(replyText, replyResolvedAnyDomain, knsNames) {
                 val query = replyMentionQuery
                 if (query == null) emptyList()
@@ -5564,7 +5648,7 @@ private fun ThreadCommentNode(
                             }
                         } else {
                             replies.forEach { reply ->
-                                LaunchedEffect(reply.posterAddress) {
+                                if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(reply.posterAddress) {
                                     viewModel.ensureSenderProfileFetched(reply.posterAddress)
                                 }
                                 KaPostCell(
@@ -5747,6 +5831,9 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
     /** Your profile (the dock's Profile tab): See All Posts beside the avatar opens the KaPost
      *  tab, wherever it lives (iOS 148a5331). */
     onSeeAllPosts: (() -> Unit)? = null,
+    /** Share Profile in the row under your name; the Profile tab has it beside its title
+     *  instead (iOS 804cbcb7), the profile overlay, which has no title, keeps it here. */
+    shareInHeaderRow: Boolean = true,
 ) {
     val colors = LocalAppColors.current
     var showLogoutConfirmation by remember { mutableStateOf(false) }
@@ -5755,9 +5842,9 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
     // below trigger a KNS fetch per author as they scroll in, and collecting the whole maps
     // here meant every one of those results recomposed the entire overlay - banner, header
     // and both pager pages - mid-scroll.
-    val profileAvatarUrl by viewModel.senderProfiles.collectSelectedAsState(address) { it[address] }
-    val knsBannerUrl by viewModel.senderBanners.collectSelectedAsState(address) { it[address] }
-    val knsBio by viewModel.senderBios.collectSelectedAsState(address) { it[address] }
+    val profileAvatarUrl by senderAvatarState(viewModel, address)
+    val knsBannerUrl by senderKnsState(viewModel.senderBanners, address)
+    val knsBio by senderKnsState(viewModel.senderBios, address)
     // Banner and bio are the .kachat profile's, yours and a tapped poster's alike, on every
     // network (iOS 3d6fb7c KachatLive.profileBanner / profileBio); the KNS ones only with the
     // .kachat UI off (unreachable, kept as the switch-back).
@@ -5787,6 +5874,8 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
     val hapticView = LocalView.current
 
     var selectedTab by remember { mutableStateOf(0) } // 0 = Posts, 1 = Replies
+    // the posts under the header slide with a Posts/Replies swipe or tap (iOS 804cbcb7)
+    val tabSlide = rememberProfileTabSlide(selectedTab)
     val name = posterDisplayNameState(viewModel, address)
     // One list for the whole page, header included, rather than a pager holding two. The banner,
     // bio and tab row are the list's first item, so they scroll up out of the way while reading
@@ -5798,7 +5887,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
     // each pager page carries its own load-more trigger and footer.
     val profilePubkey = remember(isMine, pubkey, posterProfile?.pubkey) { viewModel.profilePubkey(isMine) }
 
-    LaunchedEffect(address) { viewModel.ensureSenderProfileFetched(address) }
+    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(address) { viewModel.ensureSenderProfileFetched(address) }
 
     val repliesPage = selectedTab == 1
     val pageItems = if (repliesPage) repliesList else myPostsList
@@ -5823,11 +5912,15 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
             .clipToBounds()
             .nestedScroll(pullRefreshState.nestedScrollConnection),
     ) {
+    val swipeHapticView = androidx.compose.ui.platform.LocalView.current
     LazyColumn(
         state = profileListState,
         // slide left or right to change between Posts and Replies (owner's call, iOS 148a5331
         // `ProfileTabSwipe`)
-        modifier = Modifier.fillMaxSize().profileTabSwipe(selectedTab, tabCount = 2) { selectedTab = it },
+        modifier = Modifier.fillMaxSize().profileTabSwipe(selectedTab, tabCount = 2, slide = tabSlide) {
+            swipeHapticView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+            selectedTab = it
+        },
         // The last row scrolls clear of the dock when the page is the Profile tab.
         contentPadding = PaddingValues(bottom = bottomInset),
     ) {
@@ -5974,11 +6067,13 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                                 navController.navigate("edit_kachat_profile")
                             }
                             if (address.isNotEmpty()) {
-                                // Profile is the dock's Profile tab in KaChat: Share Profile beside
-                                // Edit Profile, and Log Out, which lived on it (owner's call, iOS
-                                // 148a5331).
-                                KaPostsProfileHeaderButton(stringResource(R.string.profile_share_profile), Icons.Outlined.IosShare) {
-                                    showShareProfile = true
+                                // Profile is the dock's Profile tab in KaChat: Edit Profile and Log
+                                // Out, which lived on it; Share Profile sits beside the Profile
+                                // title there (iOS 804cbcb7).
+                                if (shareInHeaderRow) {
+                                    KaPostsProfileHeaderButton(stringResource(R.string.profile_share_profile), Icons.Outlined.IosShare) {
+                                        showShareProfile = true
+                                    }
                                 }
                                 KaPostsProfileHeaderButton(stringResource(R.string.log_out), Icons.AutoMirrored.Outlined.Logout, tint = colors.danger) {
                                     showLogoutConfirmation = true
@@ -6052,7 +6147,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
             item(key = "empty") {
                 val loading = if (isMine) isLoadingMyProfile else posterProfile?.isLoading == true
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 40.dp),
+                    modifier = Modifier.then(tabSlide.itemModifier).fillMaxWidth().padding(vertical = 40.dp, horizontal = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     if (loading) {
@@ -6089,9 +6184,10 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
             }
         } else {
             items(items, key = { "profile-${it.id}" }) { post ->
-                LaunchedEffect(post.posterAddress) {
+                if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(post.posterAddress) {
                     viewModel.ensureSenderProfileFetched(post.posterAddress)
                 }
+                Column(tabSlide.itemModifier) {
                 KaPostCell(
                     post = post,
                     viewModel = viewModel,
@@ -6110,8 +6206,9 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                     color = colors.surfaceVariant,
                     modifier = Modifier.padding(start = 68.dp),
                 )
+                }
             }
-            pagingFooter(pagePaging, keySuffix = "profile-$selectedTab") {
+            pagingFooter(pagePaging, keySuffix = "profile-$selectedTab", modifier = tabSlide.itemModifier) {
                 viewModel.loadMoreProfile(isMine, replies = repliesPage, manual = true)
             }
         }
@@ -6240,9 +6337,8 @@ fun KaPostsSearchOverlay(
             LazyColumn(Modifier.fillMaxSize()) {
                 if (showPeople) {
                     items(peopleResults, key = { it.address }) { person ->
-                        LaunchedEffect(person.address) { viewModel.ensureSenderProfileFetched(person.address) }
-                        val personAvatar by viewModel.senderProfiles
-                            .collectSelectedAsState(person.address) { it[person.address] }
+                        if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(person.address) { viewModel.ensureSenderProfileFetched(person.address) }
+                        val personAvatar by senderAvatarState(viewModel, person.address)
                         val personName = posterDisplayNameState(viewModel, person.address)
                         Row(
                             modifier = Modifier
@@ -6466,12 +6562,11 @@ internal fun KaPostsNotificationsList(
                         return@items
                     }
                     val item = (row as KaPostsNotificationRow.Post).item
-                    LaunchedEffect(item.actorAddress) {
+                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(item.actorAddress) {
                         viewModel.ensureSenderProfileFetched(item.actorAddress)
                     }
                     // Per-actor slices: one avatar/name landing repaints its own row only.
-                    val actorAvatar by viewModel.senderProfiles
-                        .collectSelectedAsState(item.actorAddress) { it[item.actorAddress] }
+                    val actorAvatar by senderAvatarState(viewModel, item.actorAddress)
                     val actorPhoto by viewModel.contactPhotos
                         .collectSelectedAsState(item.actorAddress) { it[item.actorAddress] }
                     val actorName = posterDisplayNameState(viewModel, item.actorAddress)
@@ -6766,9 +6861,16 @@ private fun normalizedLinkUrl(raw: String): String = when {
     else -> "https://$raw"
 }
 
+/** The newest [annotatedPostText] answers by source text: a row scrolling back in reuses its
+ *  post's, rather than running the markdown, mention and URL passes over it again (audit M11). */
+private val annotatedPostTextCache = android.util.LruCache<String, androidx.compose.ui.text.AnnotatedString>(256)
+
 /** Post text with @mention tokens tinted teal AND annotated for tap-to-profile, and URLs
  *  tinted+underlined AND annotated for the tap-to-Copy/Open dialog. */
-private fun annotatedPostText(source: String): androidx.compose.ui.text.AnnotatedString {
+private fun annotatedPostText(source: String): androidx.compose.ui.text.AnnotatedString =
+    annotatedPostTextCache.get(source) ?: buildAnnotatedPostText(source).also { annotatedPostTextCache.put(source, it) }
+
+private fun buildAnnotatedPostText(source: String): androidx.compose.ui.text.AnnotatedString {
     // Markdown first: it decides what the text actually READS as (markers gone, bullets and
     // numbers materialised), and the linkifier's offsets have to be into that string, not the
     // source. Its spans are then layered on top.
@@ -6950,10 +7052,9 @@ fun KaPostsFollowListOverlay(
         } else {
             LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                 items(list, key = { it.address }) { entry ->
-                    LaunchedEffect(entry.address) { viewModel.ensureSenderProfileFetched(entry.address) }
+                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(entry.address) { viewModel.ensureSenderProfileFetched(entry.address) }
                     // Per-address slices: one avatar/name landing repaints its own row only.
-                    val entryAvatar by viewModel.senderProfiles
-                        .collectSelectedAsState(entry.address) { it[entry.address] }
+                    val entryAvatar by senderAvatarState(viewModel, entry.address)
                     val entryName = posterDisplayNameState(viewModel, entry.address)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -7196,10 +7297,9 @@ fun KaPostEngagementOverlay(
                 } else {
                     LazyColumn(state = listState) {
                         items(rows, key = { it.actionTxId }) { entry ->
-                            LaunchedEffect(entry.actorAddress) { viewModel.ensureSenderProfileFetched(entry.actorAddress) }
+                            if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(entry.actorAddress) { viewModel.ensureSenderProfileFetched(entry.actorAddress) }
                             // Per-actor slices: one avatar/name landing repaints its own row only.
-                            val actorAvatar by viewModel.senderProfiles
-                                .collectSelectedAsState(entry.actorAddress) { it[entry.actorAddress] }
+                            val actorAvatar by senderAvatarState(viewModel, entry.actorAddress)
                             val actorName = posterDisplayNameState(viewModel, entry.actorAddress)
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -7374,8 +7474,8 @@ private fun KaPostTipRow(
 ) {
     val colors = LocalAppColors.current
     val address = remember(tip.userPublicKey) { com.kachat.app.services.KaPostsService.kaspaAddressFromPubkey(tip.userPublicKey).orEmpty() }
-    LaunchedEffect(address) { if (address.isNotEmpty()) viewModel.ensureSenderProfileFetched(address) }
-    val avatar by viewModel.senderProfiles.collectSelectedAsState(address) { it[address] }
+    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(address) { if (address.isNotEmpty()) viewModel.ensureSenderProfileFetched(address) }
+    val avatar by senderAvatarState(viewModel, address)
     val name = if (address.isEmpty()) tip.userPublicKey else posterDisplayNameState(viewModel, address)
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -7414,13 +7514,6 @@ private fun KaPostTipRow(
     }
 }
 
-/**
- * KaPosts' own settings, behind the gear in the feed's icon row: the cool down before post (the
- * 5-second Undo window every action waits out, or none), and the default tip - the amount a tap
- * on Tip sends at once, with no amount screen in between. The tip is set in KAS or, with the unit
- * tapped, in the app's currency (USD unless changed in Settings): then each tip sends that much
- * worth of KAS at the price of the moment. Mirrors iOS's KaPostsSettingsView (KaPosts 4c0d5a8).
- */
 /** Instant tips go on one tap, with no swipe, so the most one may send: a bigger default tip
  *  opens the tip screen, whose swipe is the confirmation (iOS 369794e `instantTipLimitSompi`). */
 internal const val KAPOST_INSTANT_TIP_LIMIT_SOMPI = 10L * 100_000_000L
@@ -7429,6 +7522,17 @@ internal val KAPOST_INSTANT_TIP_LIMIT_NOTICE: String get() = com.kachat.app.util
  *  0.1 KAS whatever coins pay for it, so 0.0021 KAS could never go out. 0.2 KAS, the wallet's
  *  dust threshold, leaves room for the change output too (iOS b78fdb0 `instantTipMinimumSompi`). */
 internal const val KAPOST_INSTANT_TIP_MINIMUM_SOMPI = 20_000_000L
+
+/** A currency amount in sompi at a KAS price, or null when the answer isn't a real amount: not
+ *  finite, negative, or more than all the KAS there will ever be ([KaspaUnit.MAX_TYPED_SOMPI]).
+ *  Every currency-to-sompi conversion of a tip goes through here (iOS audit 2026-11-21 #10
+ *  `KaPostsSettingsView.sompi(fiat:price:)`). */
+internal fun kaPostTipSompi(fiat: Double, price: Double): Long? {
+    if (!fiat.isFinite() || !price.isFinite() || fiat < 0 || price <= 0) return null
+    val value = fiat / price * 100_000_000.0
+    if (!value.isFinite() || value < 0 || Math.round(value) > KaspaUnit.MAX_TYPED_SOMPI) return null
+    return Math.round(value)
+}
 /** "0.2 KAS" (iOS `instantTipMinimumText`). */
 internal fun kaPostInstantTipMinimumText(): String = "${KaspaUnit.plain(KAPOST_INSTANT_TIP_MINIMUM_SOMPI)} ${KaspaUnit.symbol}"
 
@@ -7440,6 +7544,13 @@ internal fun kaPostInstantTipMinimumText(): String = "${KaspaUnit.plain(KAPOST_I
 @Composable
 fun KaPostsSettingsScreen(onBack: () -> Unit) = KaPostsSettingsOverlay(onClose = onBack, embedded = true)
 
+/**
+ * KaPosts' own settings, behind the gear in the feed's icon row: the cool down before post (the
+ * 5-second Undo window every action waits out, or none), and the default tip - the amount a tap
+ * on Tip sends at once, with no amount screen in between. The tip is set in KAS or, with the unit
+ * tapped, in the app's currency (USD unless changed in Settings): then each tip sends that much
+ * worth of KAS at the price of the moment. Mirrors iOS's KaPostsSettingsView (KaPosts 4c0d5a8).
+ */
 @Composable
 fun KaPostsSettingsOverlay(
     onClose: () -> Unit,
@@ -7530,7 +7641,7 @@ fun KaPostsSettingsOverlay(
         val amount = typedAmount()?.takeIf { it > 0 } ?: return null
         if (!tipInFiat) return KaspaUnit.sompiFromUserText(tipText)
         val price = tipPrice(tipCurrency)?.takeIf { it > 0 } ?: return null
-        return Math.round(amount / price * 100_000_000.0)
+        return kaPostTipSompi(amount, price)
     }
 
     /** Under the smallest tip the network takes ([KAPOST_INSTANT_TIP_MINIMUM_SOMPI]): not saved. */
@@ -7539,8 +7650,17 @@ fun KaPostsSettingsOverlay(
         return sompi < KAPOST_INSTANT_TIP_MINIMUM_SOMPI
     }
 
-    /** An amount that can be saved: above zero and not under the network's minimum. */
-    fun tipAmountIsValid(): Boolean = (typedAmount() ?: 0.0) > 0 && !tipBelowMinimum()
+    /** A currency amount worth more KAS than can exist at today's price: not a tip, not saved
+     *  (iOS audit 2026-11-21 #10 `tipOutOfRange`). */
+    fun tipOutOfRange(): Boolean {
+        if (!tipInFiat) return false
+        val amount = typedAmount()?.takeIf { it > 0 } ?: return false
+        val price = tipPrice(tipCurrency)?.takeIf { it > 0 } ?: return false
+        return kaPostTipSompi(amount, price) == null
+    }
+
+    /** An amount that can be saved: above zero, not under the network's minimum, and a real amount. */
+    fun tipAmountIsValid(): Boolean = (typedAmount() ?: 0.0) > 0 && !tipBelowMinimum() && !tipOutOfRange()
 
     /** The saved default tip, in the unit it was saved in. */
     fun showSavedTip() {
@@ -7557,7 +7677,7 @@ fun KaPostsSettingsOverlay(
     }
 
     fun commitTip() {
-        if (!instantTipEnabled || tipBelowMinimum()) return
+        if (!instantTipEnabled || tipBelowMinimum() || tipOutOfRange()) return
         seeded = true
         if (tipInFiat) {
             val amount = typedAmount()?.takeIf { it > 0 } ?: return
@@ -7845,47 +7965,6 @@ fun KaPostsSettingsOverlay(
 }
 
 /**
- * Profile > Help (iOS b78fdb0 `ProfileHelpView`): one row, the Welcome Guide, which replays the
- * first-run tour with Skip.
- */
-@Composable
-private fun KaPostsProfileHelpOverlay(onClose: () -> Unit, onWelcomeGuide: () -> Unit) {
-    val colors = LocalAppColors.current
-    KaPostsOverlayScaffold(title = stringResource(R.string.help), onClose = onClose) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            KaPostsFixedTitle(stringResource(R.string.help))
-            Column(
-                Modifier
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(colors.surface),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onWelcomeGuide)
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                ) {
-                    // iOS helpRow: a 20pt icon in a 30pt frame, 14 apart; subheadline semibold
-                    // over caption.
-                    Box(Modifier.width(30.dp), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.AutoAwesome, null, tint = KaspaTeal, modifier = Modifier.size(22.dp))
-                    }
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text(stringResource(R.string.feed54_help_welcome_guide), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                        Text(stringResource(R.string.feed54_help_welcome_guide_subtitle), color = colors.textSecondary, fontSize = 12.sp)
-                    }
-                    Icon(Icons.Default.KeyboardArrowRight, null, tint = colors.textSecondary, modifier = Modifier.size(24.dp))
-                }
-            }
-        }
-    }
-}
-
-/**
  * KaPost Settings > Tips From (iOS 071e901 `TipSourcePage`): the address tips leave from unless
  * the tip sheet picks another. The chatting address sends a tip that counts on the post; another
  * address sends it privately (`ChatViewModel.sendPayment`: no post named, nothing counted, nobody
@@ -7922,7 +8001,6 @@ private fun KaPostTipSourcePage(
     }
 }
 
-/** A currency amount for the default-tip field: two decimals, trimmed ("1", "1.5", "0.25"). */
 /** A currency amount for the field: the currency's decimals (8 for Bitcoin, else 2), trimmed
  *  ("1", "1.5", "0.25"; iOS f954738 `fiatText(_:currency:)`). */
 private fun kaPostsFiatTipText(value: Double, currency: String): String {
@@ -7981,10 +8059,9 @@ fun KaPostsModerationOverlay(
         } else {
             LazyColumn {
                 items(addresses, key = { it }) { address ->
-                    LaunchedEffect(address) { viewModel.ensureSenderProfileFetched(address) }
+                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(address) { viewModel.ensureSenderProfileFetched(address) }
                     // Per-address slices: one avatar/name landing repaints its own row only.
-                    val rowAvatar by viewModel.senderProfiles
-                        .collectSelectedAsState(address) { it[address] }
+                    val rowAvatar by senderAvatarState(viewModel, address)
                     val rowName = posterDisplayNameState(viewModel, address)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -8072,7 +8149,7 @@ fun KaPostsBookmarksOverlay(
         } else {
             LazyColumn {
                 items(bookmarks, key = { "bookmark-${it.id}" }) { post ->
-                    LaunchedEffect(post.posterAddress) { viewModel.ensureSenderProfileFetched(post.posterAddress) }
+                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(post.posterAddress) { viewModel.ensureSenderProfileFetched(post.posterAddress) }
                     KaPostCell(
                         post = post,
                         viewModel = viewModel,
@@ -8205,7 +8282,6 @@ internal fun rememberKaPostsCoverSlideState(onClose: () -> Unit, slidesIn: Boole
  */
 internal val LocalKaPostsBack = androidx.compose.runtime.staticCompositionLocalOf<(() -> Unit)?> { null }
 
-/** Shared full-screen overlay chrome: back arrow + bold title over the app background. */
 /**
  * The feed's own header indicators - clickable connection dot leading, chatting balance centred -
  * repeated on every overlay that covers the feed. Reading a thread or a profile is still "being in
@@ -8304,6 +8380,7 @@ internal fun KaPostsSegmentedPicker(titles: List<String>, selected: Int, onSelec
     }
 }
 
+/** Shared full-screen overlay chrome: back arrow + bold title over the app background. */
 @Composable
 private fun KaPostsOverlayScaffold(
     title: String,

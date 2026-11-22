@@ -2118,7 +2118,7 @@ private fun PassphraseInputField(
         visualTransformation = if (reveal) VisualTransformation.None else PasswordVisualTransformation(),
         // Password keyboard even while revealed: a visual transformation doesn't change what the
         // IME is told, and only the Password type keeps keyboards from learning, suggesting or
-        // syncing what is typed (audit AND-030; RevealableSecureField does the same).
+        // syncing what is typed (audit AND-030).
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             capitalization = KeyboardCapitalization.None,

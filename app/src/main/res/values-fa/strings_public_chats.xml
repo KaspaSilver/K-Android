@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">در حال رمزگذاری…</string>
     <string name="pc_room_voice_receiving">در حال دریافت… %1$d از %2$d</string>
     <string name="pc_room_voice_recording">در حال ضبط ...</string>
-    <string name="pc_rooms53_channel_name_invalid">نام کانال باید ۱ تا %1$d نویسه و بدون فاصله یا دونقطه باشد.</string>
     <string name="pc_rooms53_day_one">%1$d روز</string>
     <string name="pc_rooms53_days">%1$d روز</string>
-    <string name="pc_rooms53_join_failed">هنگام پیوستن به آن کانال مشکلی پیش آمد.</string>
     <string name="pc_rooms54_failed_to_edit">ویرایش ناموفق بود: %1$s</string>
     <string name="pc_rooms54_failed_to_send">ارسال ناموفق بود: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">ارسال پیام صوتی ناموفق بود: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">نمایه KaPost آن‌ها: پست‌ها، پاسخ‌ها و دنبال‌کنندگان.</string>
     <string name="pc_sender_send_kaspa_subtitle">Kaspa را به آدرس آن‌ها بفرستید.</string>
     <string name="pc_sender_copy_address_subtitle">آدرس Kaspa او را کپی کنید.</string>
-    <string name="pc_public_chats">گفتگوهای عمومی</string>
+    <string name="pc_original_message_not_loaded">پیام اصلی بارگیری نشده است</string>
 </resources>

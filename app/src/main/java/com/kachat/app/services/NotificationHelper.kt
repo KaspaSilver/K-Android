@@ -88,36 +88,21 @@ class NotificationHelper @Inject constructor(
         }
     }
 
-    /**
-     * Every KaChat notification on the phone, gone: Log Out and Delete Account (iOS 83806b3d
-     * `clearNotificationsForSignedOutAccount`). Decrypted message text would otherwise outlive the
-     * account that could read it. The launcher badge follows the notifications on Android.
-     */
-    fun clearAllNotifications() {
-        runCatching { NotificationManagerCompat.from(context).cancelAll() }
-    }
-
     /** See [appForeground] — driven by KaChatApplication's ProcessLifecycleOwner observer. */
     fun setAppForeground(foreground: Boolean) {
         appForeground.value = foreground
     }
 
-    /** Whether the app is on screen. No longer a banner gate: while push is active the remote
-     *  push is the only banner source, foreground included (see [PushState]); the txId ledger
-     *  in [claimTxId] stays so the push's own two paths (FCM handler and a push-triggered sync)
-     *  cannot double-post. */
+    /** Whether the app is on screen. While push is active the app banners what it finds itself
+     *  only while it is ([mayBannerLocally], iOS 428a797b `InAppBanner`); the txId ledger in
+     *  [claimTxId] keeps that and the push to one banner per message. */
     val isAppInForeground: Boolean get() = appForeground.value
 
     /** Reactive form of [isAppInForeground] — drives lifecycle-scoped loops that must start on
      *  foreground and stop on background (e.g. NextcloudSyncService's remote change watcher). */
     val appForegroundFlow: StateFlow<Boolean> = appForeground.asStateFlow()
 
-    /** Reactive form of "a conversation thread is open on screen" — mirrors [appForegroundFlow].
-     *  Drives NextcloudSyncService's adaptive mirror cadence: fast tier while the user is inside
-     *  a chat (where a mirrored message is visible the moment it lands), relaxed tier elsewhere. */
-    val openChatFlow: StateFlow<Boolean> = openChat.asStateFlow()
-
-    /** Snapshot form of [openChatFlow] for one-shot reads (e.g. picking a debounce tier). */
+    /** Whether a conversation thread is open on screen, for one-shot reads (e.g. picking a debounce tier). */
     val isChatOpen: Boolean get() = openChat.value
 
     /**
@@ -147,6 +132,59 @@ class NotificationHelper @Inject constructor(
      *  for it. A plain payment to the chatting address can banner from the payment sync and from
      *  [AddressActivityNotifier] (iOS 56b75c8) - whichever comes first is the only one. */
     fun claimForBanner(txId: String): Boolean = claimTxId(txId)
+
+    /**
+     * Whether a message the app found itself (its sync, scans, sweeps and polls) may banner now
+     * (iOS 428a797b `InAppBanner`, owner 2026-11-22): while the app is open it banners new 1:1,
+     * group and room messages itself, one per message, so nothing waits on the push service -
+     * but only a message still news ([IN_APP_BANNER_MAX_AGE_MS] old at most; 0 = not in a block
+     * yet). In the background and when closed the pushes alone banner. A device with no push at
+     * all banners from here as before ([PushState]): there the app is the only source there is.
+     */
+    fun mayBannerLocally(pushActive: Boolean, blockTimeMs: Long): Boolean {
+        if (!pushActive) return true
+        if (!appForeground.value) return false
+        return blockTimeMs <= 0L || System.currentTimeMillis() - blockTimeMs <= IN_APP_BANNER_MAX_AGE_MS
+    }
+
+    /**
+     * Whether a notification for [txId] is already in the shade (iOS 428a797b `InAppBanner.post`
+     * checks the delivered notifications): one the system drew from a push carries the push's
+     * collapse id, the transaction id, as its tag, and the app's own carry it in their extras.
+     * The app's banner is then skipped: one banner per message.
+     */
+    fun isShowing(txId: String?): Boolean {
+        val id = txId?.trim()?.takeIf { it.isNotEmpty() } ?: return false
+        return activeNotifications().any { sbn ->
+            sbn.tag.equals(id, ignoreCase = true) ||
+                sbn.notification.extras?.getString(EXTRA_TX_ID).equals(id, ignoreCase = true)
+        }
+    }
+
+    /**
+     * Whether this transaction's Received push (`address_activity`) is already in the shade, so
+     * the app's own "Received" notice is skipped (iOS 428a797b). The push carries no collapse id:
+     * the one the system drew is matched by its title ("Funds received") and the amount in its
+     * text ("Received 1.5 KAS"); one this app drew carries the transaction id.
+     */
+    fun isReceivedPushShowing(txId: String, amountSompi: Long): Boolean {
+        if (isShowing(txId)) return true
+        val kas = java.math.BigDecimal.valueOf(amountSompi).movePointLeft(8)
+        return activeNotifications().any { sbn ->
+            val extras = sbn.notification.extras ?: return@any false
+            val title = extras.getCharSequence(android.app.Notification.EXTRA_TITLE)?.toString()
+            if (title != RECEIVED_PUSH_TITLE) return@any false
+            val text = extras.getCharSequence(android.app.Notification.EXTRA_TEXT)?.toString().orEmpty()
+            val number = RECEIVED_AMOUNT.find(text)?.groupValues?.get(1)?.replace(",", "")
+                ?.toBigDecimalOrNull() ?: return@any false
+            number.compareTo(kas) == 0
+        }
+    }
+
+    private fun activeNotifications(): List<android.service.notification.StatusBarNotification> =
+        runCatching {
+            context.getSystemService(NotificationManager::class.java)?.activeNotifications?.toList()
+        }.getOrNull().orEmpty()
 
     /**
      * True for the first part of a long voice note or multi-part photo to reach this device - it
@@ -285,6 +323,7 @@ class NotificationHelper @Inject constructor(
         if (!settings.notificationsEnabled.first()) return
         if (notificationOverride == ContactNotificationMode.OFF) return
         if (!claimTxId(dedupeTxId)) return // the other delivery path (poll vs push) got here first
+        if (isShowing(dedupeTxId)) return // its push is in the shade already (iOS 428a797b)
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -319,8 +358,9 @@ class NotificationHelper @Inject constructor(
         val channelId = channelFor(soundEnabled, vibrationEnabled)
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_kachat_logo)
-            .setContentTitle(title)
-            .setContentText(text)
+            .setContentTitle(withoutBidiControls(title))
+            .setContentText(withoutBidiControls(text))
+            .addExtras(txIdExtras(dedupeTxId))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -372,8 +412,10 @@ class NotificationHelper @Inject constructor(
         val vibrationEnabled = settings.notificationVibrationEnabled.first()
         val notification = NotificationCompat.Builder(context, channelFor(soundEnabled, vibrationEnabled))
             .setSmallIcon(R.drawable.ic_kachat_logo)
-            .setContentTitle(title)
-            .setContentText(text)
+            .setContentTitle(withoutBidiControls(title))
+            .setContentText(withoutBidiControls(text))
+            // the transaction, so its Received push and the app's notice show once (iOS 428a797b)
+            .addExtras(txIdExtras(dedupeKey))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -385,6 +427,49 @@ class NotificationHelper @Inject constructor(
             NotificationManagerCompat.from(context).notify(notificationId, notification)
         } catch (_: SecurityException) {}
     }
+
+    /**
+     * A `.kachat` name push (an offer, a sale, a renewal reminder; `name_event`) while the app is
+     * open: shown as the push service worded it, since the market came back (iOS 428a797b
+     * NotificationService shows it while signed in). Its tap opens .kachat at [name].
+     */
+    suspend fun showNameEvent(title: String, text: String, name: String?, dedupeKey: String?) {
+        if (walletManager.isLoggedOut) return
+        if (!settings.notificationsEnabled.first()) return
+        if (title.isBlank() && text.isBlank()) return
+        if (!claimTxId(dedupeKey)) return
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_KACHAT_NAME, name?.takeIf { it.isNotBlank() } ?: "")
+            putExtra(EXTRA_OPEN_KACHAT, true)
+        }
+        val notificationId = "kachat_name:${dedupeKey ?: "$title|$text"}".hashCode()
+        val pendingIntent = PendingIntent.getActivity(
+            context, notificationId, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val soundEnabled = settings.notificationSoundEnabled.first()
+        val vibrationEnabled = settings.notificationVibrationEnabled.first()
+        val notification = NotificationCompat.Builder(context, channelFor(soundEnabled, vibrationEnabled))
+            .setSmallIcon(R.drawable.ic_kachat_logo)
+            .setContentTitle(withoutBidiControls(title))
+            .setContentText(withoutBidiControls(text))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(withoutBidiControls(text)))
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setSilent(!soundEnabled && !vibrationEnabled)
+            .setVibrate(if (vibrationEnabled) longArrayOf(0, 250, 250, 250) else longArrayOf(0))
+            .apply { if (!soundEnabled) setSound(null) }
+            .build()
+        try {
+            NotificationManagerCompat.from(context).notify(notificationId, notification)
+        } catch (_: SecurityException) {}
+    }
+
+    /** The extras that name a notification's transaction ([isShowing]). */
+    private fun txIdExtras(txId: String?): android.os.Bundle =
+        android.os.Bundle().apply { txId?.takeIf { it.isNotBlank() }?.let { putString(EXTRA_TX_ID, it) } }
 
     /**
      * Per-group opt-in notification for a new `gcomm` message — see [EXTRA_GROUP_ID]/GroupRepository.
@@ -413,6 +498,7 @@ class NotificationHelper @Inject constructor(
         if (activeGroupId.value == groupId) return // already looking at this group's thread
         if (!settings.notificationsEnabled.first()) return
         if (!claimTxId(dedupeTxId)) return // the other delivery path (scan/sync vs push) got here first
+        if (isShowing(dedupeTxId)) return // its push is in the shade already (iOS 428a797b)
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -436,9 +522,10 @@ class NotificationHelper @Inject constructor(
         val channelId = channelFor(soundEnabled, vibrationEnabled)
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_kachat_logo)
-            .setContentTitle(title)
-            .setContentText(text)
-            .setSubText(subtitle)
+            .setContentTitle(withoutBidiControls(title))
+            .setContentText(withoutBidiControls(text))
+            .setSubText(subtitle?.let { withoutBidiControls(it) })
+            .addExtras(txIdExtras(dedupeTxId))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -488,7 +575,7 @@ class NotificationHelper @Inject constructor(
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_kachat_logo)
             .setContentTitle(context.getString(R.string.new_message_request))
-            .setContentText(context.getString(R.string.group_invite_notification, inviteBannerGroupName(groupName)))
+            .setContentText(withoutBidiControls(context.getString(R.string.group_invite_notification, inviteBannerGroupName(groupName))))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -586,12 +673,32 @@ class NotificationHelper @Inject constructor(
             return updated - updated.entries.sortedBy { it.value }.take(excess).map { it.key }.toSet()
         }
 
-        const val CHANNEL_ID = "kachat_messages_sound_vibrate"
+        /** How old a message the app finds itself may be and still get a banner while the app is
+         *  open: older is catch-up, not news (iOS 428a797b `InAppBanner.maxAgeMs`). */
+        const val IN_APP_BANNER_MAX_AGE_MS = 3 * 60 * 1000L
+
+        /** The transaction a notification this app drew is about ([isShowing]). */
+        const val EXTRA_TX_ID = "kachat_tx_id"
+
+        /** What the push service titles a Received KAS push, and how its text gives the amount
+         *  (kasia-indexer `handle_funds_event`: "Funds received", "Received 1.5 KAS"). */
+        private const val RECEIVED_PUSH_TITLE = "Funds received"
+        private val RECEIVED_AMOUNT = Regex("""Received\s+([0-9][0-9,]*(?:\.[0-9]+)?)\s""")
+
+        /** A banner's text without bidi embeddings, overrides and isolates (iOS 428a797b
+         *  NotificationService `withoutBidiControls`): a sender's name or text can't reorder what
+         *  the lock screen shows. The plain marks stay. */
+        internal fun withoutBidiControls(text: String): String =
+            com.kachat.app.util.KaPostsMarkdown.strippingBidiControls(text)
+
         const val EXTRA_CONTACT_ID = "contact_id"
         const val EXTRA_GROUP_ID = "group_id"
-        /** A `.kachat` name notification an older build posted: its tap lands on Chats now (the
-         *  .kachat market left the app, iOS d54ea87). */
+        /** A `.kachat` name notification (a local renewal reminder, or a `name_event` push): its
+         *  tap opens that name on .kachat. */
         const val EXTRA_KACHAT_NAME = "kachat_name"
+        /** With [EXTRA_KACHAT_NAME] on a name push: .kachat opens even when the push names no
+         *  name (iOS 428a797b: a tapped name push opens .kachat). */
+        const val EXTRA_OPEN_KACHAT = "open_kachat"
 
         /** Set instead of [EXTRA_GROUP_ID] when the notification has no resolvable local group —
          *  the tap opens the Chats list rather than a `group_chat/<id>` route that would resolve
@@ -608,6 +715,9 @@ class NotificationHelper @Inject constructor(
         /** The chatting address (iOS 56b75c8): its receipt always names the address, so the tap
          *  opens its History; as a fallback it lands where a spending receipt does. */
         const val KIND_CHATTING = "chatting"
+        /** A Cold Storage address (iOS 428a797b `kindKey` "cold"): it has no history here, so the
+         *  tap opens Wallet. */
+        const val KIND_COLD = "cold"
         /** The single own address an address-activity notification is about; its tap opens
          *  that address's History (iOS 13046ad). Absent for a receipt across several addresses. */
         const val EXTRA_WALLET_ACTIVITY_ADDRESS = "wallet_activity_address"

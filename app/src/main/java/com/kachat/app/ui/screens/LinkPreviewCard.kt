@@ -722,6 +722,14 @@ private fun LinkPreviewCardContent(data: LinkPreviewData, url: String, txId: Str
                         .data(data.imageUrl)
                         .addHeader("User-Agent", LinkPreviewService.BROWSER_USER_AGENT)
                         .apply { if (LinkPreviewService.isSameSite(data.imageUrl, data.url)) addHeader("Referer", data.url) }
+                        // a KaPost card's image: every redirect held to the same allow-list (iOS)
+                        .apply {
+                            if (com.kachat.app.services.KaPostLinkPreviewPolicy.isMarkedForPreview(data.url)) {
+                                tag(LinkPreviewService.RedirectGate::class.java, LinkPreviewService.RedirectGate { next ->
+                                    com.kachat.app.services.KaPostLinkPreviewPolicy.allowsImage(next, data.url)
+                                })
+                            }
+                        }
                         .crossfade(true)
                         .build()
                 }
@@ -850,10 +858,8 @@ object KaChatLink {
      *  preview in every chat app, which a bare kachat:// line does nowhere. */
     const val WEB_HOST = "kachat.app"
 
-    fun profileUrl(address: String) = "kachat://profile/$address"
-    /** A KaPost post's links (iOS 148a5331 `KaChatInternalLink.kaPost`): the in-app form, and the
-     *  kachat.app form a share writes. */
-    fun kaPostUrl(txId: String) = "kachat://kapost/$txId"
+    /** A KaPost post's link (iOS 148a5331 `KaChatInternalLink.kaPost`): the kachat.app form a
+     *  share writes. */
     fun kaPostWebUrl(txId: String) = "https://$WEB_HOST/post/$txId"
     /** The one builder both share buttons use - your own Profile and anyone's User Info - so the
      *  two links cannot drift apart: kachat.app/u/<address>, trimmed and lowercased (iOS 44d5fa4). */

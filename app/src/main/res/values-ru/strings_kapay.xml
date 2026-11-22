@@ -54,6 +54,7 @@
     <string name="kp_buy_kusdt">Купить kUSDT</string>
     <string name="kp_cancel_77dfd">Отмена</string>
     <string name="kp_check_address_history_before_trying_again">Проверьте историю адреса, прежде чем пробовать снова.</string>
+    <string name="kp_trade_may_have_gone_through">Сделка могла пройти.</string>
     <string name="kp_checking_address_lld_5b84c">Проверка адреса #%1$s</string>
     <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">Проверяет первую тысячу адресов, даже если среди них есть пустые, и продолжает, пока находит новые.</string>
     <string name="kp_close_and_keep_scanning_b66cc">Закрыть и продолжить сканирование</string>

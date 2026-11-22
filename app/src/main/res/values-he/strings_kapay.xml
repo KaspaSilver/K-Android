@@ -54,6 +54,7 @@
     <string name="kp_buy_kusdt">קניית kUSDT</string>
     <string name="kp_cancel_77dfd">ביטול</string>
     <string name="kp_check_address_history_before_trying_again">בדקו את היסטוריית הכתובת לפני שתנסו שוב.</string>
+    <string name="kp_trade_may_have_gone_through">ייתכן שהעסקה בוצעה.</string>
     <string name="kp_checking_address_lld_5b84c">בודק כתובת #%1$s</string>
     <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">בודק את אלף הכתובות הראשונות גם אם יש ביניהן כתובות ריקות, ואז ממשיך כל עוד הוא ממשיך למצוא.</string>
     <string name="kp_close_and_keep_scanning_b66cc">סגירה והמשך סריקה</string>

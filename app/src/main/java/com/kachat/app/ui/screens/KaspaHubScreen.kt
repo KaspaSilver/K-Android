@@ -32,10 +32,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -65,7 +71,17 @@ import com.kachat.app.ui.theme.LocalAppColors
  * The Kaspa Hub tab (iOS 148a5331 `KaspaHubView`): a grid of everything that isn't in the dock,
  * and the section picked from it. The section owns the whole screen, exactly as it looks from its
  * own dock slot ([content] draws the same screen the dock would). Tapping the Kaspa Hub tab again
- * goes back to the grid ([HubRouter.close]); so does the system Back, before anything else.
+ * goes back to the grid ([HubRouter.close]); so does the system Back, after the section's own.
+ *
+ * A section opened here stays alive, hidden, once left (iOS 428a797b `keptSections`, audit
+ * 2026-11-21 #28): KaPost, Portfolio, KaPlay, .kachat, Stats and Cold Storage come back exactly
+ * as they were - feed, scroll position, the page inside them - instead of loading again
+ * ([KEPT_ALIVE]). The others (Chats, Wallet, Contacts, Settings, Kaspa Websites) still close when
+ * left: an open chat marks itself read until it leaves, and a web page would keep playing. A
+ * hidden section is composed but neither measured, drawn nor touchable, its Back handlers are
+ * parked, and [LocalHubSectionHidden] tells what runs inside it ([OnScreenPresence]). Kept
+ * sections live as long as this screen does; their saved state outlives it (a dock tab switch
+ * disposes the Hub's route), so one opened again after that still comes back where it was left.
  *
  * [badgeCount] is what the dock would show on a tab, so moving one here never hides its badge.
  */
@@ -78,24 +94,157 @@ fun KaspaHubScreen(
     val openSection by HubRouter.openSection.collectAsState()
     val open = openSection?.takeIf { it in hub }
 
-    // a section moved into the dock meanwhile must not stay open here too
+    // Sections opened since the Hub came up that stay alive (hidden) once left, in the order they
+    // were first opened (iOS `keptSections`).
+    var keptSections by remember { mutableStateOf<List<AppTab>>(emptyList()) }
+    // Each kept section's remembered-and-saved state (scroll positions, a page open inside it),
+    // under its own key, so it never carries into another section.
+    val sectionStates = rememberSaveableStateHolder()
+
+    // a section moved into the dock meanwhile must not stay open (or kept) here too
     LaunchedEffect(hub, openSection) {
         val section = openSection
         if (section != null && section !in hub) HubRouter.close()
+        val gone = keptSections.filter { it !in hub }
+        if (gone.isNotEmpty()) {
+            keptSections = keptSections - gone.toSet()
+            gone.forEach { sectionStates.removeState(it.key) }
+        }
+    }
+    // Opened: kept from now on (iOS `keep`).
+    LaunchedEffect(open) {
+        if (open != null && open in KEPT_ALIVE && open !in keptSections) keptSections = keptSections + open
+    }
+    // Short of memory: the hidden sections go; they load again when next opened (iOS
+    // didReceiveMemoryWarning).
+    val context = LocalContext.current
+    val latestOpen by rememberUpdatedState(open)
+    DisposableEffect(context) {
+        val callbacks = object : android.content.ComponentCallbacks2 {
+            fun dropHidden() {
+                val keep = latestOpen
+                val dropped = keptSections.filter { it != keep }
+                if (dropped.isEmpty()) return
+                keptSections = keptSections.filter { it == keep }
+                dropped.forEach { sectionStates.removeState(it.key) }
+            }
+            @Suppress("DEPRECATION")
+            override fun onTrimMemory(level: Int) {
+                if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW &&
+                    level != android.content.ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
+                ) dropHidden()
+            }
+            override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {}
+            @Suppress("OVERRIDE_DEPRECATION")
+            override fun onLowMemory() = dropHidden()
+        }
+        val app = context.applicationContext
+        app.registerComponentCallbacks(callbacks)
+        onDispose { app.unregisterComponentCallbacks(callbacks) }
     }
 
-    if (open != null) {
-        // Registered before the section, so a section's own BackHandler (a sheet, a page inside
-        // it) still comes first.
-        BackHandler { HubRouter.close() }
-        CompositionLocalProvider(LocalInHubSection provides true) {
-            // keyed, so one section's remembered state never carries into the next
-            androidx.compose.runtime.key(open) { content(open) }
+    // The kept sections to draw. The one being opened is in the list from its first frame, before
+    // the effect above stores it, so its place (and state) never changes between the two.
+    val alive = if (open != null && open in KEPT_ALIVE && open !in keptSections) keptSections + open else keptSections
+
+    // Registered once, before any section, so a section's own BackHandler (a sheet, a page inside
+    // it) still comes first - a kept section's are registered again each time it shows.
+    BackHandler(enabled = open != null) { HubRouter.close() }
+
+    Box(Modifier.fillMaxSize()) {
+        Box(Modifier.hubLayerHidden(open != null)) {
+            HubSectionPresence(hidden = open != null) {
+                KaspaHubGrid(hub = hub, badgeCount = badgeCount, onOpen = { HubRouter.open(it) })
+            }
         }
-    } else {
-        KaspaHubGrid(hub = hub, badgeCount = badgeCount, onOpen = { HubRouter.open(it) })
+        for (tab in alive) {
+            // keyed, so one section's remembered state never carries into the next
+            androidx.compose.runtime.key(tab) {
+                val hidden = tab != open
+                Box(Modifier.hubLayerHidden(hidden)) {
+                    sectionStates.SaveableStateProvider(tab.key) {
+                        HubSectionPresence(hidden = hidden) {
+                            CompositionLocalProvider(LocalInHubSection provides true) { content(tab) }
+                        }
+                    }
+                }
+            }
+        }
+        if (open != null && open !in KEPT_ALIVE) {
+            androidx.compose.runtime.key(open) {
+                CompositionLocalProvider(LocalInHubSection provides true) { content(open) }
+            }
+        }
     }
 }
+
+/**
+ * The sections kept alive when left (iOS `KaspaHubView.keptAlive`). Each was checked for what it
+ * does while on screen: KaPost's feed pages only while it shows ([KaPostsDock.onScreen]), KaPlay's
+ * pages are the shell's own routes, and the rest load once and refresh on a pull.
+ */
+private val KEPT_ALIVE: Set<AppTab> = setOf(
+    AppTab.KAPOSTS, AppTab.PORTFOLIO, AppTab.GAMES, AppTab.KACHAT_NAMES, AppTab.KACHAT_STATS, AppTab.COLD_STORAGE,
+)
+
+/**
+ * True inside a Kaspa Hub section that is kept alive but hidden (another section or the grid is
+ * showing; iOS `hubSectionHidden`). Such a section stays composed, so anything that should run
+ * only while it shows reads this, usually through [OnScreenPresence].
+ */
+val LocalHubSectionHidden = androidx.compose.runtime.compositionLocalOf { false }
+
+/**
+ * [appear] while the caller is composed and its Kaspa Hub section shows, [disappear] when either
+ * stops (iOS `onScreenPresence(appear:disappear:)`): a kept-alive, hidden section counts as gone.
+ * Always in pairs, never twice in a row. Use it, not a bare DisposableEffect, for a timer or poll
+ * in anything a Hub section can show.
+ */
+@Composable
+fun OnScreenPresence(appear: () -> Unit, disappear: () -> Unit) {
+    val hidden = LocalHubSectionHidden.current
+    val currentAppear by rememberUpdatedState(appear)
+    val currentDisappear by rememberUpdatedState(disappear)
+    DisposableEffect(hidden) {
+        if (!hidden) currentAppear()
+        onDispose { if (!hidden) currentDisappear() }
+    }
+}
+
+/**
+ * A Hub layer's hidden flag for what is inside it, and its Back handlers parked while it is hidden:
+ * a [BackHandler] registers with the dispatcher it is given, so a hidden section's (a page open in
+ * Cold Storage, a sheet) never takes the system Back from the one showing, and comes back on top
+ * of the Hub's own when the section shows again.
+ */
+@Composable
+private fun HubSectionPresence(hidden: Boolean, content: @Composable () -> Unit) {
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    val parked = remember(lifecycleOwner) {
+        object : androidx.activity.OnBackPressedDispatcherOwner {
+            override val onBackPressedDispatcher = androidx.activity.OnBackPressedDispatcher()
+            override val lifecycle: androidx.lifecycle.Lifecycle get() = lifecycleOwner.lifecycle
+        }
+    }
+    val real = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current ?: parked
+    // One call either way: a second call site would start the section over on every switch.
+    CompositionLocalProvider(
+        LocalHubSectionHidden provides hidden,
+        androidx.activity.compose.LocalOnBackPressedDispatcherOwner provides (if (hidden) parked else real),
+    ) { content() }
+}
+
+/**
+ * A Hub layer that is kept but not showing (iOS `hubLayerHidden`): composed, but neither measured
+ * nor placed, so it draws nothing, takes no touch and is left out of what TalkBack reads. Shown,
+ * it fills the Hub.
+ */
+private fun Modifier.hubLayerHidden(hidden: Boolean): Modifier =
+    if (hidden) {
+        this.layout { _, _ -> layout(0, 0) {} }
+    } else {
+        this.fillMaxSize()
+    }
 
 @Composable
 private fun KaspaHubGrid(

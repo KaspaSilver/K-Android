@@ -52,6 +52,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.PlayArrow
@@ -205,13 +206,11 @@ internal fun ChessAvatar(address: String, contacts: Map<String, ContactEntity>, 
     )
 }
 
-/** Holds the arena scan for as long as the calling screen is composed. */
+/** Holds the arena scan for as long as the calling screen is on screen: composed, and not inside
+ *  a Kaspa Hub section kept alive but hidden (iOS 428a797b `onScreenPresence`). */
 @Composable
 internal fun HoldArena(service: ChessTournamentService) {
-    DisposableEffect(Unit) {
-        service.acquire()
-        onDispose { service.release() }
-    }
+    com.kachat.app.ui.screens.OnScreenPresence(appear = { service.acquire() }, disappear = { service.release() })
 }
 
 /**
@@ -411,8 +410,8 @@ fun ChessTournamentsScreen(mode: ChessLobbyMode, navController: NavController, o
     ) { padding ->
         // The same tab bar and swipe the Chats screen uses, so a tab is a tab wherever it
         // appears in the app (iOS 353f040).
-        // Both screens: play, Active (watch-only), Finished. The leaderboards have a tab of their
-        // own in the dock (ChessLeaderboardTabScreen).
+        // Both screens: play, Active (watch-only), Finished. The leaderboards have a page of their
+        // own inside Chess (ChessLeaderboardScreen, iOS 428a797b).
         val tabs = listOf(ChessText.string(mode.label), ChessText.string("Active"), ChessText.string("Finished"))
         val pagerState = androidx.compose.foundation.pager.rememberPagerState { tabs.size }
         val tabScope = rememberCoroutineScope()
@@ -739,7 +738,8 @@ private fun ChessFinishedGames(mode: ChessLobbyMode, navController: NavControlle
     val duel = mode == ChessLobbyMode.DUEL
     val now = arenaNow(service)
     val finished by service.finishedTournaments.collectAsState()
-    val done = finished.filter { it.isDuel == duel && it.isPublic }.take(100)
+    // Remembered: the arena clock recomposes this screen every second.
+    val done = remember(finished, duel) { finished.filter { it.isDuel == duel && it.isPublic }.take(100) }
     val serverDown by service.arenaServerDown.collectAsState()
 
     @Composable
@@ -1444,7 +1444,8 @@ internal fun middleEllipsis(text: String, max: Int): String {
 
 /**
  * Play > Chess: choose your game. 1v1 or a tournament, each its own screen, or the bots
- * ([ChessBotsScreen]). A room the player is already waiting or playing in is offered first.
+ * ([ChessBotsScreen]), and the leaderboards under them ([ChessLeaderboardScreen], iOS 428a797b).
+ * A room the player is already waiting or playing in is offered first.
  * Mirrors iOS's ChessHomeView.
  */
 @Composable
@@ -1554,6 +1555,13 @@ fun ChessHomeScreen(navController: NavController) {
                 title = ChessText.string("Bots"),
                 detail = ChessText.string("Five bots, level 1 to 5, from Kaspa Silver to Yonatan Sompolinsky. Beat one to unlock the next. The result goes on Kaspa."),
             ) { navController.navigate("chess_bots") }
+            // The leaderboards, under the games (iOS 428a797b; owner's call 2026-11-22: no longer
+            // a Kaspa Hub tile of their own). iOS list.number.
+            ChessGameCard(
+                icon = Icons.Default.FormatListNumbered,
+                title = ChessText.string("Leaderboard"),
+                detail = ChessText.string("Who's on top in 1v1 and tournaments, this month or all time, and against each bot."),
+            ) { navController.navigate(KaPlayRoutes.LEADERBOARDS) }
         }
     }
 }
@@ -1615,7 +1623,7 @@ internal fun ChessHomeBar(
     }
 }
 
-/** The backup strip a tab's first screen shows above its title (GamesScreen and ChessLeaderboardScreen provide it). */
+/** The backup strip a tab's first screen shows above its title (GamesScreen provides it). */
 val LocalBackupBanner = androidx.compose.runtime.staticCompositionLocalOf<@Composable () -> Unit> { {} }
 
 /** iOS `.largeTitle.weight(.bold)`, one line, shrinking to 0.6 of it (minimumScaleFactor), then a
@@ -1690,13 +1698,6 @@ internal fun ChessGameCard(
     }
 }
 
-/**
- * The waiting room: covers the app from the moment a player joins a public 1v1 or tournament
- * room - or creates or joins a private one - until it fills, their seat runs out, or they
- * leave. Nothing else is reachable meanwhile: searching for players is the one thing happening.
- * Their avatar, a question mark for every empty seat, the time the seat is held for, the
- * private code to share, and Leave behind a warning. Mirrors iOS's ChessWaitingRoomView.
- */
 /** Why the waiting room closed without a game, for the note the lobby shows (iOS 077d777
  *  `ChessWaitingRoomView.Exit`). */
 private enum class ChessWaitingRoomExit {
@@ -1709,6 +1710,13 @@ private enum class ChessWaitingRoomExit {
     JOIN_NOT_LANDED,
 }
 
+/**
+ * The waiting room: covers the app from the moment a player joins a public 1v1 or tournament
+ * room - or creates or joins a private one - until it fills, their seat runs out, or they
+ * leave. Nothing else is reachable meanwhile: searching for players is the one thing happening.
+ * Their avatar, a question mark for every empty seat, the time the seat is held for, the
+ * private code to share, and Leave behind a warning. Mirrors iOS's ChessWaitingRoomView.
+ */
 @Composable
 private fun ChessWaitingRoom(
     tournamentId: String,

@@ -37,8 +37,4 @@ interface PortfolioDefinitionDao {
 
     @Query("SELECT * FROM portfolios WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): PortfolioEntity?
-
-    /** Every portfolio id another wallet on this device holds - the Nextcloud merge never moves those. */
-    @Query("SELECT id FROM portfolios WHERE walletAddress != :walletAddress AND walletAddress != ''")
-    suspend fun idsOfOtherWallets(walletAddress: String): List<String>
 }

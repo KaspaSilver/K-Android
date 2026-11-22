@@ -383,6 +383,9 @@ class PortfolioViewModel @Inject constructor(
     private var retryBackoffMillis = INITIAL_RETRY_BACKOFF_MILLIS
 
     init {
+        // Portfolio is open: its wallet-load price backfill may start (iOS 428a797b: made on
+        // first open, never at launch).
+        repository.markPortfolioOpened()
         // Non-forced: paints the persisted price/history instantly and only hits the network for
         // what's actually stale. Every screen that instantiates its own PortfolioViewModel (Send,
         // Cold Storage, Portfolio tab...) runs this init, and the forced variant's cache-bypassing
@@ -402,13 +405,6 @@ class PortfolioViewModel @Inject constructor(
         }
     }
 
-    /**
-     * [force] (the default — pull-to-refresh and currency changes) bypasses every cache; the
-     * init-time call passes false so fresh persisted data short-circuits the network entirely.
-     * Either way the persisted last-known price paints first, so a failed or throttled fetch
-     * degrades to a slightly stale number instead of a blank dash, and any failure schedules a
-     * deferred retry via [scheduleRetry] rather than parking forever.
-     */
     /**
      * Portfolio's eye button: every amount on that screen reads as dots, the KAS price and the
      * percentages aside. Persisted, so a hidden portfolio stays hidden across launches.
@@ -444,6 +440,13 @@ class PortfolioViewModel @Inject constructor(
         }
     }
 
+    /**
+     * [force] (the default — pull-to-refresh and currency changes) bypasses every cache; the
+     * init-time call passes false so fresh persisted data short-circuits the network entirely.
+     * Either way the persisted last-known price paints first, so a failed or throttled fetch
+     * degrades to a slightly stale number instead of a blank dash, and any failure schedules a
+     * deferred retry via [scheduleRetry] rather than parking forever.
+     */
     fun refreshPrice(force: Boolean = true) {
         retryJob?.cancel()
         val currencyCode = currency.value
@@ -584,7 +587,6 @@ class PortfolioViewModel @Inject constructor(
     /** The currency the in-flight (or last) 7-day refresh was for - a switch supersedes it. */
     private var lastSevenDayCurrency: String? = null
 
-    /** Switches the price chart's window (1/7/30 days) and refetches history for it. */
     /** Days since 1 January, at least two (so a chart has a line to draw on New Year's Day, and
      *  YTD never lands on 1D) - the YTD button's range, computed at the moment it is used rather
      *  than stored, so it is right after midnight (iOS 20be932, `yearToDateDays`). */
@@ -602,6 +604,7 @@ class PortfolioViewModel @Inject constructor(
         return days.coerceAtLeast(2)
     }
 
+    /** Switches the price chart's window (1/7/30 days) and refetches history for it. */
     fun setPriceRangeDays(days: Int) {
         if (_priceRangeDays.value == days) return
         _priceRangeDays.value = days
@@ -611,25 +614,6 @@ class PortfolioViewModel @Inject constructor(
         if (_chartFlipped.value) loadAlternateChart()
     }
 
-    /**
-     * Serves [days] from [priceHistoryCache] if already fetched this session, then from the
-     * persisted 10-minute cache (surviving relaunches — see
-     * [PortfolioRepository.readPersistedPriceHistory]), before hitting the network — cancelling
-     * any still-in-flight fetch first (rapidly tapping the range cycle otherwise fires
-     * overlapping requests — see [priceHistoryCache]'s doc comment for why that's a real problem,
-     * not just wasteful). [force] (explicit refresh, see [refreshPrice]) skips both caches.
-     *
-     * An empty network result gets one paced retry (on top of the Retry-After-honoring retry
-     * inside [PortfolioRepository.getPriceHistory] itself), then falls back to the persisted copy
-     * for this range even if stale — a rate-limited fetch was previously either wiping out the
-     * whole chart card (it only renders when `priceHistory.size >= 2`) or getting stuck silently
-     * showing a stale *range* forever (every range's fetch coming back empty left the first
-     * loaded range's ~1-day curve on screen no matter which range was selected) — both confirmed
-     * via on-device repro; a stale curve for the *requested* range beats either. Only if there's
-     * nothing at all is [_priceHistory] left alone, preserving whatever chart is on screen
-     * instead of blanking it, and the range simply retried on its next selection since nothing
-     * was cached.
-     */
     /**
      * Which fetch a range is served from. Seven buttons, three requests: a day of 5-minute
      * points, 90 days hourly (1W, 1M and 3M are cuts of it), 365 days daily (YTD and 1Y), and
@@ -654,6 +638,25 @@ class PortfolioViewModel @Inject constructor(
         return if (cut.size >= 2) cut else base
     }
 
+    /**
+     * Serves [days] from [priceHistoryCache] if already fetched this session, then from the
+     * persisted 10-minute cache (surviving relaunches — see
+     * [PortfolioRepository.readPersistedPriceHistory]), before hitting the network — cancelling
+     * any still-in-flight fetch first (rapidly tapping the range cycle otherwise fires
+     * overlapping requests — see [priceHistoryCache]'s doc comment for why that's a real problem,
+     * not just wasteful). [force] (explicit refresh, see [refreshPrice]) skips both caches.
+     *
+     * An empty network result gets one paced retry (on top of the Retry-After-honoring retry
+     * inside [PortfolioRepository.getPriceHistory] itself), then falls back to the persisted copy
+     * for this range even if stale — a rate-limited fetch was previously either wiping out the
+     * whole chart card (it only renders when `priceHistory.size >= 2`) or getting stuck silently
+     * showing a stale *range* forever (every range's fetch coming back empty left the first
+     * loaded range's ~1-day curve on screen no matter which range was selected) — both confirmed
+     * via on-device repro; a stale curve for the *requested* range beats either. Only if there's
+     * nothing at all is [_priceHistory] left alone, preserving whatever chart is on screen
+     * instead of blanking it, and the range simply retried on its next selection since nothing
+     * was cached.
+     */
     private fun fetchPriceHistory(days: Int, force: Boolean = false) {
         val currencyCode = currency.value
         val baseDays = baseDaysFor(days)
@@ -720,10 +723,6 @@ class PortfolioViewModel @Inject constructor(
             )
         }
     }
-
-    /** True when this on-chain transaction is already recorded in [portfolioId]. */
-    fun isTransactionInPortfolio(txId: String, portfolioId: String): Boolean =
-        portfolioIdsContaining(txId).contains(portfolioId)
 
     /**
      * Which portfolios already hold a row for this source.
@@ -849,12 +848,6 @@ class PortfolioViewModel @Inject constructor(
             if (((a xor b) and (a xor difference)) < 0) return if (b < 0) Long.MAX_VALUE else Long.MIN_VALUE
             return difference
         }
-
-        /**
-         * The key a ChangeNOW swap is recorded under. Namespaced so it can never collide with a
-         * Kaspa txid.
-         */
-        fun swapSourceTxId(swapId: String) = "changenow:$swapId"
 
         /** First deferred-retry wait for a plain (non-throttled) failure — offline, DNS, 5xx with no Retry-After. */
         private const val INITIAL_RETRY_BACKOFF_MILLIS = 15_000L
@@ -1012,12 +1005,6 @@ class PortfolioViewModel @Inject constructor(
         }
 
         /**
-         * Real today-only $ and % change (not all-time P&L) for the portfolio picker header's
-         * cards — the latest value-history sample minus whichever sample is closest to (but not
-         * after) 24h before it. `null` when no sample exists that far back yet (e.g. a portfolio
-         * created today), so callers can show a neutral/no-data state instead of a wrong number.
-         */
-        /**
          * First-to-last change across a series, which for a range-scoped history IS that range's
          * move. Used by both full-chart headers so the figure beside the big number always
          * answers the range button the user just pressed, rather than always answering "24h".
@@ -1031,6 +1018,12 @@ class PortfolioViewModel @Inject constructor(
             return amount to percent
         }
 
+        /**
+         * Real today-only $ and % change (not all-time P&L) for the portfolio picker header's
+         * cards — the latest value-history sample minus whichever sample is closest to (but not
+         * after) 24h before it. `null` when no sample exists that far back yet (e.g. a portfolio
+         * created today), so callers can show a neutral/no-data state instead of a wrong number.
+         */
         internal fun computeTodayChange(valueHistory: List<Pair<Long, Double>>): Pair<Double, Double>? {
             val latest = valueHistory.lastOrNull() ?: return null
             val dayAgoMillis = latest.first - 86_400_000L

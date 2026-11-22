@@ -639,15 +639,6 @@ class NextcloudService @Inject constructor(
         _autoBackupEnabled.value = enabled
     }
 
-    /** Reads [walletAddress]'s persisted Automatic Sync toggle straight from storage, without
-     *  waiting for the active-wallet state swap — the timing-independent read the
-     *  reconciliation the sync service uses at wallet activation. */
-    fun isAutoBackupEnabledFor(walletAddress: String): Boolean {
-        val suffix = walletHashSuffix(walletAddress)
-        val connected = prefs.contains(scopedKey(PREF_SERVER, suffix)) && prefs.contains(scopedKey(PREF_APP_PASSWORD, suffix))
-        return resolveAutoBackupEnabled(suffix, connected)
-    }
-
     private fun basicAuth(account: NextcloudAccount): String =
         "Basic " + android.util.Base64.encodeToString(
             "${account.username}:${account.appPassword}".toByteArray(Charsets.UTF_8),

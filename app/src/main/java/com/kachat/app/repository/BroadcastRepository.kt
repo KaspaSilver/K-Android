@@ -288,8 +288,7 @@ class BroadcastRepository @Inject constructor(
     /**
      * What the Public Chats list shows for one room: its newest message and how many messages
      * from other people are newer than the read marker. [lastMessage] is null for a room with
-     * nothing in it yet. Counting stops at the bounded window it looks at, which is far more
-     * than a badge ever needs to say.
+     * nothing in it yet.
      */
     data class RoomSummary(
         val lastMessage: BroadcastMessageEntity?,
@@ -302,24 +301,44 @@ class BroadcastRepository @Inject constructor(
      * means the room has no marker yet, so nothing in it counts as unread.
      */
     fun roomSummary(channelName: String, myAddress: String?, lastReadMs: Long?): Flow<RoomSummary> {
-        return combine(
-            database.broadcastDao().getLatestMessagesForChannel(channelName, SUMMARY_WINDOW),
-            getHiddenSenders(),
-        ) { newestFirst, hidden ->
-            val hiddenHere = hiddenAddressesIn(channelName, hidden)
-            val readable = newestFirst.filterNot {
-                it.senderAddress in hiddenHere || MessageReaction.parseOrNull(it.content) != null ||
-                    com.kachat.app.util.MessageEdit.parseOrNull(it.content) != null
+        // Every write to the room table re-runs each joined room's summary, so it is read in SQL
+        // (audit H4): the newest plain row and the plain unread count there, and only the rows
+        // that may be reactions, edits or voice-note parts come back to be parsed.
+        val dao = database.broadcastDao()
+        val network = networkSenderPattern()
+        // No account: nothing is "mine" (a null would make every SQL comparison false).
+        val me = myAddress ?: ""
+        return getHiddenSenders()
+            .map { hiddenAddressesIn(channelName, it).toList() }
+            .distinctUntilChanged()
+            .flatMapLatest { hidden ->
+                val lastMessage = dao.summaryNewestPlain(channelName, network, me, hidden)
+                    .distinctUntilChanged()
+                    .flatMapLatest { plain ->
+                        dao.summaryMarkedAfter(channelName, network, me, hidden, plain?.blockTimestamp ?: Long.MIN_VALUE, SUMMARY_MARKED_LIMIT)
+                            .map { marked -> marked.firstOrNull { isReadableContent(it.content) } ?: plain }
+                    }
+                val unread = if (lastReadMs == null) flowOf(0) else combine(
+                    dao.summaryUnreadPlainCount(channelName, network, me, hidden, lastReadMs),
+                    dao.summaryUnreadMarked(channelName, network, me, hidden, lastReadMs),
+                ) { plainCount, marked ->
+                    // A long voice note's parts count once (iOS 1b15521 `unreadCount`).
+                    val seenNotes = HashSet<String>()
+                    plainCount + marked.count {
+                        isReadableContent(it.content) &&
+                            (com.kachat.app.util.BroadcastVoiceParts.noteKey(it)?.let { note -> seenNotes.add(note) } ?: true)
+                    }
+                }
+                combine(lastMessage, unread) { last, count -> RoomSummary(lastMessage = last, unreadCount = count) }
             }
-            // A long voice note's parts count once (iOS 1b15521 `unreadCount`).
-            val seenNotes = HashSet<String>()
-            val unread = if (lastReadMs == null) 0 else readable.count {
-                it.blockTimestamp > lastReadMs && it.senderAddress != myAddress &&
-                    (com.kachat.app.util.BroadcastVoiceParts.noteKey(it)?.let { note -> seenNotes.add(note) } ?: true)
-            }
-            RoomSummary(lastMessage = readable.firstOrNull(), unreadCount = unread)
-        }.flowOn(Dispatchers.Default)
+            .distinctUntilChanged()
+            .flowOn(Dispatchers.Default)
     }
+
+    /** The SQL LIKE pattern for the running network's senders, "kaspa:%" or "kaspatest:%": the
+     *  room table holds both networks' rows, and every room read keeps to the running one
+     *  (audit M2; iOS keeps one store per wallet address, so per network). */
+    fun networkSenderPattern(): String = "${com.kachat.app.util.KaspaNetwork.hrp}:%"
 
     /** A room's newest [ROOM_WINDOW_SIZE] rows (widened by "Load earlier messages"), and whether
      *  the read filled the window — which is the only way to know there is more behind it. */
@@ -333,6 +352,10 @@ class BroadcastRepository @Inject constructor(
         /** Each hidden part's anchor id: a reply or reaction aimed at a hidden part (another
          *  client that shows parts one by one) goes to the note's bubble (iOS 369794e). */
         val anchorIdByPartId: Map<String, String> = emptyMap(),
+        /** The window's messages by id (not the arena's), long voice notes' hidden parts
+         *  included: what a reply quotes is drawn from the message itself, never from the sender
+         *  and text the reply claims (iOS audit 2026-11-21 #18 `message(id:inChannel:)`). */
+        val byId: Map<String, BroadcastMessageEntity> = emptyMap(),
     )
 
     /** Never includes messages from a sender hidden IN THIS ROOM (or via a legacy every-room hide) — including ones already cached from before the hide (see BroadcastScanningService for the future-side enforcement). Reaction messages (see [getReactions]) never render as a message row, so they're filtered out here too. */
@@ -349,14 +372,15 @@ class BroadcastRepository @Inject constructor(
      * counting the rendered ones would call a full window exhausted.
      */
     fun getMessageWindow(channelName: String, limit: Int?): Flow<RoomWindow> {
+        val network = networkSenderPattern()
         val rows = if (limit == null) {
-            database.broadcastDao().getMessagesForChannel(channelName)
+            database.broadcastDao().getMessagesForChannel(channelName, network)
         } else {
             // DESC + LIMIT takes the NEWEST n off the (channelName, blockTimestamp) index; the
             // screen wants them oldest-first, as the unwindowed query already returns them.
-            database.broadcastDao().getLatestMessagesForChannel(channelName, limit).map { it.asReversed() }
+            database.broadcastDao().getLatestMessagesForChannel(channelName, network, limit).map { it.asReversed() }
         }
-        return combine(rows, getHiddenSenders()) { messages, hidden ->
+        return combine(rows, getHiddenSenders(), walletManager.activeAddressFlow) { messages, hidden, me ->
             val hiddenHere = hiddenAddressesIn(channelName, hidden)
             // And never two rows with one id: the room's LazyColumn is keyed by it, and a
             // duplicate key crashes Compose (iOS d0b819f - there it left a blank gap). The table's
@@ -364,8 +388,7 @@ class BroadcastRepository @Inject constructor(
             val seen = HashSet<String>(messages.size)
             val fresh = messages.filter {
                 seen.add(it.id) &&
-                    it.senderAddress !in hiddenHere && MessageReaction.parseOrNull(it.content) == null &&
-                    com.kachat.app.util.MessageEdit.parseOrNull(it.content) == null
+                    it.senderAddress !in hiddenHere && !isOtherAccountsUnsent(it, me) && isReadableContent(it.content)
             }
             // A long voice note is one bubble at its lowest-index part; its other parts aren't drawn.
             val voiceNotes = com.kachat.app.util.BroadcastVoiceParts.group(fresh)
@@ -374,6 +397,8 @@ class BroadcastRepository @Inject constructor(
                 hasMore = limit != null && messages.size >= limit,
                 voiceNotes = voiceNotes.notesByAnchorId,
                 anchorIdByPartId = voiceNotes.anchorIdByPartId,
+                byId = if (channelName in com.kachat.app.models.FeaturedBroadcastChannels.SERVICE_CHANNELS) emptyMap()
+                else fresh.associateBy { it.id },
             )
         // The reaction/edit sniff runs over every row on every change - through a room's first
         // backfill that is once per page. Collected from the screen it ran on the main thread
@@ -400,12 +425,12 @@ class BroadcastRepository @Inject constructor(
     fun getReactions(channelName: String): Flow<List<ReactionEntity>> {
         // Only rows carrying the reaction marker are read (iOS `loadReactions` reads its own
         // store on change): the whole room, parsed, on every insert into any room was the cost.
-        val rows = database.broadcastDao().getReactionRowsForChannel(channelName).distinctUntilChanged()
-        return combine(rows, getHiddenSenders()) { messages, hidden ->
+        val rows = database.broadcastDao().getReactionRowsForChannel(channelName, networkSenderPattern()).distinctUntilChanged()
+        return combine(rows, getHiddenSenders(), walletManager.activeAddressFlow) { messages, hidden, me ->
             val hiddenHere = hiddenAddressesIn(channelName, hidden)
             val newestPerReactor = LinkedHashMap<Pair<String, String>, Pair<BroadcastMessageEntity, com.kachat.app.util.MessageReactionContent>>()
             for (row in messages) {
-                if (row.senderAddress in hiddenHere) continue
+                if (row.senderAddress in hiddenHere || isOtherAccountsUnsent(row, me)) continue
                 val parsed = MessageReaction.parseOrNull(row.content) ?: continue
                 val key = parsed.targetTxId to row.senderAddress
                 val existing = newestPerReactor[key]
@@ -445,11 +470,11 @@ class BroadcastRepository @Inject constructor(
         // they name. Room re-runs the query on any change to the table, so a target arriving
         // after its edit still lands - which is why these rows are not deduplicated (the result
         // is, below).
-        val rows = database.broadcastDao().getEditRowsForChannel(channelName)
-        return combine(rows, getHiddenSenders()) { editRows, hidden ->
+        val rows = database.broadcastDao().getEditRowsForChannel(channelName, networkSenderPattern())
+        return combine(rows, getHiddenSenders(), walletManager.activeAddressFlow) { editRows, hidden, me ->
             val hiddenHere = hiddenAddressesIn(channelName, hidden)
             val edits = editRows.mapNotNull { row ->
-                if (row.senderAddress in hiddenHere) return@mapNotNull null
+                if (row.senderAddress in hiddenHere || isOtherAccountsUnsent(row, me)) return@mapNotNull null
                 // A failed edit never reached the chain (only an older build left one, iOS ee5ec98).
                 if (row.deliveryStatus == "failed") return@mapNotNull null
                 com.kachat.app.util.MessageEdit.parseOrNull(row.content)?.let { row to it }
@@ -529,13 +554,59 @@ class BroadcastRepository @Inject constructor(
     }
 
     companion object {
-        /** How far back the Public Chats list looks in each room. A badge past this reads the
-         *  same to anyone, and it keeps a busy curated room cheap to summarise. */
-        const val SUMMARY_WINDOW = 200
+        /** How many of a room's newest reaction- or edit-looking rows the Public Chats list parses
+         *  to see whether one of them, newer than the newest plain message, is a message itself. */
+        private const val SUMMARY_MARKED_LIMIT = 50
 
         /** How much of a room the thread screen reads at once, and how much each "Load earlier
          *  messages" adds. iOS's `roomWindowSize`. */
         const val ROOM_WINDOW_SIZE = 400
+
+        /** More rows than any indexer page is asked for: the rest of an answer is ignored (iOS
+         *  `PublicChatIndexerClient.maxRowsPerPage`). */
+        private const val MAX_INDEXER_ROWS_PER_PAGE = 500
+        /** One indexer row's content, in UTF-8 bytes: twice what a transaction's payload can
+         *  carry (iOS `maxContentBytes`). */
+        private const val MAX_INDEXER_CONTENT_BYTES = 200_000
+
+        /** See [wellFormedPage] (iOS `PublicChatIndexerClient.isWellFormed`). */
+        internal fun isWellFormedIndexerRow(
+            row: com.kachat.app.services.BroadcastHistoryRow,
+            channel: String,
+            addressPrefix: String,
+            now: Long,
+        ): Boolean {
+            val txId = row.txId ?: return false
+            if (txId.length != 64 || !txId.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) return false
+            val sender = row.senderAddress ?: return false
+            if (!sender.startsWith(addressPrefix) || !com.kachat.app.util.KaspaAddress.isValid(sender)) return false
+            val content = row.content ?: return false
+            val bytes = utf8Length(content)
+            if (bytes <= 0 || bytes > MAX_INDEXER_CONTENT_BYTES) return false
+            // A day of clock skew either way is allowed; past that the time is nonsense.
+            val blockTime = row.blockTime ?: return false
+            if (blockTime <= 0 || blockTime > now + 24L * 3600 * 1000) return false
+            val rowChannel = row.channel
+            if (!rowChannel.isNullOrEmpty() && com.kachat.app.util.MessageProtocol.normalizeChannelName(rowChannel) != channel) return false
+            return true
+        }
+
+        /** [text]'s length in UTF-8 bytes, without encoding it. */
+        private fun utf8Length(text: String): Int {
+            var bytes = 0
+            var i = 0
+            while (i < text.length) {
+                val c = text[i]
+                bytes += when {
+                    c.code < 0x80 -> 1
+                    c.code < 0x800 -> 2
+                    Character.isHighSurrogate(c) && i + 1 < text.length && Character.isLowSurrogate(text[i + 1]) -> { i++; 4 }
+                    else -> 3
+                }
+                i++
+            }
+            return bytes
+        }
 
         /** Failures in a row that confirm an indexer is down, and how close they must follow one
          *  another (iOS ee5ec98 `noteIndexerResult`: three inside two minutes). */
@@ -623,6 +694,21 @@ class BroadcastRepository @Inject constructor(
             rows.filter { it.channelName.isEmpty() || it.channelName == channelName }
                 .map { it.senderAddress }
                 .toSet()
+
+        /** A message row, not a reaction or an edit (both are rows of the same table). A cheap
+         *  substring check first: the type marker has to be there for either to parse, and most
+         *  rows - photos and voice parts with ~20 KB of base64 among them - never reach Gson. */
+        fun isReadableContent(content: String): Boolean {
+            if (content.contains("\"reaction\"") && MessageReaction.parseOrNull(content) != null) return false
+            if (content.contains("\"edit\"") && com.kachat.app.util.MessageEdit.parseOrNull(content) != null) return false
+            return true
+        }
+
+        /** Another local account's send that hasn't landed (pending, failed or unconfirmed). The
+         *  room table is shared by every account on the phone; iOS keeps one store per account,
+         *  so these are never shown as somebody's post (audit L1). */
+        fun isOtherAccountsUnsent(row: BroadcastMessageEntity, myAddress: String?): Boolean =
+            row.deliveryStatus != "sent" && row.senderAddress != myAddress
     }
 
     /** Hides a sender in ONE room - their messages and notifications from that room disappear; other rooms are unaffected. */
@@ -810,6 +896,27 @@ class BroadcastRepository @Inject constructor(
     private fun skipsIndexer(channelName: String): Boolean =
         channelName == ARENA && arenaHealth.shouldSkipIndexer()
 
+    /**
+     * [page] with only the rows the app can believe the shape of (iOS audit 2026-11-21 #19
+     * `PublicChatIndexerClient.isWellFormed`): a 64-hex txid, a valid address on this network,
+     * content within what a transaction can carry, a block time that isn't zero or far in the
+     * future, and, when the row names its room, the room asked for; and no more rows than any
+     * page is asked for. Who sent a row is still checked on chain (BroadcastSenderVerifier).
+     */
+    private fun wellFormedPage(
+        page: com.kachat.app.services.BroadcastHistoryResponse,
+        channelName: String,
+    ): com.kachat.app.services.BroadcastHistoryResponse {
+        val rows = page.messages ?: return page
+        val wanted = com.kachat.app.util.MessageProtocol.normalizeChannelName(channelName)
+        val prefix = "${com.kachat.app.util.KaspaNetwork.hrp}:"
+        val now = System.currentTimeMillis()
+        val kept = rows.take(MAX_INDEXER_ROWS_PER_PAGE).filter { isWellFormedIndexerRow(it, wanted, prefix, now) }
+        if (kept.size == rows.size) return page
+        android.util.Log.w("BroadcastRepository", "Dropped ${rows.size - kept.size} malformed indexer row(s) for #$wanted")
+        return page.copy(messages = kept)
+    }
+
     /** One page of a room's history. Every arena read reports how it went: any status that isn't
      *  a success, or a body that doesn't decode, gave no rows, and to the arena that's the same as
      *  no answer. [isBackfill]: an older page paged in right after the newest page answered; its
@@ -821,7 +928,7 @@ class BroadcastRepository @Inject constructor(
         before: Long?,
         isBackfill: Boolean = false,
     ): com.kachat.app.services.BroadcastHistoryResponse {
-        if (channelName != ARENA) return api.getBroadcasts(channel = channelName, limit = limit, before = before)
+        if (channelName != ARENA) return wellFormedPage(api.getBroadcasts(channel = channelName, limit = limit, before = before), channelName)
         try {
             val page = api.getBroadcasts(channel = channelName, limit = limit, before = before)
             // Gson fills a missing field with null where iOS's Decodable throws: a 200 without the
@@ -833,7 +940,7 @@ class BroadcastRepository @Inject constructor(
             arenaHealth.recordAnswer()
             arenaHealthObserved()
             arenaIndexerAnswered = true
-            return page
+            return wellFormedPage(page, channelName)
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -1159,7 +1266,10 @@ class BroadcastRepository @Inject constructor(
             }
         }
         val dao = database.broadcastDao()
-        val rows = dao.getUnsettledSends(channelName).filter { it.id !in pendingSendsThisRun }
+        // Only this account's: the table is shared, and another account's sends are its own to
+        // settle once it is the open one again (audit L1).
+        val me = myAddress() ?: return
+        val rows = dao.getUnsettledSends(channelName).filter { it.id !in pendingSendsThisRun && it.senderAddress == me }
         val earliestIndexByNote = HashMap<String, Int>()
         val partOf = HashMap<String, Pair<String, Int>>()
         for (row in rows) {
@@ -1230,6 +1340,15 @@ class BroadcastRepository @Inject constructor(
     /** This wallet's own address, or null before there is one. */
     fun myAddress(): String? = runCatching { walletManager.getAddress() }.getOrNull()
 
+    /** Whether [address] is one of the accounts on this phone, the open one or another (either
+     *  network's form): a post from it is the user's own and never banners (audit M5). */
+    fun isLocalAccountAddress(address: String): Boolean {
+        if (address.isBlank()) return false
+        val mine = listOfNotNull(myAddress()) +
+            runCatching { walletManager.getAllAccounts() }.getOrDefault(emptyList()).map { it.address }
+        return mine.any { com.kachat.app.util.KaspaNetwork.isSameAccount(it, address) }
+    }
+
     /**
      * One small newest-page fetch for a room nobody is looking at, merged like any other indexer
      * page. Returns the rows that were NEW to the store, so the caller can banner what just
@@ -1282,16 +1401,22 @@ class BroadcastRepository @Inject constructor(
             val content = message.content ?: return@filter false
             MessageReaction.parseOrNull(content) == null && com.kachat.app.util.MessageEdit.parseOrNull(content) == null
         }
-        // Hidden is judged on the VERIFIED sender, never on the indexer's guess.
+        // Hidden is judged on the VERIFIED sender, never on the indexer's guess. A room's hidden
+        // senders are stored all the same: the table is shared by every account on the phone,
+        // and one account's hide must not cost another the posts (audit L3). Reads filter them,
+        // and the rows handed back (the sweep's banners) leave them out. The arena's reducer
+        // reads the table unfiltered, so there they stay out.
         val admitted = admitIndexerRows(
-            channelName, wanted, skipSender = { it in hidden },
+            channelName, wanted, skipSender = { isArena && it in hidden },
             stillWanted = { isArena || isCurrentWallet(turn) },
         )
         // The store is missing a row that just happened: as far as a claim or a join goes, the
         // indexer hasn't answered yet (on iOS an answered page is always stored whole).
         if (isArena && admitted.recentUnknown) return null
         noteArenaAnswered(channelName, askedAt, coveredFrom = null)
-        return if (isArena || isCurrentWallet(turn)) admitted.inserted else emptyList()
+        return if (isArena) admitted.inserted
+        else if (isCurrentWallet(turn)) admitted.inserted.filter { it.senderAddress !in hidden }
+        else emptyList()
     }
 
     /** What [admitIndexerRows] stored, and how many rows it could not verify yet. */
@@ -1442,7 +1567,11 @@ class BroadcastRepository @Inject constructor(
         }
         val api = broadcastIndexers.broadcastIndexerApiFor(base) ?: return
         val channels: List<String>? = try {
+            // Only names a room could have, and no more of them than an indexer could track (iOS
+            // audit 2026-11-21 #19).
             api.getTrackedChannels().channels?.filterNotNull()
+                ?.filter { com.kachat.app.util.MessageProtocol.isValidChannelName(com.kachat.app.util.MessageProtocol.normalizeChannelName(it)) }
+                ?.take(1_000)
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -1455,7 +1584,7 @@ class BroadcastRepository @Inject constructor(
 
     /** The newest chain time stored for [channelName], or null for an empty room. */
     suspend fun newestBlockTimestamp(channelName: String): Long? =
-        database.broadcastDao().newestBlockTimestamp(channelName)
+        database.broadcastDao().newestBlockTimestamp(channelName, networkSenderPattern())
 
     /**
      * Room Info's check after a Save: asks [baseUrl] for one row of [channelName] and returns how

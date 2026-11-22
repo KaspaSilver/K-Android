@@ -2,7 +2,11 @@ package com.kachat.app.services
 
 import com.kachat.app.repository.AppSettingsRepository
 import com.kachat.app.util.KaspaAddress
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
@@ -42,24 +46,58 @@ class KaPostPreviewLoader @Inject constructor(
     fun cached(txId: String): KaPostPreview? = synchronized(cache) { cache[txId] }
 
     suspend fun load(txId: String): KaPostPreview? {
-        val (deferred, owner) = lock.withLock {
-            synchronized(cache) { cache[txId] }?.let { return it }
-            misses[txId]?.let { if (System.currentTimeMillis() - it < MISS_RETRY_MS) return null }
-            inFlight[txId]?.let { return@withLock it to false }
-            CompletableDeferred<KaPostPreview?>().also { inFlight[txId] = it } to true
-        }
-        if (!owner) return deferred.await()
-        val result = runCatching {
-            val base = settingsRepository.indexerUrl.first().trim()
-            fetch(txId, base)?.let { (authorKey, text) ->
-                KaPostPreview(authorAddress = authorKey?.let(::authorAddress), text = text)
+        while (true) {
+            val (deferred, owner) = lock.withLock {
+                synchronized(cache) { cache[txId] }?.let { return it }
+                misses[txId]?.let { if (System.currentTimeMillis() - it < MISS_RETRY_MS) return null }
+                inFlight[txId]?.let { return@withLock it to false }
+                CompletableDeferred<KaPostPreview?>().also { inFlight[txId] = it } to true
             }
-        }.getOrNull()
-        lock.withLock {
-            inFlight.remove(txId)
-            if (result != null) synchronized(cache) { cache[txId] = result } else misses[txId] = System.currentTimeMillis()
+            if (!owner) {
+                // The card that started the load scrolled away before it finished: its load was
+                // dropped, so this one asks again (unless this card is going too).
+                return try {
+                    deferred.await()
+                } catch (e: CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                    continue
+                }
+            }
+            return loadAsOwner(txId, deferred)
         }
-        deferred.complete(result)
+    }
+
+    /**
+     * The one load for [txId]. Only a real answer or a real failure is remembered: a card leaving
+     * the screen cancels this, and that is neither, so it leaves no five-minute miss behind and
+     * never leaves [inFlight] holding a load nobody will finish.
+     */
+    private suspend fun loadAsOwner(txId: String, deferred: CompletableDeferred<KaPostPreview?>): KaPostPreview? {
+        var result: KaPostPreview? = null
+        var finished = false
+        try {
+            result = try {
+                val base = settingsRepository.indexerUrl.first().trim()
+                fetch(txId, base)?.let { (authorKey, text) ->
+                    KaPostPreview(authorAddress = authorKey?.let(::authorAddress), text = text)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            finished = true
+        } finally {
+            withContext(NonCancellable) {
+                lock.withLock {
+                    inFlight.remove(txId)
+                    if (finished) {
+                        if (result != null) synchronized(cache) { cache[txId] = result!! } else misses[txId] = System.currentTimeMillis()
+                    }
+                }
+                if (finished) deferred.complete(result) else deferred.cancel()
+            }
+        }
         return result
     }
 

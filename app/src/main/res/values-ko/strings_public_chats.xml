@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">인코딩 중…</string>
     <string name="pc_room_voice_receiving">수신 중… %2$d개 중 %1$d개</string>
     <string name="pc_room_voice_recording">녹음...</string>
-    <string name="pc_rooms53_channel_name_invalid">채널 이름은 공백이나 콜론 없이 1~%1$d자여야 합니다.</string>
     <string name="pc_rooms53_day_one">%1$d일</string>
     <string name="pc_rooms53_days">%1$d일</string>
-    <string name="pc_rooms53_join_failed">채널에 참여하는 중 문제가 발생했습니다.</string>
     <string name="pc_rooms54_failed_to_edit">편집하지 못했습니다: %1$s</string>
     <string name="pc_rooms54_failed_to_send">보내지 못했습니다: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">음성 메시지를 보내지 못했습니다: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">상대방의 KaPost 프로필: 게시물, 답글, 팔로워.</string>
     <string name="pc_sender_send_kaspa_subtitle">상대방의 주소로 Kaspa를 보냅니다.</string>
     <string name="pc_sender_copy_address_subtitle">상대의 Kaspa 주소를 복사합니다.</string>
-    <string name="pc_public_chats">공개 채팅</string>
+    <string name="pc_original_message_not_loaded">원본 메시지를 불러오지 않았습니다</string>
 </resources>

@@ -53,15 +53,8 @@ class PublicChatSettings @Inject constructor(
         }
     }
 
-    /** The Popular switch KaPost had; kept for the room view model, always on by default. */
-    val broadcastPopularEnabled: Flow<Boolean> = dataStore.data.map { it[KEY_POPULAR] ?: true }
-
-    suspend fun setBroadcastPopularEnabled(value: Boolean) = dataStore.edit { it[KEY_POPULAR] = value }
-
     /** Whether room senders' .kas avatars load (an avatar URL is anyone's, so it can be turned off). */
     val broadcastShowKnsAvatars: Flow<Boolean> = dataStore.data.map { it[KEY_SHOW_KNS_AVATARS] ?: true }
-
-    suspend fun setBroadcastShowKnsAvatars(value: Boolean) = dataStore.edit { it[KEY_SHOW_KNS_AVATARS] = value }
 
     /**
      * Accounts blocked in KaPost, per account: their room messages and pushes are left out too
@@ -83,7 +76,6 @@ class PublicChatSettings @Inject constructor(
     private companion object {
         val KEY_OVERRIDES = stringPreferencesKey("broadcast_indexer_overrides")
         val KEY_OVERRIDES_TESTNET = stringPreferencesKey("broadcast_indexer_overrides.testnet")
-        val KEY_POPULAR = booleanPreferencesKey("broadcast_popular_enabled")
         val KEY_SHOW_KNS_AVATARS = booleanPreferencesKey("broadcast_show_kns_avatars")
 
         fun blockedKey(walletAddress: String) = stringSetPreferencesKey("kaposts_blocked_$walletAddress")

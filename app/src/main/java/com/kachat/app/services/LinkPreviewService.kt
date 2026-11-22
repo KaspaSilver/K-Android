@@ -73,7 +73,45 @@ object LinkPreviewService {
         .readTimeout(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .callTimeout(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .withRedirectRules()
+        .dns(PublicOnlyDns)
         .build()
+
+    /**
+     * A preview fetch never reaches into the reader's own network (security audit L1): a public
+     * name that resolves to a loopback, link-local, private (site-local) or IPv6 unique-local
+     * address is refused, as if it didn't resolve. Android only.
+     */
+    private object PublicOnlyDns : okhttp3.Dns {
+        override fun lookup(hostname: String): List<java.net.InetAddress> {
+            val answers = okhttp3.Dns.SYSTEM.lookup(hostname).filter { isPublicAddress(it) }
+            if (answers.isEmpty()) throw java.net.UnknownHostException("$hostname has no public address")
+            return answers
+        }
+    }
+
+    /** Not loopback, link-local, private (site-local), IPv6 unique-local, any-local or multicast. */
+    internal fun isPublicAddress(address: java.net.InetAddress): Boolean {
+        if (address.isLoopbackAddress || address.isLinkLocalAddress || address.isSiteLocalAddress ||
+            address.isAnyLocalAddress || address.isMulticastAddress
+        ) return false
+        val bytes = address.address
+        // fc00::/7, IPv6 unique-local
+        if (bytes.size == 16 && (bytes[0].toInt() and 0xfe) == 0xfc) return false
+        return true
+    }
+
+    /**
+     * Whether [url]'s host is a public name (security audit L1, the rule [isAllowedRedirect]
+     * applies to a redirect elsewhere): not localhost, a `.local` name, a bare single-label name
+     * or an IP literal. A preview's first fetch goes only there.
+     */
+    fun isPublicHostUrl(url: String): Boolean {
+        val host = hostOf(url) ?: return false
+        if (host == "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || !host.contains('.')) return false
+        // IP literals: IPv6 carries colons, IPv4 is digits and dots only
+        if (host.contains(':') || host.all { it.isDigit() || it == '.' }) return false
+        return true
+    }
 
     // `null` value = "fetched, but no preview data found" - still worth caching so a bad/plain
     // link isn't refetched on every scroll. Bounded FIFO eviction, not LRU - simplicity over
@@ -201,6 +239,11 @@ object LinkPreviewService {
         runCatching { java.net.URI(url).host }.getOrNull()
             ?.lowercase()?.removePrefix("[")?.removeSuffix("]")?.takeIf { it.isNotEmpty() }
 
+    /** A stricter redirect rule for one request, on top of [isAllowedRedirect]: a KaPost card's
+     *  page and image fetches carry one ([KaPostLinkPreviewPolicy.allowsRedirect] /
+     *  [KaPostLinkPreviewPolicy.allowsImage]), as a request tag so Coil passes it through too. */
+    class RedirectGate(val allows: (String) -> Boolean)
+
     /** Redirects followed only where [isAllowedRedirect] says, by [RedirectRulesInterceptor]
      *  rather than OkHttp's own follow-up. */
     private fun OkHttpClient.Builder.withRedirectRules(): OkHttpClient.Builder =
@@ -219,6 +262,8 @@ object LinkPreviewService {
                 if (response.code !in REDIRECT_CODES) return response
                 val next = response.header("Location")?.let { request.url.resolve(it) } ?: return response
                 if (!isAllowedRedirect(request.url.toString(), next.toString())) return response
+                // A KaPost card's fetch: every hop also held to its allow-list (iOS redirectPolicy).
+                request.tag(RedirectGate::class.java)?.let { gate -> if (!gate.allows(next.toString())) return response }
                 val builder = request.newBuilder().url(next)
                 // 303 always, and 301/302 for anything but GET or HEAD, go on as a GET (OkHttp's
                 // own rule); 307/308 keep the method and body.
@@ -295,29 +340,37 @@ object LinkPreviewService {
     }
 
     suspend fun fetchPreview(url: String): LinkPreviewData? {
+        // A KaPost link is cached apart from the same link in a chat, since it's fetched under
+        // stricter rules (iOS `cacheKey(for:)`).
+        val key = if (KaPostLinkPreviewPolicy.isMarkedForPreview(url)) "kapost|$url" else url
         synchronized(cacheLock) {
-            if (cache.containsKey(url)) {
-                val storedAt = cacheStoredAt[url] ?: 0L
-                if (System.currentTimeMillis() - storedAt < CACHE_TTL_MS) return cache[url]
+            if (cache.containsKey(key)) {
+                val storedAt = cacheStoredAt[key] ?: 0L
+                if (System.currentTimeMillis() - storedAt < CACHE_TTL_MS) return cache[key]
                 // Expired: drop it and fall through to a fresh fetch, which re-stores it at the
                 // back of the FIFO like any new entry.
-                cache.remove(url)
-                cacheStoredAt.remove(url)
+                cache.remove(key)
+                cacheStoredAt.remove(key)
             }
         }
 
-        val result = withContext(Dispatchers.IO) { fetchAndParse(url) }
+        val result = withContext(Dispatchers.IO) { fetchAndParse(url) }?.let { data ->
+            // A KaPost card's image only from the site or its image servers; anything else draws
+            // the card without it (iOS `KaPostLinkPreviewPolicy.allowsImage`).
+            val image = data.imageUrl
+            if (key != url && image != null && !KaPostLinkPreviewPolicy.allowsImage(image, url)) data.copy(imageUrl = null) else data
+        }
 
         synchronized(cacheLock) {
-            if (!cache.containsKey(url) && cache.size >= CACHE_LIMIT) {
+            if (!cache.containsKey(key) && cache.size >= CACHE_LIMIT) {
                 val oldestKey = cache.keys.firstOrNull()
                 if (oldestKey != null) {
                     cache.remove(oldestKey)
                     cacheStoredAt.remove(oldestKey)
                 }
             }
-            cache[url] = result
-            cacheStoredAt[url] = System.currentTimeMillis()
+            cache[key] = result
+            cacheStoredAt[key] = System.currentTimeMillis()
         }
         return result
     }
@@ -325,10 +378,17 @@ object LinkPreviewService {
     private fun fetchAndParse(url: String): LinkPreviewData? {
         val scheme = url.substringBefore("://", missingDelimiterValue = "").lowercase()
         if (scheme != "http" && scheme != "https") return null
+        // never an IP address, localhost or a local name: no fetch into the reader's own network (L1)
+        if (!isPublicHostUrl(url)) return null
+
+        // A KaPost card: the page must be on the allow-list, and so must every redirect (iOS).
+        val kaPostLink = KaPostLinkPreviewPolicy.isMarkedForPreview(url)
+        if (kaPostLink && !KaPostLinkPreviewPolicy.allowsPage(url)) return null
+        val redirectGate = if (kaPostLink) RedirectGate(KaPostLinkPreviewPolicy::allowsRedirect) else null
 
         // Nextcloud public shares are media files, not pages — no Open Graph to scrape. Type
         // comes from a HEAD on the raw-file endpoint instead (see fetchNextcloudPreview).
-        nextcloudShareEndpoints(url)?.let { return fetchNextcloudPreview(url, it) }
+        if (!kaPostLink) nextcloudShareEndpoints(url)?.let { return fetchNextcloudPreview(url, it) }
 
         // YouTube serves a cookie-consent-wall page (no Open Graph tags at all) to plain scraper
         // requests instead of the real video page, so the generic scrape below never finds
@@ -336,7 +396,7 @@ object LinkPreviewService {
         // exactly for this (no consent wall, no API key needed).
         val host = runCatching { java.net.URI(url).host?.lowercase() }.getOrNull()
         if (host != null && host in youTubeHosts) {
-            fetchYouTubeOEmbed(url)?.let { return it }
+            fetchYouTubeOEmbed(url, redirectGate)?.let { return it }
             // Fall through to the generic scrape only if oEmbed itself failed (e.g. a
             // private/deleted video) - unlikely to succeed either, but no harm trying.
         }
@@ -349,6 +409,7 @@ object LinkPreviewService {
             val request = Request.Builder()
                 .url(url)
                 .header("User-Agent", scrapeUserAgent)
+                .apply { if (redirectGate != null) tag(RedirectGate::class.java, redirectGate) }
                 .build()
 
             client.newCall(request).execute().use { response ->
@@ -400,7 +461,7 @@ object LinkPreviewService {
         )
     }
 
-    private fun fetchYouTubeOEmbed(url: String): LinkPreviewData? {
+    private fun fetchYouTubeOEmbed(url: String, redirectGate: RedirectGate? = null): LinkPreviewData? {
         val oEmbedUrl = "https://www.youtube.com/oembed".toHttpUrlOrNull()
             ?.newBuilder()
             ?.addQueryParameter("url", url)
@@ -411,6 +472,7 @@ object LinkPreviewService {
             val request = Request.Builder()
                 .url(oEmbedUrl)
                 .header("User-Agent", "Mozilla/5.0 (compatible; KaChatLinkPreview/1.0)")
+                .apply { if (redirectGate != null) tag(RedirectGate::class.java, redirectGate) }
                 .build()
 
             client.newCall(request).execute().use { response ->

@@ -7,6 +7,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -48,24 +49,52 @@ class GlobalNotificationCenterStore @Inject constructor(
     val lastSeenAt: StateFlow<Long> = _lastSeenAt.asStateFlow()
 
     private val maxEntries = 100
+
+    /** The account [entries] were loaded for. The feed is read and saved under this address, not
+     *  whatever wallet is current at write time, so one account's rows never land under another's
+     *  key. Null while no one is signed in: nothing is shown and nothing is saved (iOS 428a797b
+     *  `loadedAddress`, audit 2026-11-21 #8). */
     private var loadedWallet: String? = null
 
     /** My own bare KNS domain, cached per wallet, for group @mention detection. */
     private var myDomainWallet: String? = null
     private var myDomain: String? = null
 
+    init {
+        // Log Out, sign-in, import and account switches all change the signed-in account.
+        // Reloading only when a screen asked left the last account's rows in the bell, and the
+        // next account's first notification saved them under its own key for good (iOS 428a797b,
+        // as KaPostsUnseenStore).
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default).launch {
+            walletManager.signedInAddressFlow.collect { address -> load(address) }
+        }
+    }
+
     private fun walletAddressOrNull(): String? =
         try { walletManager.getAddress() } catch (_: Exception) { null }
+
+    /** The signed-in account's address; null while signed out. */
+    private fun signedInAddressOrNull(): String? = if (walletManager.isLoggedOut) null else walletAddressOrNull()
 
     private fun entriesKey(wallet: String) = "entries_$wallet"
     private fun seenKey(wallet: String) = "seen_$wallet"
 
-    /** Loads the active wallet's feed; call before reading and on account switches. */
+    /** Loads the signed-in wallet's feed (account switches reload by themselves, see init). */
     @Synchronized
     fun reloadIfNeeded() {
-        val wallet = walletAddressOrNull() ?: return
+        load(signedInAddressOrNull())
+    }
+
+    @Synchronized
+    private fun load(wallet: String?) {
         if (loadedWallet == wallet) return
         loadedWallet = wallet
+        if (wallet == null) {
+            // signed out: the bell is empty, never the last account's
+            _entries.value = emptyList()
+            _lastSeenAt.value = 0L
+            return
+        }
         val loaded = try {
             gson.fromJson(prefs.getString(entriesKey(wallet), null) ?: "[]", listType) ?: emptyList()
         } catch (_: Exception) { emptyList<Entry>() }
@@ -102,7 +131,9 @@ class GlobalNotificationCenterStore @Inject constructor(
         prefs.edit().putLong(seenKey(wallet), _lastSeenAt.value).apply()
     }
 
+    @Synchronized
     fun clearAll() {
+        if (loadedWallet == null) return
         _entries.value = emptyList()
         persist()
     }

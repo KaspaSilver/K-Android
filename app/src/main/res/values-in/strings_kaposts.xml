@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">Tidak suka dihapus di jaringan</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">Follow diposting ke jaringan</string>
-    <string name="feed54_help_welcome_guide">Panduan Selamat Datang</string>
-    <string name="feed54_help_welcome_guide_subtitle">Tur awal: feed Anda, ruang, tip, dan alamat Anda.</string>
     <string name="feed54_like_posted">Suka diposting ke jaringan</string>
     <string name="feed54_like_removed">Suka dihapus di jaringan</string>
     <string name="feed54_post_not_found">Postingan tidak ditemukan - mungkin lebih lama dari feed saat ini</string>

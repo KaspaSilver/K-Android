@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">Aucun nom n\'est en période de grâce pour le moment.</string>
     <string name="kn_no_open_offers">Aucune offre en cours.</string>
     <string name="kn_not_enough">Pas assez de KAS sur votre adresse de discussion pour ce nom.</string>
+    <string name="kn_err_claim_in_progress">Vous réclamez déjà %1$s.</string>
+    <string name="kn_err_not_enough_kas">Pas assez de KAS pour cela. Ajoutez-en et réessayez.</string>
     <string name="kn_not_for_sale">Pas à vendre</string>
     <string name="kn_not_valid_name">Ce n’est pas un nom valide.</string>
     <string name="kn_nothing_yet">Rien pour l’instant.</string>

@@ -11,7 +11,12 @@ import javax.inject.Singleton
  * channels, KaPosts pings), per the iOS repo's PUSH_EXTENSIONS.md §4: the app posts no banners of its own for
  * what it discovers itself while push is active.
  *
- * Foreground included. The app used to banner from both sources while on screen - the local
+ * Since iOS 428a797b (owner, 2026-11-22) the app banners again while it is OPEN: new 1:1, group
+ * and room messages and KaPost activity it finds itself, one banner per message
+ * ([NotificationHelper.mayBannerLocally], the txId ledger, a push already in the shade). What
+ * follows still holds for the background and the closed app.
+ *
+ * (Until 2026-11-22) Foreground included. The app used to banner from both sources while on screen - the local
  * poll or scan posted, and a racing push for the same tx was collapsed by NotificationHelper's
  * txId ledger - and the seams showed: the same message arriving as two differently-worded
  * banners, or a banner whose wording depended on which path won. Every discovery path (the

@@ -19,7 +19,6 @@
     <string name="shell_customize_dock_footer">Выберите, что будет в доке. Всё остальное — в Kaspa Hub.</string>
     <string name="shell_terms_of_use">Условия использования</string>
     <string name="shell_message_indexer_footer">KaPost, публичные чаты и шахматы тоже читаются с этого индексатора.</string>
-    <string name="shell_ks_title">Статистика KaChat</string>
     <string name="shell_ks_what_counts">Что считается</string>
     <string name="shell_ks_range_day">24 часа</string>
     <string name="shell_ks_range_week">7 дней</string>

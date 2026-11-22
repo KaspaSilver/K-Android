@@ -19,7 +19,6 @@
     <string name="shell_customize_dock_footer">আপনার ডকে কী থাকবে বেছে নিন। বাকি সব Kaspa Hub-এ।</string>
     <string name="shell_terms_of_use">ব্যবহারের শর্তাবলী</string>
     <string name="shell_message_indexer_footer">KaPost, পাবলিক চ্যাট আর দাবাও এই ইনডেক্সার থেকে পড়া হয়।</string>
-    <string name="shell_ks_title">KaChat পরিসংখ্যান</string>
     <string name="shell_ks_what_counts">কী গোনা হয়</string>
     <string name="shell_ks_range_day">২৪ ঘণ্টা</string>
     <string name="shell_ks_range_week">৭ দিন</string>

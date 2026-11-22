@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">« Je n\'aime pas » retiré sur le réseau</string>
     <string name="feed54_failure_format">%1$s : %2$s</string>
     <string name="feed54_follow_posted">Abonnement publié sur le réseau</string>
-    <string name="feed54_help_welcome_guide">Guide de bienvenue</string>
-    <string name="feed54_help_welcome_guide_subtitle">La visite de départ : votre fil, les salons, les pourboires et votre adresse.</string>
     <string name="feed54_like_posted">J\'aime publié sur le réseau</string>
     <string name="feed54_like_removed">J\'aime retiré sur le réseau</string>
     <string name="feed54_post_not_found">Publication introuvable - elle est peut-être plus ancienne que le fil actuel</string>

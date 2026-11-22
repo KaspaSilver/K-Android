@@ -50,11 +50,8 @@ data class PushRegistrationRequest(
     @SerializedName("capabilities") val capabilities: List<String> = emptyList(),
     @SerializedName("primary_address") val primaryAddress: String? = null,
     @SerializedName("aliases") val aliases: List<String> = emptyList(),
-    /**
-     * The Public Chats and KaPosts fields below are always sent empty since 2026-10-24 (both
-     * features left the app, iOS e2f6732), which tells the service this device wants none of
-     * their pushes - an older build may have asked it for them.
-     */
+    /** The Public Chats and KaPosts fields (back since iOS 148a5331): the rooms whose bell is on,
+     *  and this account's KaPost key, switches and watched authors. */
     @SerializedName("watched_broadcast_channels") val watchedBroadcastChannels: List<String> = emptyList(),
     @SerializedName("hidden_broadcast_senders") val hiddenBroadcastSenders: Map<String, List<String>> = emptyMap(),
     @SerializedName("kaposts_pubkey") val kaPostsPubkey: String? = null,
@@ -64,6 +61,23 @@ data class PushRegistrationRequest(
     @SerializedName("kaposts_notify_reposts") val kaPostsNotifyReposts: Boolean = false,
     @SerializedName("kaposts_notify_follows") val kaPostsNotifyFollows: Boolean = false,
     @SerializedName("kaposts_watch_authors") val kaPostsWatchAuthors: List<String> = emptyList(),
+    /**
+     * Everyone this account blocked or muted on KaPost (66-hex): the push service sends no KaPost
+     * push whose actor is one of them (kasia-indexer `kaposts_blocked_pubkeys`; the list replaces
+     * the stored one). iOS 428a797b, audit 2026-11-21 #16.
+     */
+    @SerializedName("kaposts_blocked_pubkeys") val kaPostsBlockedPubkeys: List<String> = emptyList(),
+    /**
+     * "k": this registration is K, the all-in-one app, which takes every kind of push (chats,
+     * groups, KaPost, rooms, Received KAS, .kachat). Without it the push service treats the
+     * registration as the old chats-only KaChat (kachat-indexer docs/K_ALL_IN_ONE_PUSH.md).
+     */
+    @SerializedName("app") val app: String? = null,
+    /**
+     * Received KAS (`address_activity`): the spending and Cold Storage addresses whose receives
+     * notify; empty with Address Activity off. The chatting address stays in [watchedAddresses].
+     */
+    @SerializedName("watch_only_addresses") val watchOnlyAddresses: List<String> = emptyList(),
     @SerializedName("auth") val auth: PushAuthRequest? = null,
 )
 

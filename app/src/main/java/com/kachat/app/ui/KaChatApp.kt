@@ -56,7 +56,6 @@ import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
 import androidx.navigation.navArgument
 import com.kachat.app.ui.screens.*
-import com.kachat.app.ui.screens.chess.ChessLeaderboardScreen
 import com.kachat.app.ui.screens.chess.GamesScreen
 import com.kachat.app.ui.screens.chess.KaPlayRoutes
 import com.kachat.app.ui.screens.chess.kaPlayGraph
@@ -1076,7 +1075,6 @@ fun MainShell(
             // The one KaPost instance that opens links and pushes (it is in one place at a time).
             AppTab.KAPOSTS -> KaPostsScreen(navController = navController, walletViewModel = walletViewModel)
             AppTab.GAMES -> GamesScreen(navController = navController, walletViewModel = walletViewModel)
-            AppTab.LEADERBOARD -> ChessLeaderboardScreen(navController = navController, walletViewModel = walletViewModel)
             AppTab.KACHAT_STATS -> KaChatStatsScreen(onBack = null)
             AppTab.APPS -> KaspaWebsitesScreen()
         }
@@ -1093,6 +1091,10 @@ fun MainShell(
         // The green dot's half sheet, hosted once for the whole app rather than by each of the
         // headers that draw a dot - so it comes up OVER whatever you were reading.
         ConnectionStatusOverlayHost(onOpenConnectionSettings = { navController.navigate("connection_settings") })
+        // A .kachat registration in flight: its progress half sheet, back up after a relaunch
+        // (iOS 428a797b `KachatRegistrationPresenter` on MainTabView; `KachatNamesActions.resume`
+        // sets it on activation). Launched networks only; draws nothing otherwise.
+        com.kachat.app.ui.screens.KachatRegistrationPresenter()
 
         val dockInset = innerPadding.calculateBottomPadding()
         // Only the tabs and the pages that keep the dock reserve room for it (LocalDockInset);
@@ -1175,9 +1177,7 @@ fun MainShell(
             }
             // A public room, pushed inside Chats with the dock kept and its composer just above it.
             composable(PublicChatRoutes.ROOM) { entry ->
-                val channel = entry.arguments?.getString("channelName")
-                    ?.let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(android.net.Uri.decode(it)) }
-                    ?: return@composable
+                val channel = PublicChatRoutes.channelArgument(entry.arguments) ?: return@composable
                 CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides threadDockInset(dockInset)) {
                     BroadcastChannelScreen(
                         channelName = channel,
@@ -1192,9 +1192,7 @@ fun MainShell(
                 }
             }
             composable(PublicChatRoutes.ROOM_INFO) { entry ->
-                val channel = entry.arguments?.getString("channelName")
-                    ?.let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(android.net.Uri.decode(it)) }
-                    ?: return@composable
+                val channel = PublicChatRoutes.channelArgument(entry.arguments) ?: return@composable
                 CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                     BroadcastRoomInfoScreen(
                         channelName = channel,
@@ -1204,9 +1202,7 @@ fun MainShell(
                 }
             }
             composable(PublicChatRoutes.HIDDEN_USERS) { entry ->
-                val channel = entry.arguments?.getString("channelName")
-                    ?.let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(android.net.Uri.decode(it)) }
-                    ?: return@composable
+                val channel = PublicChatRoutes.channelArgument(entry.arguments) ?: return@composable
                 BroadcastHiddenUsersScreen(channelName = channel, onBack = { navController.popBackStack() })
             }
             // KaPlay's and the Leaderboard tab's pages.
@@ -1585,13 +1581,6 @@ object OwnAddressRoute {
 }
 
 /**
- * One of your own addresses, opened from a tapped "Received" notification on its History tab
- * (iOS 13046ad `OwnAddressHistorySheet`): the chatting address or a spending address, each on the same screen you'd reach it through
- * (Profile > Chatting Address, Manage Addresses), resolved with its balance for the header. Those
- * screens already open on History; at the root of this sheet each puts Done top left in place of
- * its back arrow (closesWithDone), where iOS's sheet has its Done.
- */
-/**
  * What a chat thread keeps clear for the dock: the part the keyboard doesn't already cover. The
  * thread's own bottomBar applies imePadding() to clear the keyboard, so reserving both left a dead
  * gap above a full keyboard; a floating keyboard or a hardware keyboard's small bar is shorter than
@@ -1604,6 +1593,13 @@ private fun threadDockInset(dockInset: Dp): Dp {
     return (dockInset - keyboard).coerceAtLeast(0.dp)
 }
 
+/**
+ * One of your own addresses, opened from a tapped "Received" notification on its History tab
+ * (iOS 13046ad `OwnAddressHistorySheet`): the chatting address or a spending address, each on the same screen you'd reach it through
+ * (Profile > Chatting Address, Manage Addresses), resolved with its balance for the header. Those
+ * screens already open on History; at the root of this sheet each puts Done top left in place of
+ * its back arrow (closesWithDone), where iOS's sheet has its Done.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun OwnAddressHistorySheet(

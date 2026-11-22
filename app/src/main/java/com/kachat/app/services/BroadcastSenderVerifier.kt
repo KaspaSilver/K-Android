@@ -9,6 +9,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeoutOrNull
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.ConcurrentHashMap
@@ -69,6 +71,8 @@ class BroadcastSenderVerifier @Inject constructor(
     private val rowBackoff = BoundedMap<String, Pair<Int, Long>>(MAX_REMEMBERED)
     private val droppedLogged = BoundedMap<String, Boolean>(MAX_REMEMBERED)
     private val inflight = ConcurrentHashMap<String, CompletableDeferred<Judged>>()
+    /** The live author checks' REST lookups on the wire at once ([MAX_LIVE_LOOKUPS_CONCURRENT]). */
+    private val liveLookupSlots = Semaphore(MAX_LIVE_LOOKUPS_CONCURRENT)
 
     /** The final verdict for [txId], or null when there is none yet. */
     fun verdictFor(txId: String): Judged? = verdicts[txId.lowercase()]
@@ -132,6 +136,14 @@ class BroadcastSenderVerifier @Inject constructor(
         val settled = settleLive(hit)
         if (settled.verdict != Verdict.UNKNOWN) return settled
         val key = hit.txId.lowercase()
+        inflight[key]?.let { return it.await() }
+        // Past a backlog a spammer could build, the rest are refused (iOS audit 2026-11-21 #23
+        // `RoomAuthorLookups.maxPending`): their posts are dropped from the stream, as any post
+        // whose author can't be checked is; the indexer still serves them.
+        if (inflight.size >= MAX_LIVE_PENDING) {
+            Log.w(TAG, "Public chat: author check backlog full, dropped a lookup")
+            return Judged(Verdict.UNKNOWN)
+        }
         val mine = CompletableDeferred<Judged>()
         val running = inflight.putIfAbsent(key, mine)
         if (running != null) return running.await()
@@ -141,7 +153,9 @@ class BroadcastSenderVerifier @Inject constructor(
                 delay(wait)
                 val local = settleLive(hit)
                 if (local.verdict != Verdict.UNKNOWN) { result = local; break }
-                val shape = lookupShapes(listOf(key))?.shapes?.get(key) ?: continue
+                // A few REST lookups at a time, however many posts a block carries (iOS
+                // `RoomAuthorLookups.maxConcurrent`): a burst could get the phone rate-limited.
+                val shape = liveLookupSlots.withPermit { lookupShapes(listOf(key)) }?.shapes?.get(key) ?: continue
                 // Output 0 as the node streamed it when readable, else as the REST API has it.
                 val judged = judge(shape.inputAddress, hit.outputAddress ?: shape.outputAddress)
                 if (judged.verdict != Verdict.UNKNOWN) {
@@ -306,6 +320,10 @@ class BroadcastSenderVerifier @Inject constructor(
         private val LIVE_VERIFY_DELAYS_MS = listOf(1_500L, 3_000L, 5_000L, 10_000L, 25_000L, 50_000L)
         private const val REST_TIMEOUT_MS = 12_000L
         private const val REST_BATCH = 100
+        /** Live author checks' REST lookups at once, and the most waiting at all (iOS audit
+         *  2026-11-21 #23 `RoomAuthorLookups.maxConcurrent` / `maxPending`). */
+        private const val MAX_LIVE_LOOKUPS_CONCURRENT = 4
+        private const val MAX_LIVE_PENDING = 64
         private const val MAX_REMEMBERED = 20_000
         private val TX_ID = Regex("^[0-9a-f]{64}$")
 

@@ -50,10 +50,6 @@ class VoiceRecorderService @Inject constructor(
 
     val isSupported: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
-    /** The active recording is iOS's own WebM layout ([OpusWebMRecorder]), not MediaRecorder's -
-     *  the fee preview sizes it by [VoiceMessage.estimatedRecordingBytes]'s matching rate. */
-    val writesOwnWebM: Boolean get() = opusRecorder != null
-
     val isRecording: Boolean get() = recorder != null || opusRecorder != null || pcmRecorder != null
 
     /**

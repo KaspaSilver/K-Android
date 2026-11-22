@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">डिसलाइक नेटवर्क पर हटा दिया गया</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">फ़ॉलो नेटवर्क पर पोस्ट हो गया</string>
-    <string name="feed54_help_welcome_guide">स्वागत गाइड</string>
-    <string name="feed54_help_welcome_guide_subtitle">पहली बार का टूर: आपकी फ़ीड, रूम, टिप और आपका पता।</string>
     <string name="feed54_like_posted">लाइक नेटवर्क पर पोस्ट हो गया</string>
     <string name="feed54_like_removed">लाइक नेटवर्क पर हटा दिया गया</string>
     <string name="feed54_post_not_found">पोस्ट नहीं मिली - यह मौजूदा फ़ीड से पुरानी हो सकती है</string>

@@ -144,6 +144,23 @@ object KaPostLinkPreviewPolicy {
         return matches(parsed.host, allowedDomains) || matches(parsed.host, imageCDNDomains)
     }
 
+    /**
+     * Links a KaPost card is drawing (iOS `MarkedLinkSet`, the newest 4,096). [LinkPreviewService]
+     * holds these to this policy on every hop: the page must pass [allowsPage], a redirect
+     * [allowsRedirect], and the card's image [allowsImage]. Links in 1:1 chats and groups keep
+     * their own rules.
+     */
+    private val marked = object : LinkedHashMap<String, Boolean>(64, 0.75f, false) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size > MARKED_LIMIT
+    }
+    private const val MARKED_LIMIT = 4_096
+
+    /** Called where a KaPost decides to draw a link as a card, before the card fetches it. */
+    fun markForPreview(url: String) { synchronized(marked) { marked[url] = true } }
+
+    fun isMarkedForPreview(url: String?): Boolean =
+        url != null && synchronized(marked) { marked.containsKey(url) }
+
     private fun isHttps(url: String): Boolean =
         url.substringBefore("://", missingDelimiterValue = "").equals("https", ignoreCase = true)
 

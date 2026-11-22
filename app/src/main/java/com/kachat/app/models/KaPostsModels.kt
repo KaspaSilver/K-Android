@@ -105,8 +105,18 @@ data class KaPostDraft(
          *  time stays.) Null for a poll read from the network (iOS df4aba6). */
         val lengthMs: Long? = null,
     ) {
-        val total: Int get() = counts.sum()
+        /** All votes, summed without overflow (each count clamped first, iOS audit 2026-11-21 #20). */
+        val total: Int get() = counts.fold(0L) { sum, count -> sum + clampedCount(count) }
+            .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         val isClosed: Boolean get() = closesAtMs <= System.currentTimeMillis()
+
+        companion object {
+            /** Most votes one option is shown with. Counts come from the indexer, so a wild or
+             *  negative number is clamped here rather than trusted (iOS `KaPostPoll.maxCount`). */
+            const val MAX_COUNT = 1_000_000_000
+
+            fun clampedCount(count: Int): Int = count.coerceIn(0, MAX_COUNT)
+        }
 
         /** A failed poll's retry length: its chosen length, else closesAt minus the post's time,
          *  at least a minute (iOS IOS-093 / df4aba6). */

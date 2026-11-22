@@ -61,7 +61,9 @@ class PortfolioManager @Inject constructor(
     )
 
     /** Set immediately by [setActivePortfolio] so the switch is reflected instantly, without waiting on a disk round-trip through [activePortfolioIdFlow]'s recomputation. */
-    private val activePortfolioIdOverride = MutableStateFlow<String?>(null)
+    // (wallet address, portfolio id): kept with its wallet, so after a switch away and back the
+    // other wallet's pick doesn't hide this one's stored choice.
+    private val activePortfolioIdOverride = MutableStateFlow<Pair<String, String>?>(null)
 
     private fun activePortfolioKey(walletAddress: String) =
         ACTIVE_PORTFOLIO_KEY_PREFIX + walletAddress.replace(":", "_")
@@ -98,7 +100,7 @@ class PortfolioManager @Inject constructor(
             if (address == null || portfolios.isEmpty()) {
                 null
             } else {
-                val stored = override ?: loadStoredActiveId(address)
+                val stored = override?.takeIf { it.first == address }?.second ?: loadStoredActiveId(address)
                 portfolios.firstOrNull { it.id == stored }?.id ?: portfolios.first().id
             }
         }.distinctUntilChanged()
@@ -155,18 +157,22 @@ class PortfolioManager @Inject constructor(
      *  iOS wallet 59593af). */
     suspend fun addPortfolio(name: String, makeActive: Boolean = true): PortfolioEntity? {
         val address = walletManager.getAddress()
-        val count = database.portfolioDefinitionDao().count(address)
-        if (count >= MAX_PORTFOLIOS) return null
-        val trimmed = name.trim()
-        val entity = PortfolioEntity(
-            id = UUID.randomUUID().toString(),
-            walletAddress = address,
-            name = trimmed.ifBlank { "Portfolio ${count + 1}" },
-            sortOrder = count,
-            createdAtMillis = System.currentTimeMillis()
-        )
-        ledgerStore.savePortfolios(listOf(entity))
-        normalizeSortOrder(address)
+        // count-then-insert as one step: two quick Adds at four portfolios made six
+        val entity = defaultSeedMutex.withLock {
+            val count = database.portfolioDefinitionDao().count(address)
+            if (count >= MAX_PORTFOLIOS) return null
+            val trimmed = name.trim()
+            val created = PortfolioEntity(
+                id = UUID.randomUUID().toString(),
+                walletAddress = address,
+                name = trimmed.ifBlank { "Portfolio ${count + 1}" },
+                sortOrder = count,
+                createdAtMillis = System.currentTimeMillis()
+            )
+            ledgerStore.savePortfolios(listOf(created))
+            normalizeSortOrder(address)
+            created
+        }
         if (makeActive) setActivePortfolio(entity.id)
         return entity
     }
@@ -215,16 +221,10 @@ class PortfolioManager @Inject constructor(
         return true
     }
 
-    /** Delete Account: which portfolio [walletAddress] had open (iOS `clearAllLocalData`). */
-    fun forgetActivePortfolio(walletAddress: String) {
-        runCatching { sharedPrefs.edit().remove(activePortfolioKey(walletAddress)).apply() }
-            .onFailure { android.util.Log.w("PortfolioManager", "Portfolio selection not removed", it) }
-    }
-
     fun setActivePortfolio(id: String) {
         val address = walletManager.getAddress()
         runCatching { sharedPrefs.edit().putString(activePortfolioKey(address), id).apply() }
             .onFailure { android.util.Log.w("PortfolioManager", "Portfolio selection not saved", it) }
-        activePortfolioIdOverride.value = id
+        activePortfolioIdOverride.value = address to id
     }
 }

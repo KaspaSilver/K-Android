@@ -163,7 +163,7 @@ private val qrOnlyHints = mapOf(
     DecodeHintType.ALSO_INVERTED to true,
 )
 
-private fun decodeQrCode(imageProxy: ImageProxy, onResult: (Result) -> Unit) {
+internal fun decodeQrCode(imageProxy: ImageProxy, onResult: (Result) -> Unit) {
     try {
         val plane = imageProxy.planes[0]
         val buffer = plane.buffer
@@ -237,7 +237,7 @@ fun QrScannerSheet(onScanned: (String) -> Unit, onDismiss: () -> Unit) {
 
 /** The white headline on iOS's `.ultraThinMaterial` plate that sits under the scanning frame. */
 @Composable
-private fun ScannerPlate(text: String) {
+internal fun ScannerPlate(text: String) {
     Text(
         text,
         color = Color.White,

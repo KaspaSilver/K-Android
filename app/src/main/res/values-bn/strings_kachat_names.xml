@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">এখন কোনো নাম গ্রেস পিরিয়ডে নেই।</string>
     <string name="kn_no_open_offers">কোনো খোলা প্রস্তাব নেই।</string>
     <string name="kn_not_enough">এই নামের জন্য আপনার চ্যাটিং ঠিকানায় যথেষ্ট KAS নেই।</string>
+    <string name="kn_err_claim_in_progress">আপনি ইতিমধ্যে %1$s দাবি করছেন।</string>
+    <string name="kn_err_not_enough_kas">এর জন্য যথেষ্ট KAS নেই। কিছু যোগ করে আবার চেষ্টা করুন।</string>
     <string name="kn_not_for_sale">বিক্রির জন্য নয়</string>
     <string name="kn_not_valid_name">বৈধ নাম নয়।</string>
     <string name="kn_nothing_yet">এখনও কিছু নেই।</string>

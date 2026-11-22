@@ -53,12 +53,23 @@ import androidx.compose.runtime.getValue
 
 /**
  * Full-screen in-app browser for the Apps bubbles - the only way out is the X top-left,
- * matching iOS's InAppBrowserScreen. Plain WebView with JS enabled; navigation stays inside.
+ * matching iOS's InAppBrowserScreen. The header names the page on screen now (its host, with
+ * "http://" when it isn't https), not the site it opened on ([title] is no longer shown, as on
+ * iOS). It stays on the site it opened (that host and its subdomains, "www." aside): a link or
+ * redirect to another http(s) site opens in the phone's browser, other schemes are refused
+ * (iOS audit 2026-11-21 #2; security audit L3).
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClose: () -> Unit) {
     val colors = LocalAppColors.current
+    var currentUrl by remember(url) { mutableStateOf(url) }
+    var isLoading by remember(url) { mutableStateOf(true) }
+    val headerHost = remember(currentUrl) {
+        val shown = runCatching { android.net.Uri.parse(currentUrl) }.getOrNull()
+        val host = shown?.host.orEmpty()
+        if (shown?.scheme?.lowercase() == "https") host else "http://$host"
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,7 +84,20 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
             IconButton(onClick = onClose) {
                 Icon(Icons.Default.Close, contentDescription = androidx.compose.ui.res.stringResource(com.kachat.app.R.string.close), tint = KaspaTeal)
             }
-            Text(title, color = colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(
+                headerHost,
+                color = colors.textPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Box(modifier = Modifier.size(34.dp), contentAlignment = Alignment.Center) {
+                if (isLoading) {
+                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = KaspaTeal)
+                }
+            }
         }
         // Optional strip under the top bar (Claim Testnet Kaspa: "your address is copied",
         // iOS 2a81767).
@@ -91,27 +115,118 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
             }
         }
         androidx.compose.material3.HorizontalDivider(color = colors.divider, thickness = 0.5.dp)
+        // No WebView on this phone, or one mid-update (MissingWebViewPackageException /
+        // AndroidRuntimeException): the page opens in the phone's browser instead of crashing.
+        var webViewMissing by remember { mutableStateOf(false) }
+        val hostContext = androidx.compose.ui.platform.LocalContext.current
+        androidx.compose.runtime.LaunchedEffect(webViewMissing) {
+            if (!webViewMissing) return@LaunchedEffect
+            try {
+                hostContext.startActivity(
+                    android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            } catch (e: Exception) {
+                // nothing can open it: the screen just closes
+            }
+            onClose()
+        }
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
-                WebView(context).apply {
+                val created = try { WebView(context) } catch (e: Exception) { null }
+                if (created == null) {
+                    webViewMissing = true
+                    android.widget.FrameLayout(context)
+                } else created.apply {
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT,
                     )
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
-                    webViewClient = WebViewClient()
+                    webViewClient = InAppBrowserClient(
+                        startUrl = url,
+                        onPage = { now -> if (!now.startsWith("about:", ignoreCase = true)) currentUrl = now },
+                        onLoading = { isLoading = it },
+                    )
                     loadUrl(url)
                 }
             },
             // Closing the browser frees the page (its renderer, timers and media) instead of
             // leaving it to the garbage collector.
-            onRelease = { webView ->
-                webView.stopLoading()
-                webView.destroy()
+            onRelease = { view ->
+                (view as? WebView)?.let { webView ->
+                    webView.stopLoading()
+                    webView.destroy()
+                }
             },
         )
+    }
+}
+
+/**
+ * [InAppBrowserScreen]'s navigation rules (iOS `InAppWebView.Coordinator`): the browser stays on
+ * the site it opened ([startUrl]'s host and its subdomains, "www." aside). A link or redirect to
+ * another http(s) site opens in the phone's browser - only for a tapped link or the very first
+ * load's redirect, so a page's script can't keep throwing the person out - and is never shown
+ * under this site's name. Frames inside the page load as they like; `about:` and `blob:` pages
+ * are allowed, `data:` and every other scheme refused in the main frame.
+ */
+private class InAppBrowserClient(
+    startUrl: String,
+    private val onPage: (String) -> Unit,
+    private val onLoading: (Boolean) -> Unit,
+) : WebViewClient() {
+    /** The site the browser was opened on, without a leading "www.". */
+    private val siteHost: String = run {
+        val host = runCatching { android.net.Uri.parse(startUrl).host }.getOrNull()?.lowercase().orEmpty()
+        host.removePrefix("www.")
+    }
+
+    private fun isOnSite(target: android.net.Uri): Boolean {
+        val host = target.host?.lowercase() ?: return false
+        if (siteHost.isEmpty()) return false
+        return host == siteHost || host.endsWith(".$siteHost")
+    }
+
+    override fun shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest): Boolean {
+        val target = request.url
+        // a frame inside the page (a captcha, an embed): it can't replace the page or its header
+        if (!request.isForMainFrame) return false
+        return when (target.scheme?.lowercase()) {
+            "http", "https" -> {
+                if (isOnSite(target)) return false
+                val firstLoad = view.copyBackForwardList().currentItem == null
+                if (request.hasGesture() || firstLoad) {
+                    try {
+                        view.context.startActivity(
+                            android.content.Intent(android.content.Intent.ACTION_VIEW, target)
+                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    } catch (e: Exception) {
+                        // no browser on the phone: the link just doesn't open
+                    }
+                }
+                true
+            }
+            "about", "blob" -> false
+            else -> true
+        }
+    }
+
+    override fun onPageStarted(view: WebView, url: String?, favicon: android.graphics.Bitmap?) {
+        onLoading(true)
+        url?.let(onPage)
+    }
+
+    override fun onPageFinished(view: WebView, url: String?) {
+        onLoading(false)
+        (view.url ?: url)?.let(onPage)
+    }
+
+    override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
+        url?.let(onPage)
     }
 }
 

@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">Кодирование…</string>
     <string name="pc_room_voice_receiving">Получение… %1$d из %2$d</string>
     <string name="pc_room_voice_recording">Запись...</string>
-    <string name="pc_rooms53_channel_name_invalid">Название канала должно содержать от 1 до %1$d символов без пробелов и двоеточий.</string>
     <string name="pc_rooms53_day_one">%1$d дн.</string>
     <string name="pc_rooms53_days">%1$d дн.</string>
-    <string name="pc_rooms53_join_failed">Не удалось присоединиться к этому каналу.</string>
     <string name="pc_rooms54_failed_to_edit">Не удалось изменить: %1$s</string>
     <string name="pc_rooms54_failed_to_send">Не удалось отправить: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">Не удалось отправить голосовое сообщение: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">Их профиль в KaPost: посты, ответы и подписчики.</string>
     <string name="pc_sender_send_kaspa_subtitle">Отправить Kaspa на их адрес.</string>
     <string name="pc_sender_copy_address_subtitle">Скопировать его адрес Kaspa.</string>
-    <string name="pc_public_chats">Публичные чаты</string>
+    <string name="pc_original_message_not_loaded">Исходное сообщение не загружено</string>
 </resources>

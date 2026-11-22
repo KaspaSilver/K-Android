@@ -11,9 +11,6 @@ import com.kachat.app.util.MessageProtocol
 object PublicChatLink {
     private const val WEB_HOST = "kachat.app"
 
-    /** The in-app form. */
-    fun appUrl(channel: String): String = "kachat://broadcast/$channel"
-
     /** The form that goes out in a share: it previews everywhere and opens the app when installed. */
     fun webUrl(channel: String): String = "https://$WEB_HOST/broadcast/$channel"
 

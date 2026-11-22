@@ -32,10 +32,13 @@ class ColdStorageManager @Inject constructor(
         private const val PREF_ADDRESS_SNAPSHOT = "cold_address_snapshot"
     }
 
+    // Every field has a default so Kotlin emits a no-arg constructor: Gson then runs it and a
+    // record saved before a field existed keeps that field's default (on, ""), instead of the
+    // false / null Gson's constructor-less path leaves (a null walletAddress crashed the tab).
     data class ColdAccount(
-        val id: String,
-        val name: String,
-        val kpub: String,
+        val id: String = "",
+        val name: String = "",
+        val kpub: String = "",
         // Which spending wallet this was imported under - "" for accounts saved before this
         // field existed (see getAccounts()'s claim-on-first-load migration).
         val walletAddress: String = "",
@@ -79,6 +82,8 @@ class ColdStorageManager @Inject constructor(
     private fun saveAccounts(accounts: List<ColdAccount>) {
         val json = gson.toJson(accounts)
         sharedPrefs.edit().putString(PREF_ACCOUNTS, json).apply()
+        // the push registration's Received KAS addresses follow (iOS 428a797b coldStorageAccountsChanged)
+        AddressActivityNotifier.watchOnlyChanges.value += 1
     }
 
     /**
@@ -247,6 +252,7 @@ class ColdStorageManager @Inject constructor(
 
     private fun saveHiddenAddresses(hidden: List<HiddenAddress>) {
         sharedPrefs.edit().putString(PREF_HIDDEN_ADDRESSES, gson.toJson(hidden)).apply()
+        AddressActivityNotifier.watchOnlyChanges.value += 1
     }
 
     /** Indices hidden under [accountId] — never deletes the address itself, just what the main list filters out. */

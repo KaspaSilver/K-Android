@@ -15,6 +15,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -75,6 +78,7 @@ class KaPostsScheduledStore @Inject constructor(
     private val walletEngine: KaspaWalletEngine,
 ) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val appContext: Context = context.applicationContext
 
     private val _entries = MutableStateFlow<List<KaPostScheduledEntry>>(emptyList())
     val entries: StateFlow<List<KaPostScheduledEntry>> = _entries.asStateFlow()
@@ -97,11 +101,18 @@ class KaPostsScheduledStore @Inject constructor(
         // KaChat's wallet engine keeps a spent coin out of its picks for 10 minutes
         // ([OutpointReservations]); a scheduled post's coins are held again well inside that, for
         // as long as the post waits, so no send, message or name action spends them meanwhile.
+        // Only while a post waits, or coins just sent are still held: it used to wake every four
+        // minutes for the life of the process, scheduled posts or not (audit L13).
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default).launch {
-            while (true) {
-                runCatching { holdReservedCoins() }
-                kotlinx.coroutines.delay(HOLD_REFRESH_MS)
-            }
+            _entries.map { list -> list.any { it.status == KaPostScheduledEntry.STATUS_SCHEDULED } }
+                .distinctUntilChanged()
+                .collectLatest { waiting ->
+                    while (true) {
+                        runCatching { holdReservedCoins() }
+                        if (!waiting && reservedOutpoints.isEmpty()) break
+                        kotlinx.coroutines.delay(HOLD_REFRESH_MS)
+                    }
+                }
         }
     }
 
@@ -379,7 +390,9 @@ class KaPostsScheduledStore @Inject constructor(
                     update(entry.copy(status = KaPostScheduledEntry.STATUS_SUBMITTED, submittedAtMs = System.currentTimeMillis()), wallet)
                 } else {
                     Log.w(TAG, "Scheduled post rejected", e)
-                    update(entry.copy(status = KaPostScheduledEntry.STATUS_FAILED, error = e.message), wallet)
+                    // The node's own words ("rpc error: code = ...") mean nothing to the reader;
+                    // the post's row says it failed in the app's language (audit L5).
+                    update(entry.copy(status = KaPostScheduledEntry.STATUS_FAILED, error = appContext.getString(com.kachat.app.R.string.failed_to_send)), wallet)
                 }
             }
             // Sent or rejected, it no longer waits on the phone (iOS KaPostsScheduledStore.swift).
@@ -503,6 +516,20 @@ class KaPostsScheduledStore @Inject constructor(
                 entries.firstOrNull { it.txId == txId }?.let { return it }
             }
             return null
+        }
+
+        /**
+         * Log Out: the leaving account's reminders still waiting come down (iOS 428a797b
+         * `clearNotificationsForSignedOutAccount` removes every pending request but the .kachat
+         * reminders). Its posts stay, and opening the app as it again sends what is due.
+         */
+        fun cancelReminders(context: Context, address: String) {
+            val appContext = context.applicationContext
+            val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val reminder = KaPostsScheduledReminder(appContext)
+            for (wallet in com.kachat.app.util.KaspaNetwork.accountAddressVariants(address)) {
+                readEntries(prefs, wallet).forEach { reminder.cancel(it.txId) }
+            }
         }
 
         /**

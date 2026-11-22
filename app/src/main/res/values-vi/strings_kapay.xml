@@ -54,6 +54,7 @@
     <string name="kp_buy_kusdt">Mua kUSDT</string>
     <string name="kp_cancel_77dfd">Hủy</string>
     <string name="kp_check_address_history_before_trying_again">Hãy kiểm tra lịch sử của địa chỉ trước khi thử lại.</string>
+    <string name="kp_trade_may_have_gone_through">Giao dịch có thể đã được thực hiện.</string>
     <string name="kp_checking_address_lld_5b84c">Đang kiểm tra địa chỉ #%1$s</string>
     <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">Kiểm tra một nghìn địa chỉ đầu tiên dù có khoảng trống, rồi tiếp tục chừng nào còn tìm thấy.</string>
     <string name="kp_close_and_keep_scanning_b66cc">Đóng và tiếp tục quét</string>

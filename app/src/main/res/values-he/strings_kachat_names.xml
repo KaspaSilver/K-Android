@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">אין כרגע שמות בתקופת החסד.</string>
     <string name="kn_no_open_offers">אין הצעות פתוחות.</string>
     <string name="kn_not_enough">אין מספיק KAS בכתובת הצ׳אט שלך עבור השם הזה.</string>
+    <string name="kn_err_claim_in_progress">כבר תובעים את %1$s.</string>
+    <string name="kn_err_not_enough_kas">אין מספיק KAS לשם כך. הוסיפו קצת ונסו שוב.</string>
     <string name="kn_not_for_sale">לא למכירה</string>
     <string name="kn_not_valid_name">זה לא שם תקין.</string>
     <string name="kn_nothing_yet">עדיין אין כלום.</string>

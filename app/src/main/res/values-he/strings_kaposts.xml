@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">הדיסלייק הוסר ברשת</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">המעקב פורסם ברשת</string>
-    <string name="feed54_help_welcome_guide">מדריך ברוכים הבאים</string>
-    <string name="feed54_help_welcome_guide_subtitle">הסיור הראשון: הפיד, החדרים, הטיפים והכתובת שלכם.</string>
     <string name="feed54_like_posted">הלייק פורסם ברשת</string>
     <string name="feed54_like_removed">הלייק הוסר ברשת</string>
     <string name="feed54_post_not_found">הפוסט לא נמצא - ייתכן שהוא ישן יותר מהפיד הנוכחי</string>

@@ -59,7 +59,8 @@ class KasPriceRepository @Inject constructor(
                 return price
             } catch (e: HttpException) {
                 if (attempt > 0 || (e.code() != 429 && e.code() < 500)) return null
-                val retryAfterSeconds = e.response()?.headers()?.get("Retry-After")?.toDoubleOrNull() ?: 2.0
+                // finite and 0..600 s, else 2 s (iOS 428a797b, audit 2026-11-21 #20)
+                val retryAfterSeconds = PortfolioRepository.retryAfterSeconds(e.response()?.headers()?.get("Retry-After"))
                 if (retryAfterSeconds > MAX_INLINE_RETRY_SECONDS) {
                     throttledUntilMillis = System.currentTimeMillis() + (retryAfterSeconds * 1000).toLong()
                     return null
@@ -77,9 +78,6 @@ class KasPriceRepository @Inject constructor(
     companion object {
         /** The prefs file the price lives in - Portfolio's, so the price carries over. */
         const val PREFS_NAME = "kachat_price_history_cache"
-        /** The key prefix of the current-price entries in [PREFS_NAME]; everything else there was
-         *  Portfolio's chart history. */
-        const val CURRENT_PRICE_KEY_PREFIX = "kachat_current_price_"
         /** A price younger than this is shown without asking again. */
         const val FRESH_MILLIS = 60 * 1000L
         private const val MAX_INLINE_RETRY_SECONDS = 10.0

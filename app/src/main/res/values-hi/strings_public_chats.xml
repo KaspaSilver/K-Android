@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">एन्कोडिंग…</string>
     <string name="pc_room_voice_receiving">प्राप्त हो रहा है… %2$d में से %1$d</string>
     <string name="pc_room_voice_recording">रिकॉर्डिंग...</string>
-    <string name="pc_rooms53_channel_name_invalid">चैनल के नाम 1-%1$d अक्षरों के होने चाहिए, बिना स्पेस या कोलन के।</string>
     <string name="pc_rooms53_day_one">%1$d दिन</string>
     <string name="pc_rooms53_days">%1$d दिन</string>
-    <string name="pc_rooms53_join_failed">उस चैनल से जुड़ते समय कुछ गलत हो गया।</string>
     <string name="pc_rooms54_failed_to_edit">संपादन विफल: %1$s</string>
     <string name="pc_rooms54_failed_to_send">भेजना विफल: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">वॉइस मैसेज भेजना विफल: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">उनकी KaPost प्रोफ़ाइल: पोस्ट, जवाब और फ़ॉलोअर्स।</string>
     <string name="pc_sender_send_kaspa_subtitle">उनके पते पर Kaspa भेजें।</string>
     <string name="pc_sender_copy_address_subtitle">उनका Kaspa पता कॉपी करें।</string>
-    <string name="pc_public_chats">सार्वजनिक चैट</string>
+    <string name="pc_original_message_not_loaded">मूल संदेश लोड नहीं हुआ</string>
 </resources>

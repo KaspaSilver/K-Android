@@ -82,10 +82,6 @@ interface GroupDao {
     @Query("SELECT * FROM group_messages WHERE txId = :txId AND walletAddress = :walletAddress LIMIT 1")
     suspend fun getMessage(txId: String, walletAddress: String): GroupMessageEntity?
 
-    /** Existence check by tx id — see GroupRepository.isGroupTxIngested (FCM fallback decision). */
-    @Query("SELECT COUNT(*) FROM group_messages WHERE txId = :txId AND walletAddress = :walletAddress")
-    suspend fun countMessagesByTxId(txId: String, walletAddress: String): Int
-
     /** Sends still on "pending" that were started before [beforeMs]. */
     @Query("SELECT * FROM group_messages WHERE walletAddress = :walletAddress AND txId LIKE 'pending\\_%' ESCAPE '\\' AND deliveryStatus = 'pending' AND blockTimestamp < :beforeMs")
     suspend fun getPendingSentBefore(walletAddress: String, beforeMs: Long): List<GroupMessageEntity>

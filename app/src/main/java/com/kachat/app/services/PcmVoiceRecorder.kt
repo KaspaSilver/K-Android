@@ -27,9 +27,6 @@ internal class PcmVoiceRecorder private constructor(
     @Volatile private var failure: Throwable? = null
     private val thread = Thread({ run() }, "PcmVoiceRecorder")
 
-    /** Samples captured so far. */
-    val capturedSamples: Int get() = captured.get()
-
     private fun start() {
         thread.start()
     }

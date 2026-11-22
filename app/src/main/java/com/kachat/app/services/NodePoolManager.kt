@@ -186,6 +186,15 @@ class NodePoolManager @Inject constructor(
     // blocked network must not burn battery on a 5s retry loop forever) and, from the
     // second such cycle on, the nodeConnectionsBlocked flag below.
     private var consecutiveDeadCycles = 0
+
+    /** Unmetered steady state (see probeCycle): how many Active nodes stay connected and probed
+     *  between full waves, and how often (in cycles, ~30 s each) the full wave still runs. */
+    private val wifiSteadyStateNodes = 4
+    private val wifiFullWaveEveryCycles = 10
+    private var cyclesSinceFullWave = 0
+
+    /** Probe cadence while backgrounded with no push (see startProbing). */
+    private val backgroundNoPushDelayMillis = 120_000L
     private val maxDeadCycleBackoffMillis = 120_000L
 
     // True once probing has concluded that no Kaspa gRPC node is reachable at all on the
@@ -435,7 +444,17 @@ class NodePoolManager @Inject constructor(
                         else -> 30_000L
                     }
                 }
-                delay(delayMillis)
+                if (!notificationHelper.isAppInForeground) {
+                    // Backgrounded without push (the gate above lets only that through): the pool
+                    // stays up for what still needs it - a notification's Reply, the always-listen
+                    // rooms - but probes at a background pace, and probeCycle keeps only the
+                    // primary connected. The front of the app ends the wait at once.
+                    kotlinx.coroutines.withTimeoutOrNull(maxOf(delayMillis, backgroundNoPushDelayMillis)) {
+                        notificationHelper.appForegroundFlow.first { it }
+                    }
+                } else {
+                    delay(delayMillis)
+                }
             }
         }
     }
@@ -623,13 +642,28 @@ class NodePoolManager @Inject constructor(
         // verdicts for the unprobed nodes just go stale, which a status display tolerates; if
         // the primary dies, the next cycle promotes the next stale-Active node, redials it, and
         // failures decay the truly dead ones until the pool drops below target and full
-        // discovery resumes automatically. WiFi keeps the full wave exactly as before.
+        // discovery resumes automatically.
+        //
+        // Unmetered (Wi-Fi) steady state, the same idea less strictly: the best
+        // [wifiSteadyStateNodes] Active nodes (the primary, its standby and the cross-check node
+        // among them) are probed each cycle and every other channel is closed by the sweep below,
+        // instead of ~26 channels each pinging every 20 s. The full wave still runs every
+        // [wifiFullWaveEveryCycles]th cycle, so the rest of the pool's verdicts (and the node
+        // list) stay fresh, and at once whenever the pool drops below target.
         val fullWave = (seeds + manualEndpoints + discoveredEndpoints + dnsResolvedEndpoints).distinct()
-        val firstWave = if (meteredNetwork.isMetered && activeCount >= targetActiveNodes) {
+        val healthy = activeCount >= targetActiveNodes
+        // Backgrounded (only reached without push, see startProbing) is treated as metered: the
+        // primary alone.
+        val firstWave = if ((meteredNetwork.isMetered || !notificationHelper.isAppInForeground) && healthy) {
             registry.activeBestFirst().firstOrNull()
                 ?.let { listOf(it.address) }
                 ?: fullWave
+        } else if (healthy && cyclesSinceFullWave < wifiFullWaveEveryCycles - 1) {
+            cyclesSinceFullWave++
+            registry.activeBestFirst().take(wifiSteadyStateNodes).map { it.address }
+                .ifEmpty { fullWave }
         } else {
+            cyclesSinceFullWave = 0
             fullWave
         }
         val firstResults = probeWave(firstWave, epoch)
@@ -851,6 +885,44 @@ class NodePoolManager @Inject constructor(
     suspend fun getUtxosByAddressesFromNode(addresses: List<String>): List<UtxoEntry> {
         if (addresses.isEmpty()) return emptyList()
         return getBroadcastConnection().getUtxosByAddresses(addresses).map { entry ->
+            UtxoEntry(
+                address = entry.address,
+                outpoint = Outpoint(transactionId = entry.outpoint.transactionId, index = entry.outpoint.index),
+                utxoEntry = UtxoData(
+                    amount = entry.utxoEntry.amount,
+                    scriptPublicKey = ScriptPublicKey(entry.utxoEntry.scriptPublicKey.scriptPublicKey),
+                    blockDaaScore = entry.utxoEntry.blockDaaScore,
+                    isCoinbase = entry.utxoEntry.isCoinbase,
+                    covenantId = entry.utxoEntry.covenantId.ifEmpty { null }
+                )
+            )
+        }
+    }
+
+    /**
+     * [getUtxosByAddressesFromNode], asked of two different nodes - the primary and the next best
+     * Active one - keeping only the coins both list identically (security audit M6: the pool's
+     * nodes are gossip-discovered and spoken to over plaintext gRPC, so one node's word isn't
+     * proof). The trusted node, when one is set, is asked alone: the person chose to trust it.
+     * Throws when fewer than two nodes answer.
+     */
+    suspend fun getUtxosByAddressesAgreed(addresses: List<String>): List<UtxoEntry> {
+        if (addresses.isEmpty()) return emptyList()
+        if (trustedNodeAddress.value != null) return getUtxosByAddressesFromNode(addresses)
+        val primary = broadcastAddress()
+        val second = registry.activeBestFirst().map { it.address }.firstOrNull { it != primary }
+            ?: throw IllegalStateException("no second node to cross-check with")
+        fun key(entry: protowire.Rpc.RpcUtxosByAddressesEntry) = listOf(
+            entry.outpoint.transactionId.lowercase(), entry.outpoint.index.toString(), entry.utxoEntry.amount.toString(),
+            entry.utxoEntry.scriptPublicKey.scriptPublicKey.lowercase(), entry.utxoEntry.covenantId.lowercase(),
+        ).joinToString("|")
+        val (first, other) = coroutineScope {
+            val a = async { connectionFor(primary).getUtxosByAddresses(addresses) }
+            val b = async { connectionFor(second).getUtxosByAddresses(addresses) }
+            a.await() to b.await()
+        }
+        val agreed = other.mapTo(HashSet()) { key(it) }
+        return first.filter { key(it) in agreed }.map { entry ->
             UtxoEntry(
                 address = entry.address,
                 outpoint = Outpoint(transactionId = entry.outpoint.transactionId, index = entry.outpoint.index),
@@ -1127,8 +1199,11 @@ class NodePoolManager @Inject constructor(
         connections.remove(address)?.let { runCatching { it.close() } }
     }
 
-    /** Triggers an immediate out-of-cycle probe pass — "Refresh Pool". */
-    /** The returned job ends when the probe pass does - Connection Status spins until then. */
+    /**
+     * Triggers an immediate out-of-cycle probe pass — "Refresh Pool".
+     *
+     * The returned job ends when the probe pass does - Connection Status spins until then.
+     */
     fun refreshNow(): Job = scope.launch { probeCycle() }
 
     /** Drops discovered/DNS-resolved/manual nodes and all connections, resets to just the seed list — "Clear Connection Pool". */

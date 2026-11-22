@@ -5,7 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.LiveHelp
 import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.kachat.app.R
@@ -33,9 +32,6 @@ data class KaChatBot(
         }
 
     companion object {
-        /** A bot chat's circle when the bot has no icon of its own (iOS "cpu"). */
-        val fallbackIcon: ImageVector get() = Icons.Outlined.Memory
-
         /** Every bot, in the order the circles row on Chats shows them (iOS 82ab31d, 7dd508a;
          *  the mainnet addresses from 64ce0c7). */
         val all: List<KaChatBot> = listOf(

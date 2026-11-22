@@ -229,7 +229,8 @@ fun KaPostTipSheet(
                             error = outcome.message
                         }
                         is KaPostTipSender.Outcome.Failed -> {
-                            error = outcome.message ?: context.getString(R.string.something_went_wrong)
+                            // as UserFacingError words it, as an instant tip's (audit L6)
+                            error = com.kachat.app.util.UserFacingError.message(outcome.message, context.getString(R.string.something_went_wrong))
                             chatViewModel.refreshSpendingUtxos()
                         }
                     }

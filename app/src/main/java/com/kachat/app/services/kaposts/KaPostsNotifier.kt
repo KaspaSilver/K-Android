@@ -16,8 +16,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * KaPost's local banners: activity on your posts while the app is open and push is off (the
- * poller's), and their removal once you have seen the list. KaPost's `NotificationHelper.showKaPosts`
+ * KaPost's local banners: activity on your posts while the app is open (the poller's, iOS
+ * 428a797b) and pushes that arrive meanwhile, one per action, and their removal once you have
+ * seen the list. KaPost's `NotificationHelper.showKaPosts`
  * / `cancelKaPostsNotifications`, kept here so KaChat's NotificationHelper stays as it is; it posts
  * on KaChat's own message channels ([NotificationHelper.channelFor]).
  *
@@ -61,8 +62,13 @@ class KaPostsNotifier @Inject constructor(
         val notification = NotificationCompat.Builder(context, NotificationHelper.channelFor(soundEnabled, vibrationEnabled))
             .setSmallIcon(R.drawable.ic_kachat_logo)
             .setContentTitle("KaPost")
-            .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            // without bidi controls, so a name or post can't reorder what the lock screen shows
+            // (iOS 428a797b NotificationService `withoutBidiControls`)
+            .setContentText(NotificationHelper.withoutBidiControls(text))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(NotificationHelper.withoutBidiControls(text)))
+            .addExtras(android.os.Bundle().apply {
+                if (actionTxId.isNotBlank()) putString(NotificationHelper.EXTRA_TX_ID, actionTxId)
+            })
             // iOS threadIdentifier "kaposts": what [cancelKaPostsNotifications] knows it by.
             .setGroup(KAPOSTS_GROUP)
             .setAutoCancel(true)

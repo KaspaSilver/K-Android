@@ -45,10 +45,13 @@ class PublicChatUnreadBadge @Inject constructor(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    /** Each joined room's unread count, and whether its bell is on. */
-    private data class RoomCount(val unread: Int, val bellOn: Boolean)
+    /** Each joined room's summary, with its unread count as the list and the badge show it, and
+     *  whether its bell is on. */
+    private data class RoomCount(val name: String, val summary: BroadcastRepository.RoomSummary, val bellOn: Boolean) {
+        val unread: Int get() = summary.unreadCount
+    }
 
-    private val roomCounts: Flow<List<RoomCount>> =
+    private val roomCounts: StateFlow<List<RoomCount>> =
         combine(repository.getJoinedChannels(), readState.state, notifier.activeChannelName) { channels, read, viewing ->
             Triple(channels, read, viewing)
         }.flatMapLatest { (channels, read, viewing) ->
@@ -60,16 +63,30 @@ class PublicChatUnreadBadge @Inject constructor(
                 combine(rooms.map { channel ->
                     val name = channel.channelName
                     repository.roomSummary(name, me, read.lastReadByChannel[name]).map { summary ->
+                        // A default room switched off in Public Chats settings is never counted,
+                        // nor the room on screen (iOS `unreadCount` while `isViewing`: the dock
+                        // stays on screen inside a room); one marked unread by hand shows at
+                        // least one.
                         val unread = when {
                             name in read.hiddenCurated || name == viewing -> 0
                             name in read.manuallyUnread -> maxOf(summary.unreadCount, 1)
                             else -> summary.unreadCount
                         }
-                        RoomCount(unread, channel.notifyEnabled)
+                        RoomCount(name, summary.copy(unreadCount = unread), channel.notifyEnabled)
                     }
                 }) { it.toList() }
             }
         }.flowOn(Dispatchers.Default)
+            // One copy for the Chats list and both badges: each room's summary re-reads on every
+            // write to the room table, and every collector used to run its own (audit H4).
+            .stateIn(scope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Each joined room's newest message and unread count, for the Chats list's room rows
+     *  (service rooms left out). Shared with the badges below. */
+    val roomSummaries: StateFlow<Map<String, BroadcastRepository.RoomSummary>> = roomCounts
+        .map { counts -> counts.associate { it.name to it.summary } }
+        .distinctUntilChanged()
+        .stateIn(scope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /** The rooms' part of the Chats badge: unread messages in rooms whose bell is on. */
     val chatsBadgeCount: StateFlow<Int> = roomCounts

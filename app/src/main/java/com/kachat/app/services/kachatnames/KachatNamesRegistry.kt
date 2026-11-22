@@ -3,7 +3,6 @@ package com.kachat.app.services.kachatnames
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
@@ -24,7 +23,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -43,6 +45,27 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/** The most an indexer, REST or manifest answer may be (security audit L6): a hostile or broken
+ *  server can't fill memory with one. Well above the biggest real page (a REST page of 50 full
+ *  transactions, the registry's name lists). */
+internal const val KACHAT_NAMES_MAX_RESPONSE_BYTES = 16L * 1024 * 1024
+
+/** The body, read up to [maxBytes]; a bigger one throws instead of being read whole. */
+internal fun okhttp3.ResponseBody?.readCapped(maxBytes: Long = KACHAT_NAMES_MAX_RESPONSE_BYTES): ByteArray {
+    if (this == null) return ByteArray(0)
+    if (contentLength() > maxBytes) throw KachatNames.Failure("the answer is too large")
+    val source = source()
+    val buffer = okio.Buffer()
+    while (source.read(buffer, 64L * 1024) != -1L) {
+        if (buffer.size > maxBytes) throw KachatNames.Failure("the answer is too large")
+    }
+    return buffer.readByteArray()
+}
+
+/** [readCapped] as UTF-8 text (every answer read this way is JSON). */
+internal fun okhttp3.ResponseBody?.stringCapped(maxBytes: Long = KACHAT_NAMES_MAX_RESPONSE_BYTES): String =
+    String(readCapped(maxBytes), Charsets.UTF_8)
 
 /**
  * The `.kachat` registry for the screens: lookups, an owner's names, listings, lapsed names,
@@ -98,8 +121,6 @@ class KachatNamesRegistry @Inject constructor(
     val source: StateFlow<Source?> = _source.asStateFlow()
 
     private val _chainState = MutableStateFlow<RegistryState?>(null)
-    /** The walker's registry (chain source only). */
-    val chainState: StateFlow<RegistryState?> = _chainState.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
@@ -135,7 +156,20 @@ class KachatNamesRegistry @Inject constructor(
      * once after a launch while a fresh copy is fetched; Settings > Storage > Cache > Profiles
      * clears it ([clearProfileCache]).
      */
-    private var identities by mutableStateOf<Map<String, Identity>>(emptyMap())
+    private var identities: Map<String, Identity>
+        get() = identityMap
+        set(value) {
+            // Replaced whole as before, but readers observe their own address only
+            // ([identityStates], audit H6): an answer redraws that person's avatar and name, not
+            // every one on screen.
+            synchronized(identityLock) {
+                identityMap = value
+                identityStates.publish()
+            }
+        }
+    @Volatile private var identityMap: Map<String, Identity> = emptyMap()
+    /** [identities] per address, as snapshot state: what [cachedIdentity] reads in composition. */
+    private val identityStates = PerKeyState<Identity> { identityMap[it] }
     /** When each cached identity was stored (unix ms): the oldest go first past [IDENTITIES_KEEP]. */
     private val identityStoredAt = ConcurrentHashMap<String, Long>()
     /** The coalesced write of [identities] to disk (a contact sweep lands many in a row). */
@@ -534,7 +568,7 @@ class KachatNamesRegistry @Inject constructor(
                 ?: throw KachatNames.Failure("bad Kaspa REST API URL")
             val list = http.newCall(request).execute().use { response ->
                 if (response.code != 200) throw KachatNames.Failure("the Kaspa REST API answered ${response.code} for $address")
-                val body = response.body?.string() ?: return@use null
+                val body = response.body?.stringCapped() ?: return@use null
                 val json = JsonParser.parseString(body)
                 if (!json.isJsonArray) null else json.asJsonArray
             } ?: break
@@ -554,7 +588,7 @@ class KachatNamesRegistry @Inject constructor(
             val url = "${restBase()}/transactions/$txId?inputs=false&outputs=false&resolve_previous_outpoints=no"
             http.newCall(Request.Builder().url(url).build()).execute().use { response ->
                 if (response.code != 200) return@use false
-                val j = JsonParser.parseString(response.body?.string() ?: "")
+                val j = JsonParser.parseString(response.body.stringCapped())
                 j.isJsonObject && j.asJsonObject.get("is_accepted")?.let { it.isJsonPrimitive && it.asJsonPrimitive.isBoolean && it.asBoolean } == true
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
@@ -929,11 +963,15 @@ class KachatNamesRegistry @Inject constructor(
                     Totals(last24h = t.last24h, last7d = t.last7d, total = t.total) to fees
                 } else {
                     // an indexer from before `transactions`: the per-kind figures, added up
+                    // (saturating, a negative figure as none: a server's numbers must never wrap;
+                    // iOS audit 2026-11-21 #20)
                     val kinds = j.activity.orEmpty().values
+                    fun sum(value: (IndexerApi.StatsJson.Counts) -> Long): Long =
+                        kinds.fold(0L) { acc, kind -> KachatNames.clampedSum(acc, value(kind).coerceAtLeast(0L)) }
                     Totals(
-                        last24h = kinds.sumOf { it.last24h },
-                        last7d = kinds.sumOf { it.last7d },
-                        total = kinds.sumOf { it.total },
+                        last24h = sum { it.last24h },
+                        last7d = sum { it.last7d },
+                        total = sum { it.total },
                     ) to fees
                 }
             }
@@ -1028,7 +1066,17 @@ class KachatNamesRegistry @Inject constructor(
         if (!KachatNamesService.isLaunched) return profileOnlyIdentity(a)
         prepare()
         (_source.value as? Source.Indexer)?.let { src ->
-            fromIndexer(src.base, "/identity/$a") { IndexerApi.IdentityJson.parse(it) }?.let { return it.identity }
+            fromIndexer(src.base, "/identity/$a") { IndexerApi.IdentityJson.parse(it) }?.let {
+                // an answer about another address labels nobody (security audit M5)
+                val identity = it.identity
+                val answered = keyOf(identity.address)
+                val asked = keyOf(a)
+                return if (answered != null && asked != null && !answered.contentEquals(asked)) {
+                    Identity(a, null, emptyList(), null)
+                } else {
+                    identity.copy(address = a)
+                }
+            }
         }
         val key = keyOf(a) ?: return Identity(a, null, emptyList(), null)
         // held names: a name in grace still labels and resolves to its owner (iOS f7c371a)
@@ -1081,7 +1129,7 @@ class KachatNamesRegistry @Inject constructor(
                 val request = Request.Builder().url(url).build()
                 http.newCall(request).execute().use { response ->
                     if (response.code != 200) return@use null
-                    JsonParser.parseString(response.body?.string() ?: "").takeIf { it.isJsonArray }?.asJsonArray
+                    JsonParser.parseString(response.body.stringCapped()).takeIf { it.isJsonArray }?.asJsonArray
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
@@ -1312,8 +1360,13 @@ class KachatNamesRegistry @Inject constructor(
                 }
                 val answer = post(base, "/identity/batch", body).asJsonObject.getAsJsonObject("identities")
                     ?: return null
+                // only the addresses asked for: an answer can't fill the cache with others (iOS
+                // audit 2026-11-21 #19)
+                val asked = chunk.toHashSet()
                 for ((address, identity) in answer.entrySet()) {
-                    out[address.lowercase()] = IndexerApi.IdentityJson.parse(identity).identity
+                    val key = address.lowercase()
+                    if (key !in asked) continue
+                    out[key] = IndexerApi.IdentityJson.parse(identity).identity
                 }
             }
             out
@@ -1325,13 +1378,46 @@ class KachatNamesRegistry @Inject constructor(
         }
     }
 
+    /**
+     * Whether [label] (a bare name) is [address]'s on the chain, not only in the indexer's word:
+     * the name resolves to this address's key, isn't lapsed, and a node holds that name record
+     * (security audit M5). For the screens where someone decides to pay. Remembered ten minutes
+     * per (address, name); a failed check is asked again next time.
+     */
+    suspend fun confirmedLabel(address: String, label: String): Boolean {
+        val name = try { Codec.normalize(label).also { Codec.validate(it) } } catch (_: Exception) { return false }
+        val cacheKey = address.trim().lowercase() + "|" + name
+        confirmedLabels[cacheKey]?.let { if (System.currentTimeMillis() - it < CONFIRMED_LABEL_TTL_MS) return true }
+        val owner = keyOf(address) ?: return false
+        val info = try {
+            (lookup(name) as? Lookup.Registered)?.info
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        } ?: return false
+        if (info.name != name || !info.owner.contentEquals(owner) || info.status(graceMs) == Status.LAPSED) return false
+        try {
+            confirmOnChain(info)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            return false
+        }
+        confirmedLabels[cacheKey] = System.currentTimeMillis()
+        return true
+    }
+
+    private val confirmedLabels = java.util.concurrent.ConcurrentHashMap<String, Long>()
+
     fun cachedIdentity(address: String): Identity? {
         // Every network since iOS d36fc42: profiles need no registry. Mainnet has no names yet,
         // so there an address keeps its short form and only its profile (avatar...) shows.
         if (!KachatNamesService.profilesEnabled) return null
         val key = address.trim().lowercase()
         if (KaspaNetwork.ofAddress(key) == null || !KaspaNetwork.isOnActiveNetwork(key)) return null
-        val known = identities[key]
+        // this address alone, as state: a composable reading it redraws when ITS identity changes
+        val known = identityStates.read(key)
         val rev = _revision.value
         val now = System.currentTimeMillis()
         val asked = identityAsked[key]
@@ -1346,24 +1432,89 @@ class KachatNamesRegistry @Inject constructor(
         val missedRecently = identityMisses[key]?.let { now - it < 60_000L } == true
         if (stale && !missedRecently && identityLookups.add(key)) {
             identityAsked[key] = rev to now
-            scope.launch {
-                try {
-                    val found = identity(key)
-                    identityMisses.remove(key)
-                    storeFetchedIdentities(mapOf(key to found))
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (_: Exception) {
-                    // the registry or profiles are not there (being upgraded, offline, a 503):
-                    // this address is asked again in a minute
-                    identityMisses[key] = System.currentTimeMillis()
-                } finally {
-                    identityLookups.remove(key)
+            // Queued and sent with everyone else asked in the next moment ([flushIdentityBatch]):
+            // a feed full of new authors is one `/identity/batch` request and one cache update,
+            // not one of each per author (iOS audit 2026-11-21 #31).
+            val schedule = synchronized(identityBatchLock) {
+                identityBatchQueue.add(key)
+                if (identityBatchScheduled) false else {
+                    identityBatchScheduled = true
+                    true
                 }
+            }
+            if (schedule) scope.launch {
+                delay(IDENTITY_BATCH_DELAY_MS)
+                flushIdentityBatch()
             }
         }
         val own = ownProfile(key)?.profile ?: return known
         return (known ?: Identity(key, null, emptyList(), null)).copy(profile = own)
+    }
+
+    /** Addresses [cachedIdentity] wants looked up, sent together after a short wait. */
+    private val identityBatchQueue = ArrayList<String>()
+    private var identityBatchScheduled = false
+    private val identityBatchLock = Any()
+
+    /**
+     * Looks up everyone [cachedIdentity] queued in the last moment: one `/identity/batch` request
+     * (200 a call), or, where there's no batch (the chain walker, an older indexer), eight at a
+     * time. The answers are filed together, in one cache update (iOS `flushIdentityBatch`).
+     */
+    private suspend fun flushIdentityBatch() {
+        val keys = synchronized(identityBatchLock) {
+            val queued = identityBatchQueue.toList()
+            identityBatchQueue.clear()
+            identityBatchScheduled = false
+            queued
+        }
+        if (keys.isEmpty()) return
+        val found = HashMap<String, Identity>()
+        val answered = HashSet<String>()
+        try {
+            val batch = identitiesBatch(keys)
+            if (batch != null) {
+                found.putAll(batch)
+                answered.addAll(keys)
+            } else {
+                for (slice in keys.chunked(8)) {
+                    val answers = kotlinx.coroutines.coroutineScope {
+                        slice.map { key ->
+                            async {
+                                key to try {
+                                    identity(key)
+                                } catch (e: kotlinx.coroutines.CancellationException) {
+                                    throw e
+                                } catch (_: Exception) {
+                                    // the registry or profiles are not there (being upgraded,
+                                    // offline, a 503): asked again in a minute
+                                    null
+                                }
+                            }
+                        }.awaitAll()
+                    }
+                    for ((key, identity) in answers) {
+                        if (identity != null) found[key] = identity
+                        answered.add(key)
+                    }
+                }
+            }
+        } finally {
+            val stored = HashMap<String, Identity>()
+            val now = System.currentTimeMillis()
+            for (key in keys) {
+                identityLookups.remove(key)
+                val identity = found[key]
+                if (key !in answered || identity == null) {
+                    // failed, or not in the batch's answer: asked again in a minute
+                    identityMisses[key] = now
+                    continue
+                }
+                identityMisses.remove(key)
+                stored[key] = identity
+            }
+            storeFetchedIdentities(stored)
+        }
     }
 
     // Profile cache on disk (iOS 5e408f7)
@@ -1507,7 +1658,7 @@ class KachatNamesRegistry @Inject constructor(
                 if (code == 404) throw KachatNames.Failure("not found")
                 throw KachatNames.Failure("the names indexer answered $code")
             }
-            JsonParser.parseString(response.body?.string() ?: "")
+            JsonParser.parseString(response.body.stringCapped(NAMES_INDEXER_MAX_RESPONSE_BYTES))
         }
     }
 
@@ -1525,7 +1676,7 @@ class KachatNamesRegistry @Inject constructor(
                 if (code == 404) throw KachatNames.Failure("not found")
                 throw KachatNames.Failure("the names indexer answered $code")
             }
-            JsonParser.parseString(response.body?.string() ?: "")
+            JsonParser.parseString(response.body.stringCapped(NAMES_INDEXER_MAX_RESPONSE_BYTES))
         }
     }
 
@@ -1582,9 +1733,16 @@ class KachatNamesRegistry @Inject constructor(
         /** 1,000 transactions per address: past the newest dust anyone would pay to send (iOS 8de95c9, IOS-065). */
         const val REST_MAX_PAGES = 20
         private const val CACHE_FILE = "registry.json"
+        /** How long a name [confirmedLabel] checked on the chain stays confirmed. */
+        private const val CONFIRMED_LABEL_TTL_MS = 10 * 60 * 1000L
         /** The identities in [KachatProfileCache] (iOS 5e408f7), at most [IDENTITIES_KEEP] people. */
         private const val IDENTITIES_FILE = "identities.json"
         private const val IDENTITIES_KEEP = 1000
+        /** How long [cachedIdentity] waits to gather others into one batch (iOS `identityBatchDelay`). */
+        private const val IDENTITY_BATCH_DELAY_MS = 250L
+        /** The largest answer from the names indexer that is read at all: a page of 200 events or
+         *  listings, or 200 identities, is far below it (iOS audit 2026-11-21 #19 `maxResponseBytes`). */
+        private const val NAMES_INDEXER_MAX_RESPONSE_BYTES = 4_000_000L
         private const val STANDBY_PREFS = "kachat_names_registry"
         /** The standby copy is walked this often while the indexer is in use, or on a metered
          *  connection (iOS 4f8e14bb). */
@@ -1720,21 +1878,30 @@ class KachatNamesRegistry @Inject constructor(
             for (e in events) {
                 at[e.txId] = maxOf(at[e.txId] ?: 0L, e.at ?: 0L)
                 val name = e.name ?: continue
-                val years = e.years ?: continue
-                if (years <= 0) continue
+                val rawYears = e.years ?: continue
+                if (rawYears <= 0) continue
+                // `years` can come from an indexer: a name holds a handful of periods, so anything
+                // past 1000 is nonsense, clamped before any math, and every sum and product holds
+                // at the top instead of wrapping or throwing (iOS 428a797b, audit 2026-11-21 #20).
+                val years = minOf(rawYears, 1000L)
                 val length = name.toByteArray(Charsets.UTF_8).size
-                when (e.op) {
-                    "register" -> paid[e.txId] = (paid[e.txId] ?: 0L) + params.registerCost(forLength = length, years = years)
-                    "extend", "renew" -> paid[e.txId] = (paid[e.txId] ?: 0L) + params.renewPrice(forLength = length) * years
+                val cost = when (e.op) {
+                    "register" -> KachatNames.clampedSum(
+                        params.registerPrice(forLength = length),
+                        KachatNames.clampedProduct(params.renewPrice(forLength = length), years - 1),
+                    )
+                    "extend", "renew" -> KachatNames.clampedProduct(params.renewPrice(forLength = length), years)
+                    else -> null
                 }
+                if (cost != null) paid[e.txId] = KachatNames.clampedSum(paid[e.txId] ?: 0L, cost)
             }
             var txTotal = 0L; var tx7 = 0L; var tx1 = 0L
             var feeTotal = 0L; var fee7 = 0L; var fee1 = 0L
             for ((tx, time) in at) {
                 val fee = paid[tx] ?: 0L
-                txTotal += 1; feeTotal += fee
-                if (time > d7) { tx7 += 1; fee7 += fee }
-                if (time > d1) { tx1 += 1; fee1 += fee }
+                txTotal += 1; feeTotal = KachatNames.clampedSum(feeTotal, fee)
+                if (time > d7) { tx7 += 1; fee7 = KachatNames.clampedSum(fee7, fee) }
+                if (time > d1) { tx1 += 1; fee1 = KachatNames.clampedSum(fee1, fee) }
             }
             return Totals(last24h = tx1, last7d = tx7, total = txTotal) to Totals(last24h = fee1, last7d = fee7, total = feeTotal)
         }
@@ -1834,7 +2001,9 @@ object KachatProfileCache {
 @Singleton
 class KachatSocialImageResolver @Inject constructor(
     @ApplicationContext private val context: Context,
-    okHttpClient: OkHttpClient
+    okHttpClient: OkHttpClient,
+    private val walletManager: com.kachat.app.services.WalletManager,
+    private val database: dagger.Lazy<com.kachat.app.services.database.KaChatDatabase>,
 ) {
     data class Entry(val profile: SocialProfile, val checkedAt: Long)
 
@@ -1863,6 +2032,70 @@ class KachatSocialImageResolver @Inject constructor(
     /** The cache by normalized link: screens collect it so a lookup that lands re-renders them
      *  (iOS `@Published entries`). */
     val entries: StateFlow<Map<String, Entry>> = _entries.asStateFlow()
+
+    /** [entries] per link, as snapshot state ([observedProfile], audit H6). */
+    private val entryStates = PerKeyState<Entry> { _entries.value[it] }
+
+    init {
+        // every change to the cache reaches the readers of the links it changed, and only those
+        scope.launch { _entries.collect { entryStates.publish() } }
+    }
+
+    /**
+     * The cached profile for [link], read so a composable redraws when THIS link's answer changes
+     * and not when anyone else's lands (collecting [entries] subscribed every avatar on screen to
+     * every answer, audit H6). Null when there is none or the link isn't a supported one.
+     */
+    fun observedProfile(link: String?): SocialProfile? = key(link)?.let { entryStates.read(it)?.profile }
+
+    // Who may be looked up (iOS audit 2026-11-21 #17)
+
+    /** Addresses whose profile screen the person opened this session (a tap): their social links
+     *  may be looked up from then on, wherever they show. Snapshot state, so avatars already on
+     *  screen for them redraw once and show it too. */
+    private var openedAddresses by androidx.compose.runtime.mutableStateOf<Set<String>>(emptySet())
+
+    /** The active account's chats (its contacts table), lowercased; snapshot state, so a chat
+     *  that starts lets its avatar show. */
+    private var chatAddresses by androidx.compose.runtime.mutableStateOf<Set<String>>(emptySet())
+
+    init {
+        scope.launch {
+            @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+            walletManager.activeAddressFlow
+                .flatMapLatest { wallet ->
+                    if (wallet == null) kotlinx.coroutines.flow.flowOf(emptySet())
+                    else database.get().contactDao().getContacts(wallet).map { rows -> rows.mapTo(HashSet()) { it.id.trim().lowercase() } }
+                }
+                .distinctUntilChanged()
+                .collect { chatAddresses = it }
+        }
+    }
+
+    /**
+     * THE gate for every social lookup an avatar or profile starts (iOS `mayLookUp(address:)`). A
+     * lookup tells X, YouTube, GitHub and the rest the viewer's IP and whose profile they looked
+     * at, so it happens only for your own account, people in your Contacts (Address Book) or
+     * chats, and anyone whose profile you opened. Anyone else (a KaPost author, a room member
+     * scrolled past) shows the initials avatar and contacts no one.
+     */
+    fun mayLookUp(address: String?): Boolean {
+        if (address.isNullOrBlank()) return false
+        val key = address.trim().lowercase()
+        if (key in openedAddresses) return true
+        if (walletManager.activeAddressFlow.value?.trim()?.lowercase() == key) return true
+        if (com.kachat.app.services.AddressBookManager.shared?.entry(address) != null) return true
+        return key in chatAddresses
+    }
+
+    /** A profile screen for [address] is open (the person tapped it): its links may be looked up
+     *  (iOS `noteProfileOpened`). Call from an effect, never during composition. */
+    fun noteProfileOpened(address: String?) {
+        if (address.isNullOrBlank()) return
+        val key = address.trim().lowercase()
+        if (key in openedAddresses) return
+        openedAddresses = openedAddresses + key
+    }
 
     /** What a lookup came back with (iOS `KachatSocialImageResolver.Lookup`, c124cb3). */
     sealed class Lookup {
@@ -2009,6 +2242,7 @@ class KachatSocialImageResolver @Inject constructor(
             persistScheduled = false
             inFlight.clear()
             requested.clear()
+            openedAddresses = emptySet()
             unreachableAt.clear()
             recheckedAt.clear()
             _entries.value = emptyMap()
@@ -2117,7 +2351,9 @@ class KachatSocialImageResolver @Inject constructor(
         val image = SocialSource.openGraphImage(html)
         val banner = when (source.platform) {
             SocialSource.Platform.X -> SocialSource.xBanner(html)
-            SocialSource.Platform.YOUTUBE -> fetch(source.link, BROWSER_AGENT, cookie = "CONSENT=YES+1")
+            // no consent cookie: K never accepts Google's consent for the person (iOS audit
+            // 2026-11-21 #17). Where YouTube answers with its consent page instead, no banner.
+            SocialSource.Platform.YOUTUBE -> fetch(source.link, BROWSER_AGENT)
                 ?.takeIf { it.second == 200 }?.let { SocialSource.youtubeBanner(it.first) }
             else -> null
         }

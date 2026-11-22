@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">Đã gỡ lượt không thích trên mạng</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">Đã đăng theo dõi lên mạng</string>
-    <string name="feed54_help_welcome_guide">Hướng dẫn chào mừng</string>
-    <string name="feed54_help_welcome_guide_subtitle">Chuyến tham quan đầu tiên: bảng tin, phòng, tip và địa chỉ của bạn.</string>
     <string name="feed54_like_posted">Đã đăng lượt thích lên mạng</string>
     <string name="feed54_like_removed">Đã gỡ lượt thích trên mạng</string>
     <string name="feed54_post_not_found">Không tìm thấy bài đăng - có thể nó cũ hơn bảng tin hiện tại</string>

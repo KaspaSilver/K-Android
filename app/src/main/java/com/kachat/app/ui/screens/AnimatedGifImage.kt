@@ -16,6 +16,7 @@ import com.kachat.app.util.GifDecoder
 import com.kachat.app.util.GifPrep
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
@@ -38,7 +39,10 @@ fun AnimatedGifImage(
     contentScale: ContentScale = ContentScale.Fit,
 ) {
     var frame by remember(data) { mutableStateOf<ImageBitmap?>(null) }
-    LaunchedEffect(data) {
+    // A chat left open behind the home screen keeps its composition: the loop waits for the app to
+    // be seen again rather than decode frames nobody sees.
+    val lifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(data, lifecycle) {
         withContext(Dispatchers.Default) {
             if (!GifPrep.isSafeToAnimate(data)) return@withContext
             val first = runCatching { GifDecoder(data) }.getOrNull() ?: return@withContext
@@ -54,6 +58,9 @@ fun AnimatedGifImage(
                 decoder = null
                 var shown = 0
                 while (isActive) {
+                    if (!lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) {
+                        lifecycle.currentStateFlow.first { it.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED) }
+                    }
                     val decoded = runCatching { current.nextFrame() }.getOrNull() ?: break
                     buffers[next].setPixels(decoded.pixels, 0, current.width, 0, 0, current.width, current.height)
                     frame = images[next]

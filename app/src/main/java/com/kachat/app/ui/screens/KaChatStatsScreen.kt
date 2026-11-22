@@ -103,19 +103,6 @@ data class KaChatStatCounts(val total: Long?, val last24h: Long?, val last7d: Lo
     }
 }
 
-/** The categories a snapshot reports, in the fixed display order, each with its count for
- *  [range]. A category no indexer reports is left out rather than shown as zero. */
-fun kaChatStatRows(
-    counts: Map<KaChatStatCategory, KaChatStatCounts>,
-    range: KaChatStatRange,
-): List<Pair<KaChatStatCategory, Long?>> =
-    KaChatStatCategory.entries.mapNotNull { c -> counts[c]?.let { c to it.value(range) } }
-
-/** The KaChat transactions total for [rows]: the sum of every reported count (the .kachat names
- *  categories included), null when none has a number for the range. */
-fun kaChatStatsTotal(rows: List<Pair<KaChatStatCategory, Long?>>): Long? =
-    rows.mapNotNull { it.second }.takeIf { it.isNotEmpty() }?.sum()
-
 /** Merges indexers' `GET /stats` `categories`: a category comes from the first response (in
  *  settings order) that reports it; keys this app doesn't know are skipped. */
 fun mergeKaChatStatCategories(responses: List<JsonObject>): Map<KaChatStatCategory, KaChatStatCounts> {
@@ -329,23 +316,33 @@ fun KaChatStatsScreen(onBack: (() -> Unit)?, viewModel: KaChatStatsViewModel = h
     // added up.
     val kachatTotals = kachatTransactions ?: snapshot?.let { snap ->
         val counts = KaChatStatCategory.entries.filter { it.isKachat }.mapNotNull { snap.counts[it] }
+        // saturating: an indexer's numbers must never wrap Stats (iOS 428a797b, audit 2026-11-21 #20)
+        fun sum(value: (KaChatStatCounts) -> Long?): Long =
+            counts.fold(0L) { acc, c -> com.kachat.app.services.kachatnames.KachatNames.clampedSum(acc, (value(c) ?: 0L).coerceAtLeast(0L)) }
         if (counts.isEmpty()) null
         else com.kachat.app.services.kachatnames.KachatNamesRegistry.Totals(
-            last24h = counts.sumOf { (it.last24h ?: 0L).coerceAtLeast(0L) },
-            last7d = counts.sumOf { (it.last7d ?: 0L).coerceAtLeast(0L) },
-            total = counts.sumOf { (it.total ?: 0L).coerceAtLeast(0L) },
+            last24h = sum { it.last24h },
+            last7d = sum { it.last7d },
+            total = sum { it.total },
         )
     }
-    // Every KaChat transaction, all time: each kind's all-time count plus .kachat's.
+    // Every KaChat transaction, all time: each kind's all-time count plus .kachat's. Saturating,
+    // and a negative count is none (iOS 428a797b, audit 2026-11-21 #20).
     val allTimeTotal: Long? = run {
         var sum = 0L
         var any = false
         snapshot?.let { snap ->
             for (category in chatCategories) {
-                snap.counts[category]?.total?.let { sum += it; any = true }
+                snap.counts[category]?.total?.let {
+                    sum = com.kachat.app.services.kachatnames.KachatNames.clampedSum(sum, it.coerceAtLeast(0L))
+                    any = true
+                }
             }
         }
-        kachatTotals?.let { sum += it.total; any = true }
+        kachatTotals?.let {
+            sum = com.kachat.app.services.kachatnames.KachatNames.clampedSum(sum, it.total.coerceAtLeast(0L))
+            any = true
+        }
         if (any) sum else null
     }
 

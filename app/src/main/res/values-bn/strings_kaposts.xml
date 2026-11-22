@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">ডিসলাইক নেটওয়ার্ক থেকে সরানো হয়েছে</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">ফলো নেটওয়ার্কে পোস্ট হয়েছে</string>
-    <string name="feed54_help_welcome_guide">স্বাগত গাইড</string>
-    <string name="feed54_help_welcome_guide_subtitle">প্রথমবারের ট্যুর: আপনার ফিড, রুম, টিপ ও আপনার ঠিকানা।</string>
     <string name="feed54_like_posted">লাইক নেটওয়ার্কে পোস্ট হয়েছে</string>
     <string name="feed54_like_removed">লাইক নেটওয়ার্ক থেকে সরানো হয়েছে</string>
     <string name="feed54_post_not_found">পোস্ট পাওয়া যায়নি - এটি বর্তমান ফিডের চেয়ে পুরোনো হতে পারে</string>

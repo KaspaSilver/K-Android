@@ -54,6 +54,7 @@
     <string name="kp_buy_kusdt">kUSDTを購入</string>
     <string name="kp_cancel_77dfd">キャンセル</string>
     <string name="kp_check_address_history_before_trying_again">もう一度試す前にアドレスの履歴を確認してください。</string>
+    <string name="kp_trade_may_have_gone_through">取引はすでに成立している可能性があります。</string>
     <string name="kp_checking_address_lld_5b84c">アドレス #%1$s を確認中</string>
     <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">途中に空きがあっても最初の1,000個のアドレスを確認し、その後も見つかる限り続けます。</string>
     <string name="kp_close_and_keep_scanning_b66cc">閉じてスキャンを続ける</string>

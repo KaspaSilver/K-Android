@@ -255,9 +255,6 @@ class NameServicesClient @Inject constructor(
         refresh(address)
     }
 
-    /** How many names the address owns across these services (for the "Your Domains" count). */
-    val totalOwned: Int get() = _owned.value.values.sumOf { it.size }
-
     private fun apply(names: List<OwnedServiceName>?, tld: NameServiceTLD) {
         if (names != null) {
             _owned.value = _owned.value + (tld to names)
@@ -533,7 +530,29 @@ class NameServicesClient @Inject constructor(
             val trimmed = input.trim().lowercase()
             if (trimmed.startsWith("kaspa:") || trimmed.startsWith("kaspatest:")) return false
             val label = NameServiceTLD.splitTypedName(trimmed).first
-            return label.isNotEmpty() && label.all { it.isLetterOrDigit() || it == '-' || it == '_' }
+            return label.isNotEmpty() && label.all { it.isLetterOrDigit() || it == '-' || it == '_' } &&
+                !mixesScripts(label)
+        }
+
+        /** Letters from more than one writing system in one label ("аlice": a Cyrillic а among
+         *  Latin letters) - a lookalike of another name, never resolved (security audit L5). */
+        internal fun mixesScripts(label: String): Boolean {
+            val scripts = HashSet<Character.UnicodeScript>()
+            var i = 0
+            while (i < label.length) {
+                val cp = label.codePointAt(i)
+                if (Character.isLetter(cp)) {
+                    val script = when (val s = Character.UnicodeScript.of(cp)) {
+                        // Japanese, Korean and Chinese writing mix these as a matter of course
+                        Character.UnicodeScript.HIRAGANA, Character.UnicodeScript.KATAKANA,
+                        Character.UnicodeScript.HANGUL, Character.UnicodeScript.BOPOMOFO -> Character.UnicodeScript.HAN
+                        else -> s
+                    }
+                    if (script != Character.UnicodeScript.COMMON && script != Character.UnicodeScript.INHERITED) scripts += script
+                }
+                i += Character.charCount(cp)
+            }
+            return scripts.size > 1
         }
 
         /** The answer a typed name gets: the service the person named, if they typed an ending,

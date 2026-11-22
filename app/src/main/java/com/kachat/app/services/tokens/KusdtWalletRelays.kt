@@ -216,23 +216,32 @@ class KusdtStoreRelay @Inject constructor(
     /** Drops what Trestly's code kept for one owner key: entries named after it, and records in
      *  lists (positions) that name it as their owner. */
     @Synchronized
-    fun forget(ownerHex: String) {
-        val owner = ownerHex.lowercase()
+    fun forget(ownerHex: String) = forget(listOf(ownerHex))
+
+    /** [forget] for several owner keys (an account's chatting and spending addresses) in one
+     *  rewrite of the store. */
+    @Synchronized
+    fun forget(ownerHexes: Collection<String>) {
+        val owners = ownerHexes.map { it.lowercase() }.filter { it.isNotEmpty() }.toSet()
+        if (owners.isEmpty()) return
         val all = HashMap(loadStore())
         for ((key, text) in all.entries.toList()) {
-            if (key.lowercase().contains(owner)) {
+            val keyLower = key.lowercase()
+            if (owners.any { keyLower.contains(it) }) {
                 all.remove(key)
-            } else if (text.lowercase().contains(owner)) {
-                val list = try { JsonParser.parseString(text) } catch (e: Exception) { null }
-                if (list != null && list.isJsonArray && list.asJsonArray.all { it.isJsonObject }) {
-                    val kept = JsonArray()
-                    list.asJsonArray.forEach { item ->
-                        val o = item.asJsonObject.get("owner")
-                        val itemOwner = o?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString?.lowercase().orEmpty()
-                        if (itemOwner != owner) kept.add(item)
-                    }
-                    all[key] = kept.toString()
+                continue
+            }
+            val textLower = text.lowercase()
+            if (owners.none { textLower.contains(it) }) continue
+            val list = try { JsonParser.parseString(text) } catch (e: Exception) { null }
+            if (list != null && list.isJsonArray && list.asJsonArray.all { it.isJsonObject }) {
+                val kept = JsonArray()
+                list.asJsonArray.forEach { item ->
+                    val o = item.asJsonObject.get("owner")
+                    val itemOwner = o?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString?.lowercase().orEmpty()
+                    if (itemOwner !in owners) kept.add(item)
                 }
+                all[key] = kept.toString()
             }
         }
         save(all)

@@ -90,10 +90,6 @@ class ChatViewModel @Inject constructor(
     private val _initialSyncPhase = MutableStateFlow<InitialSyncPhase?>(null)
     val initialSyncPhase: StateFlow<InitialSyncPhase?> = _initialSyncPhase.asStateFlow()
 
-    val onboardingSyncHeld: StateFlow<Boolean> get() = onboardingGate.held
-
-    fun holdSyncForOnboarding() = onboardingGate.hold()
-
     /**
      * Lifts the wizard's hold and runs the account's first full sync, publishing a phase as it
      * goes. Everything was deferred until now, so this is where all of that work happens - and a
@@ -408,9 +404,6 @@ class ChatViewModel @Inject constructor(
     val chatFetchStates: StateFlow<Map<String, com.kachat.app.repository.ChatRepository.ChatFetchState>> =
         chatRepository.chatFetchStates
 
-    enum class DangerZoneOpStatus { IDLE, IN_PROGRESS, SUCCESS, FAILED }
-    data class DangerZoneOpState(val status: DangerZoneOpStatus = DangerZoneOpStatus.IDLE, val message: String? = null)
-
     /**
      * "Wipe and Re-sync Incoming Messages" — deletes received messages (all chats when
      * [contactIds] is null, otherwise just the selected 1:1 conversations), then re-fetches
@@ -590,13 +583,13 @@ class ChatViewModel @Inject constructor(
         .map { contacts -> contacts.associateBy({ it.id }, { it.knsAvatarUrl }) }
         .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    /** address -> live contact alias (KNS-resolved name or custom nickname), for group chat's sender labels - see [contactAvatarsByAddress]. */
     /** Contacts you have accepted (an active conversation) - whose links in a group may load
      *  their preview without a tap, the same rule as a 1:1 chat (iOS 680cff3). */
     val acceptedContactAddresses: StateFlow<Set<String>> = chatRepository.getContacts()
         .map { contacts -> contacts.filter { it.conversationStatus == "active" }.map { it.id }.toSet() }
         .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
+    /** address -> live contact alias (KNS-resolved name or custom nickname), for group chat's sender labels - see [contactAvatarsByAddress]. */
     val contactAliasesByAddress: StateFlow<Map<String, String>> = chatRepository.getContacts()
         .map { contacts -> contacts.mapNotNull { c -> c.alias?.takeIf { it.isNotBlank() }?.let { c.id to it } }.toMap() }
         .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
@@ -760,17 +753,6 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /** Purely local — no transaction sent. Declining fully deletes the contact (see [deleteChat]) — the same as any other delete, they'd need a fresh handshake to reach you again. */
-    fun declineHandshake(contactId: String) {
-        viewModelScope.launch { chatRepository.deleteChat(contactId) }
-    }
-
-    /**
-     * A broadcast sender viewed via "User Info" isn't necessarily a saved 1:1 contact yet — unlike
-     * [addContact] (the real "add/import" flow, with its primary-domain auto-fill side effect),
-     * this is just a bare local row so per-contact fields (name/photo/notification overrides,
-     * chosen KNS domain) have somewhere to persist to the first time one of them is edited.
-     */
     /**
      * Makes sure a contact row exists for [contactId] before opening their thread - a broadcast
      * sender or a group member viewed through User Info may never have been one. A deliberate
@@ -881,12 +863,7 @@ class ChatViewModel @Inject constructor(
     // kept as two separate UTXO sets so the live fee preview below prices each correctly rather
     // than one silently reusing the other's (possibly empty, possibly wrong-balance) UTXOs.
     private val _currentUtxos = MutableStateFlow<List<com.kachat.app.services.UtxoEntry>>(emptyList())
-    val currentUtxos: StateFlow<List<com.kachat.app.services.UtxoEntry>> = _currentUtxos.asStateFlow()
-
     private val _spendingUtxos = MutableStateFlow<List<com.kachat.app.services.UtxoEntry>>(emptyList())
-    // Exposed publicly (unlike the backing field) so the payment composer's "Max" button can mass/
-    // fee-estimate against the spending-chain UTXOs actually spent from, not the identity address's.
-    val spendingUtxos: StateFlow<List<com.kachat.app.services.UtxoEntry>> = _spendingUtxos.asStateFlow()
 
     private val _paymentAmount = MutableStateFlow("")
     val paymentAmount: StateFlow<String> = _paymentAmount.asStateFlow()
@@ -1785,8 +1762,7 @@ class ChatViewModel @Inject constructor(
      * encryption, etc.). Resolve a domain to its owning address first (see
      * [onCreateChatAddressChanged]) and pass the result here.
      * @param knsName The domain name to display, if this contact was added via KNS.
-     */
-    /**
+     *
      * [deliberate]: the user typed the address in (Create Chat) - their own other accounts are
      * allowed, only the account in use is refused (see ChatRepository.addContact). [onResult]
      * gets the refusal reason, or null when the contact was stored, so the caller can say why
@@ -1880,12 +1856,6 @@ class ChatViewModel @Inject constructor(
     val groupsUnreadCount: StateFlow<Int> = groupConversations.map { list -> list.sumOf { it.unreadCount.coerceAtLeast(0) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-    /**
-     * The groups a chat-list search matches, as iOS's Select All counts them
-     * (ChatListView.displayedGroups): the group's name, any member's name you gave them or their
-     * address, or any of its messages (up to 4 KB each). Broader than the circles row, which
-     * matches the name alone - so Select All while searching picks the same groups on both.
-     */
     /** The 1:1 chats one of whose messages matches the Chats search (iOS ChatListView). */
     suspend fun contactIdsWithMessageMatching(query: String): Set<String> {
         val q = query.trim()
@@ -1894,6 +1864,12 @@ class ChatViewModel @Inject constructor(
             .getOrElse { if (it is kotlinx.coroutines.CancellationException) throw it else emptySet() }
     }
 
+    /**
+     * The groups a chat-list search matches, as iOS's Select All counts them
+     * (ChatListView.displayedGroups): the group's name, any member's name you gave them or their
+     * address, or any of its messages (up to 4 KB each). Broader than the circles row, which
+     * matches the name alone - so Select All while searching picks the same groups on both.
+     */
     suspend fun groupIdsMatchingSearch(groups: List<com.kachat.app.models.GroupEntity>, query: String): Set<String> {
         val q = query.trim()
         if (q.isEmpty()) return groups.map { it.groupId }.toSet()
@@ -1908,13 +1884,6 @@ class ChatViewModel @Inject constructor(
         }.map { it.groupId }.toSet()
     }
 
-    /**
-     * One-shot KNS resolve for a single group-member address row - unlike
-     * [onCreateChatAddressChanged]/[knsResolvedAddress] (single shared StateFlow, fine for the
-     * one-address Create Chat flow), the group member list can have up to 10 rows resolving
-     * concurrently, so each row owns its own debounce/resolving state locally in Compose and
-     * just calls this directly.
-     */
     /** What a typed name points to on every service, .kachat first - the primary answer and the
      *  "Other domains" (iOS 6ac48a7). */
     suspend fun resolveEverywhere(input: String): List<com.kachat.app.services.NameResolution> =
@@ -1925,10 +1894,6 @@ class ChatViewModel @Inject constructor(
 
     private val _createGroupError = MutableStateFlow<String?>(null)
     val createGroupError: StateFlow<String?> = _createGroupError.asStateFlow()
-
-    fun clearCreateGroupError() {
-        _createGroupError.value = null
-    }
 
     /** Any address not already a contact is auto-added, matching [addContact]'s own-or-create behavior. */
     fun createGroupChat(
@@ -2101,7 +2066,6 @@ class ChatViewModel @Inject constructor(
     val groupSilent: StateFlow<Set<String>> = settings.groupSilent
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
-    fun isGroupMemberHidden(groupId: String, address: String) = "$groupId|$address" in groupHiddenMembers.value
     fun isGroupMemberMuted(groupId: String, address: String) = "$groupId|$address" in groupMutedMembers.value
     fun isGroupMentionsOnly(groupId: String) = com.kachat.app.util.MentionsFeature.ENABLED && groupId in groupMentionsOnly.value
 
@@ -2269,24 +2233,12 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    fun addGroupMember(contact: ContactEntity, groupId: String, onResult: (Boolean, String?) -> Unit) {
-        viewModelScope.launch {
-            try {
-                groupRepository.addMember(contact, groupId)
-                onResult(true, null)
-            } catch (e: Exception) {
-                onResult(false, e.message)
-            }
-        }
-    }
-
     /**
      * Adds several members one at a time - each [GroupRepository.addMember] rotates the epoch and
      * redistributes the new root, so they MUST run sequentially (a concurrent pair would both read
      * the same current epoch and collide). Mirrors iOS's serial add loop. Reports how many were
      * added and how many failed once the whole batch is done.
-     */
-    /**
+     *
      * Takes addresses rather than contacts so someone who is not in the address book can still be
      * invited: a group invite is encrypted to a public key decoded from the address itself, so
      * there is no handshake or prior chat to require. Mints the contact on the way through,
@@ -2544,19 +2496,6 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch { loadKnsProfile(contactId) }
     }
 
-    /**
-     * [refreshKnsProfile], awaited: the address's .kas profile asked for again now (User Info >
-     * Rescan Profile, iOS bc95d17 `fetchProfile(force: true)`). Returns the profile, null when it
-     * has none or names are not shown.
-     */
-    suspend fun refreshKnsProfileNow(contactId: String): KnsProfileFields? {
-        if (!com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY) {
-            _knsProfiles.update { it + (contactId to KnsProfileUiState()) }
-            return null
-        }
-        return loadKnsProfile(contactId)
-    }
-
     private suspend fun loadKnsProfile(contactId: String): KnsProfileFields? {
         val contact = chatRepository.getContact(contactId)
         val ownedAssets = knsService.getOwnedDomains(contactId)
@@ -2801,11 +2740,6 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    /** Retries an edit whose send previously failed - re-sends the stored text. */
-    fun retryEdit(contactId: String, target: MessageEntity, text: String, onError: (String) -> Unit = {}) {
-        sendEdit(contactId, target, text, onError)
-    }
-
     /** [onError] gets the failure's reason - the chat passes its "Failed to Send" alert, as
      *  iOS's composer does; chess moves keep their own failed-move handling. */
     fun sendMessage(contactId: String, text: String, onError: ((String) -> Unit)? = null, mediaSend: Boolean = false) {
@@ -2948,10 +2882,11 @@ class ChatViewModel @Inject constructor(
      * reaction is applied to the local reactions table immediately (optimistic UI) and the actual
      * send happens in the background via the same [WalletService.sendKasiaMessage] pipeline any
      * other message uses.
+     *
+     * [onError] gets the failure's reason. The pill already turns red with a Retry, but the
+     * error itself was only logged, so a reaction failing instantly on every attempt gave
+     * nothing to go on - the thread shows it in the same toast a failed send uses (iOS).
      */
-    /** [onError] gets the failure's reason. The pill already turns red with a Retry, but the
-     *  error itself was only logged, so a reaction failing instantly on every attempt gave
-     *  nothing to go on - the thread shows it in the same toast a failed send uses (iOS). */
     fun sendReaction(contactId: String, targetTxId: String, emoji: String, action: String, onError: (String) -> Unit = {}) {
         viewModelScope.launch {
             val myAddress = walletManager.getAddress()
@@ -3846,22 +3781,23 @@ class ChatViewModel @Inject constructor(
      * Sends a Kaspa payment via WalletService. Same optimistic pending/failed pattern
      * as [sendMessage], but with no retry entry point — matches iOS explicitly excluding
      * payment retry, since blindly re-sending a payment risks paying twice.
+     *
+     * [onResult] is (succeeded, errorMessage, txId). A 1:1 chat payment has no sent-confirmation
+     * sheet - its bubble is the confirmation (iOS 80a6aae); the txId is null on failure.
+     *
+     * [note] is the Send KAS sheet's memo (iOS 8d208b2): sealed to the recipient in a
+     * `kchat:1:pay:` payload, which the seed also reads back on another device (iOS bfe9f022).
+     * The sender's own bubble keeps it from send time ("Sent X KAS — memo", iOS 2be75ed). A payment
+     * from the chatting address carries that payload even with no memo (iOS buildPaymentTx);
+     * one from a spending address carries none (see below).
+     *
+     * [sourceSpendingIndex] is the payment's From (iOS 6333dd3 `sendPayment(sourceSpendingIndex:)`):
+     * null = the chatting address (the default) - signed with the identity key, change back to
+     * it; else that spending address - signed with its own key, change to a never-used address,
+     * which is revealed in Manage Addresses (no primary moves) - see
+     * [com.kachat.app.services.KaspaWalletEngine.sendSpendingPayment]. Either way it is paid to
+     * the contact's chatting address.
      */
-    /** [onResult] is (succeeded, errorMessage, txId). A 1:1 chat payment has no sent-confirmation
-     *  sheet - its bubble is the confirmation (iOS 80a6aae); the txId is null on failure.
-     *
-     *  [note] is the Send KAS sheet's memo (iOS 8d208b2): sealed to the recipient in a
-     *  `kchat:1:pay:` payload, which the seed also reads back on another device (iOS bfe9f022).
-     *  The sender's own bubble keeps it from send time ("Sent X KAS — memo", iOS 2be75ed). A payment
-     *  from the chatting address carries that payload even with no memo (iOS buildPaymentTx);
-     *  one from a spending address carries none (see below).
-     *
-     *  [sourceSpendingIndex] is the payment's From (iOS 6333dd3 `sendPayment(sourceSpendingIndex:)`):
-     *  null = the chatting address (the default) - signed with the identity key, change back to
-     *  it; else that spending address - signed with its own key, change to a never-used address,
-     *  which is revealed in Manage Addresses (no primary moves) - see
-     *  [com.kachat.app.services.KaspaWalletEngine.sendSpendingPayment]. Either way it is paid to
-     *  the contact's chatting address. */
     fun sendPayment(
         contactId: String,
         amount: String,
@@ -3942,6 +3878,12 @@ class ChatViewModel @Inject constructor(
     fun getConversation(contactId: String): Conversation? {
         return conversations.value.find { it.contact.id == contactId }
     }
+
+    /** Just [contactId]'s row of [conversations], re-emitting only when that row changes - what an
+     *  open thread or board collects, so another chat's new message or unread count doesn't
+     *  recompose it. */
+    fun conversationFlow(contactId: String): Flow<Conversation?> =
+        conversations.map { list -> list.find { it.contact.id == contactId } }.distinctUntilChanged()
     
     fun getMessages(contactId: String): Flow<List<MessageEntity>> {
         return chatRepository.getMessages(contactId)
@@ -4281,22 +4223,6 @@ class ChatViewModel @Inject constructor(
         private const val NEXTCLOUD_LINK_PREVIEW_BYTES = 100
 
         /**
-         * Whether the "the recipient won't see your messages yet" banner belongs in a 1:1 chat.
-         *
-         * Cross-platform corrected semantics (desktop's `relationshipState === "established"`,
-         * which this is the Android equivalent of):
-         *  - Visible from the moment the chat opens. It is NOT gated on having already sent
-         *    something, and NOT gated on the composer having text — the whole point is to warn
-         *    *before* the user types into the void.
-         *  - Hidden only once the relationship is genuinely reciprocated: at least one real
-         *    non-handshake message in EACH direction. Evidence in one direction only isn't
-         *    enough, and a handshake on its own isn't evidence of communication at all.
-         *
-         * "Genuine" excludes handshakes (protocol traffic, not conversation) and empty-bodied
-         * messages, but counts a payment either way — an actual KAS transfer is real two-way
-         * contact even when it carries no note.
-         */
-        /**
          * A handshake we sent that they have not answered - no handshake back, no genuine message
          * back. Their answer of either kind makes the action available again.
          *
@@ -4319,6 +4245,22 @@ class ChatViewModel @Inject constructor(
             return !answered
         }
 
+        /**
+         * Whether the "the recipient won't see your messages yet" banner belongs in a 1:1 chat.
+         *
+         * Cross-platform corrected semantics (desktop's `relationshipState === "established"`,
+         * which this is the Android equivalent of):
+         *  - Visible from the moment the chat opens. It is NOT gated on having already sent
+         *    something, and NOT gated on the composer having text — the whole point is to warn
+         *    *before* the user types into the void.
+         *  - Hidden only once the relationship is genuinely reciprocated: at least one real
+         *    non-handshake message in EACH direction. Evidence in one direction only isn't
+         *    enough, and a handshake on its own isn't evidence of communication at all.
+         *
+         * "Genuine" excludes handshakes (protocol traffic, not conversation) and empty-bodied
+         * messages, but counts a payment either way — an actual KAS transfer is real two-way
+         * contact even when it carries no note.
+         */
         internal fun shouldShowUnnotifiedWarning(messages: List<MessageEntity>): Boolean {
             fun isGenuine(m: MessageEntity): Boolean =
                 m.type != com.kachat.app.util.MessageProtocol.TYPE_HANDSHAKE &&

@@ -114,6 +114,7 @@
     <string name="kp_355bcc577d71" formatted="false">Завершённые</string>
     <string name="kp_a8d435fecb0c" formatted="false">Завершённые партии 1v1</string>
     <string name="kp_781b28d8c53d" formatted="false">Завершённые турниры</string>
+    <string name="kp_cf5805795ab2" formatted="false">Кто впереди в 1v1 и турнирах — за этот месяц или за всё время, и против каждого бота.</string>
     <string name="kp_08ab1ad685e3" formatted="false">Пять ботов, уровни с 1 по 5, от Kaspa Silver до Yonatan Sompolinsky. Обыграйте одного, чтобы открыть следующего. Результат записывается в Kaspa.</string>
     <string name="kp_03e3c2d3a084" formatted="false">Пять ботов, уровни с 1 по 5. Обыграйте одного, чтобы открыть следующего. Результат каждой партии записывается в Kaspa, когда она заканчивается.</string>
     <string name="kp_e3e82846c325" formatted="false">Партия</string>

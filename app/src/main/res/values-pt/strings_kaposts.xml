@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">Descurtida removida na rede</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">Seguir publicado na rede</string>
-    <string name="feed54_help_welcome_guide">Guia de boas-vindas</string>
-    <string name="feed54_help_welcome_guide_subtitle">O tour inicial: seu feed, salas, gorjetas e seu endereço.</string>
     <string name="feed54_like_posted">Curtida publicada na rede</string>
     <string name="feed54_like_removed">Curtida removida na rede</string>
     <string name="feed54_post_not_found">Post não encontrado - pode ser mais antigo que o feed atual</string>

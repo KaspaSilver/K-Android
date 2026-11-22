@@ -67,7 +67,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Groups
@@ -76,7 +75,6 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -1656,9 +1654,12 @@ internal fun ConversationRow(
             // visible rows.
             val previewContext = LocalContext.current
             val lastBody = convo.lastMessage?.plaintextBody
-            // The body's length and head, as iOS's preview cache: it can change under one id (an
-            // edit, or a message that could not be decrypted until now).
-            val preview = remember(convo.lastMessage?.id, lastBody?.length, lastBody?.take(24)) {
+            // The whole body is the key, as iOS's preview cache: it can change under one id (an
+            // edit, or a message that could not be decrypted until now), and "length + first 24
+            // characters" showed one message's preview for another (iOS audit 2026-11-21 #21). A
+            // very long one is keyed by a hash of all of it.
+            val previewKey = lastBody?.let { if (it.length <= 4_096) "t:$it" else "h:${it.length}|${it.hashCode()}" }
+            val preview = remember(convo.lastMessage?.id, previewKey) {
                 messagePreviewText(convo.lastMessage, previewContext)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1764,7 +1765,17 @@ fun ContactAvatar(
 ) {
     val book = if (includeAssignedPhoto) com.kachat.app.services.AddressBookManager.shared else null
     val photoVersion = book?.photoVersion ?: 0
-    val assignedPhoto = remember(address, photoVersion, book) { book?.photo(address)?.asImageBitmap() }
+    // Your Contacts photo: shown at once when already decoded, otherwise read and decoded off the
+    // main thread (a file check and a JPEG decode per row on first sight hitched the list).
+    val assignedPhotoState = remember(address, photoVersion, book) {
+        mutableStateOf(book?.cachedPhoto(address)?.asImageBitmap())
+    }
+    LaunchedEffect(assignedPhotoState) {
+        if (book == null || assignedPhotoState.value != null) return@LaunchedEffect
+        assignedPhotoState.value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { book.photo(address) }
+            ?.asImageBitmap()
+    }
+    val assignedPhoto = assignedPhotoState.value
     val shownUrl = if (address != null && com.kachat.app.services.kachatnames.KachatNamesService.isEnabled) {
         kachatAvatarUrl(address)
     } else {
@@ -1815,10 +1826,14 @@ fun ContactAvatar(
 @Composable
 fun kachatAvatarUrl(address: String): String? {
     val resolver = com.kachat.app.services.kachatnames.KachatSocialImageResolver.instance ?: return null
-    val entries by resolver.entries.collectAsState()
+    // Only your own, your contacts' and chats', and opened profiles are looked up (iOS audit
+    // 2026-11-21 #17): anyone else keeps the initials, and no platform is contacted.
+    if (!resolver.mayLookUp(address)) return null
+    // Both reads are per key (audit H6): this avatar redraws when ITS identity or link answer
+    // lands, not on every answer for anyone on screen.
     val link = com.kachat.app.services.kachatnames.KachatNamesRegistry.cachedIdentityOf(address)?.profile?.avatar
     LaunchedEffect(link) { resolver.refreshIfStale(link) }
-    return resolver.cached(link, entries)?.avatar
+    return resolver.observedProfile(link)?.avatar
 }
 
 /**
@@ -1830,13 +1845,17 @@ fun kachatAvatarUrl(address: String): String? {
 fun kachatProfileBannerAndBio(address: String): Pair<String?, String?> {
     if (address.isEmpty()) return null to null
     val resolver = com.kachat.app.services.kachatnames.KachatSocialImageResolver.instance ?: return null to null
-    val entries by resolver.entries.collectAsState()
+    // Only a profile screen asks for the banner and bio: the person opened it, so its links may
+    // be looked up from now on (iOS audit 2026-11-21 #17 `openedProfile`).
+    LaunchedEffect(address) { resolver.noteProfileOpened(address) }
+    if (!resolver.mayLookUp(address)) return null to null
+    // per key, as kachatAvatarUrl (audit H6)
     val profile = com.kachat.app.services.kachatnames.KachatNamesRegistry.cachedIdentityOf(address)?.profile
     LaunchedEffect(profile?.banner, profile?.bio) {
         resolver.refreshIfStale(profile?.banner)
         resolver.refreshIfStale(profile?.bio)
     }
-    return resolver.cached(profile?.banner, entries)?.banner to resolver.cached(profile?.bio, entries)?.bio
+    return resolver.observedProfile(profile?.banner)?.banner to resolver.observedProfile(profile?.bio)?.bio
 }
 
 private val backupAvatarCache = android.util.LruCache<String, ImageBitmap>(64)
@@ -2160,31 +2179,6 @@ private fun ChatsNewSheet(
                 }
             }
         }
-    }
-}
-
-/**
- * Wallet's Send (iOS bfe9f022): Send Kaspa ([SpendingAddressSendFlow]) in a sheet of its own, which
- * only Cancel closes. It starts from the chatting address, and From picks any other.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun ChatsSpendingSendLauncher(walletViewModel: WalletViewModel, onDone: () -> Unit) {
-    val chattingAddress by walletViewModel.address.collectAsState()
-    val chattingBalance by walletViewModel.balanceSompi.collectAsState()
-    val from = chattingAddress
-    if (from == null) {
-        LaunchedEffect(Unit) { onDone() }
-        return
-    }
-    IosFullSheet(onDismissed = onDone, swipeToDismiss = false) { close ->
-        SpendingAddressSendFlow(
-            fromAddress = from,
-            balanceSompi = chattingBalance,
-            title = stringResource(R.string.chats_send_kaspa),
-            viewModel = walletViewModel,
-            onDone = close,
-        )
     }
 }
 

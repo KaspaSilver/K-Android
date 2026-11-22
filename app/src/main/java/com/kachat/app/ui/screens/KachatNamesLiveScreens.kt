@@ -23,19 +23,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.CallMerge
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Badge
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.PanTool
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -58,16 +54,11 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -109,6 +100,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
@@ -391,6 +383,10 @@ fun Context.kachatErrorText(e: Throwable): String {
             m.endsWith(" is already registered.") -> getString(R.string.kn_err_already_registered, m.removeSuffix(" is already registered."))
             else -> m
         }
+        // a dropped connection, a node or server that didn't answer: never the exception's own
+        // developer text (audit LOW L12)
+        is java.io.IOException, is io.grpc.StatusRuntimeException, is io.grpc.StatusException ->
+            getString(R.string.send_failure_network_hint)
         else -> kachatPendingError(m)
     }
 }
@@ -411,9 +407,19 @@ fun Context.kachatPendingError(m: String): String {
         // combining many small coins first (iOS f1c16ec)
         KachatNamesActions.COMBINING_COINS -> getString(R.string.kn_combining_coins)
         KachatNamesActions.NOT_ENOUGH_TO_COMBINE -> getString(R.string.kn_not_enough_to_combine)
-        else -> m
+        else -> when {
+            // the builder's "<op>: insufficient funds: need ..." (audit LOW L12)
+            m.contains("insufficient funds") -> getString(R.string.kn_err_not_enough_kas)
+            // an exception with no message of its own, saved as its class name
+            // ("java.net.SocketTimeoutException")
+            DEVELOPER_TEXT.containsMatchIn(m) -> getString(R.string.send_failure_network_hint)
+            else -> m
+        }
     }
 }
+
+/** An exception's class name, which is all `toString()` gives for one with no message. */
+private val DEVELOPER_TEXT = Regex("^(java|javax|kotlin|kotlinx|okhttp3|okio|io\\.grpc|android)\\.[\\w.$]+(Exception|Error)\\b")
 
 /** [KachatNamesActions.freeingName] (iOS eea52b2). */
 private val FREEING_NAME = Regex("Freeing (.+) for you\\.\\.\\.")
@@ -568,7 +574,13 @@ class KachatLiveViewModel @Inject constructor(
             // the chatting address and every used address of this wallet (iOS d1026de, IOS-085)
             loadOwnKeys()
             if (actions.myKey != null) {
-                val (names, offers) = actions.ownNamesAndOffers(heldOnly = false)
+                // An address whose history couldn't be read reads as unused: its names would
+                // vanish, so a partial answer only fills an empty screen (audit LOW L11).
+                val (names, offers) = try {
+                    actions.ownNamesAndOffers(heldOnly = false, requireAllKeys = true)
+                } catch (e: com.kachat.app.services.kachatnames.KachatNamesActions.IncompleteKeys) {
+                    if (mine.isEmpty() && myOffers.isEmpty()) e.partial else mine to myOffers
+                }
                 mine = names
                 myOffers = offers
                 if (myOffers.isNotEmpty()) {
@@ -608,34 +620,6 @@ class KachatLiveViewModel @Inject constructor(
         } catch (e: Exception) {
             Search.Failed(e)
         }
-    }
-
-    /** The profile hero's `.kachat` part: your label, your profile's avatar, banner and bio
-     *  sources (a social link each, iOS c124cb3) and its Linktree link. */
-    data class Hero(val label: String?, val avatar: String?, val banner: String?, val bio: String?, val linktree: String?)
-
-    /**
-     * The `.kachat` label of [address] (primary name, else oldest active name) and its address
-     * profile's sources and Linktree link, for the profile hero (iOS ContactsView
-     * `loadKachatLabel`, 5df42b4 / ad32798 / 1322216 / c124cb3) - the record this wallet last wrote first,
-     * else the one the source knows. On mainnet (no registry yet) only the profile: no label
-     * (iOS d36fc42, where `identity` is profile-only there).
-     */
-    suspend fun hero(address: String): Hero? {
-        if (!KachatNamesService.profilesEnabled) return null
-        registry.refreshIfStale(300_000)
-        // a profile saved on another device since this one's last save replaces the local copy
-        // (iOS 5d4ce87)
-        registry.syncOwnProfile(address)
-        val identity = try {
-            registry.identity(address)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            null
-        }
-        val profile = registry.ownProfile(address)?.profile ?: identity?.profile
-        return Hero(identity?.label, profile?.avatar, profile?.banner, profile?.bio, profile?.linktree)
     }
 
     /** Runs [block] past the screen's life: a send must not be cancelled by closing its sheet
@@ -1707,20 +1691,19 @@ fun KachatGraceTile(n: NameInfo, vm: KachatLiveViewModel, onOpen: () -> Unit, mo
     val scope = rememberCoroutineScope()
     val manifest by vm.service.manifest.collectAsState()
     val graceMs = manifest?.params?.graceMs ?: 0L
-    // ticks every second for the countdown (iOS TimelineView(.periodic(by: 1)))
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1_000)
-            now = System.currentTimeMillis()
-        }
-    }
+    // One clock for every tile on screen, ticking every second for the countdown (iOS
+    // TimelineView(.periodic(by: 1))); a timer per tile made a long grid redraw all of itself
+    // every second (performance audit M10).
+    val clock = KachatSecondClock.now.collectAsState()
+    val releaseAt = kachatClampedSum(n.expiresAt, graceMs)
     // the hub reloads once when it's released
     var reloaded by remember(n.name) { mutableStateOf(false) }
-    val left = kachatClampedSum(n.expiresAt, graceMs) - now
+    // read through derivedStateOf: the tile itself only redraws when it's released, the
+    // countdown line below every second
+    val released by remember(releaseAt) { derivedStateOf { releaseAt - clock.value <= 0 } }
     // released: it moves to Available
-    LaunchedEffect(left <= 0) {
-        if (left <= 0 && !reloaded) {
+    LaunchedEffect(released) {
+        if (released && !reloaded) {
             reloaded = true
             scope.launch { vm.reload() }
         }
@@ -1728,16 +1711,39 @@ fun KachatGraceTile(n: NameInfo, vm: KachatLiveViewModel, onOpen: () -> Unit, mo
     KachatNameTile(n.name, modifier = modifier, onClick = onOpen) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(stringResource(R.string.kn_released_in), color = colors.textSecondary, fontSize = 11.sp)
-            Text(
-                KachatLive.countdown(left, context),
-                color = colors.warning, fontWeight = FontWeight.Bold, fontSize = 15.sp,
-                style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum")
-            )
+            KachatGraceTileCountdown(releaseAt, clock)
         }
         KachatLive.price(vm.registry, n.name)?.let { price ->
             KachatFitText(KaspaUnit.amount(price), color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Normal)
         }
     }
+}
+
+/** A grace tile's countdown: the only part that reads the clock every second. */
+@Composable
+private fun KachatGraceTileCountdown(releaseAt: Long, clock: State<Long>) {
+    val context = LocalContext.current
+    val colors = LocalAppColors.current
+    Text(
+        KachatLive.countdown(releaseAt - clock.value, context),
+        color = colors.warning, fontWeight = FontWeight.Bold, fontSize = 15.sp,
+        style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum")
+    )
+}
+
+/** The time now, once a second, shared by every grace tile on screen; it ticks only while one is
+ *  shown. */
+internal object KachatSecondClock {
+    val now: kotlinx.coroutines.flow.StateFlow<Long> = kotlinx.coroutines.flow.flow {
+        while (true) {
+            emit(System.currentTimeMillis())
+            delay(1_000)
+        }
+    }.stateIn(
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate),
+        kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(0),
+        System.currentTimeMillis(),
+    )
 }
 
 /** [a] + [b] that stops at Long.MAX_VALUE instead of wrapping negative (iOS 5848fb0
@@ -2843,7 +2849,10 @@ fun KachatClaimSheet(target: KachatClaimTarget, onClose: () -> Unit, onStarted: 
         startError = null
         vm.launch {
             try {
-                vm.actions.startRegistration(target.name, years, maxPrice = q.price, feeTier = feeTier, customFeerate = customFeerate)
+                vm.actions.startRegistration(
+                    target.name, years, maxPrice = q.price, feeTier = feeTier, customFeerate = customFeerate,
+                    quotedFeerate = q.feerate,
+                )
                 // the swipe-up screen gives the haptic and shows the progress (iOS 5bab351)
                 onStarted()
                 progressId = vm.actions.pending.value.lastOrNull { it.name == target.name && it.isOpen }?.id
@@ -3439,30 +3448,12 @@ fun KachatLiveNameDetailScreen(
                             // When the grace period ends: then anyone can claim it (Available), with
                             // a live countdown (iOS fde757f).
                             val ends = kachatClampedSum(info.expiresAt, vm.graceMs)
-                            var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-                            LaunchedEffect(ends) {
-                                while (true) {
-                                    delay(1_000)
-                                    now = System.currentTimeMillis()
-                                }
-                            }
                             Row(verticalAlignment = Alignment.Top) {
                                 Icon(Icons.Default.HourglassEmpty, contentDescription = null, tint = colors.warning, modifier = Modifier.size(14.dp).padding(top = 1.dp))
                                 Spacer(Modifier.width(6.dp))
                                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     Text(stringResource(R.string.kn_grace_period_ends, KachatLive.day(ends)), color = colors.warning, fontSize = 12.sp)
-                                    val releasedIn = stringResource(R.string.kn_released_in)
-                                    val left = KachatLive.countdown(ends - now, androidx.compose.ui.platform.LocalContext.current)
-                                    Text(
-                                        androidx.compose.ui.text.buildAnnotatedString {
-                                            append(releasedIn)
-                                            append(" ")
-                                            pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum"))
-                                            append(left)
-                                            pop()
-                                        },
-                                        color = colors.warning, fontSize = 12.sp,
-                                    )
+                                    KachatGraceCountdownText(ends, colors.warning)
                                 }
                             }
                         }
@@ -4269,11 +4260,16 @@ fun rememberKachatHeldCount(
             com.kachat.app.services.kachatnames.KachatOwnedNamesCache.load(cacheContext, walletAddress)?.let { count = it.names.size }
         }
         if (vm.registry.refreshedAt.value == null) vm.registry.refresh()
+        var incomplete = false
         val own = if (walletAddress.lowercase() == vm.actions.myAddress) {
             try {
-                vm.actions.ownNamesAndOffers(heldOnly = true)
+                vm.actions.ownNamesAndOffers(heldOnly = true, requireAllKeys = true)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: com.kachat.app.services.kachatnames.KachatNamesActions.IncompleteKeys) {
+                // an address's history couldn't be read: the count would drop its names (audit LOW L11)
+                incomplete = true
+                if (count == null) e.partial else null
             } catch (_: Exception) {
                 null
             }
@@ -4283,6 +4279,7 @@ fun rememberKachatHeldCount(
         val key = KachatNamesRegistry.keyOf(walletAddress)
         count = when {
             own != null -> own.first.size
+            incomplete -> count
             key != null -> try {
                 vm.registry.heldNames(key).size
             } catch (e: CancellationException) {
@@ -4348,9 +4345,18 @@ fun KachatLiveDomainsTab(
         // d1026de, IOS-085).
         val own = if (walletAddress.lowercase() == vm.actions.myAddress) {
             try {
-                vm.actions.ownNamesAndOffers(heldOnly = true)
+                vm.actions.ownNamesAndOffers(heldOnly = true, requireAllKeys = true)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: com.kachat.app.services.kachatnames.KachatNamesActions.IncompleteKeys) {
+                // an address's history couldn't be read: its names would vanish from the screen
+                // and the saved copy, so only an empty screen takes the partial answer, unsaved
+                // (audit LOW L11)
+                if (names.isEmpty() && myOffers.isEmpty()) {
+                    names = e.partial.first
+                    myOffers = e.partial.second
+                }
+                null
             } catch (_: Exception) {
                 null
             }
@@ -4837,11 +4843,11 @@ private fun FundingErrorFooter(text: String, showsFund: Boolean, onFund: () -> U
 /** iOS `@AppStorage("kachat_profile_privacy_seen")`: the first save says profiles are public. */
 private const val PRIVACY_SEEN_KEY = "kachat_profile_privacy_seen"
 
-// MARK: - Expired names banner (Profile)
+// MARK: - Expired names banner (Wallet)
 
 /**
- * This wallet's .kachat names that have expired and sit in their grace period, for Profile's
- * banner ([KachatExpiredNamesBanner]): renew before grace ends, or anyone can claim them. A
+ * This wallet's .kachat names that have expired and sit in their grace period, for the Wallet
+ * tab's banner ([KachatExpiredNamesBanner]): renew before grace ends, or anyone can claim them. A
  * dismissal (the X) is per name and expiry, so a name that expires again brings it back (iOS
  * 6ac48a7 `KachatExpiredNamesModel`). Only where the registry is launched; elsewhere nothing here
  * builds it.
@@ -4895,8 +4901,9 @@ class KachatExpiredNamesViewModel @Inject constructor(
     }
 }
 
-/** Profile's banner while one of this wallet's .kachat names is in its grace period. Tapping it
- *  opens the name (renew is there); the X hides it (iOS 6ac48a7 `KachatExpiredNamesBanner`). */
+/** The Wallet tab's banner while one of this wallet's .kachat names is in its grace period (iOS
+ *  428a797b: attached at the top of Wallet). Tapping it opens the name (renew is there); the X
+ *  hides it (iOS 6ac48a7 `KachatExpiredNamesBanner`). */
 @Composable
 fun KachatExpiredNamesBanner(walletAddress: String?, vm: KachatExpiredNamesViewModel = hiltViewModel()) {
     val revision by vm.revision.collectAsState()
@@ -4963,40 +4970,6 @@ class KachatSocialViewModel @Inject constructor(
     val social: KachatSocialImageResolver,
 ) : ViewModel()
 
-
-/** A Form text field: no box, the row is the field. */
-@Composable
-private fun FormTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    modifier: Modifier = Modifier,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    textStyle: TextStyle = LocalTextStyle.current,
-    singleLine: Boolean = true,
-    minLines: Int = 1,
-    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-    textAlign: TextAlign = TextAlign.Start,
-) {
-    val colors = LocalAppColors.current
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder, color = colors.textTertiary, style = textStyle, textAlign = textAlign, modifier = Modifier.fillMaxWidth()) },
-        singleLine = singleLine,
-        minLines = minLines,
-        maxLines = maxLines,
-        textStyle = textStyle.copy(textAlign = textAlign),
-        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrect = false, keyboardType = keyboardType),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
-            focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
-            focusedTextColor = colors.textPrimary, unfocusedTextColor = colors.textPrimary, cursorColor = KaspaTeal,
-        ),
-        modifier = modifier
-    )
-}
-
 /** A filled field's trailing clear button (iOS `xmark.circle.fill`, secondary). The 20dp icon
  *  sits 16 in from the edge as before; the tap target around it is 44dp, iOS's minimum. */
 @Composable
@@ -5017,22 +4990,6 @@ private fun FormClearButton(onClick: () -> Unit) {
         )
     }
 }
-
-/**
- * What .kachat names are, what they cost and how to claim one: the page on home.kachat.app that
- * "Get a .kachat name" (Edit Profile) and "Get a .kachat domain" (Your Domains) open. Names are
- * bought in KaPay, never in this app (iOS 413f6d6d `KachatNamesInfo`).
- */
-object KachatNamesInfo {
-    const val PAGE_URL = "https://home.kachat.app/kachat/"
-
-    fun open(context: android.content.Context) {
-        runCatching {
-            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(PAGE_URL)))
-        }
-    }
-}
-
 
 /**
  * One profile field's source (avatar, banner or bio) looked up on this device, showing exactly the
@@ -5405,26 +5362,27 @@ fun KachatLiveProfileEditorScreen(
     }
 }
 
-/**
- * An address's .kachat names where a screen still asks for KaChat's earlier read-only list (an
- * address's Domains tab): KaPay's [KachatLiveDomainsTab] now, as on iPhone (148a5331 replaced
- * `KachatOwnedNamesList` with it). A name opens its page here; Claim a Name opens the .kachat tab.
- */
+/** "Released in" with the live countdown to [ends]: its own composable, so the 1 s tick redraws
+ *  only this line, not the whole name detail screen. */
 @Composable
-fun KachatOwnedNamesList(
-    walletAddress: String,
-    vm: KachatLiveViewModel? = if (KachatNamesService.isLaunched) hiltViewModel() else null,
-) {
-    var opened by remember(walletAddress) { mutableStateOf<NameInfo?>(null) }
-    val openedInfo = opened
-    if (vm != null && openedInfo != null) {
-        KachatLiveNameDetailScreen(openedInfo, onBack = { opened = null }, vm = vm)
-        return
+private fun KachatGraceCountdownText(ends: Long, color: androidx.compose.ui.graphics.Color) {
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(ends) {
+        while (true) {
+            delay(1_000)
+            now = System.currentTimeMillis()
+        }
     }
-    KachatLiveDomainsTab(
-        walletAddress = walletAddress,
-        onOpen = { opened = it },
-        onInscribe = { KachatDeepLink.pendingTab.value = true },
-        vm = vm,
+    val releasedIn = stringResource(R.string.kn_released_in)
+    val left = KachatLive.countdown(ends - now, androidx.compose.ui.platform.LocalContext.current)
+    Text(
+        androidx.compose.ui.text.buildAnnotatedString {
+            append(releasedIn)
+            append(" ")
+            pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum"))
+            append(left)
+            pop()
+        },
+        color = color, fontSize = 12.sp,
     )
 }

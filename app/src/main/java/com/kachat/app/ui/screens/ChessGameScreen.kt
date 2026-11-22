@@ -54,6 +54,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -120,9 +121,13 @@ fun ChessGameScreen(
     chatViewModel: ChatViewModel = hiltViewModel(),
     walletViewModel: WalletViewModel = hiltViewModel()
 ) {
-    val conversations by chatViewModel.conversations.collectAsState()
-    val conversation = conversations.find { it.contact.id == contactId }
-    val messages by chatViewModel.getMessages(contactId).collectAsState(initial = emptyList())
+    // Only this chat's row: another chat's activity must not recompose the board.
+    val conversationFlow = remember(contactId) { chatViewModel.conversationFlow(contactId) }
+    val conversation by conversationFlow.collectAsState(initial = chatViewModel.getConversation(contactId))
+    // Remembered: a Flow built in composition is a new instance on every recomposition, and
+    // collectAsState restarts (re-running the whole-history query) whenever the instance changes.
+    val messagesFlow = remember(contactId) { chatViewModel.getMessages(contactId) }
+    val messages by messagesFlow.collectAsState(initial = emptyList())
     val myAddress by walletViewModel.address.collectAsState()
     val focusManager = LocalFocusManager.current
 
@@ -231,13 +236,18 @@ fun ChessGameScreen(
         val color = myColor
         if (color != null) summary?.lastReportedClockMs(color.opposite) else null
     }
-    val myRemainingMs = if (isTimed) {
-        ((myLastReportedClockMs ?: 0L) - thinkingElapsedMs).coerceAtLeast(0L)
-    } else {
-        null
+    // Derived, not read here directly: the clock ticks every 100 ms, and reading it at the screen
+    // root recomposed the whole board 10 times a second. Only the clock chip reads the value; the
+    // root sees the two booleans below, which change once a turn.
+    val myRemainingMsState = remember(gameId, isTimed, myLastReportedClockMs) {
+        derivedStateOf {
+            if (isTimed) ((myLastReportedClockMs ?: 0L) - thinkingElapsedMs).coerceAtLeast(0L) else null
+        }
     }
+    val myClockPositive by remember(myRemainingMsState) { derivedStateOf { (myRemainingMsState.value ?: 0L) > 0L } }
+    val myClockExpired by remember(myRemainingMsState) { derivedStateOf { myRemainingMsState.value?.let { it <= 0L } == true } }
 
-    val clockRunning = isTimed && isMyTurn && isResumed && (myRemainingMs ?: 0L) > 0L
+    val clockRunning = isTimed && isMyTurn && isResumed && myClockPositive
     LaunchedEffect(clockRunning, moveCount, gameId) {
         if (!clockRunning) return@LaunchedEffect
         var lastTick = android.os.SystemClock.elapsedRealtime()
@@ -266,7 +276,7 @@ fun ChessGameScreen(
     // minute, and then, with the clock still at zero, this starts the next one (iOS: the next
     // clock tick). Reopening the board joins the send already running. Input below is also gated
     // on not-flagged.
-    val hasFlagged = isTimed && isMyTurn && myRemainingMs != null && myRemainingMs <= 0L
+    val hasFlagged = isTimed && isMyTurn && myClockExpired
     LaunchedEffect(hasFlagged, gameId, myAddress) {
         if (!hasFlagged) return@LaunchedEffect
         while (true) {
@@ -349,7 +359,7 @@ fun ChessGameScreen(
             // that value becomes my authoritative clock until my next move. The local thinking
             // accumulator resets (the persisted record is keyed to a move count that just
             // advanced, so it's stale either way; clear it eagerly).
-            val newClockMs = summary?.timeControl?.clockMsAfterMove(myRemainingMs ?: 0L)
+            val newClockMs = summary?.timeControl?.clockMsAfterMove(myRemainingMsState.value ?: 0L)
             clockPrefs.edit().remove(clockPrefsKey).apply()
             thinkingElapsedMs = 0L
             chatViewModel.sendChessMove(contactId, gameId, move, clockMs = newClockMs)
@@ -546,9 +556,9 @@ fun ChessGameScreen(
                         WaitingOnOpponentOverlay()
                     }
                 }
-                if (isTimed && myRemainingMs != null) {
+                if (isTimed) {
                     Spacer(Modifier.height(6.dp))
-                    ChessClockRow(remainingMs = myRemainingMs, isSideToMove = isMyTurn)
+                    LiveChessClockRow(remainingMs = myRemainingMsState, isSideToMove = isMyTurn)
                 }
                 Spacer(Modifier.height(8.dp))
                 HorizontalDivider()
@@ -692,6 +702,12 @@ private fun WinLossCounter(wins: Int, losses: Int) {
  *  both hugging the trailing edge like a physical clock beside the board. The side to move is
  *  emphasized (teal fill, bold, brighter text); under 20 seconds the chip tints red. Monospace
  *  digits so the display doesn't jitter as it ticks. */
+@Composable
+private fun LiveChessClockRow(remainingMs: androidx.compose.runtime.State<Long?>, isSideToMove: Boolean) {
+    // The ticking value is read here, so each tick redraws only this chip.
+    ChessClockRow(remainingMs = remainingMs.value ?: 0L, isSideToMove = isSideToMove)
+}
+
 @Composable
 private fun ChessClockRow(remainingMs: Long, isSideToMove: Boolean) {
     val lowTime = remainingMs < 20_000L

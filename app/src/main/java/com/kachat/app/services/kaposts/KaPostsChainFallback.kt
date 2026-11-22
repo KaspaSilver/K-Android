@@ -268,7 +268,16 @@ class KaPostsChainPosts @Inject constructor(
     }
 
     /** A delete or edit and the key that signed it ([authorPubkey]). */
-    data class SignedAmendment(val authorPubkey: String, val amendment: Amendment)
+    data class SignedAmendment(
+        val authorPubkey: String,
+        val amendment: Amendment,
+        /** The signature that proved it: every copy of one signed payload carries the same one. */
+        val signature: String = "",
+    ) {
+        /** Pubkey and signature, as [VerifiedPost.repeatKey]: a copy of the payload put on chain
+         *  again by anyone has the same one. */
+        val repeatKey: String get() = xOnly(authorPubkey) + ":" + signature.lowercase()
+    }
 
     private data class LatestEdit(val b64: String, val mentions: List<String>, val timestampMs: Long)
 
@@ -283,21 +292,25 @@ class KaPostsChainPosts @Inject constructor(
         val address = KaPostsService.kaspaAddressFromPubkey(ofPubkey) ?: return null
         val found = mutableListOf<VerifiedPost>()
         val deleted = mutableSetOf<String>()
-        val latestEdits = mutableMapOf<String, LatestEdit>()
+        // Each signed edit at the time it FIRST reached the chain: a signed edit carries no time
+        // of its own, so anyone can put an old one on chain again, and taken at the copy's time
+        // it would undo a later edit inside the window (audit L10).
+        val editsBySignature = mutableMapOf<String, Amendment.Edit>()
         for (page in 0 until PAGES_PER_PERSON) {
             val list = chainReader.addressPayloads(address, PAGE_SIZE, page * PAGE_SIZE)
-                ?: return if (page == 0) null else applying(deleted, latestEdits, found)
+                ?: return if (page == 0) null else applying(deleted, latestEdits(editsBySignature.values), found)
             for (tx in list) {
                 if (tx.isAccepted == false) continue
                 val hex = tx.payload ?: continue
                 val payload = hexToUtf8(hex) ?: continue
                 val timestampMs = tx.blockTime ?: 0L
-                when (val amendment = verifiedAmendment(payload, timestampMs, ofPubkey)) {
+                val signed = signedAmendment(payload, timestampMs, onlyBy = ofPubkey)
+                when (val amendment = signed?.amendment) {
                     is Amendment.Delete -> deleted += amendment.postId
                     is Amendment.Edit -> {
-                        if (amendment.timestampMs >= (latestEdits[amendment.postId]?.timestampMs ?: Long.MIN_VALUE)) {
-                            latestEdits[amendment.postId] = LatestEdit(amendment.b64, amendment.mentions, amendment.timestampMs)
-                        }
+                        val key = signed.repeatKey
+                        val earlier = editsBySignature[key]
+                        if (earlier == null || amendment.timestampMs < earlier.timestampMs) editsBySignature[key] = amendment
                     }
                     null -> {
                         val verified = verifiedPost(payload, tx.transactionId, timestampMs) ?: continue
@@ -308,7 +321,50 @@ class KaPostsChainPosts @Inject constructor(
             }
             if (list.size < PAGE_SIZE) break
         }
-        return applying(deleted, latestEdits, found)
+        return applying(deleted, latestEdits(editsBySignature.values), found)
+    }
+
+    /** The latest edit of each post, each signed edit counted once, at its first time. */
+    private fun latestEdits(edits: Collection<Amendment.Edit>): Map<String, LatestEdit> {
+        val latest = mutableMapOf<String, LatestEdit>()
+        for (edit in edits) {
+            if (edit.timestampMs >= (latest[edit.postId]?.timestampMs ?: Long.MIN_VALUE)) {
+                latest[edit.postId] = LatestEdit(edit.b64, edit.mentions, edit.timestampMs)
+            }
+        }
+        return latest
+    }
+
+    /**
+     * Whether [pubkey]'s newest signed follow action for itself on chain is a follow: true only
+     * then, false when the newest is an unfollow or none was found in the pages read, null when
+     * Kaspa REST didn't answer. Checked before an unfollow of yourself is paid for, so an indexer
+     * that says you follow yourself can't make the app spend a fee on that by itself (audit L9).
+     */
+    suspend fun followsSelfOnChain(pubkey: String): Boolean? = withContext(Dispatchers.Default) {
+        val address = KaPostsService.kaspaAddressFromPubkey(pubkey) ?: return@withContext null
+        val me = xOnly(pubkey)
+        var newest: Pair<Long, Boolean>? = null
+        for (page in 0 until PAGES_PER_PERSON) {
+            val list = chainReader.addressPayloads(address, PAGE_SIZE, page * PAGE_SIZE)
+                ?: return@withContext if (page == 0) null else newest?.second ?: false
+            for (tx in list) {
+                if (tx.isAccepted == false) continue
+                val payload = tx.payload?.let { hexToUtf8(it) } ?: continue
+                val root = listOf(KaPostsProtocol.PREFIX, "k:1:").firstOrNull { payload.startsWith(it) } ?: continue
+                val fields = payload.removePrefix(root).split(":")
+                // follow:<pubkey>:<signature>:<follow|unfollow>:<followedPubkey>
+                if (fields.size < 5 || fields[0] != "follow") continue
+                if (xOnly(fields[1]) != me || xOnly(fields[4]) != me) continue
+                val action = fields[3]
+                if (action != "follow" && action != "unfollow") continue
+                if (!signatureIsValid(fields[2], KaPostsProtocol.followSigningString(action, fields[4]), fields[1])) continue
+                val at = tx.blockTime ?: 0L
+                if (newest == null || at > newest!!.first) newest = at to (action == "follow")
+            }
+            if (list.size < PAGE_SIZE) break
+        }
+        newest?.second ?: false
     }
 
     /** What's left of a person's posts: the first copy of each signed payload, deleted ones gone,
@@ -359,7 +415,7 @@ class KaPostsChainPosts @Inject constructor(
             return when (fields[0]) {
                 "delete" -> {
                     if (!signatureIsValid(fields[2], KaPostsProtocol.deleteSigningString(fields[3]), fields[1])) return null
-                    SignedAmendment(fields[1], Amendment.Delete(fields[3]))
+                    SignedAmendment(fields[1], Amendment.Delete(fields[3]), fields[2])
                 }
                 "edit" -> {
                     if (fields.size < 6) return null
@@ -367,7 +423,7 @@ class KaPostsChainPosts @Inject constructor(
                     val text = decodedText(fields[4]) ?: return null
                     if (!KaPostsProtocol.isKaChatContent(text) || KaPostsProtocol.stripMarker(text).isBlank()) return null
                     if (!signatureIsValid(fields[2], KaPostsProtocol.editSigningString(fields[3], fields[4], fields[5]), fields[1])) return null
-                    SignedAmendment(fields[1], Amendment.Edit(fields[3], fields[4], mentions, timestampMs))
+                    SignedAmendment(fields[1], Amendment.Edit(fields[3], fields[4], mentions, timestampMs), fields[2])
                 }
                 else -> null
             }
@@ -537,7 +593,8 @@ class KaPostsLiveChainFeed @Inject constructor(
     /** What one block held for this feed. */
     private class Scan {
         val posts = mutableListOf<KaPostsChainPosts.VerifiedPost>()
-        val amendments = mutableListOf<Pair<String, LiveAmendment>>()
+        /** Key, amendment, and the signed payload's [KaPostsChainPosts.SignedAmendment.repeatKey]. */
+        val amendments = mutableListOf<Triple<String, LiveAmendment, String>>()
     }
 
     private val _amendments = MutableStateFlow<Map<String, LiveAmendment>>(emptyMap())
@@ -666,13 +723,19 @@ class KaPostsLiveChainFeed @Inject constructor(
             }
             val signed = KaPostsChainPosts.signedAmendment(payload, blockTime) ?: continue
             when (val amendment = signed.amendment) {
-                is KaPostsChainPosts.Amendment.Delete -> scan.amendments +=
-                    amendmentKey(amendment.postId, signed.authorPubkey) to LiveAmendment(edit = null, seenAtMs = blockTime)
-                is KaPostsChainPosts.Amendment.Edit -> scan.amendments +=
-                    amendmentKey(amendment.postId, signed.authorPubkey) to LiveAmendment(
+                is KaPostsChainPosts.Amendment.Delete -> scan.amendments += Triple(
+                    amendmentKey(amendment.postId, signed.authorPubkey),
+                    LiveAmendment(edit = null, seenAtMs = blockTime),
+                    signed.repeatKey,
+                )
+                is KaPostsChainPosts.Amendment.Edit -> scan.amendments += Triple(
+                    amendmentKey(amendment.postId, signed.authorPubkey),
+                    LiveAmendment(
                         edit = LiveEdit(amendment.b64, amendment.mentions, amendment.timestampMs),
                         seenAtMs = blockTime,
-                    )
+                    ),
+                    signed.repeatKey,
+                )
             }
         }
         return scan
@@ -683,7 +746,10 @@ class KaPostsLiveChainFeed @Inject constructor(
         if (!active) return
         if (scan.amendments.isNotEmpty()) {
             val updated = _amendments.value.toMutableMap()
-            for ((key, amendment) in scan.amendments) {
+            for ((key, amendment, repeatKey) in scan.amendments) {
+                // A copy of a signed edit put on chain again would take the new block's time and
+                // undo a later edit: only its first sighting counts (audit L10).
+                if (!firstSighting("amend:$repeatKey")) continue
                 // A delete stands; a later edit replaces an earlier one.
                 val existing = updated[key]
                 if (existing != null) {

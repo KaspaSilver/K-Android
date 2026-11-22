@@ -1,8 +1,6 @@
 package com.kachat.app.ui.screens
 
-import androidx.compose.foundation.layout.statusBars
 
-import androidx.compose.foundation.layout.navigationBarsPadding
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,16 +23,12 @@ import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.MonetizationOn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Sensors
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,85 +44,7 @@ import com.kachat.app.services.GlobalNotificationCenterStore
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
 import com.kachat.app.viewmodels.WalletViewModel
-import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
-
-/**
- * The notifications sheet (iOS `GlobalNotificationListView`): a full-height sheet with Done on the
- * left, "Notifications" in the middle and Clear All on the right, then the newest-first feed - each
- * row its source's icon, the title, up to two lines of body and the source with how long ago - or,
- * with nothing in it, the bell and "No notifications yet". Opening it marks everything seen (clears
- * the bell's dot), as iOS's onAppear does.
- *
- * Every row opens what it is about, the same way the matching notification's tap does: a wallet
- * receipt the History of the address that got the Kaspa (the own-address sheet a tapped banner
- * opens - iOS 95e2cba `.openOwnAddress`), a token received its Manage screen on Wallet (iOS
- * 5b7c772c), or, for a receipt saved before rows carried their address, just closes. Rows of the sources an
- * older build recorded (KaPosts, group mentions, public chats, .kachat news) are dropped on load.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun GlobalNotificationSheet(
-    store: GlobalNotificationCenterStore,
-    walletViewModel: WalletViewModel,
-    navController: NavController,
-    onDismiss: () -> Unit,
-) {
-    val entries by store.entries.collectAsState()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) { store.markAllSeen() }
-
-    /** Closes the sheet (animated, like iOS's dismiss), then runs [then]. */
-    fun dismiss(then: () -> Unit = {}) {
-        scope.launch { sheetState.hide() }.invokeOnCompletion {
-            onDismiss()
-            then()
-        }
-    }
-
-    fun open(entry: GlobalNotificationCenterStore.Entry) =
-        routeNotificationEntry(entry, walletViewModel, navController) { then -> dismiss(then) }
-
-    com.kachat.app.ui.theme.IosSheetColors {
-        val colors = LocalAppColors.current
-        // A plain list: the sheet's own background (white in light mode, the raised sheet grey in dark).
-        val background = colors.background
-        ModalBottomSheet(
-            scrimColor = com.kachat.app.ui.theme.IosSheetScrim,
-            shape = com.kachat.app.ui.theme.IosSheetShape,
-            tonalElevation = com.kachat.app.ui.theme.IosSheetTonalElevation,
-            windowInsets = androidx.compose.foundation.layout.WindowInsets.statusBars,
-            onDismissRequest = onDismiss,
-            sheetState = sheetState,
-            containerColor = background,
-            dragHandle = null,
-        ) {
-            // The sheet runs down behind the navigation bar, as iOS's does behind the home indicator;
-            // its content stays above it.
-            Column(Modifier.navigationBarsPadding()) {
-                Column(Modifier.fillMaxSize()) {
-                    // The inline navigation bar: Done (cancellation, left), the title, Clear All
-                    // (right) - both on iOS 26's glass capsules; Clear All greys out with nothing
-                    // to clear but keeps its glass.
-                    SheetNavBar(
-                        title = stringResource(R.string.notifications),
-                        leading = { SheetBarButton(stringResource(R.string.done), onClick = { dismiss() }) },
-                        trailing = {
-                            SheetBarButton(
-                                stringResource(R.string.notification_center_clear_all),
-                                onClick = { store.clearAll() },
-                                enabled = entries.isNotEmpty(),
-                            )
-                        },
-                    )
-                    NotificationEntriesList(entries, onOpen = { open(it) })
-                }
-            }
-        }
-    }
-}
 
 /**
  * Routes a tapped row to its subject, the same way the matching notification's tap does (iOS

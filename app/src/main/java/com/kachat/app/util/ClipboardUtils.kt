@@ -9,14 +9,6 @@ import android.os.Looper
 import com.kachat.app.R
 
 /**
- * Copies sensitive text (a private key hex) to the system clipboard and auto-wipes it 30 seconds
- * later, whether or not the app is still open (see [wipeSensitiveClip]). Mirrors the iOS 30-second
- * clipboard clear for private-key material.
- *
- * The recovery phrase goes through here too (iOS f9beba1): copying it is how it reaches a
- * password manager, and the same sensitive marking and 30-second wipe apply.
- */
-/**
  * The one standardized confirmation toast for copying an address to the clipboard, shared by
  * every address-copy site in the app (iOS shows the identical text): "Address kaspa:qz3x...m2aj...8f2k copied".
  *
@@ -52,6 +44,14 @@ internal fun addressCopiedDisplay(address: String): String {
     return "$prefix${body.take(4)}...${body.substring(midStart, midStart + 4)}...${body.takeLast(4)}"
 }
 
+/**
+ * Copies sensitive text (a private key hex) to the system clipboard and auto-wipes it 30 seconds
+ * later, whether or not the app is still open (see [wipeSensitiveClip]). Mirrors the iOS 30-second
+ * clipboard clear for private-key material.
+ *
+ * The recovery phrase goes through here too (iOS f9beba1): copying it is how it reaches a
+ * password manager, and the same sensitive marking and 30-second wipe apply.
+ */
 fun copyPrivateKeyWithAutoWipe(context: Context, value: String, label: String = "private key") {
     val appContext = context.applicationContext
     val clipboard = appContext.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

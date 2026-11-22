@@ -25,10 +25,6 @@ interface PortfolioDao {
     @Query("SELECT * FROM portfolio_transactions WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): PortfolioTransactionEntity?
 
-    /** Every row id another wallet on this device holds - the Nextcloud merge never moves those. */
-    @Query("SELECT id FROM portfolio_transactions WHERE walletAddress != :walletAddress AND walletAddress != ''")
-    suspend fun idsOfOtherWallets(walletAddress: String): List<String>
-
     /** One read of every portfolio's rows for this wallet - the Nextcloud sync's snapshot. */
     @Query("SELECT * FROM portfolio_transactions WHERE walletAddress = :walletAddress ORDER BY timestampMillis ASC")
     suspend fun getAllTransactionsForWalletOnce(walletAddress: String): List<PortfolioTransactionEntity>

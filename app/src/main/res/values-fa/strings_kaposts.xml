@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">نپسندیدن در شبکه حذف شد</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">دنبال‌کردن در شبکه ثبت شد</string>
-    <string name="feed54_help_welcome_guide">راهنمای خوش‌آمدگویی</string>
-    <string name="feed54_help_welcome_guide_subtitle">تور آغازین: فید، اتاق‌ها، انعام‌ها و آدرس شما.</string>
     <string name="feed54_like_posted">پسند در شبکه ثبت شد</string>
     <string name="feed54_like_removed">پسند در شبکه حذف شد</string>
     <string name="feed54_post_not_found">پست پیدا نشد - شاید قدیمی‌تر از فید فعلی باشد</string>

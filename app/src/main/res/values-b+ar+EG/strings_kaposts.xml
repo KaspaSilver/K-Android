@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">عدم إعجابك اتشال من على الشبكة</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">المتابعة اتنشرت على الشبكة</string>
-    <string name="feed54_help_welcome_guide">دليل الترحيب</string>
-    <string name="feed54_help_welcome_guide_subtitle">الجولة الأولى: الفيد بتاعك والأوض والإكراميات وعنوانك.</string>
     <string name="feed54_like_posted">إعجابك اتنشر على الشبكة</string>
     <string name="feed54_like_removed">إعجابك اتشال من على الشبكة</string>
     <string name="feed54_post_not_found">المنشور مش موجود - ممكن يكون أقدم من الفيد الحالي</string>

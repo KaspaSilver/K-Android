@@ -234,8 +234,13 @@ class KaChatApplication : Application(), Configuration.Provider {
         // KaPost and Public Chats (iOS 148a5331)
         startupStep("public chat scanning") { broadcastScanningService.get() }
         startupStep("scheduled KaPosts") { kaPostsScheduledStore.get() }
-        startupStep("KaPost notifications") { kaPostsNotificationPoller.get() }
-        startupStep("notification bell count") { allNotificationsBadge.get() }
+        // KaPost activity polling and the bell count load their caches (the KNS profile cache, the
+        // notification stores) as they are built - nothing the first frame shows - so they are built
+        // off the main thread; a screen that needs one first simply waits for it to finish.
+        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.Default + logOnly) {
+            startupStep("KaPost notifications") { kaPostsNotificationPoller.get() }
+            startupStep("notification bell count") { allNotificationsBadge.get() }
+        }
         // Reserve the coins every still-waiting scheduled post is going to spend, before any
         // send can pick them.
         startupStep("scheduled KaPosts reload") { kaPostsScheduledStore.get().reloadIfNeeded() }

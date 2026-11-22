@@ -19,7 +19,6 @@
     <string name="shell_customize_dock_footer">Elige qué va en tu dock. Todo lo demás está en Kaspa Hub.</string>
     <string name="shell_terms_of_use">Términos de uso</string>
     <string name="shell_message_indexer_footer">KaPost, los chats públicos y el ajedrez también se leen de este indexador.</string>
-    <string name="shell_ks_title">Estadísticas de KaChat</string>
     <string name="shell_ks_what_counts">Qué se cuenta</string>
     <string name="shell_ks_range_day">24 horas</string>
     <string name="shell_ks_range_week">7 días</string>

@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">لا توجد أسماء في فترة السماح الآن.</string>
     <string name="kn_no_open_offers">لا توجد عروض مفتوحة.</string>
     <string name="kn_not_enough">لا يوجد ما يكفي من KAS على عنوان الدردشة لهذا الاسم.</string>
+    <string name="kn_err_claim_in_progress">أنت تطالب بـ %1$s بالفعل.</string>
+    <string name="kn_err_not_enough_kas">لا يوجد KAS كافٍ لهذا. أضف بعضه وحاول مرة أخرى.</string>
     <string name="kn_not_for_sale">ليس للبيع</string>
     <string name="kn_not_valid_name">ليس اسمًا صالحًا.</string>
     <string name="kn_nothing_yet">لا شيء بعد.</string>

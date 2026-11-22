@@ -212,9 +212,6 @@ class KaspadConnection internal constructor(
     /** A request is waiting for its answer: closing now would fail it. */
     val hasPendingRequests: Boolean get() = pending.isNotEmpty()
 
-    /** The node this connects to, as the pool keys it. */
-    val nodeAddress: String get() = address
-
     /** Whether a request went out on this connection within [withinMs]. */
     fun usedWithin(withinMs: Long, nowMs: Long = System.currentTimeMillis()): Boolean =
         lastRequestAtMs?.let { nowMs - it < withinMs } ?: false

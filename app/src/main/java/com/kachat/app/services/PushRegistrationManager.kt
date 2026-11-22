@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -58,6 +59,11 @@ import javax.inject.Singleton
  * this account's KaPost key with its per-kind switches and watched authors, as KaPost registered
  * them (PUSH_EXTENSIONS.md 2, 3, 3a). A change to any of them re-registers.
  *
+ * K takes every push (iOS 428a797b, kachat-indexer docs/K_ALL_IN_ONE_PUSH.md): the registration
+ * says `"app": "k"`, lists the Received KAS addresses (`watch_only_addresses`: spending and
+ * notifying Cold Storage addresses, none with Address Activity off) and everyone blocked or muted
+ * on KaPost (`kaposts_blocked_pubkeys`, audit 2026-11-21 #16). All three are in the fingerprint.
+ *
  * [PushState.setActive] is flipped true only after a registration round-trip succeeds while
  * system notifications are deliverable, and false on failure/unregister — the pollers consult it
  * to suppress their duplicate local banners for push-covered types (the iOS repo's PUSH_EXTENSIONS.md §4).
@@ -78,6 +84,10 @@ class PushRegistrationManager @Inject constructor(
     // only from this manager's own coroutines.
     private val broadcastRepository: dagger.Lazy<com.kachat.app.repository.BroadcastRepository>,
     private val kaPostsWatchStore: dagger.Lazy<KaPostsWatchStore>,
+    /** The Received KAS addresses (`watch_only_addresses`, iOS 428a797b
+     *  `AddressActivityNotifier.pushWatchOnlyAddresses`). Lazy: reached only from this manager's
+     *  own coroutines. */
+    private val addressActivityNotifier: dagger.Lazy<AddressActivityNotifier>,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.kachat.app.util.StartupSafety.logOnlyHandler("PushRegistrationManager"))
     // Serialize registrations so an account switch + a token refresh can't race.
@@ -92,6 +102,10 @@ class PushRegistrationManager @Inject constructor(
      */
     @Volatile
     private var lastRegisteredFingerprint: String? = null
+
+    /** The account [lastRegisteredFingerprint] was registered for - see [registerAsyncUnlessRegistered]. */
+    @Volatile
+    private var lastRegisteredAddress: String? = null
 
     /**
      * Everything the registration payload is derived from, observed as one combined flow.
@@ -124,6 +138,11 @@ class PushRegistrationManager @Inject constructor(
         val trackedRoomsVersion: Long = 0L,
         val kaPostsKinds: List<Boolean> = emptyList(),
         val kaPostsWatching: Set<String> = emptySet(),
+        /** Everyone blocked or muted on KaPost (iOS 428a797b `observeKaPostsModeration`, audit #16). */
+        val kaPostsHidden: Set<String> = emptySet(),
+        /** What the Received KAS addresses are made of: the Address Activity and spending
+         *  switches, and [AddressActivityNotifier.watchOnlyChanges] (spending and Cold Storage). */
+        val watchOnlyInputs: Triple<Boolean, Boolean, Long> = Triple(false, false, 0L),
     )
 
     /** The five KaPost switches the push service filters on (likes, dislikes, comments,
@@ -136,6 +155,22 @@ class PushRegistrationManager @Inject constructor(
         settings.kaPostsNotifyFollows,
     ) { likes, dislikes, comments, reposts, follows -> listOf(likes, dislikes, comments, reposts, follows) }
 
+    /** The active account's KaPost mutes and blocks, together (addresses). */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private val kaPostsHiddenFlow = walletManager.activeAddressFlow.flatMapLatest { address ->
+        if (address == null) {
+            kotlinx.coroutines.flow.flowOf(emptySet())
+        } else {
+            combine(settings.kapostsMuted(address), settings.kapostsBlocked(address)) { muted, blocked -> muted + blocked }
+        }
+    }
+
+    private val watchOnlyInputsFlow = combine(
+        settings.addressActivityNotificationsEnabled,
+        settings.spendingReceiveNotifications,
+        AddressActivityNotifier.watchOnlyChanges,
+    ) { activity, spending, version -> Triple(activity, spending, version) }
+
     private fun featureInputsFlow() = combine(
         broadcastRepository.get().getNotifyEnabledChannelNames(),
         broadcastRepository.get().getHiddenSenders().map { rows -> rows.map { "${it.channelName}|${it.senderAddress}" }.toSet() },
@@ -143,6 +178,9 @@ class PushRegistrationManager @Inject constructor(
         kaPostsKindsFlow,
         kaPostsWatchStore.get().watching,
     ) { rooms, hidden, tracked, kinds, watching -> FeatureInputs(rooms, hidden, tracked, kinds, watching) }
+        // KaPost Block and Mute, and the Received KAS addresses, re-register too (iOS 428a797b).
+        .combine(kaPostsHiddenFlow) { inputs, hidden -> inputs.copy(kaPostsHidden = hidden) }
+        .combine(watchOnlyInputsFlow) { inputs, watchOnly -> inputs.copy(watchOnlyInputs = watchOnly) }
 
     init {
         scope.launch {
@@ -207,6 +245,22 @@ class PushRegistrationManager @Inject constructor(
             runCatching { retryPendingUnregisterIfNeeded() }
                 .onFailure { Log.w(TAG, "push unregister retry failed: ${it.message}") }
         }
+    }
+
+    /**
+     * [registerAsync], unless the active account's registration already went through in this
+     * process and nothing has invalidated it since (a failure or an unregister clears
+     * [lastRegisteredFingerprint]). What a wallet view model asks for as each screen opens: a
+     * registration that failed is still retried then, but a registered device no longer re-reads
+     * every contact and group to find out it has nothing to send. Changes to what is watched
+     * reach the registration through the observer in init.
+     */
+    fun registerAsyncUnlessRegistered() {
+        val address = walletManager.activeAddressFlow.value
+        if (address != null && lastRegisteredFingerprint != null &&
+            lastRegisteredAddress.equals(address.trim(), ignoreCase = true)
+        ) return
+        registerAsync()
     }
 
     /** False on a network with no push service, or a phone without Google Play services. */
@@ -484,7 +538,7 @@ class PushRegistrationManager @Inject constructor(
         val watchedGroupIds = collectWatchedGroupIds(walletAddress)
         // Public Chats and KaPost (iOS 148a5331): the rooms whose bell is on with who is hidden in
         // them, and this account's KaPost key, switches and watched authors.
-        val features = collectFeatureFields(privateKey)
+        val features = collectFeatureFields(privateKey, walletAddress)
 
         // Skip the network round-trip entirely when the server-accepted snapshot is unchanged —
         // this is what collapses the startup trigger + init-observer + foreground triggers into
@@ -506,6 +560,7 @@ class PushRegistrationManager @Inject constructor(
         }
 
         lastRegisteredFingerprint = fingerprint
+        lastRegisteredAddress = walletAddress
         // This registration replaced anything an earlier unregister still owed the service.
         clearUnregisterPending()
         // Remote-push mode is only real if the system will actually show what FCM delivers;
@@ -565,6 +620,12 @@ class PushRegistrationManager @Inject constructor(
                     kaPostsNotifyReposts = features.kinds.getOrElse(3) { true },
                     kaPostsNotifyFollows = features.kinds.getOrElse(4) { true },
                     kaPostsWatchAuthors = features.watchAuthors,
+                    // KaPost Block and Mute stop pushes too (iOS 428a797b, audit #16).
+                    kaPostsBlockedPubkeys = if (features.kaPostsPubkey == null) emptyList() else features.blockedPubkeys,
+                    // K takes every kind of push, and the Received KAS addresses (iOS 428a797b,
+                    // kachat-indexer docs/K_ALL_IN_ONE_PUSH.md).
+                    app = APP_MARKER,
+                    watchOnlyAddresses = features.watchOnly,
                     auth = auth,
                 )
             )
@@ -644,16 +705,26 @@ class PushRegistrationManager @Inject constructor(
             features.kaPostsPubkey.orEmpty(),
             features.kinds.joinToString("") { if (it) "1" else "0" },
             features.watchAuthors.sorted().joinToString("+"),
+            features.blockedPubkeys.joinToString("+"),
+            // The K marker and the Received KAS addresses too: a build that starts sending them
+            // updates the registration once, and a new spending address is watched at once (iOS
+            // 428a797b).
+            APP_MARKER,
+            features.watchOnly.joinToString("+"),
         ).joinToString("\n")
     )
 
-    /** The Public Chats and KaPosts fields of one registration (iOS 148a5331). */
+    /** The Public Chats and KaPosts fields of one registration (iOS 148a5331), and K's (iOS 428a797b). */
     private class FeatureFields(
         val rooms: List<String>,
         val hiddenSenders: Map<String, List<String>>,
         val kaPostsPubkey: String?,
         val kinds: List<Boolean>,
         val watchAuthors: List<String>,
+        /** Everyone blocked or muted on KaPost, 66-hex compressed, sorted. */
+        val blockedPubkeys: List<String>,
+        /** The Received KAS addresses, sorted. */
+        val watchOnly: List<String>,
     )
 
     /**
@@ -664,7 +735,7 @@ class PushRegistrationManager @Inject constructor(
      * none left out); the account's KaPosts identity, the compressed public key of its key; and
      * the authors it asked to hear about when they post.
      */
-    private suspend fun collectFeatureFields(privateKey: ByteArray): FeatureFields {
+    private suspend fun collectFeatureFields(privateKey: ByteArray, walletAddress: String): FeatureFields {
         val repository = broadcastRepository.get()
         val rooms = repository.getNotifyEnabledChannelNames().first()
             .filter {
@@ -683,7 +754,13 @@ class PushRegistrationManager @Inject constructor(
         }.getOrNull()
         val kinds = kaPostsKindsFlow.first()
         val watchAuthors = if (pubkey == null) emptyList() else kaPostsWatchStore.get().watchedPubkeys()
-        return FeatureFields(rooms, hiddenSenders, pubkey, kinds, watchAuthors)
+        val hiddenAddresses = runCatching {
+            settings.kapostsMuted(walletAddress).first() + settings.kapostsBlocked(walletAddress).first()
+        }.getOrDefault(emptySet())
+        val blocked = kaPostsPubkeys(hiddenAddresses)
+        val watchOnly = runCatching { addressActivityNotifier.get().pushWatchOnlyAddresses() }
+            .getOrDefault(emptySet()).sorted()
+        return FeatureFields(rooms, hiddenSenders, pubkey, kinds, watchAuthors, blocked, watchOnly)
     }
 
     /**
@@ -698,7 +775,11 @@ class PushRegistrationManager @Inject constructor(
             contact.theirAlias?.trim()?.takeIf { it.isNotEmpty() }?.let { aliases += it }
             // Only from the key of the account this contact belongs to: a registration that
             // spanned an account switch derives none from the other account's key (iOS dfaba68).
-            runCatching { walletManager.myDeterministicAlias(contact.id, privateKey, contact.walletAddress) }
+            runCatching {
+                com.kachat.app.util.DeterministicAliasMemo.myAlias(contact.id, privateKey, contact.walletAddress) {
+                    walletManager.myDeterministicAlias(contact.id, privateKey, contact.walletAddress)
+                }
+            }
                 .getOrNull()?.trim()?.takeIf { it.isNotEmpty() }?.let { aliases += it }
             // Every alias they have been seen sending to us under (PeerAliasStore), so a push is
             // sent for those messages too.
@@ -816,6 +897,23 @@ class PushRegistrationManager @Inject constructor(
                 ((high shl 4) or low).toByte()
             }
         }
+
+        /** The registration's `app` field: K takes every kind of push (iOS 428a797b
+         *  `PushNotificationManager.appMarker`, kachat-indexer docs/K_ALL_IN_ONE_PUSH.md). */
+        internal const val APP_MARKER = "k"
+
+        /**
+         * KaPost addresses as the push service's pubkeys (iOS 428a797b `collectKaPostsHiddenPubkeys`):
+         * a Schnorr address's 32-byte key, "02" in front (66-hex compressed; the service compares
+         * the x-only part), lowercased and sorted. Anything else is left out.
+         */
+        internal fun kaPostsPubkeys(addresses: Collection<String>): List<String> =
+            addresses.map { it.trim().lowercase() }.toSortedSet().mapNotNull { address ->
+                val (version, payload) = runCatching { com.kachat.app.util.KaspaAddress.decode(address) }.getOrNull()
+                    ?: return@mapNotNull null
+                if (version.toInt() != 0 || payload.size != 32) return@mapNotNull null
+                "02" + payload.joinToString("") { "%02x".format(it) }
+            }
 
         internal fun supersededBase(storedBase: String?, currentBase: String): String? {
             val old = storedBase?.trim()?.takeIf { it.isNotEmpty() } ?: return null

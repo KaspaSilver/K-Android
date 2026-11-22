@@ -164,6 +164,10 @@ class BroadcastScanningService @Inject constructor(
         scope.launch {
             meteredNetwork.isMeteredFlow.collect { reevaluate() }
         }
+        // Push on or off: whether a bell-on room in the background needs the stream (reevaluate).
+        scope.launch {
+            pushState.pushActive.collect { reevaluate() }
+        }
         // The chess arena's indexer down, or back: with it down the block stream is the arena's
         // only live route, metered or not (iOS da59726). Its current value too: this service can
         // start after the indexer went down.
@@ -285,10 +289,17 @@ class BroadcastScanningService @Inject constructor(
             // Rows older than a few minutes are backlog, not a message that just arrived - and
             // the first pass for a room is history catching up, so it stays quiet.
             val cutoff = System.currentTimeMillis() - SWEEP_BANNER_WINDOW_MS
-            if (!firstPass && !pushState.isActive) {
+            // While the app is open it banners new room messages itself, push or not (iOS
+            // 428a797b `InAppBanner`): one per message, never a reaction or an edit.
+            if (!firstPass) {
                 for (row in fresh) {
                     if (row.blockTimestamp <= cutoff) continue
-                    if (row.senderAddress == myAddressOrNull()) continue
+                    if (!notificationHelper.mayBannerLocally(pushState.isActive, row.blockTimestamp)) continue
+                    if (broadcastRepository.isLocalAccountAddress(row.senderAddress)) continue
+                    if (isSenderHidden(row.senderAddress, channel)) continue
+                    if (MessageReaction.parseOrNull(row.content) != null ||
+                        com.kachat.app.util.MessageEdit.parseOrNull(row.content) != null
+                    ) continue
                     broadcastNotifier.showBroadcast(
                         channelName = channel,
                         title = "#$channel",
@@ -348,11 +359,6 @@ class BroadcastScanningService @Inject constructor(
     }
 
     @Synchronized
-    private fun isChannelWanted(channelName: String): Boolean {
-        return channelName in alwaysListenChannelNames || channelName in liveViewedChannelNames
-    }
-
-    @Synchronized
     private fun acquire() {
         wantCount++
         reevaluate()
@@ -366,8 +372,8 @@ class BroadcastScanningService @Inject constructor(
 
     /**
      * One start/stop decision for every input change (demand, foreground, network type,
-     * channel mix). Unmetered (WiFi) keeps the original behavior exactly: stream whenever
-     * anything wants it, foreground or background. On METERED networks the full-block stream
+     * channel mix). On WiFi the stream runs for the rooms listed in the body (no longer whenever
+     * anything wants it). On METERED networks the full-block stream
      * (roughly 1-4 GB/day if left running) is only justified for a wanted channel with NO
      * other delivery path — the indexer-tracked rooms (curated, or added on the indexer)
      * already get an 8s indexer poll while open (BroadcastViewModel.startIndexerBackfill) plus a 30-day history backfill on
@@ -378,20 +384,44 @@ class BroadcastScanningService @Inject constructor(
      */
     @Synchronized
     private fun reevaluate() {
-        // A room on screen wants the stream only while the app is in front: left open behind the
-        // home button it would stream every block until the process dies. Always-listen rooms
-        // keep their background stream (iOS suspends the app instead).
-        val demand = wantCount > 0 && (alwaysListenWasWanted || notificationHelper.isAppInForeground)
-        val shouldRun = demand && (
-            !meteredNetwork.isMetered ||
-                (
-                    notificationHelper.isAppInForeground &&
-                        (alwaysListenChannelNames + liveViewedChannelNames)
-                            .any { !hasIndexerDelivery(it) }
-                    )
-            )
+        // Only the rooms that need the stream turn it on (iOS `scanWantedChannels`, its audit #26:
+        // streaming every bell-on room on Wi-Fi kept the app parsing ~10 full blocks a second;
+        // audit M7 here):
+        // - a room the indexer doesn't cover (none keeps its history, or it isn't answering, or
+        //   the arena with its indexer down): the stream is its only live route;
+        // - a room open on screen, on Wi-Fi: the fast path on top of its 8 s indexer poll (the
+        //   chess arena counts as open while a chess screen is up);
+        // - Android only, a bell-on room in the background on Wi-Fi when there is no push: then
+        //   nothing else can banner it (iOS is suspended in the background instead).
+        // A covered bell-on room otherwise gets its messages from the closed-room sweep (in front,
+        // every 20 s) and remote push. A room on screen wants the stream only while the app is in
+        // front: left open behind the home button it would stream every block until the process
+        // dies. On metered networks only in front, for a room with no other route, as before.
+        val foreground = notificationHelper.isAppInForeground
+        val metered = meteredNetwork.isMetered
+        val rooms = alwaysListenChannelNames + (if (foreground) liveViewedChannelNames else emptySet())
+        // Per room, so the block handler only checks authors for the rooms the stream is on for
+        // (iOS `streamChannels`): a covered bell-on room riding along with an uncovered one used
+        // to cost an author lookup per post too.
+        val stream = if (metered && !foreground) emptySet() else rooms.filterTo(HashSet()) { room ->
+            !hasIndexerDelivery(room) ||
+                (!metered && foreground && room in liveViewedChannelNames) ||
+                (!metered && !foreground && !pushState.isActive && room in alwaysListenChannelNames)
+        }
+        streamChannelNames = stream
+        val shouldRun = wantCount > 0 && stream.isNotEmpty()
+        if (shouldRun != isRunning) {
+            Log.i("BroadcastScanningService", if (shouldRun) "Block stream on for ${stream.size} room(s)"
+                else "Block stream off: the indexer covers every room")
+        }
+        // Off, the collector goes with the subscription: no room's scan parses blocks (iOS
+        // removes its block handler with no such room).
         if (shouldRun) startInternal() else stopInternal()
     }
+
+    /** The rooms the stream is on for, as of the last [reevaluate]: the block handler only checks
+     *  authors for these (iOS `streamChannels`). */
+    @Volatile private var streamChannelNames: Set<String> = emptySet()
 
     /** The exact connection the live NOTIFY_START went to — [stopInternal] must send its
      *  NOTIFY_STOP to THIS node. A fresh getBroadcastConnection() there could hand back a
@@ -470,13 +500,13 @@ class BroadcastScanningService @Inject constructor(
                     ?: output.takeIf { it.hasVerboseData() }?.verboseData?.scriptPublicKeyAddress?.takeIf { it.isNotBlank() }
             }
             senderVerifier.rememberOutputs(txId, outputAddresses)
-            if (!isChannelWanted(parsed.channel)) continue
-            // A sender hidden in this room is dropped before the author is checked: checking can
-            // cost REST lookups, and every room on the network posts (iOS 369794e
-            // `hitsWorthVerifying`). The posting address is output 0's, which a verified post's
-            // input 0 must match; storing checks the verified sender again.
-            val postingAddress = outputAddresses.firstOrNull()
-            if (postingAddress != null && isSenderHidden(postingAddress, parsed.channel)) continue
+            // Only rooms the stream is on for (iOS `hitsWorthVerifying` over `streamChannels`):
+            // the indexer serves the others, and their authors aren't looked up from here.
+            if (parsed.channel !in streamChannelNames) continue
+            // A sender hidden in this room is still checked and stored (iOS 369794e
+            // `hitsWorthVerifying` drops them, but its store is per account): the room table is
+            // shared by every account on the phone, and one account's hide must not cost another
+            // the posts (audit L3). Reads filter them out, and they never banner.
 
             val input0 = tx.inputsList.firstOrNull()
             val hit = BroadcastSenderVerifier.LiveHit(
@@ -520,7 +550,11 @@ class BroadcastScanningService @Inject constructor(
         senderAddress: String,
         blockTimestampMillis: Long,
     ) {
-        if (isSenderHidden(senderAddress, parsed.channel)) return
+        // Stored even when hidden in this room (audit L3, see the block loop); only the banner
+        // below is skipped. The chess arena's reducer reads the table unfiltered, so a hidden
+        // sender's arena rows stay out as before.
+        val hiddenHere = isSenderHidden(senderAddress, parsed.channel)
+        if (hiddenHere && parsed.channel in FeaturedBroadcastChannels.SERVICE_CHANNELS) return
 
         val stored = database.broadcastDao().insertMessageIfAbsent(
             BroadcastMessageEntity(
@@ -562,10 +596,22 @@ class BroadcastScanningService @Inject constructor(
         // notifies nothing; that is the trade, made on purpose and the same one iOS makes.
         // Only a device with no push at all banners from the scan. The chess arena is
         // machinery, never a chat: it never notifies (iOS serviceChannels).
-        if (com.kachat.app.util.MessageEdit.parseOrNull(parsed.content) != null) {
+        //
+        // A post by an account on this phone is the user's own - a send that finished after they
+        // left the room, or their other account - and is never announced either (audit M5; the
+        // closed-room sweep skips them the same way).
+        if (hiddenHere) return
+        if (com.kachat.app.util.MessageEdit.parseOrNull(parsed.content) != null ||
+            broadcastRepository.isLocalAccountAddress(senderAddress)
+        ) {
             notificationHelper.claimWithoutNotifying(txId)
-        } else if (isChannelNotifyEnabled(parsed.channel) && !pushState.isActive &&
-            parsed.channel !in FeaturedBroadcastChannels.SERVICE_CHANNELS) {
+        } else if (isChannelNotifyEnabled(parsed.channel) &&
+            parsed.channel !in FeaturedBroadcastChannels.SERVICE_CHANNELS &&
+            // No push: as before. With push, only while the app is open, a recent message and
+            // never a reaction (iOS 428a797b `InAppBanner`).
+            (!pushState.isActive || (notificationHelper.mayBannerLocally(true, blockTimestampMillis) &&
+                MessageReaction.parseOrNull(parsed.content) == null))
+        ) {
             // A reaction's raw JSON must never surface in a notification — humanize it.
             // Otherwise unwrap a reply first so a voice reply's notification says "🎤 Audio
             // message" too, rather than showing the raw reply JSON (see MessageReply).

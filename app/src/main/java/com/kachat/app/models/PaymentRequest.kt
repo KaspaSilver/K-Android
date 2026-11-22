@@ -107,9 +107,6 @@ class PaymentRequest private constructor(
             return "$path?$query"
         }
 
-    /** `kachat://pay/...` */
-    val appLinkString: String get() = "kachat://pay/$linkTail"
-
     /** The link the Copy button gives out: `https://kachat.app/pay/...`. */
     val shareUrlString: String get() = "https://kachat.app/pay/$linkTail"
 

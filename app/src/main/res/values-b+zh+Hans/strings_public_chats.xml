@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">正在编码…</string>
     <string name="pc_room_voice_receiving">正在接收… %1$d/%2$d</string>
     <string name="pc_room_voice_recording">记录...</string>
-    <string name="pc_rooms53_channel_name_invalid">频道名称须为 1-%1$d 个字符，且不能包含空格或冒号。</string>
     <string name="pc_rooms53_day_one">%1$d 天</string>
     <string name="pc_rooms53_days">%1$d 天</string>
-    <string name="pc_rooms53_join_failed">加入该频道时出错。</string>
     <string name="pc_rooms54_failed_to_edit">编辑失败：%1$s</string>
     <string name="pc_rooms54_failed_to_send">发送失败：%1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">语音消息发送失败：%1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">对方的 KaPost 个人资料：帖子、回复和粉丝。</string>
     <string name="pc_sender_send_kaspa_subtitle">向对方的地址发送 Kaspa。</string>
     <string name="pc_sender_copy_address_subtitle">复制对方的 Kaspa 地址。</string>
-    <string name="pc_public_chats">公共聊天</string>
+    <string name="pc_original_message_not_loaded">原消息未加载</string>
 </resources>

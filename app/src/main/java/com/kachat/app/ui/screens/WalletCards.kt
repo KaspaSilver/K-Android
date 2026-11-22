@@ -95,17 +95,6 @@ fun WalletCardCount(value: String) {
     Text(value, color = LocalAppColors.current.textSecondary, fontSize = 17.sp, maxLines = 1)
 }
 
-/** Notifications' unread count on Wallet: a red dot and the number, while any are unread (iOS
- *  5b7c772c `WalletView.notificationsSection`). */
-@Composable
-fun WalletUnreadBadge(count: Int) {
-    if (count <= 0) return
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box(Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFFF3B30)))
-        WalletCardCount("$count")
-    }
-}
-
 /**
  * A card like Connection Settings' (iOS 5b7c772c `ConnectionSettingsView.connectionCard`, as KaPay
  * has it): the [icon] in its accent circle, [title] (headline) with [subtitle] under it, then

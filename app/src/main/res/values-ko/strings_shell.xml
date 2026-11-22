@@ -19,7 +19,6 @@
     <string name="shell_customize_dock_footer">Dock에 둘 항목을 고르세요. 나머지는 모두 Kaspa Hub에 있습니다.</string>
     <string name="shell_terms_of_use">이용 약관</string>
     <string name="shell_message_indexer_footer">KaPost, 공개 채팅, 체스도 이 인덱서에서 읽어 옵니다.</string>
-    <string name="shell_ks_title">KaChat 통계</string>
     <string name="shell_ks_what_counts">집계 기준</string>
     <string name="shell_ks_range_day">24시간</string>
     <string name="shell_ks_range_week">7일</string>

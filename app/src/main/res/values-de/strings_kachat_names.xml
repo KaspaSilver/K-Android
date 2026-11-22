@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">Gerade ist kein Name in der Nachfrist.</string>
     <string name="kn_no_open_offers">Keine offenen Angebote.</string>
     <string name="kn_not_enough">Nicht genug KAS auf deiner Chat-Adresse für diesen Namen.</string>
+    <string name="kn_err_claim_in_progress">Du sicherst dir %1$s bereits.</string>
+    <string name="kn_err_not_enough_kas">Nicht genug KAS dafür. Füge welche hinzu und versuche es erneut.</string>
     <string name="kn_not_for_sale">Nicht zu verkaufen</string>
     <string name="kn_not_valid_name">Kein gültiger Name.</string>
     <string name="kn_nothing_yet">Noch nichts.</string>

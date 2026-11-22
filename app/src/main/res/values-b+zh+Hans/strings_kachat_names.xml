@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">目前没有处于宽限期的名称。</string>
     <string name="kn_no_open_offers">没有进行中的报价。</string>
     <string name="kn_not_enough">你的聊天地址上的 KAS 不足以注册这个名称。</string>
+    <string name="kn_err_claim_in_progress">你已经在领取 %1$s。</string>
+    <string name="kn_err_not_enough_kas">KAS 不足。请添加一些后重试。</string>
     <string name="kn_not_for_sale">非卖品</string>
     <string name="kn_not_valid_name">不是有效的名称。</string>
     <string name="kn_nothing_yet">暂无内容。</string>

@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">지금은 유예 기간인 이름이 없습니다.</string>
     <string name="kn_no_open_offers">진행 중인 제안이 없어요.</string>
     <string name="kn_not_enough">이 이름을 받기에 채팅 주소의 KAS가 부족해요.</string>
+    <string name="kn_err_claim_in_progress">이미 %1$s을(를) 받는 중이에요.</string>
+    <string name="kn_err_not_enough_kas">KAS가 부족해요. 추가한 후 다시 시도하세요.</string>
     <string name="kn_not_for_sale">판매하지 않음</string>
     <string name="kn_not_valid_name">올바른 이름이 아니에요.</string>
     <string name="kn_nothing_yet">아직 없어요.</string>

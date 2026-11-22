@@ -112,14 +112,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 
 /**
- * The frame every "..." menu in the app now uses: a half sheet with a title, a line of context,
- * and a stack of [ActionSheetRow]s.
- *
- * These were popup menus of bare labels, which have room for a verb and nothing else. A sheet has
- * room for each option to say what it does, and it keeps the thing being acted on on screen while
- * you choose. Mirrors iOS's `.sheet(item:)` menus.
- */
-/**
  * A message's long-press menu, as a half sheet: what the message is at the top, the message
  * itself under it when there is text to show, then a square tile per action, three to a row
  * ([ActionSheetTiles] - iOS cdac6d0), each saying what it does to TalkBack. Every bubble in every
@@ -401,6 +393,14 @@ fun IosSheetGrabber(modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * The frame every "..." menu in the app now uses: a half sheet with a title, a line of context,
+ * and a stack of [ActionSheetRow]s.
+ *
+ * These were popup menus of bare labels, which have room for a verb and nothing else. A sheet has
+ * room for each option to say what it does, and it keeps the thing being acted on on screen while
+ * you choose. Mirrors iOS's `.sheet(item:)` menus.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActionSheetContainer(
@@ -685,6 +685,9 @@ object ActionSheetTileMetrics {
     fun sheetHeight(tiles: Int, header: Dp = 70.dp): Dp = header + gridHeight(tiles) + 44.dp
 }
 
+/** The sender whose avatar was tapped; non-null presents [SenderActionsSheet]. */
+data class SenderSheetTarget(val address: String, val isOwnMessage: Boolean)
+
 /**
  * The sender half sheet a tapped avatar opens in a group thread or a broadcast room: what the
  * avatar's popup menu used to offer, with a line under each option saying what it does - the
@@ -699,9 +702,6 @@ object ActionSheetTileMetrics {
  *   whether the sender is currently muted, which picks the row's wording.
  * @param hideSubtitle where the hide is undone - "Room Info" or "Group Info".
  */
-/** The sender whose avatar was tapped; non-null presents [SenderActionsSheet]. */
-data class SenderSheetTarget(val address: String, val isOwnMessage: Boolean)
-
 @Composable
 fun SenderActionsSheet(
     address: String,
@@ -865,7 +865,7 @@ fun TransactionActionsSheet(
 
 /** "Sent 12.5 KAS on Sep 3, 2026, 2:02 PM" - what is about to be acted on, in one line. */
 private fun summary(context: android.content.Context, tx: AddressHistoryService.AddressTransaction, is24Hour: Boolean): String {
-    val amount = AddressActivityNotifier.formatKas(tx.amountSompi)
+    val amount = com.kachat.app.repository.ChatRepository.formatKas(tx.amountSompi)
     val time = tx.blockTimeMillis?.let {
         com.kachat.app.util.IosDateStyle.mediumDateShortTime(it, is24Hour)
     }
@@ -1392,7 +1392,6 @@ private fun trimmedKasAmount(sompi: Long): String {
     return "$text ${KaspaUnit.symbol}"
 }
 
-/** What a sent message's delivery row is reporting. Mirrors iOS's `DeliveryStatusLabel.Status`. */
 /**
  * The line under a message: its time, and - for your own messages - the delivery status right
  * before it ("✓ Sent  10:57 AM", iOS bfe9f022). Every chat shows this under every message; it replaced the
@@ -1422,7 +1421,11 @@ fun MessageTimeLine(
     }
 }
 
-/** [UNCONFIRMED]: our send whose outcome is unknown. It may have landed, so no Retry (iOS d23e6f7a). */
+/**
+ * What a sent message's delivery row is reporting. Mirrors iOS's `DeliveryStatusLabel.Status`.
+ *
+ * [UNCONFIRMED]: our send whose outcome is unknown. It may have landed, so no Retry (iOS d23e6f7a).
+ */
 enum class DeliveryStatus { PENDING, SENT, FAILED, WARNING, UNCONFIRMED }
 
 /** Maps the persisted `deliveryStatus` string onto [DeliveryStatus]; anything unknown reads as sent,

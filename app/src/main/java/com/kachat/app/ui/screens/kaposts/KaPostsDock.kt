@@ -3,9 +3,7 @@ package com.kachat.app.ui.screens
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.isImeVisible
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,21 +62,9 @@ private val DockHeight = 60.dp
 /** The gap under the dock, above the system navigation bar, as the shell's real one. */
 private val DockBottomGap = 12.dp
 
-/**
- * How far content on a screen with the dock copy over it keeps clear of the bottom, so its last
- * rows and its reply box sit above the dock rather than under it. Zero while the keyboard is up:
- * the dock steps aside for it.
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun kaPostsDockCopyInset(): Dp {
-    if (WindowInsets.isImeVisible) return 0.dp
-    val navBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    return DockHeight + DockBottomGap + navBar
-}
-
-/** [kaPostsDockCopyInset] above the navigation bar: what a screen that already keeps clear of the
- *  system bars adds for the dock copy. */
+/** How far content on a screen with the dock copy over it keeps clear of the bottom, on top of
+ *  the system bars it already keeps clear of, so its last rows and its reply box sit above the
+ *  dock rather than under it. Zero while the keyboard is up: the dock steps aside for it. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun kaPostsDockCopyInsetAboveNavBar(): Dp =

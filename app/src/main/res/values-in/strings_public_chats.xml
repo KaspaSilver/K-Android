@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">Mengenkode…</string>
     <string name="pc_room_voice_receiving">Menerima… %1$d dari %2$d</string>
     <string name="pc_room_voice_recording">Merekam...</string>
-    <string name="pc_rooms53_channel_name_invalid">Nama kanal harus 1-%1$d karakter tanpa spasi atau titik dua.</string>
     <string name="pc_rooms53_day_one">%1$d hari</string>
     <string name="pc_rooms53_days">%1$d hari</string>
-    <string name="pc_rooms53_join_failed">Terjadi kesalahan saat bergabung ke kanal itu.</string>
     <string name="pc_rooms54_failed_to_edit">Gagal menyunting: %1$s</string>
     <string name="pc_rooms54_failed_to_send">Gagal mengirim: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">Gagal mengirim pesan suara: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">Profil KaPost mereka: postingan, balasan, dan pengikut.</string>
     <string name="pc_sender_send_kaspa_subtitle">Kirim Kaspa ke alamat mereka.</string>
     <string name="pc_sender_copy_address_subtitle">Salin alamat Kaspa mereka.</string>
-    <string name="pc_public_chats">Obrolan Publik</string>
+    <string name="pc_original_message_not_loaded">Pesan asli belum dimuat</string>
 </resources>

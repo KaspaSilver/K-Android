@@ -1,6 +1,5 @@
 package com.kachat.app.services
 
-import com.kachat.app.util.UserFacingError
 import android.util.Log
 import com.kachat.app.util.KaspaMessageSigner
 import kotlinx.coroutines.async
@@ -59,23 +58,6 @@ class KnsService @Inject constructor(
         }
     }
 
-    /**
-     * Kaspa address -> the domain to display for it, or null if it owns none at all.
-     * An address can own a domain without ever explicitly marking it "primary" (a
-     * separate off-chain action, see [setPrimaryDomain]) — the primary-name endpoint alone
-     * 404s for those, even though the owner very much has a real, verified domain. Falls
-     * back to the first verified domain they own, matching iOS KNSService's exact rule:
-     * `finalPrimary = primaryDomain ?? allDomains.first?.fullName`.
-     */
-    /**
-     * Cached on disk, because this is the single most-repeated KNS call in the app: the chat
-     * list sweeps it over every contact, group screens sweep it over every member, and each miss
-     * costs up to two requests. A domain changes rarely, so an answer from the last run of the
-     * app is almost always still the answer.
-     *
-     * [forceRefresh] is for the paths that just CHANGED something and must not read their own
-     * stale answer back - setting a primary domain, or editing a KNS profile.
-     */
     /** [address]'s .kas name for showing as its name - null while
      *  [SHOWS_DOMAIN_NAMES_AS_IDENTITY] is off. Use this, not [reverseResolve], anywhere the
      *  result labels a person. */
@@ -86,6 +68,22 @@ class KnsService @Inject constructor(
     suspend fun identityPrimaryDomain(address: String): String? =
         if (SHOWS_DOMAIN_NAMES_AS_IDENTITY) getExplicitPrimaryDomain(address) else null
 
+    /**
+     * Kaspa address -> the domain to display for it, or null if it owns none at all.
+     * An address can own a domain without ever explicitly marking it "primary" (a
+     * separate off-chain action, see [setPrimaryDomain]) — the primary-name endpoint alone
+     * 404s for those, even though the owner very much has a real, verified domain. Falls
+     * back to the first verified domain they own, matching iOS KNSService's exact rule:
+     * `finalPrimary = primaryDomain ?? allDomains.first?.fullName`.
+     *
+     * Cached on disk, because this is the single most-repeated KNS call in the app: the chat
+     * list sweeps it over every contact, group screens sweep it over every member, and each miss
+     * costs up to two requests. A domain changes rarely, so an answer from the last run of the
+     * app is almost always still the answer.
+     *
+     * [forceRefresh] is for the paths that just CHANGED something and must not read their own
+     * stale answer back - setting a primary domain, or editing a KNS profile.
+     */
     suspend fun reverseResolve(address: String, forceRefresh: Boolean = false): String? {
         if (!forceRefresh) {
             profileCache.cachedReverse(address)?.let { return it.domain }
@@ -316,7 +314,7 @@ class KnsService @Inject constructor(
 
         /**
          * Whether an ADDRESS is shown by its .kas name anywhere in the app - contacts, chat rows,
-         * User Info, group and public chat senders, KaPosts authors, chess players, calls,
+         * User Info, group and public chat senders, KaPosts authors, chess players,
          * notifications. Off since 5.2 (iOS 509c0fe): someone without a .kachat name is shown by
          * the name you gave them, else their address. [identityName] / [identityPrimaryDomain]
          * are the reads for display. Your Domains (managing your own .kas names) and typing a
@@ -410,7 +408,9 @@ class KnsService @Inject constructor(
             if (value.endsWith(".kas")) value = value.dropLast(4)
             if (value.isEmpty()) return null
             if (value.startsWith("-") || value.endsWith("-")) return null
-            if (!value.all { it.isLetterOrDigit() || it == '-' }) return null
+            // ASCII only, as iOS's allowed set: `isLetterOrDigit` let any Unicode letter through
+            // ("аlice" with a Cyrillic а; security audit L5)
+            if (!value.all { it in 'a'..'z' || it in '0'..'9' || it == '-' }) return null
             return value
         }
 

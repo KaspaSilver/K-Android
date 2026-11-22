@@ -1555,8 +1555,10 @@ class GroupRepository @Inject constructor(
                 }
                 // The remote push is the only banner source while push is active, foreground or
                 // background (iOS ChatService.localBannersEnabled): the FCM handler words this one
-                // with readGroupMessagePush. Only a device with no push banners from here.
-                if (!pushState.isActive) {
+                // with readGroupMessagePush. Only a device with no push banners from here - and,
+                // while the app is open, this one too (iOS 428a797b `InAppBanner`): one banner per
+                // message (history caught up returned above).
+                if (notificationHelper.mayBannerLocally(pushState.isActive, blockTimestamp)) {
                     // A later part of a long voice note or multi-part photo: the note is one
                     // message, so only its first part to arrive rings (iOS 7c5c22e3).
                     val partKey = com.kachat.app.util.VoicePartGrouping.partKey(plaintext, "${group.groupId}|${parsed.senderId.toHexString()}")
@@ -1792,16 +1794,6 @@ class GroupRepository @Inject constructor(
      *  for the push that couldn't be read itself (see [inviteHeldByTx]). */
     private val invitesHeldByTx = java.util.concurrent.ConcurrentHashMap<String, GroupControlPush.Invite>()
 
-    /** "wallet|txId" of verified roots read this process. */
-    private val rootTxIds: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
-
-    /** Whether a sync has read [txId] as a root: a push it couldn't read then has no "Group update"
-     *  to give, the root having rotated a held group's keys or brought an invite. */
-    fun wasRootTx(txId: String): Boolean {
-        val walletAddress = walletManager.getActiveAccount()?.address ?: return false
-        return "$walletAddress|$txId" in rootTxIds
-    }
-
     /** The invite [txId] brought in, if a sync has just held one from it and no banner has gone out. */
     fun inviteHeldByTx(txId: String): GroupControlPush.Invite? {
         val walletAddress = walletManager.getActiveAccount()?.address ?: return null
@@ -1919,11 +1911,6 @@ class GroupRepository @Inject constructor(
                     }
                     return
                 }
-            }
-            // For the FCM handler, when a sync got to read a root its push couldn't (see wasRootTx).
-            if (txId != null) {
-                if (rootTxIds.size >= 256) rootTxIds.clear()
-                rootTxIds.add("$walletAddress|$txId")
             }
             if (isSelfSent && rootPayload.groupSeed == null) return // our own member-copy echo
             // Nobody joins a group by being added to it: a group this device doesn't hold waits in

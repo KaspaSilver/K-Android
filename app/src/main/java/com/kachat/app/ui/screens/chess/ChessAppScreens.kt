@@ -44,8 +44,8 @@ import com.kachat.app.util.KaPlayText
 import com.kachat.app.viewmodels.WalletViewModel
 
 // KaPlay's own tab screens, back in KaChat (iOS 148a5331, phase 4: Views/Games/GamesView.swift,
-// Views/Chess/ChessLeaderboardTabView.swift and ChessPlayerView.swift): the KaPlay tab (`.games`)
-// and the Leaderboard tab (`.leaderboard`), both starting in Kaspa Hub, and a player's card.
+// Views/Chess/ChessLeaderboardView.swift and ChessPlayerView.swift): the KaPlay tab (`.games`),
+// starting in Kaspa Hub, KaPlay > Chess > Leaderboard (iOS 428a797b), and a player's card.
 
 /**
  * The KaPlay tab (iOS `.games`, KaPlay's Play tab): a card per game. Chess is the only one so far;
@@ -66,8 +66,10 @@ fun GamesScreen(
     // from under Chess (or a board) already open over it.
     val ownEntry = androidx.compose.ui.platform.LocalLifecycleOwner.current as? androidx.navigation.NavBackStackEntry
     val top by navController.currentBackStackEntryAsState()
-    LaunchedEffect(challenge, top) {
-        if (challenge != null && ownEntry != null && top?.id == ownEntry.id) {
+    // Kept alive but hidden in Kaspa Hub (iOS 428a797b): not on screen, so it waits until it shows.
+    val hubHidden = com.kachat.app.ui.screens.LocalHubSectionHidden.current
+    LaunchedEffect(challenge, top, hubHidden) {
+        if (challenge != null && !hubHidden && ownEntry != null && top?.id == ownEntry.id) {
             navController.navigate(KaPlayRoutes.HOME)
         }
     }
@@ -102,35 +104,32 @@ fun GamesScreen(
 }
 
 /**
- * The Leaderboard tab (iOS `.leaderboard`, `ChessLeaderboardTabView`): three rows, each opening its
- * own page. 1v1 and Tournaments are a board for this month or all time
- * ([ChessLeaderboardPageScreen]); Bots is a board per bot ([ChessBotLeaderboardsScreen]).
+ * KaPlay > Chess > Leaderboard (iOS 428a797b `ChessLeaderboardView`; owner's call, 2026-11-22:
+ * inside Chess, no longer a Kaspa Hub tile of its own): three rows, each opening its own page.
+ * 1v1 and Tournaments are a board for this month or all time ([ChessLeaderboardPageScreen]); Bots
+ * is a board per bot ([ChessBotLeaderboardsScreen]). Pushed inside KaPlay, so a back button and the
+ * balance in the bar, no connection dot or backup strip.
  */
 @Composable
-fun ChessLeaderboardScreen(
-    navController: NavController,
-    walletViewModel: WalletViewModel = hiltViewModel(),
-) {
+fun ChessLeaderboardScreen(navController: NavController) {
     KaPlayText.init(androidx.compose.ui.platform.LocalContext.current)
-    KaPlayBackupBanner(walletViewModel, navController) {
-        Scaffold(
-            containerColor = LocalAppColors.current.background,
-            contentWindowInsets = WindowInsets(0),
-            topBar = { ChessHomeBar(onBack = null, title = KaPlayText.string("Leaderboard"), showsBackupBanner = true) },
-        ) { padding ->
-            Column(
-                Modifier.padding(padding).fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                ChessLeaderboardLink(KaPlayText.string("1v1"), Icons.Default.People) {
-                    navController.navigate(KaPlayRoutes.leaderboard(ChessLobbyMode.DUEL))
-                }
-                ChessLeaderboardLink(KaPlayText.string("Tournaments"), Icons.Default.EmojiEvents) {
-                    navController.navigate(KaPlayRoutes.leaderboard(ChessLobbyMode.TOURNAMENT))
-                }
-                ChessLeaderboardLink(KaPlayText.string("Bots"), Icons.Default.Memory) {
-                    navController.navigate(KaPlayRoutes.BOT_BOARDS)
-                }
+    Scaffold(
+        containerColor = LocalAppColors.current.background,
+        contentWindowInsets = WindowInsets(0),
+        topBar = { ChessHomeBar(onBack = { navController.popBackStack() }, showConnectionDot = false, title = KaPlayText.string("Leaderboard")) },
+    ) { padding ->
+        Column(
+            Modifier.padding(padding).fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            ChessLeaderboardLink(KaPlayText.string("1v1"), Icons.Default.People) {
+                navController.navigate(KaPlayRoutes.leaderboard(ChessLobbyMode.DUEL))
+            }
+            ChessLeaderboardLink(KaPlayText.string("Tournaments"), Icons.Default.EmojiEvents) {
+                navController.navigate(KaPlayRoutes.leaderboard(ChessLobbyMode.TOURNAMENT))
+            }
+            ChessLeaderboardLink(KaPlayText.string("Bots"), Icons.Default.Memory) {
+                navController.navigate(KaPlayRoutes.BOT_BOARDS)
             }
         }
     }

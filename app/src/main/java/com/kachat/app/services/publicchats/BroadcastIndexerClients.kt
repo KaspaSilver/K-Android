@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.kachat.app.util.capResponseBodies
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -61,17 +62,36 @@ class BroadcastIndexerClients @Inject constructor(
         return created
     }
 
+    /**
+     * The shared client, with every answer size-capped (iOS audit 2026-11-21 #19
+     * `PublicChatIndexerClient.maxResponseBytes`): a history page bigger than any real page, or a
+     * tracked-rooms list bigger than 256 KB, is not read at all - it fails as an IOException.
+     */
+    private val cappedClient: OkHttpClient = okHttpClient.newBuilder()
+        .capResponseBodies("Public chats indexer") { request ->
+            if (request.url.encodedPath.endsWith("broadcast-channels")) MAX_TRACKED_BYTES else MAX_RESPONSE_BYTES
+        }
+        .build()
+
     /** A malformed URL never crashes: it is logged and no client is made. */
     private fun create(baseUrl: String): BroadcastIndexerApi? = try {
         val sanitized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         Retrofit.Builder()
             .baseUrl(sanitized)
-            .client(okHttpClient)
+            .client(cappedClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(BroadcastIndexerApi::class.java)
     } catch (e: Exception) {
         Log.w("BroadcastIndexerClients", "Invalid public chat indexer URL", e)
         null
+    }
+
+    companion object {
+        /** The most a history page may weigh: a page is at most 200 rows and a room message's
+         *  payload is under 100 KB, so a real page stays well under this (iOS `maxResponseBytes`). */
+        const val MAX_RESPONSE_BYTES = 24L * 1024 * 1024
+        /** The tracked-rooms list (iOS: 256 KB). */
+        const val MAX_TRACKED_BYTES = 256L * 1024
     }
 }

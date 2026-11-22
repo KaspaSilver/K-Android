@@ -57,12 +57,6 @@ import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
 import kotlinx.coroutines.launch
 
-/**
- * What the app is holding that it could fetch again, with a way to drop any of it.
- *
- * Nothing on this screen is user data - see [CacheManager] for why each category qualifies. That
- * is the whole reason it can offer a plain "Clear" rather than the warnings the Danger Zone needs.
- */
 /** iOS CacheManager's `systemImage`s: person.crop.square, globe, doc. */
 private fun CacheManager.Category.icon(): ImageVector = when (this) {
     CacheManager.Category.PROFILES -> Icons.Outlined.AccountBox
@@ -70,6 +64,12 @@ private fun CacheManager.Category.icon(): ImageVector = when (this) {
     CacheManager.Category.TEMPORARY_FILES -> Icons.AutoMirrored.Outlined.InsertDriveFile
 }
 
+/**
+ * What the app is holding that it could fetch again, with a way to drop any of it.
+ *
+ * Nothing on this screen is user data - see [CacheManager] for why each category qualifies. That
+ * is the whole reason it can offer a plain "Clear" rather than the warnings the Danger Zone needs.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CacheSettingsScreen(

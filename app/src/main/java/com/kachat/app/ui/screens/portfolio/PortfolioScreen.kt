@@ -20,7 +20,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.text.KeyboardOptions
@@ -42,7 +41,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -51,7 +49,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Hexagon
 import androidx.compose.material.icons.filled.SwapHoriz
@@ -60,15 +57,11 @@ import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material.icons.outlined.LocalGasStation
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
@@ -84,37 +77,25 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -146,14 +127,12 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -181,7 +160,6 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -250,15 +228,6 @@ private fun portfolioDecimalFormat(digits: Int): java.text.DecimalFormat {
 
 private val portfolioDecimalFormats = java.util.concurrent.ConcurrentHashMap<String, java.text.DecimalFormat>()
 
-/** "1d"/"7d"/"30d"/"3m"/"1y" — matches the PortfolioViewModel.priceRangeDays values in the range switcher. */
-private fun priceRangeLabel(days: Int): String = when (days) {
-    1 -> "1d"
-    7 -> "7d"
-    90 -> "3m"
-    365 -> "1y"
-    else -> "${days}d"
-}
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun PortfolioScreen(
@@ -284,7 +253,6 @@ fun PortfolioScreen(
     LaunchedEffect(Unit) { viewModel.refreshHashrate() }
     // 0 = Data, 1 = Transactions. Swipeable (see HorizontalPager below) as well as tap-to-switch.
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
-    val tabCoroutineScope = rememberCoroutineScope()
 
     // Pull-to-refresh (portfolio cards + tab row stay fixed above the pager; only the FAB/toolbar
     // refresh icon was removed, replaced by this gesture). `pullRefreshState.isRefreshing` starts
@@ -1177,185 +1145,6 @@ private fun AddressEntryDialog(
             }
     }
 }
-
-@Composable
-private fun PortfolioSummaryCard(
-    summary: PortfolioSummary,
-    currentPriceUsd: Double?,
-    priceChange24h: Double? = null,
-    scrubbedPrice: Pair<Long, Double>? = null,
-    currencyCode: String
-) {
-    val plColor = if (summary.totalPL >= 0) LocalAppColors.current.success else LocalAppColors.current.danger
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(LocalAppColors.current.surface)
-            .padding(14.dp)
-    ) {
-        Text(
-            if (scrubbedPrice != null) formatDateTime(scrubbedPrice.first) else tr(R.string.kp_kas_price_bb9bb),
-            color = LocalAppColors.current.textSecondary,
-            fontSize = 12.sp
-        )
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                text = when {
-                    scrubbedPrice != null -> formatUsdPrice(scrubbedPrice.second, currencyCode)
-                    currentPriceUsd != null -> formatUsdPrice(currentPriceUsd, currencyCode)
-                    else -> "—"
-                },
-                color = LocalAppColors.current.textPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp
-            )
-            // Only shown at rest — a 24h change badge next to a scrubbed historical price would
-            // be misleading (it's always "now vs 24h ago", not relative to the scrubbed point).
-            if (scrubbedPrice == null && priceChange24h != null) {
-                Spacer(Modifier.width(8.dp))
-                val isPositive = priceChange24h >= 0
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 3.dp)) {
-                    Icon(
-                        if (isPositive) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
-                        contentDescription = null,
-                        tint = if (isPositive) LocalAppColors.current.success else LocalAppColors.current.danger,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(Modifier.width(2.dp))
-                    Text(
-                        "${String.format(Locale.US, "%.2f", kotlin.math.abs(priceChange24h))}%",
-                        color = if (isPositive) LocalAppColors.current.success else LocalAppColors.current.danger,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-        }
-        Spacer(Modifier.height(10.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text(stringResource(R.string.holdings), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                Text(kas(summary.holdingsKas), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(stringResource(R.string.current_value), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                Text(money(summary.currentValue, currencyCode), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
-            }
-        }
-        Spacer(Modifier.height(10.dp))
-        androidx.compose.material3.HorizontalDivider(color = LocalAppColors.current.divider)
-        Spacer(Modifier.height(10.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text(stringResource(R.string.total_invested), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                Text(money(summary.totalInvested, currencyCode), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(stringResource(R.string.total_p_l), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        if (summary.totalPL >= 0) Icons.Default.TrendingUp else Icons.Default.TrendingDown,
-                        contentDescription = null,
-                        tint = plColor,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        "${money(summary.totalPL, currencyCode)} (${String.format(Locale.US, "%.1f", summary.totalPLPercent)}%)",
-                        color = plColor,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-}
-
-/** Compact sparkline — just enough to show the price trend at a glance above the summary card. */
-@Composable
-private fun PriceChartCard(
-    priceHistory: List<Pair<Long, Double>>,
-    onScrub: (Pair<Long, Double>?) -> Unit,
-    selectedRangeDays: Int,
-    onRangeSelected: (Int) -> Unit
-) {
-    var canvasWidthPx by remember { mutableStateOf(0) }
-    var selectedIndex by remember { mutableStateOf<Int?>(null) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(LocalAppColors.current.surface)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            modifier = Modifier.clickable {
-                // Cycles 1 -> 7 -> 30 -> 90 -> 365 -> 1 day...
-                val nextDays = when (selectedRangeDays) {
-                    1 -> 7
-                    7 -> 30
-                    30 -> 90
-                    90 -> 365
-                    else -> 1
-                }
-                onRangeSelected(nextDays)
-            },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Price (${priceRangeLabel(selectedRangeDays)})",
-                color = LocalAppColors.current.textSecondary,
-                fontSize = 12.sp
-            )
-        }
-        Spacer(Modifier.width(12.dp))
-        val minPrice = priceHistory.minOf { it.second }
-        val maxPrice = priceHistory.maxOf { it.second }
-        val range = (maxPrice - minPrice).takeIf { it > 0 } ?: 1.0
-        val textSecondaryColor = LocalAppColors.current.textSecondary
-        Canvas(
-            modifier = Modifier
-                .weight(1f)
-                .height(36.dp)
-                .onSizeChanged { canvasWidthPx = it.width }
-                .pointerInput(priceHistory) {
-                    fun scrubAt(x: Float) {
-                        if (canvasWidthPx <= 0) return
-                        val index = ((x / canvasWidthPx) * (priceHistory.size - 1)).roundToInt().coerceIn(0, priceHistory.size - 1)
-                        selectedIndex = index
-                        onScrub(priceHistory[index])
-                    }
-                    detectDragGestures(
-                        onDragStart = { offset -> scrubAt(offset.x) },
-                        onDrag = { change, _ -> scrubAt(change.position.x); change.consume() },
-                        onDragEnd = { selectedIndex = null; onScrub(null) },
-                        onDragCancel = { selectedIndex = null; onScrub(null) }
-                    )
-                }
-        ) {
-            val stepX = size.width / (priceHistory.size - 1).coerceAtLeast(1)
-            val path = Path()
-            priceHistory.forEachIndexed { index, (_, price) ->
-                val x = index * stepX
-                val y = size.height - ((price - minPrice) / range * size.height).toFloat()
-                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
-            }
-            drawPath(path = path, color = KaspaTeal, style = Stroke(width = 3f))
-
-            selectedIndex?.let { index ->
-                val x = index * stepX
-                val y = size.height - ((priceHistory[index].second - minPrice) / range * size.height).toFloat()
-                drawLine(color = textSecondaryColor, start = Offset(x, 0f), end = Offset(x, size.height), strokeWidth = 2f)
-                drawCircle(color = KaspaTeal, radius = 4f, center = Offset(x, y))
-            }
-        }
-    }
-}
-
-private fun formatAxisHour(millis: Long): String = SimpleDateFormat("h a", Locale.getDefault()).format(Date(millis))
-private fun formatAxisDate(millis: Long): String = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(millis))
 
 // MARK: two launcher squares (KAS price | portfolio value)
 

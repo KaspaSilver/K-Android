@@ -63,6 +63,9 @@ class BroadcastNotifier @Inject constructor(
         if (activeChannel.value == channelName && notificationHelper.isAppInForeground) return
         if (!settings.notificationsEnabled.first()) return
         if (!dedupeTxId.isNullOrBlank() && !notificationHelper.claimForBanner(dedupeTxId)) return
+        // Its push, drawn by the system while the app was away, is in the shade already: one
+        // banner per message (iOS 428a797b `InAppBanner`).
+        if (notificationHelper.isShowing(dedupeTxId)) return
 
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -79,8 +82,14 @@ class BroadcastNotifier @Inject constructor(
         val vibrationEnabled = settings.notificationVibrationEnabled.first()
         val notification = NotificationCompat.Builder(context, NotificationHelper.channelFor(soundEnabled, vibrationEnabled))
             .setSmallIcon(R.drawable.ic_kachat_logo)
-            .setContentTitle(title)
-            .setContentText(bodyText)
+            // Without bidi controls, so a room name, sender or text can't reorder what the lock
+            // screen shows (iOS audit 2026-11-21 #22, NotificationService `withoutBidiControls`).
+            .setContentTitle(com.kachat.app.util.KaPostsMarkdown.strippingBidiControls(title))
+            .setContentText(com.kachat.app.util.KaPostsMarkdown.strippingBidiControls(bodyText))
+            // the message, so the app's banner and its push show once (iOS 428a797b `InAppBanner`)
+            .addExtras(android.os.Bundle().apply {
+                dedupeTxId?.takeIf { it.isNotBlank() }?.let { putString(NotificationHelper.EXTRA_TX_ID, it) }
+            })
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -102,9 +111,11 @@ class BroadcastNotifier @Inject constructor(
         runCatching { NotificationManagerCompat.from(context).cancel(ownId) }
         runCatching {
             val manager = context.getSystemService(android.app.NotificationManager::class.java) ?: return@runCatching
+            // banners carry the name with its bidi controls stripped (see showBroadcast)
+            val strippedTitle = "#" + com.kachat.app.util.KaPostsMarkdown.strippingBidiControls(channelName)
             for (sbn in manager.activeNotifications) {
                 val title = sbn.notification.extras?.getCharSequence(android.app.Notification.EXTRA_TITLE)?.toString()
-                if (sbn.id == ownId || title == "#$channelName") manager.cancel(sbn.tag, sbn.id)
+                if (sbn.id == ownId || title == "#$channelName" || title == strippedTitle) manager.cancel(sbn.tag, sbn.id)
             }
         }
     }

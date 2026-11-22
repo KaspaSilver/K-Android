@@ -54,6 +54,7 @@
     <string name="kp_buy_kusdt">kUSDT কিনুন</string>
     <string name="kp_cancel_77dfd">বাতিল করুন</string>
     <string name="kp_check_address_history_before_trying_again">আবার চেষ্টা করার আগে ঠিকানার ইতিহাস দেখুন।</string>
+    <string name="kp_trade_may_have_gone_through">ট্রেডটি হয়তো সম্পন্ন হয়েছে।</string>
     <string name="kp_checking_address_lld_5b84c">ঠিকানা #%1$s যাচাই করা হচ্ছে</string>
     <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">মাঝে ফাঁকা থাকলেও প্রথম এক হাজার ঠিকানা দেখে, তারপর যতক্ষণ কিছু পাওয়া যায় ততক্ষণ এগিয়ে যায়।</string>
     <string name="kp_close_and_keep_scanning_b66cc">বন্ধ করুন ও স্ক্যান চালিয়ে যান</string>

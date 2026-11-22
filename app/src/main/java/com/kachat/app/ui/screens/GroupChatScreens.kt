@@ -255,7 +255,10 @@ fun GroupChatThreadScreen(
     val fundingGate = rememberZeroBalanceFundingGate()
     val groups by chatViewModel.groups.collectAsState()
     val group = groups.firstOrNull { it.groupId == groupId }
-    val allGroupMessages by chatViewModel.getGroupMessages(groupId).collectAsState(initial = emptyList())
+    // Each flow is remembered: built inline, a new instance on every recomposition restarted its
+    // collection, re-reading and re-decrypting the whole group history for nothing.
+    val groupMessagesFlow = remember(groupId) { chatViewModel.getGroupMessages(groupId) }
+    val allGroupMessages by groupMessagesFlow.collectAsState(initial = emptyList())
     // Long voice notes' and multi-part photos' parts (iOS 7c5c22e3), keyed by (group, sender,
     // tag id): each shows as one row, its earliest part; the other parts are left out.
     val mediaPartGroups = remember(allGroupMessages) {
@@ -264,11 +267,13 @@ fun GroupChatThreadScreen(
     val messages = remember(allGroupMessages, mediaPartGroups) {
         if (mediaPartGroups.hiddenTxIds.isEmpty()) allGroupMessages else allGroupMessages.filterNot { it.txId in mediaPartGroups.hiddenTxIds }
     }
-    val groupReactions by chatViewModel.getGroupReactions(groupId).collectAsState(initial = emptyList())
+    val groupReactionsFlow = remember(groupId) { chatViewModel.getGroupReactions(groupId) }
+    val groupReactions by groupReactionsFlow.collectAsState(initial = emptyList())
     val groupReactionsByTxId = remember(groupReactions) { groupReactions.groupBy { it.targetTxId } }
     val groupReplyingTo by chatViewModel.groupReplyingTo.collectAsState()
     // The newest edit per message (see MessageEdit) - applied to the bubble as it is drawn.
-    val groupEdits by chatViewModel.getGroupEdits(groupId).collectAsState(initial = emptyList())
+    val groupEditsFlow = remember(groupId) { chatViewModel.getGroupEdits(groupId) }
+    val groupEdits by groupEditsFlow.collectAsState(initial = emptyList())
     val acceptedContacts by chatViewModel.acceptedContactAddresses.collectAsState()
     val groupEditsByTxId = remember(groupEdits) { groupEdits.associateBy { it.targetTxId } }
     val groupEditingMessage by chatViewModel.groupEditingMessage.collectAsState()

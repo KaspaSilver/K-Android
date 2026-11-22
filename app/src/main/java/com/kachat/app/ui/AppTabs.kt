@@ -9,7 +9,6 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.PieChart
@@ -19,7 +18,6 @@ import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.PieChart
@@ -67,8 +65,10 @@ enum class AppTab(
     KACHAT_NAMES("kachatNames", "kachat_names", R.string.shell_tab_kachat, Icons.Filled.AlternateEmail, Icons.Filled.AlternateEmail),
     // iOS square.text.square (KaPost's Feed tab)
     KAPOSTS("kaposts", "kaposts", R.string.shell_tab_kapost, Icons.AutoMirrored.Filled.Article, Icons.AutoMirrored.Outlined.Article),
+    // KaPlay's Play tab. Its leaderboards are inside KaPlay > Chess since iOS 428a797b (owner's
+    // call 2026-11-22): the old "leaderboard" tab is gone, and a saved arrangement naming it drops
+    // it as it is read ([fromKey] knows no such key), as iOS's `AppTab(rawValue:)` does.
     GAMES("games", "games", R.string.kaplay_tab_games, Icons.Filled.SportsEsports, Icons.Outlined.SportsEsports),
-    LEADERBOARD("leaderboard", "leaderboard", R.string.kaplay_tab_leaderboard, Icons.Filled.EmojiEvents, Icons.Outlined.EmojiEvents),
     KACHAT_STATS("kachatStats", "kachat_stats", R.string.shell_tab_stats, Icons.Filled.BarChart, Icons.Outlined.BarChart),
     APPS("apps", "kaspa_websites", R.string.shell_tab_websites, Icons.Filled.Public, Icons.Outlined.Language);
 

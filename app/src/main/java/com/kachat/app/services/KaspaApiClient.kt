@@ -465,12 +465,6 @@ interface KasiaIndexerApi {
     ): List<PaymentIndexerResponse>
 
     /**
-     * [aliasHex] is the SENDER's own alias (from their handshake), UTF-8-encoded then hex-encoded.
-     * [blockTime], when given, returns only messages at or after that block time (same cursor
-     * param as [getHandshakesByReceiver]) — safe even if the boundary item comes back again, since
-     * callers already dedup by txId against local storage.
-     */
-    /**
      * Your own `self_stash` notes by [scope] (hex of the UTF-8 scope, e.g. "saved_handshake").
      * [blockTime] is the page cursor, as on the other endpoints. See MESSAGING.md "Saved-handshake
      * notes" and ContactNoteService.
@@ -503,6 +497,12 @@ interface KasiaIndexerApi {
         @Query("limit") limit: Int = 1
     ): retrofit2.Response<okhttp3.ResponseBody>
 
+    /**
+     * [aliasHex] is the SENDER's own alias (from their handshake), UTF-8-encoded then hex-encoded.
+     * [blockTime], when given, returns only messages at or after that block time (same cursor
+     * param as [getHandshakesByReceiver]) — safe even if the boundary item comes back again, since
+     * callers already dedup by txId against local storage.
+     */
     @GET("contextual-messages/by-sender")
     suspend fun getContextualMessagesBySender(
         @Query("address") address: String,

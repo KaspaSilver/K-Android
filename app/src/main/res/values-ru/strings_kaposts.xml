@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">Дизлайк убран в сети</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">Подписка отправлена в сеть</string>
-    <string name="feed54_help_welcome_guide">Приветственное руководство</string>
-    <string name="feed54_help_welcome_guide_subtitle">Вводный тур: ваша лента, комнаты, чаевые и ваш адрес.</string>
     <string name="feed54_like_posted">Лайк опубликован в сети</string>
     <string name="feed54_like_removed">Лайк убран в сети</string>
     <string name="feed54_post_not_found">Пост не найден - возможно, он старше текущей ленты</string>

@@ -210,11 +210,8 @@ fun WalletScreen(
     }
     val domainsCount = kachatOwnedCount + ownedKnsDomains.size + ownedServiceNames.values.sumOf { it.size }
 
-    // Notifications (Kaspa and kUSDT received): its unread count, on the card and the tab's dot.
+    // Notifications (Kaspa and kUSDT received), for the Notifications page.
     val notifCenterVm: com.kachat.app.viewmodels.NotificationCenterViewModel = hiltViewModel()
-    val notifEntries by notifCenterVm.store.entries.collectAsState()
-    val notifLastSeen by notifCenterVm.store.lastSeenAt.collectAsState()
-    val notifUnread = notifEntries.count { it.timestampMs > notifLastSeen }
 
     val haptic = com.kachat.app.util.rememberHaptics()
     val dockInset = LocalDockInset.current
@@ -246,6 +243,9 @@ fun WalletScreen(
                         .padding(top = 8.dp, bottom = 16.dp + dockInset),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    // One of your .kachat names expired and is in grace: renew it in time (at the
+                    // top of the Wallet tab, as KaPay has it; iOS 428a797b). Draws nothing otherwise.
+                    KachatExpiredNamesBanner(walletAddress = current)
                     // Total Balance, then a page per token, swiped between, with a pill per card
                     // under it (iOS `balancePager`). Plain taps, not a long press: those held the
                     // touch before a swipe could have it.

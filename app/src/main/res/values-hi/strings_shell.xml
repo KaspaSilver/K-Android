@@ -19,7 +19,6 @@
     <string name="shell_customize_dock_footer">चुनें कि आपके डॉक में क्या हो। बाकी सब Kaspa Hub में है।</string>
     <string name="shell_terms_of_use">उपयोग की शर्तें</string>
     <string name="shell_message_indexer_footer">KaPost, सार्वजनिक चैट और शतरंज भी इसी इंडेक्सर से पढ़े जाते हैं।</string>
-    <string name="shell_ks_title">KaChat आँकड़े</string>
     <string name="shell_ks_what_counts">क्या गिना जाता है</string>
     <string name="shell_ks_range_day">24 घंटे</string>
     <string name="shell_ks_range_week">7 दिन</string>

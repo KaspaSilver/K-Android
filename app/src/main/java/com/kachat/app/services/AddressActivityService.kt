@@ -88,8 +88,4 @@ class AddressActivityService @Inject constructor(
         }
         return merged
     }
-
-    /** Just the set that has ever been used, for callers that do not need the timestamps. */
-    suspend fun activeAddresses(addresses: List<String>): Set<String>? =
-        lastActivity(addresses)?.keys
 }

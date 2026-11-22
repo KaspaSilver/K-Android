@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">Non mi piace rimosso sulla rete</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">Follow pubblicato sulla rete</string>
-    <string name="feed54_help_welcome_guide">Guida di benvenuto</string>
-    <string name="feed54_help_welcome_guide_subtitle">Il tour iniziale: il tuo feed, le stanze, le mance e il tuo indirizzo.</string>
     <string name="feed54_like_posted">Mi piace pubblicato sulla rete</string>
     <string name="feed54_like_removed">Mi piace rimosso sulla rete</string>
     <string name="feed54_post_not_found">Post non trovato - potrebbe essere più vecchio del feed attuale</string>

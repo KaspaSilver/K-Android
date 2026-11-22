@@ -61,8 +61,6 @@ class NodeRegistry {
         addresses.forEach { records[it] = NodeRecord(address = it, type = type, lastProbe = null) }
     }
 
-    fun containsAddress(address: String): Boolean = records.containsKey(address)
-
     /**
      * Zeroes every record's consecutive-failure count while keeping the addresses and last
      * probe results — called when the device's network path changes (WiFi <-> cellular, VPN

@@ -11,7 +11,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kachat.app.models.BroadcastChannelEntity
 import com.kachat.app.models.BroadcastMessageEntity
-import com.kachat.app.models.ContactEntity
 import com.kachat.app.models.ReactionEntity
 import com.kachat.app.repository.BroadcastRepository
 import com.kachat.app.repository.ChatRepository
@@ -33,6 +32,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
@@ -74,6 +75,8 @@ class BroadcastViewModel @Inject constructor(
     private val readState: com.kachat.app.services.BroadcastReadStateStore,
     /** The KaPosts translation service, reused as-is for public chat messages (iOS 03e5128). */
     private val translationService: com.kachat.app.services.PostTranslationService,
+    /** The rooms' summaries and unread counts, shared with the dock badge. */
+    private val unreadBadge: com.kachat.app.services.publicchats.PublicChatUnreadBadge,
 ) : ViewModel() {
 
     // Address -> KNS avatar URL (or null if fetched but no avatar/domain exists) for whoever's
@@ -101,17 +104,52 @@ class BroadcastViewModel @Inject constructor(
         .map { contacts -> contacts.mapNotNull { c -> c.alias?.takeIf { it.isNotBlank() }?.let { c.id to it } }.toMap() }
         .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
+    /** Senders already asked for (looked up, or waiting): each is looked up once per screen. */
+    private val requestedSenders = HashSet<String>()
+
+    /** Senders waiting for their lookup. Rows scrolling in ask one by one; the worker takes
+     *  them in batches ([runSenderLookups]). */
+    private val senderLookupRequests = kotlinx.coroutines.channels.Channel<String>(kotlinx.coroutines.channels.Channel.UNLIMITED)
+    private var senderLookupWorker: Job? = null
+
+    /**
+     * Looks up [address]'s KNS name (and avatar, when allowed) once. Called as each row comes on
+     * screen: the lookups wait a moment for the rows arriving with it, go out a few at a time,
+     * and land in the maps once per batch - a busy room opened or flung no longer fires a burst
+     * of requests, each answer redrawing the room (audit M14). Main thread only.
+     */
     fun ensureSenderProfileFetched(address: String) {
-        if (_senderProfiles.value.containsKey(address)) return
-        _senderProfiles.value = _senderProfiles.value + (address to null)
-        viewModelScope.launch {
+        if (!requestedSenders.add(address)) return
+        senderLookupRequests.trySend(address)
+        if (senderLookupWorker == null) senderLookupWorker = viewModelScope.launch { runSenderLookups() }
+    }
+
+    private suspend fun runSenderLookups() {
+        while (true) {
+            val batch = mutableListOf(senderLookupRequests.receive())
+            delay(SENDER_LOOKUP_SETTLE_MS)
+            while (true) batch += senderLookupRequests.tryReceive().getOrNull() ?: break
+            for (chunk in batch.chunked(SENDER_LOOKUP_CONCURRENCY)) {
+                val results = kotlinx.coroutines.coroutineScope {
+                    chunk.map { address -> async { address to lookupSender(address) } }.awaitAll()
+                }
+                val names = results.mapNotNull { (address, found) -> found?.let { address to it.first } }
+                val avatars = results.mapNotNull { (address, found) -> found?.second?.let { address to it } }
+                if (names.isNotEmpty()) _senderKnsNames.value = _senderKnsNames.value + names
+                if (avatars.isNotEmpty()) _senderProfiles.value = _senderProfiles.value + avatars
+            }
+        }
+    }
+
+    /** [address]'s active KNS name and avatar URL, or null when it owns no domain or the lookup
+     *  failed. */
+    private suspend fun lookupSender(address: String): Pair<String?, String?>? {
             try {
                 val ownedAssets = knsService.getOwnedDomains(address)
-                if (ownedAssets.isEmpty()) return@launch
+                if (ownedAssets.isEmpty()) return null
                 val ownedNames = ownedAssets.mapNotNull { it.asset }
                 val primary = knsService.identityName(address)
                 val activeName = KnsService.pickActiveDomain(ownedNames, null, primary)
-                _senderKnsNames.value = _senderKnsNames.value + (address to activeName)
 
                 // Avatar lookup is gated by showKnsAvatarsEnabled — an avatarUrl is an arbitrary
                 // attacker-controlled string, and fetching it just from a message rendering on
@@ -121,7 +159,7 @@ class BroadcastViewModel @Inject constructor(
                 // always exempt from the gate — it's your own profile, so there's no attacker or
                 // tracking risk in fetching it, and your own picture should keep showing normally
                 // in broadcast rooms regardless of this setting.
-                if (!showKnsAvatarsEnabled.value && address != walletManager.getAddress()) return@launch
+                if (!showKnsAvatarsEnabled.value && address != walletManager.getAddress()) return activeName to null
 
                 // The active/primary domain's own profile might have no avatar even though a
                 // different domain the same address owns does — Edit Profile always writes
@@ -135,25 +173,13 @@ class BroadcastViewModel @Inject constructor(
                 val avatarUrl = checkOrder.firstNotNullOfOrNull { asset ->
                     asset.assetId?.let { knsService.getProfile(it) }?.avatarUrl
                 }
-                if (avatarUrl != null) {
-                    _senderProfiles.value = _senderProfiles.value + (address to avatarUrl)
-                }
+                return activeName to avatarUrl
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.w("BroadcastViewModel", "Could not fetch KNS profile for ${address.redactedForLog()}", e)
+                return null
             }
-        }
-    }
-
-    /** Broadcast senders often aren't saved contacts yet — creates a minimal one first (same as how an unknown address is handled elsewhere) so the existing chat-info screen has something to show. */
-    fun openSenderProfile(address: String, onReady: (String) -> Unit) {
-        viewModelScope.launch {
-            if (chatRepository.getContact(address) == null) {
-                chatRepository.addContact(
-                    ContactEntity(id = address, walletAddress = walletManager.getAddress(), alias = null, knsName = null, publicKeyHex = null)
-                )
-            }
-            onReady(address)
-        }
     }
 
     private val _messageText = MutableStateFlow("")
@@ -226,14 +252,6 @@ class BroadcastViewModel @Inject constructor(
     private val _voiceRecordingState = MutableStateFlow(VoiceRecordingState())
     val voiceRecordingState: StateFlow<VoiceRecordingState> = _voiceRecordingState.asStateFlow()
 
-    /**
-     * The payload byte count to price the live fee preview off of: the real typed-text length
-     * while composing, or a rough elapsed-time-based estimate of the final encoded size while
-     * recording a voice message — same approach as 1:1 chats, applies equally to both since a
-     * broadcast's content is never encrypted (no extra encryption overhead to account for).
-     * Via Nextcloud, the chain only carries the ~100-byte share link regardless of recording
-     * length — mirrors ChatViewModel.previewPayloadSize's identical branch.
-     */
     /** This recording was started "via Nextcloud" from the mic's route step - the room then
      *  carries only the share link. Replaced the "Send Media via Nextcloud" setting (iOS 8b13460).
      *  Declared ahead of [previewPayloadSize], which reads it. */
@@ -404,45 +422,12 @@ class BroadcastViewModel @Inject constructor(
         .map { channels -> channels.filter { it.channelName !in com.kachat.app.models.FeaturedBroadcastChannels.SERVICE_CHANNELS } }
         .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    /** Whether [channelName] is on this account's list already, read from the database: a link
-     *  opened on a cold start finds [joinedChannels] still empty (iOS ee5ec98 `confirmJoin`). */
-    // On a cold start the account isn't open yet and the list reads empty, so a room already joined
-    // would be offered again: wait for it (up to 10 s, as [openRoomFromPush]; iOS f954738).
-    suspend fun isOnRoomList(channelName: String): Boolean = broadcastRepository.isJoined(channelName)
-
     /**
-     * Each joined room's newest message and unread count, for the Public Chats list. Rebuilt when
-     * the joined set or the read markers change; each room's own flow then follows its messages.
+     * Each joined room's newest message and unread count, for the Public Chats list: the one
+     * shared copy the dock badge also reads ([com.kachat.app.services.publicchats.PublicChatUnreadBadge.roomSummaries]),
+     * so a write to the room table re-reads each room once, not once per screen (audit H4).
      */
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val roomSummaries: StateFlow<Map<String, BroadcastRepository.RoomSummary>> =
-        kotlinx.coroutines.flow.combine(joinedChannels, readState.state) { channels, read -> channels to read }
-            .flatMapLatest { (channels, read) ->
-                val me = runCatching { walletManager.getAddress() }.getOrNull()
-                if (channels.isEmpty()) {
-                    kotlinx.coroutines.flow.flowOf(emptyMap())
-                } else {
-                    kotlinx.coroutines.flow.combine(
-                        channels.map { channel ->
-                            val name = channel.channelName
-                            broadcastRepository.roomSummary(name, me, read.lastReadByChannel[name])
-                                .map { summary ->
-                                    // A default room switched off in Public Chats settings is
-                                    // never counted; one marked unread by hand shows at least one.
-                                    val hidden = name in read.hiddenCurated
-                                    val manual = name in read.manuallyUnread
-                                    // The room being read counts nothing (iOS `unreadCount` while
-                                    // `isViewing`): the dock stays on screen inside a room.
-                                    val viewing = broadcastNotifier.isViewingChannel(name)
-                                    name to summary.copy(
-                                        unreadCount = if (hidden || viewing) 0 else maxOf(summary.unreadCount, if (manual) 1 else 0)
-                                    )
-                                }
-                        }
-                    ) { pairs -> pairs.toMap() }
-                }
-            }
-            .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    val roomSummaries: StateFlow<Map<String, BroadcastRepository.RoomSummary>> get() = unreadBadge.roomSummaries
 
     /**
      * The rooms the Public Chats list shows, in its order: the two Popular rooms on top, then every
@@ -564,14 +549,6 @@ class BroadcastViewModel @Inject constructor(
         }
     }
 
-    /** Whether the Popular tab shows at all — toggled from the gear icon next to the join button. */
-    val popularTabEnabled: StateFlow<Boolean> = settings.broadcastPopularEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
-    fun setPopularTabEnabled(enabled: Boolean) {
-        viewModelScope.launch { settings.setBroadcastPopularEnabled(enabled) }
-    }
-
     /**
      * Whether senders' KNS profile pictures render in broadcast rooms, and whether
      * [ensureSenderProfileFetched] is allowed to look up a sender's avatar at all — toggled from
@@ -579,10 +556,6 @@ class BroadcastViewModel @Inject constructor(
      */
     val showKnsAvatarsEnabled: StateFlow<Boolean> = settings.broadcastShowKnsAvatars
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
-    fun setShowKnsAvatarsEnabled(enabled: Boolean) {
-        viewModelScope.launch { settings.setBroadcastShowKnsAvatars(enabled) }
-    }
 
     /** Which block explorer website "Go to Explorer" opens — shared preference, set in Settings > Kaspa Explorer. */
     val kaspaExplorer: StateFlow<com.kachat.app.models.KaspaExplorer> = settings.kaspaExplorer
@@ -713,61 +686,23 @@ class BroadcastViewModel @Inject constructor(
         viewModelScope.launch { broadcastRepository.setNotifyEnabled(channelName, notifyEnabled) }
     }
 
-    /**
-     * Creates a curated room's row if it has none. The language rooms are not auto-joined (see
-     * [com.kachat.app.models.FeaturedBroadcastChannels.LANGUAGE_NAMES]), so opening one has to
-     * materialize its row for the bell/retention state to exist. Deliberately NOT [joinChannel]:
-     * that one drives the join DIALOG's state machine and would flash a success result.
-     */
-    fun ensureCuratedRoomJoined(channelName: String) {
-        viewModelScope.launch { broadcastRepository.joinChannel(channelName) }
-    }
-
-    /**
-     * Bell for a curated room that may have no row yet: join and toggle in ONE coroutine, so the
-     * write can't land before the row exists (the two calls are separate coroutines otherwise,
-     * and the toggle would silently no-op on a missing row). The join is idempotent.
-     */
-    fun setNotifyEnabledEnsuringJoined(channelName: String, notifyEnabled: Boolean) {
-        viewModelScope.launch {
-            broadcastRepository.joinChannel(channelName)
-            broadcastRepository.setNotifyEnabled(channelName, notifyEnabled)
-        }
-    }
-
     /** Per-channel local message retention override — set via the settings icon next to a channel, capped at 3 days. */
     fun setRetentionMillis(channelName: String, retentionMillis: Long) {
         viewModelScope.launch { broadcastRepository.setRetentionMillis(channelName, retentionMillis) }
     }
 
-    // SUCCESS is distinct from the initial IDLE so a LaunchedEffect watching for "just joined"
-    // can tell "nothing attempted yet" apart from "just succeeded" — collapsing both into IDLE
-    // made the join dialog close itself the instant it opened, before the user typed anything.
-    enum class JoinChannelStatus { IDLE, SUCCESS, FAILED }
-    data class JoinChannelUiState(val status: JoinChannelStatus = JoinChannelStatus.IDLE, val message: String? = null)
-
-    private val _joinChannelState = MutableStateFlow(JoinChannelUiState())
-    val joinChannelState: StateFlow<JoinChannelUiState> = _joinChannelState.asStateFlow()
-
+    /** Joins a room a share link asked for (the room screen's join request). The name is checked
+     *  again; a failure is only logged, as the room opens either way. */
     fun joinChannel(rawName: String) {
         val name = MessageProtocol.normalizeChannelName(rawName)
-        // iOS PublicChatListView.join's words, shown under "Couldn't Join Channel".
-        if (!MessageProtocol.isValidChannelName(name)) {
-            _joinChannelState.value = JoinChannelUiState(
-                status = JoinChannelStatus.FAILED,
-                message = appContext.getString(com.kachat.app.R.string.pc_rooms53_channel_name_invalid, MessageProtocol.MAX_BROADCAST_CHANNEL_NAME_LENGTH)
-            )
-            return
-        }
+        if (!MessageProtocol.isValidChannelName(name)) return
         viewModelScope.launch {
-            _joinChannelState.value = try {
+            try {
                 broadcastRepository.joinChannel(name)
-                JoinChannelUiState(status = JoinChannelStatus.SUCCESS)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Log.e("BroadcastViewModel", "Could not join $name", e)
-                JoinChannelUiState(status = JoinChannelStatus.FAILED, message = appContext.getString(com.kachat.app.R.string.pc_rooms53_join_failed))
             }
         }
     }
@@ -811,10 +746,6 @@ class BroadcastViewModel @Inject constructor(
         }
     }
 
-    fun resetJoinChannelState() {
-        _joinChannelState.value = JoinChannelUiState()
-    }
-
     fun leaveChannel(channelName: String) {
         viewModelScope.launch { broadcastRepository.leaveChannel(channelName) }
         // A room left takes its read state with it; rejoining starts counting from then.
@@ -828,11 +759,6 @@ class BroadcastViewModel @Inject constructor(
     /** The app-wide broadcast indexer, shown as the placeholder a blank override falls back to. */
     val appWideBroadcastIndexer: StateFlow<String> =
         settings.broadcastIndexerUrl.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
-
-    /** Points one room at its own indexer. Blank clears the override. */
-    fun setIndexerOverride(channelName: String, url: String) {
-        viewModelScope.launch { settings.setBroadcastIndexerOverride(channelName, url) }
-    }
 
     /** What Room Info's last Save found (iOS PublicChatRoomInfoView `IndexerCheck`). */
     sealed class IndexerCheck {
@@ -985,31 +911,6 @@ class BroadcastViewModel @Inject constructor(
      * pending channel as the navigation completes does not cancel it. The rows land in Room and
      * the room's own Flow picks them up.
      */
-    /**
-     * A tapped room push opens the room only while it is in this account's list: a room deleted
-     * since (or never joined here) is not joined back by a tap (iOS b78fdb0 `openRoomFromPush`).
-     * On a cold start the account may still be landing, so the check waits for it (up to 10 s).
-     * [channelName] must already be validated (`KaChatLink.sanitizeChannelName`). [open] runs on
-     * the main thread, and only then is the room's newest page asked for.
-     */
-    fun openRoomFromPush(channelName: String, open: () -> Unit) {
-        viewModelScope.launch {
-            if (!broadcastRepository.isJoined(channelName)) {
-                android.util.Log.i("BroadcastViewModel", "[Push] Ignored a tap on a push for a room that isn't joined")
-                return@launch
-            }
-            open()
-            prefetchNewest(channelName)
-        }
-    }
-
-    fun prefetchNewest(channelName: String) {
-        viewModelScope.launch {
-            runCatching { broadcastRepository.fetchNewestFromIndexer(channelName) }
-                .onFailure { android.util.Log.w("BroadcastViewModel", "Notification prefetch failed", it) }
-        }
-    }
-
     // ------------------------------------------------------------------
     // Room window — "Load earlier messages"
     // ------------------------------------------------------------------
@@ -1585,6 +1486,13 @@ class BroadcastViewModel @Inject constructor(
     }
 
     companion object {
+        /** How long a sender lookup waits for the other rows coming on screen with it. */
+        private const val SENDER_LOOKUP_SETTLE_MS = 150L
+
+        /** Sender lookups out at once (iOS KNSService.refreshIfNeeded's cap, as
+         *  [KnsService.domainOwningAddresses]). */
+        private const val SENDER_LOOKUP_CONCURRENCY = 4
+
         /** Rough on-chain payload size of a Nextcloud share link — the message is just the URL.
          *  Same figure as ChatViewModel's identically-named constant. */
         private const val NEXTCLOUD_LINK_PREVIEW_BYTES = 100

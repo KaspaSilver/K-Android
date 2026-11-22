@@ -39,7 +39,6 @@ import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import com.kachat.app.ui.theme.IosRoundedFontFamily
 import com.kachat.app.ui.theme.iosGlass
 import com.kachat.app.ui.theme.mirrorInRtl
 import com.kachat.app.ui.theme.iosShadow
@@ -83,12 +82,10 @@ import androidx.compose.material.icons.outlined.MonetizationOn
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.EmojiEmotions
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.layout
-import androidx.compose.material.icons.filled.PhoneEnabled
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.filled.Apps
@@ -96,10 +93,8 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.CallMerge
 import androidx.compose.material.icons.automirrored.filled.Reply
-import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.*
@@ -155,13 +150,11 @@ import com.kachat.app.repository.ChatRepository
 import com.kachat.app.services.AddressHistoryService
 import com.kachat.app.services.KnsInscriptionEngine
 import com.kachat.app.services.KnsService
-import com.kachat.app.services.VoiceRecorderService
 import com.kachat.app.services.UtxoEntry
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
 import com.kachat.app.util.ChatTimeFormat
 import com.kachat.app.util.KaspaAddress
-import com.kachat.app.util.KaspaMass
 import com.kachat.app.util.rememberCameraCaptureLauncher
 import com.kachat.app.util.authenticateWithDeviceCredential
 import com.kachat.app.util.ImageMessage
@@ -202,8 +195,10 @@ fun ChatThreadScreen(
     startInPaymentMode: Boolean = false
 ) {
     val showFeeEstimate by settingsViewModel.showFeeEstimate.collectAsState()
-    val conversations by chatViewModel.conversations.collectAsState()
-    val conversation = conversations.find { it.contact.id == contactId }
+    // Only this chat's row: another chat's new message or unread count must not recompose the
+    // whole thread.
+    val conversationFlow = remember(contactId) { chatViewModel.conversationFlow(contactId) }
+    val conversation by conversationFlow.collectAsState(initial = chatViewModel.getConversation(contactId))
     // Message Requests (NO_HANDSHAKE_MESSAGING.md, iOS f7ca401): someone else started this chat
     // and you haven't accepted - the whole thread is readable, and Accept / Reject replace the
     // composer. A Private chat never carries the inbox tag.
@@ -248,9 +243,14 @@ fun ChatThreadScreen(
     // A window of the newest history plus whatever older pages have been scrolled into, not the
     // whole conversation - a two-year chat used to be mapped in full on every emission (iOS keeps
     // the same 160-row window and pages older history in from the store).
-    val allMessages by chatViewModel.threadMessages(contactId).collectAsState(initial = emptyList())
-    val isLoadingOlderMessages by chatViewModel.isLoadingOlderMessages(contactId).collectAsState(initial = false)
-    val hasOlderMessages by chatViewModel.hasOlderMessages(contactId).collectAsState(initial = true)
+    // Each flow is remembered: built inline, a new instance on every recomposition restarted its
+    // collection and re-ran the window query (media included) for nothing.
+    val threadMessagesFlow = remember(contactId) { chatViewModel.threadMessages(contactId) }
+    val allMessages by threadMessagesFlow.collectAsState(initial = emptyList())
+    val isLoadingOlderFlow = remember(contactId) { chatViewModel.isLoadingOlderMessages(contactId) }
+    val isLoadingOlderMessages by isLoadingOlderFlow.collectAsState(initial = false)
+    val hasOlderFlow = remember(contactId) { chatViewModel.hasOlderMessages(contactId) }
+    val hasOlderMessages by hasOlderFlow.collectAsState(initial = true)
     // "Sent via another device" rows are backup fill-in slots, never UI (matches iOS and the
     // chess mini chat); legacy restores from pre-1d236ba builds can still hold such rows.
     // Messages this account can't decrypt are hidden the same way (isHiddenPlaceholder).
@@ -282,11 +282,13 @@ fun ChatThreadScreen(
         val unlockAt = photosUnlockAt
         unlockAt == null || System.currentTimeMillis() < unlockAt
     }
-    val reactions by chatViewModel.getReactions(contactId).collectAsState(initial = emptyList())
+    val reactionsFlow = remember(contactId) { chatViewModel.getReactions(contactId) }
+    val reactions by reactionsFlow.collectAsState(initial = emptyList())
     val reactionsByTxId = remember(reactions) { reactions.groupBy { it.targetTxId } }
     // The newest edit per message (see MessageEdit) - applied to the bubble as it is drawn, the
     // stored row is never rewritten.
-    val edits by chatViewModel.getEdits(contactId).collectAsState(initial = emptyList())
+    val editsFlow = remember(contactId) { chatViewModel.getEdits(contactId) }
+    val edits by editsFlow.collectAsState(initial = emptyList())
     val editsByTxId = remember(edits) { edits.associateBy { it.targetTxId } }
     val editingMessage by chatViewModel.editingMessage.collectAsState()
     val handshakeSendInFlight by chatViewModel.handshakeSendInFlight.collectAsState()
@@ -297,7 +299,6 @@ fun ChatThreadScreen(
     val handshakeAcceptInFlight by chatViewModel.handshakeAcceptInFlight.collectAsState()
     val handshakeAcceptError by chatViewModel.handshakeAcceptError.collectAsState()
     // Accepting is an on-chain send and it can fail; without this the button just did nothing.
-    val acceptErrorContext = LocalContext.current
     LaunchedEffect(handshakeAcceptError) {
         handshakeAcceptError[contactId]?.let { message ->
             IosToasts.error(message)
@@ -1555,6 +1556,26 @@ fun ChatThreadScreen(
                 )
             }
         }
+        // Worked out once per change to the messages, not once per chess row (each row used to
+        // summarize its whole game and re-parse every later message): each game's summary on the
+        // first row that asks, and each game's newest move time, computed only when a chess row
+        // is on screen.
+        val chessSummaryByGame = remember(chessSourceMessages, myAddress) {
+            HashMap<String, com.kachat.app.util.ChessGameSummary?>()
+        }
+        val chessLatestTimestampByGame = remember(chessSourceMessages) {
+            lazy {
+                val latest = HashMap<String, Long>()
+                for (m in chessSourceMessages) {
+                    val gameId = com.kachat.app.util.ChessMessage.parseOrNull(
+                        MessageReply.parseOrNull(m.plaintextBody)?.text ?: m.plaintextBody
+                    )?.gameId ?: continue
+                    val known = latest[gameId]
+                    if (known == null || m.blockTimestamp > known) latest[gameId] = m.blockTimestamp
+                }
+                latest
+            }
+        }
 
         // Drawn to the bottom of the screen, NOT padded by the composer: the messages run on
         // underneath it and the dock (iOS), and the list takes the composer's height (with the
@@ -1632,22 +1653,18 @@ fun ChatThreadScreen(
                         val chessSummaryForRow = remember(chessEnvelopeForRow, chessSourceMessages, myAddress) {
                             val address = myAddress
                             if (chessEnvelopeForRow != null && address != null) {
-                                com.kachat.app.util.ChessGameEngine.summarize(chessEnvelopeForRow.gameId, chessSourceMessages, address, contactId)
+                                chessSummaryByGame.getOrPut(chessEnvelopeForRow.gameId) {
+                                    com.kachat.app.util.ChessGameEngine.summarize(chessEnvelopeForRow.gameId, chessSourceMessages, address, contactId)
+                                }
                             } else {
                                 null
                             }
                         }
-                        val isLatestChessForRow = remember(chessEnvelopeForRow, chessSourceMessages) {
-                            chessEnvelopeForRow != null && com.kachat.app.util.ChessGameEngine.isLatestChessMessage(
-                                com.kachat.app.util.ChessGameEngine.SimpleChessSourceMessage(
-                                    id = msg.id,
-                                    plaintextBody = msg.plaintextBody,
-                                    isOutgoing = msg.direction == "sent",
-                                    blockTimestamp = msg.blockTimestamp,
-                                    sendFailed = msg.direction == "sent" && msg.deliveryStatus == "failed"
-                                ),
-                                chessSourceMessages
-                            )
+                        // ChessGameEngine.isLatestChessMessage, from the per-game newest time above:
+                        // no message of this game is newer than this one.
+                        val isLatestChessForRow = remember(chessEnvelopeForRow, chessSourceMessages, msg.blockTimestamp) {
+                            chessEnvelopeForRow != null &&
+                                (chessLatestTimestampByGame.value[chessEnvelopeForRow.gameId]?.let { msg.blockTimestamp >= it } ?: true)
                         }
                         // The row standing for a whole long voice note or multi-part photo: every
                         // part present, and the note's combined status. Reply and react target
@@ -3188,13 +3205,6 @@ fun FullMessageTextDialog(text: String, onDismiss: () -> Unit, onCopy: () -> Uni
 }
 
 /**
- * A voice message bubble — decodes the embedded base64 audio to a temp file once, then plays it
- * with [android.media.MediaPlayer] (which decodes WebM/Opus natively, no manual PCM handling
- * needed for playback). No waveform visualization — the [VoiceMessageContent] format doesn't
- * carry sample data, and re-decoding to PCM just to draw bars isn't worth the extra native-audio
- * surface area for a cosmetic detail; play/pause + duration covers the actual "does it work" bar.
- */
-/**
  * "Play Chess" 1:1 feature - dispatches to an invite card (Accept/Decline, mirroring the
  * handshake pending-request card above), a live status card (board thumbnail + status, for the
  * most recent chess message in its game), or a compact one-line log entry (earlier moves in the
@@ -3474,6 +3484,13 @@ object VoicePlayback {
     }
 }
 
+/**
+ * A voice message bubble — decodes the embedded base64 audio to a temp file once, then plays it
+ * with [android.media.MediaPlayer] (which decodes WebM/Opus natively, no manual PCM handling
+ * needed for playback). No waveform visualization — the [VoiceMessageContent] format doesn't
+ * carry sample data, and re-decoding to PCM just to draw bars isn't worth the extra native-audio
+ * surface area for a cosmetic detail; play/pause + duration covers the actual "does it work" bar.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AudioBubble(voiceContent: VoiceMessageContent, isSent: Boolean, onLongPress: () -> Unit, onDoubleClick: () -> Unit = {}) {
@@ -3880,356 +3897,10 @@ fun ImageBubble(
     }
 }
 
-@Composable
-fun ChatActionButton(icon: ImageVector, onClick: () -> Unit = {}, size: Dp = 40.dp, iconSize: Dp = 20.dp) {
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier
-            .size(size)
-            .background(LocalAppColors.current.surface, CircleShape)
-    ) {
-        Icon(icon, null, tint = KaspaTeal, modifier = Modifier.size(iconSize))
-    }
-}
-
-/**
- * Profile is only your profile (iOS d1844582, bfe9f022, 5b7c772c `ProfileView`): the hero, then
- * Share Profile (QR and Copy Share Link) and Log Out as cards, with Help at the top right. The
- * account's money, the Chatting Address, Your Domains and Notifications are on [WalletScreen]; the
- * account name and About are in Settings.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ProfileScreen(
-    viewModel: WalletViewModel,
-    navController: NavController,
-    connectionViewModel: ConnectionViewModel = hiltViewModel(),
-    chatViewModel: ChatViewModel = hiltViewModel(),
-) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val address by viewModel.address.collectAsState()
-    val balance by viewModel.fullBalance.collectAsState()
-    val dotColorHex by connectionViewModel.dotColorHex.collectAsState()
-    val scrollState = rememberScrollState()
-    var showLogoutConfirmation by remember { mutableStateOf(false) }
-    // Share Profile: the Chatting Address's QR and Copy Share Link, in a sheet (iOS 5b7c772c).
-    var showShareProfile by remember { mutableStateOf(false) }
-
-    val knsInscribeState by viewModel.knsInscribeState.collectAsState()
-    val pendingKnsCommit by viewModel.pendingKnsCommit.collectAsState()
-
-    val knsProfile by viewModel.knsProfile.collectAsState()
-    // Your `.kachat` label (KACHAT_NAMES.md section 7 - your primary name while you own it and it
-    // is active, else your oldest active name), shown as your name on the hero (iOS 5df42b4), and
-    // your address profile. On every network since iOS d36fc42: mainnet has no registry yet, so
-    // there you show by your short address, with your profile's picture, banner and bio.
-    val kachatLive: KachatLiveViewModel? =
-        if (com.kachat.app.services.kachatnames.KachatNamesService.profilesEnabled) hiltViewModel() else null
-    var kachatLabel by remember { mutableStateOf<String?>(null) }
-    // The address profile's sources (a social link each for avatar, banner and bio, looked up on
-    // this device) and Linktree link (iOS ad32798 / 1322216 / c124cb3; mainnet too since d36fc42).
-    var kachatAvatarSource by remember { mutableStateOf<String?>(null) }
-    var kachatBannerSource by remember { mutableStateOf<String?>(null) }
-    var kachatBioSource by remember { mutableStateOf<String?>(null) }
-    var kachatLinktree by remember { mutableStateOf<String?>(null) }
-    val kachatRevision = kachatLive?.registry?.revision?.collectAsState()?.value
-    LaunchedEffect(address, kachatRevision) {
-        val a = address
-        val hero = if (kachatLive != null && a != null) kachatLive.hero(a) else null
-        kachatLabel = hero?.label
-        kachatAvatarSource = hero?.avatar
-        kachatBannerSource = hero?.banner
-        kachatBioSource = hero?.bio
-        kachatLinktree = hero?.linktree
-    }
-    // What each source shows, from the device's cache; a missing or stale answer is looked up
-    // again and lands here through the collected cache (iOS `socialImages.profile(for:)`).
-    val kachatSocialEntries = kachatLive?.social?.entries?.collectAsState()?.value
-    LaunchedEffect(kachatAvatarSource, kachatBannerSource, kachatBioSource) {
-        listOf(kachatAvatarSource, kachatBannerSource, kachatBioSource).forEach { kachatLive?.social?.refreshIfStale(it) }
-    }
-    val kachatAvatar = kachatSocialEntries?.let { kachatLive?.social?.cached(kachatAvatarSource, it) }?.avatar
-    val kachatBanner = kachatSocialEntries?.let { kachatLive?.social?.cached(kachatBannerSource, it) }?.banner
-    val kachatBio = kachatSocialEntries?.let { kachatLive?.social?.cached(kachatBioSource, it) }?.bio
-    val activeProfileDomainName = viewModel.activeProfileDomainName.collectAsState().value
-
-    LaunchedEffect(Unit) {
-        // The balance requests at most every 30 s: switching tabs back and forth started them
-        // each time. Arriving funds still refresh at once (the activity events below), and pull
-        // to refresh is always there (iOS 9de981a).
-        if (viewModel.claimProfileAppearRefresh()) {
-            viewModel.refreshBalance()
-        }
-        viewModel.refreshOwnedDomains()
-    }
-
-    // Funds landing used to show up here only on the next open or a pull-to-refresh - the screen
-    // that shows your balance was the one screen not listening for it. Same always-on event the
-    // chat composer's Available pill already uses.
-    LaunchedEffect(Unit) {
-        chatViewModel.ownAddressUtxoActivityEvents.collect {
-            viewModel.refreshBalance()
-        }
-    }
-
-    val pullRefreshState = rememberPullToRefreshState()
-    LaunchedEffect(pullRefreshState.isRefreshing) {
-        if (pullRefreshState.isRefreshing) {
-            viewModel.refreshBalanceAndAwait()
-            pullRefreshState.endRefresh()
-        }
-    }
-
-    val dockInset = LocalDockInset.current
-    Scaffold(
-        containerColor = LocalAppColors.current.background,
-        // The page runs on under the dock; its scroll ends with room to clear it.
-        contentWindowInsets = WindowInsets(0),
-        topBar = {
-            Column(
-                modifier = Modifier
-                    .background(LocalAppColors.current.background)
-                    .statusBarsPadding()
-            ) {
-                // Row one is the status row - connection dot, balance, Help - the way every
-                // other main page opens and the way iOS orders its Profile toolbar.
-                TopStatusBar(
-                    balance = balance,
-                    onStatusClick = { ConnectionStatusOverlayState.open() },
-                    dotColorHex = dotColorHex,
-                    showAddButton = false,
-                    trailingContent = {
-                        ToolbarIconButton(
-                            // SF Symbols "questionmark.circle".
-                            icon = Icons.AutoMirrored.Filled.HelpOutline,
-                            contentDescription = stringResource(R.string.help),
-                            onClick = { navController.navigate("help") },
-                        )
-                    },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-                AccountBackupBanner(viewModel) { navController.navigate("account_backup") }
-                Text(
-                    stringResource(R.string.profile),
-                    color = LocalAppColors.current.textPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = LargeTitleSize,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp),
-                )
-            }
-        },
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .nestedScroll(pullRefreshState.nestedScrollConnection)
-        ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-                // Still scrollable as a safety net (smaller phones, larger system font scale),
-                // but every element below is sized to comfortably fit a typical phone screen
-                // without needing it.
-                .verticalScroll(scrollState)
-                .padding(top = 16.dp),
-            // iOS's VStack(spacing: 16).
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // iOS glassBackground(cornerRadius: 18): the material, a 0.8 white hairline at 18%
-            // and the soft shadow.
-            Column(modifier = Modifier.fillMaxWidth().iosGlass(18.dp)) {
-                run {
-                    // On testnet the .kachat profile (avatar, banner and bio looked up from its
-                    // social link) comes first; the KNS one otherwise (iOS ad32798 / 1322216).
-                    // On testnet identity is .kachat only: no KNS fallback there (iOS e52357d).
-                    val bannerUrl = kachatBanner
-                        ?: knsProfile?.bannerUrl?.takeIf { !com.kachat.app.services.kachatnames.KachatNamesService.isEnabled }
-                    if (bannerUrl != null) {
-                        // Whole, at its own proportions (iOS c66bfc7).
-                        WholeBanner(model = bannerUrl, placeholderHeight = 140.dp) {
-                            Box(Modifier.fillMaxSize().background(KaspaTeal.copy(alpha = 0.25f)))
-                        }
-                    } else {
-                        Box(
-                            Modifier.fillMaxWidth().height(140.dp).background(
-                                androidx.compose.ui.graphics.Brush.linearGradient(
-                                    listOf(KaspaTeal.copy(alpha = 0.55f), KaspaTeal.copy(alpha = 0.15f))
-                                )
-                            )
-                        )
-                    }
-                    // The .kas is part of the name, so the hero shows it too.
-                    // Your domain name, else your short address - never the account name, which is
-                    // your own label for the account, not what anyone sees you as (iOS 3041164).
-                    // Your .kas name isn't your name here since 5.2 (iOS 509c0fe); that will be
-                    // your .kachat name.
-                    // On testnet your .kachat label comes first (iOS 5df42b4), ending as Show
-                    // .kachat Endings says (iOS 94ed3a35).
-                    val heroName = kachatLabel?.let(com.kachat.app.models.KachatNameLabel::display)
-                        ?: activeProfileDomainName?.takeIf { com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY }
-                        ?: address?.let { com.kachat.app.util.KaspaAddress.shortDisplay(it) } ?: ""
-                    // iOS: the avatar row is pulled 38 up into the banner (.padding(.top, -38)),
-                    // taking its layout space with it - so the name sits 8 under the avatar's
-                    // row and the card ends 14 under the text, not 38 lower.
-                    Column(modifier = Modifier.fillMaxWidth().profilePulledUp(38.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            // 76 across, ringed by a 3pt stroke of the screen background centred
-                            // on its edge (iOS .overlay(Circle().stroke(systemBackground, 3))).
-                            val ringColor = LocalAppColors.current.background
-                            Box(
-                                modifier = Modifier
-                                    .size(76.dp)
-                                    .drawWithContent {
-                                        drawContent()
-                                        drawCircle(ringColor, radius = size.minDimension / 2f, style = Stroke(width = 3.dp.toPx()))
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                ContactAvatar(
-                                    imageUrl = if (com.kachat.app.services.kachatnames.KachatNamesService.isEnabled) kachatAvatar else knsProfile?.avatarUrl,
-                                    fallbackText = heroName,
-                                    size = 76.dp
-                                )
-                            }
-                            Spacer(Modifier.weight(1f))
-                            // KaChat's own profile (iOS 09e0403). .kas profiles are customized per
-                            // domain in Your Domains instead; the app no longer shows them.
-                            // subheadline semibold, bottom-aligned with the avatar, 4 up.
-                            Text(
-                                stringResource(R.string.edit_kachat_profile),
-                                color = KaspaTeal,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp,
-                                modifier = Modifier
-                                    .padding(bottom = 4.dp)
-                                    .clickable { navController.navigate("edit_kachat_profile") }
-                            )
-                        }
-                        // VStack(spacing: 6): title3 bold name, subheadline bio, the link.
-                        Column(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(top = 8.dp, bottom = 14.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            Text(heroName, color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp, maxLines = 1)
-                            (kachatBio ?: knsProfile?.bio?.takeIf { it.isNotBlank() && !com.kachat.app.services.kachatnames.KachatNamesService.isEnabled })?.let { bio ->
-                                Text(bio, color = LocalAppColors.current.textSecondary, fontSize = 15.sp)
-                            }
-                            // The Linktree link: the one way a .kachat profile links anything else.
-                            kachatLinktree?.let { linktree ->
-                                val linktreeUriHandler = LocalUriHandler.current
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.clickable { runCatching { linktreeUriHandler.openUri(linktree) } }
-                                ) {
-                                    Icon(Icons.Default.Link, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(4.dp))
-                                    Text(
-                                        linktree.replace("https://", ""),
-                                        color = KaspaTeal,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 15.sp,
-                                        maxLines = 1
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (pendingKnsCommit != null) {
-                SettingsSection(title = null) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            stringResource(R.string.a_kns_inscription_s_commit_transaction),
-                            color = LocalAppColors.current.textSecondary,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Button(
-                            onClick = { viewModel.retryPendingKnsReveal() },
-                            colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal),
-                            enabled = knsInscribeState.status != WalletViewModel.KnsInscribeUiStatus.SUBMITTING_REVEAL
-                        ) {
-                            Text(stringResource(R.string.retry_inscription_reveal), color = Color.Black, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-
-            // A kachat.app link to you (iOS 863b0e9). Pasted anywhere it previews with your KNS name
-            // and avatar; tapped with KaChat installed it opens a chat with you, or the new-chat
-            // screen for someone who has not got you as a contact; without KaChat the page offers
-            // the download. Profile is Share Profile and Log Out since iOS 5b7c772c: Your Domains,
-            // Notifications and the Chatting Address are cards on Wallet. A sheet with your
-            // Chatting Address's QR and Copy Share Link, in place of the system share sheet.
-            if (address != null) {
-                val shareHaptic = com.kachat.app.util.rememberHaptics()
-                ProfileLinkRow(
-                    label = stringResource(R.string.profile_share_profile),
-                    icon = Icons.Default.IosShare,
-                    onClick = {
-                        shareHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
-                        showShareProfile = true
-                    },
-                )
-            }
-
-            ProfileLinkRow(
-                label = stringResource(R.string.log_out),
-                icon = Icons.AutoMirrored.Filled.Logout,
-                tint = LocalAppColors.current.danger,
-                showsChevron = false,
-                onClick = { showLogoutConfirmation = true },
-            )
-
-            // Room for the last card to scroll clear of the dock it runs under.
-            Spacer(modifier = Modifier.height(dockInset + 16.dp))
-        }
-
-        PullToRefreshContainer(
-            state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
-
-        }
-    }
-
-    val shareAddress = address
-    if (showShareProfile && shareAddress != null) {
-        ShareProfileSheet(
-            address = shareAddress,
-            shareUrl = KaChatLink.profileWebUrl(shareAddress),
-            onDismiss = { showShareProfile = false },
-        )
-    }
-
-    // Half sheet rather than a dialog, matching every other chooser in the app - and it gives
-    // the consequence a row of its own beside the action, which a dialog of bare verbs cannot.
-    if (showLogoutConfirmation) {
-        ConfirmActionSheet(
-            title = stringResource(R.string.log_out),
-            confirmTitle = stringResource(R.string.log_out),
-            confirmSubtitle = stringResource(R.string.signs_out_of_this_account_wallet_and),
-            confirmIcon = Icons.AutoMirrored.Filled.Logout,
-            onConfirm = { viewModel.logout() },
-            onDismiss = { showLogoutConfirmation = false },
-        )
-    }
-
-}
-
 /**
  * Dedicated KNS domain-management screen — the owned-domain list (star to mark primary, swap
  * icon to transfer), plus inscribing a new domain. Used to live inline as a collapsible section
- * on [ProfileScreen] itself; broken out once the list plus its two dialogs (inscribe/transfer)
+ * on the old Profile screen; broken out once the list plus its two dialogs (inscribe/transfer)
  * made that screen too crowded to scan at a glance.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -5165,6 +4836,7 @@ fun ManageAddressesScreen(
                     ManageChattingAddressRow(
                         address = chatting,
                         balanceSompi = knownChattingSompi,
+                        showsDomainTag = chatting in domainOwningAddresses,
                         onClick = onOpenChattingAddress,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                     )
@@ -7572,10 +7244,10 @@ private fun AddressActionsSheet(
  * Nothing is derived or unlocked to show this: a Kaspa P2PK address IS its public key in bech32,
  * so this decodes the address the screen already has. No FLAG_SECURE, no reveal gate and no
  * clipboard expiry either - unlike the private key alongside it, this is a value you hand out on
- * purpose. Mirrors iOS's `AddressPublicKeyView`.
+ * purpose. Mirrors iOS's `AddressPublicKeyView`. Cold Storage's Address Actions show it too.
  */
 @Composable
-private fun AddressPublicKeyOverlay(address: String, note: String, onDismiss: () -> Unit) {
+internal fun AddressPublicKeyOverlay(address: String, note: String, onDismiss: () -> Unit) {
     val keyCopyHaptic = com.kachat.app.util.rememberHaptics()
     val colors = LocalAppColors.current
     val context = LocalContext.current
@@ -8231,20 +7903,6 @@ private fun FilledCircleArrow(up: Boolean, color: Color, cutout: Color, size: Dp
     }
 }
 
-/**
- * One spending address row in [ManageAddressesScreen] — shared by the main and "Hidden" sections,
- * differing only in whether [WalletService.SpendingAddressEntry.hidden] shows a hide or an unhide
- * swipe action. Hiding is a swipe-left action (matching Chats' swipe-to-delete and Cold Storage's
- * address rows) rather than a permanent icon button, since it's reached for less often than the
- * actions in the overflow menu. Unhiding is always available, but an address can't be hidden while
- * it still holds a balance or is the primary ("Pay in Kaspa") spending address — see
- * [WalletViewModel.setManageAddressHidden], which enforces the same rule as a backstop.
- *
- * Everything besides hide/unhide (copy, QR, set primary, rename) lives behind a single overflow
- * button's actions sheet rather than a row of icons, so the address itself has room to sit
- * on its own line instead of being squeezed by four icon buttons. Send/receive for a specific
- * address live in [SpendingAddressTxHistoryScreen] instead (reached via `onClick`).
- */
 /** "Contains domain" capsule tag shown on spending/cold address rows that own at least one KNS
  *  domain — shared component ported from iOS's ContainsDomainTag. */
 @Composable
@@ -8260,6 +7918,20 @@ fun ContainsDomainTag() {
     )
 }
 
+/**
+ * One spending address row in [ManageAddressesScreen] — shared by the main and "Hidden" sections,
+ * differing only in whether [WalletService.SpendingAddressEntry.hidden] shows a hide or an unhide
+ * swipe action. Hiding is a swipe-left action (matching Chats' swipe-to-delete and Cold Storage's
+ * address rows) rather than a permanent icon button, since it's reached for less often than the
+ * actions in the overflow menu. Unhiding is always available, but an address can't be hidden while
+ * it still holds a balance or is the primary ("Pay in Kaspa") spending address — see
+ * [WalletViewModel.setManageAddressHidden], which enforces the same rule as a backstop.
+ *
+ * Everything besides hide/unhide (copy, QR, set primary, rename) lives behind a single overflow
+ * button's actions sheet rather than a row of icons, so the address itself has room to sit
+ * on its own line instead of being squeezed by four icon buttons. Send/receive for a specific
+ * address live in [SpendingAddressTxHistoryScreen] instead (reached via `onClick`).
+ */
 @Composable
 private fun ManageAddressRow(
     entry: com.kachat.app.services.WalletService.SpendingAddressEntry,
@@ -8447,7 +8119,7 @@ private fun ManageAddressActionsSheet(
  * "Used", and a chevron - it opens the chatting address's own screen.
  */
 @Composable
-private fun ManageChattingAddressRow(address: String, balanceSompi: Long?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ManageChattingAddressRow(address: String, balanceSompi: Long?, showsDomainTag: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -8480,12 +8152,16 @@ private fun ManageChattingAddressRow(address: String, balanceSompi: Long?, onCli
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold
             )
-            Text(
-                text = stringResource(R.string.pr_used),
-                color = LocalAppColors.current.warning,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            // "Used", and the Contains domain tag when it holds a KNS or .kachat name (iOS 428a797b).
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = stringResource(R.string.pr_used),
+                    color = LocalAppColors.current.warning,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (showsDomainTag) ContainsDomainTag()
+            }
         }
         // iOS: "chevron.right" at caption size, secondary.
         Icon(
@@ -10181,7 +9857,7 @@ private fun AccountAboutPage(viewModel: WalletViewModel, onOpenLicenses: () -> U
         AccountAboutDivider()
         AccountAboutRow(stringResource(R.string.settings_privacy_policy), null, onClick = { open("https://home.kachat.app/privacy/") })
         AccountAboutDivider()
-        // The notices WebRTC, Opus and Protocol Buffers require to ship with the binary, and the
+        // The notices Opus and Protocol Buffers require to ship with the binary, and the
         // attribution the Apache/MIT libraries ask for. Same row as iOS's About.
         AccountAboutRow(stringResource(R.string.open_source_licenses), null, onClick = onOpenLicenses)
     }
@@ -10570,23 +10246,6 @@ fun AppWideCustomizationPickers(walletViewModel: WalletViewModel) {
 }
 
 /**
- * A circular icon button with its label centered underneath — used in pairs on [ProfileScreen]
- * (Receive Kaspa / Chatting Address). iOS qrCircleIcon: an 80pt accent circle with a black 26pt
- * medium qrcode, then the label in subheadline, 8 below.
- */
-/**
- * Lays [this] out [amount] higher than where it would sit and gives that height back, the way
- * SwiftUI's negative top padding does: what follows moves up with it.
- */
-private fun Modifier.profilePulledUp(amount: Dp): Modifier = layout { measurable, constraints ->
-    val pull = amount.roundToPx()
-    val placeable = measurable.measure(constraints)
-    layout(placeable.width, (placeable.height - pull).coerceAtLeast(0)) {
-        placeable.place(0, -pull)
-    }
-}
-
-/**
  * SF Symbols' chevron.right as iOS draws it at a small text size: a thin open chevron of the
  * given glyph [height] (caption ~11, footnote ~12), in secondary grey.
  */
@@ -10606,42 +10265,6 @@ private fun ProfileChevron(height: Dp, stroke: Dp) {
             color = color,
             style = Stroke(width = stroke.toPx(), cap = StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
         )
-    }
-}
-
-/**
- * Profile's Your Domains / Settings / Help cards (iOS yourDomainsSection, settingsSection,
- * helpSection): a card of its own each (glassBackground 18), padded 16, holding a Label - the
- * primary-coloured outline symbol, the body title 28 in from the symbol's edge - then, for Your
- * Domains, the count in secondary, and the caption chevron.
- */
-@Composable
-private fun ProfileLinkRow(
-    label: String,
-    icon: ImageVector,
-    value: String? = null,
-    /** Log Out: the symbol and label in red, and no chevron. */
-    tint: Color = LocalAppColors.current.textPrimary,
-    showsChevron: Boolean = true,
-    onClick: () -> Unit,
-) {
-    val colors = LocalAppColors.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .iosGlass(18.dp)
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp))
-        Spacer(Modifier.width(6.dp))
-        Text(label, color = tint, fontSize = 17.sp, maxLines = 1, modifier = Modifier.weight(1f))
-        if (value != null) {
-            Text(value, color = colors.textSecondary, fontSize = 17.sp, maxLines = 1)
-            Spacer(Modifier.width(8.dp))
-        }
-        if (showsChevron) ProfileChevron(height = 11.dp, stroke = 1.6.dp)
     }
 }
 
@@ -10775,22 +10398,6 @@ fun SettingsActionItem(
         Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
         Text(text = label, color = labelColor, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-    }
-}
-
-@Composable
-fun SettingsInfoItem(label: String, value: String, valueColor: Color = LocalAppColors.current.textSecondary, onClick: (() -> Unit)? = null) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .heightIn(min = 52.dp)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = label, color = LocalAppColors.current.textPrimary, style = MaterialTheme.typography.bodyLarge)
-        Text(text = value, color = valueColor, style = MaterialTheme.typography.bodyLarge)
     }
 }
 
@@ -12176,24 +11783,6 @@ fun ConnectionUrlField(label: String, value: String, onClick: (() -> Unit)? = nu
 }
 
 @Composable
-fun ConnectionInfoRow(label: String, value: String, valueColor: Color = LocalAppColors.current.textSecondary) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(label, color = LocalAppColors.current.textPrimary, style = MaterialTheme.typography.bodyLarge)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (label == "Status") {
-                Box(modifier = Modifier.size(8.dp).background(valueColor, CircleShape))
-                Spacer(Modifier.width(8.dp))
-            }
-            Text(value, color = valueColor, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
 fun PoolStatItem(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.Start) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -12558,6 +12147,9 @@ fun QrCodeOverlay(
     /** The toast a tap shows, when [value] isn't an address - "kpub copied to clipboard." for
      *  a kpub (iOS ColdStorageView's kpub QR). Null: the standard address toast. */
     copiedToast: String? = null,
+    /** Copied as the app's other sensitive values are (marked sensitive, cleared after 30 s): a
+     *  kpub (iOS 428a797b `ColdStorageClipboard.copyKpub`). */
+    sensitiveCopy: Boolean = false,
 ) {
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
@@ -12581,7 +12173,8 @@ fun QrCodeOverlay(
             // tap would look broken). The back arrow below still consumes its own taps, so
             // dismissal stays on the arrow / system back only.
             .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                clipboardManager.setText(AnnotatedString(value))
+                if (sensitiveCopy) com.kachat.app.util.copyPrivateKeyWithAutoWipe(context, value, label = "kpub")
+                else clipboardManager.setText(AnnotatedString(value))
                 // iOS: every one of these full-screen QR copies plays the success haptic.
                 qrCopyHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
                 if (copiedToast != null) IosToasts.show(copiedToast)
@@ -13250,7 +12843,6 @@ fun CreateChatActionItem(icon: ImageVector, label: String, onClick: () -> Unit) 
 
 private const val MAX_GROUP_MEMBERS = 50
 
-/** One row in the group-member address list - supports both a raw Kaspa address and a KNS domain, resolved the same way the single-contact flow's address field does. */
 /**
  * "Other domains": what the same typed name points to on the other name services, under the name
  * it resolved to, each one selectable (iOS a0dbc15, 6ac48a7 `OtherDomainsDropdown`). Every field
@@ -13325,6 +12917,7 @@ fun OtherDomainsDropdown(
     }
 }
 
+/** One row in the group-member address list - supports both a raw Kaspa address and a KNS domain, resolved the same way the single-contact flow's address field does. */
 data class GroupAddressRow(
     val id: String = java.util.UUID.randomUUID().toString(),
     val text: String = "",
@@ -13558,11 +13151,14 @@ fun ChatInfoScreen(
     onNavigateToNotificationSettings: (String) -> Unit = {},
     onNavigateToDomains: (String) -> Unit = {}
 ) {
-    val conversation = chatViewModel.conversations.collectAsState().value.find { it.contact.id == contactId }
+    val conversationFlow = remember(contactId) { chatViewModel.conversationFlow(contactId) }
+    val conversation by conversationFlow.collectAsState(initial = chatViewModel.getConversation(contactId))
     // Which section's half sheet is up.
     var infoSheet by remember { mutableStateOf<String?>(null) }
 
-    val messages by chatViewModel.getMessages(contactId).collectAsState(initial = emptyList())
+    // Remembered, so a recomposition doesn't restart the whole-history query.
+    val messagesFlow = remember(contactId) { chatViewModel.getMessages(contactId) }
+    val messages by messagesFlow.collectAsState(initial = emptyList())
     val myAddress by walletViewModel.address.collectAsState()
     // Your own profile link lands here too (iOS 95f50ca). It is you, not a contact: nothing to
     // rename, chat with, alias or notify, so only the rows that describe the address remain.
@@ -13619,8 +13215,12 @@ fun ChatInfoScreen(
     }
     // The .kachat profile's pieces, each looked up from its social link on this device.
     val kachatSocial = if (usesKnsProfile) null else com.kachat.app.services.kachatnames.KachatSocialImageResolver.instance
-    val kachatSocialEntries = kachatSocial?.entries?.collectAsState()?.value
-    LaunchedEffect(kachatProfile) {
+    // This screen is a profile the person opened: its links may be looked up (iOS audit
+    // 2026-11-21 #17, ChatInfoView `openedProfile`).
+    LaunchedEffect(contactId, kachatSocial) { kachatSocial?.noteProfileOpened(contactId) }
+    val kachatSocialEntries = kachatSocial?.takeIf { it.mayLookUp(contactId) }?.entries?.collectAsState()?.value
+    LaunchedEffect(kachatProfile, kachatSocialEntries != null) {
+        if (kachatSocialEntries == null) return@LaunchedEffect
         kachatProfile?.let { p -> listOf(p.avatar, p.banner, p.bio).forEach { kachatSocial?.refreshIfStale(it) } }
     }
     val kachatAvatar = kachatSocialEntries?.let { kachatSocial?.cached(kachatProfile?.avatar, it) }?.avatar

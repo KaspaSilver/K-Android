@@ -1,13 +1,10 @@
 package com.kachat.app.services
 
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.kachat.app.models.ChatHistoryArchiveMessage
 import com.kachat.app.models.MessageEntity
 import com.kachat.app.util.MessageProtocol
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -127,123 +124,7 @@ class ChatHistoryExportImportServiceTest {
         assertEquals("sent", archived.deliveryStatus)
     }
 
-    // --- shared-file merge --------------------------------------------------------------
-
-    private fun archiveJson(
-        exportedAt: String,
-        wallet: String = myAddress,
-        messages: String,
-        extraTopLevel: String = ""
-    ) = """
-        {"schemaVersion":1,"exportedAt":"$exportedAt","walletAddress":"$wallet",
-         "conversations":[{"contactAddress":"$contactAddress","contactAlias":"Them","unreadCount":0,
-         "messages":[$messages]}]$extraTopLevel}
-    """.trimIndent()
-
-    private fun messageJson(txId: String, content: String = "hello", status: String = "sent", blockTime: Long = 1_700_000_000_000L) =
-        """{"id":"$txId","txId":"$txId","senderAddress":"$myAddress","receiverAddress":"$contactAddress",
-            "content":"$content","timestamp":"2023-11-14T22:13:20.123Z","blockTime":$blockTime,
-            "isOutgoing":true,"messageType":"contextual","deliveryStatus":"$status"}"""
-
-    private fun merge(remote: String, local: String): JsonObject =
-        ChatHistoryExportImportService.mergeArchives(
-            ChatHistoryExportImportService.parseRemoteArchive(remote, myAddress),
-            JsonParser.parseString(local).asJsonObject
-        )
-
-    private fun mergedMessages(merged: JsonObject): List<JsonObject> =
-        merged.getAsJsonArray("conversations").first().asJsonObject
-            .getAsJsonArray("messages").map { it.asJsonObject }
-
-    @Test
-    fun `merge is a union, so neither side's messages are lost`() {
-        val merged = merge(
-            archiveJson("2026-08-01T00:00:00Z", messages = messageJson("remote_only")),
-            archiveJson("2026-08-02T00:00:00Z", messages = messageJson("local_only"))
-        )
-        assertEquals(setOf("remote_only", "local_only"), mergedMessages(merged).map { it.get("txId").asString }.toSet())
-    }
-
-    @Test
-    fun `a remote pending message survives the merge, even though this device never exports pending`() {
-        val merged = merge(
-            archiveJson("2026-08-01T00:00:00Z", messages = messageJson("tx_pending", status = "pending")),
-            archiveJson("2026-08-02T00:00:00Z", messages = messageJson("tx_other"))
-        )
-        val pending = mergedMessages(merged).single { it.get("txId").asString == "tx_pending" }
-        assertEquals("pending", pending.get("deliveryStatus").asString)
-    }
-
-    @Test
-    fun `the same txId dedupes to the better copy - a real body beats a placeholder`() {
-        val merged = merge(
-            archiveJson("2026-08-01T00:00:00Z", messages = messageJson("tx1", content = "[Encrypted message]")),
-            archiveJson("2026-08-02T00:00:00Z", messages = messageJson("tx1", content = "the real text"))
-        )
-        val messages = mergedMessages(merged)
-        assertEquals(1, messages.size)
-        assertEquals("the real text", messages.single().get("content").asString)
-    }
-
-    @Test
-    fun `the same txId dedupes to the further-along delivery status`() {
-        val merged = merge(
-            archiveJson("2026-08-01T00:00:00Z", messages = messageJson("tx1", status = "sent")),
-            archiveJson("2026-08-02T00:00:00Z", messages = messageJson("tx1", status = "pending"))
-        )
-        assertEquals("sent", mergedMessages(merged).single().get("deliveryStatus").asString)
-    }
-
-    @Test
-    fun `unknown top-level keys survive the merge - dropping desktopState would wipe desktop's state`() {
-        val merged = merge(
-            archiveJson("2026-08-01T00:00:00Z", messages = messageJson("tx1"), extraTopLevel = ""","desktopState":{"kind":"kachat-desktop-backup","state":{"a":1}}"""),
-            archiveJson("2026-08-02T00:00:00Z", messages = messageJson("tx2"))
-        )
-        assertEquals(
-            "kachat-desktop-backup",
-            merged.getAsJsonObject("desktopState").get("kind").asString
-        )
-    }
-
-    @Test
-    fun `merging heals a legacy Android row into something iOS can decode`() {
-        val merged = merge(
-            archiveJson("2026-08-01T00:00:00Z", messages = messageJson("64hex_not_a_uuid")),
-            archiveJson("2026-08-02T00:00:00Z", messages = messageJson("tx2"))
-        )
-        val healed = mergedMessages(merged).single { it.get("txId").asString == "64hex_not_a_uuid" }
-        assertTrue(healed.get("id").asString.matches(UUID_REGEX))
-        assertEquals("2023-11-14T22:13:20Z", healed.get("timestamp").asString)   // fractional seconds stripped
-        val conversationId = merged.getAsJsonArray("conversations").first().asJsonObject.get("conversationId").asString
-        assertTrue(conversationId.matches(UUID_REGEX))
-    }
-
-    @Test
-    fun `a remote backup for a different wallet aborts instead of being overwritten`() {
-        val error = runCatching {
-            ChatHistoryExportImportService.parseRemoteArchive(
-                archiveJson("2026-08-01T00:00:00Z", wallet = "kaspa:someone_else", messages = messageJson("tx1")),
-                myAddress
-            )
-        }.exceptionOrNull()
-        assertTrue(error is IllegalStateException)
-    }
-
-    @Test
-    fun `content that isn't an archive is reported as unreadable, a newer schema as incompatible`() {
-        for (body in listOf("not json at all", "[1,2,3]", """{"hello":"world"}""")) {
-            val error = runCatching { ChatHistoryExportImportService.parseRemoteArchive(body, myAddress) }.exceptionOrNull()
-            assertTrue("expected $body to be unreadable", error is RemoteBackupUnreadableException)
-        }
-        for (body in listOf("""{"schemaVersion":7,"conversations":[]}""", """{"schemaVersion":7}""")) {
-            val error = runCatching { ChatHistoryExportImportService.parseRemoteArchive(body, myAddress) }.exceptionOrNull()
-            assertTrue("expected $body to be refused as a newer schema", error is IllegalStateException)
-            assertFalse("a newer schema is never taken for damage: $body", error is RemoteBackupUnreadableException)
-        }
-    }
-
-    // --- what a sync does with the server copy (NEXTCLOUD_SYNC.md §7, iOS d57019a) ----------
+    // --- backup envelope detection ------------------------------------------------------
 
     private val ownHint = BackupCrypto.walletHint(myAddress)
 
@@ -251,110 +132,14 @@ class ChatHistoryExportImportServiceTest {
         """{"kachatEncryptedBackup":$version,"cipher":"aes-256-gcm","nonce":"AAAAAAAAAAAAAAAA","ciphertext":"BBBB"""" +
             (if (hint != null) ""","walletHint":"$hint"}""" else "}")
 
-    private val validArchive get() = archiveJson("2026-08-01T00:00:00Z", messages = messageJson("tx1"))
-
-    private fun plan(remote: String?, decrypt: (String) -> String = { throw IllegalStateException(BackupCrypto.DECRYPT_FAILED_MESSAGE) }) =
-        ChatHistoryExportImportService.planRemoteBackup(remote, myAddress, decrypt)
-
-    private fun assertAborts(remote: String?, decrypt: (String) -> String = { throw IllegalStateException(BackupCrypto.DECRYPT_FAILED_MESSAGE) }) {
-        val error = runCatching { plan(remote, decrypt) }.exceptionOrNull()
-        assertTrue("expected the sync to abort before any PUT, got ${error ?: "a plan"}", error is IllegalStateException)
-    }
-
-    private fun assertReplacedInPlace(remote: String?, decrypt: (String) -> String = { throw IllegalStateException(BackupCrypto.DECRYPT_FAILED_MESSAGE) }) {
-        val decision = plan(remote, decrypt)
-        assertTrue("expected a write without merge", decision is RemoteBackupPlan.WriteLocal)
-        assertNotNull("expected it logged as a replacement", (decision as RemoteBackupPlan.WriteLocal).replacedBecause)
-    }
-
-    @Test
-    fun `no backup yet writes this device's history without merging`() {
-        val decision = plan(null)
-        assertTrue(decision is RemoteBackupPlan.WriteLocal)
-        assertNull((decision as RemoteBackupPlan.WriteLocal).replacedBecause)
-    }
-
-    @Test
-    fun `a readable archive of this wallet is merged`() {
-        assertTrue(plan(validArchive) is RemoteBackupPlan.Merge)
-        assertTrue(plan(envelope(), decrypt = { validArchive }) is RemoteBackupPlan.Merge)
-    }
-
-    @Test
-    fun `this wallet's envelope that won't decrypt is replaced in place`() {
-        assertReplacedInPlace(envelope(hint = ownHint))
-    }
-
-    @Test
-    fun `this wallet's envelope that decrypts to something that isn't an archive is replaced in place`() {
-        assertReplacedInPlace(envelope(hint = ownHint), decrypt = { """{"conversations":""" })
-    }
-
-    @Test
-    fun `a file cut off at rest is replaced in place`() {
-        assertReplacedInPlace(validArchive.take(validArchive.length / 2))   // plaintext
-        val sealed = envelope()
-        assertReplacedInPlace(sealed.take(sealed.length - 30))              // envelope, hint lost with the tail
-        for (body in listOf("not json at all", "[1,2,3]", """{"hello":"world"}""", "   ")) assertReplacedInPlace(body)
-    }
-
-    @Test
-    fun `another wallet's envelope is never touched, and is not even decrypted`() {
-        var decryptCalled = false
-        assertAborts(envelope(hint = BackupCrypto.walletHint("kaspa:someone_else")), decrypt = { decryptCalled = true; validArchive })
-        assertFalse(decryptCalled)
-    }
-
-    @Test
-    fun `another wallet's plaintext archive is never touched`() {
-        assertAborts(archiveJson("2026-08-01T00:00:00Z", wallet = "kaspa:someone_else", messages = messageJson("tx1")))
-    }
-
-    @Test
-    fun `an envelope without a walletHint that won't decrypt can't be attributed, so it is never touched`() {
-        assertAborts(envelope(hint = null))
-    }
-
-    @Test
-    fun `a newer schema is never touched`() {
-        assertAborts("""{"schemaVersion":2,"walletAddress":"$myAddress","conversations":[]}""")
-        assertAborts("""{"schemaVersion":2,"walletAddress":"$myAddress","history":{}}""")
-        assertAborts(envelope(), decrypt = { """{"schemaVersion":2,"conversations":[]}""" })
-        assertAborts(envelope(version = 2))
-    }
-
     @Test
     fun `envelope detection reads the marker version and walletHint`() {
         assertTrue(BackupCrypto.isEnvelope(envelope()))
         assertFalse(BackupCrypto.isEnvelope(envelope(version = 2)))
         assertEquals(2, BackupCrypto.envelopeVersion(envelope(version = 2)))
-        assertNull(BackupCrypto.envelopeVersion(validArchive))
+        assertNull(BackupCrypto.envelopeVersion("""{"schemaVersion":1,"walletAddress":"$myAddress","conversations":[]}"""))
         assertEquals(ownHint, BackupCrypto.envelopeWalletHint(envelope()))
         assertNull(BackupCrypto.envelopeWalletHint(envelope(hint = null)))
-    }
-
-    // --- per-conversation photo (NEXTCLOUD_SYNC.md §5) -------------------------------------
-
-    private fun archiveWithPhoto(exportedAt: String, photo: String?) = """
-        {"schemaVersion":1,"exportedAt":"$exportedAt","walletAddress":"$myAddress",
-         "conversations":[{"contactAddress":"$contactAddress","unreadCount":0,
-         ${if (photo != null) "\"contactPhoto\":\"$photo\"," else ""}"messages":[${messageJson("tx1")}]}]}
-    """.trimIndent()
-
-    private fun mergedPhoto(merged: JsonObject): String? =
-        merged.getAsJsonArray("conversations").first().asJsonObject.get("contactPhoto")?.asString
-
-    @Test
-    fun `a photo only this device has survives the merge`() {
-        val merged = merge(archiveWithPhoto("2026-08-01T00:00:00Z", null), archiveWithPhoto("2026-08-02T00:00:00Z", "LOCAL"))
-        assertEquals("LOCAL", mergedPhoto(merged))
-    }
-
-    @Test
-    fun `the newer archive's photo wins, and an empty one never overwrites a real one`() {
-        assertEquals("LOCAL", mergedPhoto(merge(archiveWithPhoto("2026-08-01T00:00:00Z", "REMOTE"), archiveWithPhoto("2026-08-02T00:00:00Z", "LOCAL"))))
-        assertEquals("REMOTE", mergedPhoto(merge(archiveWithPhoto("2026-08-03T00:00:00Z", "REMOTE"), archiveWithPhoto("2026-08-02T00:00:00Z", "LOCAL"))))
-        assertEquals("REMOTE", mergedPhoto(merge(archiveWithPhoto("2026-08-01T00:00:00Z", "REMOTE"), archiveWithPhoto("2026-08-02T00:00:00Z", null))))
     }
 
     // --- toMessageEntity ---------------------------------------------------------------

@@ -53,11 +53,12 @@ class ColdStorageSendEngine @Inject constructor(
      * derived address set, but nothing in the format lets KaChat *tell* it which path to use. To
      * stay unambiguous, every input in a single send is sourced from exactly one address (picked
      * by the user from the account's address list), never aggregated across several.
+     *
+     * [manualUtxos], if given (coin control), fixes the exact input set instead of letting
+     * [KaspaUtxoSelector.selectUtxosAndCalculateFee] greedily grow one — re-resolved against
+     * this call's own fresh [api.getUtxos] fetch by outpoint, not used as-is, so a UTXO spent
+     * since the coin-control picker was shown can't silently get included.
      */
-    /** [manualUtxos], if given (coin control), fixes the exact input set instead of letting
-     *  [KaspaUtxoSelector.selectUtxosAndCalculateFee] greedily grow one — re-resolved against
-     *  this call's own fresh [api.getUtxos] fetch by outpoint, not used as-is, so a UTXO spent
-     *  since the coin-control picker was shown can't silently get included. */
     suspend fun buildUnsignedTransaction(
         fromAddress: String,
         toAddress: String,
@@ -175,12 +176,14 @@ class ColdStorageSendEngine @Inject constructor(
      * be stale (this address's real balance moved since the list was last refreshed), so basing
      * Max on it can offer more than what's actually spendable, and the real build then fails
      * with insufficient funds even though the on-screen "Available" looked fine.
+     *
+     * If coin control has fixed a UTXO set ([manualUtxos]), Max reflects only that subset
+     * (re-resolved against this call's own fresh fetch, same as [buildUnsignedTransaction])
+     * rather than the whole address's balance.
+     *
+     * The Fast / Priority / custom extra ([feeMultiplier], [customExtraFeeSompi]) comes off flat,
+     * derived from this same base - see [com.kachat.app.util.SendFeeModel.maxAfterFees].
      */
-    /** If coin control has fixed a UTXO set ([manualUtxos]), Max reflects only that subset
-     *  (re-resolved against this call's own fresh fetch, same as [buildUnsignedTransaction])
-     *  rather than the whole address's balance. */
-    /** The Fast / Priority / custom extra ([feeMultiplier], [customExtraFeeSompi]) comes off flat,
-     *  derived from this same base - see [com.kachat.app.util.SendFeeModel.maxAfterFees]. */
     suspend fun estimateMaxAmount(
         fromAddress: String,
         feeRateOverride: Long? = null,

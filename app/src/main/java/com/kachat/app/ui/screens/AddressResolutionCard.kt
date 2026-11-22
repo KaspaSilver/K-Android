@@ -91,11 +91,23 @@ fun AddressResolutionCard(
         }
     }
 
+    // The address's .kachat name (snapshot state: it recomposes when the identity lands), shown
+    // once a node confirms the name record is this address's - this card sits where someone
+    // decides to pay, and the indexer's reverse label alone is not proof (security audit M5).
+    val cachedKachat = shown?.let { com.kachat.app.services.kachatnames.KachatNamesRegistry.cachedIdentityOf(it)?.label }
+    var confirmedKachat by remember(shown) { mutableStateOf<String?>(null) }
+    LaunchedEffect(shown, cachedKachat) {
+        confirmedKachat = null
+        val address = shown ?: return@LaunchedEffect
+        val label = cachedKachat ?: return@LaunchedEffect
+        val registry = com.kachat.app.services.kachatnames.KachatNamesRegistry.shared ?: return@LaunchedEffect
+        if (registry.confirmedLabel(address, label)) confirmedKachat = label
+    }
+
     if (shown == null) return
-    // The domain typed, else the address's .kachat name (snapshot state: it recomposes when the
-    // identity lands), else what KNS knows.
+    // The domain typed, else the address's confirmed .kachat name, else what KNS knows.
     val name = domain
-        ?: com.kachat.app.services.kachatnames.KachatNamesRegistry.kachatName(shown)
+        ?: confirmedKachat?.takeIf { it == cachedKachat }?.let(com.kachat.app.models.KachatNameLabel::display)
         ?: profileName
     Row(
         modifier = modifier

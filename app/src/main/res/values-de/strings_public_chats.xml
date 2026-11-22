@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">Kodierung...</string>
     <string name="pc_room_voice_receiving">Wird empfangen… %1$d von %2$d</string>
     <string name="pc_room_voice_recording">Aufnahme...</string>
-    <string name="pc_rooms53_channel_name_invalid">Kanalnamen müssen 1–%1$d Zeichen lang sein, ohne Leerzeichen oder Doppelpunkte.</string>
     <string name="pc_rooms53_day_one">%1$d Tag</string>
     <string name="pc_rooms53_days">%1$d Tage</string>
-    <string name="pc_rooms53_join_failed">Beim Beitreten zu diesem Kanal ist etwas schiefgelaufen.</string>
     <string name="pc_rooms54_failed_to_edit">Bearbeiten fehlgeschlagen: %1$s</string>
     <string name="pc_rooms54_failed_to_send">Senden fehlgeschlagen: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">Sprachnachricht konnte nicht gesendet werden: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">Ihr KaPost-Profil: Beiträge, Antworten und Follower.</string>
     <string name="pc_sender_send_kaspa_subtitle">Sende Kaspa an ihre Adresse.</string>
     <string name="pc_sender_copy_address_subtitle">Ihre Kaspa-Adresse kopieren.</string>
-    <string name="pc_public_chats">Öffentliche Chats</string>
+    <string name="pc_original_message_not_loaded">Originalnachricht nicht geladen</string>
 </resources>

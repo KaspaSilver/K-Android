@@ -36,18 +36,6 @@ import androidx.compose.ui.unit.sp
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
 
-/**
- * The header every main page carries: the connection dot leading, the chatting-address balance
- * centered, an optional trailing action - and the page's bold, left-aligned title underneath.
- *
- * On iOS `ConnectionStatusIndicator` (leading) and `BalanceToolbarLabel` (principal) are toolbar
- * items on essentially every screen, so how you are connected and what you hold are never more
- * than a glance away, whatever you are looking at. Android had them on some pages and not
- * others; this is the one place that decides, so they cannot drift apart again.
- *
- * Goes in a Scaffold's `topBar` slot, which is why it clears the status bar itself - unlike a
- * CenterAlignedTopAppBar, hand-built top bar content gets no inset for free.
- */
 /** iOS 26 draws every toolbar item on glass: on black a #191919 disc or capsule edged by a
  *  #2E2E2E hairline (sampled from the iPhone), on white a white one with a faint edge. */
 @Composable
@@ -187,6 +175,18 @@ fun IosToolbarRow(
     }
 }
 
+/**
+ * The header every main page carries: the connection dot leading, the chatting-address balance
+ * centered, an optional trailing action - and the page's bold, left-aligned title underneath.
+ *
+ * On iOS `ConnectionStatusIndicator` (leading) and `BalanceToolbarLabel` (principal) are toolbar
+ * items on essentially every screen, so how you are connected and what you hold are never more
+ * than a glance away, whatever you are looking at. Android had them on some pages and not
+ * others; this is the one place that decides, so they cannot drift apart again.
+ *
+ * Goes in a Scaffold's `topBar` slot, which is why it clears the status bar itself - unlike a
+ * CenterAlignedTopAppBar, hand-built top bar content gets no inset for free.
+ */
 @Composable
 fun MainPageHeader(
     title: String,

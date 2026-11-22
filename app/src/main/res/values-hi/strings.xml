@@ -3,7 +3,6 @@
     <string name="app_name">K</string>
     <string name="n_12_words">12 शब्द</string>
     <string name="n_24_words">24 शब्द</string>
-    <string name="a_kns_inscription_s_commit_transaction">एक KNS इंस्क्रिप्शन का कमिट लेन-देन हो गया, लेकिन रिवील कभी पूरा नहीं हुआ। इसे पूरा करने के लिए अभी फिर से प्रयास करें; जब तक आप ऐसा नहीं करते, फंड सुरक्षित रूप से बंधे हुए हैं।</string>
     <string name="accept">स्वीकार करें</string>
     <string name="account_name">खाता नाम</string>
     <string name="active_nodes">सक्रिय नोड</string>
@@ -90,7 +89,6 @@
     <string name="kns_domains">आपके डोमेन</string>
     <string name="contact_kns_domains">KNS डोमेन</string>
     <string name="kachat">KaChat</string>
-    <string name="kachat_logo">K लोगो</string>
     <string name="kachat_needs_to_connect_to_a">K को एक नोड से जुड़ने की आवश्यकता है। आप कैसे कनेक्ट करना चाहेंगे?</string>
     <string name="kaspa_explorer">कास्पा एक्सप्लोरर</string>
     <string name="label_optional">लेबल (वैकल्पिक)</string>
@@ -123,7 +121,6 @@
     <string name="photo">फ़ोटो</string>
     <string name="photo_message">फ़ोटो संदेश</string>
     <string name="photo_message_full_screen">फ़ोटो संदेश, पूर्ण स्क्रीन</string>
-    <string name="photos">फ़ोटो</string>
     <string name="pool_health">पूल स्वास्थ्य</string>
     <string name="promote_pawn_to">मोहरे को इसमें बदलें:</string>
     <string name="qr_code">QR कोड</string>
@@ -140,7 +137,6 @@
     <string name="chess_cancel_game">गेम रद्द करें</string>
     <string name="resign_this_game">क्या इस खेल में हार माननी है?</string>
     <string name="retry">पुनः प्रयास करें</string>
-    <string name="retry_inscription_reveal">इंस्क्रिप्शन रिवील फिर से प्रयास करें</string>
     <string name="save">सहेजें</string>
     <string name="saved_accounts">सहेजे गए खाते</string>
     <string name="scan_qr_code">QR कोड स्कैन करें</string>
@@ -205,7 +201,6 @@
     <string name="discover_addresses">पते खोजें</string>
     <string name="email">ईमेल</string>
     <string name="explorer">एक्सप्लोरर</string>
-    <string name="generate_new_spending_address">नया खर्च पता जनरेट करें</string>
     <string name="github">GitHub</string>
     <string name="hide_user">उपयोगकर्ता छिपाएं</string>
     <string name="ip_address_book">IP पता पुस्तिका</string>
@@ -216,8 +211,6 @@
     <string name="kaspa_node">कास्पा नोड</string>
     <string name="default_recommended">डिफ़ॉल्ट (अनुशंसित)</string>
     <string name="automatic_scan">स्वचालित स्कैन</string>
-    <string name="kaspa_node_quick_access_footer">स्वचालित स्कैन सबसे अच्छे उपलब्ध नोड खोजकर उनसे कनेक्ट करता है। कोई खास नोड चुनने पर सिर्फ़ उसी से कनेक्ट होता है, दूसरे नोड पर नहीं जाता। सहेजे गए पते कनेक्शन सेटिंग्स > IP पता पुस्तिका में प्रबंधित करें।</string>
-    <string name="node_connections_blocked">इस नेटवर्क पर नोड कनेक्शन ब्लॉक लगते हैं। संदेश पाना इंडेक्सर के ज़रिए अब भी काम करता है और सामान्य भुगतान REST API से अब भी जाते हैं, लेकिन चैट संदेश भेजने के लिए नोड कनेक्शन चाहिए।</string>
     <string name="last_sync">अंतिम सिंक</string>
     <string name="latency">विलंबता</string>
     <string name="open_chat">चैट खोलें</string>
@@ -321,7 +314,6 @@
     <string name="not_available_on_this_network">इस नेटवर्क पर उपलब्ध नहीं</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
     <string name="km_no_names">अभी कोई .kachat नाम नहीं</string>
-    <string name="kn_manage_in_wallet">.kachat नाम KaChat Wallet में खरीदें, नवीनीकृत करें, बेचें और ट्रांसफ़र करें।</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">शुरुआत का पूरा परिचय: वॉलेट, चैट, भुगतान और बहुत कुछ।</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -479,7 +471,6 @@
     <string name="chats_new_chat">नई चैट</string>
     <string name="chats_new_group_chat">नई ग्रुप चैट</string>
     <string name="chats_new_chat_subtitle">किसी को उसके पते या नाम से मैसेज करें।</string>
-    <string name="qr_receive_address_subtitle">यह एक नया पता है, जिसका पहले कभी उपयोग नहीं हुआ।</string>
     <string name="qr_chatting_address_subtitle">चैट करने और .kachat डोमेन पाने के लिए उपयोग करें।</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="coin_control">कॉइन कंट्रोल</string>
@@ -500,7 +491,6 @@
     <string name="nextcloud">Nextcloud</string>
     <!-- Send Kaspa: slide to send (iOS afaad34) -->
     <!-- Send Kaspa: send from another spending address (iOS e994235) -->
-    <string name="send_from">यहाँ से भेजें</string>
     <string name="primary">प्राथमिक</string>
     <!-- Chats circles row (iOS a062577) -->
     <string name="chats_pinned_to_front">सबसे आगे पिन किया गया</string>
@@ -757,7 +747,6 @@
     <string name="pr_chatting_footer">भुगतान, नोट के साथ, भुगतान करने वाले के साथ आपकी चैट में आएगा।</string>
     <string name="pr_memo_placeholder">किसलिए (वैकल्पिक)</string>
     <string name="pr_copy">भुगतान अनुरोध कॉपी करें</string>
-    <string name="pr_anyone_note">जो भी इसे K में खोलेगा, उसे यह भरी हुई Kaspa भेजें स्क्रीन मिलेगी, और दिखेगा कि इसे आपके चैट पते ने बनाया है (उसकी कुंजी से हस्ताक्षरित)।</string>
     <string name="pr_requested">माँगा गया</string>
     <string name="pr_paid_as_chat_payment">चैट भुगतान के रूप में: उनके साथ आपकी चैट में दिखेगा।</string>
     <string name="pr_paid_to_their_spending">उनके खर्च वाले पते पर भुगतान।</string>
@@ -838,17 +827,11 @@
     <string name="appearance_light">लाइट</string>
     <string name="appearance_dark">डार्क</string>
     <string name="storage_local_used">उपयोग हुआ लोकल स्टोरेज: %1$s</string>
-    <string name="storage_on_device_footer">संदेश इस डिवाइस पर कितने समय तक रखे जाते हैं और कितनी जगह लेते हैं। यह किसी भी क्लाउड स्टोरेज से पहले लागू होता है।</string>
-    <string name="require_photo_approval_new_contacts">नए संपर्कों की फ़ोटो के लिए स्वीकृति ज़रूरी करें</string>
     <string name="quick_reactions">त्वरित प्रतिक्रियाएं</string>
-    <string name="quick_reactions_footer">किसी इमोजी को दूसरे से बदलने के लिए उस पर टैप करें।</string>
     <string name="reset_to_default">डिफ़ॉल्ट पर रीसेट करें</string>
     <string name="notifications_wallet">वॉलेट</string>
     <string name="address_activity">पते की गतिविधि</string>
-    <string name="address_activity_footer">जब आपके किसी खर्च या कोल्ड स्टोरेज पते पर किसी बाहरी स्रोत से Kaspa आए, तो सूचित करें। आपके अपने पतों के बीच ट्रांसफ़र अनदेखे किए जाते हैं।</string>
-    <string name="explorer_footer">पूरे ऐप में \"लेन-देन देखें\" लिंक बनाने के लिए उपयोग होता है।</string>
     <string name="verbose_api_logging">विस्तृत API लॉगिंग</string>
-    <string name="verbose_api_logging_footer">हर इंडेक्सर अनुरोध को पूरे कनेक्शन और समय विवरण के साथ लॉग करता है। सामान्य उपयोग में इसे बंद रखें: विफल और धीमे अनुरोध हमेशा लॉग होते हैं, और ज़्यादा लॉगिंग से Android ऐप के लॉग संदेश छोड़ सकता है।</string>
     <string name="your_address">आपका पता</string>
     <!-- Quantum-safe (KIP-22) addresses: the shield's two states in Manage Addresses (iOS bba1b1e) -->
     <string name="quantum_safe">क्वांटम-सुरक्षित</string>
@@ -1199,7 +1182,6 @@
     <string name="the_passphrase_shows_too_if_this_account">अगर इस खाते में पासफ़्रेज़ है, तो वह भी दिखेगा।</string>
     <string name="transaction_id_tap_to_view_in">लेन-देन ID · %1$s में देखने के लिए टैप करें</string>
     <string name="transaction_id">लेन-देन ID</string>
-    <string name="not_now_2">अभी नहीं</string>
     <string name="unsilence">म्यूट हटाएं</string>
     <string name="silence">म्यूट करें</string>
     <string name="pin">पिन करें</string>
@@ -1266,7 +1248,6 @@
     <string name="so_do_you_need_one">तो क्या आपको इसकी ज़रूरत है?</string>
     <string name="if_you_are_not_sure_choose_no">अगर आपको यकीन नहीं है, तो आपको इसकी ज़रूरत नहीं है: शुरुआत में वापस जाएं और नया खाता बनाएं पर टैप करें, जो बिना पासफ़्रेज़ के खाता बनाता है। यह फिर भी आपके 12 या 24 शब्दों से सुरक्षित रहता है, और आप बाद में कभी भी पासफ़्रेज़ वाला दूसरा खाता बना सकते हैं।</string>
     <string name="if_you_never_set_one_up_choose">अगर आपने कभी इसे सेट अप नहीं किया, तो \"नहीं\" चुनें। पासफ़्रेज़ कुछ ऐसा है जिसे आपने जानबूझकर टाइप किया होगा, इसलिए अगर आप इसके बारे में पहली बार सुन रहे हैं, तो आपके पास यह नहीं है।</string>
-    <string name="my_kachat_profile">मेरी KaChat प्रोफ़ाइल</string>
     <string name="signs_out_of_this_account_wallet_and">इस खाते से साइन आउट करता है। वॉलेट और संदेश डेटा इस डिवाइस पर बना रहता है।</string>
     <string name="could_not_work_out_the_network_fee">नेटवर्क शुल्क का हिसाब नहीं लगाया जा सका।</string>
     <string name="could_not_work_out_the_maximum">अधिकतम राशि का हिसाब नहीं लगाया जा सका।</string>
@@ -1317,7 +1298,6 @@
     <string name="new_messages_connection_requests_and_payments">नए संदेश, कनेक्शन अनुरोध और भुगतान</string>
     <string name="group_chat">समूह चैट</string>
     <string name="new_group_message">नया समूह संदेश</string>
-    <string name="group_update">समूह अपडेट</string>
     <string name="could_not_derive_the_quantum_addresss_key">क्वांटम पते की कुंजी नहीं बनाई जा सकी</string>
     <string name="no_spendable_utxos">खर्च करने योग्य कोई UTXO नहीं</string>
     <string name="balance_too_low_to_cover_fee">शुल्क के लिए बैलेंस बहुत कम है</string>
@@ -1336,7 +1316,6 @@
     <string name="ready_to_scan">स्कैन के लिए तैयार</string>
     <string name="the_active_account_changed_switch_back_to">सक्रिय खाता बदल गया है। उसी खाते पर वापस जाएं और फिर कोशिश करें।</string>
     <string name="nextcloud_rejected_the_username_or_app_password">Nextcloud ने उपयोगकर्ता नाम या ऐप पासवर्ड अस्वीकार कर दिया।</string>
-    <string name="nextcloud_returned_http">Nextcloud ने HTTP %1$d लौटाया।</string>
     <string name="nextcloud_sent_an_empty_file">Nextcloud ने एक खाली फ़ाइल भेजी।</string>
     <string name="that_file_is_too_large_to_import">यह फ़ाइल इंपोर्ट करने के लिए बहुत बड़ी है।</string>
     <string name="selected_utxos_are_no_longer_available_please">चुने गए UTXO अब उपलब्ध नहीं हैं - कृपया फिर से चुनें</string>
@@ -1421,12 +1400,10 @@
     <string name="nc_username">उपयोगकर्ता नाम</string>
     <string name="nc_app_password">ऐप पासवर्ड</string>
     <string name="nc_use_https">https का उपयोग करें। बिना एन्क्रिप्शन वाले कनेक्शन समर्थित नहीं हैं।</string>
-    <string name="nc_app_password_footer">Nextcloud में सेटिंग्स → सुरक्षा → डिवाइस और सेशन में एक ऐप पासवर्ड बनाएं — अपने खाते का पासवर्ड इस्तेमाल न करें। K इसे डिवाइस के एन्क्रिप्टेड स्टोरेज में रखता है।</string>
     <string name="nc_connect">कनेक्ट करें</string>
     <string name="nc_connected_account">जुड़ा हुआ खाता</string>
     <string name="nc_start_folder">शुरुआती फ़ोल्डर</string>
     <string name="nc_automatic_sync">स्वचालित सिंक</string>
-    <string name="nc_auto_sync_one_service">स्वचालित सिंक एक समय में एक ही क्लाउड सेवा के साथ काम करता है।</string>
     <string name="nc_last_synced">पिछला सिंक</string>
     <string name="nc_backup_folder">बैकअप फ़ोल्डर</string>
     <string name="nc_default_folder">%1$s (डिफ़ॉल्ट)</string>
@@ -1437,7 +1414,6 @@
     <string name="nc_contact_backup">संपर्क बैकअप</string>
     <string name="nc_contact_backup_footer">यहाँ केवल आपके संपर्कों का एन्क्रिप्टेड बैकअप लिया जाता है। आपके संदेश और ग्रुप चैट आपके सीड फ़्रेज़ से वापस आ जाते हैं।</string>
     <string name="nc_disconnect">डिस्कनेक्ट करें</string>
-    <string name="nc_disconnect_footer">डिस्कनेक्ट करने से सहेजा गया ऐप पासवर्ड इस डिवाइस से हट जाता है। आपके Nextcloud सर्वर पर कुछ नहीं बदलता।</string>
     <string name="nc_disconnect_title">Nextcloud डिस्कनेक्ट करें</string>
     <string name="nc_disconnect_message">ऐप पासवर्ड इस डिवाइस के एन्क्रिप्टेड स्टोरेज से हटा दिया जाता है। आप कभी भी फिर से कनेक्ट कर सकते हैं।</string>
     <string name="send_outcome_unknown">हो सकता है यह भेजा जा चुका हो, लेकिन नेटवर्क ने इसकी पुष्टि नहीं की। दोबारा भेजने से पहले अपना बैलेंस जांच लें।</string>
@@ -1489,7 +1465,6 @@
     <string name="chess_tc_1_1_subtitle">हर खिलाड़ी को एक मिनट, और हर चाल पर एक सेकंड।</string>
     <string name="chess_tc_casual">कैज़ुअल</string>
     <string name="chess_tc_no_timer">कोई टाइमर नहीं।</string>
-    <string name="reveals_the_next_unused_address_in_this_wallet">इस वॉलेट का अगला अप्रयुक्त पता दिखाता है।</string>
     <string name="check_off_every_address_you_want_on_the_list">सूची में जो भी पते चाहिए, उन्हें एक बार में चुन लें।</string>
     <string name="close_and_keep_scanning">बंद करें और स्कैन जारी रखें</string>
     <string name="recents">हाल के</string>
@@ -1505,9 +1480,7 @@
     <string name="cache_frees_your_messages_are_not_touched">%1$s खाली करता है। आपके संदेश, संपर्क और कुंजियाँ नहीं छुए जाते।</string>
     <string name="kachat_link_menu_title">KaChat लिंक</string>
     <string name="open_in_kachat">K में खोलें</string>
-    <string name="open_in_kapost">KaPost में खोलें</string>
     <string name="opens_it_right_here_in_the_app">इसे यहीं ऐप में खोलता है।</string>
-    <string name="opens_the_post_in_the_kapost_app">पोस्ट को KaPost ऐप में खोलता है।</string>
     <string name="nextcloud_upload_failed_sending_on_chain">Nextcloud अपलोड विफल — इसके बजाय ऑन-चेन भेजा जा रहा है</string>
     <string name="standard_kaspa_wallet">स्टैंडर्ड Kaspa वॉलेट</string>
     <string name="has_history">इतिहास है</string>
@@ -1590,7 +1563,6 @@
     <string name="chess_notif_accepted">♟️ आपका शतरंज खेल स्वीकार किया</string>
     <string name="chess_notif_declined">♟️ आपका शतरंज खेल अस्वीकार किया</string>
     <string name="chess_notif_move">♟️ चाल चली: %1$s → %2$s</string>
-    <string name="chess_notif_move_generic">♟️ शतरंज की एक चाल चली</string>
     <string name="chess_notif_lost_on_time">♟️ समय खत्म होने से हार गए</string>
     <string name="chess_notif_resigned">♟️ शतरंज के खेल में हार मान ली</string>
     <string name="fee_label">शुल्क</string>
@@ -1616,9 +1588,7 @@
     <string name="message_needs_too_many_coins">इस मैसेज को एक ट्रांज़ैक्शन के लिए बहुत ज़्यादा कॉइन चाहिए। अपने चैटिंग पते पर Compound UTXOs इस्तेमाल करें, फिर कोशिश करें।</string>
     <string name="use_their_domain_name">उनका डोमेन नाम इस्तेमाल करें</string>
     <string name="show_request_as_qr">अनुरोध को QR के रूप में दिखाएँ</string>
-    <string name="pr_qr_scan_to_pay_in_kapay">सब कुछ भरा हुआ पाने के लिए फ़ोन के कैमरे से स्कैन करें और KaPay में भुगतान करें।</string>
     <string name="pr_qr_scan_to_pay_in_kachat">सब कुछ भरा हुआ पाने के लिए फ़ोन के कैमरे से स्कैन करें और K में भुगतान करें।</string>
-    <string name="get_a_kachat_domain">.kachat डोमेन पाएँ</string>
     <string name="set_as_name">नाम के रूप में सेट करें</string>
     <string name="their_name">उनका नाम</string>
     <string name="get_a_kachat_name">.kachat नाम पाएँ</string>
@@ -1683,7 +1653,6 @@
     <string name="bridged_usdt">ब्रिज किया गया USDT</string>
     <string name="composer_send_dollars_subtitle">इस संपर्क को डॉलर (kUSDT) भेजें।</string>
     <string name="generate_new_address">नया पता जनरेट करें</string>
-    <string name="get_kapay">KaPay पाएँ</string>
     <string name="send_dollars">डॉलर भेजें</string>
     <string name="tap_to_manage">प्रबंधित करने के लिए टैप करें</string>
     <string name="token_about_kusdt">kUSDT, Ethereum और BNB Chain का USDT है, जिसे Trestly के वॉल्ट में 1:1 रखा जाता है और Kaspa पर टोकन के रूप में जारी किया जाता है। इसे Tether जारी नहीं करता, और सिर्फ़ Trestly ही इसे वापस USDT में बदल सकता है।</string>
@@ -1715,7 +1684,6 @@
     <string name="token_couldnt_check">अभी %1$@ जाँच नहीं पाए: %2$@ फिर कोशिश करने के लिए नीचे खींचें।</string>
     <string name="token_discover_addresses">kUSDT पते खोजें</string>
     <string name="token_discover_addresses_subtitle">kUSDT रखने वाले आपके पते खोजता है।</string>
-    <string name="token_empty_state_message">इसे अपने किसी नए पते पर पाएँ। kUSDT ख़रीदना और बदलना KaPay में होता है।</string>
     <string name="token_every_coin_goes_to_recipient">हर %1$s कॉइन में %2$s होता है। यह KAS %3$s के साथ प्राप्तकर्ता तक जाता है, इसलिए खोता नहीं।</string>
     <string name="token_every_coin_holds_kas">हर kUSDT कॉइन में 1.5 KAS होता है। जब आप kUSDT भेजते हैं, तो यह उसके साथ जाता है।</string>
     <string name="token_fee">शुल्क %1$s</string>

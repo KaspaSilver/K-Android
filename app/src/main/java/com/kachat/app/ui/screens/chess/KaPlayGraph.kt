@@ -12,13 +12,16 @@ import com.kachat.app.services.chess.ChessBotChallenge
 import com.kachat.app.ui.screens.LocalDockInset
 
 /**
- * The pages the KaPlay and Leaderboard tabs push (iOS 148a5331 phase 4: GamesView's and
- * ChessLeaderboardTabView's NavigationStacks). The two tabs themselves are [GamesScreen] and
- * [ChessLeaderboardScreen], placed by the dock / Kaspa Hub like any other tab.
+ * The pages the KaPlay tab pushes (iOS 148a5331 phase 4: GamesView's NavigationStack). The tab
+ * itself is [GamesScreen], placed by the dock / Kaspa Hub like any other tab. The leaderboards
+ * are inside KaPlay > Chess > Leaderboard ([ChessLeaderboardScreen], [LEADERBOARDS]; iOS
+ * 428a797b, owner's call 2026-11-22: no longer a Kaspa Hub tile of their own).
  */
 object KaPlayRoutes {
     /** KaPlay > Chess: choose your game ([ChessHomeScreen]). */
     const val HOME = "chess_home"
+    /** KaPlay > Chess > Leaderboard: 1v1, Tournaments and Bots ([ChessLeaderboardScreen]). */
+    const val LEADERBOARDS = "chess_leaderboards"
     const val MODE = "chess_mode/{mode}"
     const val TOURNAMENT = "chess_tournament/{tournamentId}"
     const val TOURNAMENT_GAME = "chess_tournament_game/{tournamentId}/{gameId}"
@@ -42,7 +45,7 @@ object KaPlayRoutes {
 
     /** Pushed pages that keep the dock (everything but the boards and the player's card). */
     val DOCKED_ROUTES: Set<String> = setOf(
-        HOME, MODE, TOURNAMENT, BOTS, BOT, LEADERBOARD, BOT_BOARDS, BOT_BOARD,
+        HOME, MODE, TOURNAMENT, BOTS, BOT, LEADERBOARDS, LEADERBOARD, BOT_BOARDS, BOT_BOARD,
     )
 
     /**
@@ -113,6 +116,9 @@ fun NavGraphBuilder.kaPlayGraph(navController: NavController, dockInset: Dp) {
                 ChessBotChallenge.fromRouteArg(entry.arguments?.getString("challenge")),
             )
         }
+    }
+    composable(KaPlayRoutes.LEADERBOARDS) {
+        CompositionLocalProvider(LocalDockInset provides dockInset) { ChessLeaderboardScreen(navController) }
     }
     composable(KaPlayRoutes.LEADERBOARD) { entry ->
         val mode = runCatching {

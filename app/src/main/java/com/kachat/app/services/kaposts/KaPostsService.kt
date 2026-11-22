@@ -76,18 +76,6 @@ data class KPoll(
         get() = options.orEmpty().map { KaPostsProtocol.decodeB64(it) ?: "" }
 }
 
-/** `GET /get-poll` - one poll's current numbers, without reloading a feed. */
-data class KPollResponse(
-    val id: String?,
-    val options: List<String>?,
-    val counts: List<Int>?,
-    val total: Int?,
-    val closesAt: Long?,
-    val myVote: Int?,
-) {
-    fun toPoll() = KPoll(options = options, counts = counts, total = total, closesAt = closesAt, myVote = myVote)
-}
-
 data class KPagination(val hasMore: Boolean?, val nextCursor: String?, val prevCursor: String?)
 
 data class KPostsResponse(val posts: List<KPost>?, val pagination: KPagination?)
@@ -219,13 +207,6 @@ interface KaPostApi {
         @Query("id") id: String,
         @Query("requesterPubkey") requesterPubkey: String,
     ): KPostResponse
-
-    /** One poll's options, counts and the requester's own vote (section 5.9). */
-    @GET("get-poll")
-    suspend fun getPoll(
-        @Query("postId") postId: String,
-        @Query("requesterPubkey") requesterPubkey: String,
-    ): KPollResponse
 
     /** A post plus its ancestor chain, root first, done server-side in one request. */
     @GET("get-thread")
@@ -397,15 +378,6 @@ class KaPostsService @Inject constructor(
         const val POLL_MIN_OPTIONS = 2
         const val POLL_MAX_OPTIONS = 4
 
-        /** Each option is 1-40 Unicode scalars, and no two may be the same - counted and cut by
-         *  [com.kachat.app.util.KaPostsProtocol.POLL_OPTION_MAX_SCALARS] the way the indexer counts. */
-        const val POLL_OPTION_MAX_LENGTH = com.kachat.app.util.KaPostsProtocol.POLL_OPTION_MAX_SCALARS
-
-        /** Voting closes at most seven days out of BLOCK time; the indexer rejects anything
-         *  further, so the composer's longest poll uses
-         *  [com.kachat.app.util.KaPostsProtocol.POLL_MAX_LENGTH_MS] (5 minutes short). */
-        const val POLL_MAX_DURATION_MS = 7 * 24 * 60 * 60 * 1000L
-
         /**
          * Compressed (02/03 + x) or raw x-only pubkey hex -> Kaspa address. THE bridge that
          * keeps identity in KNS: every K pubkey maps to an address and resolves through the
@@ -447,6 +419,113 @@ class KaPostsService @Inject constructor(
                 outputScriptLens = listOf(34),
                 payloadSize = payload.toByteArray(Charsets.UTF_8).size,
             ) <= com.kachat.app.util.KaspaMass.MAX_STANDARD_MASS
+
+        // MARK: Sanity checks on indexer answers (iOS audit 2026-11-21 #19)
+        //
+        // The indexer's rows are believed for display, but only once they look like what the
+        // chain could hold: ids are txids, authors are pubkeys, times are not far in the future,
+        // amounts are within Kaspa's supply and counts are clamped. Its answers carry no
+        // signatures, so the indexer is still trusted for authorship; only the chain fallback
+        // verifies signatures.
+
+        /** Largest base64 post content accepted (a post fits one transaction, about 100 KB). */
+        const val MAX_CONTENT_CHARACTERS = 200_000
+        /** Largest count (likes, replies, tips, followers...) shown from the indexer. */
+        const val MAX_COUNT = 1_000_000_000
+        /** All the KAS there will ever be, in sompi: a bigger amount is not a real tip. */
+        const val MAX_SUPPLY_SOMPI = 28_700_000_000L * 100_000_000L
+        /** Rows past this in one answer are dropped (the indexer caps `limit` at 100). */
+        const val MAX_ROWS_PER_PAGE = 200
+
+        /**
+         * The `requesterPubkey` sent where the answer has no per-viewer fields (engagement and
+         * follow lists, the health probe): only feeds, threads, replies, polls, notifications and
+         * user details need it to be the reader. Elsewhere it would only tell the indexer who is
+         * looking (iOS audit 2026-11-21 #24 `anonymousRequester`).
+         */
+        val ANONYMOUS_REQUESTER = "02" + "0".repeat(64)
+
+        fun clampedCount(count: Int?): Int? = count?.coerceIn(0, MAX_COUNT)
+
+        private fun isHex(text: String?, vararg lengths: Int): Boolean =
+            text != null && text.length in lengths &&
+                text.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+
+        fun isTxId(text: String?): Boolean = isHex(text, 64)
+
+        /** A compressed (66 hex) or x-only (64 hex) pubkey. */
+        fun isPubkey(text: String?): Boolean = isHex(text, 64, 66)
+
+        /** A time in ms that could be real: after Kaspa's launch year, at most a day ahead. */
+        fun isPlausibleTimestamp(ms: Long): Boolean =
+            ms > 1_600_000_000_000L && ms <= System.currentTimeMillis() + 86_400_000L
+
+        /** Gson leaves an absent field null whatever its Kotlin type, so nothing is assumed. */
+        @Suppress("SENSELESS_COMPARISON", "UNNECESSARY_SAFE_CALL")
+        fun isWellFormed(post: KPost?): Boolean {
+            if (post == null || !isTxId(post.id) || !isPubkey(post.userPublicKey)) return false
+            if (post.postContent == null || post.postContent.length > MAX_CONTENT_CHARACTERS) return false
+            if (!isPlausibleTimestamp(post.timestamp)) return false
+            val parent = post.parentPostId
+            if (!parent.isNullOrEmpty() && !isTxId(parent)) return false
+            post.poll?.let { poll ->
+                if ((poll.options?.size ?: 0) !in 1..32 || (poll.counts?.size ?: 0) > 64) return false
+            }
+            if ((post.quote?.referencedMessage?.length ?: 0) > MAX_CONTENT_CHARACTERS) return false
+            return true
+        }
+
+        /** The post with every count clamped to `0..MAX_COUNT`, so nothing downstream overflows. */
+        fun clamped(post: KPost): KPost = post.copy(
+            repliesCount = clampedCount(post.repliesCount),
+            quotesCount = clampedCount(post.quotesCount),
+            upVotesCount = clampedCount(post.upVotesCount),
+            downVotesCount = clampedCount(post.downVotesCount),
+            tipsCount = clampedCount(post.tipsCount),
+            mentionedPubkeys = post.mentionedPubkeys?.filter { isPubkey(it) }?.take(50),
+            poll = post.poll?.let { poll ->
+                poll.copy(
+                    counts = poll.counts?.map { it.coerceIn(0, MAX_COUNT) },
+                    total = clampedCount(poll.total),
+                    myVote = poll.myVote?.takeIf { it in 0 until (poll.options?.size ?: 0) },
+                )
+            },
+        )
+
+        /** Well-formed posts only, counts clamped, at most [MAX_ROWS_PER_PAGE]. */
+        fun sanitized(posts: List<KPost>): List<KPost> =
+            posts.take(MAX_ROWS_PER_PAGE).filter { isWellFormed(it) }.map { clamped(it) }
+
+        @Suppress("SENSELESS_COMPARISON")
+        fun isWellFormed(notification: KNotification?): Boolean {
+            if (notification == null || !isTxId(notification.id) || !isPubkey(notification.userPublicKey)) return false
+            if (!isPlausibleTimestamp(notification.timestamp)) return false
+            if ((notification.postContent?.length ?: 0) > MAX_CONTENT_CHARACTERS) return false
+            val amount = notification.tipAmountSompi
+            if (amount != null && amount !in 0..MAX_SUPPLY_SOMPI) return false
+            return true
+        }
+
+        private val CONTENT_ID_SHAPE = Regex("^[0-9a-f]{64}$")
+        private val PUBKEY_SHAPE = Regex("^0[23][0-9a-f]{64}$")
+
+        /** A post, reply, quote or poll id as the chain makes it: a 64-character lowercase txid. */
+        fun isWellFormedContentId(id: String?): Boolean = id != null && CONTENT_ID_SHAPE.matches(id)
+
+        /** A compressed KaPost pubkey: 02/03 + 64 lowercase hex. */
+        fun isWellFormedPubkey(pubkey: String?): Boolean = pubkey != null && PUBKEY_SHAPE.matches(pubkey)
+
+        /**
+         * Ids and keys from the indexer go into what this account signs. One shaped like
+         * `edit:<txid>` or `delete:<txid>` would make a reply or an unquote sign exactly an edit or
+         * a delete of one of our own posts (the prefix in [KaPostsProtocol.editSigningString]
+         * only helps if the id can't carry it), so nothing is signed over anything but the exact
+         * shapes. A malformed one can only come from a bad indexer answer.
+         */
+        internal fun requireWellFormed(ids: List<String?> = emptyList(), pubkeys: List<String?> = emptyList()) {
+            if (ids.all(::isWellFormedContentId) && pubkeys.all(::isWellFormedPubkey)) return
+            throw com.google.gson.JsonParseException("Malformed KaPost id or key")
+        }
 
         /**
          * The mentions array a post, reply, edit or poll signs: valid shapes only, in order, one
@@ -597,12 +676,20 @@ class KaPostsService @Inject constructor(
             chainPosts.posts(pubkey).orEmpty().filter { it.parentPostId != null }
         })
 
-    suspend fun fetchRepliesPage(postId: String, limit: Int = 25, before: String? = null): KPage<KPost> =
+    suspend fun fetchRepliesPage(
+        postId: String,
+        limit: Int = 25,
+        before: String? = null,
+        /** False for the feed's small "is this a thread" probe: one disk write per commented
+         *  post while scrolling, for a page nothing reads back (audit M13). */
+        keepPage: Boolean = true,
+    ): KPage<KPost> =
         withChain(before, read = {
             val requester = requesterPubkey()
             val response = get(
                 KRepliesResponse::class.java, "get-replies",
                 mapOf("post" to postId, "requesterPubkey" to requester, "limit" to "$limit", "before" to before),
+                keepPage = keepPage,
             ) { it.getReplies(postId, requester, limit, before) }
             val raw = response.replies.orEmpty()
             pageOf(raw, filterKaChat(raw), response.pagination, limit) { it.id }
@@ -619,25 +706,24 @@ class KaPostsService @Inject constructor(
      */
     suspend fun fetchPost(id: String): KPost? {
         val requester = requesterPubkey()
-        return get(KPostResponse::class.java, "get-post", mapOf("id" to id, "requesterPubkey" to requester)) {
+        val post = get(KPostResponse::class.java, "get-post", mapOf("id" to id, "requesterPubkey" to requester)) {
             it.getPost(id, requester)
-        }.post
-    }
-
-    /** One poll's current numbers, for refreshing a card without reloading the feed. */
-    suspend fun fetchPoll(postId: String): KPoll? {
-        val requester = requesterPubkey()
-        return get(KPollResponse::class.java, "get-poll", mapOf("postId" to postId, "requesterPubkey" to requester)) {
-            it.getPoll(postId, requester)
-        }.toPoll()
+        }.post ?: return null
+        // a post that can't be what the chain holds is a bad answer (iOS audit 2026-11-21 #19)
+        if (!isWellFormed(post)) throw com.google.gson.JsonParseException("Malformed KaPost from the indexer")
+        return clamped(post)
     }
 
     /** A post's whole ancestor chain, root first - one request instead of one per level. */
     suspend fun fetchThread(id: String): List<KPost> {
         val requester = requesterPubkey()
-        return get(KThreadResponse::class.java, "get-thread", mapOf("id" to id, "requesterPubkey" to requester)) {
+        val response = get(KThreadResponse::class.java, "get-thread", mapOf("id" to id, "requesterPubkey" to requester)) {
             it.getThread(id, requester)
-        }.ancestors.orEmpty()
+        }
+        // checked as iOS does (audit 2026-11-21 #19): a malformed post is a bad answer, and only
+        // well-formed ancestors, counts clamped, are kept
+        response.post?.let { if (!isWellFormed(it)) throw com.google.gson.JsonParseException("Malformed KaPost from the indexer") }
+        return sanitized(response.ancestors.orEmpty())
     }
 
     /** The requester's notification stream - actions on OUR content. */
@@ -648,7 +734,8 @@ class KaPostsService @Inject constructor(
             mapOf("requesterPubkey" to requester, "limit" to "$limit", "before" to before),
         ) { it.getNotifications(requester, limit, before) }
         val raw = response.notifications.orEmpty()
-        return pageOf(raw, raw, response.pagination, limit) { it.id }
+        val wellFormed = raw.take(MAX_ROWS_PER_PAGE).filter { isWellFormed(it) }
+        return pageOf(raw, wellFormed, response.pagination, limit) { it.id }
     }
 
     /** Per-post actor lists (KaChat indexer fork) - works for ANY post. */
@@ -658,13 +745,15 @@ class KaPostsService @Inject constructor(
         limit: Int = 50,
         before: String? = null,
     ): KPage<KEngagementEntry> {
-        val requester = requesterPubkey()
+        // nothing per-viewer in this answer: the reader isn't named (iOS audit 2026-11-21 #24)
+        val requester = ANONYMOUS_REQUESTER
         val response = get(
             KEngagementResponse::class.java, "get-post-engagement",
             mapOf("postId" to postId, "type" to type, "requesterPubkey" to requester, "limit" to "$limit", "before" to before),
         ) { it.getPostEngagement(postId, type, requester, limit, before) }
         val raw = response.engagement.orEmpty()
-        return pageOf(raw, raw, response.pagination, limit) { it.actionTxId }
+        val entries = raw.take(MAX_ROWS_PER_PAGE).filter { isPubkey(it.actorPubkey) && isTxId(it.actionTxId) }
+        return pageOf(raw, entries, response.pagination, limit) { it.actionTxId }
     }
 
     /** Who tipped a post, newest first (`get-post-tippers`, KAPOSTS_INDEXER.md 5.11). */
@@ -675,8 +764,11 @@ class KaPostsService @Inject constructor(
         ) { it.getPostTippers(postId, limit, before) }
         val raw = response.tippers.orEmpty()
         val cursor = response.pagination?.nextCursor
+        val tips = raw.take(MAX_ROWS_PER_PAGE).filter {
+            isTxId(it.id) && isPubkey(it.userPublicKey) && it.amountSompi in 0..MAX_SUPPLY_SOMPI
+        }
         return KPage(
-            items = raw,
+            items = tips,
             rawIds = raw.map { it.id },
             cursor = cursor,
             // iOS: more only when the server says so AND hands a cursor.
@@ -691,7 +783,8 @@ class KaPostsService @Inject constructor(
         limit: Int = 50,
         before: String? = null,
     ): KPage<KFollowUser> {
-        val requester = requesterPubkey()
+        // nothing per-viewer in this answer: the reader isn't named (iOS audit 2026-11-21 #24)
+        val requester = ANONYMOUS_REQUESTER
         val query = mapOf("userPubkey" to pubkey, "requesterPubkey" to requester, "limit" to "$limit", "before" to before)
         val response = if (followers) {
             get(KFollowListResponse::class.java, "get-users-followers", query) { it.getUsersFollowers(pubkey, requester, limit, before) }
@@ -699,7 +792,8 @@ class KaPostsService @Inject constructor(
             get(KFollowListResponse::class.java, "get-users-following", query) { it.getUsersFollowing(pubkey, requester, limit, before) }
         }
         val raw = response.items
-        return pageOf(raw, raw, response.pagination, limit) { it.userPublicKey }
+        val users = raw.take(MAX_ROWS_PER_PAGE).filter { isPubkey(it.userPublicKey) }
+        return pageOf(raw, users, response.pagination, limit) { it.userPublicKey }
     }
 
     /** Single-page convenience for callers that never paginate (the notification poller). */
@@ -708,16 +802,21 @@ class KaPostsService @Inject constructor(
 
     suspend fun fetchUserDetails(pubkey: String): KUserDetails {
         val requester = requesterPubkey()
-        return get(KUserDetails::class.java, "get-user-details", mapOf("user" to pubkey, "requesterPubkey" to requester)) {
+        val details = get(KUserDetails::class.java, "get-user-details", mapOf("user" to pubkey, "requesterPubkey" to requester)) {
             it.getUserDetails(pubkey, requester)
         }
+        // counts clamped (iOS audit 2026-11-21 #19)
+        return details.copy(
+            followersCount = clampedCount(details.followersCount),
+            followingCount = clampedCount(details.followingCount),
+        )
     }
 
     /**
      * KaChat-only filter: keep posts whose decoded content carries the invisible marker, and
      * drop content the indexer masked for blocked users.
      */
-    private fun filterKaChat(posts: List<KPost>): List<KPost> = posts.filter { post ->
+    private fun filterKaChat(posts: List<KPost>): List<KPost> = sanitized(posts).filter { post ->
         if (post.blockedUser == true) return@filter false
         val content = post.decodedContent ?: return@filter false
         KaPostsProtocol.isKaChatContent(content)
@@ -736,6 +835,8 @@ class KaPostsService @Inject constructor(
         type: Class<T>,
         path: String,
         query: Map<String, String?>,
+        /** False: answered as usual, but its page isn't saved ([fetchRepliesPage]'s probe). */
+        keepPage: Boolean = true,
         call: suspend (KaPostApi) -> T,
     ): T {
         val client = api()
@@ -763,7 +864,10 @@ class KaPostsService @Inject constructor(
             }
             throw apiError(e)
         } catch (e: Exception) {
-            if (KaPostsIndexerHealth.isUnreadableBody(e)) {
+            // A huge answer isn't read: an answer this build won't take, not an outage (iOS
+            // audit 2026-11-21 #19).
+            if (KaPostsIndexerHealth.isUnreadableBody(e) || e is com.kachat.app.util.ResponseTooLargeException ||
+                e.cause is com.kachat.app.util.ResponseTooLargeException) {
                 // The indexer answered, with something this build can't read: no outage.
                 health.noteUnreadableAnswer()
                 throw e
@@ -774,7 +878,7 @@ class KaPostsService @Inject constructor(
             throw e
         }
         health.noteAnswered()
-        if (pageKey != null) {
+        if (pageKey != null && keepPage) {
             KaPostsPageCache.save(appContext, pageKey) { pageGson.toJson(decoded).toByteArray(Charsets.UTF_8) }
         }
         return decoded
@@ -797,7 +901,7 @@ class KaPostsService @Inject constructor(
         val client = kaPostApiProvider.kapostApi.value ?: return false
         return try {
             kotlinx.coroutines.withTimeoutOrNull(PROBE_TIMEOUT_MS) {
-                client.getPostsWatching("02" + "0".repeat(64), 1, null)
+                client.getPostsWatching(ANONYMOUS_REQUESTER, 1, null)
             } != null
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
@@ -922,6 +1026,7 @@ class KaPostsService @Inject constructor(
         expectedOwner: String? = null,
     ): String {
         checkOwner(expectedOwner)
+        requireWellFormed(ids = listOf(postId))
         val b64 = KaPostsProtocol.b64(KaPostsProtocol.KACHAT_MARKER + text)
         val pubkey = requesterPubkey()
         val mentions = mentionsJson(listOfNotNull(parentAuthorPubkey) + mentionedPubkeys, pubkey)
@@ -937,6 +1042,7 @@ class KaPostsService @Inject constructor(
      */
     suspend fun submitEdit(text: String, postId: String, mentionedPubkeys: List<String> = emptyList(), expectedOwner: String? = null): String {
         checkOwner(expectedOwner)
+        requireWellFormed(ids = listOf(postId))
         val b64 = KaPostsProtocol.b64(KaPostsProtocol.KACHAT_MARKER + text)
         val pubkey = requesterPubkey()
         val mentions = mentionsJson(mentionedPubkeys, pubkey)
@@ -971,6 +1077,7 @@ class KaPostsService @Inject constructor(
      */
     suspend fun submitPollVote(pollId: String, optionIndex: Int, expectedOwner: String? = null): String {
         checkOwner(expectedOwner)
+        requireWellFormed(ids = listOf(pollId))
         val pubkey = requesterPubkey()
         val signature = sign(KaPostsProtocol.pollVoteSigningString(pollId, optionIndex))
         return submitPayloadTx(KaPostsProtocol.pollVotePayload(pubkey, signature, pollId, optionIndex), expectedOwner)
@@ -1056,6 +1163,7 @@ class KaPostsService @Inject constructor(
      */
     suspend fun submitDelete(postId: String, expectedOwner: String? = null): String {
         checkOwner(expectedOwner)
+        requireWellFormed(ids = listOf(postId))
         val signature = sign(KaPostsProtocol.deleteSigningString(postId))
         return submitPayloadTx(KaPostsProtocol.deletePayload(requesterPubkey(), signature, postId), expectedOwner)
     }
@@ -1070,6 +1178,7 @@ class KaPostsService @Inject constructor(
 
     private suspend fun submitVoteAction(postId: String, vote: String, authorPubkey: String, expectedOwner: String?): String {
         checkOwner(expectedOwner)
+        requireWellFormed(ids = listOf(postId), pubkeys = listOf(authorPubkey))
         val signature = sign(KaPostsProtocol.voteSigningString(postId, vote, authorPubkey))
         return submitPayloadTx(KaPostsProtocol.votePayload(requesterPubkey(), signature, postId, vote, authorPubkey), expectedOwner)
     }
@@ -1078,6 +1187,7 @@ class KaPostsService @Inject constructor(
     suspend fun submitFollow(follow: Boolean, followedPubkey: String, expectedOwner: String? = null): String {
         checkOwner(expectedOwner)
         val action = if (follow) "follow" else "unfollow"
+        requireWellFormed(pubkeys = listOf(followedPubkey))
         val signature = sign(KaPostsProtocol.followSigningString(action, followedPubkey))
         return submitPayloadTx(KaPostsProtocol.followPayload(requesterPubkey(), signature, action, followedPubkey), expectedOwner)
     }
@@ -1089,6 +1199,7 @@ class KaPostsService @Inject constructor(
      */
     suspend fun submitQuote(text: String?, contentId: String, quotedAuthorPubkey: String, expectedOwner: String? = null): String {
         checkOwner(expectedOwner)
+        requireWellFormed(ids = listOf(contentId), pubkeys = listOf(quotedAuthorPubkey))
         val b64 = KaPostsProtocol.b64(KaPostsProtocol.KACHAT_MARKER + (text ?: ""))
         val signature = sign(KaPostsProtocol.quoteSigningString(contentId, b64, quotedAuthorPubkey))
         return submitPayloadTx(KaPostsProtocol.quotePayload(requesterPubkey(), signature, contentId, b64, quotedAuthorPubkey), expectedOwner)
@@ -1097,6 +1208,7 @@ class KaPostsService @Inject constructor(
     /** Removal counter-action: withdraws our quote/repost of [contentId]. */
     suspend fun submitUnquote(contentId: String, expectedOwner: String? = null): String {
         checkOwner(expectedOwner)
+        requireWellFormed(ids = listOf(contentId))
         val signature = sign(KaPostsProtocol.unquoteSigningString(contentId))
         return submitPayloadTx(KaPostsProtocol.unquotePayload(requesterPubkey(), signature, contentId), expectedOwner)
     }
@@ -1107,6 +1219,7 @@ class KaPostsService @Inject constructor(
      * transaction itself is a chat payment to the author (ChatViewModel.sendPayment).
      */
     fun tipPayload(postId: String, authorPubkey: String, sealedHex: String): ByteArray {
+        requireWellFormed(ids = listOf(postId), pubkeys = listOf(authorPubkey))
         val signature = sign(KaPostsProtocol.tipSigningString(postId, authorPubkey, sealedHex))
         return KaPostsProtocol.tipPayload(requesterPubkey(), signature, postId, authorPubkey, sealedHex)
             .toByteArray(Charsets.UTF_8)

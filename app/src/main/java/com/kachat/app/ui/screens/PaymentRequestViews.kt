@@ -891,17 +891,9 @@ private fun RequestedByHeader(creator: String) {
         verifiedName = null
         val name = shownName ?: return@LaunchedEffect
         val registry = com.kachat.app.services.kachatnames.KachatNamesRegistry.shared ?: return@LaunchedEffect
-        val owner = com.kachat.app.services.kachatnames.KachatNamesRegistry.keyOf(creator) ?: return@LaunchedEffect
-        val info = try {
-            (registry.lookup(name) as? com.kachat.app.services.kachatnames.Lookup.Registered)?.info
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            null
-        } ?: return@LaunchedEffect
-        if (info.owner.contentEquals(owner) && info.status(registry.graceMs) != com.kachat.app.services.kachatnames.Status.LAPSED) {
-            verifiedName = name
-        }
+        // the name resolves to this address, isn't lapsed, and a node holds its record: the
+        // indexer's word alone never earns the check (security audit M5)
+        if (registry.confirmedLabel(creator, name)) verifiedName = name
     }
     val isVerified = shownName != null && verifiedName == shownName
     val tint = if (isVerified) colors.success else colors.textSecondary

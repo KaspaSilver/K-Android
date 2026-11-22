@@ -84,24 +84,76 @@ interface BroadcastDao {
     @Query("SELECT channelName FROM broadcast_channels WHERE walletAddress = :walletAddress AND notifyEnabled = 1")
     fun getNotifyEnabledChannelNames(walletAddress: String): Flow<List<String>>
 
-    @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName ORDER BY blockTimestamp ASC")
-    fun getMessagesForChannel(channelName: String): Flow<List<BroadcastMessageEntity>>
+    // Every room read below takes [network], the running network's sender pattern ("kaspa:%" or
+    // "kaspatest:%", BroadcastRepository.networkSenderPattern): the table is shared by both
+    // networks (iOS keeps one store per wallet address, so per network), and a room shows only
+    // the posts of the network the app runs on (audit M2).
 
-    /** The newest rows in a room, newest first - enough for the Public Chats list to show the last
-     *  message and count what is unread, without loading a curated room's thirty days of history
-     *  every time anything changes. Uses the (channelName, blockTimestamp) index. */
-    @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName ORDER BY blockTimestamp DESC LIMIT :limit")
-    fun getLatestMessagesForChannel(channelName: String, limit: Int): Flow<List<BroadcastMessageEntity>>
+    @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network ORDER BY blockTimestamp ASC")
+    fun getMessagesForChannel(channelName: String, network: String): Flow<List<BroadcastMessageEntity>>
+
+    /** The newest rows in a room, newest first: the room screen's window. Uses the
+     *  (channelName, blockTimestamp) index. */
+    @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network ORDER BY blockTimestamp DESC LIMIT :limit")
+    fun getLatestMessagesForChannel(channelName: String, network: String, limit: Int): Flow<List<BroadcastMessageEntity>>
+
+    /**
+     * The Chats list's room summary (BroadcastRepository.roomSummary), in four small reads instead
+     * of the room's newest 200 rows parsed on every write. A row whose content has none of the
+     * markers "reaction", "edit" or "voicePart" is a plain message, settled in SQL; the few that
+     * carry a marker are read and parsed by the caller. Each read skips the senders hidden here,
+     * another local account's sends that never landed, and the other network's rows.
+     */
+    @Query(
+        "SELECT * FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network " +
+            "AND (deliveryStatus = 'sent' OR senderAddress = :myAddress) AND senderAddress NOT IN (:hidden) " +
+            "AND content NOT LIKE '%\"reaction\"%' AND content NOT LIKE '%\"edit\"%' " +
+            "ORDER BY blockTimestamp DESC LIMIT 1"
+    )
+    fun summaryNewestPlain(channelName: String, network: String, myAddress: String, hidden: List<String>): Flow<BroadcastMessageEntity?>
+
+    /** The rows that may be reactions or edits, newer than [afterMillis], newest first: whichever
+     *  of them parses as neither is a message newer than [summaryNewestPlain]'s. */
+    @Query(
+        "SELECT * FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network " +
+            "AND (deliveryStatus = 'sent' OR senderAddress = :myAddress) AND senderAddress NOT IN (:hidden) " +
+            "AND (content LIKE '%\"reaction\"%' OR content LIKE '%\"edit\"%') AND blockTimestamp > :afterMillis " +
+            "ORDER BY blockTimestamp DESC LIMIT :limit"
+    )
+    fun summaryMarkedAfter(channelName: String, network: String, myAddress: String, hidden: List<String>, afterMillis: Long, limit: Int): Flow<List<BroadcastMessageEntity>>
+
+    /** Other people's plain messages newer than the read marker: the unread count, in SQL. */
+    @Query(
+        "SELECT COUNT(*) FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network " +
+            "AND deliveryStatus = 'sent' AND senderAddress != :myAddress AND senderAddress NOT IN (:hidden) " +
+            "AND blockTimestamp > :afterMillis " +
+            "AND content NOT LIKE '%\"reaction\"%' AND content NOT LIKE '%\"edit\"%' AND content NOT LIKE '%\"voicePart\"%'"
+    )
+    fun summaryUnreadPlainCount(channelName: String, network: String, myAddress: String, hidden: List<String>, afterMillis: Long): Flow<Int>
+
+    /** Other people's marked rows newer than the read marker, for the caller to count: a reaction
+     *  or edit not at all, a long voice note's parts once. A voice part is cut to its head, which
+     *  is all its tag needs - not its ~20 KB of audio. */
+    @Query(
+        "SELECT id, channelName, senderAddress, blockTimestamp, deliveryStatus, " +
+            "CASE WHEN content LIKE '%\"voicePart\"%' AND content NOT LIKE '%\"reaction\"%' AND content NOT LIKE '%\"edit\"%' " +
+            "THEN substr(content, 1, 2048) ELSE content END AS content " +
+            "FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network " +
+            "AND deliveryStatus = 'sent' AND senderAddress != :myAddress AND senderAddress NOT IN (:hidden) " +
+            "AND blockTimestamp > :afterMillis " +
+            "AND (content LIKE '%\"reaction\"%' OR content LIKE '%\"edit\"%' OR content LIKE '%\"voicePart\"%')"
+    )
+    fun summaryUnreadMarked(channelName: String, network: String, myAddress: String, hidden: List<String>, afterMillis: Long): Flow<List<BroadcastMessageEntity>>
 
     /** Only a room's rows that can be reactions: the JSON type marker, filtered in SQL so the
      *  room's other rows are never read or parsed (iOS keeps reactions apart and loads them on
      *  change, PublicChatService `loadReactions`). The caller still parses each row. */
-    @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName AND content LIKE '%\"reaction\"%' ORDER BY blockTimestamp ASC")
-    fun getReactionRowsForChannel(channelName: String): Flow<List<BroadcastMessageEntity>>
+    @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network AND content LIKE '%\"reaction\"%' ORDER BY blockTimestamp ASC")
+    fun getReactionRowsForChannel(channelName: String, network: String): Flow<List<BroadcastMessageEntity>>
 
     /** Only a room's rows that can be edits - see [getReactionRowsForChannel] (iOS `loadEdits`). */
-    @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName AND content LIKE '%\"edit\"%' ORDER BY blockTimestamp ASC")
-    fun getEditRowsForChannel(channelName: String): Flow<List<BroadcastMessageEntity>>
+    @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network AND content LIKE '%\"edit\"%' ORDER BY blockTimestamp ASC")
+    fun getEditRowsForChannel(channelName: String, network: String): Flow<List<BroadcastMessageEntity>>
 
     /** The rows with these ids - the messages a room's edits name. Keep [ids] under SQLite's
      *  999-variable limit. */
@@ -109,8 +161,8 @@ interface BroadcastDao {
     suspend fun getMessagesByIds(ids: List<String>): List<BroadcastMessageEntity>
 
     /** The newest chain time stored for a room, for its read marker (iOS `markChannelRead`). */
-    @Query("SELECT MAX(blockTimestamp) FROM broadcast_messages WHERE channelName = :channelName")
-    suspend fun newestBlockTimestamp(channelName: String): Long?
+    @Query("SELECT MAX(blockTimestamp) FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network")
+    suspend fun newestBlockTimestamp(channelName: String, network: String): Long?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: BroadcastMessageEntity)
@@ -142,11 +194,6 @@ interface BroadcastDao {
     @Query("UPDATE broadcast_messages SET deliveryStatus = 'pending' WHERE id = :id AND deliveryStatus = 'failed'")
     suspend fun claimFailedForRetry(id: String): Int
 
-    /** A room's rows still marked pending - for settling the ones an earlier run left behind
-     *  (BroadcastRepository.settlePendingSendsFromBeforeThisRun, iOS e5a9b11). */
-    @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName AND deliveryStatus = 'pending'")
-    suspend fun getPendingMessages(channelName: String): List<BroadcastMessageEntity>
-
     /** A room's pending rows, and its unconfirmed rows whose id never became a transaction's -
      *  what the settle looks at (iOS 33095ac `settlePendingMessages`). */
     @Query("SELECT * FROM broadcast_messages WHERE channelName = :channelName AND (deliveryStatus = 'pending' OR (deliveryStatus = 'unconfirmed' AND substr(id, 1, 8) = 'pending_'))")
@@ -163,7 +210,9 @@ interface BroadcastDao {
     @Query("SELECT id FROM broadcast_messages WHERE channelName = :channelName AND senderAddress = :senderAddress AND content = :content AND deliveryStatus = 'sent' AND blockTimestamp >= :sinceMillis ORDER BY blockTimestamp ASC")
     suspend fun deliveredCopyIds(channelName: String, senderAddress: String, content: String, sinceMillis: Long): List<String>
 
-    @Query("DELETE FROM broadcast_messages WHERE channelName = :channelName AND blockTimestamp < :cutoffMillis")
+    /** The room's rolling retention. Never a send of ours still queued or failed: it stays until
+     *  it is sent or deleted, or its Retry would find nothing and drop it (audit L4). */
+    @Query("DELETE FROM broadcast_messages WHERE channelName = :channelName AND blockTimestamp < :cutoffMillis AND deliveryStatus NOT IN ('pending', 'failed')")
     suspend fun deleteOlderThan(channelName: String, cutoffMillis: Long)
 
     /** Wipes every cached message for a channel — used when leaving, since the user is explicitly warned that leaving deletes them (unlike the normal per-channel rolling retention, which is passive). */
@@ -177,12 +226,12 @@ interface BroadcastDao {
     @Query("DELETE FROM broadcast_hidden_senders WHERE senderAddress = :senderAddress AND walletAddress = :walletAddress AND (channelName = :channelName OR channelName = '')")
     suspend fun unhideSender(senderAddress: String, walletAddress: String, channelName: String)
 
-    /** Reactive so a fresh hide/unhide immediately re-filters any already-open channel screen and the scanning service's insert-time check (see BroadcastScanningService). */
     /** Every cached room message: they aren't per account, so only once no account is left
      *  (iOS da59726). */
     @Query("DELETE FROM broadcast_messages")
     suspend fun deleteAllMessages()
 
+    /** Reactive so a fresh hide/unhide immediately re-filters any already-open channel screen and the scanning service's insert-time check (see BroadcastScanningService). */
     @Query("SELECT * FROM broadcast_hidden_senders WHERE walletAddress = :walletAddress")
     fun getHiddenSenders(walletAddress: String): Flow<List<HiddenBroadcastSenderEntity>>
 }

@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">Belum ada nama dalam masa tenggang saat ini.</string>
     <string name="kn_no_open_offers">Tidak ada penawaran terbuka.</string>
     <string name="kn_not_enough">KAS di alamat obrolan Anda tidak cukup untuk nama ini.</string>
+    <string name="kn_err_claim_in_progress">Anda sudah mengklaim %1$s.</string>
+    <string name="kn_err_not_enough_kas">KAS tidak cukup untuk ini. Tambahkan dan coba lagi.</string>
     <string name="kn_not_for_sale">Tidak dijual</string>
     <string name="kn_not_valid_name">Bukan nama yang valid.</string>
     <string name="kn_nothing_yet">Belum ada.</string>

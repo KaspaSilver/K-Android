@@ -8,7 +8,6 @@
     <string name="withdrawal_failed">Withdrawal failed</string>
     <string name="n_12_words">12 words</string>
     <string name="n_24_words">24 words</string>
-    <string name="a_kns_inscription_s_commit_transaction">A KNS inscription\'s commit transaction went through, but the reveal never finished. Retry now to complete it; the funds are safely tied up until you do.</string>
     <string name="accept">Accept</string>
     <string name="account_name">Account Name</string>
     <string name="active_nodes">Active Nodes</string>
@@ -33,7 +32,7 @@
     <!-- App-wide settings reachable from the accounts screen's gear (no active account) -->
     <string name="app_settings">App Settings</string>
 
-    <!-- Simple Mode (Settings > Security > Simple Mode + the Welcome Guide's "How do you want KaChat?" step) -->
+    <!-- Delivery status -->
     <string name="delivery_sent">Sent</string>
     <string name="delivery_sending">Sending</string>
     <string name="delivery_failed">Failed</string>
@@ -112,7 +111,6 @@
     <!-- Someone ELSE'"'"'s domains, in Chat Info and the contact domains screen. "Your" is wrong there. -->
     <string name="contact_kns_domains">KNS Domains</string>
     <string name="kachat">KaChat</string>
-    <string name="kachat_logo">K Logo</string>
     <string name="kachat_needs_to_connect_to_a">K needs to connect to a node. How would you like to connect?</string>
     <string name="kaspa_explorer">Kaspa Explorer</string>
     <string name="label_optional">Label (optional)</string>
@@ -151,7 +149,6 @@
     <string name="photo">Photo</string>
     <string name="photo_message">Photo message</string>
     <string name="photo_message_full_screen">Photo message, full screen</string>
-    <string name="photos">Photos</string>
     <string name="pool_health">Pool Health</string>
     <string name="promote_pawn_to">Promote pawn to:</string>
     <string name="qr_code">QR Code</string>
@@ -168,7 +165,6 @@
     <string name="chess_cancel_game">Cancel game</string>
     <string name="resign_this_game">Resign this game?</string>
     <string name="retry">Retry</string>
-    <string name="retry_inscription_reveal">Retry Inscription Reveal</string>
     <string name="save">Save</string>
     <string name="saved_accounts">Saved Accounts</string>
     <string name="scan_qr_code">Scan QR Code</string>
@@ -233,7 +229,6 @@
     <string name="discover_addresses">Discover Addresses</string>
     <string name="email">Email</string>
     <string name="explorer">Explorer</string>
-    <string name="generate_new_spending_address">Generate New Spending Address</string>
     <string name="github">GitHub</string>
     <string name="hide_user">Hide User</string>
     <string name="ip_address_book">IP Address Book</string>
@@ -244,8 +239,6 @@
     <string name="kaspa_node">Kaspa Node</string>
     <string name="default_recommended">Default (Recommended)</string>
     <string name="automatic_scan">Automatic Scan</string>
-    <string name="kaspa_node_quick_access_footer">Automatic Scan discovers and connects to the best available nodes. Choosing a specific node connects only to it, without falling back to others. Manage saved addresses in Connection Settings &gt; IP Address Book.</string>
-    <string name="node_connections_blocked">Node connections appear blocked on this network. Receiving messages still works over the indexer and plain payments still go through the REST API, but sending chat messages needs a node connection.</string>
     <string name="last_sync">Last Sync</string>
     <string name="latency">Latency</string>
     <string name="open_chat">Open Chat</string>
@@ -378,7 +371,6 @@
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
     <string name="km_no_names">No .kachat names yet</string>
     <!-- Your Domains > .kachat footer (iOS d63b29d): the market lives in KaChat Wallet. English for now, as on iOS. -->
-    <string name="kn_manage_in_wallet">Buy, renew, sell and transfer .kachat names in KaChat Wallet.</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">The full first-run tour: wallet, chats, payments and more.</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -551,7 +543,6 @@
     <string name="settings_complete_your_backup">Complete Your Backup</string>
     <string name="settings_account_name_placeholder">Account name</string>
     <string name="settings_privacy_policy">Privacy Policy</string>
-    <string name="qr_receive_address_subtitle">This is a fresh address, never used before.</string>
     <string name="qr_chatting_address_subtitle">Use for chatting and acquiring .kachat domains.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="fee_tier_normal">Normal</string>
@@ -563,7 +554,6 @@
     <string name="scan_qr">Scan QR</string>
     <!-- Send Kaspa: slide to send (iOS afaad34) -->
     <!-- Send Kaspa: send from another spending address (iOS e994235) -->
-    <string name="send_from">Send From</string>
     <!-- Chats circles row (iOS a062577) -->
     <string name="chats_pinned_to_front">Pinned to the front</string>
     <string name="chats_unpinned">Unpinned</string>
@@ -836,7 +826,6 @@
     <string name="pr_chatting_footer">The payment lands in your chat with whoever pays, with the memo.</string>
     <string name="pr_memo_placeholder">What it\'s for (optional)</string>
     <string name="pr_copy">Copy Payment Request</string>
-    <string name="pr_anyone_note">Anyone who opens it in K gets Send Kaspa with this filled in, and sees it was made by your chatting address (signed with its key).</string>
     <string name="pr_requested">Requested</string>
     <string name="pr_paid_as_chat_payment">Paid as a chat payment: it shows in your chat with them.</string>
     <string name="pr_paid_to_their_spending">Paid to their spending address.</string>
@@ -925,17 +914,11 @@
     <string name="appearance_light">Light</string>
     <string name="appearance_dark">Dark</string>
     <string name="storage_local_used">Local storage used: %1$s</string>
-    <string name="storage_on_device_footer">How long messages are kept on this device, and how much space they use. Applies before any cloud storage.</string>
-    <string name="require_photo_approval_new_contacts">Require approval for photos from new contacts</string>
     <string name="quick_reactions">Quick Reactions</string>
-    <string name="quick_reactions_footer">Tap an emoji to replace it with a different one.</string>
     <string name="reset_to_default">Reset to Default</string>
     <string name="notifications_wallet">Wallet</string>
     <string name="address_activity">Address Activity</string>
-    <string name="address_activity_footer">Notify when any of your spending or cold storage addresses receives Kaspa from an external source. Transfers between your own addresses are ignored.</string>
-    <string name="explorer_footer">Used to build \"view transaction\" links throughout the app.</string>
     <string name="verbose_api_logging">Verbose API Logging</string>
-    <string name="verbose_api_logging_footer">Logs every indexer request with full connection and timing detail. Leave off for normal use: failed and slow requests are always logged, and heavy logging can cause Android to drop the app\'s log messages.</string>
     <string name="resync_all_chats">Yes, All Chats</string>
     <string name="resync_all_chats_subtitle">Removes every incoming message locally, then re-syncs them from the blockchain. Sent messages and account info are kept.</string>
     <string name="resync_select_chats">Select Chats...</string>
@@ -950,12 +933,10 @@
     <string name="nc_username">Username</string>
     <string name="nc_app_password">App password</string>
     <string name="nc_use_https">Use https. Unencrypted connections are not supported.</string>
-    <string name="nc_app_password_footer">Create an app password in Nextcloud under Settings → Security → Devices &amp; sessions — don\'t use your account password. K stores it in the device\'s encrypted storage.</string>
     <string name="nc_connect">Connect</string>
     <string name="nc_connected_account">Connected Account</string>
     <string name="nc_start_folder">Start Folder</string>
     <string name="nc_automatic_sync">Automatic Sync</string>
-    <string name="nc_auto_sync_one_service">Automatic sync works with one cloud service at a time.</string>
     <string name="nc_last_synced">Last synced</string>
     <string name="nc_backup_folder">Backup Folder</string>
     <string name="nc_default_folder">%1$s (default)</string>
@@ -966,7 +947,6 @@
     <string name="nc_contact_backup">Contact Backup</string>
     <string name="nc_contact_backup_footer">Only your contacts are backed up here, encrypted. Your messages and group chats come back with your seed phrase.</string>
     <string name="nc_disconnect">Disconnect</string>
-    <string name="nc_disconnect_footer">Disconnecting removes the stored app password from this device. Nothing changes on your Nextcloud server.</string>
     <string name="nc_disconnect_title">Disconnect Nextcloud</string>
     <string name="nc_disconnect_message">The app password is removed from this device\'s encrypted storage. You can reconnect any time.</string>
     <!-- Group Info (iOS GroupChatInfoView; these iOS strings have no translations) -->
@@ -1131,7 +1111,6 @@
     <string name="the_passphrase_shows_too_if_this_account">The passphrase shows too, if this account has one.</string>
     <string name="transaction_id_tap_to_view_in">Transaction ID · tap to view in %1$s</string>
     <string name="transaction_id">Transaction ID</string>
-    <string name="not_now_2">Not now</string>
     <string name="deselect_all">Deselect All</string>
     <string name="unsilence">Unsilence</string>
     <string name="silence">Silence</string>
@@ -1263,7 +1242,6 @@
     <string name="restore_from_nfc_card">Restore from NFC Card</string>
     <string name="say_anything_to_the_bot_to_get">Say anything to the bot to get started.</string>
     <string name="sent_a_photo">%1$s sent a photo</string>
-    <string name="my_kachat_profile">My KaChat profile</string>
     <string name="signs_out_of_this_account_wallet_and">Signs out of this account. Wallet and message data stay on this device.</string>
     <string name="could_not_work_out_the_network_fee">Could not work out the network fee.</string>
     <string name="could_not_work_out_the_maximum">Could not work out the maximum.</string>
@@ -1353,7 +1331,6 @@
     <string name="new_messages_connection_requests_and_payments">New messages, connection requests, and payments</string>
     <string name="group_chat">Group chat</string>
     <string name="new_group_message">New group message</string>
-    <string name="group_update">Group update</string>
     <string name="could_not_derive_the_quantum_addresss_key">Could not derive the quantum address\'s key</string>
     <string name="no_spendable_utxos">No spendable UTXOs</string>
     <string name="balance_too_low_to_cover_fee">Balance too low to cover fee</string>
@@ -1408,7 +1385,6 @@
     <string name="nfc_card">NFC Card</string>
     <string name="the_active_account_changed_switch_back_to">The active account changed. Switch back to that account and try again.</string>
     <string name="nextcloud_rejected_the_username_or_app_password">Nextcloud rejected the username or app password.</string>
-    <string name="nextcloud_returned_http">Nextcloud returned HTTP %1$d.</string>
     <string name="nextcloud_sent_an_empty_file">Nextcloud sent an empty file.</string>
     <string name="that_file_is_too_large_to_import">That file is too large to import.</string>
     <string name="selected_utxos_are_no_longer_available_please">Selected UTXOs are no longer available - please reselect</string>
@@ -1526,7 +1502,6 @@
     <string name="chess_tc_1_1_subtitle">One minute each, plus one second a move.</string>
     <string name="chess_tc_casual">Casual</string>
     <string name="chess_tc_no_timer">No timer.</string>
-    <string name="reveals_the_next_unused_address_in_this_wallet">Reveals the next unused address in this wallet.</string>
     <string name="check_off_every_address_you_want_on_the_list">Check off every address you want on the list, in one sitting.</string>
     <string name="close_and_keep_scanning">Close and Keep Scanning</string>
     <string name="recents">Recents</string>
@@ -1542,9 +1517,7 @@
     <string name="cache_frees_your_messages_are_not_touched">Frees %1$s. Your messages, contacts and keys are not touched.</string>
     <string name="kachat_link_menu_title">KaChat Link</string>
     <string name="open_in_kachat">Open in K</string>
-    <string name="open_in_kapost">Open in KaPost</string>
     <string name="opens_it_right_here_in_the_app">Opens it right here in the app.</string>
-    <string name="opens_the_post_in_the_kapost_app">Opens the post in the KaPost app.</string>
     <string name="nextcloud_upload_failed_sending_on_chain">Nextcloud upload failed — sending on-chain instead</string>
     <string name="standard_kaspa_wallet">Standard Kaspa Wallet</string>
     <string name="has_history">Has history</string>
@@ -1627,7 +1600,6 @@
     <string name="chess_notif_accepted">♟️ Accepted your chess game</string>
     <string name="chess_notif_declined">♟️ Declined your chess game</string>
     <string name="chess_notif_move">♟️ Played %1$s → %2$s</string>
-    <string name="chess_notif_move_generic">♟️ Played a chess move</string>
     <string name="chess_notif_lost_on_time">♟️ Lost on time</string>
     <string name="chess_notif_resigned">♟️ Resigned the chess game</string>
     <string name="fee_label">Fee</string>
@@ -1653,9 +1625,7 @@
     <string name="message_needs_too_many_coins">This message needs too many coins for one transaction. Use Compound UTXOs on your chatting address, then try again.</string>
     <string name="use_their_domain_name">Use Their Domain Name</string>
     <string name="show_request_as_qr">Show Request As QR</string>
-    <string name="pr_qr_scan_to_pay_in_kapay">Scan it with a phone\'s camera to pay in KaPay, with everything filled in.</string>
     <string name="pr_qr_scan_to_pay_in_kachat">Scan it with a phone\'s camera to pay in K, with everything filled in.</string>
-    <string name="get_a_kachat_domain">Get a .kachat domain</string>
     <string name="set_as_name">Set as Name</string>
     <string name="their_name">Their Name</string>
     <string name="get_a_kachat_name">Get a .kachat name</string>
@@ -1722,7 +1692,6 @@
     <string name="bridged_usdt">Bridged USDT</string>
     <string name="composer_send_dollars_subtitle">Send dollars (kUSDT) to this contact.</string>
     <string name="generate_new_address">Generate New Address</string>
-    <string name="get_kapay">Get KaPay</string>
     <string name="send_dollars">Send Dollars</string>
     <string name="tap_to_manage">Tap to Manage</string>
     <string name="token_about_kusdt">kUSDT is USDT from Ethereum and BNB Chain, held 1:1 in Trestly\'s vault and issued as a token on Kaspa. It isn\'t issued by Tether, and only Trestly can turn it back into USDT.</string>
@@ -1754,7 +1723,6 @@
     <string name="token_couldnt_check">Couldn\'t check %1$s just now: %2$s Pull down to try again.</string>
     <string name="token_discover_addresses">Discover kUSDT Addresses</string>
     <string name="token_discover_addresses_subtitle">Finds your addresses holding kUSDT.</string>
-    <string name="token_empty_state_message">Receive it on a fresh address of yours. Buying and swapping kUSDT happen in KaPay.</string>
     <string name="token_every_coin_goes_to_recipient">Every %1$s coin holds %2$s. It goes to the recipient with the %3$s, so the KAS isn\'t lost.</string>
     <string name="token_every_coin_holds_kas">Every kUSDT coin holds 1.5 KAS. It goes along with the kUSDT when you send it.</string>
     <string name="token_fee">Fee %1$s</string>

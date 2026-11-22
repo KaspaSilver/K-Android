@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">Hiện không có tên nào trong thời gian ân hạn.</string>
     <string name="kn_no_open_offers">Không có đề nghị đang mở.</string>
     <string name="kn_not_enough">Địa chỉ trò chuyện của bạn không đủ KAS cho tên này.</string>
+    <string name="kn_err_claim_in_progress">Bạn đang nhận %1$s rồi.</string>
+    <string name="kn_err_not_enough_kas">Không đủ KAS cho việc này. Hãy thêm và thử lại.</string>
     <string name="kn_not_for_sale">Không bán</string>
     <string name="kn_not_valid_name">Tên không hợp lệ.</string>
     <string name="kn_nothing_yet">Chưa có gì.</string>

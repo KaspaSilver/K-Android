@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">已在网络上取消点踩</string>
     <string name="feed54_failure_format">%1$s：%2$s</string>
     <string name="feed54_follow_posted">关注已发布到网络</string>
-    <string name="feed54_help_welcome_guide">欢迎指南</string>
-    <string name="feed54_help_welcome_guide_subtitle">初次导览：你的动态、房间、打赏和你的地址。</string>
     <string name="feed54_like_posted">点赞已发布到网络</string>
     <string name="feed54_like_removed">已在网络上取消点赞</string>
     <string name="feed54_post_not_found">未找到帖子 - 它可能早于当前动态</string>

@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">Dislike im Netzwerk entfernt</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">Follow im Netzwerk gepostet</string>
-    <string name="feed54_help_welcome_guide">Willkommensleitfaden</string>
-    <string name="feed54_help_welcome_guide_subtitle">Die Einführung: dein Feed, Räume, Trinkgelder und deine Adresse.</string>
     <string name="feed54_like_posted">Like im Netzwerk gepostet</string>
     <string name="feed54_like_removed">Like im Netzwerk entfernt</string>
     <string name="feed54_post_not_found">Beitrag nicht gefunden - er ist vielleicht älter als der aktuelle Feed</string>

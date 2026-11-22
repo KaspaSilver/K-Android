@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">네트워크에서 싫어요를 취소했습니다</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">팔로우를 네트워크에 게시했습니다</string>
-    <string name="feed54_help_welcome_guide">환영 가이드</string>
-    <string name="feed54_help_welcome_guide_subtitle">처음 둘러보기: 피드, 방, 팁, 그리고 주소.</string>
     <string name="feed54_like_posted">좋아요를 네트워크에 게시했습니다</string>
     <string name="feed54_like_removed">네트워크에서 좋아요를 취소했습니다</string>
     <string name="feed54_post_not_found">게시물을 찾을 수 없습니다 - 현재 피드보다 오래된 게시물일 수 있습니다</string>

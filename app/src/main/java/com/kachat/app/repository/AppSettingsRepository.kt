@@ -80,7 +80,6 @@ class AppSettingsRepository @Inject constructor(
         val KEY_CONNECTION_KEYS_NETWORK = stringPreferencesKey("connection_keys_network")
 
         // Defaults matching the iOS app
-        const val DEFAULT_NETWORK        = "mainnet"
         const val DEFAULT_INDEXER_URL    = "https://indexer.kachat.app"
         // Superseded defaults, migrated away on read (see `indexerUrl` below): kasia.fyi is offline
         // and never ran the group-chat REST endpoints; kasia.wtf was the previous community default,
@@ -189,8 +188,6 @@ class AppSettingsRepository @Inject constructor(
         fun replacingRetiredDefaultNode(address: String): String =
             if (address.trim().lowercase() in LEGACY_DEFAULT_TRUSTED_NODE_ADDRESSES) DEFAULT_TRUSTED_NODE_ADDRESS else address
 
-        // Wallet (just a flag — actual keys live in Keystore)
-        val KEY_HAS_WALLET       = booleanPreferencesKey("has_wallet")
         val KEY_ACTIVE_ADDRESS   = stringPreferencesKey("active_address")
         
         // How hard chat photos get compressed before sending — mirrors iOS's
@@ -456,10 +453,6 @@ class AppSettingsRepository @Inject constructor(
         prefs[knownGoodNodesKey]?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
     }
 
-    val hasWallet: Flow<Boolean> = dataStore.data.map {
-        it[KEY_HAS_WALLET] ?: false
-    }
-
     val activeAddress: Flow<String?> = dataStore.data.map {
         it[KEY_ACTIVE_ADDRESS]
     }
@@ -489,7 +482,6 @@ class AppSettingsRepository @Inject constructor(
      *  [biometricSeedPhraseEnabled] since revealing one address's own derived key is lower-stakes
      *  than the wallet's whole seed phrase, but still sensitive enough to gate independently. */
     val biometricSpendingKeyEnabled: Flow<Boolean> = dataStore.data.map { it[KEY_BIOMETRIC_SPENDING_KEY_ENABLED] ?: true }
-    /** Settings > Security > Child Mode — see [KEY_CHILD_MODE_ENABLED]. */
     /** True while an auto-presented onboarding wizard run hasn't reached Finish — see [KEY_ONBOARDING_WIZARD_PENDING]. */
     val onboardingWizardPending: Flow<Boolean> = dataStore.data.map { it[KEY_ONBOARDING_WIZARD_PENDING] ?: false }
     /** Opt-in per-request HTTP logging, default OFF — see [KEY_VERBOSE_API_LOGGING]. */
@@ -665,8 +657,6 @@ class AppSettingsRepository @Inject constructor(
     // -------------------------------------------------------------------------
 
     suspend fun setIndexerUrl(value: String) = dataStore.edit { it[KEY_INDEXER_URL] = value }
-    suspend fun setKaspaRestUrl(value: String) = dataStore.edit { it[KEY_KASPA_REST_URL] = value }
-    suspend fun setPushIndexerUrl(value: String) = dataStore.edit { it[KEY_PUSH_INDEXER_URL] = value }
     /** Connection Settings' Trestly API URL; blank goes back to the network's default. */
     suspend fun setTrestlyApiUrl(value: String) = dataStore.edit { it[KEY_TRESTLY_API_URL] = value.trim() }
 
@@ -759,7 +749,6 @@ class AppSettingsRepository @Inject constructor(
         } ?: emptyList()
         prefs[KEY_SAVED_NODE_ADDRESSES] = Gson().toJson(current.filterNot { it.id == id })
     }
-    suspend fun setHasWallet(value: Boolean) = dataStore.edit { it[KEY_HAS_WALLET] = value }
     suspend fun setActiveAddress(value: String) = dataStore.edit { it[KEY_ACTIVE_ADDRESS] = value }
     suspend fun setKaspaExplorer(value: com.kachat.app.models.KaspaExplorer) = dataStore.edit { it[KEY_KASPA_EXPLORER] = value.name }
     suspend fun setVerboseApiLogging(value: Boolean) = dataStore.edit { it[KEY_VERBOSE_API_LOGGING] = value }
@@ -768,9 +757,6 @@ class AppSettingsRepository @Inject constructor(
     suspend fun setBiometricSeedPhraseEnabled(value: Boolean) = dataStore.edit { it[KEY_BIOMETRIC_SEED_PHRASE_ENABLED] = value }
     suspend fun setBiometricAccountLoginEnabled(value: Boolean) = dataStore.edit { it[KEY_BIOMETRIC_ACCOUNT_LOGIN_ENABLED] = value }
     suspend fun setBiometricSpendingKeyEnabled(value: Boolean) = dataStore.edit { it[KEY_BIOMETRIC_SPENDING_KEY_ENABLED] = value }
-    /** Called right before the first-run guide auto-presents. Never downgrades an already-made
-     *  choice (a second account created later re-shows the guide, but the device-level Adult/Child
-     *  answer stands and Skip stays available). */
     /** The onboarding wizard auto-presented — an unfinished run must re-present at next launch. */
     suspend fun markOnboardingWizardPending() = dataStore.edit { it[KEY_ONBOARDING_WIZARD_PENDING] = true }
     /** Only the wizard's Finish button clears this. */
@@ -871,6 +857,33 @@ class AppSettingsRepository @Inject constructor(
         dataStore.edit { it[kapostsMutedKey(walletAddress)] = value }
     suspend fun setKapostsBlocked(walletAddress: String, value: Set<String>) =
         dataStore.edit { it[kapostsBlockedKey(walletAddress)] = value }
+
+    /** Read and write in one DataStore edit, so two quick changes (or a change during the chain
+     *  follow import) can't overwrite each other. Returns the set written. */
+    suspend fun updateKapostsFollowing(walletAddress: String, transform: (Set<String>) -> Set<String>): Set<String> {
+        var written: Set<String> = emptySet()
+        dataStore.edit { prefs ->
+            written = transform(prefs[kapostsFollowingKey(walletAddress)] ?: emptySet())
+            prefs[kapostsFollowingKey(walletAddress)] = written
+        }
+        return written
+    }
+
+    /** Mute and block lists changed in one DataStore edit ([updateKapostsFollowing]). */
+    suspend fun updateKapostsModeration(
+        walletAddress: String,
+        transform: (muted: Set<String>, blocked: Set<String>) -> Pair<Set<String>, Set<String>>,
+    ) {
+        dataStore.edit { prefs ->
+            val oldMuted = prefs[kapostsMutedKey(walletAddress)] ?: emptySet()
+            val oldBlocked = prefs[kapostsBlockedKey(walletAddress)] ?: emptySet()
+            val (muted, blocked) = transform(oldMuted, oldBlocked)
+            // only what changed is written: an absent list stays absent (the legacy migration
+            // reads "no lists of its own yet" from that)
+            if (muted != oldMuted) prefs[kapostsMutedKey(walletAddress)] = muted
+            if (blocked != oldBlocked) prefs[kapostsBlockedKey(walletAddress)] = blocked
+        }
+    }
 
     /** Adopts the pre-scoping mute/block lists for [walletAddress] when it is the only account and
      *  has no lists of its own yet. Idempotent. */

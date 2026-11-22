@@ -19,11 +19,12 @@ import javax.inject.Singleton
 /**
  * While the app is in the FOREGROUND (KaChatApplication's process lifecycle observer calls
  * [start]/[stop] on foreground/background transitions), polls the indexer's notification stream
- * every 30s and keeps the unseen count. Banners come from remote pushes, and from here only for a
- * device with no push at all ([PushState]). Once the app is backgrounded or closed, the push
- * service is the only KaPosts notification source — deliberately no background continuation here,
- * so push failures stay visible. Last-seen is stored per wallet so nothing replays, and opening the
- * Notifications screen marks everything seen.
+ * every 20 s, keeps the unseen count and shows a banner for new activity on your posts (iOS
+ * 428a797b `KaPostsNotificationService`, owner 2026-11-22), so a banner shows even when the push
+ * service misses one; one banner per action when the push comes too. A KaPost push while the app
+ * is open asks for a poll at once ([pollSoon]). Once the app is backgrounded or closed, the push
+ * service is the only KaPosts notification source. Last-seen is stored per wallet so nothing
+ * replays, and opening the Notifications screen marks everything seen.
  */
 @Singleton
 class KaPostsNotificationPoller @Inject constructor(
@@ -31,10 +32,8 @@ class KaPostsNotificationPoller @Inject constructor(
     private val walletManager: WalletManager,
     private val notificationHelper: KaPostsNotifier,
     private val dataStore: DataStore<Preferences>,
-    // While native FCM push is active the server sends the KaPosts pings (the iOS repo's PUSH_EXTENSIONS.md
-    // §3/§4), so the poller must not post duplicates — but it still polls: last-seen tracking
-    // and the Notifications screen's data depend on it.
-    private val pushState: PushState,
+    // Whether the app is open, and whether an action's push is in the shade already.
+    private val appNotifications: NotificationHelper,
     // Settings > Notifications > KaPosts: per-kind toggles filtered here at the poll source
     // (never at display), mirroring iOS — a toggled-off kind is dropped permanently: the
     // last-seen watermark advances regardless, so it never re-fires if re-enabled later.
@@ -88,17 +87,40 @@ class KaPostsNotificationPoller @Inject constructor(
     @Volatile
     var isNotificationsScreenVisible: Boolean = false
 
+    /** When the last poll started, so a burst of pushes asks the indexer once. */
+    @Volatile private var lastPollAt = 0L
+
+    @Synchronized
     fun start() {
         if (pollJob?.isActive == true) return
         pollJob = scope.launch {
             while (true) {
-                try { pollOnce() } catch (e: Exception) { Log.w("KaPostsPoller", "poll failed", e) }
+                lastPollAt = System.currentTimeMillis()
+                try { pollOnce() } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) { Log.w("KaPostsPoller", "poll failed", e) }
                 delay(POLL_INTERVAL_MS)
             }
         }
     }
 
+    /** A KaPost push arrived while the app is open: poll now (the bell's count comes from the
+     *  poll), unless one started in the last 15 s. Does nothing while the poller is stopped (iOS
+     *  428a797b `pollSoon`). */
+    @Synchronized
+    fun pollSoon() {
+        if (pollJob?.isActive != true) return
+        if (System.currentTimeMillis() - lastPollAt < POLL_SOON_MIN_GAP_MS) return
+        stop()
+        start()
+    }
+
+    /** Delete Account: the last notification already surfaced for [address] (iOS 428a797b
+     *  `kaposts_notifications_last_seen_<wallet>` in `removeLocalData`). */
+    suspend fun removeAllData(address: String) {
+        dataStore.edit { it.remove(lastSeenKey(address)) }
+    }
+
     /** Called when the app leaves the foreground — background KaPosts pings are push's job. */
+    @Synchronized
     fun stop() {
         pollJob?.cancel()
         pollJob = null
@@ -172,37 +194,41 @@ class KaPostsNotificationPoller @Inject constructor(
         // being only about interruption - but the setting reads "do not tell me about this", and
         // switching Likes off only to find a hundred of them waiting on the badge is the switch
         // not working.
-        var arrivals = 0
-        for (n in freshAll) {
+        val arrivals = freshAll.filter { n ->
             val actor = KaPostsService.kaspaAddressFromPubkey(n.userPublicKey)
-            if (actor == null || actor == address || actor in hidden) continue
-            if (!settingsRepository.shouldNotifyKaPostsAction(n.contentType, n.voteType)) continue
-            arrivals++
+            actor != null && actor != address && actor !in hidden &&
+                settingsRepository.shouldNotifyKaPostsAction(n.contentType, n.voteType)
         }
         // Nothing is unseen while the notifications screen is open (iOS 33095ac).
-        if (isNotificationsScreenVisible) unseenStore.markAllSeen() else unseenStore.recordArrivals(arrivals)
-        // Per-kind toggle filter (Likes/Reposts/Follows/Dislikes/Comments) applied at the
-        // source, BEFORE the burst cap, so a disabled kind neither notifies nor consumes a
-        // slot. The watermark above already advanced over filtered items.
-        val fresh = freshAll.filter {
-            settingsRepository.shouldNotifyKaPostsAction(it.contentType, it.voteType)
+        if (isNotificationsScreenVisible) {
+            unseenStore.markAllSeen()
+            return
         }
-        if (fresh.isEmpty()) return
-        // The remote push is the only banner source while push is active - see PushState. The
-        // bell count above is fed regardless; only the banner is the push's. A device with no
-        // push at all still pings from here.
-        if (pushState.isActive) return
-        // The list itself is open: the reader sees these land in it, so no banner.
-        if (isNotificationsScreenVisible) return
-        // Oldest first, capped so a viral post can't fire fifty pings at once.
-        for (n in fresh.sortedBy { it.timestamp }.takeLast(5)) {
+        unseenStore.recordArrivals(arrivals.size)
+        // While the app is open it banners new activity on your posts itself, push or not (iOS
+        // 428a797b `postBanners`, owner 2026-11-22): the newest few recent arrivals, oldest
+        // first, each once - not when its push already showed (the push's tag is the action's
+        // txid; [KaPostsNotifier.claim] holds back a push that comes later). Older activity, and
+        // the rest of a burst, are only counted in the bell.
+        if (!appNotifications.isAppInForeground) return
+        val nowMs = System.currentTimeMillis()
+        val recent = arrivals
+            .filter { nowMs - milliseconds(it.timestamp) <= BANNER_MAX_AGE_MS }
+            .sortedByDescending { it.timestamp }
+            .take(MAX_BANNERS_PER_POLL)
+            .reversed()
+        for (n in recent) {
+            if (isNotificationsScreenVisible || !appNotifications.isAppInForeground) return
             val actor = KaPostsService.kaspaAddressFromPubkey(n.userPublicKey) ?: continue
-            if (actor == address || actor in hidden) continue
+            if (appNotifications.isShowing(n.id)) {
+                notificationHelper.claim(n.id)
+                continue
+            }
             val text = KaPostsProtocol.stripMarker(n.decodedContent ?: "").trim()
             val name = actorDisplayName(actor)
             notificationHelper.showKaPosts(
-                // The whole text, as iOS postLocal: the system shade cuts it where it must.
-                text = "$name ${actionText(n.contentType, n.voteType, text, n.tipAmountSompi)}" + if (text.isEmpty()) "" else ": $text",
+                // "alice liked your post: <text>", the text cut at 200 characters (iOS 428a797b).
+                text = "$name ${actionText(n.contentType, n.voteType, text, n.tipAmountSompi)}" + if (text.isEmpty()) "" else ": ${prefixCodePoints(text, 200)}",
                 actionTxId = n.id,
                 // Same per-kind target rule as the in-app notifications overlay and iOS: a
                 // reply targets the reply ITSELF, and the landing rule opens its parent's thread
@@ -222,7 +248,26 @@ class KaPostsNotificationPoller @Inject constructor(
 
     private companion object {
         /** Same cadence as iOS's KaPostsNotificationService. */
-        const val POLL_INTERVAL_MS = 30_000L
+        const val POLL_INTERVAL_MS = 20_000L
+
+        /** A push asks for a poll at once, unless one started this recently (iOS 428a797b `pollSoon`). */
+        const val POLL_SOON_MIN_GAP_MS = 15_000L
+
+        /** Activity older than this when a poll finds it gets no banner (it is in the bell): a
+         *  return after a long absence doesn't replay a stack of banners (iOS 428a797b). */
+        const val BANNER_MAX_AGE_MS = 10 * 60 * 1000L
+
+        /** The most banners one poll shows; the rest are only counted in the bell (iOS 428a797b). */
+        const val MAX_BANNERS_PER_POLL = 3
+
+        /** Indexer timestamps are milliseconds; a seconds value is scaled up. */
+        fun milliseconds(timestamp: Long): Long = if (timestamp < 100_000_000_000L) timestamp * 1000 else timestamp
+
+        /** The first [count] characters of [text], never cutting an emoji in half. */
+        fun prefixCodePoints(text: String, count: Int): String {
+            val points = text.codePointCount(0, text.length)
+            return if (points <= count) text else text.substring(0, text.offsetByCodePoints(0, count))
+        }
 
         /** How far back one poll follows the bell's count (50 a page, iOS ee5ec98). */
         const val MAX_UNSEEN_COUNT_PAGES = 10

@@ -21,9 +21,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.kachat.app.services.CoinGeckoApi
-import com.kachat.app.services.KaspaRestApi
-import com.kachat.app.services.KasiaIndexerApi
-import com.kachat.app.services.KnsApi
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -161,39 +158,6 @@ object AppModule {
 
     /** Anything slower than this on a healthy endpoint is worth a line even on success. */
     private const val SLOW_REQUEST_THRESHOLD_MS = 2_000L
-
-    @Provides
-    @Singleton
-    fun provideKaspaRestApi(okHttpClient: OkHttpClient): KaspaRestApi {
-        return Retrofit.Builder()
-            .baseUrl("https://api.kaspa.org/") // Default, will be updated by a wrapper
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(KaspaRestApi::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideKasiaIndexerApi(okHttpClient: OkHttpClient): KasiaIndexerApi {
-        return Retrofit.Builder()
-            .baseUrl("https://api.kasia.io/")
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(KasiaIndexerApi::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideKnsApi(okHttpClient: OkHttpClient): KnsApi {
-        return Retrofit.Builder()
-            .baseUrl("https://api.kns.kaspa.org/")
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(KnsApi::class.java)
-    }
 
     @Provides
     @Singleton

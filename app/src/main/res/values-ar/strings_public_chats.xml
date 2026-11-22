@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">جاري الترميز…</string>
     <string name="pc_room_voice_receiving">جارٍ الاستلام… %1$d من %2$d</string>
     <string name="pc_room_voice_recording">تسجيل...</string>
-    <string name="pc_rooms53_channel_name_invalid">يجب أن يتكون اسم القناة من 1 إلى %1$d حرفًا دون مسافات أو نقطتين.</string>
     <string name="pc_rooms53_day_one">%1$d يوم</string>
     <string name="pc_rooms53_days">%1$d أيام</string>
-    <string name="pc_rooms53_join_failed">حدث خطأ أثناء الانضمام إلى تلك القناة.</string>
     <string name="pc_rooms54_failed_to_edit">فشل التعديل: %1$s</string>
     <string name="pc_rooms54_failed_to_send">فشل الإرسال: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">فشل إرسال الرسالة الصوتية: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">الملف الشخصي لهذا الحساب في KaPost: المنشورات والردود والمتابعون.</string>
     <string name="pc_sender_send_kaspa_subtitle">أرسل Kaspa إلى عنوانه.</string>
     <string name="pc_sender_copy_address_subtitle">انسخ عنوان Kaspa الخاص به.</string>
-    <string name="pc_public_chats">المحادثات العامة</string>
+    <string name="pc_original_message_not_loaded">لم يتم تحميل الرسالة الأصلية</string>
 </resources>

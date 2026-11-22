@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">Сейчас нет имён в льготном периоде.</string>
     <string name="kn_no_open_offers">Нет открытых предложений.</string>
     <string name="kn_not_enough">На вашем адресе для чатов недостаточно KAS для этого имени.</string>
+    <string name="kn_err_claim_in_progress">Вы уже получаете %1$s.</string>
+    <string name="kn_err_not_enough_kas">Недостаточно KAS для этого. Пополните баланс и попробуйте снова.</string>
     <string name="kn_not_for_sale">Не продаётся</string>
     <string name="kn_not_valid_name">Недопустимое имя.</string>
     <string name="kn_nothing_yet">Пока ничего.</string>

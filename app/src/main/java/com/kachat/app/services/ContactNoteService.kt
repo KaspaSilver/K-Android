@@ -175,8 +175,6 @@ class ContactNoteService @Inject constructor(
         }
     }
 
-    /** Your message went out in [contactAddress]'s chat: make sure a fresh import of this seed
-     *  can find the chat again. A cheap no-op for every chat already noted. */
     /** Everything kept for [wallet]: it's going off this device (iOS bfe9f022). */
     fun removeAllData(wallet: String) {
         prefs.edit()
@@ -189,6 +187,8 @@ class ContactNoteService @Inject constructor(
             .apply()
     }
 
+    /** Your message went out in [contactAddress]'s chat: make sure a fresh import of this seed
+     *  can find the chat again. A cheap no-op for every chat already noted. */
     fun onMessageDelivered(contactAddress: String) {
         scope.launch {
             mutex.withLock {

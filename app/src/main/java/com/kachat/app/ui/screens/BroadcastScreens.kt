@@ -3,19 +3,12 @@ package com.kachat.app.ui.screens
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.MarkEmailRead
-import androidx.compose.material.icons.outlined.MarkEmailUnread
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
-import androidx.compose.material.icons.outlined.PushPin
-import com.kachat.app.util.UserFacingError
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Switch
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Block
@@ -27,35 +20,24 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import com.kachat.app.ui.theme.IosRoundedFontFamily
 import com.kachat.app.ui.theme.iosGlass
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material.icons.filled.AddComment
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.MarkEmailUnread
-import androidx.compose.material.icons.filled.Drafts
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -65,43 +47,26 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Reply
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.automirrored.filled.VolumeOff
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -109,11 +74,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -125,19 +87,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.kachat.app.R
-import com.kachat.app.models.BroadcastRetention
 import com.kachat.app.models.addressDisplayName
 import com.kachat.app.models.FeaturedBroadcastChannels
-import com.kachat.app.repository.ChatRepository
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
 import com.kachat.app.util.ChatTimeFormat
@@ -159,9 +116,6 @@ import kotlinx.coroutines.launch
  * (MainActivity) or from a tap on an in-app invite card ([openKaChatLink]). MainShell watches
  * [pendingChannel] and navigates; the room screen itself consumes [consumeJoinRequest] so a room
  * the user isn't in yet is created/joined before it opens, landing in their own channel list.
- *
- * The Child Mode check lives with the navigation in MainShell, exactly like the KaPosts link and
- * broadcast-notification paths, so a link can never route into a hidden feature.
  */
 object BroadcastDeepLink {
     private val _pendingChannel = MutableStateFlow<String?>(null)
@@ -189,10 +143,6 @@ object BroadcastDeepLink {
     }
 
     fun consumeJoinRequest(channelName: String): Boolean = joinRequests.remove(channelName)
-
-    fun clearJoinRequests() {
-        joinRequests.clear()
-    }
 }
 /**
  * The customize sheet, behind the button at the top left of the Public Chats tab: every default
@@ -353,7 +303,8 @@ internal fun PublicChatRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "#$channelName",
+                    // bidi controls stripped (iOS audit 2026-11-21 #22 `PublicChatRoomSummary.displayName`)
+                    "#${strippingRoomBidiControls(channelName)}",
                     color = colors.textPrimary,
                     // iOS .headline
                     fontWeight = FontWeight.SemiBold,
@@ -414,7 +365,8 @@ internal fun publicRoomPreview(raw: String): String {
             else -> com.kachat.app.util.tr(R.string.file_emoji)
         }
     }
-    return com.kachat.app.util.NextcloudShareSniff.linkSafePreview(content)
+    // link-safe, and bidi controls stripped (iOS audit 2026-11-21 #22 `PublicChatRoomSummary.lastPreview`)
+    return strippingRoomBidiControls(com.kachat.app.util.NextcloudShareSniff.linkSafePreview(content))
 }
 
 /** A clock time today, "Yesterday", or the month and day, the way the chat lists read it. */
@@ -776,7 +728,6 @@ fun BroadcastChannelScreen(
     }
     // Voice-note playback is owned per bubble; the room going away is what ends it.
     DisposableEffect(Unit) { onDispose { VoicePlayback.stopAllAfterChildrenDispose() } }
-    val roomDotColorHex by androidx.hilt.navigation.compose.hiltViewModel<com.kachat.app.viewmodels.ConnectionViewModel>().dotColorHex.collectAsState()
 
     // Opened from a share link for a room the user isn't in: create/join it first so it lands in
     // "Your Channels" instead of vanishing the moment they navigate away. Curated rooms never
@@ -854,7 +805,8 @@ fun BroadcastChannelScreen(
                 // circle carrying the room glyph (accent at 20%, "number" 18 semibold) where they
                 // carry a photo. The title itself is the way in to everything about the room.
                 ChatHeaderChipLayout(
-                    name = "#$channelName",
+                    // bidi controls stripped, as in the Chats list (iOS audit 2026-11-21 #22)
+                    name = "#${strippingRoomBidiControls(channelName)}",
                     onClick = { navController.navigate(PublicChatRoutes.roomInfo(channelName)) },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -942,8 +894,9 @@ fun BroadcastChannelScreen(
                     RoomComposerBanner(
                         icon = Icons.AutoMirrored.Filled.Reply,
                         title = stringResource(R.string.replying_to, addressDisplayName(reply.senderAddress, contactAliases[reply.senderAddress], senderKnsNames[reply.senderAddress])),
-                        // The quote the reply will carry (iOS replyBanner: MessageReplyCodec.previewText).
-                        preview = BroadcastViewModel.replyPreviewText(reply.content),
+                        // The quote the reply will carry (iOS replyBanner: MessageReplyCodec.previewText),
+                        // bidi controls stripped (iOS audit 2026-11-21 #22).
+                        preview = strippingRoomBidiControls(BroadcastViewModel.replyPreviewText(reply.content)),
                         cancelDescription = stringResource(R.string.cancel_reply),
                         onCancel = { broadcastViewModel.cancelReply() },
                     )
@@ -1448,6 +1401,28 @@ fun BroadcastChannelScreen(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             if (replyContent != null) {
+                                // What the quote shows (iOS audit 2026-11-21 #18 `replyQuoteDisplay`):
+                                // the sender and text a reply envelope carries are whatever its
+                                // author typed, so the quote is drawn from the quoted message itself,
+                                // found by replyToId among the room's loaded messages (with its edit).
+                                // When it isn't loaded the quote names nobody: "Original message not
+                                // loaded" over the text the reply claims, in italics.
+                                val original = messageWindow.byId[replyContent.replyToId]
+                                val youText = stringResource(R.string.reactions_you)
+                                val quoteSender: String? = original?.let {
+                                    if (it.senderAddress == myAddress) youText
+                                    else addressDisplayName(it.senderAddress, contactAliases[it.senderAddress], senderKnsNames[it.senderAddress])
+                                }
+                                val quotePreview = remember(original, editsByTxId[original?.id], replyContent.replyToPreview) {
+                                    if (original == null) {
+                                        strippingRoomBidiControls(replyContent.replyToPreview)
+                                    } else {
+                                        val edited = editsByTxId[original.id]?.let {
+                                            com.kachat.app.util.MessageEdit.apply(it.text, original.content)
+                                        }
+                                        strippingRoomBidiControls(MessageReply.previewText(edited ?: original.content).take(160))
+                                    }
+                                }
                                 // iOS replyQuoteView: caption2 semibold sender over a two-line
                                 // caption preview, 2 apart, padded 8 on tertiarySystemBackground in
                                 // a 10-rounded box at most 240 wide.
@@ -1461,16 +1436,27 @@ fun BroadcastChannelScreen(
                                         .clickable { jumpToReply(replyContent.replyToId) }
                                         .padding(8.dp)
                                 ) {
+                                    if (quoteSender != null) {
+                                        Text(
+                                            quoteSender,
+                                            color = KaspaTeal,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    } else {
+                                        // The quoted message isn't here to check: nobody is named.
+                                        Text(
+                                            stringResource(R.string.pc_original_message_not_loaded),
+                                            color = LocalAppColors.current.textSecondary,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
                                     Text(
-                                        addressDisplayName(replyContent.replyToSender, contactAliases[replyContent.replyToSender], senderKnsNames[replyContent.replyToSender]),
-                                        color = KaspaTeal,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        replyContent.replyToPreview,
+                                        quotePreview,
                                         color = LocalAppColors.current.textSecondary,
                                         fontSize = 12.sp,
+                                        fontStyle = if (quoteSender == null) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis,
                                         textAlign = if (isMine) TextAlign.End else TextAlign.Start,
@@ -1899,7 +1885,9 @@ fun BroadcastChannelScreen(
                             // message, paired with the error icon on the reaction pill. Aligned with
                             // ColumnScope.align (NOT a fillMaxWidth Box) so it sits under the pill's
                             // side of the bubble without stretching this Column to the full row width.
-                            messageReactions.firstOrNull { it.deliveryStatus == "failed" }?.let { failedReaction ->
+                            // Only this account's own: Retry resends as the open account, and does
+                            // nothing for another's (audit L2).
+                            messageReactions.firstOrNull { it.deliveryStatus == "failed" && it.reactorAddress == myAddress }?.let { failedReaction ->
                                 Text(
                                     text = stringResource(R.string.retry),
                                     color = LocalAppColors.current.danger,

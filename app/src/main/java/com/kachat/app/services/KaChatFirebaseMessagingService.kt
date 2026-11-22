@@ -51,6 +51,8 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
     @Inject lateinit var broadcastNotifierLazy: dagger.Lazy<com.kachat.app.services.publicchats.BroadcastNotifier>
     @Inject lateinit var kaPostsNotifierLazy: dagger.Lazy<KaPostsNotifier>
     @Inject lateinit var kaPostsNotificationPollerLazy: dagger.Lazy<KaPostsNotificationPoller>
+    // Received KAS pushes (iOS 428a797b).
+    @Inject lateinit var addressActivityNotifierLazy: dagger.Lazy<AddressActivityNotifier>
     private val notificationHelper: NotificationHelper get() = notificationHelperLazy.get()
     private val pushRegistrationManager: PushRegistrationManager get() = pushRegistrationManagerLazy.get()
     private val walletManager: WalletManager get() = walletManagerLazy.get()
@@ -124,14 +126,20 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                     return@runBlocking
                 }
                 when (type) {
-                    // .kachat name events (offers, sales, renewal): iPhone 148a5331 still
-                    // delivers them silently (its NotificationService), with the .kachat tab back
-                    // or not - the name's news shows in the app (KachatNamesNotifier and its
-                    // reminders). A tap on one the OS drew opens the name (MainActivity).
-                    "name_event" -> {
-                        data["tx_id"]?.takeIf { it.isNotBlank() }?.let { notificationHelper.claimWithoutNotifying(it) }
-                        Log.i(TAG, "Delivered a name_event push silently, as iOS does")
-                    }
+                    // .kachat name events (offers, sales, renewal reminders): shown as sent since
+                    // the market came back to K (iOS 428a797b NotificationService, kachat-indexer
+                    // docs/K_ALL_IN_ONE_PUSH.md); signed out, nothing (checked above). A tap opens
+                    // .kachat at the name (MainActivity), as one the OS drew does.
+                    "name_event" -> notificationHelper.showNameEvent(
+                        title = data["title"].orEmpty(),
+                        text = body,
+                        name = data["name"],
+                        dedupeKey = data["tx_id"]?.takeIf { it.isNotBlank() } ?: data["dedup"]?.takeIf { it.isNotBlank() },
+                    )
+
+                    // Received KAS on a spending or Cold Storage address (iOS 428a797b; the
+                    // registration's watch_only_addresses).
+                    "address_activity" -> handleAddressActivityPush(data, body)
 
                     "broadcast" -> handleRoomPush(data, body)
 
@@ -190,6 +198,14 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             Log.i(TAG, "Room push dropped: the room isn't joined, or its bell is off")
             return
         }
+        // A room message one of this phone's own accounts sent never rings here (audit M5; the
+        // block-scan path does the same through BroadcastScanningService).
+        val roomSender = data["sender"]?.takeIf { it.isNotBlank() }
+        if (roomSender != null && broadcastRepositoryLazy.get().isLocalAccountAddress(roomSender)) {
+            txId?.let { notificationHelper.claimWithoutNotifying(it) }
+            Log.i(TAG, "Room push dropped: our own message")
+            return
+        }
         if (com.kachat.app.util.BroadcastPushPreview.isEditEnvelope(body)) {
             txId?.let { notificationHelper.claimWithoutNotifying(it) }
             Log.i(TAG, "Edit push dropped: an edit is never announced")
@@ -214,6 +230,31 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     /**
+     * A Received KAS push (`address_activity`, iOS 428a797b): one notice per transaction - none
+     * when the app's own "Received" notice for it showed already ([AddressActivityNotifier] claims
+     * the same transaction id). Its tap opens that address's history; a Cold Storage address has
+     * none here, so Wallet. Nothing with Address Activity off (the registration may not have
+     * caught up yet).
+     */
+    private suspend fun handleAddressActivityPush(data: Map<String, String>, body: String) {
+        val txId = data["tx_id"]?.trim()?.takeIf { it.isNotEmpty() }
+        if (!settingsRepository.addressActivityNotificationsEnabled.first()) {
+            txId?.let { notificationHelper.claimWithoutNotifying(it) }
+            return
+        }
+        if (txId != null && !notificationHelper.claimForBanner(txId)) return
+        val address = data["address"]?.trim()?.takeIf { com.kachat.app.util.KaspaAddress.isValid(it) }
+        val opensHistory = address != null && addressActivityNotifierLazy.get().opensHistory(address)
+        notificationHelper.showAddressActivity(
+            title = data["title"]?.takeIf { it.isNotBlank() } ?: "Funds received",
+            text = body,
+            dedupeKey = txId ?: "push-${address.orEmpty().takeLast(12)}-${System.currentTimeMillis()}",
+            kind = if (opensHistory) NotificationHelper.KIND_SPENDING else NotificationHelper.KIND_COLD,
+            address = address.takeIf { opensHistory },
+        )
+    }
+
+    /**
      * A KaPosts push (PUSH_EXTENSIONS.md 3; iOS 148a5331): nothing from someone muted or blocked
      * when the push names who acted (`actor_pubkey`), nothing a KaPost switch turned off, and no
      * banner while KaPost's notifications are on screen. A reply or a quote opens itself, else the
@@ -224,6 +265,9 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         val title = data["title"].orEmpty()
         val text = body.ifEmpty { title }
         val txId = data["tx_id"].orEmpty()
+        // The bell's count comes from the poll: a push while the app is open asks for one now
+        // (iOS 428a797b `pollSoon`).
+        if (notificationHelper.isAppInForeground) kaPostsNotificationPollerLazy.get().pollSoon()
         val actorHidden = data["actor_pubkey"]
             ?.let { KaPostsService.kaspaAddressFromPubkey(it) }
             ?.let { actor ->

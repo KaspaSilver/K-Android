@@ -1569,9 +1569,23 @@ object IndexerApi {
     }
 
     class IdentityJson(val address: String, val label: String?, val names: List<String>?, val profile: Profile?) {
-        val identity: Identity get() = Identity(address, label, names ?: emptyList(), profile?.sanitized())
+        /**
+         * The indexer's word, checked as far as it can be here (security audit M5): only names the
+         * gap's rule allows (`a-z 0-9 -`, so no lookalike, Unicode or bidi text), and a label that
+         * is one of the address's names when the answer lists them.
+         */
+        val identity: Identity get() {
+            // at most MAX_NAMES taken from one answer (iOS audit 2026-11-21 #19)
+            val held = names?.asSequence()?.take(MAX_NAMES * 2)?.map { Codec.normalize(it) }
+                ?.filter { Codec.isValid(it) }?.distinct()?.take(MAX_NAMES)?.toList()
+            val shown = label?.let { Codec.normalize(it) }?.takeIf { Codec.isValid(it) && (held == null || it in held) }
+            return Identity(address, shown, held ?: emptyList(), profile?.sanitized())
+        }
 
         companion object {
+            /** At most this many names are taken from one answer (iOS `IdentityJSON.maxNames`). */
+            const val MAX_NAMES = 100
+
             fun parse(e: JsonElement): IdentityJson {
                 val o = objectOf(e)
                 return IdentityJson(

@@ -6,7 +6,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kachat.app.models.PendingKnsCommit
 import com.kachat.app.models.WalletSourceFamily
 import com.kachat.app.repository.AppSettingsRepository
 import com.kachat.app.services.AddressHistoryService
@@ -39,6 +38,9 @@ import javax.inject.Inject
 
 /** How many identity-chain indices one "Change Chatting Address" scan pass covers (matches iOS). */
 const val CHATTING_ADDRESS_SCAN_BATCH = 50
+
+/** A balance read this recently is not fetched again when another screen's view model opens. */
+private const val OPEN_BALANCE_FRESH_MS = 10_000L
 
 @HiltViewModel
 class WalletViewModel @Inject constructor(
@@ -82,11 +84,6 @@ class WalletViewModel @Inject constructor(
 ) : ViewModel() {
 
     /** Refreshes what the active account owns on .k and .kaspa. */
-    fun refreshServiceNames() {
-        val address = walletManager.activeAddressFlow.value ?: return
-        viewModelScope.launch { nameServices.refresh(address) }
-    }
-
     suspend fun refreshServiceNamesAndAwait() {
         val address = walletManager.activeAddressFlow.value ?: return
         nameServices.refresh(address)
@@ -117,10 +114,6 @@ class WalletViewModel @Inject constructor(
     // Screens raising this must always clear it again on dismiss (including back-press).
     private val _hideBottomBar = MutableStateFlow(false)
     val hideBottomBar: StateFlow<Boolean> = _hideBottomBar.asStateFlow()
-
-    fun setHideBottomBar(hide: Boolean) {
-        _hideBottomBar.value = hide
-    }
 
     private val _hasWallet = MutableStateFlow(walletManager.hasWallet())
     val hasWallet: StateFlow<Boolean> = _hasWallet
@@ -175,14 +168,6 @@ class WalletViewModel @Inject constructor(
     private val _spendingAddress = MutableStateFlow<String?>(null)
     val spendingAddress: StateFlow<String?> = _spendingAddress
 
-    /** Everything this account holds (iOS 6333dd3 `accountTotalSompi`, Profile's Manage Addresses
-     *  card): the chatting address and every revealed spending address, hidden ones too. Null
-     *  until the spending total is known. */
-    val accountTotalSompi: StateFlow<Long?> =
-        combine(walletService.balance, walletService.spendingTotalBalance) { chatting, spending ->
-            spending?.let { chatting + it }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
-
     /** Every revealed spending address together (iOS bfe9f022 WalletView `spendingTotalSompi`):
      *  Wallet's Spending line. Null until it is known. */
     val spendingTotalSompi: StateFlow<Long?> = walletService.spendingTotalBalance
@@ -194,27 +179,12 @@ class WalletViewModel @Inject constructor(
             balance.takeIf { known }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
 
-    /** Re-derives the current spending address and refreshes its balance — safe to call anytime the Profile screen appears, since the underlying index only ever changes via a successful send. */
-    /** For which account and when (unix ms) Profile's appear last ran its balance requests - see
-     *  [claimProfileAppearRefresh]. */
-    private var profileAppearRefreshed: Pair<String?, Long>? = null
-
-    /** True (and stamped) when Profile's appear may run its balance requests again: at most every
-     *  30 s for the same account, as tab switches otherwise started them each time (iOS 9de981a
-     *  `appearRefreshedAt`, which lives in a view rebuilt for another wallet). */
-    fun claimProfileAppearRefresh(): Boolean {
-        val now = System.currentTimeMillis()
-        val account = walletManager.activeAddressFlow.value
-        val last = profileAppearRefreshed
-        if (last != null && last.first == account && now - last.second < 30_000L) return false
-        profileAppearRefreshed = account to now
-        return true
-    }
-
     /** For which account and when (unix ms) Wallet's appear last ran its balance requests. */
     private var walletAppearRefreshed: Pair<String?, Long>? = null
 
-    /** [claimProfileAppearRefresh] for the Wallet tab (iOS bfe9f022 `appearRefreshedAt`). */
+    /** True (and stamped) when Wallet's appear may run its balance requests again: at most every
+     *  30 s for the same account, as tab switches otherwise started them each time (iOS bfe9f022
+     *  `appearRefreshedAt`). */
     fun claimWalletAppearRefresh(): Boolean {
         val now = System.currentTimeMillis()
         val account = walletManager.activeAddressFlow.value
@@ -386,8 +356,12 @@ class WalletViewModel @Inject constructor(
                 _manageAddressesRaw.value = live
             }
             refreshQuantumShields(_manageAddressesRaw.value)
-            // "Contains domain" tags: batched cached KNS lookups after the rows are visible.
-            refreshDomainOwningAddresses(_manageAddressesRaw.value.map { it.address })
+            // "Contains domain" tags: batched cached KNS lookups after the rows are visible. The
+            // chatting address first: it can hold a domain as much as any spending address
+            // (iOS 428a797b).
+            refreshDomainOwningAddresses(
+                (listOfNotNull(address.value) + _manageAddressesRaw.value.map { it.address }).distinct()
+            )
         } finally {
             // try/finally so no exit — success, a throw, or cancellation — can strand the
             // initial-load spinner.
@@ -890,10 +864,13 @@ class WalletViewModel @Inject constructor(
         }
     }
 
-    /** Coin control's data source for a spending address - see `SpendingAddressSendFlow`. Never
-     *  [addressHistoryService]/[spendingAddressUtxos] - those return a display-only DTO
-     *  with no scriptPublicKey, which signing needs. */
-    /** Throws when the coins could not be fetched, so coin control can say so. */
+    /**
+     * Coin control's data source for a spending address - see `SpendingAddressSendFlow`. Never
+     * [addressHistoryService]/[spendingAddressUtxos] - those return a display-only DTO
+     * with no scriptPublicKey, which signing needs.
+     *
+     * Throws when the coins could not be fetched, so coin control can say so.
+     */
     suspend fun fetchUtxosForCoinControl(address: String): List<UtxoEntry> = walletEngine.fetchUtxosOrThrow(address)
 
     /** The coins a send's estimate and Max price (iOS estimateWithdrawalFee /
@@ -1121,26 +1098,25 @@ class WalletViewModel @Inject constructor(
     private val _discoveringAddresses = MutableStateFlow(false)
     val discoveringAddresses: StateFlow<Boolean> = _discoveringAddresses.asStateFlow()
 
-    /**
-     * Re-runs the same gap-limit on-chain scan used on wallet import, to pick up any spending
-     * address with real history beyond what's currently shown (e.g. KAS sent to one directly,
-     * before the Manage Addresses screen ever generated it locally). [onResult] receives how
-     * many used addresses the scan found in total (0 if none).
-     */
     /** Live scan position, so Manage Addresses' actions sheet can count up during a discovery
      *  rather than sit on a spinner - same readout Cold Storage's sheet gives. */
     private val _spendingDiscoveryProgress = MutableStateFlow<SpendingAddressDiscovery.DiscoveryProgress?>(null)
     val spendingDiscoveryProgress: StateFlow<SpendingAddressDiscovery.DiscoveryProgress?> = _spendingDiscoveryProgress.asStateFlow()
 
-    /** [onResult] receives how many addresses HOLD something (a balance or a KNS domain), not a
-     *  recovered index - see [SpendingAddressDiscovery.discoverFunded].
+    /**
+     * Re-runs the same gap-limit on-chain scan used on wallet import, to pick up any spending
+     * address with real history beyond what's currently shown (e.g. KAS sent to one directly,
+     * before the Manage Addresses screen ever generated it locally). [onResult] receives how many
+     * addresses HOLD something (a balance or a KNS domain), not a recovered index - see
+     * [SpendingAddressDiscovery.discoverFunded].
      *
-     *  The sweep belongs to the account it started for - [owner], or the active account when
-     *  the sweep starts (iOS e571f45, IOS-107, owner's choice): that account's address and chain
-     *  material are taken at the start ([WalletManager.spendingSweepAccount]), and every
-     *  derivation and write (legacy bound, hidden set, quantum bound, address cache) goes to that
-     *  account even if another one is active by the time an await returns. Its results are
-     *  dropped only if the account was removed meanwhile. */
+     * The sweep belongs to the account it started for - [owner], or the active account when
+     * the sweep starts (iOS e571f45, IOS-107, owner's choice): that account's address and chain
+     * material are taken at the start ([WalletManager.spendingSweepAccount]), and every
+     * derivation and write (legacy bound, hidden set, quantum bound, address cache) goes to that
+     * account even if another one is active by the time an await returns. Its results are
+     * dropped only if the account was removed meanwhile.
+     */
     fun discoverSpendingAddresses(owner: String? = null, onResult: (Int) -> Unit) {
         if (_discoveringAddresses.value) return
         viewModelScope.launch {
@@ -1346,7 +1322,6 @@ class WalletViewModel @Inject constructor(
         _ownedDomainAssets.value = emptyList()
         _primaryDomainName.value = null
         _knsProfile.value = null
-        _addressKnsDomains.value = emptyList()
         _domainOwningAddresses.value = emptySet()
         _quantumSpentAddresses.value = emptySet()
         walletService.resetBalancesForAccountSwitch()
@@ -1379,8 +1354,9 @@ class WalletViewModel @Inject constructor(
                 if (address != null) {
                     settings.setActiveAddress(address)
                     // Register (or re-register on account switch) this device's FCM token with
-                    // the indexer so native push works while backgrounded. No-ops without FCM.
-                    pushRegistrationManager.registerAsync()
+                    // the indexer so native push works while backgrounded. No-ops without FCM, and
+                    // when this account is already registered: every screen's view model runs this.
+                    pushRegistrationManager.registerAsyncUnlessRegistered()
                     // A KNS commit an earlier run left without its reveal (iOS 4f8e14bb).
                     viewModelScope.launch {
                         try {
@@ -1398,8 +1374,15 @@ class WalletViewModel @Inject constructor(
             _address.value = walletManager.getAddress()
             _accountName.value = walletManager.getAccountName()
             _accounts.value = walletManager.getAllAccounts()
-            refreshBalance()
-            refreshSpendingAddress()
+            // Most pushed screens build their own WalletViewModel: one opened right after another
+            // shows the balances just read instead of fetching them from the node again. The
+            // balances are shared (WalletService), so nothing on screen changes.
+            if (!walletService.balanceReadWithin(OPEN_BALANCE_FRESH_MS)) refreshBalance()
+            if (walletService.spendingBalanceReadWithin(OPEN_BALANCE_FRESH_MS)) {
+                _spendingAddress.value = try { walletManager.currentSpendingAddress() } catch (e: Exception) { null }
+            } else {
+                refreshSpendingAddress()
+            }
 
             // A cold start lands back in whichever account was already active, not the Welcome
             // screen's saved-accounts list, unless Log Out was the last thing done. Biometrics for
@@ -1459,6 +1442,11 @@ class WalletViewModel @Inject constructor(
         // Its banners go with it: the next account to sign in must not find them, and a banner's
         // Reply would send from that account (iOS 83806b3d).
         walletManager.clearNotificationsForSignedOutAccount()
+        // Its own pending reminders too (scheduled KaPosts); the .kachat renewal and expiry
+        // reminders stay, each wallet's on purpose (iOS 428a797b, audit 2026-11-21 #11).
+        walletManager.getActiveAccount()?.address?.let { active ->
+            runCatching { com.kachat.app.services.KaPostsScheduledStore.cancelReminders(appContext, active) }
+        }
         // Drafts are per account and go with a Log Out too (iOS 83806b3d `clearMessageDrafts`).
         walletManager.getActiveAccount()?.address?.let { active ->
             com.kachat.app.util.KaspaNetwork.accountAddressVariants(active).forEach { chatRepository.discardDrafts(it) }
@@ -1762,12 +1750,6 @@ class WalletViewModel @Inject constructor(
     val importWalletState: StateFlow<ImportWalletUiState> = _importWalletState.asStateFlow()
 
     /**
-     * Validates the seed phrase up front (so a typo surfaces on the import screen, not after the
-     * passphrase step) and stashes it for [commitImport]. Returns false and surfaces the error if
-     * the mnemonic is invalid. The passphrase itself can't be validated — a wrong one just derives
-     * a different, empty account — so it's only collected on the next screen.
-     */
-    /**
      * The wallet type and address the import's passphrase step found or the user picked there
      * (iOS da467165 `importChoice`), persisted on the account by [commitImport]. Standard #0 until
      * the search says otherwise, and whenever a fresh import run starts ([prepareImport]).
@@ -1802,6 +1784,12 @@ class WalletViewModel @Inject constructor(
         _justImportedWallet.value = false
     }
 
+    /**
+     * Validates the seed phrase up front (so a typo surfaces on the import screen, not after the
+     * passphrase step) and stashes it for [commitImport]. Returns false and surfaces the error if
+     * the mnemonic is invalid. The passphrase itself can't be validated — a wrong one just derives
+     * a different, empty account — so it's only collected on the next screen.
+     */
     fun prepareImport(name: String, words: List<String>): Boolean {
         if (!walletManager.isValidMnemonic(words)) {
             _importWalletState.value = ImportWalletUiState(
@@ -2059,9 +2047,6 @@ class WalletViewModel @Inject constructor(
     /** BIP39 English wordlist (2048 words) for the in-app import keyboard's autocomplete. */
     val bip39Words: List<String> by lazy { walletManager.bip39WordList() }
 
-    /** True if [word] is an exact BIP39 English word. */
-    fun isBip39Word(word: String): Boolean = walletManager.isValidMnemonicWord(word)
-
     /**
      * Sends Kaspa to a given address (from the identity address). [manualUtxos] threads through
      * coin control the same way [withdrawFromSpendingAddress] already does for spending-chain
@@ -2123,9 +2108,6 @@ class WalletViewModel @Inject constructor(
         walletManager.setSpendingUtxoLabel(address, outpointKey, label)
     }
 
-    /** Forward KNS domain resolution for any recipient-address field (Withdraw dialogs, the
-     *  spending-address send flow) - lets typing "name.kas" resolve to a Kaspa address the same
-     *  way Create Chat's own address field already does. */
     /** What a typed name points to on every service, .kachat first - the primary answer and the
      *  "Other domains" (iOS 6ac48a7). */
     suspend fun resolveEverywhere(input: String): List<com.kachat.app.services.NameResolution> =
@@ -2222,10 +2204,6 @@ class WalletViewModel @Inject constructor(
             refreshKnsProfile()
             if (expected == null || _primaryDomainName.value.equals(expected, ignoreCase = true)) return
         }
-    }
-
-    fun clearSetPrimaryError() {
-        _setPrimaryState.value = SetPrimaryDomainUiState()
     }
 
     // -------------------------------------------------------------------------
@@ -2353,26 +2331,9 @@ class WalletViewModel @Inject constructor(
     }
 
     // -------------------------------------------------------------------------
-    // Per-address KNS domains ("KNS Domains (n)" tab on a spending address's detail screen) and
-    // the "Contains domain" tags on the Manage Addresses list.
+    // The "Contains domain" tags on the Manage Addresses list.
     // -------------------------------------------------------------------------
 
-    private val _addressKnsDomains = MutableStateFlow<List<com.kachat.app.services.KnsAsset>>(emptyList())
-    val addressKnsDomains: StateFlow<List<com.kachat.app.services.KnsAsset>> = _addressKnsDomains.asStateFlow()
-    private val _addressKnsDomainsLoading = MutableStateFlow(false)
-    val addressKnsDomainsLoading: StateFlow<Boolean> = _addressKnsDomainsLoading.asStateFlow()
-
-    fun loadAddressKnsDomains(address: String) {
-        viewModelScope.launch {
-            _addressKnsDomainsLoading.value = true
-            _addressKnsDomains.value = try { knsService.getOwnedDomains(address) } catch (e: Exception) { emptyList() }
-            _addressKnsDomainsLoading.value = false
-        }
-    }
-
-    /** Addresses in the Manage Addresses list that own at least one KNS domain (or, where it is
-     *  live, a .kachat name - iOS 881ada6) — batched cached
-     *  lookups fired AFTER the rows are already visible, so tags fill in without blocking. */
     /** The registry's revision where it's live, so Profile's Your Domains count reloads when a
      *  registration, sale or transfer lands; a flat 0 where it isn't launched (iOS 10e4a1a). */
     val kachatRegistryRevision: StateFlow<Int> =
@@ -2406,6 +2367,9 @@ class WalletViewModel @Inject constructor(
     private val _domainOwningAddresses = MutableStateFlow<Set<String>>(emptySet())
     val domainOwningAddresses: StateFlow<Set<String>> = _domainOwningAddresses.asStateFlow()
 
+    /** Addresses in the Manage Addresses list that own at least one KNS domain (or, where it is
+     *  live, a .kachat name - iOS 881ada6) — batched cached
+     *  lookups fired AFTER the rows are already visible, so tags fill in without blocking. */
     private fun refreshDomainOwningAddresses(addresses: List<String>) {
         if (addresses.isEmpty()) return
         viewModelScope.launch {
@@ -2656,18 +2620,6 @@ class WalletViewModel @Inject constructor(
 
     enum class KnsInscribeUiStatus { IDLE, CHECKING_AVAILABILITY, FETCHING_FEE, SUBMITTING_COMMIT, SUBMITTING_REVEAL, VERIFYING, SUCCESS, FAILED }
 
-    /** The Profile screen's pending-reveal Retry ([retryPendingKnsReveal]). */
-    data class KnsInscribeUiState(
-        val status: KnsInscribeUiStatus = KnsInscribeUiStatus.IDLE,
-        val errorMessage: String? = null,
-    )
-
-    private val _knsInscribeState = MutableStateFlow(KnsInscribeUiState())
-    val knsInscribeState: StateFlow<KnsInscribeUiState> = _knsInscribeState.asStateFlow()
-
-    val pendingKnsCommit: StateFlow<PendingKnsCommit?> = settings.pendingKnsCommit
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
-
     val kaspaExplorer: StateFlow<com.kachat.app.models.KaspaExplorer> = settings.kaspaExplorer
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), com.kachat.app.models.KaspaExplorer.default)
 
@@ -2744,20 +2696,6 @@ class WalletViewModel @Inject constructor(
     fun setShowSetupGuides(enabled: Boolean) {
         val addr = _address.value ?: return
         viewModelScope.launch { settings.setShowSetupGuides(addr, enabled) }
-    }
-
-    /** Retries just the reveal half of a commit that broadcast but never finished — see WalletService.retryPendingKnsReveal. */
-    fun retryPendingKnsReveal() {
-        val pending = pendingKnsCommit.value ?: return
-        viewModelScope.launch {
-            _knsInscribeState.value = KnsInscribeUiState(status = KnsInscribeUiStatus.SUBMITTING_REVEAL)
-            try {
-                walletService.retryPendingKnsReveal(pending)
-                _knsInscribeState.value = KnsInscribeUiState(status = KnsInscribeUiStatus.SUCCESS)
-            } catch (e: Exception) {
-                _knsInscribeState.value = KnsInscribeUiState(status = KnsInscribeUiStatus.FAILED, errorMessage = UserFacingError.message(e, appContext.getString(R.string.retry_failed)))
-            }
-        }
     }
 
     private fun WalletService.KnsInscribeStep.toUiStatus(): KnsInscribeUiStatus = when (this) {

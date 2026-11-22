@@ -114,6 +114,7 @@
     <string name="kp_355bcc577d71" formatted="false">Đã kết thúc</string>
     <string name="kp_a8d435fecb0c" formatted="false">Ván 1v1 đã kết thúc</string>
     <string name="kp_781b28d8c53d" formatted="false">Giải đấu đã kết thúc</string>
+    <string name="kp_cf5805795ab2" formatted="false">Ai dẫn đầu ở 1v1 và giải đấu, tháng này hoặc mọi thời điểm, và trước từng bot.</string>
     <string name="kp_08ab1ad685e3" formatted="false">Năm bot, cấp 1 đến 5, từ Kaspa Silver đến Yonatan Sompolinsky. Thắng một bot để mở khóa bot tiếp theo. Kết quả được ghi lên Kaspa.</string>
     <string name="kp_03e3c2d3a084" formatted="false">Năm bot, cấp 1 đến 5. Thắng một bot để mở khóa bot tiếp theo. Kết quả mỗi ván được ghi lên Kaspa khi kết thúc.</string>
     <string name="kp_e3e82846c325" formatted="false">Ván đấu</string>

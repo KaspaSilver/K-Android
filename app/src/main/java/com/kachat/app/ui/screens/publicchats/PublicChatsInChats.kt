@@ -72,11 +72,25 @@ object PublicChatRoutes {
     /** A room's Hidden Users ([BroadcastHiddenUsersScreen]); Room Info pushes it. */
     const val HIDDEN_USERS = "broadcast_hidden_users/{channelName}"
 
-    fun room(channelName: String): String = "broadcast/$channelName"
+    // The name is one encoded path segment: a room name may hold "/", "#", "?" or "%" (the
+    // protocol forbids only whitespace and ":"), which raw would split the route, end it early or
+    // turn into a query - a crash or the wrong room. Navigation decodes the argument again.
+    fun room(channelName: String): String = "broadcast/${android.net.Uri.encode(channelName)}"
 
-    fun hiddenUsers(channelName: String): String = "broadcast_hidden_users/$channelName"
+    fun hiddenUsers(channelName: String): String = "broadcast_hidden_users/${android.net.Uri.encode(channelName)}"
 
-    fun roomInfo(channelName: String): String = "broadcast_room_info/$channelName"
+    fun roomInfo(channelName: String): String = "broadcast_room_info/${android.net.Uri.encode(channelName)}"
+
+    /**
+     * The room a pushed route names (its already-decoded "channelName" argument), or null. Every
+     * room reaching a route is one this app joined or opened by name, so the protocol's own rule
+     * is the check here, as iOS opens any joined room; links and pushes passed the stricter
+     * `PublicChatLink.normalizeAndValidateChannel` gate before they got here.
+     */
+    fun channelArgument(arguments: android.os.Bundle?): String? {
+        val name = com.kachat.app.util.MessageProtocol.normalizeChannelName(arguments?.getString("channelName") ?: return null)
+        return name.takeIf { com.kachat.app.util.MessageProtocol.isValidChannelName(it) }
+    }
 }
 
 /**
@@ -122,12 +136,14 @@ internal fun PublicRoomChatsRow(
     val youLabel = stringResource(R.string.pc_you)
     val yesterday = stringResource(R.string.pc_yesterday)
     val last = summary?.lastMessage
+    // Worked out once per message (iOS `PublicChatRoomSummaries.previewMemo`): by id and content.
+    val lastPreview = remember(last?.id, last?.content) { last?.let { publicRoomPreview(it.content) } }
     val preview = last?.let { message ->
         val sender = when {
             myAddress != null && message.senderAddress.equals(myAddress, ignoreCase = true) -> youLabel
             else -> com.kachat.app.models.addressDisplayName(message.senderAddress, contactAliases[message.senderAddress])
         }
-        "$sender: ${publicRoomPreview(message.content)}"
+        "$sender: $lastPreview"
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,

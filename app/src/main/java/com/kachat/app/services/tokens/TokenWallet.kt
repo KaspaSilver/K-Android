@@ -61,6 +61,7 @@ class TokenWallet @Inject constructor(
     private val notificationHelper: NotificationHelper,
     private val notificationCenter: GlobalNotificationCenterStore,
     private val noticeBubbles: NoticeBubbleStore,
+    private val storeRelay: dagger.Lazy<KusdtStoreRelay>,
 ) {
     /** The tokens KaChat shows, in order. */
     val tokens: List<WalletToken> = listOf(WalletToken.KUSDT)
@@ -177,6 +178,11 @@ class TokenWallet @Inject constructor(
             coins = emptyMap()
             pendingCoins = emptyList()
             loadedAccount = account
+            // The old account's lookup times don't describe this one: its first refresh must be
+            // the full lookup, or coins outside the narrow poll read as missing (too low a
+            // balance) and come back later as "Received".
+            lastRefreshed = null
+            lastDiscovered = null
         }
         _holdings.value = emptyMap()
     }
@@ -775,6 +781,16 @@ class TokenWallet @Inject constructor(
         val editor = prefs.edit()
         for (token in tokens) for (kind in listOf("activity", "seen", "hidden", "shown")) editor.remove("token_${kind}_${token.id}_$account")
         editor.apply()
+        // What Trestly's code kept for each spending address's key (liquidity positions, followed
+        // trades): read now, while the account's derived-address cache still exists (iOS
+        // `removeLocalData`; the chatting address's key goes in AccountFeatureCleanup).
+        try {
+            val owners = walletManager.cachedSpendingAddresses(account)
+                .mapNotNull { address -> Kusdt.schnorrOwner(address)?.let { Kusdt.hex(it) } }
+            if (owners.isNotEmpty()) storeRelay.get().forget(owners)
+        } catch (e: Exception) {
+            Log.w(TAG, "Trestly store not cleared for the spending addresses: ${e.javaClass.simpleName}")
+        }
         var clearHoldings = false
         var clearActivity = false
         synchronized(lock) {

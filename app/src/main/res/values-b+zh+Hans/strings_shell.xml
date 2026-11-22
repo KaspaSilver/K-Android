@@ -19,7 +19,6 @@
     <string name="shell_customize_dock_footer">选择程序坞里放什么。其余都在 Kaspa Hub 中。</string>
     <string name="shell_terms_of_use">使用条款</string>
     <string name="shell_message_indexer_footer">KaPost、公共聊天和国际象棋也从此索引器读取。</string>
-    <string name="shell_ks_title">KaChat 统计</string>
     <string name="shell_ks_what_counts">统计范围</string>
     <string name="shell_ks_range_day">24 小时</string>
     <string name="shell_ks_range_week">7 天</string>

@@ -159,12 +159,6 @@ class GroupSecretStore @Inject constructor(
         bagCache.remove(key)
     }
 
-    /** Every group id this wallet holds secrets for - used to restore in-memory scanning state on cold start/wallet switch. */
-    fun allGroupIds(walletAddress: String): List<String> {
-        val prefix = "bag_${walletAddress}_"
-        return sharedPrefs.all.keys.filter { it.startsWith(prefix) }.map { it.removePrefix(prefix) }
-    }
-
     // --- deletion tombstones: which groups this wallet deleted, and which delete markers are
     // already on chain (so a delete survives a seedless re-import). Entries are
     // PendingGroupInvite.key (that admin's offer of the id), or a bare group id for that id from

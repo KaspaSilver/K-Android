@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">ネットワーク上のよくないねを取り消しました</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">フォローをネットワークに投稿しました</string>
-    <string name="feed54_help_welcome_guide">ようこそガイド</string>
-    <string name="feed54_help_welcome_guide_subtitle">はじめてのツアー：フィード、ルーム、チップ、あなたのアドレス。</string>
     <string name="feed54_like_posted">いいねをネットワークに投稿しました</string>
     <string name="feed54_like_removed">ネットワーク上のいいねを取り消しました</string>
     <string name="feed54_post_not_found">投稿が見つかりません - 現在のフィードより古い可能性があります</string>

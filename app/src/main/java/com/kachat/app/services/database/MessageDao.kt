@@ -90,35 +90,37 @@ interface MessageDao {
     suspend fun getAllMessagesForWallet(walletAddress: String): List<MessageEntity>
 
     /**
-     * One row per contactId (within this wallet) — whichever message has the most recent
-     * blockTimestamp.
+     * One row per contactId (within this wallet) — whichever shown message has the most recent
+     * blockTimestamp; a contact with no shown message has no row. Ordered by contactId.
      *
-     * Joins each contact's max timestamp back to its own row. The previous form matched on
-     * `blockTimestamp IN (SELECT MAX(...) GROUP BY contactId)`, which could not use an index and
-     * also returned extra rows whenever two different contacts' newest messages happened to
-     * share a timestamp. The trailing GROUP BY collapses a genuine tie within one contact to a
-     * single row.
-     */
-    /*
      * [hidden] ([MessageEntity.HIDDEN_PLACEHOLDERS]) are bodies never shown: a chat whose newest
      * row is one previews its newest real message instead, or nothing (iOS
      * Conversation.newestRealMessage). So is a call message an older build stored (iOS
      * 7c5c22e3, `CallSignal`): the LIKE is the SQL side of [com.kachat.app.util.CallSignal].
+     *
+     * Walks each contact's rows newest first on the (walletAddress, contactId, blockTimestamp)
+     * index and stops at the first shown one, so only a handful of bodies are ever read. The
+     * previous form grouped the whole table under the body filters, which made SQLite load every
+     * message body of the wallet (photo and voice base64 included) on each re-run - and Room
+     * re-runs this on every write to `messages`. Same rows as before: the newest shown row per
+     * contact, and when two share that timestamp the first stored (the row the old GROUP BY
+     * kept).
      */
     @Query(
         """
         SELECT m.* FROM messages m
-        JOIN (
-            SELECT contactId, MAX(blockTimestamp) AS maxTs FROM messages
-            WHERE walletAddress = :walletAddress
-              AND (plaintextBody IS NULL OR plaintextBody NOT IN (:hidden))
-              AND (plaintextBody IS NULL OR plaintextBody NOT LIKE '{%"type":"call_%')
-            GROUP BY contactId
-        ) newest ON m.contactId = newest.contactId AND m.blockTimestamp = newest.maxTs
-        WHERE m.walletAddress = :walletAddress
-          AND (m.plaintextBody IS NULL OR m.plaintextBody NOT IN (:hidden))
-          AND (m.plaintextBody IS NULL OR m.plaintextBody NOT LIKE '{%"type":"call_%')
-        GROUP BY m.contactId
+        WHERE m.rowid IN (
+            SELECT (
+                SELECT x.rowid FROM messages x
+                WHERE x.walletAddress = :walletAddress AND x.contactId = c.contactId
+                  AND (x.plaintextBody IS NULL OR x.plaintextBody NOT IN (:hidden))
+                  AND (x.plaintextBody IS NULL OR x.plaintextBody NOT LIKE '{%"type":"call_%')
+                ORDER BY x.blockTimestamp DESC, x.rowid ASC
+                LIMIT 1
+            )
+            FROM (SELECT DISTINCT contactId FROM messages WHERE walletAddress = :walletAddress) c
+        )
+        ORDER BY m.contactId
         """
     )
     fun getLatestMessagePerContact(walletAddress: String, hidden: List<String>): Flow<List<MessageEntity>>
@@ -167,7 +169,6 @@ interface MessageDao {
     @Query("SELECT EXISTS(SELECT 1 FROM messages WHERE walletAddress = :walletAddress AND contactId = :contactId AND direction = 'sent')")
     suspend fun hasSentToContact(contactId: String, walletAddress: String): Boolean
 
-    /** Anything they sent us we can see - a message, payment or handshake. */
     /** Whether they have sent us a MESSAGE in this conversation - a payment from them doesn't
      *  count (iOS 1eb4708) - whatever the case its address was stored in (audit IOS-008).
      *  [contactIdLowercase] must already be lowercased; Kaspa addresses are ASCII, so SQLite's

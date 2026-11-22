@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">Kodlanıyor…</string>
     <string name="pc_room_voice_receiving">Alınıyor… %2$d parçadan %1$d</string>
     <string name="pc_room_voice_recording">Kayıt...</string>
-    <string name="pc_rooms53_channel_name_invalid">Kanal adları boşluk veya iki nokta içermeden 1-%1$d karakter olmalıdır.</string>
     <string name="pc_rooms53_day_one">%1$d gün</string>
     <string name="pc_rooms53_days">%1$d gün</string>
-    <string name="pc_rooms53_join_failed">O kanala katılırken bir sorun oluştu.</string>
     <string name="pc_rooms54_failed_to_edit">Düzenlenemedi: %1$s</string>
     <string name="pc_rooms54_failed_to_send">Gönderilemedi: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">Sesli mesaj gönderilemedi: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">KaPost profili: gönderiler, yanıtlar ve takipçiler.</string>
     <string name="pc_sender_send_kaspa_subtitle">Adresine Kaspa gönder.</string>
     <string name="pc_sender_copy_address_subtitle">Kaspa adresini kopyala.</string>
-    <string name="pc_public_chats">Herkese Açık Sohbetler</string>
+    <string name="pc_original_message_not_loaded">Orijinal mesaj yüklenmedi</string>
 </resources>

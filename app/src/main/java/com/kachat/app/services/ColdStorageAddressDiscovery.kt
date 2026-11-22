@@ -82,13 +82,6 @@ class ColdStorageAddressDiscovery @Inject constructor(
     }
 
     /**
-     * @param chain 0 = external/receive, 1 = internal/change (KaChat only ever sources sends/
-     * change from chain 0 for cold storage — see [KaspaExtendedPublicKey] doc).
-     * @param startIndex first index to scan — the detail screen's refresh paints 0..maxDerivedIndex
-     * from a batched balance call first and only gap-scans BEYOND that bound, so a failed lookup
-     * here can no longer blank the already-known addresses.
-     */
-    /**
      * Scan progress: the index being checked, and how many used addresses have been found.
      *
      * The scan is one network call per address until the gap limit is reached, so it can run for
@@ -96,6 +89,13 @@ class ColdStorageAddressDiscovery @Inject constructor(
      */
     data class DiscoveryProgress(val checkingIndex: Int, val foundCount: Int)
 
+    /**
+     * @param chain 0 = external/receive, 1 = internal/change (KaChat only ever sources sends/
+     * change from chain 0 for cold storage — see [KaspaExtendedPublicKey] doc).
+     * @param startIndex first index to scan — the detail screen's refresh paints 0..maxDerivedIndex
+     * from a batched balance call first and only gap-scans BEYOND that bound, so a failed lookup
+     * here can no longer blank the already-known addresses.
+     */
     suspend fun discoverAddresses(
         rootKey: DeterministicKey,
         chain: Int = 0,
@@ -312,14 +312,6 @@ class ColdStorageAddressDiscovery @Inject constructor(
     )
 
     /**
-     * On-chain transaction history for a single address, newest first. Direction/amount aren't
-     * fields the REST API returns directly — a tx is only "sent" from [address] if one of its
-     * inputs' resolved previous-outpoint address matches (the default `resolve_previous_outpoints`
-     * behavior on [KaspaRestApi.getTransactions] already resolves this); the amount then excludes
-     * whatever output pays change back to [address] itself, mirroring the same sent-vs-received
-     * inference [com.kachat.app.repository.ChatRepository]'s payment sync already relies on.
-     */
-    /**
      * Whether a history fetch actually finished, alongside what it got.
      *
      * [complete] false means the request failed after its retries - the list is not the address's
@@ -336,9 +328,14 @@ class ColdStorageAddressDiscovery @Inject constructor(
      *  rate-limits, and a single 429 used to return "no transactions". */
     private val historyRetryDelaysMs = listOf(0L, 600L, 2_000L, 5_000L)
 
-    suspend fun getTransactionHistory(address: String, limit: Int = HISTORY_PAGE_SIZE): List<AddressTransaction> =
-        getTransactionHistoryResult(address, limit).transactions
-
+    /**
+     * On-chain transaction history for a single address, newest first. Direction/amount aren't
+     * fields the REST API returns directly — a tx is only "sent" from [address] if one of its
+     * inputs' resolved previous-outpoint address matches (the default `resolve_previous_outpoints`
+     * behavior on [KaspaRestApi.getTransactions] already resolves this); the amount then excludes
+     * whatever output pays change back to [address] itself, mirroring the same sent-vs-received
+     * inference [com.kachat.app.repository.ChatRepository]'s payment sync already relies on.
+     */
     suspend fun getTransactionHistoryResult(address: String, limit: Int = HISTORY_PAGE_SIZE): HistoryResult {
         val api = networkService.kaspaRestApi.value ?: return HistoryResult(emptyList(), complete = false)
         var transactions: List<TransactionResponse>? = null

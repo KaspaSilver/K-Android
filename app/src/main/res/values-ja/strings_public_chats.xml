@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">エンコード中…</string>
     <string name="pc_room_voice_receiving">受信中… %2$d件中%1$d件</string>
     <string name="pc_room_voice_recording">録音中...</string>
-    <string name="pc_rooms53_channel_name_invalid">チャンネル名は1〜%1$d文字で、スペースやコロンを含めないでください。</string>
     <string name="pc_rooms53_day_one">%1$d日</string>
     <string name="pc_rooms53_days">%1$d日</string>
-    <string name="pc_rooms53_join_failed">そのチャンネルへの参加中に問題が発生しました。</string>
     <string name="pc_rooms54_failed_to_edit">編集に失敗しました: %1$s</string>
     <string name="pc_rooms54_failed_to_send">送信に失敗しました: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">ボイスメッセージの送信に失敗しました: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">相手の KaPost プロフィール: 投稿、返信、フォロワー。</string>
     <string name="pc_sender_send_kaspa_subtitle">相手のアドレスに Kaspa を送ります。</string>
     <string name="pc_sender_copy_address_subtitle">相手のKaspaアドレスをコピーします。</string>
-    <string name="pc_public_chats">パブリックチャット</string>
+    <string name="pc_original_message_not_loaded">元のメッセージは読み込まれていません</string>
 </resources>

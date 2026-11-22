@@ -19,7 +19,6 @@
     <string name="shell_customize_dock_footer">اختار اللي في الشريط بتاعك. الباقي كله في Kaspa Hub.</string>
     <string name="shell_terms_of_use">شروط الاستخدام</string>
     <string name="shell_message_indexer_footer">KaPost والمحادثات العامة والشطرنج بيتقروا من الفهرس ده كمان.</string>
-    <string name="shell_ks_title">إحصاءات KaChat</string>
     <string name="shell_ks_what_counts">ما الذي يُحتسب</string>
     <string name="shell_ks_range_day">24 ساعة</string>
     <string name="shell_ks_range_week">7 أيام</string>

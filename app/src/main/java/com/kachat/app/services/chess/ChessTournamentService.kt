@@ -133,6 +133,8 @@ class ChessTournamentService @Inject constructor(
     private var liveViewing: AutoCloseable? = null
     private var clockJob: Job? = null
     private var backfillJob: Job? = null
+    /** The arena's reducer, while a chess screen is up ([startReducing]). */
+    private var reduceJob: Job? = null
     private var historyReadyJob: Job? = null
     private var fastPollJob: Job? = null
     /** When a claim was last posted for a game (wall ms). One is enough when it takes; one the
@@ -191,6 +193,7 @@ class ChessTournamentService @Inject constructor(
     fun acquire() = synchronized(lock) {
         refCount += 1
         if (refCount != 1) return@synchronized
+        startReducing()
         scope.launch {
             runCatching { arena.joinChannel(ChessTournamentCodec.ARENA_CHANNEL) }
                 .onFailure { Log.w(TAG, "Could not join the arena", it) }
@@ -309,9 +312,29 @@ class ChessTournamentService @Inject constructor(
         scope.launch { fastPollOnce() }
     }
 
+    /**
+     * Reduces the arena on every change while a chess screen is up (from [acquire], till
+     * [release]). Nothing outside the chess screens reads what it works out, and each of its
+     * reads is the whole thirty-day arena, re-run by Room on any write to the Public Chats table
+     * (the chess moves, every room's polls and the block scan): with Chess closed that was
+     * background work for nobody (audit M8). Opening Chess again reduces at once, on the rows as
+     * they stand then.
+     */
+    private fun startReducing() {
+        reduceJob?.cancel()
+        reduceJob = scope.launch {
+            arena.messages(ChessTournamentCodec.ARENA_CHANNEL)
+                .distinctUntilChanged()
+                .conflate()
+                .collect { rows -> reduceMutex.withLock { reduce(rows) } }
+        }
+    }
+
     fun release() = synchronized(lock) {
         refCount = maxOf(0, refCount - 1)
         if (refCount != 0) return@synchronized
+        reduceJob?.cancel()
+        reduceJob = null
         liveViewing?.close()
         liveViewing = null
         backfillJob?.cancel()
@@ -737,9 +760,6 @@ class ChessTournamentService @Inject constructor(
         return tournament.games.values.any { !it.isOver && it.decidedWinner(now) == me }
     }
 
-    fun openTournaments(all: Map<String, ChessTournament>) =
-        all.values.filter { it.status == ChessTournament.Status.OPEN }.sortedByDescending { it.createdAt }
-
     /** Rooms with a game still being played. A live room whose clocks have all run out with no
      *  claim posted is not one of them (see [ChessTournamentGame.flaggedSide]). */
     private val _liveTournaments = MutableStateFlow<List<ChessTournament>>(emptyList())
@@ -1162,10 +1182,6 @@ class ChessTournamentService @Inject constructor(
         return ChessText.format("Join (Fee: %s)", fee)
     }
 
-    fun clearError() {
-        _lastError.value = null
-    }
-
     /** The opponent flagged in one of our games, lately: post the claim. Runs on every tick; a
      *  claim that has not taken after [CLAIM_RETRY_MS] (voided, or not sent) goes again. */
     private fun claimTimeoutsIfDue() {
@@ -1299,12 +1315,9 @@ class ChessTournamentService @Inject constructor(
     // Last in the class: Kotlin runs initializers in order, and these collectors reduce on
     // another thread at once, so every field they touch is set before they start.
     init {
-        scope.launch {
-            arena.messages(ChessTournamentCodec.ARENA_CHANNEL)
-                .distinctUntilChanged()
-                .conflate()
-                .collect { rows -> reduceMutex.withLock { reduce(rows) } }
-        }
+        // The arena's reducer runs while a chess screen is up ([acquire] starts it, [release]
+        // stops it - [startReducing]): its read is the whole arena, and Room re-runs it on every
+        // write to the Public Chats table, chess closed or not (audit M8).
         // A queued join, a pending move or a claim belongs to the account that made it: after a
         // log out or a switch they must never be sent from the next one (iOS 8d5f925).
         scope.launch {

@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -84,6 +85,8 @@ class KaPostsViewModel @Inject constructor(
     private val tokenWallet: com.kachat.app.services.tokens.TokenWallet,
     /** Tips go through the chat payment path (iOS 148a5331 `ChatService.sendPayment(tip:)`). */
     private val tipSender: com.kachat.app.services.KaPostTipSender,
+    /** A self-follow checked on chain before an unfollow of it is paid for (audit L9). */
+    private val chainPosts: com.kachat.app.services.KaPostsChainPosts,
     @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context,
 ) : ViewModel() {
 
@@ -108,7 +111,10 @@ class KaPostsViewModel @Inject constructor(
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                com.kachat.app.services.KaPostTipSender.Outcome.Failed(e.message)
+                // Worded for the reader, as an instant tip's failure is (audit L6).
+                com.kachat.app.services.KaPostTipSender.Outcome.Failed(
+                    com.kachat.app.util.UserFacingError.message(e, appContext.getString(R.string.something_went_wrong))
+                )
             }
             onResult(outcome)
         }
@@ -258,6 +264,17 @@ class KaPostsViewModel @Inject constructor(
         private val SENDER_PROBE_BACKOFF_MS = longArrayOf(5_000L, 20_000L, 60_000L)
         private const val TAG = "KaPostsViewModel"
         const val UNDO_DELAY_MS = 5_000L
+
+        /**
+         * Whether anything shows what a poster's KNS lookup ([ensureSenderProfileFetched]) finds:
+         * its avatar, banner and bio only with the .kachat UI off (a `.kachat` profile is shown
+         * instead), its .kas name only then too ([posterName]), and the composers' @ suggestions
+         * only with mentions on ([com.kachat.app.util.MentionsFeature]). Neither holds now, so no
+         * row starts those lookups, or collects their maps, for nothing (audit H5).
+         */
+        val SHOWS_SENDER_KNS: Boolean
+            get() = !com.kachat.app.services.kachatnames.KachatNamesService.isEnabled ||
+                com.kachat.app.util.MentionsFeature.ENABLED
 
         /** Mentioned people's real keys, by x-only key, for this run: a key never changes parity
          *  (iOS 369794e `mentionKeyCache`). */
@@ -720,12 +737,6 @@ class KaPostsViewModel @Inject constructor(
         return result
     }
 
-    /** The selected tab's feed - kept for callers that only care about what's on screen. */
-    val visibleFeed: StateFlow<List<KaPostDraft>> = combine(
-        visiblePosts, visibleFollowingPosts, _selectedFeed,
-    ) { global, followingFeed, tab -> feedFor(tab, global, followingFeed) }
-        .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
     // MARK: - New posts waiting
 
     /**
@@ -877,12 +888,16 @@ class KaPostsViewModel @Inject constructor(
         }
         val key = translationKey(post)
         if (!considered.add(key)) return
-        viewModelScope.launch {
+        // Off the main thread: the URL and mention passes over the whole post and the language
+        // check ran on it for every row (audit M11).
+        viewModelScope.launch(Dispatchers.Default) {
             val source = translationService.detectLanguage(post.text) ?: return@launch
             // Pass the source we already have: canOfferTranslation would otherwise identify the
             // same text a second time.
             if (!translationService.canOfferTranslation(post.text, source)) return@launch
-            _translatable.value = _translatable.value + (key to source)
+            // the language may have changed meanwhile: that cleared what was considered for it
+            if (translationService.targetLanguage() != language) return@launch
+            _translatable.update { it + (key to source) }
         }
     }
 
@@ -1239,6 +1254,8 @@ class KaPostsViewModel @Inject constructor(
      * already knew instead of a feed of shortened addresses that fills in as requests land.
      */
     private fun seedSenderCachesFromDisk() {
+        // nothing would show it (SHOWS_SENDER_KNS): no disk read on the main thread for it
+        if (!SHOWS_SENDER_KNS) return
         val cached = knsProfileCache.snapshot()
         if (cached.isEmpty()) return
         _senderKnsNames.value = cached.mapValues { it.value.knsName?.takeIf { com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY } }.cappedForSenders()
@@ -1249,6 +1266,8 @@ class KaPostsViewModel @Inject constructor(
 
     fun ensureSenderProfileFetched(address: String) {
         if (address.isEmpty()) return
+        // 2-4+ KNS requests per new author whose answers nothing shows (audit H5)
+        if (!SHOWS_SENDER_KNS) return
         // A cached answer recent enough to still be true - the whole point of the disk cache.
         // Checked BEFORE the in-memory map so a seeded entry that has since gone stale is still
         // re-probed rather than being treated as settled for the life of the process.
@@ -1315,13 +1334,6 @@ class KaPostsViewModel @Inject constructor(
             }
         }
     }
-
-    /**
-     * A name as it is SHOWN. A KNS domain keeps its ".kas" everywhere: the suffix is part of the
-     * name, and KaPosts used to be the one place that dropped it. Aliases pass through exactly
-     * as the user wrote them.
-     */
-    fun displayKasName(name: String): String = name.trim()
 
     /**
      * A domain as a LOOKUP KEY: lowercased, ".kas" off. Typing and matching never need the
@@ -1437,10 +1449,25 @@ class KaPostsViewModel @Inject constructor(
         return shown.lowercase().contains(needle)
     }
 
+    /** Bumped by an account switch ([resetSearch]): a page the old account asked for lands nowhere. */
+    private var searchGeneration = 0
+
+    /** Search belongs to the account that ran it: a switch starts it over (audit L9). */
+    private fun resetSearch() {
+        searchGeneration++
+        searchLowercasedText = emptyMap()
+        _searchScanned.value = emptyList()
+        searchCursor = null
+        _searchHasMore.value = true
+        _searchLoadFailed.value = false
+        _isSearching.value = false
+    }
+
     /** Reads another stretch of the global feed into the searchable set. */
     fun searchLoadMore() {
         if (_isSearching.value || !_searchHasMore.value) return
         _isSearching.value = true
+        val generation = searchGeneration
         viewModelScope.launch {
             try {
                 val result = accumulate(
@@ -1452,6 +1479,7 @@ class KaPostsViewModel @Inject constructor(
                     isVisible = { true },
                     fetch = { before -> kaPostsService.fetchGlobalFeedPage(PAGE_LIMIT, before) },
                 )
+                if (generation != searchGeneration) return@launch
                 searchLowercasedText = searchLowercasedText + result.items.associate { it.id to it.text.lowercase() }
                 _searchScanned.value = _searchScanned.value + result.items
                 searchCursor = result.cursor
@@ -1463,7 +1491,7 @@ class KaPostsViewModel @Inject constructor(
                     ensureSenderProfileFetched(address)
                 }
             } finally {
-                _isSearching.value = false
+                if (generation == searchGeneration) _isSearching.value = false
             }
         }
     }
@@ -1503,11 +1531,6 @@ class KaPostsViewModel @Inject constructor(
         return tab != FeedTab.FOLLOWING || post.posterAddress in following.value
     }
 
-    /**
-     * Selecting a tab no longer refetches it: pages already accumulated (and the scroll position
-     * riding on them) must survive a swipe away and back. Only a never-loaded tab loads here; the
-     * Refresh control is what resets to page one.
-     */
     /** A post's popularity score. See the ordering in [feedFor]. */
     private fun popularityScore(post: KaPostDraft): Int =
         post.likes + post.reposts + post.dislikes + commentCount(post)
@@ -1645,6 +1668,11 @@ class KaPostsViewModel @Inject constructor(
         popularDockOnFeed = onFeed
     }
 
+    /**
+     * Selecting a tab no longer refetches it: pages already accumulated (and the scroll position
+     * riding on them) must survive a swipe away and back. Only a never-loaded tab loads here; the
+     * Refresh control is what resets to page one.
+     */
     fun selectFeed(tab: FeedTab) {
         // The new-posts pill belongs to the feed it was found for (iOS clears it when the feed
         // changes): carried over, its posts were spliced into the other tab.
@@ -1662,13 +1690,6 @@ class KaPostsViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Page one for [tab]: clears the accumulated pages, the cursor and the end-reached flag.
-     *
-     * The in-flight guard is PER TAB (the surface's own flag), not the shared header spinner -
-     * swiping to Following while the global feed is still loading has to be able to load
-     * Following, and the two write to different lists anyway.
-     */
     /**
      * One-shot per session: rebuild the LOCAL follow set from the on-chain follow graph.
      * The local set is what every Follow button and the Following feed filter read, and it
@@ -1730,22 +1751,26 @@ class KaPostsViewModel @Inject constructor(
                 followChainKeys = keys
                 // Read + write the CAPTURED account's scoped set (not following.value, which
                 // tracks whatever account is active by the time the fetch loop finishes).
-                val local = settings.kapostsFollowing(walletAddress).first()
-                val merged = (local + chain).toMutableSet()
                 // Only adding left an unfollow made on another device or in KaChat as
                 // "Following" here for good. What the last full read listed and this one doesn't
                 // was unfollowed elsewhere; a follow only ever on this phone was never listed,
                 // so it stays. Only from a full read: a cut-off list proves nothing (iOS 369794e).
-                if (complete) {
-                    followSync.lastChainList(walletAddress)?.let { last -> merged -= (last - chain) }
-                    followSync.setLastChainList(walletAddress, chain)
+                val unfollowedElsewhere = if (complete) {
+                    (followSync.lastChainList(walletAddress)?.let { last -> last - chain } ?: emptySet())
+                        .also { followSync.setLastChainList(walletAddress, chain) }
+                } else emptySet()
+                // Merged inside one read-and-write, so a follow tapped while this ran isn't lost
+                // (audit L8).
+                settings.updateKapostsFollowing(walletAddress) { local ->
+                    val merged = (local + chain).toMutableSet()
+                    merged -= unfollowedElsewhere
+                    // This session's own taps win: the chain may not list them yet.
+                    for (address in followsToggledThisSession.toList()) {
+                        if (address in local) merged += address else merged -= address
+                    }
+                    merged -= walletAddress
+                    merged
                 }
-                // This session's own taps win: the chain may not list them yet.
-                for (address in followsToggledThisSession.toList()) {
-                    if (address in local) merged += address else merged -= address
-                }
-                merged -= walletAddress
-                if (merged != local) settings.setKapostsFollowing(walletAddress, merged)
                 submitPendingFollows(walletAddress, listedOnChain = chain)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 followingChainSyncStarted = false
@@ -1822,8 +1847,12 @@ class KaPostsViewModel @Inject constructor(
                 resetTranslations()
                 // Account switch: nothing loaded belongs to the new identity.
                 resetLoadGates()
+                resetSearch()
                 // Nothing armed under the old account goes out as the new one: a pending
                 // 5-second post, like or edit is dropped with its countdown and toast.
+                // A post dropped in its countdown comes back as a draft when its account is
+                // open again, not only after a cold start (audit L7).
+                abandonCountdowns()
                 undoJobs.values.forEach { it.cancel() }
                 undoJobs.clear()
                 _undoDeadlines.value = emptyMap()
@@ -1860,6 +1889,20 @@ class KaPostsViewModel @Inject constructor(
         // One-time cleanup of the legacy GLOBAL follow set, which leaked one account's follows
         // into every other account on this device (fresh accounts started with them).
         viewModelScope.launch { settings.clearLegacyKapostsFollowing() }
+    }
+
+    override fun onCleared() {
+        // The countdowns die with this view model: what they held becomes a draft at that
+        // account's next recover rather than only after a cold start (audit L7).
+        abandonCountdowns()
+        super.onCleared()
+    }
+
+    /** Every post held behind a countdown that won't run now ([KaPostsHeldPostStore.abandon];
+     *  a no-op for ids it doesn't hold, such as a like's). */
+    private fun abandonCountdowns() {
+        val ids = undoJobs.keys.map { it.substringAfter(':') } + _undoToasts.value.map { it.postId }
+        ids.toSet().forEach { heldPosts.abandon(it) }
     }
 
     /**
@@ -1985,6 +2028,13 @@ class KaPostsViewModel @Inject constructor(
             if (below.isEmpty()) null else comment.copy(comments = below)
         }
 
+    /**
+     * Page one for [tab]: clears the accumulated pages, the cursor and the end-reached flag.
+     *
+     * The in-flight guard is PER TAB (the surface's own flag), not the shared header spinner -
+     * swiping to Following while the global feed is still loading has to be able to load
+     * Following, and the two write to different lists anyway.
+     */
     suspend fun loadFeed(tab: FeedTab = _selectedFeed.value) {
         syncFollowingFromChain()
         val key = feedKey(tab)
@@ -2139,9 +2189,12 @@ class KaPostsViewModel @Inject constructor(
                 val options = remote.decodedOptions
                 if (options.isEmpty()) null else KaPostDraft.KaPostPoll(
                     options = options,
-                    counts = List(options.size) { index -> remote.counts?.getOrNull(index) ?: 0 },
+                    counts = List(options.size) { index ->
+                        KaPostDraft.KaPostPoll.clampedCount(remote.counts?.getOrNull(index) ?: 0)
+                    },
                     closesAtMs = remote.closesAt ?: 0L,
-                    myVote = remote.myVote,
+                    // An index the options don't have is no vote (iOS audit 2026-11-21 #20).
+                    myVote = remote.myVote?.takeIf { it in options.indices },
                 )
             },
         )
@@ -2149,7 +2202,6 @@ class KaPostsViewModel @Inject constructor(
 
     // MARK: - Post tree mutation (local + remote lists; profile lists arrive in Phase B)
 
-    /** Every list a post can live in, in iOS mutatePost's search order. */
     /**
      * Posts read off the chain because the indexer could not answer for them (see [chainPost]).
      *
@@ -2160,10 +2212,18 @@ class KaPostsViewModel @Inject constructor(
      */
     private val _chainPosts = MutableStateFlow<List<KaPostDraft>>(emptyList())
 
+    /** Every list a post can live in, in iOS mutatePost's search order. */
     private fun allPostLists(): List<MutableStateFlow<List<KaPostDraft>>> = listOf(
         _localPosts, _globalPosts, _followingPosts, _posterProfilePosts, _posterProfileReplies,
         _myProfilePosts, _myProfileReplies, _chainPosts,
     )
+
+    /** A tip just sent counts on its post at once; the indexer's own count takes over on the
+     *  next refresh (iOS 0f241ce `countTip`). */
+    fun countTip(tip: com.kachat.app.models.KaPostTip?) {
+        val postId = tip?.postId ?: return
+        mutateEverywhere(KaPostDraft.stableId(postId)) { it.copy(tips = it.tips + 1) }
+    }
 
     /**
      * Applies [transform] to EVERY copy of the post, in every list AND the self-thread chains.
@@ -2177,13 +2237,6 @@ class KaPostsViewModel @Inject constructor(
      * lists without an occurrence keep their instance (mutatePostIn returns them reference-
      * equal) so their flows never tick.
      */
-    /** A tip just sent counts on its post at once; the indexer's own count takes over on the
-     *  next refresh (iOS 0f241ce `countTip`). */
-    fun countTip(tip: com.kachat.app.models.KaPostTip?) {
-        val postId = tip?.postId ?: return
-        mutateEverywhere(KaPostDraft.stableId(postId)) { it.copy(tips = it.tips + 1) }
-    }
-
     private fun mutateEverywhere(id: String, transform: (KaPostDraft) -> KaPostDraft) {
         for (flow in allPostLists()) {
             val (updated, hit) = mutatePostIn(flow.value, id, transform)
@@ -2511,7 +2564,10 @@ class KaPostsViewModel @Inject constructor(
                     val counts = live.counts.toMutableList()
                     val previous = live.myVote
                     if (previous != null && previous in counts.indices) counts[previous] = (counts[previous] - 1).coerceAtLeast(0)
-                    if (optionIndex in counts.indices) counts[optionIndex] = counts[optionIndex] + 1
+                    // Counts come from the indexer: never trust them to be in range.
+                    if (optionIndex in counts.indices) {
+                        counts[optionIndex] = KaPostDraft.KaPostPoll.clampedCount(counts[optionIndex] + 1)
+                    }
                     current.copy(poll = live.copy(counts = counts, myVote = optionIndex))
                 }
                 showActionToast(appContext.getString(R.string.feed54_vote_posted), txId)
@@ -2520,25 +2576,6 @@ class KaPostsViewModel @Inject constructor(
                 Log.w(TAG, "Poll vote failed", e)
                 if (e is com.kachat.app.services.SendOutcomeUnknownException) return@scheduleUndoable
                 showActionToast(failureText(appContext.getString(R.string.kaposts_couldnt_post_vote), e), txId = "", isFailure = true)
-            }
-        }
-    }
-
-    /** Takes one poll's numbers from the indexer, without reloading a feed. */
-    fun refreshPoll(localId: String, remoteId: String) {
-        viewModelScope.launch {
-            val remote = try { kaPostsService.fetchPoll(remoteId) } catch (_: Exception) { null } ?: return@launch
-            val options = remote.decodedOptions
-            if (options.isEmpty()) return@launch
-            mutateEverywhere(localId) { current ->
-                current.copy(
-                    poll = KaPostDraft.KaPostPoll(
-                        options = options,
-                        counts = List(options.size) { index -> remote.counts?.getOrNull(index) ?: 0 },
-                        closesAtMs = remote.closesAt ?: current.poll?.closesAtMs ?: 0L,
-                        myVote = remote.myVote ?: current.poll?.myVote,
-                    )
-                )
             }
         }
     }
@@ -2573,6 +2610,8 @@ class KaPostsViewModel @Inject constructor(
 
     /** Kick KNS lookups for every 1:1 contact so the @ autocomplete has domains to offer. */
     fun prefetchMentionCandidates() {
+        // only for @ suggestions, which show only with mentions on (audit H5)
+        if (!com.kachat.app.util.MentionsFeature.ENABLED) return
         for ((address, _) in contactAliases.value) ensureSenderProfileFetched(address)
     }
 
@@ -2825,14 +2864,17 @@ class KaPostsViewModel @Inject constructor(
         _unconfirmedThreadId.value = null
     }
 
-    /** Rapid sequential sends spend change the node hasn't indexed yet - retry with settle gaps. */
     /** How a post that didn't go through is shown: failed with Retry, or not confirmed with none
      *  (iOS e5a9b11 `failureStatus`). */
     private fun failureStatus(e: Throwable): KaPostDraft.Delivery =
         if (e is com.kachat.app.services.SendOutcomeUnknownException) KaPostDraft.Delivery.UNCONFIRMED else KaPostDraft.Delivery.FAILED
 
-    /** Never once the account that made the action ([owner]) isn't the open one: the retry would
-     *  be signed by another (iOS f954738). */
+    /**
+     * Rapid sequential sends spend change the node hasn't indexed yet - retry with settle gaps.
+     *
+     * Never once the account that made the action ([owner]) isn't the open one: the retry would
+     * be signed by another (iOS f954738).
+     */
     private suspend fun submitWithUtxoRetry(owner: String, op: suspend () -> String): String {
         var attempt = 0
         while (true) {
@@ -2857,10 +2899,17 @@ class KaPostsViewModel @Inject constructor(
     /** remoteId -> "its replies include one by the author" (false is cached: one probe per post). */
     // Seeded with the thread roots found in earlier sessions: a probe answers a question about
     // history that does not change (see KaPostsThreadProbeStore).
-    private val _threadRootFlags = MutableStateFlow<Map<String, Boolean>>(
-        threadProbeStore.persistedRoots().associateWith { true },
-    )
+    private val _threadRootFlags = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val threadRootFlags: StateFlow<Map<String, Boolean>> = _threadRootFlags.asStateFlow()
+
+    init {
+        // Read off the main thread: about 2,048 ids of JSON, once for each KaPost view model
+        // (audit L12). What this run found meanwhile is kept.
+        viewModelScope.launch(Dispatchers.IO) {
+            val roots = threadProbeStore.persistedRoots().associateWith { true }
+            _threadRootFlags.update { roots + it }
+        }
+    }
 
     /** root LOCAL id -> the author's continuation segments, in order. */
     private val _threadChains = MutableStateFlow<Map<String, List<KaPostDraft>>>(emptyMap())
@@ -2882,9 +2931,10 @@ class KaPostsViewModel @Inject constructor(
      * Claims live in [threadProbeStore], persisted across launches, so a post is never probed
      * twice - and the claim is a PLAIN store, not compose state: the flags map only ticks when a
      * post actually IS a thread root, so composing each commented row does not recompose the tab.
+     *
+     * Runs in the row's own effect (iOS: the row's `.task`): a row scrolled away cancels its
+     * wait for a slot and gives the claim back, so a fling doesn't queue every row it passed.
      */
-    /** Runs in the row's own effect (iOS: the row's `.task`): a row scrolled away cancels its
-     *  wait for a slot and gives the claim back, so a fling doesn't queue every row it passed. */
     suspend fun probeThreadRoot(post: KaPostDraft) {
         val remoteId = post.remoteId ?: return
         if (_threadRootFlags.value.containsKey(remoteId)) return
@@ -2897,7 +2947,7 @@ class KaPostsViewModel @Inject constructor(
         ) return
         run {
             val page = try {
-                threadProbeLimit.withPermit { kaPostsService.fetchRepliesPage(remoteId, 10, null) }
+                threadProbeLimit.withPermit { kaPostsService.fetchRepliesPage(remoteId, 10, null, keepPage = false) }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 // Never got to ask: give the claim back so the next appearance asks the question.
                 threadProbeStore.unclaim(remoteId)
@@ -2916,11 +2966,6 @@ class KaPostsViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Walks the author's self-reply chain from an opened root (root <- seg2 <- seg3 ... by the
-     * same author), fetching each link. Self-sufficient (fetches the first page itself), so it
-     * doesn't race loadReplies. Capped defensively.
-     */
     /** Ancestor chains from get-thread, keyed by the post's txid and held root first. */
     private val _fetchedAncestors = MutableStateFlow<Map<String, List<KaPostDraft>>>(emptyMap())
     val fetchedAncestors: StateFlow<Map<String, List<KaPostDraft>>> = _fetchedAncestors.asStateFlow()
@@ -2957,6 +3002,11 @@ class KaPostsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Walks the author's self-reply chain from an opened root (root <- seg2 <- seg3 ... by the
+     * same author), fetching each link. Self-sufficient (fetches the first page itself), so it
+     * doesn't race loadReplies. Capped defensively.
+     */
     fun loadSelfThreadChain(post: KaPostDraft) {
         val rootRemote = post.remoteId ?: return
         viewModelScope.launch {
@@ -2988,6 +3038,11 @@ class KaPostsViewModel @Inject constructor(
     /** Re-submits a failed post or reply (replies resolve their parent for the payload); a quote
      *  goes again as the quote, a poll as the poll (iOS f28f1dc). */
     fun retryPost(post: KaPostDraft) {
+        // Only a post that is still failed: a second tap on Retry before the row redraws finds it
+        // already PENDING and would otherwise send it (and pay for it) twice. Follows and tips
+        // have the same guard.
+        val current = findPost(post.id) ?: post
+        if (current.deliveryStatus != KaPostDraft.Delivery.FAILED) return
         // A failed THREAD resumes its remaining chain instead of re-posting just the root.
         if (threadRemainders.containsKey(post.id)) {
             continueThread(post.id)
@@ -3333,7 +3388,6 @@ class KaPostsViewModel @Inject constructor(
 
     // MARK: - Reposts/quotes (K's repost mechanism IS the quote action)
 
-    /** Plain repost: no optimistic card, 5s undo on the target's repost icon. */
     /** The X-style repost menu's Quote choice, raised from any cell — the main KaPosts screen
      *  collects this and opens its quote composer for the post. */
     private val _quoteRequest = MutableStateFlow<KaPostDraft?>(null)
@@ -3343,6 +3397,7 @@ class KaPostsViewModel @Inject constructor(
 
     fun consumeQuoteRequest() { _quoteRequest.value = null }
 
+    /** Plain repost: no optimistic card, 5s undo on the target's repost icon. */
     fun scheduleRepost(target: KaPostDraft) {
         // A post that is not on chain yet has nothing to quote: the flag just flips locally, the
         // way iOS's toggleRepost treats a local session post.
@@ -3511,8 +3566,7 @@ class KaPostsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // Scoped to the account that tapped the button, read fresh from its own key.
-                val current = settings.kapostsFollowing(walletAddress).first()
-                settings.setKapostsFollowing(walletAddress, if (willFollow) current + address else current - address)
+                settings.updateKapostsFollowing(walletAddress) { current -> if (willFollow) current + address else current - address }
                 var key = pubkey ?: followChainKeys[address]
                 if (key == null) {
                     key = resolveKaPostsPubkey(address)
@@ -3534,9 +3588,8 @@ class KaPostsViewModel @Inject constructor(
                     Log.w(TAG, "Follow submit failed", e)
                     if (e is com.kachat.app.services.SendOutcomeUnknownException) return@launch
                     // Back as it was, in the account that tapped the button (iOS ee5ec98).
-                    val now = settings.kapostsFollowing(walletAddress).first()
-                    if ((address in now) == willFollow) {
-                        settings.setKapostsFollowing(walletAddress, if (willFollow) now - address else now + address)
+                    settings.updateKapostsFollowing(walletAddress) { now ->
+                        if ((address in now) != willFollow) now else if (willFollow) now - address else now + address
                     }
                     // Another account is open now: the toast isn't theirs (iOS f954738).
                     if (myAddress() != walletAddress) return@launch
@@ -3556,12 +3609,13 @@ class KaPostsViewModel @Inject constructor(
         val wallet = walletManager.activeAddressFlow.value ?: return
         // Read from the store, not [muted]: a screen's copy may not have loaded yet, and writing
         // it back would replace the whole saved list with one entry.
-        viewModelScope.launch { settings.setKapostsMuted(wallet, settings.kapostsMuted(wallet).first() + address) }
+        // One read-and-write: two quick changes can't lose one (audit L8).
+        viewModelScope.launch { settings.updateKapostsModeration(wallet) { muted, blocked -> (muted + address) to blocked } }
     }
 
     fun unmute(address: String) {
         val wallet = walletManager.activeAddressFlow.value ?: return
-        viewModelScope.launch { settings.setKapostsMuted(wallet, settings.kapostsMuted(wallet).first() - address) }
+        viewModelScope.launch { settings.updateKapostsModeration(wallet) { muted, blocked -> (muted - address) to blocked } }
     }
 
     fun block(address: String) {
@@ -3569,8 +3623,7 @@ class KaPostsViewModel @Inject constructor(
         val wallet = walletManager.activeAddressFlow.value ?: return
         viewModelScope.launch {
             // Block supersedes mute - no need to track both.
-            settings.setKapostsBlocked(wallet, settings.kapostsBlocked(wallet).first() + address)
-            settings.setKapostsMuted(wallet, settings.kapostsMuted(wallet).first() - address)
+            settings.updateKapostsModeration(wallet) { muted, blocked -> (muted - address) to (blocked + address) }
         }
         // Their bell goes too: the push service sends every new post by a watched author, and a
         // background push never passes the block list. Turning it off re-registers without them
@@ -3581,7 +3634,7 @@ class KaPostsViewModel @Inject constructor(
 
     fun unblock(address: String) {
         val wallet = walletManager.activeAddressFlow.value ?: return
-        viewModelScope.launch { settings.setKapostsBlocked(wallet, settings.kapostsBlocked(wallet).first() - address) }
+        viewModelScope.launch { settings.updateKapostsModeration(wallet) { muted, blocked -> muted to (blocked - address) } }
     }
 
     /** On chain, the bookmark is kept per account ([bookmarkStore]); its change flow sets the
@@ -3755,6 +3808,9 @@ class KaPostsViewModel @Inject constructor(
                         if (!selfUnfollowScrubbed) {
                             selfUnfollowScrubbed = true
                             launch {
+                                // Only when the chain itself shows the self-follow: the indexer's
+                                // word alone never spends a fee (audit L9).
+                                if (chainPosts.followsSelfOnChain(pubkey) != true) return@launch
                                 try { kaPostsService.submitFollow(false, pubkey, expectedOwner = owner) } catch (_: Exception) {}
                             }
                         }
@@ -3953,11 +4009,6 @@ class KaPostsViewModel @Inject constructor(
     val isLoadingNotifications: StateFlow<Boolean> = _isLoadingNotifications.asStateFlow()
 
     /**
-     * Wire notification -> row. Null drops it entirely (our own actions, muted/blocked actors),
-     * which is the notification stream's own filter-shrinkage - the fetch loop keeps paging until
-     * enough rows survive it.
-     */
-    /**
      * Which KaPosts activity the user wants to hear about, as a snapshot readable without
      * suspending - [mapNotification] runs inside a mapping lambda and cannot await DataStore.
      */
@@ -4002,6 +4053,11 @@ class KaPostsViewModel @Inject constructor(
         notificationsHidden = settings.kapostsMuted(wallet).first() + settings.kapostsBlocked(wallet).first()
     }
 
+    /**
+     * Wire notification -> row. Null drops it entirely (our own actions, muted/blocked actors),
+     * which is the notification stream's own filter-shrinkage - the fetch loop keeps paging until
+     * enough rows survive it.
+     */
     private fun mapNotification(n: com.kachat.app.services.KNotification): NotificationItem? {
         val my = myAddress()
         val address = KaPostsService.kaspaAddressFromPubkey(n.userPublicKey) ?: return null

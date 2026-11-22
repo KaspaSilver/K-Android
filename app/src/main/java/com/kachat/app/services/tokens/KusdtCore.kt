@@ -27,7 +27,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
-import org.json.JSONTokener
 import java.io.ByteArrayInputStream
 import java.security.MessageDigest
 import javax.inject.Inject
@@ -77,6 +76,9 @@ class KusdtCore @Inject constructor(
     sealed class CoreError(message: String) : Exception(message) {
         class Unavailable(message: String) : CoreError(message)
         class Refused(message: String) : CoreError(message)
+        /** `execute` held a key and gave no answer (time ran out, the page died or threw): the
+         *  trade may have gone out anyway (iOS `CoreError.maybeSent`, audit 2026-11-21 #1). */
+        class MaybeSent(message: String) : CoreError(message)
     }
 
     private class CallAnswer(val text: String?, val error: String?)
@@ -131,17 +133,24 @@ class KusdtCore @Inject constructor(
         if (function != "prepare" && function != "execute") throw CoreError.Unavailable("bad call")
         load()
         loadWallet()
-        val text = call(kind = "wallet", fn = function, command = null, request = request.toString(), timeoutMs = callTimeoutMs(function))
-            ?: throw CoreError.Unavailable(context.getString(R.string.kp_trestly_pool_code_no_answer))
-        parseObject(text) ?: throw CoreError.Unavailable(context.getString(R.string.kp_trestly_pool_code_no_answer))
+        // From the post on, `execute` holds the key: no answer may mean the trade went out anyway,
+        // so it says so and the caller holds the address (iOS `wallet`, audit 2026-11-21 #1).
+        val mayLand = function == "execute"
+        val noAnswer = context.getString(R.string.kp_trestly_pool_code_no_answer)
+        val text = call(kind = "wallet", fn = function, command = null, request = request.toString(), timeoutMs = callTimeoutMs(function), sentMayLand = mayLand)
+            ?: throw (if (mayLand) CoreError.MaybeSent(noAnswer) else CoreError.Unavailable(noAnswer))
+        parseObject(text) ?: throw (if (mayLand) CoreError.MaybeSent(noAnswer) else CoreError.Unavailable(noAnswer))
     }
 
-    /** Sends one call to the page and waits for its answer, at most [timeoutMs]. Null: no answer. */
-    private suspend fun call(kind: String, fn: String?, command: String?, request: String, timeoutMs: Long): String? {
+    /** Sends one call to the page and waits for its answer, at most [timeoutMs]. Null: no answer.
+     *  [sentMayLand]: once posted, a missing answer is [CoreError.MaybeSent], not Unavailable. */
+    private suspend fun call(kind: String, fn: String?, command: String?, request: String, timeoutMs: Long, sentMayLand: Boolean = false): String? {
         val proxy = replyProxy ?: throw CoreError.Unavailable(context.getString(R.string.kusdt_builder_couldnt_start))
         val id = nextCallId++
         val answer = CompletableDeferred<CallAnswer>()
         calls[id] = answer
+        // a spending key goes in with a transfer's coins and with a trade's execute
+        if ((kind == "wallet" && fn == "execute") || request.contains("\"secretKey\"")) keyHeld = true
         try {
             val message = JsonObject().apply {
                 addProperty("t", "call")
@@ -156,17 +165,49 @@ class KusdtCore @Inject constructor(
             } catch (e: Exception) {
                 throw CoreError.Unavailable(context.getString(R.string.kusdt_builder_no_answer))
             }
-            // a review or trade never spins forever (iOS audit, 2026-11-20)
-            val got = withTimeoutOrNull(timeoutMs) { answer.await() }
-                ?: throw CoreError.Unavailable(context.getString(R.string.kusdt_builder_no_answer))
+            fun noAnswer(): CoreError = if (sentMayLand) {
+                CoreError.MaybeSent(context.getString(R.string.kp_trestly_pool_code_no_answer))
+            } else {
+                CoreError.Unavailable(context.getString(R.string.kusdt_builder_no_answer))
+            }
+            // a review or trade never spins forever (iOS audit, 2026-11-20); the page dying while
+            // it ran (tearDown) is no answer too
+            val got = try {
+                withTimeoutOrNull(timeoutMs) { answer.await() }
+            } catch (e: CoreError.Unavailable) {
+                throw noAnswer()
+            } ?: throw noAnswer()
             got.error?.let { why ->
                 // iOS: callAsyncJavaScript throws when the page's code does
                 Log.w(TAG, "the builder page threw: ${why.take(200)}")
-                throw CoreError.Unavailable(context.getString(R.string.kusdt_builder_no_answer))
+                throw noAnswer()
             }
             return got.text
         } finally {
             calls.remove(id)
+            retireSoonIfKeyHeld()
+        }
+    }
+
+    /** A key went into the page since it started: its JS heap may still hold the key as a string,
+     *  so the page goes once nothing has used it for [KEY_IDLE_RETIRE_MS], and the next call starts
+     *  a fresh one (audit L14). Calls in a row (a transfer's retries, a requote) keep it up. */
+    private var keyHeld = false
+    private var retireJob: kotlinx.coroutines.Job? = null
+
+    /** Main thread. */
+    private fun retireSoonIfKeyHeld() {
+        if (!keyHeld) return
+        val view = webView ?: return
+        retireJob?.cancel()
+        retireJob = main.launch {
+            delay(KEY_IDLE_RETIRE_MS)
+            // a call still running re-arms this when it ends
+            if (webView !== view || calls.isNotEmpty() || waiting.isNotEmpty() || walletWaiting.isNotEmpty()) return@launch
+            Log.i(TAG, "the builder page held a key: closed until the next use")
+            tearDown()
+            walletReady = false
+            walletError = null
         }
     }
 
@@ -403,6 +444,9 @@ class KusdtCore @Inject constructor(
         replyProxy = null
         files = emptyMap()
         ready = false
+        keyHeld = false
+        retireJob?.cancel()
+        retireJob = null
         val pending = calls.values.toList()
         calls.clear()
         pending.forEach { it.completeExceptionally(CoreError.Unavailable(context.getString(R.string.kusdt_builder_no_answer))) }
@@ -621,6 +665,8 @@ class KusdtCore @Inject constructor(
          *  up to 30 s to see the trade accepted, merges first). */
         private const val START_TIMEOUT_MS = 25_000L
         private const val RETRY_AFTER_MS = 10_000L
+        /** How long a page that held a key stays up with nothing using it. */
+        private const val KEY_IDLE_RETIRE_MS = 15_000L
 
         internal fun callTimeoutMs(function: String): Long = when (function) {
             "execute" -> 240_000L
@@ -630,12 +676,5 @@ class KusdtCore @Inject constructor(
 
         private fun isOwnOrigin(origin: Uri): Boolean =
             "${origin.scheme}://${origin.host}" == ORIGIN && origin.port == -1
-
-        /** [WebView.evaluateJavascript]'s answer (the result as JSON) to the string it holds;
-         *  null for `null`, no answer, or anything but a string. */
-        internal fun decodeJsResult(raw: String?): String? {
-            if (raw == null) return null
-            return try { JSONTokener(raw).nextValue() as? String } catch (e: Exception) { null }
-        }
     }
 }

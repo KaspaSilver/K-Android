@@ -141,7 +141,9 @@ fun ColdStorageListScreen(
     var manualKpubInput by remember { mutableStateOf("") }
     var pendingKpub by remember { mutableStateOf<String?>(null) }
     var nameInput by remember { mutableStateOf("") }
-    val clipboardManager = LocalClipboardManager.current
+    // A kpub reveals every address of the account and their whole history: copied like the app's
+    // other sensitive values, marked sensitive and cleared after 30 s (iOS 428a797b, audit #4).
+    val kpubContext = LocalContext.current
     val kpubHaptic = com.kachat.app.util.rememberHaptics()
     /** Account whose kpub QR is on screen. */
     var kpubQrAccount by remember { mutableStateOf<ColdStorageManager.ColdAccount?>(null) }
@@ -316,7 +318,7 @@ fun ColdStorageListScreen(
                                     subtitle = tr(R.string.kp_puts_the_extended_public_key_kc),
                                 ) {
                                     showMenu = false
-                                    clipboardManager.setText(AnnotatedString(account.kpub))
+                                    com.kachat.app.util.copyPrivateKeyWithAutoWipe(kpubContext, account.kpub, label = "kpub")
                                     kpubHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
                                     IosToasts.show("kpub copied to clipboard.")
                                 }
@@ -374,6 +376,7 @@ fun ColdStorageListScreen(
             // A kpub is ~114 characters; the two-line default is for an address and would cut it.
             valueMaxLines = 5,
             copiedToast = "kpub copied to clipboard.",
+            sensitiveCopy = true,
         )
     }
 
@@ -559,6 +562,16 @@ fun ColdStorageDetailScreen(
         viewModel.refreshAddresses(accountId)
     }
 
+    // A receipt or spend on one of this account's addresses: reload, so the funds show without a
+    // manual pull (iOS ColdStorageView's `.ownAddressUtxoActivity`).
+    LaunchedEffect(accountId) {
+        viewModel.ownAddressActivity.collect { changed ->
+            if (!viewModel.isDiscovering.value && viewModel.addresses.value.any { it.address in changed }) {
+                viewModel.refreshAddresses(accountId)
+            }
+        }
+    }
+
     LaunchedEffect(pullRefreshState.isRefreshing) {
         if (pullRefreshState.isRefreshing) {
             viewModel.refreshAddresses(accountId)
@@ -683,7 +696,8 @@ fun ColdStorageDetailScreen(
                     Row(
                         modifier = Modifier.clickable {
                             account?.kpub?.let {
-                                clipboardManager.setText(AnnotatedString(it))
+                                // marked sensitive, cleared after 30 s (iOS 428a797b, audit #4)
+                                com.kachat.app.util.copyPrivateKeyWithAutoWipe(context, it, label = "kpub")
                                 kpubHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
                                 IosToasts.show("kpub copied to clipboard.")
                             }
@@ -698,23 +712,16 @@ fun ColdStorageDetailScreen(
             }
 
             item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(LocalAppColors.current.surface)
-                        .padding(20.dp)
-                ) {
-                    Text(stringResource(R.string.total_balance), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                    Text(
-                        // grouped, all eight decimals (iOS 3d126db `KaspaUnit.groupedExact`)
-                        "${KaspaUnit.groupedExact(totalBalanceSompi)} ${KaspaUnit.symbol}",
-                        color = LocalAppColors.current.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // The same card as Manage Addresses' total (and an address's own page), with
+                    // its worth in your currency on mainnet (iOS 428a797b `KaspaAddressBalanceCard`).
+                    com.kachat.app.ui.screens.KaspaAddressBalanceCard(
+                        label = stringResource(R.string.total_balance),
+                        sompi = totalBalanceSompi,
                     )
 
-                    Spacer(Modifier.height(16.dp))
+                    // iOS: the summary's 18 apart, under the card's own 8
+                    Spacer(Modifier.height(18.dp))
                     // Directly under the balance rather than floating over the list: the actions
                     // are about this account, so they belong with it, and a FAB covered the last
                     // address row on a short list.
@@ -946,11 +953,19 @@ fun ColdStorageAddressVisibilityScreen(
 
     val start = page * pageSize
     val end = start + pageSize - 1
-    val pageEntries = remember(byIndex, page) {
+    // The page's addresses derive off the main thread (EC math, 50 per page); until they land a
+    // row reads "deriving...", as it already did for one that failed.
+    val derivedPage by produceState<Map<Int, String>>(emptyMap(), accountId, page) {
+        val range = start..end
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            range.associateWith { viewModel.coldAddressAt(accountId, it) ?: "" }
+        }
+    }
+    val pageEntries = remember(byIndex, page, derivedPage) {
         (start..end).map { index ->
             byIndex[index] ?: ColdStorageViewModel.AddressRow(
                 index = index,
-                address = viewModel.coldAddressAt(accountId, index) ?: "",
+                address = derivedPage[index] ?: "",
                 balanceSompi = 0L,
                 hasHistory = false,
                 label = null,
@@ -1670,7 +1685,7 @@ private fun ColdSendFlow(
     }
     // To, From, the fee and the total, as built (iOS summaryCard).
     val summaryCard: @Composable (Long) -> Unit = { feeSompi ->
-        ColdSummaryCard {
+        SendReviewCard {
             toRow()
             HorizontalDivider(color = colors.divider)
             fromRow()
@@ -1828,7 +1843,7 @@ private fun ColdSendFlow(
                                     modifier = Modifier.padding(top = 8.dp),
                                 )
 
-                                ColdSummaryCard {
+                                SendReviewCard {
                                     toRow()
                                     HorizontalDivider(color = colors.divider)
                                     fromRow()
@@ -2046,21 +2061,7 @@ private val ColdSendStepSpring = spring(dampingRatio = 0.9f, stiffness = 247f, v
 /** iOS `.monospacedDigit()`. */
 private val ColdTabularDigits = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum")
 
-/** The review's and the summary's card: rows on the Send Kaspa glass (iOS `sendKaspaGlass(20)`),
- *  subheadline. */
-@Composable
-private fun ColdSummaryCard(content: @Composable ColumnScope.() -> Unit) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .sendKaspaGlass(20.dp)
-            .padding(14.dp),
-        content = content,
-    )
-}
-
-/** One row of [ColdSummaryCard] (iOS `reviewRow`): the grey label leading, the value trailing,
+/** One row of [SendReviewCard] (iOS `reviewRow`): the grey label leading, the value trailing,
  *  on the first line's baseline. */
 @Composable
 private fun ColdReviewRow(label: String, value: @Composable ColumnScope.() -> Unit) {
@@ -2539,7 +2540,7 @@ fun ColdStorageTxHistoryScreen(
     }
 
     if (showPublicKey) {
-        ColdAddressPublicKeyOverlay(
+        com.kachat.app.ui.screens.AddressPublicKeyOverlay(
             address = address,
             note = tr(R.string.kp_this_is_the_public_half_of_c5f98),
             onDismiss = { showPublicKey = false },
@@ -2884,7 +2885,7 @@ private fun ColdTransactionActionsSheet(
 /** "Sent 12.5 KAS on Sep 3, 2026, 2:02 PM" - what is about to be acted on, in one line. */
 private fun coldTransactionSummary(tx: ColdStorageAddressDiscovery.AddressTransaction, is24Hour: Boolean): String {
     val direction = if (tx.sent) tr(R.string.kp_sent_35f49) else tr(R.string.kp_received_27548)
-    val amount = com.kachat.app.services.AddressActivityNotifier.formatKas(tx.amountSompi)
+    val amount = com.kachat.app.repository.ChatRepository.formatKas(tx.amountSompi)
     val time = tx.blockTimeMillis?.let { com.kachat.app.util.IosDateStyle.mediumDateShortTime(it, is24Hour) }
     if (time == null) return "$direction $amount ${KaspaUnit.symbol}"
     return tr(
@@ -2952,100 +2953,5 @@ private fun ColdStorageReceivePage(
             ),
             icon = { KaspaLogoIcon() },
         )
-    }
-}
-
-/** An address's public key, full screen (iOS `AddressPublicKeyView`; KaChat's own copy is private to
- *  Screens.kt). Safe to share: it cannot spend. */
-@Composable
-private fun ColdAddressPublicKeyOverlay(address: String, note: String, onDismiss: () -> Unit) {
-    val keyCopyHaptic = com.kachat.app.util.rememberHaptics()
-    val colors = LocalAppColors.current
-    val context = LocalContext.current
-    val clipboard = LocalClipboardManager.current
-    // null only for an address shape that carries no key (script-hash), which the wallet's own
-    // chatting address never is.
-    val publicKeyHex = remember(address) {
-        runCatching {
-            com.kachat.app.util.KaspaAddress.decode(address).second.joinToString("") { "%02x".format(it) }
-        }.getOrNull()
-    }
-
-    BackHandler(onBack = onDismiss)
-
-    Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                SheetBarBackButton(onClick = onDismiss)
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    stringResource(R.string.public_key),
-                    color = colors.textPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp,
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(KaspaTeal.copy(alpha = 0.1f))
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.VerifiedUser, null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.safe_to_share), color = colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                }
-                Text(
-                    note,
-                    color = colors.textSecondary,
-                    fontSize = 13.sp,
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
-
-            if (publicKeyHex != null) {
-                Text(
-                    publicKeyHex,
-                    color = colors.textPrimary,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(colors.surface)
-                        .padding(16.dp),
-                )
-                Spacer(Modifier.height(16.dp))
-                TextButton(onClick = {
-                    clipboard.setText(AnnotatedString(publicKeyHex))
-                    keyCopyHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                    IosToasts.show(context.getString(R.string.public_key_copied))
-                }) {
-                    Icon(Icons.Default.ContentCopy, null, tint = KaspaTeal, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.copy_public_key), color = KaspaTeal, fontWeight = FontWeight.Bold)
-                }
-            } else {
-                Text(
-                    stringResource(R.string.this_address_does_not_carry_a_public),
-                    color = colors.textSecondary,
-                    fontSize = 14.sp,
-                )
-            }
-        }
     }
 }

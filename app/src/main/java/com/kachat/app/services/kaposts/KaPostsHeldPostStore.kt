@@ -85,6 +85,17 @@ class KaPostsHeldPostStore @Inject constructor(
         store(load(key).filterNot { it.id == id }, key)
     }
 
+    /**
+     * A held post this run will not send after all: its 5-second countdown was dropped by an
+     * account switch, or with its view model. Its words stay under the account that wrote it, and
+     * that account's next [recover] (a switch back to it, or the next launch) makes them a draft.
+     * Kept as "active" instead, they were skipped until a cold start.
+     */
+    @Synchronized
+    fun abandon(id: String) {
+        active.remove(id)
+    }
+
     /** Hands one kept post to the Drafts screen now. Stays kept if its account isn't the open one. */
     @Synchronized
     fun saveAsDraft(id: String) {

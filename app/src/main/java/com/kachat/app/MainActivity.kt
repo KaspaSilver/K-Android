@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
     // Through Lazy: it needs the wallet store, and that's checked before anything builds it.
     @Inject lateinit var walletManagerLazy: dagger.Lazy<com.kachat.app.services.WalletManager>
     @Inject lateinit var shareShortcutsLazy: dagger.Lazy<com.kachat.app.services.ShareShortcutsManager>
+    // A tapped Received KAS push: the address's history, or Wallet for Cold Storage (iOS 428a797b).
+    @Inject lateinit var addressActivityNotifierLazy: dagger.Lazy<com.kachat.app.services.AddressActivityNotifier>
 
     // The KaChat sheet that explains the battery exemption before Android's own dialog. Re-derived
     // on every resume (see refreshBatteryRationale), so it follows the notification answer.
@@ -412,12 +414,42 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         // A .kachat name notification (a local renewal reminder, or the indexer's name_event
-        // push): that name on the .kachat tab.
-        intent.getStringExtra(NotificationHelper.EXTRA_KACHAT_NAME)?.takeIf { it.isNotBlank() }?.let {
-            openKachatName(it)
+        // push): that name on the .kachat tab; a name push naming none, .kachat itself (iOS
+        // 428a797b).
+        val kachatName = intent.getStringExtra(NotificationHelper.EXTRA_KACHAT_NAME)?.takeIf { it.isNotBlank() }
+        val opensKachat = intent.getBooleanExtra(NotificationHelper.EXTRA_OPEN_KACHAT, false)
+        intent.removeExtra(NotificationHelper.EXTRA_OPEN_KACHAT)
+        if (kachatName != null || opensKachat) {
+            openKachat(kachatName)
             return true
         }
         return false
+    }
+
+    /** .kachat at [rawName] when it is a valid name, else .kachat itself (iOS 428a797b
+     *  `PendingTabRoute.pending = .kachatNames`). */
+    private fun openKachat(rawName: String?) {
+        if (!com.kachat.app.services.kachatnames.KachatNamesService.isLaunched) return
+        if (rawName != null) openKachatName(rawName)
+        if (com.kachat.app.ui.screens.KachatDeepLink.pendingName.value == null) {
+            com.kachat.app.ui.screens.KachatDeepLink.pendingTab.value = true
+        }
+    }
+
+    /**
+     * A tapped Received KAS push (`address_activity`, iOS 428a797b): that address's history, as
+     * the app's own notice opens it; a Cold Storage address has none here, so Wallet.
+     */
+    private fun openReceivedPush(rawAddress: String?) {
+        val address = rawAddress?.trim()?.takeIf { com.kachat.app.util.KaspaAddress.isValid(it) }
+        if (address == null) {
+            pendingWalletActivityKind = NotificationHelper.KIND_SPENDING
+            return
+        }
+        lifecycleScope.launch {
+            val opensHistory = runCatching { addressActivityNotifierLazy.get().opensHistory(address) }.getOrDefault(true)
+            if (opensHistory) pendingOwnAddress = address else pendingWalletActivityKind = NotificationHelper.KIND_COLD
+        }
     }
 
     /** [raw] as the .kachat tab's pending name: bare, normalized, and a valid name or nothing. */
@@ -425,8 +457,15 @@ class MainActivity : AppCompatActivity() {
         val name = runCatching {
             com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(raw.trim().lowercase().removeSuffix(".kachat"))
         }.getOrNull()?.takeIf { com.kachat.app.services.kachatnames.KachatNames.Codec.isValid(it) } ?: return
+        // names not live on this network: nothing would take it now, and it would open later,
+        // unexpectedly, after a network switch (audit LOW L13)
+        if (!com.kachat.app.services.kachatnames.KachatNamesService.isLaunched) return
         com.kachat.app.ui.screens.KachatDeepLink.pendingName.value = name
     }
+
+    /** [raw] when it is a Kaspa address, the only thing a chat route is made of; null otherwise. */
+    private fun routableContactId(raw: String?): String? =
+        raw?.takeIf { com.kachat.app.util.KaspaAddress.isValid(it) }
 
     /**
      * Routes a tap on a notification FCM drew from its own `notification` block, using the data
@@ -435,10 +474,6 @@ class MainActivity : AppCompatActivity() {
      * a server-side change to which of them carry a `notification` block cannot silently break
      * their taps.
      */
-    /** [raw] when it is a Kaspa address, the only thing a chat route is made of; null otherwise. */
-    private fun routableContactId(raw: String?): String? =
-        raw?.takeIf { com.kachat.app.util.KaspaAddress.isValid(it) }
-
     private fun applyFcmNotificationTarget(intent: Intent) {
         // The push's own `type` names it; a KaPosts push also carries thread_id "kaposts" (the
         // same thread the iOS payload uses), which is taken when `type` is missing.
@@ -475,13 +510,15 @@ class MainActivity : AppCompatActivity() {
                     com.kachat.app.ui.screens.NotificationsRoute.pending.value = true
                 }
             }
-            // A .kachat name push (offers, sales, renewal): that name.
-            "name_event" -> intent.getStringExtra("name")?.takeIf { it.isNotBlank() }?.let { openKachatName(it) }
+            // A .kachat name push (offers, sales, renewal): that name, else .kachat (iOS 428a797b).
+            "name_event" -> openKachat(intent.getStringExtra("name")?.takeIf { it.isNotBlank() })
+            // A Received KAS push: that address's history, or Wallet (iOS 428a797b).
+            "address_activity" -> openReceivedPush(intent.getStringExtra("address"))
         }
         // A KaPosts push names its post under any of these; stripped with the rest.
         FCM_KEYS_POST_ID.forEach(intent::removeExtra)
         // Stripped once read, so a configuration change cannot route the same tap twice.
-        listOf("channel", "sender", "thread_id", "tx_id", "kaposts_kind", "body", "name").forEach(intent::removeExtra)
+        listOf("channel", "sender", "thread_id", "tx_id", "kaposts_kind", "body", "name", "address").forEach(intent::removeExtra)
     }
 
     /** The host a KaChat web link arrives on: kachat.app, the one the app writes. */

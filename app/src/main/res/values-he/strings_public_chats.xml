@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">מקודד…</string>
     <string name="pc_room_voice_receiving">מתקבל… %1$d מתוך %2$d</string>
     <string name="pc_room_voice_recording">הַקלָטָה...</string>
-    <string name="pc_rooms53_channel_name_invalid">שם ערוץ חייב להכיל 1-%1$d תווים, ללא רווחים או נקודתיים.</string>
     <string name="pc_rooms53_day_one">%1$d יום</string>
     <string name="pc_rooms53_days">%1$d ימים</string>
-    <string name="pc_rooms53_join_failed">משהו השתבש בהצטרפות לערוץ הזה.</string>
     <string name="pc_rooms54_failed_to_edit">העריכה נכשלה: %1$s</string>
     <string name="pc_rooms54_failed_to_send">השליחה נכשלה: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">שליחת ההודעה הקולית נכשלה: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">הפרופיל שלהם ב-KaPost: פוסטים, תגובות ועוקבים.</string>
     <string name="pc_sender_send_kaspa_subtitle">שלח Kaspa לכתובת שלהם.</string>
     <string name="pc_sender_copy_address_subtitle">העתק את כתובת ה-Kaspa שלו.</string>
-    <string name="pc_public_chats">צ\'אטים ציבוריים</string>
+    <string name="pc_original_message_not_loaded">ההודעה המקורית לא נטענה</string>
 </resources>

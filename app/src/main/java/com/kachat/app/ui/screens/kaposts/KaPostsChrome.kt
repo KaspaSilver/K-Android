@@ -1,6 +1,7 @@
 package com.kachat.app.ui.screens
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Repeat
@@ -21,20 +22,33 @@ import com.kachat.app.viewmodels.WalletViewModel
  *  `kaPostsFixedTitle`). The backup strip sits above the title (iOS e5a9b11); [onOpenBackup]
  *  opens the backup steps. */
 @Composable
-fun KaPostsFixedTitle(title: String, onOpenBackup: (() -> Unit)? = null) {
+fun KaPostsFixedTitle(
+    title: String,
+    onOpenBackup: (() -> Unit)? = null,
+    /** Something beside the title (Profile's Share Profile, iOS 804cbcb7). */
+    accessory: (@Composable () -> Unit)? = null,
+) {
     val colors = LocalAppColors.current
     if (onOpenBackup != null) {
         val walletViewModel: WalletViewModel = hiltViewModel()
         AccountBackupBanner(viewModel = walletViewModel, onOpenBackup = onOpenBackup)
     }
-    Text(
-        text = title,
-        color = colors.textPrimary,
-        fontSize = LargeTitleSize,
-        fontWeight = FontWeight.Bold,
-        maxLines = 1,
+    androidx.compose.foundation.layout.Row(
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 6.dp),
-    )
+    ) {
+        Text(
+            text = title,
+            color = colors.textPrimary,
+            fontSize = LargeTitleSize,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+        )
+        if (accessory != null) {
+            androidx.compose.foundation.layout.Spacer(Modifier.width(12.dp))
+            accessory()
+        }
+    }
     androidx.compose.material3.HorizontalDivider(color = colors.surfaceVariant)
 }
 

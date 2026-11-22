@@ -6,7 +6,6 @@
     <string name="withdrawal_failed">Penarikan gagal</string>
     <string name="n_12_words">12 kata</string>
     <string name="n_24_words">24 kata</string>
-    <string name="a_kns_inscription_s_commit_transaction">Transaksi commit inskripsi KNS sudah berhasil, tetapi reveal belum pernah selesai. Coba lagi sekarang untuk menyelesaikannya; dana Anda tertahan dengan aman sampai Anda melakukannya.</string>
     <string name="accept">Terima</string>
     <string name="account_name">Nama Akun</string>
     <string name="active_nodes">Node Aktif</string>
@@ -88,7 +87,6 @@
     <string name="kns_domains">Domain Anda</string>
     <string name="contact_kns_domains">Domain KNS</string>
     <string name="kachat">KaChat</string>
-    <string name="kachat_logo">Logo K</string>
     <string name="kachat_needs_to_connect_to_a">K perlu terhubung ke sebuah node. Bagaimana Anda ingin terhubung?</string>
     <string name="kaspa_explorer">Penjelajah Kaspa</string>
     <string name="label_optional">Label (opsional)</string>
@@ -127,7 +125,6 @@
     <string name="photo">Foto</string>
     <string name="photo_message">Pesan foto</string>
     <string name="photo_message_full_screen">Pesan foto, layar penuh</string>
-    <string name="photos">Foto</string>
     <string name="pool_health">Kesehatan Kumpulan</string>
     <string name="promote_pawn_to">Promosikan pion ke:</string>
     <string name="read">Dibaca</string>
@@ -195,7 +192,6 @@
     <string name="discover_addresses">Temukan Alamat</string>
     <string name="email">Email</string>
     <string name="explorer">Penjelajah</string>
-    <string name="generate_new_spending_address">Buat Alamat Pengeluaran Baru</string>
     <string name="github">GitHub</string>
     <string name="hide_user">Sembunyikan Pengguna</string>
     <string name="ip_address_book">Buku Alamat IP</string>
@@ -206,8 +202,6 @@
     <string name="kaspa_node">Node Kaspa</string>
     <string name="default_recommended">Default (Disarankan)</string>
     <string name="automatic_scan">Pindai Otomatis</string>
-    <string name="kaspa_node_quick_access_footer">Pindai Otomatis menemukan dan terhubung ke node terbaik yang tersedia. Memilih node tertentu hanya terhubung ke node itu, tanpa beralih ke node lain. Kelola alamat tersimpan di Pengaturan Koneksi > Buku Alamat IP.</string>
-    <string name="node_connections_blocked">Koneksi node tampaknya diblokir di jaringan ini. Penerimaan pesan tetap berjalan lewat indexer dan pembayaran biasa tetap diproses lewat REST API, tetapi mengirim pesan obrolan membutuhkan koneksi node.</string>
     <string name="last_sync">Sinkronisasi Terakhir</string>
     <string name="latency">Latensi</string>
     <string name="open_chat">Buka Obrolan</string>
@@ -309,7 +303,6 @@
     <string name="not_available_on_this_network">Tidak tersedia di jaringan ini</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
     <string name="km_no_names">Belum ada nama .kachat</string>
-    <string name="kn_manage_in_wallet">Beli, perpanjang, jual, dan transfer nama .kachat di KaChat Wallet.</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">Tur awal lengkap: dompet, obrolan, pembayaran, dan lainnya.</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -404,7 +397,6 @@
     <string name="kn_handle_bad">Itu tidak tampak seperti handle di platform ini.</string>
     <!-- Retry (the .kachat profile editor; missing in Indonesian) -->
     <string name="retry">Coba lagi</string>
-    <string name="retry_inscription_reveal">Coba Lagi Reveal Inskripsi</string>
     <!-- .kachat sheets: the chatting address's balance (iOS 8ecc38c) -->
     <string name="kn_chatting_balance">Saldo alamat obrolan</string>
     <string name="kn_balance_after">Saldo setelahnya</string>
@@ -469,7 +461,6 @@
     <string name="chats_new_chat">Obrolan Baru</string>
     <string name="chats_new_group_chat">Obrolan Grup Baru</string>
     <string name="chats_new_chat_subtitle">Kirim pesan ke seseorang lewat alamat atau namanya.</string>
-    <string name="qr_receive_address_subtitle">Ini alamat baru yang belum pernah digunakan.</string>
     <string name="qr_chatting_address_subtitle">Gunakan untuk mengobrol dan mendapatkan domain .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="coin_control">Kontrol koin</string>
@@ -496,7 +487,6 @@
     <string name="to">Kepada</string>
     <!-- Send Kaspa: slide to send (iOS afaad34) -->
     <!-- Send Kaspa: send from another spending address (iOS e994235) -->
-    <string name="send_from">Kirim Dari</string>
     <!-- Chats circles row (iOS a062577) -->
     <string name="chats_pinned_to_front">Disematkan di depan</string>
     <string name="chats_unpinned">Sematan dilepas</string>
@@ -749,7 +739,6 @@
     <string name="pr_chatting_footer">Pembayaran masuk ke obrolan Anda dengan pembayar, beserta catatannya.</string>
     <string name="pr_memo_placeholder">Untuk apa (opsional)</string>
     <string name="pr_copy">Salin Permintaan Pembayaran</string>
-    <string name="pr_anyone_note">Siapa pun yang membukanya di K mendapat Kirim Kaspa yang sudah terisi, dan melihat bahwa ini dibuat oleh alamat chat-mu (ditandatangani dengan kuncinya).</string>
     <string name="pr_requested">Diminta</string>
     <string name="pr_paid_as_chat_payment">Dibayar sebagai pembayaran obrolan: muncul di obrolan Anda dengan mereka.</string>
     <string name="pr_paid_to_their_spending">Dibayar ke alamat belanja mereka.</string>
@@ -830,17 +819,11 @@
     <string name="appearance_light">Terang</string>
     <string name="appearance_dark">Gelap</string>
     <string name="storage_local_used">Penyimpanan lokal terpakai: %1$s</string>
-    <string name="storage_on_device_footer">Berapa lama pesan disimpan di perangkat ini, dan berapa banyak ruang yang digunakan. Berlaku sebelum penyimpanan cloud apa pun.</string>
-    <string name="require_photo_approval_new_contacts">Wajibkan persetujuan untuk foto dari kontak baru</string>
     <string name="quick_reactions">Reaksi Cepat</string>
-    <string name="quick_reactions_footer">Ketuk emoji untuk menggantinya dengan emoji lain.</string>
     <string name="reset_to_default">Atur Ulang ke Default</string>
     <string name="notifications_wallet">Dompet</string>
     <string name="address_activity">Aktivitas Alamat</string>
-    <string name="address_activity_footer">Beri tahu saat salah satu alamat pengeluaran atau penyimpanan dingin Anda menerima Kaspa dari sumber eksternal. Transfer antar-alamat Anda sendiri diabaikan.</string>
-    <string name="explorer_footer">Digunakan untuk membuat tautan \"lihat transaksi\" di seluruh aplikasi.</string>
     <string name="verbose_api_logging">Log API Terperinci</string>
-    <string name="verbose_api_logging_footer">Mencatat setiap permintaan ke indexer dengan detail koneksi dan waktu lengkap. Biarkan nonaktif untuk penggunaan normal: permintaan yang gagal dan lambat selalu dicatat, dan pencatatan yang berlebihan dapat membuat Android membuang pesan log aplikasi.</string>
     <string name="your_address">Alamat Anda</string>
     <!-- Quantum-safe (KIP-22) addresses: the shield's two states in Manage Addresses (iOS bba1b1e) -->
     <string name="quantum_safe">Aman kuantum</string>
@@ -1197,7 +1180,6 @@
     <string name="the_passphrase_shows_too_if_this_account">Frasa sandi juga ditampilkan, jika akun ini memilikinya.</string>
     <string name="transaction_id_tap_to_view_in">ID Transaksi · ketuk untuk melihat di %1$s</string>
     <string name="transaction_id">ID Transaksi</string>
-    <string name="not_now_2">Nanti Saja</string>
     <string name="unsilence">Batal Senyapkan</string>
     <string name="silence">Senyapkan</string>
     <string name="pin">Sematkan</string>
@@ -1264,7 +1246,6 @@
     <string name="so_do_you_need_one">Jadi, apakah Anda memerlukannya?</string>
     <string name="if_you_are_not_sure_choose_no">Jika Anda tidak yakin, Anda tidak memerlukannya: kembali ke awal dan ketuk Buat Akun Baru, yang membuat akun tanpa frasa sandi. Akun tetap dilindungi oleh 12 atau 24 kata Anda, dan Anda selalu dapat membuat akun lain dengan frasa sandi nanti.</string>
     <string name="if_you_never_set_one_up_choose">Jika Anda tidak pernah menyiapkannya, pilih Tidak. Frasa sandi adalah sesuatu yang Anda ketik dengan sengaja, jadi jika Anda baru mendengarnya sekarang, Anda tidak memilikinya.</string>
-    <string name="my_kachat_profile">Profil KaChat Saya</string>
     <string name="signs_out_of_this_account_wallet_and">Keluar dari akun ini. Data dompet dan pesan tetap ada di perangkat ini.</string>
     <string name="could_not_work_out_the_network_fee">Tidak dapat menghitung biaya jaringan.</string>
     <string name="could_not_work_out_the_maximum">Tidak dapat menghitung jumlah maksimum.</string>
@@ -1312,7 +1293,6 @@
     <string name="new_messages_connection_requests_and_payments">Pesan baru, permintaan koneksi, dan pembayaran</string>
     <string name="group_chat">Obrolan grup</string>
     <string name="new_group_message">Pesan grup baru</string>
-    <string name="group_update">Pembaruan grup</string>
     <string name="could_not_derive_the_quantum_addresss_key">Tidak dapat menurunkan kunci alamat kuantum</string>
     <string name="no_spendable_utxos">Tidak ada UTXO yang dapat dibelanjakan</string>
     <string name="balance_too_low_to_cover_fee">Saldo terlalu rendah untuk menutupi biaya</string>
@@ -1331,7 +1311,6 @@
     <string name="ready_to_scan">Siap Memindai</string>
     <string name="the_active_account_changed_switch_back_to">Akun aktif berubah. Beralih kembali ke akun itu dan coba lagi.</string>
     <string name="nextcloud_rejected_the_username_or_app_password">Nextcloud menolak nama pengguna atau kata sandi aplikasi.</string>
-    <string name="nextcloud_returned_http">Nextcloud mengembalikan HTTP %1$d.</string>
     <string name="nextcloud_sent_an_empty_file">Nextcloud mengirim file kosong.</string>
     <string name="that_file_is_too_large_to_import">File itu terlalu besar untuk diimpor.</string>
     <string name="selected_utxos_are_no_longer_available_please">UTXO yang dipilih tidak lagi tersedia - silakan pilih ulang</string>
@@ -1418,12 +1397,10 @@
     <string name="nc_username">Nama pengguna</string>
     <string name="nc_app_password">Kata sandi aplikasi</string>
     <string name="nc_use_https">Gunakan https. Koneksi tanpa enkripsi tidak didukung.</string>
-    <string name="nc_app_password_footer">Buat kata sandi aplikasi di Nextcloud melalui Pengaturan → Keamanan → Perangkat &amp; sesi — jangan gunakan kata sandi akun Anda. K menyimpannya di penyimpanan terenkripsi perangkat.</string>
     <string name="nc_connect">Hubungkan</string>
     <string name="nc_connected_account">Akun Terhubung</string>
     <string name="nc_start_folder">Folder Awal</string>
     <string name="nc_automatic_sync">Sinkronisasi Otomatis</string>
-    <string name="nc_auto_sync_one_service">Sinkronisasi otomatis hanya bekerja dengan satu layanan cloud pada satu waktu.</string>
     <string name="nc_last_synced">Sinkronisasi terakhir</string>
     <string name="nc_backup_folder">Folder Cadangan</string>
     <string name="nc_default_folder">%1$s (bawaan)</string>
@@ -1436,7 +1413,6 @@
     <string name="nc_contact_backup">Cadangan Kontak</string>
     <string name="nc_contact_backup_footer">Hanya kontak Anda yang dicadangkan di sini, terenkripsi. Pesan dan obrolan grup Anda kembali dengan frasa benih Anda.</string>
     <string name="nc_disconnect">Putuskan</string>
-    <string name="nc_disconnect_footer">Memutuskan koneksi akan menghapus kata sandi aplikasi yang tersimpan dari perangkat ini. Tidak ada yang berubah di server Nextcloud Anda.</string>
     <string name="nc_disconnect_title">Putuskan Nextcloud</string>
     <string name="nc_disconnect_message">Kata sandi aplikasi dihapus dari penyimpanan terenkripsi perangkat ini. Anda dapat menghubungkan kembali kapan saja.</string>
     <string name="send_outcome_unknown">Ini mungkin sudah terkirim, tetapi jaringan belum mengonfirmasinya. Periksa saldo Anda sebelum mengirim lagi.</string>
@@ -1487,7 +1463,6 @@
     <string name="chess_tc_1_1_subtitle">Masing-masing satu menit, ditambah satu detik per langkah.</string>
     <string name="chess_tc_casual">Santai</string>
     <string name="chess_tc_no_timer">Tanpa pengatur waktu.</string>
-    <string name="reveals_the_next_unused_address_in_this_wallet">Menampilkan alamat berikutnya yang belum digunakan di dompet ini.</string>
     <string name="check_off_every_address_you_want_on_the_list">Centang sekaligus setiap alamat yang Anda inginkan di daftar.</string>
     <string name="close_and_keep_scanning">Tutup dan Lanjutkan Memindai</string>
     <string name="recents">Terbaru</string>
@@ -1503,9 +1478,7 @@
     <string name="cache_frees_your_messages_are_not_touched">Mengosongkan %1$s. Pesan, kontak, dan kunci Anda tidak tersentuh.</string>
     <string name="kachat_link_menu_title">Tautan KaChat</string>
     <string name="open_in_kachat">Buka di K</string>
-    <string name="open_in_kapost">Buka di KaPost</string>
     <string name="opens_it_right_here_in_the_app">Membukanya di sini, dalam aplikasi.</string>
-    <string name="opens_the_post_in_the_kapost_app">Membuka postingan di aplikasi KaPost.</string>
     <string name="nextcloud_upload_failed_sending_on_chain">Unggahan Nextcloud gagal, mengirim on-chain sebagai gantinya</string>
     <string name="standard_kaspa_wallet">Dompet Kaspa Standar</string>
     <string name="has_history">Ada riwayat</string>
@@ -1588,7 +1561,6 @@
     <string name="chess_notif_accepted">♟️ Menerima permainan catur Anda</string>
     <string name="chess_notif_declined">♟️ Menolak permainan catur Anda</string>
     <string name="chess_notif_move">♟️ Memainkan %1$s → %2$s</string>
-    <string name="chess_notif_move_generic">♟️ Memainkan langkah catur</string>
     <string name="chess_notif_lost_on_time">♟️ Kalah karena waktu habis</string>
     <string name="chess_notif_resigned">♟️ Menyerah dalam permainan catur</string>
     <string name="fee_label">Biaya</string>
@@ -1612,9 +1584,7 @@
     <string name="message_needs_too_many_coins">Pesan ini butuh terlalu banyak koin untuk satu transaksi. Gunakan Compound UTXOs pada alamat chat Anda, lalu coba lagi.</string>
     <string name="use_their_domain_name">Gunakan nama domainnya</string>
     <string name="show_request_as_qr">Tampilkan permintaan sebagai QR</string>
-    <string name="pr_qr_scan_to_pay_in_kapay">Pindai dengan kamera ponsel untuk membayar di KaPay, semuanya sudah terisi.</string>
     <string name="pr_qr_scan_to_pay_in_kachat">Pindai dengan kamera ponsel untuk membayar di K, semuanya sudah terisi.</string>
-    <string name="get_a_kachat_domain">Dapatkan domain .kachat</string>
     <string name="set_as_name">Jadikan nama</string>
     <string name="their_name">Namanya</string>
     <string name="get_a_kachat_name">Dapatkan nama .kachat</string>
@@ -1679,7 +1649,6 @@
     <string name="bridged_usdt">USDT via Bridge</string>
     <string name="composer_send_dollars_subtitle">Kirim dolar (kUSDT) ke kontak ini.</string>
     <string name="generate_new_address">Buat Alamat Baru</string>
-    <string name="get_kapay">Dapatkan KaPay</string>
     <string name="send_dollars">Kirim Dolar</string>
     <string name="tap_to_manage">Ketuk untuk mengelola</string>
     <string name="token_about_kusdt">kUSDT adalah USDT dari Ethereum dan BNB Chain, disimpan 1:1 di brankas Trestly dan diterbitkan sebagai token di Kaspa. kUSDT tidak diterbitkan oleh Tether, dan hanya Trestly yang bisa mengubahnya kembali menjadi USDT.</string>
@@ -1711,7 +1680,6 @@
     <string name="token_couldnt_check">Tidak bisa memeriksa %1$@ sekarang: %2$@ Tarik ke bawah untuk mencoba lagi.</string>
     <string name="token_discover_addresses">Temukan Alamat kUSDT</string>
     <string name="token_discover_addresses_subtitle">Menemukan alamatmu yang menyimpan kUSDT.</string>
-    <string name="token_empty_state_message">Terima di alamat baru milikmu. Membeli dan menukar kUSDT dilakukan di KaPay.</string>
     <string name="token_every_coin_goes_to_recipient">Setiap koin %1$s menyimpan %2$s. KAS itu ikut ke penerima bersama %3$s, jadi tidak hilang.</string>
     <string name="token_every_coin_holds_kas">Setiap koin kUSDT menyimpan 1.5 KAS. KAS itu ikut terkirim bersama kUSDT saat kamu mengirimnya.</string>
     <string name="token_fee">Biaya %1$s</string>

@@ -106,7 +106,7 @@ class KnsInscriptionEngine @Inject constructor(
         val api = networkService.kaspaRestApi.value ?: throw IllegalStateException("Network service unavailable")
         // One pending commit at a time: its record is a single slot, so a second commit would
         // overwrite it and strand the first one's funds (domain fee included) for good. Its reveal
-        // is retried from the profile screen first.
+        // has to finish first (WalletService resumes it).
         if (settings.pendingKnsCommit.first() != null) throw IllegalStateException(PENDING_COMMIT_MESSAGE)
 
         // The redeem script's embedded pubkey is [ownerPrivateKey]'s (identity), not the funding

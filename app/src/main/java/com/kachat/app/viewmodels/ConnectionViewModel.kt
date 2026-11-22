@@ -183,18 +183,13 @@ class ConnectionViewModel @Inject constructor(
     val verboseApiLogging: StateFlow<Boolean> =
         settings.verboseApiLogging.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    private val _discoverNewPeers = MutableStateFlow(true)
-    val discoverNewPeers: StateFlow<Boolean> = _discoverNewPeers
-
     /** Settings > Connection > Testnet: only records the choice; the switch, with each network's
      *  own connection settings, happens at the next launch (iOS `SettingsViewModel.switchNetwork(to:)`,
      *  e6f664f). Choosing the running network again cancels it. */
     fun switchNetwork(to: com.kachat.app.util.KaspaNetwork.Type) { viewModelScope.launch { settings.switchNetwork(to) } }
     fun setIndexerUrl(value: String) { viewModelScope.launch { settings.setIndexerUrl(value) } }
-    fun setKaspaRestApiUrl(value: String) { viewModelScope.launch { settings.setKaspaRestUrl(value) } }
 
     fun setTrustedNodeAddress(value: String) { viewModelScope.launch { settings.setTrustedNodeAddress(value) } }
-    fun setDiscoverNewPeers(value: Boolean) { _discoverNewPeers.value = value }
     fun setVerboseApiLogging(value: Boolean) { viewModelScope.launch { settings.setVerboseApiLogging(value) } }
     fun addSavedNodeAddress(label: String, address: String) {
         viewModelScope.launch {

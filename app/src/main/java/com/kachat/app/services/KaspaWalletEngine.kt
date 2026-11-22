@@ -699,21 +699,6 @@ class KaspaWalletEngine @Inject constructor(
     }
 
     /**
-     * Coin control's data source — mirrors [ColdStorageSendEngine.fetchUtxos], but routed
-     * through [reconcileUtxos] too so a UTXO this engine already knows is pending-spent (from a
-     * send that hasn't hit the REST indexer yet) doesn't show up as selectable in the first
-     * place, rather than only being caught later at send time.
-     */
-    /**
-     * Whether the REST client exists yet. It is created when the network service configures, a
-     * moment AFTER launch, and until then [fetchUtxos] answers `emptyList()` - which reads
-     * identically to "this address holds nothing". Callers that would otherwise present that
-     * silence as a fact about the address check this first.
-     */
-    val isRestApiReady: Boolean
-        get() = networkService.kaspaRestApi.value != null
-
-    /**
      * The balance at [address] as the node sees it - the sum of every UTXO there, exactly how
      * iOS's WalletManager.refreshBalance computes it - or null when no node can answer, so the
      * caller can fall back to the REST gateway. The gateway rate-limits a burst (HTTP 429),
@@ -761,6 +746,12 @@ class KaspaWalletEngine @Inject constructor(
         return spendable
     }
 
+    /**
+     * Coin control's data source — mirrors [ColdStorageSendEngine.fetchUtxos], but routed
+     * through [reconcileUtxos] too so a UTXO this engine already knows is pending-spent (from a
+     * send that hasn't hit the REST indexer yet) doesn't show up as selectable in the first
+     * place, rather than only being caught later at send time.
+     */
     suspend fun fetchUtxos(address: String): List<UtxoEntry> {
         return try {
             fetchUtxosOrThrow(address)

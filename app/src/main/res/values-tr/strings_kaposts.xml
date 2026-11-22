@@ -5,8 +5,6 @@
     <string name="feed54_dislike_removed">Beğenmeme ağda kaldırıldı</string>
     <string name="feed54_failure_format">%1$s: %2$s</string>
     <string name="feed54_follow_posted">Takip ağa gönderildi</string>
-    <string name="feed54_help_welcome_guide">Hos Geldiniz Rehberi</string>
-    <string name="feed54_help_welcome_guide_subtitle">İlk kullanım turu: akışınız, odalar, bahşişler ve adresiniz.</string>
     <string name="feed54_like_posted">Beğeni ağda paylaşıldı</string>
     <string name="feed54_like_removed">Beğeni ağda kaldırıldı</string>
     <string name="feed54_post_not_found">Gönderi bulunamadı - mevcut akıştan daha eski olabilir</string>

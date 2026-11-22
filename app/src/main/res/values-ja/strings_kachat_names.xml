@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">現在、猶予期間中の名前はありません。</string>
     <string name="kn_no_open_offers">進行中のオファーはありません。</string>
     <string name="kn_not_enough">この名前にはチャットアドレスの KAS が足りません。</string>
+    <string name="kn_err_claim_in_progress">%1$s はすでに取得中です。</string>
+    <string name="kn_err_not_enough_kas">KASが足りません。追加してからもう一度お試しください。</string>
     <string name="kn_not_for_sale">非売品</string>
     <string name="kn_not_valid_name">有効な名前ではありません。</string>
     <string name="kn_nothing_yet">まだ何もありません。</string>

@@ -26,6 +26,8 @@ class KaPostTipSender @Inject constructor(
     private val chatRepository: ChatRepository,
     private val walletManager: WalletManager,
     private val kaPostsService: KaPostsService,
+    /** The post's own transaction, read to check who wrote it before money goes to them. */
+    private val chainReader: KaPostChainReader,
 ) {
     sealed class Outcome {
         /** Sent; [txId] is null when it waits for coins to confirm (its bubble is in the chat). */
@@ -53,6 +55,14 @@ class KaPostTipSender @Inject constructor(
     ): Outcome {
         if (amountSompi <= 0) return Outcome.Failed("Enter a valid amount.")
         KaspaAddress.otherNetworkMessageRes(address)?.let { return Outcome.Failed(context.getString(it)) }
+        if (tip != null && !authorMatches(address, tip)) {
+            return Outcome.Failed(
+                com.kachat.app.util.UserFacingError.message(
+                    com.google.gson.JsonParseException("KaPost author doesn't match the chain"),
+                    fallback = "",
+                )
+            )
+        }
         val own = runCatching { walletManager.getAddress() }.getOrNull()
         if (!address.equals(own, ignoreCase = true)) {
             // Paying someone is reaching out to them, as writing to them is (iOS 1eb4708).
@@ -83,6 +93,31 @@ class KaPostTipSender @Inject constructor(
                 if (outcome.unknownTxId != null) Outcome.Unknown(outcome.message ?: context.getString(com.kachat.app.R.string.l53_send_outcome_unknown))
                 else Outcome.Failed(outcome.message)
         }
+    }
+
+    /**
+     * Whether [address] is the author of [tip]'s post. Who wrote a feed post comes from the
+     * indexer, which carries no signature, so a lying one could relabel someone's popular post
+     * with its own key and collect the tips. The address must be the one the named key makes,
+     * and when the chain has the post's transaction its signed author must be that key. A chain
+     * that doesn't answer (or has no such post yet) doesn't stop the tip, which goes to the
+     * person the post names, as before.
+     */
+    private suspend fun authorMatches(address: String, tip: KaPostTip): Boolean {
+        val derived = KaPostsService.kaspaAddressFromPubkey(tip.authorPubkey) ?: return false
+        if (!derived.equals(address, ignoreCase = true)) return false
+        val record = try {
+            kotlinx.coroutines.withTimeoutOrNull(CHAIN_CHECK_TIMEOUT_MS) { chainReader.fetch(tip.postId) }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        } ?: return true
+        return KaPostsChainPosts.xOnly(record.authorPubkey) == KaPostsChainPosts.xOnly(tip.authorPubkey)
+    }
+
+    private companion object {
+        const val CHAIN_CHECK_TIMEOUT_MS = 6_000L
     }
 
     /**

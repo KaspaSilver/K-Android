@@ -55,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -100,8 +101,16 @@ internal fun AnimatedQrDisplay(frames: List<ByteArray>, modifier: Modifier = Mod
         }
     }
 
+    // Every frame encoded once, off the main thread, at one pixel per module (a few KB each), and
+    // drawn scaled up with no filtering - re-encoding a full-size bitmap on the main thread every
+    // 2.5 s made the sheet hitch.
+    val frameImages by androidx.compose.runtime.produceState<List<androidx.compose.ui.graphics.ImageBitmap>?>(null, frames) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            frames.map { encodeQrModules(it) }
+        }
+    }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
-        val painter = rememberQrBitmapPainter(bytes = frames[frameIndex.coerceIn(frames.indices)])
         Box(
             modifier = Modifier
                 .size(280.dp)
@@ -111,7 +120,11 @@ internal fun AnimatedQrDisplay(frames: List<ByteArray>, modifier: Modifier = Mod
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Image(painter = painter, contentDescription = stringResource(R.string.qr_code_2), modifier = Modifier.fillMaxSize())
+            val image = frameImages?.getOrNull(frameIndex.coerceIn(frames.indices))
+            if (image != null) {
+                val painter = remember(image) { QrModulePainter(image) }
+                Image(painter = painter, contentDescription = stringResource(R.string.qr_code_2), modifier = Modifier.fillMaxSize())
+            }
         }
         if (frames.size > 1) {
             Spacer(Modifier.height(12.dp))
@@ -144,6 +157,64 @@ internal fun AnimatedQrDisplay(frames: List<ByteArray>, modifier: Modifier = Mod
                 Text(tr(R.string.kp_frame_lld_lld_5cb10, frameIndex + 1, frames.size), color = Color(0xFF6B6B70), style = MaterialTheme.typography.bodySmall)
             }
         }
+    }
+}
+
+/**
+ * One frame as a byte-mode QR at one pixel per module, no quiet zone (the white card is the
+ * margin) - the same encoding as [rememberQrBitmapPainter]'s ByteArray form (ISO-8859-1 round
+ * trip, KasSigner's raw-byte QR), just not blown up to screen size.
+ */
+private fun encodeQrModules(bytes: ByteArray): androidx.compose.ui.graphics.ImageBitmap {
+    if (bytes.isEmpty()) {
+        return android.graphics.Bitmap.createBitmap(1, 1, android.graphics.Bitmap.Config.ARGB_8888)
+            .apply { eraseColor(android.graphics.Color.WHITE) }
+            .asImageBitmap()
+    }
+    val matrix = com.google.zxing.qrcode.QRCodeWriter().encode(
+        String(bytes, Charsets.ISO_8859_1),
+        com.google.zxing.BarcodeFormat.QR_CODE,
+        0,
+        0,
+        mapOf(
+            com.google.zxing.EncodeHintType.MARGIN to 0,
+            com.google.zxing.EncodeHintType.CHARACTER_SET to "ISO-8859-1",
+        )
+    )
+    val w = matrix.width
+    val h = matrix.height
+    val pixels = IntArray(w * h)
+    for (y in 0 until h) {
+        val row = y * w
+        for (x in 0 until w) {
+            pixels[row + x] = if (matrix.get(x, y)) android.graphics.Color.BLACK else android.graphics.Color.WHITE
+        }
+    }
+    val bmp = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+    bmp.setPixels(pixels, 0, w, 0, 0, w, h)
+    return bmp.asImageBitmap()
+}
+
+/** Draws a module-sized QR at the largest whole-number scale that fits, centred, unfiltered:
+ *  crisp module edges, as the full-size encode produced. */
+private class QrModulePainter(private val image: androidx.compose.ui.graphics.ImageBitmap) :
+    androidx.compose.ui.graphics.painter.Painter() {
+    override val intrinsicSize: androidx.compose.ui.geometry.Size
+        get() = androidx.compose.ui.geometry.Size.Unspecified
+
+    override fun androidx.compose.ui.graphics.drawscope.DrawScope.onDraw() {
+        val modules = maxOf(image.width, image.height)
+        val side = minOf(size.width, size.height)
+        val scale = kotlin.math.floor(side / modules).coerceAtLeast(1f).toInt()
+        val drawn = modules * scale
+        val left = ((size.width - drawn) / 2f).toInt()
+        val top = ((size.height - drawn) / 2f).toInt()
+        drawImage(
+            image = image,
+            dstOffset = androidx.compose.ui.unit.IntOffset(left, top),
+            dstSize = androidx.compose.ui.unit.IntSize(drawn, drawn),
+            filterQuality = androidx.compose.ui.graphics.FilterQuality.None,
+        )
     }
 }
 
@@ -194,9 +265,9 @@ internal fun MultiFrameQrScannerSheet(
                     )
                 }
             }
-            ColdScannerPlate(stringResource(R.string.qr_frames_progress, received, total))
+            com.kachat.app.ui.screens.ScannerPlate(stringResource(R.string.qr_frames_progress, received, total))
         } else {
-            ColdScannerPlate(stringResource(R.string.qr_point_camera_kassigner))
+            com.kachat.app.ui.screens.ScannerPlate(stringResource(R.string.qr_point_camera_kassigner))
         }
     }
 }
@@ -217,20 +288,6 @@ private fun extractRawBytes(result: Result): ByteArray? {
     return result.text?.toByteArray(Charsets.ISO_8859_1)
 }
 
-/** The white headline on iOS's `.ultraThinMaterial` plate that sits under the scanning frame. */
-@Composable
-private fun ColdScannerPlate(text: String) {
-    Text(
-        text,
-        color = Color.White,
-        fontSize = 17.sp,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(if (LocalAppColors.current.isDark) Color(0x591C1C1E) else Color(0x4DFFFFFF))
-            .padding(16.dp),
-    )
-}
 
 /**
  * The scanner sheet (KaChat's `CameraScannerSheet`, which QrScannerScreen.kt keeps private): an
@@ -385,7 +442,7 @@ private fun ColdCameraQrScanner(modifier: Modifier = Modifier, onResult: (Result
                     .setResolutionSelector(resolutionSelector)
                     .build()
                 analysis.setAnalyzer(analysisExecutor) { imageProxy ->
-                    decodeColdQrFrame(imageProxy, onResult)
+                    com.kachat.app.ui.screens.decodeQrCode(imageProxy, onResult)
                 }
                 analysisRef[0] = analysis
                 try {
@@ -403,20 +460,4 @@ private fun ColdCameraQrScanner(modifier: Modifier = Modifier, onResult: (Result
             previewView
         }
     )
-}
-
-private fun decodeColdQrFrame(imageProxy: ImageProxy, onResult: (Result) -> Unit) {
-    try {
-        val plane = imageProxy.planes[0]
-        val buffer = plane.buffer
-        buffer.rewind()
-        val data = ByteArray(buffer.remaining())
-        buffer.get(data)
-        // KaChat's own decoder (QrScannerScreen.kt), rows read at their real stride
-        decodeQrLuminance(data, imageProxy.width, imageProxy.height, plane.rowStride)?.let(onResult)
-    } catch (e: Exception) {
-        // Decode failure for this frame - try the next one.
-    } finally {
-        imageProxy.close()
-    }
 }

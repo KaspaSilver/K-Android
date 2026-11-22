@@ -2,6 +2,7 @@ package com.kachat.app.services
 
 import android.util.Log
 import com.kachat.app.repository.AppSettingsRepository
+import com.kachat.app.util.capResponseBodies
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,11 +39,17 @@ class KaPostApiProvider @Inject constructor(
         .registerTypeAdapterFactory(com.kachat.app.util.UtxoMath.RestUtxoGuard)
         .create()
 
+    /** The KaPost indexer's answers, capped (iOS audit 2026-11-21 #19 `KaPostsAPIClient.maxResponseBytes`):
+     *  a page of 100 posts is well under 1 MB. */
+    private val indexerClient: OkHttpClient = okHttpClient.newBuilder()
+        .capResponseBodies("The KaPost indexer") { MAX_INDEXER_RESPONSE_BYTES }
+        .build()
+
     init {
         scope.launch {
             settings.kapostIndexerUrl.collectLatest { url ->
                 // Blank = no server - never keep the other network's client.
-                if (url.isBlank()) _kapostApi.value = null else create<KaPostApi>(url)?.let { _kapostApi.value = it }
+                if (url.isBlank()) _kapostApi.value = null else create<KaPostApi>(url, indexerClient)?.let { _kapostApi.value = it }
             }
         }
         scope.launch {
@@ -53,17 +60,22 @@ class KaPostApiProvider @Inject constructor(
     }
 
     /** A malformed URL keeps whatever client was there, as NetworkService does. */
-    private inline fun <reified T> create(baseUrl: String): T? = try {
+    private inline fun <reified T> create(baseUrl: String, client: OkHttpClient = okHttpClient): T? = try {
         val sanitized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         Retrofit.Builder()
             .baseUrl(sanitized)
-            .client(okHttpClient)
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
             .create(T::class.java)
     } catch (e: Exception) {
         Log.w("KaPostApiProvider", "Invalid base URL, keeping previous client: $baseUrl", e)
         null
+    }
+
+    companion object {
+        /** Largest answer read from the KaPost indexer (iOS `KaPostsAPIClient.maxResponseBytes`). */
+        const val MAX_INDEXER_RESPONSE_BYTES = 8L * 1024 * 1024
     }
 }
 

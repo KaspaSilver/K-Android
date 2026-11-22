@@ -12,31 +12,6 @@ object BroadcastRetention {
      *  indexer holds 30 days and the room should always show all of it — the 3-day cap
      *  silently pruned days 4-30 locally even after a full backfill (matches iOS/desktop). */
     val INDEXER_MILLIS = 30L * 24 * 60 * 60 * 1000L
-
-    /** A unit the retention settings dialog lets the user enter an amount in — each capped so amount * millisPerUnit can never exceed MAX_MILLIS. */
-    enum class Unit(val label: String, val millisPerUnit: Long) {
-        SECONDS("seconds", 1_000L),
-        MINUTES("minutes", 60_000L),
-        HOURS("hours", 60L * 60 * 1000L),
-        DAYS("days", 24L * 60 * 60 * 1000L);
-
-        val maxAmount: Long get() = MAX_MILLIS / millisPerUnit
-    }
-
-    /**
-     * Splits a stored millis value back into an (amount, unit) pair for pre-filling the retention
-     * dialog — picks the largest unit that divides it evenly (so e.g. 3 days shows as "3 days"
-     * rather than "72 hours"), falling back to seconds for anything odd (like the 10-second test
-     * default above, which isn't a whole number of minutes/hours/days).
-     */
-    fun toAmountAndUnit(millis: Long): Pair<Long, Unit> {
-        for (unit in listOf(Unit.DAYS, Unit.HOURS, Unit.MINUTES)) {
-            if (millis % unit.millisPerUnit == 0L && millis / unit.millisPerUnit in 1..unit.maxAmount) {
-                return (millis / unit.millisPerUnit) to unit
-            }
-        }
-        return (millis / Unit.SECONDS.millisPerUnit).coerceAtLeast(1L) to Unit.SECONDS
-    }
 }
 
 /** Curated rooms shown in the Broadcasts "Popular" tab — recommended channels baked into the app, not derived from any usage/activity data. */

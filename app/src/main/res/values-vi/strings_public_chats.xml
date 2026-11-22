@@ -13,10 +13,8 @@
     <string name="pc_room_voice_encoding">Đang mã hóa…</string>
     <string name="pc_room_voice_receiving">Đang nhận… %1$d/%2$d</string>
     <string name="pc_room_voice_recording">Đang ghi...</string>
-    <string name="pc_rooms53_channel_name_invalid">Tên kênh phải có từ 1 đến %1$d ký tự, không có khoảng trắng hay dấu hai chấm.</string>
     <string name="pc_rooms53_day_one">%1$d ngày</string>
     <string name="pc_rooms53_days">%1$d ngày</string>
-    <string name="pc_rooms53_join_failed">Đã xảy ra lỗi khi tham gia kênh đó.</string>
     <string name="pc_rooms54_failed_to_edit">Chỉnh sửa thất bại: %1$s</string>
     <string name="pc_rooms54_failed_to_send">Gửi thất bại: %1$s</string>
     <string name="pc_rooms54_failed_to_send_voice">Gửi tin nhắn thoại thất bại: %1$s</string>
@@ -57,5 +55,5 @@
     <string name="pc_sender_view_profile_subtitle">Hồ sơ KaPost của họ: bài đăng, trả lời và người theo dõi.</string>
     <string name="pc_sender_send_kaspa_subtitle">Gửi Kaspa đến địa chỉ của họ.</string>
     <string name="pc_sender_copy_address_subtitle">Sao chép địa chỉ Kaspa của họ.</string>
-    <string name="pc_public_chats">Trò chuyện công khai</string>
+    <string name="pc_original_message_not_loaded">Chưa tải tin nhắn gốc</string>
 </resources>

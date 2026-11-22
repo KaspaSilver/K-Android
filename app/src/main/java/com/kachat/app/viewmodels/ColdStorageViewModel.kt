@@ -42,7 +42,12 @@ class ColdStorageViewModel @Inject constructor(
     /** Only for a spending address's coin labels in Coin Control (iOS 148a5331: Manage Addresses'
      *  labels beside KasSigner's) - never the words or a key. */
     private val walletManager: com.kachat.app.services.WalletManager,
+    addressActivityNotifier: com.kachat.app.services.AddressActivityNotifier,
 ) : ViewModel() {
+
+    /** Own addresses whose balance just changed (cold ones included): the detail screen reloads
+     *  when one of its rows moved, as iOS's `.ownAddressUtxoActivity` does. */
+    val ownAddressActivity: kotlinx.coroutines.flow.SharedFlow<Set<String>> = addressActivityNotifier.utxoActivityEvents
 
     /** What a typed name points to on every service, .kachat first - the primary answer and the
      *  "Other domains" (iOS 6ac48a7). */
@@ -138,16 +143,6 @@ class ColdStorageViewModel @Inject constructor(
     val isDiscovering: StateFlow<Boolean> = _isDiscovering.asStateFlow()
 
     /**
-     * Loads the account's address list the way iOS does (ColdStorageManager.getAddressList +
-     * ColdStorageView.loadEntries): instant paint from the persisted snapshot of the last full
-     * load, then every index up to [ColdStorageManager.ColdAccount.maxDerivedIndex] derived
-     * locally with ONE batched balance call — funded addresses always land in that first live
-     * commit — then a gap-limit scan past the bound for addresses used before they were ever
-     * shown here, and finally a background Used backfill. The old shape (a full sequential
-     * 2-calls-per-index scan, committed only at the very end, wiped to an empty list on any
-     * error) meant one failed or throttled history lookup at index 0 showed NOTHING at all.
-     */
-    /**
      * Live scan position while discovering, so the address-actions sheet can show progress rather
      * than a spinner that says nothing about whether anything is happening.
      */
@@ -165,6 +160,16 @@ class ColdStorageViewModel @Inject constructor(
     private val _isUserDiscovering = MutableStateFlow(false)
     val isUserDiscovering: StateFlow<Boolean> = _isUserDiscovering.asStateFlow()
 
+    /**
+     * Loads the account's address list the way iOS does (ColdStorageManager.getAddressList +
+     * ColdStorageView.loadEntries): instant paint from the persisted snapshot of the last full
+     * load, then every index up to [ColdStorageManager.ColdAccount.maxDerivedIndex] derived
+     * locally with ONE batched balance call — funded addresses always land in that first live
+     * commit — then a gap-limit scan past the bound for addresses used before they were ever
+     * shown here, and finally a background Used backfill. The old shape (a full sequential
+     * 2-calls-per-index scan, committed only at the very end, wiped to an empty list on any
+     * error) meant one failed or throttled history lookup at index 0 showed NOTHING at all.
+     */
     fun refreshAddresses(
         accountId: String,
         userInitiated: Boolean = false,
@@ -203,9 +208,12 @@ class ColdStorageViewModel @Inject constructor(
                 // Pass 1 — fast: derive 0..maxDerivedIndex locally, one batched balance round
                 // trip for all of them (iOS's single getUtxosByAddresses call).
                 val known = _addresses.value.associateBy { it.index }
-                val derived = (0..account.maxDerivedIndex).mapNotNull { index ->
-                    runCatching { KaspaExtendedPublicKey.deriveChildAddress(rootKey, chain = 0, index = index) }
-                        .getOrNull()?.let { index to it }
+                // EC math per address: off the main thread (it froze the screen on open).
+                val derived = withContext(Dispatchers.Default) {
+                    (0..account.maxDerivedIndex).mapNotNull { index ->
+                        runCatching { KaspaExtendedPublicKey.deriveChildAddress(rootKey, chain = 0, index = index) }
+                            .getOrNull()?.let { index to it }
+                    }
                 }
                 val balances = addressDiscovery.fetchBalances(derived.map { it.second })
                 if (balances == null) {
@@ -235,11 +243,14 @@ class ColdStorageViewModel @Inject constructor(
                 // From ZERO, not from the account's high-water mark. Starting past what is
                 // already known meant a rescan could only ever report nothing, which is exactly
                 // what it did - and an address that gains a balance later would never be seen.
-                val beyond = addressDiscovery.discoverAddresses(
-                    rootKey,
-                    startIndex = 0,
-                    onProgress = { if (userInitiated) _discoveryProgress.value = it },
-                )
+                // The scan derives a thousand-address window locally: off the main thread too.
+                val beyond = withContext(Dispatchers.Default) {
+                    addressDiscovery.discoverAddresses(
+                        rootKey,
+                        startIndex = 0,
+                        onProgress = { if (userInitiated) _discoveryProgress.value = it },
+                    )
+                }
                 if (beyond.isNotEmpty()) {
                     // Raise the persisted bound only to cover USED/funded finds — raising it to
                     // the scan's trailing unused rows would grow it by another gap every refresh.
@@ -372,23 +383,11 @@ class ColdStorageViewModel @Inject constructor(
         }
     }
 
-    private val _addressKnsDomains = MutableStateFlow<List<com.kachat.app.services.KnsAsset>>(emptyList())
-    val addressKnsDomains: StateFlow<List<com.kachat.app.services.KnsAsset>> = _addressKnsDomains.asStateFlow()
-    private val _addressKnsDomainsLoading = MutableStateFlow(false)
-    val addressKnsDomainsLoading: StateFlow<Boolean> = _addressKnsDomainsLoading.asStateFlow()
-
-    fun loadAddressKnsDomains(address: String) {
-        viewModelScope.launch {
-            _addressKnsDomainsLoading.value = true
-            _addressKnsDomains.value = try { knsService.getOwnedDomains(address) } catch (e: Exception) { emptyList() }
-            _addressKnsDomainsLoading.value = false
-        }
-    }
-
     // Parsed kpub root keys, cached per account — the Address Visibility pager derives 50
     // addresses per page on demand, and re-parsing the kpub for each would be wasted work
     // (mirrors WalletManager.spendingChainKey's caching on the spending side).
-    private val rootKeyCache = mutableMapOf<String, org.bitcoinj.crypto.DeterministicKey>()
+    // Concurrent: the pager derives its page on Dispatchers.Default.
+    private val rootKeyCache = java.util.concurrent.ConcurrentHashMap<String, org.bitcoinj.crypto.DeterministicKey>()
 
     private fun rootKeyFor(accountId: String): org.bitcoinj.crypto.DeterministicKey? {
         rootKeyCache[accountId]?.let { return it }
@@ -439,8 +438,6 @@ class ColdStorageViewModel @Inject constructor(
         return runCatching { KaspaExtendedPublicKey.deriveChildAddress(rootKey, chain = 0, index = index) }.getOrNull()
     }
 
-    /** One-off used check for a pager-derived index (balance or history). Degrades to false
-     *  on network failure, matching WalletService.hasSpendingAddressBeenUsed. */
     /**
      * Whether this address has ever been used - or NULL when the probe could not answer.
      *

@@ -421,13 +421,6 @@ data class ChessTournamentGame(
     fun chargedMs(elapsed: Long): Long =
         maxOf(0L, elapsed - ChessTournamentCodec.allowanceMs(moves.size + 1, startedAt))
 
-    /** The allowance still unspent on the current move, for the phone to show ("clock starts in
-     *  0:42"); zero once the clock is running. */
-    fun allowanceLeftMs(now: Long): Long {
-        if (isOver) return 0
-        return maxOf(0L, ChessTournamentCodec.allowanceMs(moves.size + 1, startedAt) - maxOf(0L, now - lastEventAt))
-    }
-
     /**
      * The side whose clock has run out at [now], before anyone has posted the claim. The reducer
      * ends a game on the clock only when the opponent's phone posts that claim; when the winner

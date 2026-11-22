@@ -193,6 +193,8 @@
     <string name="kn_no_names_in_grace">अभी कोई नाम ग्रेस अवधि में नहीं है।</string>
     <string name="kn_no_open_offers">कोई खुला ऑफ़र नहीं।</string>
     <string name="kn_not_enough">इस नाम के लिए आपके चैटिंग पते पर पर्याप्त KAS नहीं है।</string>
+    <string name="kn_err_claim_in_progress">आप पहले से %1$s क्लेम कर रहे हैं।</string>
+    <string name="kn_err_not_enough_kas">इसके लिए पर्याप्त KAS नहीं है। कुछ जोड़ें और फिर से कोशिश करें।</string>
     <string name="kn_not_for_sale">बिक्री के लिए नहीं</string>
     <string name="kn_not_valid_name">मान्य नाम नहीं है।</string>
     <string name="kn_nothing_yet">अभी कुछ नहीं।</string>

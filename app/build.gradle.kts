@@ -90,8 +90,8 @@ android {
         // permanent and per app, and unlike iOS it does NOT reset when versionName changes
         // (4.1's builds ran 35..47). A device will not treat a rebuild as an update unless it
         // moves, so it goes up with every handed-out build too, alongside the build number.
-        val kachatBuildNumber = 5
-        versionCode = 138
+        val kachatBuildNumber = 6
+        versionCode = 139
         versionName = "5.3"
         buildConfigField("int", "KACHAT_BUILD_NUMBER", kachatBuildNumber.toString())
         // KACHAT_IS_RELEASE is set per flavour below rather than once here, because on Android the
@@ -135,7 +135,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            // Never the debug key (security audit L15): anyone can reproduce it, so an APK signed
+            // with it could be "updated" by anyone. Without keystore.properties a release build
+            // stops with an error instead (see the package/bundle check below).
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -147,8 +149,8 @@ android {
     }
 
     // Where a build is handed out from. Same package, same signing key, same code - the one
-    // thing that differs is the launcher name: the GitHub APK calls itself "KaChat APK" (see
-    // src/github/res) so a person can tell it from the Play Store's "KaChat" at a glance.
+    // thing that differs is the launcher name: the GitHub APK calls itself "K APK" (see
+    // src/github/res) so a person can tell it from the Play Store's "K" at a glance.
     // Installing one over the other still updates in place, since Android sees one package.
     // Play builds: bundlePlayRelease. GitHub APK: assembleGithubRelease.
     flavorDimensions += "distribution"
@@ -230,6 +232,16 @@ androidComponents {
     }
 }
 
+// A release APK or bundle is never built without the release key (security audit L15): it used
+// to fall back to the debug key silently. Debug builds and unit tests are unaffected.
+if (!keystorePropertiesFile.exists()) {
+    tasks.matching { Regex("^(package|bundle)[A-Z]\\w*Release$").matches(it.name) }.configureEach {
+        doFirst {
+            throw GradleException("Release signing: keystore.properties is missing, so there is no release key. Add it (see .gitignore) to build a release.")
+        }
+    }
+}
+
 dependencies {
     // Core Android
     implementation(libs.androidx.core.ktx)
@@ -248,7 +260,6 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.compose.material)
@@ -302,7 +313,6 @@ dependencies {
 
     // Crypto (BIP39, BIP32/44)
     implementation(libs.bitcoinj.core)
-    implementation(libs.bip39.kotlin)
     implementation(libs.zxing.core)
 
     // Camera (QR scanning)
@@ -330,10 +340,6 @@ dependencies {
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.grpc.inprocess) // in-process gRPC transport for testing KaspadConnection offline
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }

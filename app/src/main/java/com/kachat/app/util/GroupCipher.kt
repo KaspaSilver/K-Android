@@ -338,17 +338,6 @@ object GroupCipher {
         return GroupEpochPayload(groupId = groupId.toHexString(), epoch = epoch, reason = reason, sig = sig.toHexString())
     }
 
-    fun verifyEpochPayload(payload: GroupEpochPayload, adminSigningPub: ByteArray): Boolean {
-        return try {
-            val groupId = payload.groupId.hexToByteArray()
-            val sig = payload.sig.hexToByteArray()
-            val signingPayload = buildEpochSigningPayload(payload.v, groupId, payload.epoch, payload.reason)
-            verify(sig, signingPayload, adminSigningPub)
-        } catch (e: Exception) {
-            false
-        }
-    }
-
     /** gctl_tombstone - a self-addressed "I deleted this group" marker so a delete survives a
      *  seedless re-import (the recovery invite would otherwise resurrect it). Signed by the
      *  deleter, honored ONLY when signed by + addressed to the reader's own key. v2 names the admin

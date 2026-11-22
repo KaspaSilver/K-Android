@@ -29,10 +29,6 @@ interface MessageEditDao {
     @Query("SELECT * FROM message_edits WHERE walletAddress = :walletAddress AND groupId = :groupId")
     fun getEditsForGroup(groupId: String, walletAddress: String): Flow<List<MessageEditEntity>>
 
-    /** Existence check by the edit's own tx id — the sibling of [ReactionDao.countByReactionTxId]. */
-    @Query("SELECT COUNT(*) FROM message_edits WHERE editTxId = :txId AND walletAddress = :walletAddress")
-    suspend fun countByEditTxId(txId: String, walletAddress: String): Int
-
     @Query("DELETE FROM message_edits WHERE walletAddress = :walletAddress AND contactId = :contactId")
     suspend fun deleteAllForContact(contactId: String, walletAddress: String)
 

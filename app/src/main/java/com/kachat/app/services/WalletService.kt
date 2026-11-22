@@ -61,7 +61,6 @@ class WalletService @Inject constructor(
     val balanceKnown: StateFlow<Boolean> = _balanceKnown.asStateFlow()
 
     private val _spendingBalance = MutableStateFlow(0L)
-    val spendingBalance: StateFlow<Long> = _spendingBalance.asStateFlow()
 
     /** Every revealed spending address together, not just the current one. Null until a fetch
      *  succeeds, and left alone on a failure, so the caller can omit the line rather than claim
@@ -115,9 +114,29 @@ class WalletService @Inject constructor(
             if ((try { walletManager.getAddress() } catch (e: Exception) { null }) != address) return
             _balance.value = balance
             _balanceKnown.value = true
+            balanceReadAt = address to System.currentTimeMillis()
         } catch (e: Exception) {
             Log.e("WalletService", "Error refreshing balance", e)
         }
+    }
+
+    /** When [refreshBalance] / [refreshSpendingBalance] last succeeded, and for which address. */
+    @Volatile private var balanceReadAt: Pair<String, Long>? = null
+    @Volatile private var spendingBalanceReadAt: Pair<String, Long>? = null
+
+    /** Whether the chatting balance was read for the active account within [maxAgeMs] - so a
+     *  screen opening right after another doesn't fetch the same balance again. */
+    fun balanceReadWithin(maxAgeMs: Long): Boolean {
+        val (address, at) = balanceReadAt ?: return false
+        val current = try { walletManager.getAddress() } catch (e: Exception) { return false }
+        return address == current && System.currentTimeMillis() - at in 0 until maxAgeMs
+    }
+
+    /** [balanceReadWithin] for the spending balance and total. */
+    fun spendingBalanceReadWithin(maxAgeMs: Long): Boolean {
+        val (address, at) = spendingBalanceReadAt ?: return false
+        val current = try { walletManager.currentSpendingAddress() } catch (e: Exception) { return false }
+        return address == current && System.currentTimeMillis() - at in 0 until maxAgeMs
     }
 
     suspend fun refreshSpendingBalance() {
@@ -149,6 +168,7 @@ class WalletService @Inject constructor(
                 ?: api.getBalances(BalancesRequest(all)).sumOf { it.balance }
             if ((try { walletManager.currentSpendingAddress() } catch (e: Exception) { null }) != address) return
             _spendingTotalBalance.value = total
+            spendingBalanceReadAt = address to System.currentTimeMillis()
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -177,7 +197,10 @@ class WalletService @Inject constructor(
          *  control's (iOS sendPaymentInternal). */
         chatPayment: Boolean = false
     ): String {
-        val result = walletEngine.sendKaspa(
+        // Coin selection, fee math and a Schnorr signature per input are CPU work, and callers
+        // reach here from the main thread (a view model's launch): off it, so a send never
+        // stalls the screen. The network calls inside simply suspend as before.
+        val result = withContext(kotlinx.coroutines.Dispatchers.Default) { walletEngine.sendKaspa(
             toAddress, amountSompi, payloadBytes,
             feeRateOverride = feeRateOverride,
             manualUtxos = manualUtxos,
@@ -186,7 +209,7 @@ class WalletService @Inject constructor(
             excludeCoinbase = chatPayment,
             confirmedOnly = chatPayment,
             greedyAmongManual = chatPayment
-        )
+        ) }
 
         if (result.isSuccess) {
             refreshBalance()
@@ -216,7 +239,8 @@ class WalletService @Inject constructor(
         /** The fee the Review showed; a send that would pay more goes nowhere (iOS 4f8e14bb). */
         expectedFeeSompi: Long? = null,
     ): String {
-        val result = walletEngine.sendSpendingPayment(
+        // Off the main thread, as [sendKaspa]: this also derives the spending key (BIP39 PBKDF2).
+        val result = withContext(kotlinx.coroutines.Dispatchers.Default) { walletEngine.sendSpendingPayment(
             toAddress = toAddress,
             amountSompi = amountSompi,
             sourceSpendingIndex = sourceSpendingIndex,
@@ -226,7 +250,7 @@ class WalletService @Inject constructor(
             extraFeeSompi = extraFeeSompi,
             isAddressUsed = { spendingAddressUsedState(it) },
             expectedFeeSompi = expectedFeeSompi,
-        )
+        ) }
 
         if (result.isSuccess) {
             refreshSpendingBalance()
@@ -708,7 +732,9 @@ class WalletService @Inject constructor(
 
         // Sealed so the seed can read it back on any device (iOS bfe9f022, MESSAGING.md "Reading
         // back your own sends"); to the recipient it's an ordinary message.
-        val encrypted = MessageProtocol.encryptContextual(text, recipientPubKey, senderPrivateKey = walletManager.getPrivateKeyBytes())
+        val encrypted = withContext(kotlinx.coroutines.Dispatchers.Default) {
+            MessageProtocol.encryptContextual(text, recipientPubKey, senderPrivateKey = walletManager.getPrivateKeyBytes())
+        }
         // First contact carries their inbox tag so they can find it (NO_HANDSHAKE_MESSAGING.md §3).
         val inboxTag = if (firstContactTag) chatRepository.firstContactInboxTag(toContactId) else null
         val payloadBytes = MessageProtocol.buildCommPayload(alias, encrypted, inboxTag)
@@ -754,7 +780,7 @@ class WalletService @Inject constructor(
             theirAlias = if (isResponse) existing?.theirAlias else null
         )
         val json = Gson().toJson(payload)
-        val encrypted = MessageProtocol.encrypt(json, recipientPubKey)
+        val encrypted = withContext(kotlinx.coroutines.Dispatchers.Default) { MessageProtocol.encrypt(json, recipientPubKey) }
         val payloadBytes = MessageProtocol.buildHandshakePayload(encrypted)
 
         // Our own bubble for it, under [txId].
@@ -1060,33 +1086,6 @@ class WalletService @Inject constructor(
         return false
     }
 
-    /**
-     * Retries just the reveal half of a KNS inscription whose commit already broadcast but whose
-     * reveal never completed (app killed, network error, etc.) — reconstructs the exact same
-     * commit context that was persisted right after the commit succeeded, so the same funds get
-     * revealed rather than left stuck in the P2SH commit output.
-     */
-    suspend fun retryPendingKnsReveal(pending: com.kachat.app.models.PendingKnsCommit): String {
-        val commit = KnsInscriptionEngine.CommitResult(
-            commitTxId = pending.commitTxId,
-            redeemScript = pending.redeemScriptHex.hexToBytes(),
-            commitScriptPubKeyHex = pending.commitScriptPubKeyHex,
-            commitAmountSompi = pending.commitAmountSompi,
-            revealAmountSompi = pending.revealAmountSompi
-        )
-        // changeAddress falls back to the identity address for a commit persisted before that
-        // field existed. The reveal signature is the key whose pubkey the redeem script embeds:
-        // the commit's owner, a spending address for a transfer made from one.
-        val revealTxId = knsInscriptionEngine.buildAndSubmitReveal(
-            commit,
-            pending.revealTargetAddress,
-            pending.changeAddress ?: walletManager.getAddress(),
-            knsRevealOwnerKey(pending) ?: walletManager.getPrivateKeyBytes()
-        )
-        refreshBalance()
-        return revealTxId
-    }
-
     /** The key of the address that made [pending] (its reveal target), when it is this account's:
      *  the chatting key or a legacy spending address's (KNS can't move anything out of a quantum
      *  one, iOS 2a8ca5a). Null when it is another account's. */
@@ -1131,8 +1130,6 @@ class WalletService @Inject constructor(
             if (!settled) knsResumeChecked.remove(account)
         }
     }
-
-    private fun String.hexToBytes(): ByteArray = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 
     /** Polls forward resolution until the new domain's owner matches, up to 90s — a UX confirmation step, not something the broadcast itself depends on. */
     private suspend fun verifyDomainOwnership(fullDomain: String, expectedOwnerAddress: String): Boolean {

@@ -109,8 +109,23 @@ class TrestlyProviderFactory @Inject constructor(
     internal val addressActivityNotifier: AddressActivityNotifier,
     internal val notificationCenter: GlobalNotificationCenterStore,
     internal val settings: AppSettingsRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context,
 ) {
     fun make(target: TrestlyTarget, siteUrl: String): TrestlyProvider = TrestlyProvider(target, siteUrl, this)
+
+    /** K's globe logo as a small PNG data URL for `info.icon` (the site takes up to 256 KB), made
+     *  once (iOS 278de352 `iconDataURL`, from `KLogo` at 96 x 96). Empty if it can't be made. */
+    internal val iconDataUrl: String by lazy {
+        try {
+            val source = android.graphics.BitmapFactory.decodeResource(appContext.resources, com.kachat.app.R.drawable.k_logo)
+            val scaled = android.graphics.Bitmap.createScaledBitmap(source, 96, 96, true)
+            val out = java.io.ByteArrayOutputStream()
+            scaled.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
+            "data:image/png;base64," + android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP)
+        } catch (e: Exception) {
+            ""
+        }
+    }
 }
 
 /**
@@ -126,8 +141,8 @@ class TrestlyProviderFactory @Inject constructor(
  * - trestly.io (its 2026-11-20 build) finds it by `window.kusdt`, by `kusdt#initialized` and by
  *   `kusdt:announceProvider`, which is dispatched again whenever the page dispatches
  *   `kusdt:requestProvider`. It reads what KaChat answers from `methods` (on the provider and on
- *   `info`) and `kusdt_capabilities`, and names KaChat from `info` (no icon: iOS KaChat has no
- *   wallet logo to send, so `info.icon` is left out).
+ *   `info`) and `kusdt_capabilities`, and shows the app from `info`: "K" with the K globe logo
+ *   (iOS 278de352).
  * - Answers: `kaspa_requestAccounts` (the picked address: opening Trestly with it was the approval),
  *   `kaspa_getNetwork`, `kaspa_switchNetwork` (only to the network KaChat is on; else 4200),
  *   `kusdt_getBalances` (that address's plain KAS from the node and its node-checked kUSDT),
@@ -143,7 +158,9 @@ class TrestlyProvider internal constructor(
     siteUrl: String,
     private val deps: TrestlyProviderFactory,
 ) {
-    class ProviderError(val code: Int, override val message: String) : Exception(message)
+    /** [maybeSent]: the trade may have gone out though no answer said so (`execute` timed out, its
+     *  page died, or Trestly's code said `maybeSent`; iOS `ProviderError.maybeSent`). */
+    class ProviderError(val code: Int, override val message: String, val maybeSent: Boolean = false) : Exception(message)
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -189,9 +206,11 @@ class TrestlyProvider internal constructor(
         get() {
             val methodsJSON = JsonArray().apply { METHODS.forEach { add(it) } }.toString()
             val info = JsonObject().apply {
-                addProperty("name", "KaChat")
+                // what Trestly's site shows on Connect: the app's name and logo (K since
+                // 2026-11-21, iOS 278de352); rdns is an id, not shown, so it stays as Trestly knows it
+                addProperty("name", "K")
                 addProperty("rdns", RDNS)
-                addProperty("icon", "")
+                addProperty("icon", deps.iconDataUrl)
             }.toString()
             val host = JsonPrimitive(allowedHost).toString()
             return """
@@ -381,6 +400,9 @@ class TrestlyProvider internal constructor(
         declinedAt?.let { if (System.currentTimeMillis() - it < DECLINE_PAUSE_MS) throw ProviderError(Code.REJECTED, "You declined in K a moment ago.") }
         tradeInFlight = true
         try {
+            heldMinutes(target.address)?.let { minutes ->
+                throw ProviderError(Code.BUSY, "Your last trade from this address gave no answer and may still go through. Check the address's history. K takes trades from it again once that one shows on the network, or in about $minutes min.")
+            }
             val owner = Kusdt.schnorrOwner(target.address)
                 ?: throw ProviderError(Code.FAILED, "K can't trade from this kind of address.")
             val paramsJSON: JsonElement = params ?: JsonNull.INSTANCE
@@ -405,6 +427,17 @@ class TrestlyProvider internal constructor(
                     throw ProviderError(Code.REJECTED, "You declined in K. Nothing was sent.")
                 }
 
+                // the address's coins as they were before the trade: if it gives no answer, these
+                // are held, and the hold ends early once one of them is spent (the trade landed)
+                val coinsBefore = try {
+                    withContext(Dispatchers.IO) { deps.nodePoolManager.getUtxosByAddressesFromNode(listOf(target.address)) }
+                        .map { it.outpoint }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    emptyList()
+                }
+
                 // the key goes into this one request only, never into `wallet`
                 val signing = wallet.deepCopy().apply { addProperty("secret", secretHex(owner)) }
                 val request = JsonObject().apply {
@@ -422,7 +455,26 @@ class TrestlyProvider internal constructor(
                         add("quoted", prepared.get("quote") ?: JsonNull.INSTANCE)
                     }
                 }
-                val done = walletCall("execute", request)
+                val done = try {
+                    walletCall("execute", request)
+                } catch (e: ProviderError) {
+                    if (e.maybeSent) {
+                        // it may have gone out: hold this address's coins and its trades (iOS,
+                        // audit 2026-11-21 #1)
+                        hold(target.address, coinsBefore)
+                        if (coinsBefore.isNotEmpty()) OutpointReservations.shared.reserve(coinsBefore)
+                        scope.launch {
+                            delay(REFRESH_AFTER_TRADE_MS)
+                            try { deps.tokenWallet.refresh() } catch (e: CancellationException) { throw e } catch (e: Exception) {}
+                        }
+                    }
+                    throw e
+                } finally {
+                    // the key leaves this function's hands whether execute answers, throws or
+                    // times out (iOS audit 2026-11-21 #7)
+                    signing.remove("secret")
+                    request.remove("wallet")
+                }
 
                 done.get("steps")?.takeIf { it.isJsonArray }?.asJsonArray?.forEach { step ->
                     step.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.let { deps.addressActivityNotifier.markOwnTransaction(it.asString) }
@@ -544,6 +596,8 @@ class TrestlyProvider internal constructor(
             deps.core.wallet(function, request)
         } catch (e: CancellationException) {
             throw e
+        } catch (e: KusdtCore.CoreError.MaybeSent) {
+            throw ProviderError(Code.FAILED, maybeSentMessage(e.message ?: tr(R.string.kp_trestly_pool_code_no_answer)), maybeSent = true)
         } catch (e: Exception) {
             throw ProviderError(Code.FAILED, e.message ?: tr(R.string.kp_trestly_pool_code_no_answer))
         }
@@ -553,9 +607,94 @@ class TrestlyProvider internal constructor(
                 try { it.asBigDecimal.intValueExact() } catch (e: ArithmeticException) { null }
             } ?: Code.FAILED
             val maybeSent = answer.get("maybeSent")?.let { it.isJsonPrimitive && it.asJsonPrimitive.isBoolean && it.asBoolean } == true
-            throw ProviderError(code, if (maybeSent) error + " " + tr(R.string.kp_check_address_history_before_trying_again) else error)
+            if (maybeSent) throw ProviderError(code, maybeSentMessage(error), maybeSent = true)
+            throw ProviderError(code, error)
         }
         return answer
+    }
+
+    private fun maybeSentMessage(why: String): String =
+        why + " " + tr(R.string.kp_trade_may_have_gone_through) + " " + tr(R.string.kp_check_address_history_before_trying_again)
+
+    // Trades that may have gone out
+
+    /** Minutes left on this address's hold, or null when it may trade: no hold, the hold ran out,
+     *  or a coin it had before is gone from the node (the earlier trade landed). iOS `heldMinutes`. */
+    private suspend fun heldMinutes(address: String): Int? {
+        val held = loadHolds()[address] ?: return null
+        val left = held.until - System.currentTimeMillis()
+        if (left <= 0) {
+            saveHolds(loadHolds() - address)
+            return null
+        }
+        if (held.outpoints.isNotEmpty()) {
+            val now = try {
+                withContext(Dispatchers.IO) { deps.nodePoolManager.getUtxosByAddressesFromNode(listOf(address)) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                null
+            }
+            if (now != null) {
+                val present = now.map { "${it.outpoint.transactionId.lowercase()}:${it.outpoint.index}" }.toSet()
+                if (held.outpoints.any { it !in present }) {
+                    saveHolds(loadHolds() - address)
+                    return null
+                }
+            }
+        }
+        return maxOf(1, ((left + 59_999L) / 60_000L).toInt())
+    }
+
+    /** A trade whose `execute` gave no answer may still land: its address takes no new trade until
+     *  one of the coins it held before is spent or [HOLD_MS] pass. Kept on the phone, so a relaunch
+     *  doesn't drop it (iOS `MaybeSentHold`). */
+    private fun hold(address: String, outpoints: List<Outpoint>) {
+        val keys = outpoints.map { "${it.transactionId.lowercase()}:${it.index}" }
+        saveHolds(loadHolds() + (address to MaybeSentHold(System.currentTimeMillis() + HOLD_MS, keys)))
+    }
+
+    private class MaybeSentHold(val until: Long, val outpoints: List<String>)
+
+    private fun holdsPrefs() = com.kachat.app.util.AppText.context()
+        .getSharedPreferences(HOLDS_PREFS, android.content.Context.MODE_PRIVATE)
+
+    /** `{address: {"until": ms, "outpoints": ["txid:index"]}}`, written by hand (no reflection,
+     *  so a minified build reads what an earlier one wrote). */
+    private fun loadHolds(): Map<String, MaybeSentHold> {
+        val json = holdsPrefs().getString(HOLDS_KEY, null) ?: return emptyMap()
+        return try {
+            val root = org.json.JSONObject(json)
+            val out = HashMap<String, MaybeSentHold>()
+            for (address in root.keys()) {
+                val entry = root.optJSONObject(address) ?: continue
+                val list = entry.optJSONArray("outpoints")
+                val outpoints = if (list == null) emptyList() else (0 until list.length()).mapNotNull { list.optString(it).takeIf { s -> s.isNotEmpty() } }
+                out[address] = MaybeSentHold(entry.optLong("until", 0L), outpoints)
+            }
+            out
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
+    private fun saveHolds(all: Map<String, MaybeSentHold>) {
+        val now = System.currentTimeMillis()
+        val live = all.filterValues { it.until > now }
+        val editor = holdsPrefs().edit()
+        if (live.isEmpty()) {
+            editor.remove(HOLDS_KEY)
+        } else {
+            val root = org.json.JSONObject()
+            for ((address, held) in live) {
+                root.put(address, org.json.JSONObject().apply {
+                    put("until", held.until)
+                    put("outpoints", org.json.JSONArray(held.outpoints))
+                })
+            }
+            editor.putString(HOLDS_KEY, root.toString())
+        }
+        editor.apply()
     }
 
     /** Shows the approval and waits for Approve or Decline (closing the sheet declines). */
@@ -634,6 +773,10 @@ class TrestlyProvider internal constructor(
 
         private const val DECLINE_PAUSE_MS = 3_000L
         private const val REFRESH_AFTER_TRADE_MS = 4_000L
+        /** How long an address that may have a trade out takes no new one (iOS `holdSeconds`). */
+        private const val HOLD_MS = 600_000L
+        private const val HOLDS_PREFS = "kachat_trestly_holds"
+        private const val HOLDS_KEY = "maybe_sent_holds"
         private const val BANNER_MS = 4_000L
         /** The page's wrapper sends at most 4096 characters of params; room for the rest. */
         private const val MAX_MESSAGE_CHARS = 16_384

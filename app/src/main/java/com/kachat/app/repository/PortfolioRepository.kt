@@ -68,19 +68,11 @@ class PortfolioRepository @Inject constructor(
     // The app currency, for a price backfill no screen started (after a restore).
     private val settings: AppSettingsRepository,
 ) {
-    /**
-     * Whichever portfolio is currently active within whichever wallet is currently active —
-     * re-emits automatically on either switching, same pattern as BroadcastRepository/
-     * GroupRepository. Pre-wallet-scoping rows (walletAddress="") are claimed first, then
-     * pre-portfolio-scoping rows (portfolioId="") are claimed for the wallet's default portfolio
-     * — a very old install upgrading straight from before either migration needs both claims in
-     * that order.
-     */
-    /** Every portfolio's rows for the active wallet - what "already in another portfolio"
-     *  checks look across (iOS checks its whole transactions list, not the active portfolio). */
     /** The wallet's own chatting address - "Add Chatting Address" imports it (iOS 61eff0f). */
     fun chattingAddress(): String? = walletManager.activeAddressFlow.value?.takeIf { it.isNotBlank() }
 
+    /** Every portfolio's rows for the active wallet - what "already in another portfolio"
+     *  checks look across (iOS checks its whole transactions list, not the active portfolio). */
     fun getAllTransactionsForActiveWallet(): Flow<List<PortfolioTransactionEntity>> =
         walletManager.activeAddressFlow.flatMapLatest { address ->
             if (address == null) flowOf(emptyList())
@@ -120,6 +112,14 @@ class PortfolioRepository @Inject constructor(
         ledgerStore.saveTransaction(row.copy(portfolioId = toPortfolioId))
     }
 
+    /**
+     * Whichever portfolio is currently active within whichever wallet is currently active —
+     * re-emits automatically on either switching, same pattern as BroadcastRepository/
+     * GroupRepository. Pre-wallet-scoping rows (walletAddress="") are claimed first, then
+     * pre-portfolio-scoping rows (portfolioId="") are claimed for the wallet's default portfolio
+     * — a very old install upgrading straight from before either migration needs both claims in
+     * that order.
+     */
     fun getTransactions(): Flow<List<PortfolioTransactionEntity>> {
         return combine(walletManager.activeAddressFlow, portfolioManager.activePortfolioIdFlow) { address, portfolioId ->
             address to portfolioId
@@ -209,8 +209,6 @@ class PortfolioRepository @Inject constructor(
 
     suspend fun deleteTransaction(id: String) = ledgerStore.deleteTransactions(walletManager.getAddress(), listOf(id))
 
-    /** Null on any failure (offline, rate-limited, etc.) — callers fall back to the last-known price.
-     *  [currency] is the lowercase ISO 4217 code (Settings > Customization > Currency, defaults to "usd"). */
     /**
      * [PriceWithChange.change24hPercent] is nil only on a decode/response oddity, not treated as
      * a separate failure from the price fetch itself — CoinGecko returns both in the same call
@@ -233,14 +231,6 @@ class PortfolioRepository @Inject constructor(
     }
 
     /**
-     * A 429/5xx gets one in-place retry only when the server's Retry-After fits inside
-     * [MAX_INLINE_RETRY_SECONDS] — CoinGecko's real throttle window is ~59s, and parking a
-     * caller that long just holds a refresh spinner hostage. Longer windows are recorded in
-     * [throttledUntilMillis] for the ViewModel's deferred retry instead. Successes persist to
-     * [readPersistedPrice]'s cache so the UI can paint the last-known price instantly on the
-     * next open even when every fetch in a session is throttled.
-     */
-    /**
      * Market cap and market-cap rank for KAS. Null on any failure - the caller keeps its last
      * good values rather than blanking a rank because one request timed out.
      */
@@ -251,6 +241,17 @@ class PortfolioRepository @Inject constructor(
         null
     }
 
+    /**
+     * Null on any failure (offline, rate-limited, etc.) — callers fall back to the last-known price.
+     * [currency] is the lowercase ISO 4217 code (Settings > Customization > Currency, defaults to "usd").
+     *
+     * A 429/5xx gets one in-place retry only when the server's Retry-After fits inside
+     * [MAX_INLINE_RETRY_SECONDS] — CoinGecko's real throttle window is ~59s, and parking a
+     * caller that long just holds a refresh spinner hostage. Longer windows are recorded in
+     * [throttledUntilMillis] for the ViewModel's deferred retry instead. Successes persist to
+     * [readPersistedPrice]'s cache so the UI can paint the last-known price instantly on the
+     * next open even when every fetch in a session is throttled.
+     */
     suspend fun getCurrentPriceUsd(currency: String = "usd"): PriceWithChange? {
         repeat(2) { attempt ->
             try {
@@ -262,7 +263,7 @@ class PortfolioRepository @Inject constructor(
                 return result
             } catch (e: HttpException) {
                 if (attempt > 0 || (e.code() != 429 && e.code() < 500)) return null
-                val retryAfterSeconds = e.response()?.headers()?.get("Retry-After")?.toDoubleOrNull() ?: 2.0
+                val retryAfterSeconds = retryAfterSeconds(e.response()?.headers()?.get("Retry-After"))
                 if (retryAfterSeconds > MAX_INLINE_RETRY_SECONDS) {
                     recordThrottleWindow(retryAfterSeconds)
                     return null
@@ -277,17 +278,6 @@ class PortfolioRepository @Inject constructor(
         return null
     }
 
-    /**
-     * (timestampMillis, price) pairs in [currency], oldest first — empty on failure rather than
-     * throwing, so callers must not blindly overwrite existing cached history with an empty
-     * result (see [com.kachat.app.viewmodels.PortfolioViewModel]'s fetchPriceHistory).
-     *
-     * CoinGecko's keyless tier throttles bursts hard (429 for a stretch after just a few rapid
-     * calls) — a launch plus a couple of chart-range taps was enough to make every subsequent
-     * range fetch come back empty, leaving the chart stuck on whatever range loaded first. A
-     * 429/5xx here gets one in-place retry when Retry-After fits [MAX_INLINE_RETRY_SECONDS];
-     * a longer window is recorded in [throttledUntilMillis] for a deferred retry instead.
-     */
     /**
      * All-time history. CoinGecko's keyless tier refuses anything past 365 days (error 10012),
      * so [days] = [ALL_TIME_DAYS] draws the older part from Gate.io's daily KAS_USDT closes -
@@ -425,6 +415,17 @@ class PortfolioRepository @Inject constructor(
         return fetchGateHistory(days, currency, spotHint)
     }
 
+    /**
+     * (timestampMillis, price) pairs in [currency], oldest first — empty on failure rather than
+     * throwing, so callers must not blindly overwrite existing cached history with an empty
+     * result (see [com.kachat.app.viewmodels.PortfolioViewModel]'s fetchPriceHistory).
+     *
+     * CoinGecko's keyless tier throttles bursts hard (429 for a stretch after just a few rapid
+     * calls) — a launch plus a couple of chart-range taps was enough to make every subsequent
+     * range fetch come back empty, leaving the chart stuck on whatever range loaded first. A
+     * 429/5xx here gets one in-place retry when Retry-After fits [MAX_INLINE_RETRY_SECONDS];
+     * a longer window is recorded in [throttledUntilMillis] for a deferred retry instead.
+     */
     private suspend fun fetchCoinGeckoHistory(days: Int, currency: String): List<Pair<Long, Double>> {
         repeat(2) { attempt ->
             try {
@@ -433,7 +434,7 @@ class PortfolioRepository @Inject constructor(
                 }
             } catch (e: HttpException) {
                 if (attempt > 0 || (e.code() != 429 && e.code() < 500)) return emptyList()
-                val retryAfterSeconds = e.response()?.headers()?.get("Retry-After")?.toDoubleOrNull() ?: 2.0
+                val retryAfterSeconds = retryAfterSeconds(e.response()?.headers()?.get("Retry-After"))
                 if (retryAfterSeconds > MAX_INLINE_RETRY_SECONDS) {
                     // The real window (observed: 59s) doesn't fit an in-place park — capping the
                     // delay at 10s just guaranteed the retry landed inside the window and failed
@@ -651,7 +652,7 @@ class PortfolioRepository @Inject constructor(
                 return price
             } catch (e: HttpException) {
                 if (attempt > 0 || (e.code() != 429 && e.code() < 500)) return null
-                val retryAfterSeconds = e.response()?.headers()?.get("Retry-After")?.toDoubleOrNull() ?: 2.0
+                val retryAfterSeconds = retryAfterSeconds(e.response()?.headers()?.get("Retry-After"))
                 if (retryAfterSeconds > MAX_INLINE_RETRY_SECONDS) {
                     recordThrottleWindow(retryAfterSeconds)
                     return null
@@ -694,6 +695,19 @@ class PortfolioRepository @Inject constructor(
 
     /** The wallet [priceBackfillJob] is pricing. */
     private var priceBackfillWallet: String? = null
+
+    /**
+     * Portfolio's view model has been made (Portfolio, Add to Portfolio): never at launch. The
+     * wallet-load backfill waits for it, as iOS's `PortfolioViewModel.shared` is made the first
+     * time something reads it and only then loads the wallet (iOS 428a797b, audit 2026-11-21 #12:
+     * no CoinGecko requests from a launch that never opens Portfolio).
+     */
+    private val portfolioOpened = kotlinx.coroutines.flow.MutableStateFlow(false)
+
+    /** Called by [com.kachat.app.viewmodels.PortfolioViewModel] as it is made. */
+    fun markPortfolioOpened() {
+        portfolioOpened.value = true
+    }
 
     /**
      * Prices [walletAddress]'s rows still waiting for a price (either marker, [isPricePending])
@@ -787,6 +801,11 @@ class PortfolioRepository @Inject constructor(
         onProgress("Fetching transactions…")
         val historyResult = coldStorageAddressDiscovery.getFullTransactionHistoryPaginated(trimmed)
         val history = historyResult.transactions
+        // The history read can outlast a sign-out or account switch: its rows are the account
+        // that started it, so nothing is saved once another is open (iOS 428a797b, audit #13).
+        if (walletManager.isLoggedOut || walletManager.activeAddressFlow.value != walletAddress) {
+            throw PortfolioAddressImportError.NoActivePortfolio
+        }
 
         data class Candidate(val txId: String, val sent: Boolean, val amountSompi: Long, val dayStartMillis: Long, val timestampMillis: Long)
 
@@ -1201,6 +1220,8 @@ class PortfolioRepository @Inject constructor(
         // the class on purpose: the backfill runs on another thread and reads properties declared
         // above, which must all be initialized before it can start.
         priceBackfillScope.launch {
+            // not before Portfolio's view model exists (iOS 428a797b, audit #12)
+            portfolioOpened.first { it }
             walletManager.activeAddressFlow.collect {
                 try {
                     onWalletLoaded(it)
@@ -1308,6 +1329,17 @@ class PortfolioRepository @Inject constructor(
          *  [throttledUntilMillis] for a deferred, non-blocking retry instead. */
         const val MAX_INLINE_RETRY_SECONDS = 10.0
 
+        /**
+         * The server's Retry-After in seconds. Only a finite number of seconds in 0..600 counts;
+         * anything else (negative, NaN, infinite, a date, garbage) is 2 s, so a server's header
+         * never turns into a negative wait or a window that overflows the clock (iOS 428a797b
+         * `retryDelayNanoseconds`, audit 2026-11-21 #20).
+         */
+        fun retryAfterSeconds(raw: String?): Double {
+            val parsed = raw?.trim()?.toDoubleOrNull() ?: return 2.0
+            return if (parsed.isFinite() && parsed in 0.0..600.0) parsed else 2.0
+        }
+
         /** The "All" range: everything there is, drawn from Gate.io's listing onwards with
          *  CoinGecko's last year on top (see getAllTimeHistory). Not a day count - a marker. */
         const val ALL_TIME_DAYS = 0
@@ -1375,4 +1407,6 @@ sealed class PortfolioAddressImportError(message: String) : Exception(message) {
     object InvalidAddress : PortfolioAddressImportError("That doesn't look like a valid Kaspa address.")
     object NoTransactions : PortfolioAddressImportError("No new transactions found for this address.")
     object HistoryFetchFailed : PortfolioAddressImportError("Couldn't fetch this address's transactions. Check your connection and try again.")
+    /** The account signed out or switched while the history loaded (iOS 428a797b, audit #13). */
+    object NoActivePortfolio : PortfolioAddressImportError("No active portfolio to import into.")
 }

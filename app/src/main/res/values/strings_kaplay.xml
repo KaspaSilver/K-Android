@@ -114,6 +114,7 @@
     <string name="kp_355bcc577d71" formatted="false">Finished</string>
     <string name="kp_a8d435fecb0c" formatted="false">Finished 1v1 games</string>
     <string name="kp_781b28d8c53d" formatted="false">Finished tournaments</string>
+    <string name="kp_cf5805795ab2" formatted="false">Who\'s on top in 1v1 and tournaments, this month or all time, and against each bot.</string>
     <string name="kp_08ab1ad685e3" formatted="false">Five bots, level 1 to 5, from Kaspa Silver to Yonatan Sompolinsky. Beat one to unlock the next. The result goes on Kaspa.</string>
     <string name="kp_03e3c2d3a084" formatted="false">Five bots, level 1 to 5. Beat one to unlock the next. Each game\'s result is stamped on Kaspa when it ends.</string>
     <string name="kp_e3e82846c325" formatted="false">Game</string>

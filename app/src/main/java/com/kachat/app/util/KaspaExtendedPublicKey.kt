@@ -80,10 +80,38 @@ object KaspaExtendedPublicKey {
      * key, encode the remaining x-only 32 bytes as a Schnorr (version 0) address).
      */
     fun deriveChildAddress(rootKey: DeterministicKey, chain: Int, index: Int, prefix: String = KaspaNetwork.hrp): String {
-        val chainKey = HDKeyDerivation.deriveChildKey(rootKey, ChildNumber(chain, false))
+        val rootId = rootIdOf(rootKey)
+        val addressKeyId = "$rootId/$chain/$index/$prefix"
+        synchronized(addressCache) { addressCache[addressKeyId] }?.let { return it }
+        val chainKeyId = "$rootId/$chain"
+        val chainKey = synchronized(chainKeyCache) { chainKeyCache[chainKeyId] }
+            ?: HDKeyDerivation.deriveChildKey(rootKey, ChildNumber(chain, false))
+                .also { synchronized(chainKeyCache) { chainKeyCache[chainKeyId] = it } }
         val addressKey = HDKeyDerivation.deriveChildKey(chainKey, ChildNumber(index, false))
         val pubKey = addressKey.pubKey
         val xOnlyPubKey = if (pubKey.size == 33) pubKey.sliceArray(1..32) else pubKey
         return KaspaAddress.encode(prefix, 0x00, xOnlyPubKey)
+            .also { synchronized(addressCache) { addressCache[addressKeyId] = it } }
+    }
+
+    // Derived chain keys and addresses, by the root's public key + chain code: public data only,
+    // and the same kpub is derived again on every screen open, refresh and notifier pass.
+    private fun rootIdOf(rootKey: DeterministicKey): String {
+        val bytes = rootKey.pubKey + rootKey.chainCode
+        val out = StringBuilder(bytes.size * 2)
+        for (b in bytes) {
+            val v = b.toInt() and 0xFF
+            out.append(HEX[v ushr 4]).append(HEX[v and 0x0F])
+        }
+        return out.toString()
+    }
+
+    private const val HEX = "0123456789abcdef"
+
+    private val chainKeyCache = object : LinkedHashMap<String, DeterministicKey>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, DeterministicKey>?) = size > 32
+    }
+    private val addressCache = object : LinkedHashMap<String, String>(1024, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > 8192
     }
 }
