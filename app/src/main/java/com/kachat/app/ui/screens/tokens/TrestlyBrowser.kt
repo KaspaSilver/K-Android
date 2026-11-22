@@ -289,6 +289,17 @@ private fun makeTrestlyWebView(
         Log.w(TAG, "the Trestly profile couldn't be set: ${e.javaClass.simpleName}")
     }
     view.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    // The page is in a sheet whose own drag (Material's, which only snaps back here: swipe-down
+    // is off) took every up and down swipe, so the page never scrolled. A touch on the page is
+    // the page's from the start: the sheet is told not to take it, as iOS's full-screen cover
+    // has no drag of its own.
+    @Suppress("ClickableViewAccessibility")
+    view.setOnTouchListener { v, event ->
+        if (event.actionMasked == android.view.MotionEvent.ACTION_DOWN) {
+            v.parent?.requestDisallowInterceptTouchEvent(true)
+        }
+        false
+    }
     view.settings.apply {
         javaScriptEnabled = true
         // the site keeps its own state while it's open; wiped when it closes

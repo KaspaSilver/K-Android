@@ -960,8 +960,13 @@ fun MainShell(
                                 modifier = Modifier
                                     .height(52.dp)
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(26.dp))
-                                    .clickable { goToDockTab(tab) },
+                                    // Not clipped, so the badge can stand above the icon in
+                                    // full; no ripple either, as on iOS, where the moving pill is
+                                    // the only press feedback.
+                                    .clickable(
+                                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                        indication = null,
+                                    ) { goToDockTab(tab) },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
