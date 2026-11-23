@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">通过地址或名称给某人发消息。</string>
     <string name="qr_chatting_address_subtitle">用于聊天和获取 .kachat 域名。</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">币控</string>
+    <string name="utxo_selection">UTXO 选择</string>
+    <string name="utxo_selection_caption">选择这次发送要花费哪些币。</string>
     <string name="compound_utxos">合并 UTXO</string>
     <string name="compound_utxos_description">合并此地址的 UTXO，以减少以后发送时所需的输入数量。单笔交易一次能合并的数量有限，因此如果此地址的 UTXO 非常多，请在交易确认后再次点按“合并 UTXO”继续减少。</string>
     <string name="automatic">自动</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">向你发送了 %1$s KAS</string>
     <string name="push_sent_you_payment">向你发送了一笔付款</string>
+    <string name="push_sent_you_token">向你发送了 %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1730,4 +1732,11 @@
     <string name="coins_combined">已合并币</string>
     <string name="transaction_didnt_go_out">交易未发出。</string>
     <string name="k_motto">Kaspa 网络上的数字自由</string>
+    <string name="received_tip">收到打赏</string>
+    <string name="sent_tip">已打赏</string>
+    <string name="received_a_tip_kas">收到打赏：%1$s KAS</string>
+    <string name="received_a_tip">收到打赏</string>
+    <string name="history_moved">已转移</string>
+    <string name="history_to_address">至 %1$s</string>
+    <string name="history_change_to_address">找零 %1$s 至 %2$s</string>
 </resources>

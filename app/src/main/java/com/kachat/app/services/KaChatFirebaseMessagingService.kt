@@ -64,6 +64,58 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
      *  after it. Pushes are handled one at a time. */
     @Volatile private var pushReceivedAtMs = 0L
 
+    /** The push being handled came before, by its txid or id ([PushArrivalRecord.record]): a
+     *  KaPost tip's second push (iOS NotificationService `pushSeenBefore`). */
+    @Volatile private var pushSeenBefore = false
+
+    /**
+     * Every push is recorded as it reaches the phone, before the system or [onMessageReceived]
+     * draws it (iOS NotificationService `recordPushArrival`, 2026-11-22): the app then never
+     * banners the same message again once it is open. Here rather than in [onMessageReceived],
+     * which a push with a `notification` block (rooms, KaPost, Received KAS) never reaches while
+     * the app is away - the system draws those itself, and the one tapped to open the app has left
+     * the shade by the time the app looks.
+     */
+    override fun handleIntent(intent: android.content.Intent) {
+        val action = intent.action
+        val messageType = runCatching { intent.getStringExtra("message_type") }.getOrNull()
+        if ((action == "com.google.android.c2dm.intent.RECEIVE" || action == "com.google.firebase.messaging.RECEIVE_DIRECT_BOOT") &&
+            (messageType == null || messageType == "gcm")
+        ) {
+            pushSeenBefore = runCatching {
+                intent.extras?.let { PushArrivalRecord.record(applicationContext, RemoteMessage(it)) } ?: false
+            }.getOrDefault(false)
+        }
+        super.handleIntent(intent)
+        // A KaPost tip push the system just drew (app away) after the tip's payment notice.
+        runCatching { intent.extras?.let { afterSystemDrawnKaPostTip(RemoteMessage(it)) } }
+    }
+
+    /**
+     * A KaPost "tipped your post" push the system draws itself while the app is away (it has a
+     * `notification` block, so [onMessageReceived] never sees it): its post goes into the tip
+     * ledger, and when the tip's payment push came first (its "Received a tip" notice is up) the
+     * system's copy is taken down again - one notice per tip (iOS 2026-11-22: the extension words
+     * the second quietly; Android can't reword a push the system draws).
+     */
+    private fun afterSystemDrawnKaPostTip(message: RemoteMessage) {
+        val notification = message.notification ?: return
+        val data = message.data
+        if (data["type"] != "kaposts" && data["thread_id"] != "kaposts") return
+        if (KaPostTipLedger.kaPostsPushKind(data["kaposts_kind"], notification.body ?: data["body"].orEmpty()) != "tip") return
+        val txId = data["tx_id"]?.trim()?.lowercase()?.takeIf { it.length == 64 } ?: return
+        POST_ID_KEYS.firstNotNullOfOrNull { key -> data[key]?.trim()?.takeIf { it.length == 64 } }
+            ?.let { KaPostTipLedger.record(applicationContext, txId, it) }
+        // (In the foreground the system draws nothing: [onMessageReceived] has it.)
+        if (!pushSeenBefore) return
+        val manager = getSystemService(android.app.NotificationManager::class.java) ?: return
+        val tag = notification.tag ?: txId
+        runCatching {
+            manager.activeNotifications.filter { it.tag.equals(tag, ignoreCase = true) }
+                .forEach { manager.cancel(it.tag, it.id) }
+        }
+    }
+
     /** The account stores open: the app's problem screen covers the rest; a push or a token
      *  rotation meanwhile is dropped rather than building the wallet and ending the process. */
     private fun accountStoresOpen(what: String): Boolean {
@@ -158,12 +210,18 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                         // Payments land in your own chat and ring as before; a handshake is
                         // first contact like any other (Message Requests).
                         if (type == "handshake" && applyMessageRequestRule(sender, data)) return@runBlocking
+                        // A KaPost tip arrives as a payment push too (same txid as its "tipped
+                        // your post" push): it says "Received a tip" (iOS 2026-11-22).
+                        val tipText = if (type == "payment") tipPaymentPushBody(data) else null
                         notificationHelper.show(
                             contactId = sender,
                             title = contactTitle(sender, sender),
                             // A payment: "<who> - Sent you 1.5 KAS" (iOS dcb329a).
-                            text = if (type == "payment") paymentPushBody(data["amount"]) else body.ifEmpty { getString(R.string.dm_notif_new_message) },
+                            text = tipText ?: if (type == "payment") paymentPushBody(data["amount"]) else body.ifEmpty { getString(R.string.dm_notif_new_message) },
                             dedupeTxId = data["tx_id"]?.takeIf { it.isNotBlank() },
+                            fromPush = true,
+                            // the tip's KaPost push the system drew came first: replaced quietly
+                            quiet = tipText != null && (replaceSystemDrawnPush(data["tx_id"]) || pushSeenBefore),
                         )
                     }
 
@@ -226,6 +284,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             title = "#$channel",
             text = com.kachat.app.util.BroadcastPushPreview.clean(body),
             dedupeTxId = txId,
+            fromPush = true,
         )
     }
 
@@ -283,6 +342,9 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             Log.i(TAG, "KaPosts push suppressed by notification settings")
             return
         }
+        // A tip is a payment in the tipper's chat: one "Received a tip" notice that opens that
+        // chat, worded as the tip's payment push (iOS 2026-11-22 `applyKaPostsTip`).
+        if (KaPostTipLedger.kaPostsPushKind(data["kaposts_kind"], body) == "tip" && showKaPostTipAsPayment(data, body)) return
         // KaPost's notifications on screen show it already: no banner, but the action is claimed
         // so the poller doesn't draw it later.
         if (notificationHelper.isAppInForeground && kaPostsNotificationPollerLazy.get().isNotificationsScreenVisible) {
@@ -292,11 +354,88 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         val deepLink = com.kachat.app.ui.screens.KaPostsDeepLink
         val postTxId = POST_ID_KEYS.firstNotNullOfOrNull { key -> data[key]?.trim()?.takeIf { deepLink.isTxId(it) } }?.lowercase()
         val actionTarget = txId.trim().takeIf { deepLink.isTxId(it) && deepLink.pushOpensAction(data["kaposts_kind"], body) }?.lowercase()
+        // Titled "KaPost" (the server still sends "KaPosts"), the person named as the app names
+        // them, else the server's subtitle (iOS NotificationService, owner 2026-11-22).
         kaPostsNotifierLazy.get().showKaPosts(
             text = text,
             actionTxId = txId,
             postTxId = actionTarget ?: postTxId,
+            subtitle = kaPostsActorName(data["actor_pubkey"]) ?: data["subtitle"]?.trim()?.takeIf { it.isNotEmpty() },
         )
+    }
+
+    /**
+     * Who a KaPost push's actor is on this phone (iOS NotificationService `kaPostsActorName`,
+     * 2026-11-22): `actor_pubkey` as an address, then the name the app shows for a contact (yours,
+     * an Address Book name, their .kachat name, else their short address), else their .kachat name
+     * from the names the app already knows ([KnownKachatNames]; nothing is looked up). Null leaves
+     * the server's subtitle (a KNS name or a short address).
+     */
+    private suspend fun kaPostsActorName(actorPubkey: String?): String? {
+        val address = actorPubkey?.trim()?.takeIf { it.isNotEmpty() }
+            ?.let { KaPostsService.kaspaAddressFromPubkey(it) } ?: return null
+        val contact = runCatching { chatRepository.getContact(address) }.getOrNull()
+        contact?.alias?.trim()?.takeIf { it.isNotEmpty() }?.let { return it }
+        AddressBookManager.nameFor(address)?.let { return it }
+        KnownKachatNames.name(applicationContext, address)?.let { return it }
+        return if (contact != null) com.kachat.app.util.KaspaAddress.shortDisplay(address) else null
+    }
+
+    /**
+     * A KaPost "tipped your post" push becomes the tipper's chat notice, exactly as the tip's
+     * payment push reads: titled with their name, "Received a tip: 0.2 KAS", opening their chat,
+     * under the tip's txid (iOS 2026-11-22 `applyKaPostsTip`). Whichever of the two comes second
+     * is not a second notice: the txid is claimed once. False when the push doesn't name the
+     * tipper or the tip, so it shows as sent.
+     */
+    private suspend fun showKaPostTipAsPayment(data: Map<String, String>, body: String): Boolean {
+        val txId = data["tx_id"]?.trim()?.lowercase()
+            ?.takeIf { it.length == 64 && it.all { c -> c in '0'..'9' || c in 'a'..'f' } } ?: return false
+        val tipper = data["actor_pubkey"]?.let { KaPostsService.kaspaAddressFromPubkey(it) } ?: return false
+        POST_ID_KEYS.firstNotNullOfOrNull { key -> data[key]?.trim()?.takeIf { it.length == 64 } }
+            ?.let { KaPostTipLedger.record(applicationContext, txId, it) }
+        // no KaPost banner for it from the poll either
+        kaPostsNotifierLazy.get().claim(txId)
+        val kas = KaPostTipLedger.amountFromTipPushBody(body) ?: KaPostTipLedger.kasText(data["amount"])
+        notificationHelper.show(
+            contactId = tipper,
+            title = contactTitle(tipper, tipper),
+            text = tipWording(kas),
+            dedupeTxId = txId,
+            // the push's own notice ([PushArrivalRecord] holds back only the app's banners)
+            fromPush = true,
+            // the second of the tip's two pushes (iOS `pushSeenBefore`)
+            quiet = pushSeenBefore,
+        )
+        return true
+    }
+
+    /** A payment push's "Received a tip: 0.2 KAS" when the payment is a KaPost tip: known from
+     *  the ledger, or its transaction read once (iOS 2026-11-22 NotificationService "payment").
+     *  Null for any other payment. */
+    private suspend fun tipPaymentPushBody(data: Map<String, String>): String? {
+        val txId = data["tx_id"]?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        KaPostTipLedger.postId(applicationContext, txId)
+            ?: kotlinx.coroutines.withTimeoutOrNull(CHAIN_READ_BUDGET_MS) { KaPostTipLedger.tipPostId(applicationContext, txId) }
+            ?: return null
+        return tipWording(KaPostTipLedger.kasText(data["amount"]))
+    }
+
+    /** "Received a tip: 0.2 KAS" (TKAS on testnet), or "Received a tip" with no amount. */
+    private fun tipWording(kas: String?): String =
+        if (kas != null) com.kachat.app.util.KaspaUnit.label(getString(R.string.received_a_tip_kas, kas))
+        else getString(R.string.received_a_tip)
+
+    /** Removes the notification the system drew for [txId]'s push (its tag is the push's collapse
+     *  id; the app's own carry none): true when there was one, so the notice replacing it is
+     *  quiet - the second of a tip's two pushes (iOS 2026-11-22 `pushSeenBefore`). */
+    private fun replaceSystemDrawnPush(txId: String?): Boolean {
+        val id = txId?.trim()?.takeIf { it.isNotEmpty() } ?: return false
+        val manager = getSystemService(android.app.NotificationManager::class.java) ?: return false
+        val drawn = runCatching { manager.activeNotifications.filter { it.tag.equals(id, ignoreCase = true) } }
+            .getOrNull().orEmpty()
+        drawn.forEach { runCatching { manager.cancel(it.tag, it.id) } }
+        return drawn.isNotEmpty()
     }
 
     /**
@@ -389,6 +528,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             // argument any thread can be found by. Send the tap to the Chats list instead.
             targetGroupId = resolvedGroup?.groupId,
             quiet = quiet,
+            fromPush = true,
         )
     }
 
@@ -402,6 +542,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             text = banner.text,
             dedupeTxId = txId.takeIf { it.isNotBlank() },
             quiet = isLaterPartPush(banner.partKey, txId, burstOwner = null),
+            fromPush = true,
         )
     }
 
@@ -592,6 +733,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             // paths see the same message.
             dedupeTxId = txId.takeIf { it.isNotBlank() },
             quiet = isLaterPartPush(partKey, txId, burstOwner),
+            fromPush = true,
         )
     }
 
@@ -611,7 +753,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                     if (!chatRepository.isMessageRequest(contact, myAddress)) return false
                     true
                 } else if (chatRepository.markRequestNotified(sender)) {
-                    notificationHelper.showMessageRequest(sender, dedupeTxId = txId)
+                    notificationHelper.showMessageRequest(sender, dedupeTxId = txId, fromPush = true)
                     runCatching {
                         syncBudgetMs().takeIf { it > 0L }?.let { budget ->
                             kotlinx.coroutines.withTimeoutOrNull(budget) { chatRepository.syncInbox() }

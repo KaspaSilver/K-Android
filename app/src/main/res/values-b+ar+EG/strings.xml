@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">ابعت لحد بعنوانه أو اسمه.</string>
     <string name="qr_chatting_address_subtitle">استخدمه للدردشة والحصول على نطاقات ‎.kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">التحكم في العملات</string>
+    <string name="utxo_selection">اختيار UTXO</string>
+    <string name="utxo_selection_caption">اختار العملات اللي هتتصرف في الإرسال ده.</string>
     <string name="compound_utxos">دمج UTXOs</string>
     <string name="compound_utxos_description">ادمج الـ UTXOs اللي في العنوان ده علشان تقلل المدخلات اللي أي إرسال جاي محتاجها. المعاملة الواحدة تقدر تدمج عدد محدود بس مرة واحدة، فلو العنوان ده فيه عدد كبير جدًا، اضغط على دمج تاني بعد ما تتأكد علشان تكمّل التقليل.</string>
     <string name="automatic">تلقائي</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">أرسل لك %1$s KAS</string>
     <string name="push_sent_you_payment">أرسل لك دفعة</string>
+    <string name="push_sent_you_token">بعتلك %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1745,4 +1747,11 @@
     <string name="coins_combined">العملات اتدمجت</string>
     <string name="transaction_didnt_go_out">المعاملة ماطلعتش.</string>
     <string name="k_motto">الحرية الرقمية على شبكة Kaspa</string>
+    <string name="received_tip">وصلتك إكرامية</string>
+    <string name="sent_tip">بعت إكرامية</string>
+    <string name="received_a_tip_kas">وصلتك إكرامية: %1$s KAS</string>
+    <string name="received_a_tip">وصلتك إكرامية</string>
+    <string name="history_moved">اتنقل</string>
+    <string name="history_to_address">لـ %1$s</string>
+    <string name="history_change_to_address">الباقي %1$s لـ %2$s</string>
 </resources>

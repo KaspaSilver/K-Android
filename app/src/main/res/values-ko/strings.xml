@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">주소나 이름으로 메시지를 보냅니다.</string>
     <string name="qr_chatting_address_subtitle">채팅과 .kachat 도메인 획득에 사용하세요.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">코인 컨트롤</string>
+    <string name="utxo_selection">UTXO 선택</string>
+    <string name="utxo_selection_caption">이번 전송에 쓸 코인을 고르세요.</string>
     <string name="compound_utxos">UTXO 통합</string>
     <string name="compound_utxos_description">이 주소의 UTXO를 합쳐 앞으로 보낼 때 필요한 입력 수를 줄입니다. 한 번의 거래로 합칠 수 있는 수에는 한도가 있으므로, 이 주소의 UTXO가 매우 많다면 거래가 확인된 후 \'UTXO 통합\'을 다시 탭해 계속 줄이세요.</string>
     <string name="automatic">자동</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">%1$s KAS를 보냈습니다</string>
     <string name="push_sent_you_payment">결제를 보냈습니다</string>
+    <string name="push_sent_you_token">%1$s을(를) 보냈습니다</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1730,4 +1732,11 @@
     <string name="coins_combined">코인을 합쳤어요</string>
     <string name="transaction_didnt_go_out">거래가 전송되지 않았어요.</string>
     <string name="k_motto">Kaspa 네트워크 위의 디지털 자유</string>
+    <string name="received_tip">팁 받음</string>
+    <string name="sent_tip">팁 보냄</string>
+    <string name="received_a_tip_kas">팁 받음: %1$s KAS</string>
+    <string name="received_a_tip">팁 받음</string>
+    <string name="history_moved">이동됨</string>
+    <string name="history_to_address">%1$s(으)로</string>
+    <string name="history_change_to_address">잔돈 %1$s → %2$s</string>
 </resources>

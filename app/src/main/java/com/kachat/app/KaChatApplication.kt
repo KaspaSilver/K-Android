@@ -149,7 +149,7 @@ class KaChatApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var contactProfileRescanner: dagger.Lazy<com.kachat.app.services.ContactProfileRescanner>
 
-    /** kUSDT balances checked every 90 s while the app is open, so a token that arrives is
+    /** kUSDT balances checked every 30 s while the app is open, so a token that arrives is
      *  announced (iOS 5b7c772c `TokenWallet.startPolling`, MainTabView). */
     @Inject
     lateinit var tokenWallet: dagger.Lazy<com.kachat.app.services.tokens.TokenWallet>

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#34B79F</color>
+    <!-- The adaptive icon's background: dark.png's own background (iOS AppIcon is dark only, 2026-11-22). -->
+    <color name="ic_launcher_background">#050A0C</color>
 </resources>

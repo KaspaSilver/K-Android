@@ -137,8 +137,8 @@ fun ColdStorageListScreen(
     val accounts by viewModel.accounts.collectAsState()
     val importState by viewModel.importState.collectAsState()
     var showScanner by remember { mutableStateOf(false) }
-    var showManualEntry by remember { mutableStateOf(false) }
-    var manualKpubInput by remember { mutableStateOf("") }
+    // Paste kpub reads it from here at once (iOS pasteKpub); there is no entry sheet any more.
+    val kpubClipboard = LocalClipboardManager.current
     var pendingKpub by remember { mutableStateOf<String?>(null) }
     var nameInput by remember { mutableStateOf("") }
     // A kpub reveals every address of the account and their whole history: copied like the app's
@@ -189,9 +189,19 @@ fun ColdStorageListScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = dockInset)
             ) {
                 Button(
+                    // Takes what's on the clipboard at once (iOS pasteKpub, owner 2026-11-22): a
+                    // valid kpub goes straight to the sheet that names the account; anything else
+                    // is a toast. Validated by the same parser the import uses.
                     onClick = {
-                        manualKpubInput = ""
-                        showManualEntry = true
+                        val text = kpubClipboard.getText()?.text.orEmpty().trim()
+                        if (text.isEmpty() || !com.kachat.app.util.KaspaExtendedPublicKey.isValidKpub(text)) {
+                            kpubHaptic(com.kachat.app.util.IosHaptic.ERROR)
+                            IosToasts.show(tr(R.string.cold_not_a_valid_kpub))
+                        } else {
+                            kpubHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                            pendingKpub = text
+                            nameInput = "Cold Storage ${accounts.size + 1}"
+                        }
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
                     shape = RoundedCornerShape(28.dp),
@@ -268,14 +278,8 @@ fun ColdStorageListScreen(
                         Icon(Icons.Default.Security, null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
+                            // Only the name: a kpub is never shown as text (iOS, owner 2026-11-22).
                             Text(account.name, color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
-                            Text(
-                                account.kpub,
-                                color = LocalAppColors.current.textSecondary,
-                                style = MaterialTheme.typography.bodySmall,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
                         }
                         IconButton(
                             onClick = { showMenu = true },
@@ -292,11 +296,10 @@ fun ColdStorageListScreen(
                         // ColdStorageAccountActionsSheet.
                         var isRenaming by remember(account.id) { mutableStateOf(false) }
                         ActionSheetContainer(
+                            // No kpub under the title: it is never shown as text (iOS
+                            // ColdStorageAccountActionsSheet shows the name alone).
                             title = if (isRenaming) tr(R.string.kp_rename_account_90ddc) else account.name,
-                            subtitle = if (isRenaming) null else {
-                                com.kachat.app.services.AddressActivityNotifier
-                                    .shortAddress(account.kpub)
-                            },
+                            subtitle = null,
                             onDismiss = { showMenu = false },
                         ) {
                             if (isRenaming) {
@@ -373,67 +376,11 @@ fun ColdStorageListScreen(
             value = account.kpub,
             onDismiss = { kpubQrAccount = null },
             message = tr(R.string.kp_watch_only_this_cannot_spend_but_95314),
-            // A kpub is ~114 characters; the two-line default is for an address and would cut it.
-            valueMaxLines = 5,
+            // No kpub text under the code (iOS, owner 2026-11-22): only the QR, for scanning.
+            valueMaxLines = 0,
             copiedToast = "kpub copied to clipboard.",
             sensitiveCopy = true,
         )
-    }
-
-    if (showManualEntry) {
-        // A half sheet rather than a dialog: it holds one field, and a kpub is 114 characters -
-        // a dialog's single-line slot showed a sliver of it.
-        ActionSheetContainer(
-            title = stringResource(R.string.enter_kpub),
-            subtitle = stringResource(R.string.paste_the_kpub_exported_from_your),
-            onDismiss = { showManualEntry = false },
-        ) {
-            com.kachat.app.ui.theme.IosTextField(
-                value = manualKpubInput,
-                onValueChange = { manualKpubInput = it },
-                label = { Text(stringResource(R.string.kpub_2)) },
-                singleLine = false,
-                minLines = 3,
-                maxLines = 5,
-                textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.sp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = LocalAppColors.current.textPrimary,
-                    unfocusedTextColor = LocalAppColors.current.textPrimary,
-                    focusedBorderColor = KaspaTeal,
-                    unfocusedBorderColor = LocalAppColors.current.textSecondary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                OutlinedButton(
-                    onClick = { showManualEntry = false },
-                    modifier = Modifier.weight(1f).height(52.dp),
-                    shape = RoundedCornerShape(16.dp),
-                ) {
-                    Text(stringResource(R.string.cancel), color = LocalAppColors.current.textPrimary)
-                }
-                Button(
-                    onClick = {
-                        val trimmed = manualKpubInput.trim()
-                        showManualEntry = false
-                        // Feeds the same pendingKpub/nameInput -> import flow the QR scanner
-                        // already uses - scan vs. paste differ only in how the raw kpub string
-                        // is obtained, not in how it is validated, named or imported.
-                        pendingKpub = trimmed
-                        nameInput = "Cold Storage ${accounts.size + 1}"
-                    },
-                    enabled = manualKpubInput.trim().isNotEmpty(),
-                    modifier = Modifier.weight(1f).height(52.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal, contentColor = Color.Black),
-                ) {
-                    Text(stringResource(R.string.next), fontWeight = FontWeight.Bold)
-                }
-            }
-        }
     }
 
     if (pendingKpub != null) {
@@ -474,11 +421,7 @@ fun ColdStorageListScreen(
                             fontSize = 13.sp,
                             textAlign = TextAlign.Center,
                         )
-                        Text(
-                            "kpub: ${kpub.take(24)}\u2026",
-                            color = colors.textSecondary,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                        // No kpub preview: it is never shown as text (iOS importNameSheet).
                         com.kachat.app.ui.theme.IosTextField(
                             value = nameInput,
                             onValueChange = { nameInput = it },
@@ -651,13 +594,16 @@ fun ColdStorageDetailScreen(
         Box(modifier = Modifier.fillMaxSize().padding(padding).nestedScroll(pullRefreshState.nestedScrollConnection)) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            // The last address scrolls clear of the dock it runs under.
-            contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp + dockInset),
+            // The last address scrolls clear of the dock it runs under. No side padding here: the
+            // Total Balance card runs full width as Manage Addresses shows it, and every other
+            // row brings its own 16 in.
+            contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp + dockInset),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
                 Column(
                     modifier = Modifier
+                        .padding(horizontal = 16.dp)
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
                         .background(LocalAppColors.current.surface)
@@ -683,62 +629,18 @@ fun ColdStorageDetailScreen(
                             Icon(Icons.Default.Edit, tr(R.string.kp_rename_d3f4c), tint = KaspaTeal, modifier = Modifier.size(18.dp))
                         }
                     }
-                    Spacer(Modifier.height(16.dp))
-                    Text(stringResource(R.string.kpub), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        account?.kpub ?: "",
-                        color = LocalAppColors.current.textPrimary,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.clickable {
-                            account?.kpub?.let {
-                                // marked sensitive, cleared after 30 s (iOS 428a797b, audit #4)
-                                com.kachat.app.util.copyPrivateKeyWithAutoWipe(context, it, label = "kpub")
-                                kpubHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                                IosToasts.show("kpub copied to clipboard.")
-                            }
-                        },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.ContentCopy, null, tint = KaspaTeal, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.copy_kpub), color = KaspaTeal, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-                    }
+                    // No kpub here (iOS, owner 2026-11-22): it reveals every address of the
+                    // account, so it is only copied, from Address Actions.
                 }
             }
 
             item {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    // The same card as Manage Addresses' total (and an address's own page), with
-                    // its worth in your currency on mainnet (iOS 428a797b `KaspaAddressBalanceCard`).
-                    com.kachat.app.ui.screens.KaspaAddressBalanceCard(
-                        label = stringResource(R.string.total_balance),
-                        sompi = totalBalanceSompi,
-                    )
-
-                    // iOS: the summary's 18 apart, under the card's own 8
-                    Spacer(Modifier.height(18.dp))
-                    // Directly under the balance rather than floating over the list: the actions
-                    // are about this account, so they belong with it, and a FAB covered the last
-                    // address row on a short list.
-                    Button(
-                        onClick = { showActionsSheet = true },
-                        enabled = !isUserDiscovering,
-                        colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal, contentColor = Color.Black),
-                        shape = RoundedCornerShape(28.dp),
-                        modifier = Modifier.fillMaxWidth().height(48.dp)
-                    ) {
-                        if (isUserDiscovering) {
-                            com.kachat.app.ui.theme.IosActivityIndicator(strokeWidth = 2.dp, color = Color.Black, modifier = Modifier.size(18.dp))
-                        } else {
-                            Text(stringResource(R.string.address_actions), fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
+                // Full width in its own row, as Manage Addresses shows its total (iOS, owner
+                // 2026-11-22), with its worth in your currency on mainnet.
+                com.kachat.app.ui.screens.KaspaAddressBalanceCard(
+                    label = stringResource(R.string.total_balance),
+                    sompi = totalBalanceSompi,
+                )
             }
 
             item {
@@ -746,7 +648,8 @@ fun ColdStorageDetailScreen(
                     stringResource(R.string.addresses),
                     color = LocalAppColors.current.textPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
 
@@ -760,11 +663,13 @@ fun ColdStorageDetailScreen(
                 item {
                     Text(
                         if (addresses.isEmpty()) tr(R.string.kp_no_addresses_discovered_yet_15738) else "All addresses are hidden.",
-                        color = LocalAppColors.current.textSecondary
+                        color = LocalAppColors.current.textSecondary,
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
             } else {
                 items(visibleAddresses, key = { it.index }) { row ->
+                    Box(Modifier.padding(horizontal = 16.dp)) {
                     ColdAddressRow(
                         row = row,
                         showsDomainTag = row.address in domainOwningAddresses,
@@ -789,14 +694,25 @@ fun ColdStorageDetailScreen(
                             }
                         } else null
                     )
+                    }
                 }
             }
 
             item {
-                // Leaves room so the last address row isn't hidden behind the FAB.
-                Spacer(Modifier.height(64.dp))
+                // Room to scroll the last row out from under the floating button: 72 with the
+                // list's 12 spacing (iOS's 72 safe-area inset, as Manage Addresses has).
+                Spacer(Modifier.height(72.dp - 12.dp))
             }
         }
+        // The floating glass button behind Address Actions, the same one Manage Addresses has
+        // (iOS, owner 2026-11-22): bottom-trailing, over the list and clear of the dock.
+        AddressActionsFloatingButton(
+            isBusy = isUserDiscovering,
+            onClick = { showActionsSheet = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 20.dp, bottom = 16.dp + dockInset),
+        )
         PullToRefreshContainer(
             state = pullRefreshState,
             modifier = Modifier.align(Alignment.TopCenter)
@@ -911,6 +827,16 @@ fun ColdStorageDetailScreen(
                 showActionsSheet = false
                 discoverySummary = null
                 onOpenVisibility(accountId)
+            },
+            onCopyKpub = {
+                account?.kpub?.let {
+                    // marked sensitive, cleared after 30 s (iOS 428a797b, audit #4)
+                    com.kachat.app.util.copyPrivateKeyWithAutoWipe(context, it, label = "kpub")
+                    kpubHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
+                    IosToasts.show("kpub copied to clipboard.")
+                }
+                showActionsSheet = false
+                discoverySummary = null
             },
             onDismiss = {
                 showActionsSheet = false
@@ -2330,26 +2256,12 @@ fun ColdStorageTxHistoryScreen(
         // What Receive / Send and the dock cover: the lists scroll clear of it.
         val barInset = padding.calculateBottomPadding()
         Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    stringResource(R.string.balance),
-                    color = LocalAppColors.current.textSecondary,
-                    style = MaterialTheme.typography.labelMedium
-                )
-                Text(
-                    // Summed from the UTXOs this screen loads for itself. It used to read
-                    // addressRow.balanceSompi, which is null whenever the account's address list
-                    // is not loaded in this ViewModel - so the page showed 0.00000000 KAS above
-                    // a UTXOs (1) tab holding real coins. The UTXO set IS the balance.
-                    "${KaspaUnit.groupedExact(addressBalanceSompi)} ${KaspaUnit.symbol}",
-                    color = LocalAppColors.current.textPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+            // The same balance card as a Manage Addresses address's page (iOS, owner 2026-11-22):
+            // the address's name, its balance large, and its worth in your currency. Summed from
+            // the UTXOs this screen loads for itself (the account row's balance when it has none):
+            // reading only addressRow.balanceSompi showed 0.00000000 KAS above a UTXOs (1) tab
+            // holding real coins whenever the account's list wasn't loaded in this ViewModel.
+            com.kachat.app.ui.screens.KaspaAddressBalanceCard(label = displayName, sompi = addressBalanceSompi)
             // The app's tab look (Chats / Group Chats / Public Chats), not a segmented control;
             // plain names - History, UTXOs, Domains (iOS b96d727/718b88c, fe52376).
             UnderlineTabBar(
@@ -2707,6 +2619,7 @@ private fun ColdStorageAddressActionsSheet(
     onGenerate: () -> Unit,
     onDiscover: () -> Unit,
     onVisibility: () -> Unit,
+    onCopyKpub: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors = LocalAppColors.current
@@ -2794,6 +2707,14 @@ private fun ColdStorageAddressActionsSheet(
                             title = tr(R.string.kp_address_visibility_9c9a7),
                             subtitle = tr(R.string.kp_address_visibility_subtitle),
                             onClick = onVisibility,
+                        )
+                        // The kpub is never on screen (iOS, owner 2026-11-22): it reveals every
+                        // address of the account, so it is only copied, from here.
+                        ActionSheetRow(
+                            icon = Icons.Default.ContentCopy,
+                            title = stringResource(R.string.copy_kpub),
+                            subtitle = stringResource(R.string.cold_copy_kpub_reveals_all_addresses),
+                            onClick = onCopyKpub,
                         )
                         if (summary != null) {
                             Text(summary, color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)

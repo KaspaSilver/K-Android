@@ -49,7 +49,8 @@
     <string name="screen_lock_required_message">Set a screen lock on this phone (Settings &gt; Security) to delete an account or view secret keys in K.</string>
     <string name="show_password">Show password</string>
     <string name="hide_password">Hide password</string>
-    <string name="coin_control">Coin Control</string>
+    <string name="utxo_selection">UTXO Selection</string>
+    <string name="utxo_selection_caption">Choose which coins this send spends.</string>
     <string name="compound_utxos">Compound UTXOs</string>
     <string name="compound_utxos_description">Combine this address\'s UTXOs to reduce the inputs a future send needs. A single transaction can only merge so many at once, so if this address has a very large number, tap Compound again after it confirms to keep reducing.</string>
     <string name="cancel_photo">Cancel photo</string>
@@ -892,6 +893,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">Sent you %1$s KAS</string>
     <string name="push_sent_you_payment">Sent you a payment</string>
+    <string name="push_sent_you_token">Sent you %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1772,4 +1774,12 @@
     <string name="coins_combined">Coins Combined</string>
     <string name="transaction_didnt_go_out">The transaction didn\'t go out.</string>
     <string name="k_motto">Digital Freedom on the Kaspa Network</string>
+    <!-- KaPost tips in chats (iOS 2026-11-22) -->
+    <string name="received_tip">Received tip</string>
+    <string name="sent_tip">Sent tip</string>
+    <string name="received_a_tip_kas">Received a tip: %1$s KAS</string>
+    <string name="received_a_tip">Received a tip</string>
+    <string name="history_moved">Moved</string>
+    <string name="history_to_address">To %1$s</string>
+    <string name="history_change_to_address">Change %1$s to %2$s</string>
 </resources>

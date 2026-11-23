@@ -217,8 +217,16 @@ private class SwipeUpController(private val scope: CoroutineScope) {
     var confirmed by mutableStateOf(false)
     /** It ended without going out: the sending screen shows "Failed". */
     var failed by mutableStateOf(false)
+    /** The amount and recipient as they were when the swipe sent: the screen behind may clear
+     *  its form once the send goes out, and the sending screen must keep saying what's being
+     *  sent ("Sending 10 KAS" never drops to 0 KAS before the confirmation; iOS
+     *  sendingAmountSompi / sendingRecipient, 2026-11-22). */
+    var sendingAmountSompi by mutableStateOf<Long?>(null)
+    var sendingRecipient by mutableStateOf<String?>(null)
 
     var active = false
+    var amountSompi: Long? = null
+    var recipient: String? = null
     var isBusy = false
     var heightPx = 0f
     var thresholdPx = 0f
@@ -304,6 +312,8 @@ private class SwipeUpController(private val scope: CoroutineScope) {
         if (sending) return
         timers.forEach { it.cancel() }
         timers.clear()
+        sendingAmountSompi = amountSompi
+        sendingRecipient = recipient
         armed = false
         dagShown = false
         sendStarted = isBusy
@@ -486,6 +496,8 @@ fun KachatSwipeUpToSendScreen(
         val active = isEnabled && !isBusy
         SideEffect {
             c.active = active
+            c.amountSompi = amountSompi
+            c.recipient = recipient
             c.isBusy = isBusy
             c.heightPx = heightPx
             c.thresholdPx = thresholdPx
@@ -535,8 +547,8 @@ fun KachatSwipeUpToSendScreen(
 
         if (c.lift > 0f || c.sending) {
             SendProgressScreen(
-                amountSompi = amountSompi,
-                recipient = recipient,
+                amountSompi = if (c.sending) c.sendingAmountSompi ?: amountSompi else amountSompi,
+                recipient = if (c.sending) c.sendingRecipient ?: recipient else recipient,
                 sent = if (c.dagShown) sent else null,
                 done = done,
                 outcome = outcome,

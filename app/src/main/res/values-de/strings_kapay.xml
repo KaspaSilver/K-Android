@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">Von Trestlys eigenem Code in K erstellt und geprüft. Bewegt sich der Pool vorher, wird neu angeboten: Es geht nur zu diesem Kurs oder besser weiter, fragt bei weniger erneut und geht nie unter das Minimum der Seite.</string>
     <string name="kp_turn_off_receive_notifications_kc">Empfangsbenachrichtigungen ausschalten</string>
     <string name="kp_turn_on_receive_notifications_kc">Empfangsbenachrichtigungen einschalten</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">Legt den kpub dieses Kontos in die Zwischenablage. Er zeigt alle seine Adressen.</string>
+    <string name="cold_not_a_valid_kpub">Kein gültiger kpub</string>
 </resources>

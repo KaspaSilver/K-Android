@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">K内でTrestly自身のコードが作成・確認します。先にプールが動いた場合は再見積もりし、この見積もり以上でのみ進め、下回るときは再確認し、サイトの最低額を下回ることはありません。</string>
     <string name="kp_turn_off_receive_notifications_kc">受信通知をオフ</string>
     <string name="kp_turn_on_receive_notifications_kc">受信通知をオン</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">このアカウントの kpub をクリップボードにコピーします。すべてのアドレスが分かります。</string>
+    <string name="cold_not_a_valid_kpub">有効な kpub ではありません</string>
 </resources>

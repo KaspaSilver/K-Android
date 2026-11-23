@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">Escribe a alguien por su dirección o nombre.</string>
     <string name="qr_chatting_address_subtitle">Úsala para chatear y obtener dominios .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">Control de monedas</string>
+    <string name="utxo_selection">Selección de UTXO</string>
+    <string name="utxo_selection_caption">Elige qué monedas gasta este envío.</string>
     <string name="compound_utxos">Consolidar UTXOs</string>
     <string name="compound_utxos_description">Combina los UTXOs de esta dirección para reducir las entradas que necesitará un envío futuro. Una sola transacción solo puede fusionar un número limitado a la vez, así que si esta dirección tiene muchísimos, toca Consolidar de nuevo cuando se confirme para seguir reduciéndolos.</string>
     <string name="automatic">Automático</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">Te envió %1$s KAS</string>
     <string name="push_sent_you_payment">Te envió un pago</string>
+    <string name="push_sent_you_token">Te envió %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1736,4 +1738,11 @@
     <string name="coins_combined">Monedas combinadas</string>
     <string name="transaction_didnt_go_out">La transacción no salió.</string>
     <string name="k_motto">Libertad digital en la red Kaspa</string>
+    <string name="received_tip">Propina recibida</string>
+    <string name="sent_tip">Propina enviada</string>
+    <string name="received_a_tip_kas">Propina recibida: %1$s KAS</string>
+    <string name="received_a_tip">Propina recibida</string>
+    <string name="history_moved">Movido</string>
+    <string name="history_to_address">A %1$s</string>
+    <string name="history_change_to_address">Cambio %1$s a %2$s</string>
 </resources>

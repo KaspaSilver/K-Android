@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MessageDao {
-    @Query("SELECT * FROM messages WHERE contactId = :contactId AND walletAddress = :walletAddress ORDER BY blockTimestamp ASC")
+    @Query("SELECT ${MessageRowCap.COLUMNS} FROM messages WHERE contactId = :contactId AND walletAddress = :walletAddress ORDER BY blockTimestamp ASC")
     fun getMessagesForContact(contactId: String, walletAddress: String): Flow<List<MessageEntity>>
 
     /**
@@ -19,11 +19,12 @@ interface MessageDao {
      * without a cap (protocol state, a handful per contact); unsent rows are capped because each
      * failed photo send carries ~20KB of base64 and a conversation that keeps failing would
      * otherwise pin them all. Older history is paged in through [getMessagesForContactBefore].
-     * Re-emits on any change to the table, like the full query.
+     * Re-emits on any change to the table, like the full query. Read through [MessageRowCap], so
+     * one oversized stored row can't crash the open chat.
      */
     @Query(
         """
-        SELECT * FROM messages
+        SELECT ${MessageRowCap.COLUMNS} FROM messages
         WHERE contactId = :contactId AND walletAddress = :walletAddress
           AND (
             type = 'handshake'
@@ -58,7 +59,7 @@ interface MessageDao {
      */
     @Query(
         """
-        SELECT * FROM messages
+        SELECT ${MessageRowCap.COLUMNS} FROM messages
         WHERE contactId = :contactId AND walletAddress = :walletAddress
           AND (blockTimestamp < :beforeTimestamp OR (blockTimestamp = :beforeTimestamp AND id < :beforeId))
         ORDER BY blockTimestamp DESC, id DESC
@@ -447,6 +448,24 @@ interface MessageDao {
     /** Multi-contact variant of [deleteSyncCursorsForContact] — a chat-scoped "wipe and re-sync" resets only the selected conversations' cursors so only their history re-fetches. */
     @Query("DELETE FROM message_sync_cursors WHERE walletAddress = :walletAddress AND contactId IN (:contactIds)")
     suspend fun deleteSyncCursorsForContacts(walletAddress: String, contactIds: List<String>)
+}
+
+/**
+ * The columns of a full message row for the queries that feed a chat on screen, with the two
+ * big text columns capped. Android reads a query's rows through a 2 MB CursorWindow, and a row
+ * that doesn't fit in one throws "Couldn't read row N, col 0 from CursorWindow" from inside the
+ * live query, which crashed the open chat (K beta 5, Moto g 2025, while sending a photo and a
+ * payment). A body or payload over [MAX_CHARS] - never a real message: an on-chain message is
+ * a few tens of KB - reads as null / empty instead, so the chat shows that one row as
+ * unreadable rather than closing. Both are ASCII (base64, hex, JSON), so characters are bytes.
+ */
+object MessageRowCap {
+    const val MAX_CHARS = 900000
+    const val COLUMNS =
+        "id, contactId, walletAddress, type, direction, " +
+            "CASE WHEN length(plaintextBody) > $MAX_CHARS THEN NULL ELSE plaintextBody END AS plaintextBody, " +
+            "CASE WHEN length(encryptedPayload) > $MAX_CHARS THEN '' ELSE encryptedPayload END AS encryptedPayload, " +
+            "amountSompi, blockTimestamp, isRead, syncedAt, deliveryStatus"
 }
 
 /** Row of [MessageDao.getMessageBodiesForWallet]. */

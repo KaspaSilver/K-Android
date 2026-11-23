@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">با کد خود Trestly درون K ساخته و بررسی شده است. اگر استخر زودتر تغییر کند، دوباره قیمت می‌دهد: فقط با همین قیمت یا بهتر ادامه می‌دهد، برای کمتر دوباره می‌پرسد و هرگز زیر حداقل سایت نمی‌رود.</string>
     <string name="kp_turn_off_receive_notifications_kc">خاموش کردن اعلان‌های دریافت</string>
     <string name="kp_turn_on_receive_notifications_kc">روشن کردن اعلان‌های دریافت</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">kpub این حساب را در کلیپ‌بورد می‌گذارد. همه آدرس‌هایش را آشکار می‌کند.</string>
+    <string name="cold_not_a_valid_kpub">kpub معتبر نیست</string>
 </resources>

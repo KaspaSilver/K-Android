@@ -263,6 +263,11 @@ class ChatPaymentSender @Inject constructor(
                     expectedFeeSompi = request.expectedFeeSompi,
                 ).getOrThrow().also { walletService.refreshBalance() }
             }
+            // A KaPost tip: the chat's card says "Sent tip" and opens the post (iOS 2026-11-22
+            // sendPayment -> KaPostTipLedger.record).
+            if (fromChattingAddress && request.tip != null && tipPayload != null) {
+                KaPostTipLedger.record(context, txId, request.tip.postId)
+            }
             if (!fromChattingAddress) sendSpendingPaymentNotice(request.contactId, txId, request.amountSompi, request.memo, owner)
 
             // The From's balance lags the send - retry it shortly after, then again once the

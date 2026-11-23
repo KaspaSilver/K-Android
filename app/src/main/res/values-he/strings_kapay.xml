@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">נבנה ונבדק בקוד של Trestly עצמו בתוך K. אם המאגר זז קודם, מתקבלת הצעה חדשה: ממשיכים רק במחיר הזה או טוב יותר, שואלים שוב אם פחות, ואף פעם לא מתחת למינימום של האתר.</string>
     <string name="kp_turn_off_receive_notifications_kc">כיבוי התראות קבלה</string>
     <string name="kp_turn_on_receive_notifications_kc">הפעלת התראות קבלה</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">מעתיק את ה-kpub של החשבון ללוח. הוא חושף את כל הכתובות שלו.</string>
+    <string name="cold_not_a_valid_kpub">זה לא kpub תקין</string>
 </resources>

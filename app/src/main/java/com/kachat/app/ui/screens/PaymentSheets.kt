@@ -548,7 +548,7 @@ fun PaymentDetailSheet(
                             }
                         } else {
                             Text(
-                                message.plaintextBody.orEmpty(),
+                                com.kachat.app.util.PaymentDisplayText.paymentDisplayText(message.plaintextBody.orEmpty()),
                                 color = colors.textPrimary,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 17.sp,

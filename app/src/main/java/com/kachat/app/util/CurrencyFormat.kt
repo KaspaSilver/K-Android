@@ -24,12 +24,36 @@ fun currencySymbolFor(currencyCode: String): String {
 
 private val currencySymbols = java.util.concurrent.ConcurrentHashMap<String, String>()
 
-/** Generic fiat total formatter - symbol, 2 decimals unless asked for more, no thousands
- *  separators (iOS CurrencyFormat.swift; the Wallet tab's balance uses 4). */
-fun formatFiatAmount(value: Double, currencyCode: String, decimals: Int = 2): String {
+/** Generic fiat total formatter - symbol, then the amount grouped the way the phone writes
+ *  numbers ("$1,234.56"), with exactly 2 decimals unless asked for more (iOS CurrencyFormat.swift
+ *  `formatFiatAmount`, owner 2026-11-22: a decimal NumberFormatter with grouping in the current
+ *  locale; the Wallet tab's balance uses 4). Display only, never parsed back - see
+ *  [KaspaFiatAmountState], which keeps its own plain edit buffer. [locale] is for tests. */
+fun formatFiatAmount(value: Double, currencyCode: String, decimals: Int = 2, locale: Locale = fiatNumberLocale()): String {
     val sign = if (value < 0) "-" else ""
-    return "$sign${currencySymbolFor(currencyCode)}${String.format(Locale.US, "%.${decimals}f", kotlin.math.abs(value))}"
+    val format = fiatDecimalFormats.getOrPut("${locale.toLanguageTag()}|$decimals") {
+        (java.text.NumberFormat.getNumberInstance(locale) as? java.text.DecimalFormat
+            ?: java.text.DecimalFormat("#,##0", java.text.DecimalFormatSymbols.getInstance(locale))).apply {
+            isGroupingUsed = true
+            minimumFractionDigits = decimals
+            maximumFractionDigits = decimals
+        }
+    }
+    // One formatter per locale and digit count (rows ask on every recomposition); DecimalFormat
+    // isn't thread-safe.
+    val number = synchronized(format) { format.format(kotlin.math.abs(value)) }
+    return "$sign${currencySymbolFor(currencyCode)}$number"
 }
+
+/** iOS's `Locale.current`: the language chosen in Settings > Language (iOS writes it to
+ *  AppleLanguages, so `Locale.current` follows it), else the phone's own. */
+internal fun fiatNumberLocale(): Locale = try {
+    androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()
+} catch (e: Throwable) {
+    Locale.getDefault()
+}
+
+private val fiatDecimalFormats = java.util.concurrent.ConcurrentHashMap<String, java.text.DecimalFormat>()
 
 /**
  * Trimmed 8-decimal KAS amount (e.g. "12.5" rather than "12.50000000"). Deliberately no thousands

@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">Écrivez à quelqu\'un par son adresse ou son nom.</string>
     <string name="qr_chatting_address_subtitle">À utiliser pour discuter et acquérir des domaines .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">Contrôle des pièces</string>
+    <string name="utxo_selection">Sélection des UTXO</string>
+    <string name="utxo_selection_caption">Choisissez les pièces que cet envoi dépense.</string>
     <string name="compound_utxos">Consolider les UTXO</string>
     <string name="compound_utxos_description">Regroupez les UTXO de cette adresse pour réduire les entrées dont un futur envoi a besoin. Une seule transaction ne peut en fusionner qu\'un certain nombre à la fois : si cette adresse en a beaucoup, touchez de nouveau Consolider après la confirmation pour continuer à réduire.</string>
     <string name="automatic">Automatique</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">Vous a envoyé %1$s KAS</string>
     <string name="push_sent_you_payment">Vous a envoyé un paiement</string>
+    <string name="push_sent_you_token">Vous a envoyé %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1736,4 +1738,11 @@
     <string name="coins_combined">Pièces fusionnées</string>
     <string name="transaction_didnt_go_out">La transaction n\'est pas partie.</string>
     <string name="k_motto">La liberté numérique sur le réseau Kaspa</string>
+    <string name="received_tip">Pourboire reçu</string>
+    <string name="sent_tip">Pourboire envoyé</string>
+    <string name="received_a_tip_kas">Pourboire reçu : %1$s KAS</string>
+    <string name="received_a_tip">Pourboire reçu</string>
+    <string name="history_moved">Déplacé</string>
+    <string name="history_to_address">Vers %1$s</string>
+    <string name="history_change_to_address">Monnaie %1$s vers %2$s</string>
 </resources>

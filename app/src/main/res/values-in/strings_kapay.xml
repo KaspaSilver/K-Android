@@ -307,4 +307,6 @@
     <string name="kp_trestly_swap_note_kc">Dibuat dan diperiksa oleh kode Trestly sendiri di dalam K. Jika pool bergerak lebih dulu, harga dihitung ulang: hanya lanjut pada harga ini atau lebih baik, bertanya lagi jika lebih rendah, dan tidak pernah di bawah minimum situs.</string>
     <string name="kp_turn_off_receive_notifications_kc">Matikan Pemberitahuan Penerimaan</string>
     <string name="kp_turn_on_receive_notifications_kc">Nyalakan Pemberitahuan Penerimaan</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">Menyalin kpub akun ini ke papan klip. Ini mengungkap semua alamatnya.</string>
+    <string name="cold_not_a_valid_kpub">Bukan kpub yang valid</string>
 </resources>

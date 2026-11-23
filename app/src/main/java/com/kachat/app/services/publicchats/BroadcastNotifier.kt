@@ -58,10 +58,13 @@ class BroadcastNotifier @Inject constructor(
      * JSON ([notificationText]). Not while that room is on screen with the app in front (iOS
      * KaPostsApp willPresent): a room left open behind the home button notifies as usual.
      */
-    suspend fun showBroadcast(channelName: String, title: String, text: String, dedupeTxId: String? = null) {
+    suspend fun showBroadcast(channelName: String, title: String, text: String, dedupeTxId: String? = null, fromPush: Boolean = false) {
         val bodyText = notificationText(text)
         if (activeChannel.value == channelName && notificationHelper.isAppInForeground) return
         if (!settings.notificationsEnabled.first()) return
+        // The block scan's banner: none when the room's push already came, even one tapped and
+        // gone from the shade (iOS `InAppBanner.pushArrived`, 2026-11-22).
+        if (!fromPush && notificationHelper.pushArrived(dedupeTxId)) return
         if (!dedupeTxId.isNullOrBlank() && !notificationHelper.claimForBanner(dedupeTxId)) return
         // Its push, drawn by the system while the app was away, is in the shade already: one
         // banner per message (iOS 428a797b `InAppBanner`).

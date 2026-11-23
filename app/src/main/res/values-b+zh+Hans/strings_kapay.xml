@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">由 Trestly 自己的代码在 K 内构建和检查。如果资金池先变动，会重新报价：只在此报价或更好时继续，更少时再次询问，绝不低于网站的最低值。</string>
     <string name="kp_turn_off_receive_notifications_kc">关闭收款通知</string>
     <string name="kp_turn_on_receive_notifications_kc">开启收款通知</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">将此账户的 kpub 复制到剪贴板。它会暴露该账户的所有地址。</string>
+    <string name="cold_not_a_valid_kpub">不是有效的 kpub</string>
 </resources>

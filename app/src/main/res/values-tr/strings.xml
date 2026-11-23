@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">Birine adresi veya adıyla mesaj gönder.</string>
     <string name="qr_chatting_address_subtitle">Sohbet etmek ve .kachat alan adları edinmek için kullanın.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">Coin kontrolü</string>
+    <string name="utxo_selection">UTXO Seçimi</string>
+    <string name="utxo_selection_caption">Bu gönderimin hangi coinleri harcayacağını seçin.</string>
     <string name="compound_utxos">UTXO\'ları Birleştir</string>
     <string name="compound_utxos_description">Gelecekteki bir gönderimin ihtiyaç duyacağı girdi sayısını azaltmak için bu adresin UTXO\'larını birleştir. Tek bir işlem aynı anda ancak sınırlı sayıda UTXO birleştirebilir; bu adreste çok fazla UTXO varsa, azaltmaya devam etmek için işlem onaylandıktan sonra Birleştir\'e tekrar dokun.</string>
     <string name="automatic">Otomatik</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">Size %1$s KAS gönderdi</string>
     <string name="push_sent_you_payment">Size bir ödeme gönderdi</string>
+    <string name="push_sent_you_token">Size %1$s gönderdi</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1733,4 +1735,11 @@
     <string name="coins_combined">Coin’ler Birleştirildi</string>
     <string name="transaction_didnt_go_out">İşlem gönderilemedi.</string>
     <string name="k_motto">Kaspa ağında dijital özgürlük</string>
+    <string name="received_tip">Bahşiş alındı</string>
+    <string name="sent_tip">Bahşiş gönderildi</string>
+    <string name="received_a_tip_kas">Bahşiş alındı: %1$s KAS</string>
+    <string name="received_a_tip">Bahşiş alındı</string>
+    <string name="history_moved">Taşındı</string>
+    <string name="history_to_address">%1$s adresine</string>
+    <string name="history_change_to_address">Para üstü %1$s → %2$s</string>
 </resources>

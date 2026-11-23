@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">Được tạo và kiểm tra bởi chính mã của Trestly trong K. Nếu pool thay đổi trước, giá sẽ được tính lại: chỉ tiếp tục ở giá này hoặc tốt hơn, hỏi lại nếu thấp hơn và không bao giờ dưới mức tối thiểu của trang.</string>
     <string name="kp_turn_off_receive_notifications_kc">Tắt thông báo khi nhận</string>
     <string name="kp_turn_on_receive_notifications_kc">Bật thông báo khi nhận</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">Sao chép kpub của tài khoản này vào bộ nhớ tạm. Nó để lộ mọi địa chỉ của tài khoản.</string>
+    <string name="cold_not_a_valid_kpub">Không phải kpub hợp lệ</string>
 </resources>

@@ -171,7 +171,7 @@ fun CoinControlScreen(
 
     val selectedTotalSompi = utxos.filter { selectedKeys.contains(it.outpoint) }.sumOf { it.utxoEntry.amount }
 
-    // iOS's CoinControlView: an inline bar (Cancel, "Coin Control", the ellipsis.circle menu), an
+    // iOS's CoinControlView: an inline bar (Cancel, "UTXO Selection", the ellipsis.circle menu), an
     // inset grouped list of the coins with the running total as its footer, and a capsule button
     // pinned under it.
     val colors = LocalAppColors.current
@@ -181,7 +181,7 @@ fun CoinControlScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 windowInsets = WindowInsets(0, 0, 0, 0),
-                title = { Text(stringResource(R.string.coin_control), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp) },
+                title = { Text(stringResource(R.string.utxo_selection), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp) },
                 navigationIcon = {
                     SheetBarButton(stringResource(R.string.cancel), onClick = onCancel, modifier = Modifier.padding(start = 12.dp))
                 },

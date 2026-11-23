@@ -1459,7 +1459,8 @@ private fun ChatsUnreadBadge(count: Int, modifier: Modifier = Modifier) {
  * a row never leaks a reply, media, chess or call JSON envelope to the user.
  */
 private fun messagePreviewText(message: MessageEntity?, context: android.content.Context): String? {
-    val body = message?.plaintextBody ?: return null
+    // A payment's memo reads after a colon, not the stored " — " (iOS `readableContent`).
+    val body = com.kachat.app.util.PaymentDisplayText.readableBodyOrNull(message?.type, message?.plaintextBody) ?: return null
     // Hidden placeholders (cross-device, undecryptable) never surface anywhere. The chat list's
     // latest-message query already skips them; this is a backstop for any other route.
     if (MessageEntity.isHiddenPlaceholder(body)) return ""
@@ -1636,7 +1637,9 @@ internal fun ConversationRow(
             // would silently show a stale last message even when the truly most recent activity
             // was someone reacting to something older.
             val reactionPreview = latestReaction?.let { reaction ->
-                if (convo.lastMessage != null && convo.lastMessage.blockTimestamp >= reaction.blockTimestamp) {
+                // Chain time on both sides; a message not in a block yet, or within a second of
+                // the reaction, wins (iOS reactionPreviewText, 2026-11-22).
+                if (!com.kachat.app.util.ChatListReactionPreview.reactionShows(convo.lastMessage?.blockTimestamp, reaction.blockTimestamp)) {
                     return@let null
                 }
                 val reactedByMe = reaction.reactorAddress == myAddress

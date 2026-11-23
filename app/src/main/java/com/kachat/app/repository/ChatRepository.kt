@@ -35,6 +35,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -222,6 +224,7 @@ class ChatRepository @Inject constructor(
 
     fun getMessages(contactId: String): Flow<List<MessageEntity>> {
         return scopedToActiveAccount({ address -> database.messageDao().getMessagesForContact(contactId, address) }, emptyList())
+            .survivingCursorWindowErrors("messages of a chat")
     }
 
     /** The newest [limit] messages of a conversation plus its sticky rows - see the DAO. */
@@ -229,8 +232,28 @@ class ChatRepository @Inject constructor(
         return scopedToActiveAccount(
             { address -> database.messageDao().getMessageWindowForContact(contactId, address, limit, unsentLimit) },
             emptyList(),
-        )
+        ).survivingCursorWindowErrors("chat window")
     }
+
+    /**
+     * A live chat query that hits Android's "Couldn't read row N, col M from CursorWindow" runs
+     * again (the rows a send was rewriting meanwhile have settled), up to three times, and after
+     * that keeps the chat as it was shown rather than closing the app: the exception came out of
+     * the open thread's collector and crashed K beta 5 while sending (see [MessageRowCap]).
+     */
+    private fun <T> Flow<T>.survivingCursorWindowErrors(what: String): Flow<T> =
+        retryWhen { cause, attempt ->
+            val cursorWindow = cause is IllegalStateException && cause.message?.contains("CursorWindow") == true
+            if (cursorWindow && attempt < 3) {
+                Log.w("ChatRepository", "Re-reading the $what after a CursorWindow error (attempt ${attempt + 1})", cause)
+                kotlinx.coroutines.delay(150L * (attempt + 1))
+                true
+            } else false
+        }.catch { cause ->
+            if (cause is IllegalStateException && cause.message?.contains("CursorWindow") == true) {
+                Log.e("ChatRepository", "The $what still can't be read; keeping what is shown", cause)
+            } else throw cause
+        }
 
     /** One page of a conversation's history older than [before], newest first. */
     suspend fun getOlderMessagesPage(contactId: String, before: MessageEntity, limit: Int): List<MessageEntity> {
@@ -3364,16 +3387,19 @@ class ChatRepository @Inject constructor(
         )
         if (inserted == -1L) return
         Log.i("ChatRepository", "Token payment ${txId.take(12)} filed in its chat from a token_payment_notice ($status)")
-        // "Received payment", without the claimed amount (MESSAGING.md); the remote push is the
-        // only banner source while push is active (see PushState). An unverified claim never
-        // rings (audit M2).
-        if (status == "sent" && !backfill && notificationHelper.mayBannerLocally(pushState.isActive, blockTime) &&
+        // A contact's dollar payment in a chat pings under their name like a Kaspa payment (iOS
+        // postTokenPaymentBanner, owner 2026-11-22): "Sent you 1.00 kUSDT" once the coin checks
+        // out, "Sent you kUSDT" (no amount: only the sender's claim) while it can't be checked yet.
+        // One banner, keyed by the notice message's txid like its push; the wallet's own
+        // "Received kUSDT" skips a coin a notice filed (TokenWallet.announceNewCoins).
+        if (!backfill && notificationHelper.mayBannerLocally(pushState.isActive, blockTime) &&
             !notifyAsMessageRequest(contact, myAddress, noticeTxId)
         ) {
+            val what = if (status == "sent") com.kachat.app.services.tokens.TokenAmount.amount(notice.amount, token) else token.symbol
             notificationHelper.show(
                 contactId = contact.id,
                 title = contact.displayName,
-                text = notificationHelper.dmNotificationLabels().receivedPayment,
+                text = appContext.getString(com.kachat.app.R.string.push_sent_you_token, what),
                 notificationOverride = ContactNotificationMode.fromName(contact.notificationOverride),
                 dedupeTxId = noticeTxId
             )
@@ -3880,15 +3906,25 @@ class ChatRepository @Inject constructor(
                 isRead = backfill || notificationHelper.isViewingContact(conversationId)
             )
         )
+        // A KaPost tip (`kchat:1:tip:` naming the post): its card says "Received tip" and opens
+        // the post (iOS 2026-11-22 KaPostTipLedger; here the payload is already in hand).
+        val tipPostId = com.kachat.app.services.KaPostTipLedger.tipPostIdFromPayload(payloadBytes)
+            ?.also { com.kachat.app.services.KaPostTipLedger.record(appContext, tx.transactionId, it) }
         if (!filed) return true
 
         // The remote push is the only banner source while push is active, foreground or
         // background - see PushState. Only a device with no push at all banners from here.
         if (!backfill && notificationHelper.mayBannerLocally(pushState.isActive, blockTime)) {
+            // A tip is one notice, "Received a tip: 0.2 KAS" under the tipper's name, opening
+            // this chat (iOS 2026-11-22 postIncomingMessageBanner); its pushes say the same.
+            val isTip = tipPostId != null && conversationId == sender
             notificationHelper.show(
                 contactId = conversationId,
-                title = "Payment received",
-                text = displayText,
+                title = if (isTip) {
+                    database.contactDao().getContact(sender, myAddress)?.displayName
+                        ?: com.kachat.app.util.KaspaAddress.shortDisplay(sender)
+                } else "Payment received",
+                text = if (isTip) KaspaUnit.label(appContext.getString(com.kachat.app.R.string.received_a_tip_kas, formatKas(receivedSompi))) else com.kachat.app.util.PaymentDisplayText.paymentDisplayText(displayText),
                 notificationOverride = ContactNotificationMode.fromName(existingContact?.notificationOverride),
                 dedupeTxId = tx.transactionId,
             )

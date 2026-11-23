@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">שלחו הודעה למישהו לפי כתובת או שם.</string>
     <string name="qr_chatting_address_subtitle">לשימוש בצ\'אט ולרכישת דומיינים של ‎.kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">בקרת מטבעות</string>
+    <string name="utxo_selection">בחירת UTXO</string>
+    <string name="utxo_selection_caption">בחרו אילו מטבעות השליחה הזו תוציא.</string>
     <string name="compound_utxos">איחוד UTXO</string>
     <string name="compound_utxos_description">אחדו את ה-UTXO של הכתובת הזו כדי לצמצם את מספר הקלטים ששליחה עתידית תצטרך. עסקה אחת יכולה לאחד רק כמות מוגבלת בכל פעם, ולכן אם יש בכתובת הזו מספר גדול מאוד, הקישו שוב על איחוד אחרי שהעסקה תאושר כדי להמשיך לצמצם.</string>
     <string name="automatic">אוטומטי</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">שלח לך %1$s KAS</string>
     <string name="push_sent_you_payment">שלח לך תשלום</string>
+    <string name="push_sent_you_token">שלח לך %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1739,4 +1741,11 @@
     <string name="coins_combined">המטבעות אוחדו</string>
     <string name="transaction_didnt_go_out">העסקה לא יצאה.</string>
     <string name="k_motto">חופש דיגיטלי ברשת Kaspa</string>
+    <string name="received_tip">התקבל טיפ</string>
+    <string name="sent_tip">נשלח טיפ</string>
+    <string name="received_a_tip_kas">התקבל טיפ: %1$s KAS</string>
+    <string name="received_a_tip">התקבל טיפ</string>
+    <string name="history_moved">הועבר</string>
+    <string name="history_to_address">אל %1$s</string>
+    <string name="history_change_to_address">עודף %1$s אל %2$s</string>
 </resources>

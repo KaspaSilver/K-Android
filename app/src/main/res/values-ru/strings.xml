@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">Напишите кому-нибудь по адресу или имени.</string>
     <string name="qr_chatting_address_subtitle">Для чатов и получения доменов .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">Выбор монет</string>
+    <string name="utxo_selection">Выбор UTXO</string>
+    <string name="utxo_selection_caption">Выберите, какие монеты потратит эта отправка.</string>
     <string name="compound_utxos">Объединить UTXO</string>
     <string name="compound_utxos_description">Объедините UTXO этого адреса, чтобы будущей отправке требовалось меньше входов. Одна транзакция может объединить лишь ограниченное количество за раз, поэтому если на этом адресе их очень много, после подтверждения снова нажмите «Объединить», чтобы продолжить сокращение.</string>
     <string name="automatic">Автоматически</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">Отправил вам %1$s KAS</string>
     <string name="push_sent_you_payment">Отправил вам платёж</string>
+    <string name="push_sent_you_token">Отправил вам %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1739,4 +1741,11 @@
     <string name="coins_combined">Монеты объединены</string>
     <string name="transaction_didnt_go_out">Транзакция не отправлена.</string>
     <string name="k_motto">Цифровая свобода в сети Kaspa</string>
+    <string name="received_tip">Получены чаевые</string>
+    <string name="sent_tip">Отправлены чаевые</string>
+    <string name="received_a_tip_kas">Получены чаевые: %1$s KAS</string>
+    <string name="received_a_tip">Получены чаевые</string>
+    <string name="history_moved">Перемещено</string>
+    <string name="history_to_address">На %1$s</string>
+    <string name="history_change_to_address">Сдача %1$s на %2$s</string>
 </resources>

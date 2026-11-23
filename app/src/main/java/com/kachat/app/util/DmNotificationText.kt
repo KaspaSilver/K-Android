@@ -27,6 +27,8 @@ data class DmNotificationLabels(
      *  (NotificationService.reactionPreviewText, not localized there). */
     val reacted: (emoji: String) -> String = { "Reacted $it to your message" },
     val removedReaction: (emoji: String) -> String = { "Removed their $it reaction" },
+    /** "Sent you kUSDT": a dollar payment in a chat (iOS "Sent you %@", 2026-11-22). */
+    val sentYouToken: (symbol: String) -> String = { "Sent you $it" },
 ) {
     companion object {
         val ENGLISH = DmNotificationLabels(sentVideo = "Sent a video", sentFile = "Sent a file", newMessage = "New message")
@@ -46,6 +48,7 @@ data class DmNotificationLabels(
             chessMove = { from, to -> context.getString(R.string.chess_notif_move, from, to) },
             chessLostOnTime = context.getString(R.string.chess_notif_lost_on_time),
             chessResigned = context.getString(R.string.chess_notif_resigned),
+            sentYouToken = { symbol -> context.getString(R.string.push_sent_you_token, symbol) },
         )
     }
 }
@@ -65,8 +68,13 @@ fun dmNotificationText(plaintext: String, labels: DmNotificationLabels = DmNotif
     // it is only what the sender claims, and the app checks it against the chain before the chat
     // shows one (iOS paymentNoticePreviewText, IOS-080). One naming a payment to anything but our
     // chatting address never gets this far: both callers keep it silent (XP-023).
-    // A token_payment_notice (Send Dollars) reads the same (iOS 5b7c772c paymentNoticePreviewText).
+    // A kUSDT token_payment_notice (Send Dollars) reads like a Kaspa payment under the sender's
+    // name: "Sent you kUSDT", no amount - the app's own banner says it once the coin checks out
+    // (iOS paymentNoticePreviewText, owner 2026-11-22). Any other token: "Received payment".
     val pool = PaymentPoolProtocol.parse(plaintext)
+    if (pool is PaymentPoolProtocol.Envelope.TokenNotice && pool.content.token.equals("kusdt", ignoreCase = true)) {
+        return labels.sentYouToken("kUSDT")
+    }
     if (pool is PaymentPoolProtocol.Envelope.Notice || pool is PaymentPoolProtocol.Envelope.TokenNotice) return labels.receivedPayment
     // A reaction says what it was (iOS NotificationService.reactionPreviewText): "Reacted 👍 to
     // your message", or "Removed their 👍 reaction". One whose emoji isn't one emoji is kept

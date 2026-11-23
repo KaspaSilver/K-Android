@@ -463,7 +463,8 @@
     <string name="chats_new_chat_subtitle">Kirim pesan ke seseorang lewat alamat atau namanya.</string>
     <string name="qr_chatting_address_subtitle">Gunakan untuk mengobrol dan mendapatkan domain .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">Kontrol koin</string>
+    <string name="utxo_selection">Pemilihan UTXO</string>
+    <string name="utxo_selection_caption">Pilih koin mana yang dipakai pengiriman ini.</string>
     <string name="compound_utxos">Gabungkan UTXO</string>
     <string name="compound_utxos_description">Gabungkan UTXO alamat ini untuk mengurangi input yang dibutuhkan pengiriman berikutnya. Satu transaksi hanya dapat menggabungkan sejumlah tertentu sekaligus, jadi jika alamat ini memiliki sangat banyak UTXO, ketuk Gabungkan lagi setelah terkonfirmasi untuk terus menguranginya.</string>
     <string name="cancel_photo">Batalkan foto</string>
@@ -798,6 +799,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">Sent you %1$s KAS</string>
     <string name="push_sent_you_payment">Sent you a payment</string>
+    <string name="push_sent_you_token">Mengirimi Anda %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1729,4 +1731,11 @@
     <string name="coins_combined">Koin Digabungkan</string>
     <string name="transaction_didnt_go_out">Transaksi tidak terkirim.</string>
     <string name="k_motto">Kebebasan digital di jaringan Kaspa</string>
+    <string name="received_tip">Tip diterima</string>
+    <string name="sent_tip">Tip dikirim</string>
+    <string name="received_a_tip_kas">Tip diterima: %1$s KAS</string>
+    <string name="received_a_tip">Tip diterima</string>
+    <string name="history_moved">Dipindahkan</string>
+    <string name="history_to_address">Ke %1$s</string>
+    <string name="history_change_to_address">Kembalian %1$s ke %2$s</string>
 </resources>

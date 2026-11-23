@@ -231,7 +231,7 @@ class TokenWallet @Inject constructor(
      * What the regular refresh asks Trestly about: the Chatting Address, the addresses holding or
      * listed for kUSDT, ones with kUSDT history here, ones a send is waiting on, the newest few
      * revealed and any a receive screen showed in the last week. Not every address every time:
-     * Trestly would see them all together, from one IP, every 90 seconds, and could link them
+     * Trestly would see them all together, from one IP, every 30 seconds, and could link them
      * (audit #14). Derives.
      */
     private fun pollTargets(account: String): List<Target> {
@@ -599,12 +599,17 @@ class TokenWallet @Inject constructor(
      * > Address Activity. Never announced: the first look on this phone (it only learns what's
      * there), what Discover finds, and coins from your own transfers (the transaction spent a coin
      * of yours, or paid from one of your addresses). A contact's Send Dollars the chat already
-     * showed (a token_payment_notice's bubble) is recorded but not bannered again.
+     * showed (a token_payment_notice's bubble) is recorded but not bannered again, and a new coin
+     * on the Chatting Address waits up to [NOTICE_WAIT_MS] for that notice ([awaitingNotice]), so
+     * the chat's "Sent you 1.00 kUSDT" is the only ping (iOS, owner 2026-11-22). A coin waiting
+     * stays unseen, so a later refresh looks at it again.
      */
     private suspend fun announceNewCoins(previous: Map<String, List<KusdtBalances.Coin>>, account: String, token: WalletToken) {
         val byHolding = synchronized(lock) { coins }
         val current = byHolding.values.flatten()
         val known = seenOutpoints(account, token)
+        // coins waiting for their chat notice stay "new", so a later refresh looks at them again
+        val held = HashSet<String>()
         try {
             if (known == null) return // first look: learn, don't announce
             val fresh = current.filter { it.outpointKey !in known }
@@ -626,8 +631,22 @@ class TokenWallet @Inject constructor(
                         isOwnTransfer(coin.transactionId, known, ownAddresses, fallback = ownCoinSpent)
                     }
                     if (own || coin.state.amount <= 0) continue
+                    val key = coin.outpointKey
+                    val filedByChat = noticeBubbles.isNoticeBubble(account, coin.transactionId)
+                    // On the Chatting Address it may be a contact's Send Dollars whose chat notice
+                    // comes a little after the coin: wait for it (up to NOTICE_WAIT_MS), so the
+                    // chat's "Sent you 1.00 kUSDT" is the only ping (iOS, owner 2026-11-22).
+                    val now = System.currentTimeMillis()
+                    val firstSeen = if (!filedByChat && holdingId == TokenHolding.CHATTING_ID) {
+                        synchronized(awaitingNotice) { awaitingNotice.getOrPut(key) { now } }
+                    } else null
+                    if (shouldHoldForNotice(firstSeen, now)) {
+                        held += key
+                        continue
+                    }
+                    synchronized(awaitingNotice) { awaitingNotice.remove(key) }
                     // a contact's Send Dollars the chat already showed and announced: no second banner
-                    if (!noticeBubbles.isNoticeBubble(account, coin.transactionId)) received += holdingId to coin.state.amount
+                    if (!filedByChat) received += holdingId to coin.state.amount
                     record(TokenActivity("${coin.transactionId}:$holdingId:received", TokenActivity.Kind.RECEIVED.raw,
                         coin.state.amount, "", System.currentTimeMillis(), holdingId = holdingId), token, account)
                 }
@@ -635,9 +654,12 @@ class TokenWallet @Inject constructor(
             if (received.isEmpty() || !notificationsEnabled()) return
             postReceived(received, token)
         } finally {
-            rememberSeen(current, account, token)
+            rememberSeen(current.filter { it.outpointKey !in held }, account, token)
         }
     }
+
+    /** Coins on the Chatting Address waiting for a chat notice, by outpoint, with when first seen. */
+    private val awaitingNotice = HashMap<String, Long>()
 
     /** Whether the transaction that made a coin was your own: it spent a coin of yours, or an
      *  input came from one of your addresses. When the REST API can't say, [fallback]. */
@@ -657,11 +679,10 @@ class TokenWallet @Inject constructor(
 
     private suspend fun postReceived(received: List<Pair<String, Long>>, token: WalletToken) {
         val total = received.sumOf { it.second }
-        val ids = received.mapTo(HashSet()) { it.first }
-        val labels = holdings(token).filter { it.id in ids }.map { label(it) }
+        // Just "Received 1.00 kUSDT" (iOS, owner 2026-11-22): no "On your Chatting Address" line,
+        // in the notification or the bell.
         val title = context.getString(R.string.token_received_title, TokenAmount.amount(total, token))
-        val body = if (labels.size == 1) context.getString(R.string.token_received_on_one, labels[0])
-        else context.getString(R.string.token_received_on_many, labels.size)
+        val body = ""
         val id = "token-received-${token.id}-${java.util.UUID.randomUUID()}"
         notificationHelper.showAddressActivity(title = title, text = body, dedupeKey = id, kind = NOTIFICATION_KIND)
         notificationCenter.record(id, NOTIFICATION_SOURCE, title, body, System.currentTimeMillis(), token.id)
@@ -690,8 +711,9 @@ class TokenWallet @Inject constructor(
 
     @Volatile private var pollJob: Job? = null
 
-    /** While the app is open and signed in, the balances are checked every 90 seconds, so a token
-     *  that arrives is announced - only with Address Activity notifications on; the screens refresh
+    /** While the app is open and signed in, the balances are checked every 30 seconds (90 until
+     *  2026-11-22, when a Received kUSDT came minutes late; iOS startPolling), so a token that
+     *  arrives is announced - only with Address Activity notifications on; the screens refresh
      *  themselves either way. Started on foreground by KaChatApplication. */
     fun startPolling() {
         if (pollJob?.isActive == true) return
@@ -699,7 +721,7 @@ class TokenWallet @Inject constructor(
             while (isActive) {
                 delay(POLL_INTERVAL_MS)
                 if (!notificationHelper.isAppInForeground || currentAccount() == null || !notificationsEnabled()) continue
-                refreshIfStale(maxAgeMs = 80_000L)
+                refreshIfStale(maxAgeMs = POLL_MAX_AGE_MS)
             }
         }
     }
@@ -895,7 +917,18 @@ class TokenWallet @Inject constructor(
         private const val TAG = "kUSDT"
         private const val PREFS_NAME = "kachat_tokens"
         private const val ACTIVITY_CAP = 300
-        private const val POLL_INTERVAL_MS = 90_000L
+        internal const val POLL_INTERVAL_MS = 30_000L
+        /** The poll's refreshIfStale(maxAge: 25) on iOS. */
+        internal const val POLL_MAX_AGE_MS = 25_000L
+
+        /** How long a new coin on the Chatting Address waits for its chat notice before the
+         *  wallet announces it itself (iOS `TokenWallet.noticeWait`, 120 s). */
+        internal const val NOTICE_WAIT_MS = 120_000L
+
+        /** Whether a coin first seen at [firstSeenMs] (null: not one that waits) is still held for
+         *  its chat notice at [nowMs]. */
+        internal fun shouldHoldForNotice(firstSeenMs: Long?, nowMs: Long): Boolean =
+            firstSeenMs != null && nowMs - firstSeenMs < NOTICE_WAIT_MS
         private const val WEEK_MS = 7 * 86_400_000L
 
         /** [NotificationHelper.showAddressActivity]'s `kind` for a "Received kUSDT" notification:

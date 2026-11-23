@@ -56,6 +56,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardDoubleArrowRight
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.CircularProgressIndicator
@@ -624,8 +625,9 @@ fun feeTierLabel(tier: FeeTier): String = stringResource(
 )
 
 /**
- * Network fee (tap the amount to set a custom one, edited in place), the fee speed, and coin
- * control - one card. [feeText] is the fee as shown ("0.0001 KAS"), null while unknown. With
+ * UTXO Selection (coin control) in its own card above, so people notice they can pick the coins
+ * a send spends (iOS, 2026-11-22), then the network fee (tap the amount to set a custom one,
+ * edited in place) and the fee speed in the fee card. [feeText] is the fee as shown ("0.0001 KAS"), null while unknown. With
  * [onEditFee] (a send's review) the fee shows with an Edit pill that opens the screen's own fee
  * editor ([SendFeeEditorScreen], iOS bc3e1ff3) instead of being typed here.
  */
@@ -647,6 +649,8 @@ fun SendFeeControls(
 ) {
     val colors = LocalAppColors.current
     val haptic = com.kachat.app.util.rememberHaptics()
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+    if (showsCoinControl) UtxoSelectionCard(coinControlSummary, onCoinControl)
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
@@ -741,25 +745,50 @@ fun SendFeeControls(
             color = colors.textSecondary,
             fontSize = 12.sp,
         )
+    }
+    }
+}
 
-        if (showsCoinControl) {
-            HorizontalDivider(color = colors.divider)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(role = Role.Button) { onCoinControl() },
-            ) {
-                Text(stringResource(R.string.coin_control), color = colors.textPrimary, fontSize = 15.sp)
-                Spacer(Modifier.weight(1f))
-                Text(coinControlSummary, color = colors.textSecondary, fontSize = 15.sp)
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = colors.textSecondary,
-                    modifier = Modifier.size(18.dp),
-                )
+/** iOS SendFeeControls.utxoSelectionCard: one tappable glass card - an accent circle with the
+ *  stacked-layers icon ("square.stack.3d.up.fill"), "UTXO Selection" over its caption, then the
+ *  summary ("Automatic" / "3 UTXOs selected") and a chevron. Opens coin control. */
+@Composable
+private fun UtxoSelectionCard(summary: String, onClick: () -> Unit) {
+    val colors = LocalAppColors.current
+    val haptic = com.kachat.app.util.rememberHaptics()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .sendKaspaGlass(20.dp)
+            .clickable(role = Role.Button) {
+                haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                onClick()
             }
+            .padding(14.dp),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(KaspaTeal.copy(alpha = 0.15f)),
+        ) {
+            Icon(Icons.Filled.Layers, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.utxo_selection), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.utxo_selection_caption), color = colors.textSecondary, fontSize = 12.sp)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(summary, color = colors.textSecondary, fontSize = 15.sp, maxLines = 1)
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 }
@@ -800,7 +829,7 @@ private fun SendFeeTierPicker(selected: FeeTier, onSelect: (FeeTier) -> Unit) {
     }
 }
 
-/** "Automatic" or "3 UTXOs selected", for the coin control row. The count stays English, as on
+/** "Automatic" or "3 UTXOs selected", for the UTXO Selection card. The count stays English, as on
  *  iOS (`coinControlSummary`). */
 @Composable
 fun coinControlSummary(manualUtxos: List<UtxoEntry>?): String {

@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">Construit et vérifié par le propre code de Trestly dans K. Si le pool bouge avant, il recote : il ne continue qu\'à ce prix ou mieux, vous redemande pour moins, et ne descend jamais sous le minimum du site.</string>
     <string name="kp_turn_off_receive_notifications_kc">Désactiver les notifications de réception</string>
     <string name="kp_turn_on_receive_notifications_kc">Activer les notifications de réception</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">Copie le kpub de ce compte dans le presse-papiers. Il révèle toutes ses adresses.</string>
+    <string name="cold_not_a_valid_kpub">Ce n\'est pas un kpub valide</string>
 </resources>

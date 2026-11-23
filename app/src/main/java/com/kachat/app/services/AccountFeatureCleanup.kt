@@ -106,6 +106,14 @@ class AccountFeatureCleanup @Inject constructor(
         // notifier's record, the expired-names banner's dismissal and the owned-names caches of
         // the wallet and its spending addresses, on both networks.
         step(".kachat") { removeKachatLocalData(variant, walletManager.cachedSpendingAddresses(variant)) }
+        // The pushes that reached the phone and the .kachat names a KaPost push is named by (iOS
+        // 2026-11-22 `clearAllSharedData`: `push_arrivals_v1`, `shared_identity_names`).
+        step("push arrivals and known names") {
+            PushArrivalRecord.clear(context)
+            KnownKachatNames.clear(context)
+        }
+        // Which chat payments were KaPost tips (iOS 2026-11-22 `KaPostTipLedger.clear`).
+        step("KaPost tips") { KaPostTipLedger.clear(context) }
     }
 
     /** iOS 428a797b `KachatNamesActions.removeAllLocalData(forWallet:addresses:)`, in this app's

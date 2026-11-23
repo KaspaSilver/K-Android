@@ -42,7 +42,14 @@ class KaPostsNotifier @Inject constructor(
 
     /** "alice liked your post": a tap opens [postTxId] when known (its thread scrolled to
      *  [focusTxId]), else the notifications list. */
-    suspend fun showKaPosts(text: String, actionTxId: String, postTxId: String? = null, focusTxId: String? = null) {
+    suspend fun showKaPosts(
+        text: String,
+        actionTxId: String,
+        postTxId: String? = null,
+        focusTxId: String? = null,
+        /** Who acted, as the app names them (iOS `content.subtitle` on a KaPost push, 2026-11-22). */
+        subtitle: String? = null,
+    ) {
         if (!settings.notificationsEnabled.first()) return
         if (!claim(actionTxId)) return
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -65,6 +72,7 @@ class KaPostsNotifier @Inject constructor(
             // without bidi controls, so a name or post can't reorder what the lock screen shows
             // (iOS 428a797b NotificationService `withoutBidiControls`)
             .setContentText(NotificationHelper.withoutBidiControls(text))
+            .setSubText(subtitle?.takeIf { it.isNotBlank() }?.let { NotificationHelper.withoutBidiControls(it) })
             .setStyle(NotificationCompat.BigTextStyle().bigText(NotificationHelper.withoutBidiControls(text)))
             .addExtras(android.os.Bundle().apply {
                 if (actionTxId.isNotBlank()) putString(NotificationHelper.EXTRA_TX_ID, actionTxId)

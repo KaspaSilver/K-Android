@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">راسل شخصًا عبر عنوانه أو اسمه.</string>
     <string name="qr_chatting_address_subtitle">استخدمه للدردشة والحصول على نطاقات ‎.kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">التحكم في العملات</string>
+    <string name="utxo_selection">اختيار UTXO</string>
+    <string name="utxo_selection_caption">اختر العملات التي يصرفها هذا الإرسال.</string>
     <string name="compound_utxos">دمج UTXOs</string>
     <string name="compound_utxos_description">ادمج UTXOs في هذا العنوان لتقليل المدخلات التي يحتاجها أي إرسال لاحق. لا تستطيع معاملة واحدة دمج سوى عدد محدود في المرة، فإذا كان لدى هذا العنوان عدد كبير جدًا، فاضغط على دمج مرة أخرى بعد تأكيدها لمواصلة التقليل.</string>
     <string name="automatic">تلقائي</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">أرسل لك %1$s KAS</string>
     <string name="push_sent_you_payment">أرسل لك دفعة</string>
+    <string name="push_sent_you_token">أرسل لك %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1745,4 +1747,11 @@
     <string name="coins_combined">تم دمج العملات</string>
     <string name="transaction_didnt_go_out">لم تخرج المعاملة.</string>
     <string name="k_motto">الحرية الرقمية على شبكة Kaspa</string>
+    <string name="received_tip">تلقيت إكرامية</string>
+    <string name="sent_tip">أرسلت إكرامية</string>
+    <string name="received_a_tip_kas">تلقيت إكرامية: %1$s KAS</string>
+    <string name="received_a_tip">تلقيت إكرامية</string>
+    <string name="history_moved">نُقل</string>
+    <string name="history_to_address">إلى %1$s</string>
+    <string name="history_change_to_address">الباقي %1$s إلى %2$s</string>
 </resources>

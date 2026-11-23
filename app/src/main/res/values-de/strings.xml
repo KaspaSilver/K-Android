@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">Schreib jemandem über Adresse oder Namen.</string>
     <string name="qr_chatting_address_subtitle">Zum Chatten und zum Erwerb von .kachat-Domains.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">Coin Control</string>
+    <string name="utxo_selection">UTXO-Auswahl</string>
+    <string name="utxo_selection_caption">Wähle, welche Coins diese Sendung ausgibt.</string>
     <string name="compound_utxos">UTXOs zusammenführen</string>
     <string name="compound_utxos_description">Führe die UTXOs dieser Adresse zusammen, damit eine spätere Zahlung weniger Eingänge braucht. Eine einzelne Transaktion kann nur begrenzt viele auf einmal zusammenführen. Hat diese Adresse sehr viele, tippe nach der Bestätigung erneut auf „Zusammenführen“, um weiter zu reduzieren.</string>
     <string name="automatic">Automatisch</string>
@@ -805,6 +806,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">Hat dir %1$s KAS gesendet</string>
     <string name="push_sent_you_payment">Hat dir eine Zahlung gesendet</string>
+    <string name="push_sent_you_token">Hat dir %1$s gesendet</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1732,4 +1734,11 @@
     <string name="coins_combined">Coins zusammengelegt</string>
     <string name="transaction_didnt_go_out">Die Transaktion ist nicht rausgegangen.</string>
     <string name="k_motto">Digitale Freiheit im Kaspa-Netzwerk</string>
+    <string name="received_tip">Trinkgeld erhalten</string>
+    <string name="sent_tip">Trinkgeld gesendet</string>
+    <string name="received_a_tip_kas">Trinkgeld erhalten: %1$s KAS</string>
+    <string name="received_a_tip">Trinkgeld erhalten</string>
+    <string name="history_moved">Verschoben</string>
+    <string name="history_to_address">An %1$s</string>
+    <string name="history_change_to_address">Wechselgeld %1$s an %2$s</string>
 </resources>

@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">ঠিকানা বা নাম দিয়ে কাউকে মেসেজ করুন।</string>
     <string name="qr_chatting_address_subtitle">চ্যাট করতে এবং .kachat ডোমেইন পেতে ব্যবহার করুন।</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">কয়েন কন্ট্রোল</string>
+    <string name="utxo_selection">UTXO নির্বাচন</string>
+    <string name="utxo_selection_caption">এই পাঠানোয় কোন কয়েনগুলো খরচ হবে তা বেছে নিন।</string>
     <string name="compound_utxos">UTXO একত্র করুন</string>
     <string name="compound_utxos_description">ভবিষ্যতে পাঠানোর ইনপুট কমাতে এই ঠিকানার UTXOs একত্র করুন। একটি লেনদেনে একবারে সীমিত সংখ্যকই মেলানো যায়, তাই এই ঠিকানায় অনেক বেশি থাকলে কনফার্ম হওয়ার পর আরও কমাতে আবার একত্র করুন-এ ট্যাপ করুন।</string>
     <string name="automatic">স্বয়ংক্রিয়</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">আপনাকে %1$s KAS পাঠিয়েছে</string>
     <string name="push_sent_you_payment">আপনাকে একটি পেমেন্ট পাঠিয়েছে</string>
+    <string name="push_sent_you_token">আপনাকে %1$s পাঠিয়েছে</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1733,4 +1735,11 @@
     <string name="coins_combined">কয়েন একত্র হয়েছে</string>
     <string name="transaction_didnt_go_out">লেনদেনটি পাঠানো হয়নি।</string>
     <string name="k_motto">Kaspa নেটওয়ার্কে ডিজিটাল স্বাধীনতা</string>
+    <string name="received_tip">টিপ পেয়েছেন</string>
+    <string name="sent_tip">টিপ পাঠিয়েছেন</string>
+    <string name="received_a_tip_kas">টিপ পেয়েছেন: %1$s KAS</string>
+    <string name="received_a_tip">টিপ পেয়েছেন</string>
+    <string name="history_moved">সরানো হয়েছে</string>
+    <string name="history_to_address">%1$s-এ</string>
+    <string name="history_change_to_address">বাকি %1$s গেছে %2$s-এ</string>
 </resources>

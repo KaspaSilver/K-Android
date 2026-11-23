@@ -1737,7 +1737,9 @@ fun ChatThreadScreen(
                                     isSelectingMessages = true
                                     selectedMessageIds = selectedMessageIds + msg.id
                                 },
-                                onOpenPayment = if (msg.type == "pay") ({ paymentDetailMessage = msg }) else null
+                                // A KaPost tip's card opens the post it tipped; any other payment
+                                // its details (iOS ChatDetailView onOpenPayment, 2026-11-22).
+                                onOpenPayment = if (msg.type == "pay") ({ openPaymentCard(micContext, msg.id) { paymentDetailMessage = msg } }) else null
                             )
                             // Selection-mode tap catcher - sits on top (Box's later children draw
                             // over earlier ones, and Compose dispatches touches to the topmost
@@ -2374,7 +2376,9 @@ internal fun PaymentCardBubble(
     /** A single tap - the payment's details sheet, where the host has one. */
     onClick: (() -> Unit)? = null,
     onLongPress: () -> Unit = {},
-    onDoubleClick: () -> Unit = {}
+    onDoubleClick: () -> Unit = {},
+    /** The payment's txid: a KaPost tip's card says "Received tip" / "Sent tip" ([paymentCardHeading]). */
+    txId: String? = null
 ) {
     val shape = RoundedCornerShape(18.dp)
     val background = if (isSent) {
@@ -2418,7 +2422,7 @@ internal fun PaymentCardBubble(
         }
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = if (isSent) stringResource(R.string.sent) else stringResource(R.string.payment_received),
+                text = paymentCardHeading(txId = txId, isSent = isSent, canBeTip = token == null),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = if (isSent) Color.White.copy(alpha = 0.85f) else LocalAppColors.current.textSecondary
@@ -2533,7 +2537,9 @@ fun MessageBubble(
     val uriHandler = LocalUriHandler.current
     val linkContext = LocalContext.current
     val replyContent = remember(message.plaintextBody) { MessageReply.parseOrNull(message.plaintextBody) }
-    val displayBody = replyContent?.text ?: message.plaintextBody
+    // iOS `displayText`: a reply's own text, else `readableContent` (a payment's memo after a colon,
+    // not the stored " — "). Copy and the actions sheet's preview read it too.
+    val displayBody = replyContent?.text ?: com.kachat.app.util.PaymentDisplayText.readableBodyOrNull(message.type, message.plaintextBody)
     // A long voice note's or multi-part photo's parts present (iOS 7c5c22e3), and the photo once
     // every chunk is here: save, share and full screen then use the joined image.
     val mediaPartsInput = remember(mediaParts?.allTxIds, mediaParts?.parts?.size) {
@@ -2733,7 +2739,9 @@ fun MessageBubble(
                         // One tap opens its details, two still react (iOS PaymentCardTaps).
                         onClick = onOpenPayment,
                         onLongPress = { showMenu = true },
-                        onDoubleClick = { QuickReactionBarState.activeId = message.id }
+                        onDoubleClick = { QuickReactionBarState.activeId = message.id },
+                        // "Received tip" / "Sent tip" for a KaPost tip (iOS PaymentCardHeading)
+                        txId = message.id
                     )
                 } else {
                     Column(horizontalAlignment = if (isSent) Alignment.End else Alignment.Start) {
@@ -2753,7 +2761,7 @@ fun MessageBubble(
                             modifier = Modifier.widthIn(max = 280.dp).combinedClickable(onClick = {}, onLongClick = { showMenu = true })
                         ) {
                             Text(
-                                text = message.plaintextBody ?: stringResource(R.string.payment),
+                                text = com.kachat.app.util.PaymentDisplayText.readableBodyOrNull(message.type, message.plaintextBody) ?: stringResource(R.string.payment),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                 color = if (isSent) LocalAppColors.current.onOutgoingBubble else LocalAppColors.current.textPrimary,
                                 fontWeight = FontWeight.Bold
@@ -4720,6 +4728,14 @@ fun ManageAddressesScreen(
     var sendToChattingTarget by remember { mutableStateOf<com.kachat.app.services.WalletService.SpendingAddressEntry?>(null) }
     /** The slots Manage kUSDT lists: they always show here, so Hide refuses them (iOS 5b7c772c). */
     var kusdtListed by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    // The spending row whose swipe-to-hide is open: one at a time, closed when the list scrolls
+    // (as Chats' rows).
+    val addressListState = rememberLazyListState()
+    var openSwipeRow by remember { mutableStateOf<Any?>(null) }
+    LaunchedEffect(addressListState.isScrollInProgress) {
+        if (addressListState.isScrollInProgress) openSwipeRow = null
+    }
+    val swipeHaptic = com.kachat.app.util.rememberHaptics()
 
     LaunchedEffect(Unit) {
         viewModel.loadManageAddresses()
@@ -4812,6 +4828,7 @@ fun ManageAddressesScreen(
         // summary edge to edge (20 in), the Notify switch as a plain row, then the chatting
         // address and the spending addresses as glass cards 16 in, 6 above and below each.
         LazyColumn(
+            state = addressListState,
             modifier = Modifier.fillMaxSize(),
         ) {
             // The total is everything this account holds: the chatting address and every spending
@@ -4904,33 +4921,55 @@ fun ManageAddressesScreen(
                 }
             } else {
                 items(visibleAddresses, key = { it.index }) { entry ->
-                    ManageAddressRow(
-                        entry = entry,
-                        showsDomainTag = entry.address in domainOwningAddresses,
-                        quantumSpent = entry.address.lowercase() in quantumSpentAddresses,
-                        onClick = { if (onAddressPicked != null) onAddressPicked(entry) else onNavigateToTxHistory(entry.index) },
-                        onCopyClick = {
-                            clipboardManager.setText(AnnotatedString(entry.address))
-                            showAddressCopiedToast(context, entry.address)
-                        },
-                        onQrClick = { qrAddress = entry.address },
-                        onRenameClick = { renamingEntry = entry; renameInput = entry.label ?: "" },
-                        onSendToChattingClick = { sendToChattingTarget = entry },
-                        onHideClick = {
-                            // On Manage kUSDT's list: it stays here (iOS 5b7c772c).
-                            if (entry.index in kusdtListed) {
-                                IosToasts.show(context.getString(R.string.kusdt_listed_stays_here))
-                                return@ManageAddressRow
-                            }
-                            // iOS hideAddress: any address, funded too - it comes back from
-                            // Address Visibility (iOS 245a5d2).
-                            viewModel.setManageAddressHidden(entry.index, true) { ok ->
-                                if (ok) IosToasts.show(context.getString(R.string.address_hidden_re_enable_it_in_address))
-                                else IosToasts.show(context.getString(R.string.this_address_cant_be_hidden))
-                            }
-                        },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                    )
+                    // iOS hideAddress, for the row menu's Hide Address and the swipe below.
+                    val hideEntry: () -> Unit = hide@{
+                        // On Manage kUSDT's list: it stays here (iOS 5b7c772c).
+                        if (entry.index in kusdtListed) {
+                            IosToasts.show(context.getString(R.string.kusdt_listed_stays_here))
+                            return@hide
+                        }
+                        // Any address, funded too - it comes back from Address Visibility
+                        // (iOS 245a5d2).
+                        viewModel.setManageAddressHidden(entry.index, true) { ok ->
+                            if (ok) IosToasts.show(context.getString(R.string.address_hidden_re_enable_it_in_address))
+                            else IosToasts.show(context.getString(R.string.this_address_cant_be_hidden))
+                        }
+                    }
+                    // Swipe left to hide (iOS 2026-11-22 `.swipeActions(edge: .trailing,
+                    // allowsFullSwipe: true)`), like marking mail read: a partial swipe shows an
+                    // orange Hide, a full swipe hides at once. The row springs back first, so a
+                    // refused hide (kUSDT list) leaves it closed. Not in Swap's picker.
+                    val swipeable = onAddressPicked == null
+                    SwipeActionsRow(
+                        key = entry.index,
+                        openKey = openSwipeRow,
+                        onOpenKeyChange = { openSwipeRow = it },
+                        enabled = swipeable,
+                        leadingActions = emptyList(),
+                        trailingActions = if (swipeable) listOf(
+                            SwipeAction(Icons.Filled.VisibilityOff, stringResource(R.string.hide), LocalAppColors.current.warning) {
+                                swipeHaptic(com.kachat.app.util.IosHaptic.IMPACT_MEDIUM)
+                                hideEntry()
+                            },
+                        ) else emptyList(),
+                        trailingFullSwipe = true,
+                    ) {
+                        ManageAddressRow(
+                            entry = entry,
+                            showsDomainTag = entry.address in domainOwningAddresses,
+                            quantumSpent = entry.address.lowercase() in quantumSpentAddresses,
+                            onClick = { if (onAddressPicked != null) onAddressPicked(entry) else onNavigateToTxHistory(entry.index) },
+                            onCopyClick = {
+                                clipboardManager.setText(AnnotatedString(entry.address))
+                                showAddressCopiedToast(context, entry.address)
+                            },
+                            onQrClick = { qrAddress = entry.address },
+                            onRenameClick = { renamingEntry = entry; renameInput = entry.label ?: "" },
+                            onSendToChattingClick = { sendToChattingTarget = entry },
+                            onHideClick = hideEntry,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        )
+                    }
                 }
             }
 
@@ -5028,7 +5067,7 @@ fun ManageAddressesScreen(
 /** The floating glass button behind "Address Actions" on [ManageAddressesScreen] (iOS d1844582
  *  `addressActionsButton`), a spinner while an action runs. */
 @Composable
-private fun AddressActionsFloatingButton(isBusy: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun AddressActionsFloatingButton(isBusy: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val haptic = com.kachat.app.util.rememberHaptics()
     Box(
         modifier = modifier
@@ -6727,6 +6766,8 @@ fun SpendingAddressTxHistoryScreen(
                     onRetry = { viewModel.loadSpendingAddressTxHistory(address) },
                     onTransactionClick = { transactionActionTarget = it },
                     bottomPadding = barInset,
+                    ownerAddress = address,
+                    ownAddressLabel = viewModel::ownAddressLabel,
                 )
                 else -> AddressUtxoList(
                     utxos = utxos,
@@ -7030,6 +7071,9 @@ fun IdentityAddressDetailScreen(
                     onRetry = { address?.let { viewModel.loadSpendingAddressTxHistory(it) } },
                     onTransactionClick = { transactionActionTarget = it },
                     bottomPadding = barInset,
+                    // As Manage Addresses' history (iOS ChattingAddressManageView, 2026-11-22).
+                    ownerAddress = address,
+                    ownAddressLabel = viewModel::ownAddressLabel,
                 )
                 else -> AddressUtxoList(
                     utxos = utxos,
@@ -7497,11 +7541,30 @@ private fun SpendingAddressTxHistoryRow(
     tx: AddressHistoryService.AddressTransaction,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The page's own address (a spending address, iOS `SpendingAddressTransactionHistoryView`, or
+     *  the Chatting Address, iOS `ChattingAddressManageView`) and how to name the wallet's own
+     *  addresses, so a Sent row splits into Sent and Change. Null leaves the row unsplit. */
+    ownerAddress: String? = null,
+    ownAddressLabel: (suspend (String) -> String?)? = null,
 ) {
     val colors = LocalAppColors.current
     // iOS `direction(for:)` is nil - "Transaction", grey, no amount - when nothing left for
     // someone else (sent) or arrived here (received): a self-send or consolidation.
     val directionKnown = tx.amountSompi > 0
+    // iOS 2026-11-22: an outgoing row counts what went to other people as Sent, and each of this
+    // wallet's other addresses that got change on its own line; all of it to our own addresses
+    // is Moved. Null until the labels are known, and for a row without the split.
+    val splits = ownerAddress != null && ownAddressLabel != null && directionKnown && tx.sent
+    val breakdown by produceState<OutgoingBreakdown?>(null, tx.txId, ownerAddress, splits) {
+        if (!splits || ownerAddress == null || ownAddressLabel == null) return@produceState
+        val self = ownerAddress.lowercase()
+        val labels = tx.outputs.map { it.first.lowercase() }.filter { it.isNotEmpty() && it != self }
+            .distinct().associateWith { ownAddressLabel(it) }
+        value = OutgoingBreakdown.of(ownerAddress, tx.outputs) { labels[it] }
+    }
+    val moved = breakdown?.moved == true
+    // A split row waits for its breakdown rather than flash the old total first.
+    val shownAmountSompi = if (splits) breakdown?.amountSompi else tx.amountSompi
     val directionColor = when {
         !directionKnown -> colors.textSecondary
         tx.sent -> colors.danger
@@ -7526,13 +7589,28 @@ private fun SpendingAddressTxHistoryRow(
             Text(
                 when {
                     !directionKnown -> stringResource(R.string.transaction)
-                    tx.sent -> stringResource(R.string.sent)
+                    tx.sent -> if (moved) stringResource(R.string.history_moved) else stringResource(R.string.sent)
                     else -> stringResource(R.string.payment_received)
                 },
                 color = directionColor,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold
             )
+            // iOS: orange caption2 medium, one line, shrinking to 0.8 before it cuts.
+            breakdown?.change?.forEach { (label, sompi) ->
+                KachatFitText(
+                    if (moved) stringResource(R.string.history_to_address, label)
+                    else stringResource(
+                        R.string.history_change_to_address,
+                        "%.8f ${KaspaUnit.symbol}".format(java.util.Locale.US, sompi / 100_000_000.0),
+                        label,
+                    ),
+                    color = colors.warning,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    minScale = 0.8f,
+                )
+            }
             MiddleEllipsisText(
                 tx.txId,
                 color = colors.textSecondary,
@@ -7544,9 +7622,9 @@ private fun SpendingAddressTxHistoryRow(
             }
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            if (directionKnown) {
+            if (directionKnown && shownAmountSompi != null) {
                 Text(
-                    "${if (tx.sent) "-" else "+"}%.8f ${KaspaUnit.symbol}".format(java.util.Locale.US, tx.amountSompi / 100_000_000.0),
+                    "${if (tx.sent) "-" else "+"}%.8f ${KaspaUnit.symbol}".format(java.util.Locale.US, shownAmountSompi / 100_000_000.0),
                     color = directionColor,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -7705,6 +7783,9 @@ private fun AddressHistoryList(
     onTransactionClick: (AddressHistoryService.AddressTransaction) -> Unit,
     /** Extra room at the list's end for what floats over the page's foot (Receive / Send, the dock). */
     bottomPadding: Dp = 0.dp,
+    /** The page's own address: Sent rows show their change (see [SpendingAddressTxHistoryRow]). */
+    ownerAddress: String? = null,
+    ownAddressLabel: (suspend (String) -> String?)? = null,
 ) {
     val colors = LocalAppColors.current
     when {
@@ -7743,6 +7824,8 @@ private fun AddressHistoryList(
                     onClick = { onTransactionClick(tx) },
                     // The separator starts under the text, past the 26 icon and its 12 gap.
                     modifier = Modifier.insetGroupedCell(i, txHistory.size, separatorStart = 54.dp),
+                    ownerAddress = ownerAddress,
+                    ownAddressLabel = ownAddressLabel,
                 )
             }
         }
@@ -7919,15 +8002,13 @@ fun ContainsDomainTag() {
 }
 
 /**
- * One spending address row in [ManageAddressesScreen] — shared by the main and "Hidden" sections,
- * differing only in whether [WalletService.SpendingAddressEntry.hidden] shows a hide or an unhide
- * swipe action. Hiding is a swipe-left action (matching Chats' swipe-to-delete and Cold Storage's
- * address rows) rather than a permanent icon button, since it's reached for less often than the
- * actions in the overflow menu. Unhiding is always available, but an address can't be hidden while
- * it still holds a balance or is the primary ("Pay in Kaspa") spending address — see
- * [WalletViewModel.setManageAddressHidden], which enforces the same rule as a backstop.
+ * One spending address row in [ManageAddressesScreen]. Hiding is the row menu's Hide Address and,
+ * in [ManageAddressesScreen], a swipe left on the row ([SwipeActionsRow]: a partial swipe shows an
+ * orange Hide, a full swipe hides at once - iOS 2026-11-22), both through [onHideClick]: an address
+ * on Manage kUSDT's list refuses with a toast, any other one hides, funded too, and comes back from
+ * Address Visibility. Swap's picker variant has no swipe.
  *
- * Everything besides hide/unhide (copy, QR, set primary, rename) lives behind a single overflow
+ * Everything besides hide (copy, QR, rename, send to chatting) lives behind a single overflow
  * button's actions sheet rather than a row of icons, so the address itself has room to sit
  * on its own line instead of being squeezed by four icon buttons. Send/receive for a specific
  * address live in [SpendingAddressTxHistoryScreen] instead (reached via `onClick`).
@@ -7954,7 +8035,7 @@ private fun ManageAddressRow(
     var showMenu by remember { mutableStateOf(false) }
     var menuAnchor by remember { mutableStateOf(Offset.Zero) }
 
-    // Swipe-to-hide was retired in favor of the bulk Address Visibility checklist (iOS parity).
+    // Swipe-to-hide is back (iOS 2026-11-22): the caller wraps this row in a SwipeActionsRow.
     // iOS `addressRow`: a glass card (radius 18), padding 16, the text stacked 6 apart.
     Row(
         modifier = modifier
@@ -12138,7 +12219,7 @@ fun QrCodeOverlay(
     /**
      * How many lines the value text may take. Two suits an address; a kpub is roughly twice as
      * long and would be silently truncated, which is worse than wrapping when someone is
-     * comparing one by eye.
+     * comparing one by eye. 0 shows no value text at all (a kpub's QR, iOS 2026-11-22).
      */
     valueMaxLines: Int = 2,
     /** "Done" top right instead of "Close" top left - the Chats New sheet's QR pages, which iOS
@@ -12210,18 +12291,21 @@ fun QrCodeOverlay(
                 )
             }
             Spacer(Modifier.height(20.dp))
-            Text(
-                text = value,
-                color = Color.Black,
-                style = MaterialTheme.typography.bodySmall,
-                fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.Center,
-                maxLines = valueMaxLines,
-                modifier = Modifier
-                    .widthIn(max = 280.dp)
-                    .padding(horizontal = 16.dp)
-            )
-            Spacer(Modifier.height(12.dp))
+            // valueMaxLines 0: no value text, only the code (a kpub, iOS 2026-11-22).
+            if (valueMaxLines > 0) {
+                Text(
+                    text = value,
+                    color = Color.Black,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.Center,
+                    maxLines = valueMaxLines,
+                    modifier = Modifier
+                        .widthIn(max = 280.dp)
+                        .padding(horizontal = 16.dp)
+                )
+                Spacer(Modifier.height(12.dp))
+            }
             Text(
                 text = stringResource(R.string.tap_anywhere_to_copy),
                 color = Color(0xFF9A9AA0),

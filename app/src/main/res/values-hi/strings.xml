@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">किसी को उसके पते या नाम से मैसेज करें।</string>
     <string name="qr_chatting_address_subtitle">चैट करने और .kachat डोमेन पाने के लिए उपयोग करें।</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">कॉइन कंट्रोल</string>
+    <string name="utxo_selection">UTXO चयन</string>
+    <string name="utxo_selection_caption">चुनें कि यह भेजना कौन-से कॉइन खर्च करे।</string>
     <string name="compound_utxos">UTXO समेकित करें</string>
     <string name="compound_utxos_description">इस पते के UTXOs को मिलाकर आगे भेजने में लगने वाले इनपुट कम करें। एक लेन-देन में एक बार में सीमित संख्या ही मिल सकती है, इसलिए अगर इस पते पर बहुत ज़्यादा हैं, तो कन्फ़र्म होने के बाद और कम करने के लिए समेकित करें पर फिर टैप करें।</string>
     <string name="automatic">स्वचालित</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">आपको %1$s KAS भेजे</string>
     <string name="push_sent_you_payment">आपको एक भुगतान भेजा</string>
+    <string name="push_sent_you_token">आपको %1$s भेजे</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1733,4 +1735,11 @@
     <string name="coins_combined">कॉइन मिल गए</string>
     <string name="transaction_didnt_go_out">लेनदेन नहीं भेजा जा सका।</string>
     <string name="k_motto">Kaspa नेटवर्क पर डिजिटल आज़ादी</string>
+    <string name="received_tip">टिप मिली</string>
+    <string name="sent_tip">टिप भेजी</string>
+    <string name="received_a_tip_kas">टिप मिली: %1$s KAS</string>
+    <string name="received_a_tip">टिप मिली</string>
+    <string name="history_moved">स्थानांतरित</string>
+    <string name="history_to_address">%1$s को</string>
+    <string name="history_change_to_address">बाक़ी %1$s गया %2$s को</string>
 </resources>

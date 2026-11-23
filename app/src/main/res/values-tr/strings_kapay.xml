@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">K içinde Trestly\'nin kendi koduyla oluşturulup kontrol edildi. Havuz önce değişirse yeniden fiyat verir: yalnızca bu fiyat veya daha iyisiyle devam eder, daha azı için tekrar sorar ve sitenin minimumunun altına asla inmez.</string>
     <string name="kp_turn_off_receive_notifications_kc">Alma Bildirimlerini Kapat</string>
     <string name="kp_turn_on_receive_notifications_kc">Alma Bildirimlerini Aç</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">Bu hesabın kpub\'ını panoya kopyalar. Tüm adreslerini açığa çıkarır.</string>
+    <string name="cold_not_a_valid_kpub">Geçerli bir kpub değil</string>
 </resources>

@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">Собрано и проверено собственным кодом Trestly внутри K. Если пул изменится раньше, котировка пересчитывается: сделка идёт только по этой цене или лучше, при меньшей K спросит снова и никогда не опустится ниже минимума сайта.</string>
     <string name="kp_turn_off_receive_notifications_kc">Выключить уведомления о получении</string>
     <string name="kp_turn_on_receive_notifications_kc">Включить уведомления о получении</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">Копирует kpub этого счёта в буфер обмена. Он раскрывает все его адреса.</string>
+    <string name="cold_not_a_valid_kpub">Это не действительный kpub</string>
 </resources>

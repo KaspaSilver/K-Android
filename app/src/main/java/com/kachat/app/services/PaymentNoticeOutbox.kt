@@ -9,7 +9,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import javax.inject.Inject
@@ -21,8 +24,9 @@ import javax.inject.Singleton
  * A chat payment From a spending address is told to the payee by a `payment_notice` the chatting
  * address sends ([com.kachat.app.viewmodels.ChatViewModel]'s `sendSpendingPaymentNotice`). When
  * the chatting address is empty that send fails; the notice is kept here, per wallet, and sent as
- * soon as the chatting address has KAS (iOS `observeChattingBalanceForNotices`). Built at startup
- * (KaChatApplication) so the balance is watched from launch.
+ * soon as the chatting address has KAS (iOS `observeChattingBalanceForNotices`), and also every
+ * 20 seconds while the app is open, for up to 15 minutes ([scheduleUnsentNoticeRetry]). Built at
+ * startup (KaChatApplication) so the balance is watched from launch.
  */
 @Singleton
 class PaymentNoticeOutbox @Inject constructor(
@@ -31,6 +35,8 @@ class PaymentNoticeOutbox @Inject constructor(
     private val chatRepository: ChatRepository,
     /** Lazy: WalletService is what sends, and it is heavy to build at startup. */
     private val walletServiceLazy: dagger.Lazy<WalletService>,
+    /** Whether the app is on screen (KaChatApplication's ProcessLifecycleOwner observer). */
+    private val notificationHelper: NotificationHelper,
 ) {
     data class UnsentPaymentNotice(
         val contactAddress: String,
@@ -43,14 +49,48 @@ class PaymentNoticeOutbox @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val listLock = Any()
     private val sending = Mutex()
+    private val retryLock = Any()
+    @Volatile private var retryJob: Job? = null
 
     init {
+        // notices still held from an earlier run get the timer too (iOS observeChattingBalanceForNotices)
+        scope.launch { if (hasUnsentNotices()) scheduleUnsentNoticeRetry() }
         // The chatting address got KAS: the notices waiting for it go out.
         scope.launch {
             // A StateFlow only emits changes already (iOS removeDuplicates).
             walletServiceLazy.get().balance
                 .filter { it > 0 }
                 .collect { sendUnsentPaymentNotices() }
+        }
+    }
+
+    /** Whether the active account has notices waiting (iOS `unsentNotices.isEmpty`). */
+    private fun hasUnsentNotices(): Boolean {
+        val key = currentKey() ?: return false
+        return synchronized(listLock) { read(key) }.isNotEmpty()
+    }
+
+    /**
+     * A held notice is usually waiting for the payment's own change to become spendable, which
+     * doesn't change the balance, so the balance watch alone could hold it until some unrelated
+     * payment came in (a kUSDT card reached the contact minutes late on 2026-11-22 that way). So
+     * it is also tried every 20 seconds while the app is open, for up to 15 minutes (iOS
+     * `scheduleUnsentNoticeRetry`). One timer at a time; it stops early once nothing is held.
+     */
+    fun scheduleUnsentNoticeRetry() {
+        synchronized(retryLock) {
+            if (retryJob?.isActive == true) return
+            retryJob = scope.launch {
+                val started = System.currentTimeMillis()
+                while (isActive && UnsentNoticeRetry.keepsTrying(System.currentTimeMillis() - started)) {
+                    delay(UnsentNoticeRetry.INTERVAL_MS)
+                    when (UnsentNoticeRetry.step(hasUnsentNotices(), notificationHelper.isAppInForeground)) {
+                        UnsentNoticeRetry.Step.STOP -> break
+                        UnsentNoticeRetry.Step.SKIP -> continue
+                        UnsentNoticeRetry.Step.SEND -> sendUnsentPaymentNotices()
+                    }
+                }
+            }
         }
     }
 
@@ -91,6 +131,7 @@ class PaymentNoticeOutbox @Inject constructor(
             if (list.any { it.txId == notice.txId }) return
             write(key, (list + notice).takeLast(MAX_KEPT))
         }
+        scheduleUnsentNoticeRetry()
     }
 
     /**
@@ -123,6 +164,26 @@ class PaymentNoticeOutbox @Inject constructor(
             synchronized(listLock) { write(key, read(key).filterNot { it.txId in done }) }
         } finally {
             sending.unlock()
+        }
+    }
+
+    /** The timing of [scheduleUnsentNoticeRetry] (iOS `scheduleUnsentNoticeRetry`). */
+    internal object UnsentNoticeRetry {
+        /** Tried every 20 seconds... */
+        const val INTERVAL_MS = 20_000L
+        /** ...for up to 15 minutes from the notice being kept (or from launch). */
+        const val WINDOW_MS = 15 * 60_000L
+
+        enum class Step { STOP, SKIP, SEND }
+
+        /** Whether the timer goes round again [elapsedMs] after it started. */
+        fun keepsTrying(elapsedMs: Long): Boolean = elapsedMs < WINDOW_MS
+
+        /** After a wait: stop once nothing is held, skip while the app isn't on screen, else send. */
+        fun step(hasNotices: Boolean, foreground: Boolean): Step = when {
+            !hasNotices -> Step.STOP
+            !foreground -> Step.SKIP
+            else -> Step.SEND
         }
     }
 

@@ -308,4 +308,6 @@
     <string name="kp_trestly_swap_note_kc">بُني وفُحص بشيفرة Trestly نفسها داخل K. إن تحرّك المجمع أولًا يُعاد التسعير: يمضي فقط بهذا السعر أو أفضل، ويسألك مجددًا إن قلّ، ولا ينزل أبدًا تحت الحد الأدنى للموقع.</string>
     <string name="kp_turn_off_receive_notifications_kc">إيقاف إشعارات الاستلام</string>
     <string name="kp_turn_on_receive_notifications_kc">تشغيل إشعارات الاستلام</string>
+    <string name="cold_copy_kpub_reveals_all_addresses">ينسخ kpub هذا الحساب إلى الحافظة. يكشف كل عناوينه.</string>
+    <string name="cold_not_a_valid_kpub">ليس kpub صالحًا</string>
 </resources>

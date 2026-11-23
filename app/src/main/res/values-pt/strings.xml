@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">Mande mensagem para alguém pelo endereço ou nome.</string>
     <string name="qr_chatting_address_subtitle">Use para conversar e adquirir domínios .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">Controle de moedas</string>
+    <string name="utxo_selection">Seleção de UTXO</string>
+    <string name="utxo_selection_caption">Escolha quais moedas este envio gasta.</string>
     <string name="compound_utxos">Consolidar UTXOs</string>
     <string name="compound_utxos_description">Combine os UTXOs deste endereço para reduzir as entradas de que um envio futuro vai precisar. Uma única transação só consegue juntar um número limitado de cada vez, então, se este endereço tiver um número muito grande, toque em Consolidar de novo depois da confirmação para continuar reduzindo.</string>
     <string name="automatic">Automático</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">Enviou %1$s KAS para você</string>
     <string name="push_sent_you_payment">Enviou um pagamento para você</string>
+    <string name="push_sent_you_token">Enviou a você %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1736,4 +1738,11 @@
     <string name="coins_combined">Moedas juntadas</string>
     <string name="transaction_didnt_go_out">A transação não saiu.</string>
     <string name="k_motto">Liberdade digital na rede Kaspa</string>
+    <string name="received_tip">Gorjeta recebida</string>
+    <string name="sent_tip">Gorjeta enviada</string>
+    <string name="received_a_tip_kas">Gorjeta recebida: %1$s KAS</string>
+    <string name="received_a_tip">Gorjeta recebida</string>
+    <string name="history_moved">Movido</string>
+    <string name="history_to_address">Para %1$s</string>
+    <string name="history_change_to_address">Troco %1$s para %2$s</string>
 </resources>

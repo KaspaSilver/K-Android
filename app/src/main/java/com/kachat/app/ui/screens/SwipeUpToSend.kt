@@ -157,6 +157,14 @@ fun SwipeUpToSendScreen(
     var confirmed by remember { mutableStateOf(false) }
     /** The send ended without a transaction: the sending screen shows "Failed". */
     var failed by remember { mutableStateOf(false) }
+    /** The amount and recipient as they were when the swipe sent: the screen behind may clear
+     *  its form once the send goes out, and the sending screen must keep saying what's being
+     *  sent ("Sending 10 KAS" never drops to 0 KAS before the confirmation; iOS
+     *  sendingAmountSompi / sendingRecipient, 2026-11-22). */
+    var sendingAmountSompi by remember { mutableStateOf<Long?>(null) }
+    var sendingRecipient by remember { mutableStateOf<String?>(null) }
+    val latestAmountSompi by rememberUpdatedState(amountSompi)
+    val latestRecipient by rememberUpdatedState(recipient)
     var heightPx by remember { mutableIntStateOf(0) }
     val active = isEnabled && !isBusy
     val latestActive by rememberUpdatedState(active)
@@ -180,6 +188,8 @@ fun SwipeUpToSendScreen(
      *  activation can't send twice. */
     fun startSending() {
         if (phase != SwipePhase.FORM) return
+        sendingAmountSompi = latestAmountSompi
+        sendingRecipient = latestRecipient
         dismissKeyboard()
         armed = false
         dagShown = false
@@ -298,8 +308,8 @@ fun SwipeUpToSendScreen(
 
         if (lift > 0f || phase == SwipePhase.SENDING) {
             SendProgressScreen(
-                amountSompi = amountSompi,
-                recipient = recipient,
+                amountSompi = if (phase == SwipePhase.SENDING) sendingAmountSompi ?: amountSompi else amountSompi,
+                recipient = if (phase == SwipePhase.SENDING) sendingRecipient ?: recipient else recipient,
                 sent = if (dagShown) sent else null,
                 done = dagShown && sent != null,
                 failure = if (failed && dagShown) failureMessage ?: failedFallback ?: stringResource(R.string.swipe_send_failed_fallback) else null,

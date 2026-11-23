@@ -392,7 +392,9 @@ class AddressActivityNotifier @Inject constructor(
         // A Cold Storage address has no history sheet of its own here: the tap opens Wallet (iOS
         // 428a797b).
         val opensAddress = !isColdOnly(address, walletAddressOrNull(), walletManager.allSpendingAddresses().toSet())
-        if (notificationHelper.claimForBanner(dedupeKey) && !pushShowing) {
+        // Nor when its Received push already came, even one tapped and gone from the shade (iOS
+        // `InAppBanner.pushArrived`, 2026-11-22).
+        if (!notificationHelper.pushArrived(dedupeKey) && notificationHelper.claimForBanner(dedupeKey) && !pushShowing) {
             notificationHelper.showAddressActivity(
                 title = title,
                 text = describe(address),

@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">アドレスまたは名前でメッセージを送ります。</string>
     <string name="qr_chatting_address_subtitle">チャットと.kachatドメインの取得に使用します。</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">コインコントロール</string>
+    <string name="utxo_selection">UTXO の選択</string>
+    <string name="utxo_selection_caption">この送金で使うコインを選びます。</string>
     <string name="compound_utxos">UTXO を統合</string>
     <string name="compound_utxos_description">このアドレスの UTXO をまとめて、今後の送信に必要な入力の数を減らします。1回の取引でまとめられる数には上限があるため、このアドレスの UTXO が非常に多い場合は、承認後にもう一度「UTXO を統合」をタップしてさらに減らしてください。</string>
     <string name="automatic">自動</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">%1$s KAS を送ってきました</string>
     <string name="push_sent_you_payment">支払いを送ってきました</string>
+    <string name="push_sent_you_token">%1$s を送りました</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1730,4 +1732,11 @@
     <string name="coins_combined">コインをまとめました</string>
     <string name="transaction_didnt_go_out">取引は送信されませんでした。</string>
     <string name="k_motto">Kaspaネットワークでデジタルな自由を</string>
+    <string name="received_tip">チップを受け取りました</string>
+    <string name="sent_tip">チップを送りました</string>
+    <string name="received_a_tip_kas">チップを受け取りました: %1$s KAS</string>
+    <string name="received_a_tip">チップを受け取りました</string>
+    <string name="history_moved">移動</string>
+    <string name="history_to_address">%1$s へ</string>
+    <string name="history_change_to_address">おつり %1$s → %2$s</string>
 </resources>

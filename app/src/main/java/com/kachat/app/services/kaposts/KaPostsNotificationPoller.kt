@@ -219,8 +219,21 @@ class KaPostsNotificationPoller @Inject constructor(
             .reversed()
         for (n in recent) {
             if (isNotificationsScreenVisible || !appNotifications.isAppInForeground) return
+            // A tip is a payment in the tipper's chat: that chat's banner says "Received a tip"
+            // and opens the chat, so this one would be a second notice for it (iOS 2026-11-22).
+            if (n.contentType == "tip") continue
             val actor = KaPostsService.kaspaAddressFromPubkey(n.userPublicKey) ?: continue
-            if (appNotifications.isShowing(n.id)) {
+            // Its push already came, maybe the one you tapped to open K: no second banner (iOS
+            // `InAppBanner.pushArrived("kaposts:" + KaPostsBannerLedger.key)`, 2026-11-22).
+            val kaPostKey = com.kachat.app.services.PushArrivalRecord.kaPostsKey(
+                n.userPublicKey,
+                n.contentId,
+                com.kachat.app.services.PushArrivalRecord.kaPostsKind(
+                    n.contentType, n.voteType, KaPostsProtocol.stripMarker(n.decodedContent ?: "").trim().isNotEmpty()
+                ),
+            )
+            val pushCame = appNotifications.pushArrived(n.id) || appNotifications.pushArrived("kaposts:$kaPostKey")
+            if (pushCame || appNotifications.isShowing(n.id)) {
                 notificationHelper.claim(n.id)
                 continue
             }

@@ -88,8 +88,14 @@ class DmNotificationTextTest {
     }
 
     @Test
-    fun `a token payment notice reads Received payment, without the amount`() {
+    fun `a kUSDT payment notice reads Sent you kUSDT, without the amount`() {
         val notice = """{"type":"token_payment_notice","token":"kusdt","txId":"${"a".repeat(64)}","index":0,"amount":12500000,"address":"kaspa:qr"}"""
+        assertEquals("Sent you kUSDT", dmNotificationText(notice))
+    }
+
+    @Test
+    fun `another token's payment notice still reads Received payment`() {
+        val notice = """{"type":"token_payment_notice","token":"other","txId":"${"a".repeat(64)}","index":0,"amount":12500000,"address":"kaspa:qr"}"""
         assertEquals("Received payment", dmNotificationText(notice))
     }
 

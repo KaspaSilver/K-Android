@@ -473,7 +473,8 @@
     <string name="chats_new_chat_subtitle">Nhắn tin cho ai đó bằng địa chỉ hoặc tên.</string>
     <string name="qr_chatting_address_subtitle">Dùng để trò chuyện và nhận tên miền .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
-    <string name="coin_control">Kiểm soát coin</string>
+    <string name="utxo_selection">Chọn UTXO</string>
+    <string name="utxo_selection_caption">Chọn những đồng coin mà lần gửi này sẽ dùng.</string>
     <string name="compound_utxos">Hợp nhất UTXO</string>
     <string name="compound_utxos_description">Gộp các UTXOs của địa chỉ này để giảm số đầu vào mà lần gửi sau cần. Một giao dịch chỉ gộp được một số lượng nhất định cùng lúc, nên nếu địa chỉ này có rất nhiều, hãy chạm Hợp nhất lần nữa sau khi giao dịch được xác nhận để tiếp tục giảm.</string>
     <string name="automatic">Tự động</string>
@@ -806,6 +807,7 @@
     <!-- Push body for an incoming chat payment, title = who sent it (iOS dcb329a) -->
     <string name="push_sent_you_kas">Đã gửi cho bạn %1$s KAS</string>
     <string name="push_sent_you_payment">Đã gửi cho bạn một khoản thanh toán</string>
+    <string name="push_sent_you_token">Đã gửi cho bạn %1$s</string>
     <!-- .kachat: Fees card on the market's Activity page, .kachat Domains card on KaChat Stats (iOS f5d34f4) -->
     <!-- KaChat Stats: Fees tab (.kachat Domains fees) (iOS 4924787) -->
     <!-- Cold Storage empty state (iOS ColdStorageView.emptyState) -->
@@ -1730,4 +1732,11 @@
     <string name="coins_combined">Đã gộp đồng</string>
     <string name="transaction_didnt_go_out">Giao dịch chưa được gửi đi.</string>
     <string name="k_motto">Tự do số trên mạng Kaspa</string>
+    <string name="received_tip">Đã nhận tiền tip</string>
+    <string name="sent_tip">Đã gửi tiền tip</string>
+    <string name="received_a_tip_kas">Đã nhận tiền tip: %1$s KAS</string>
+    <string name="received_a_tip">Đã nhận tiền tip</string>
+    <string name="history_moved">Đã chuyển</string>
+    <string name="history_to_address">Đến %1$s</string>
+    <string name="history_change_to_address">Tiền thừa %1$s đến %2$s</string>
 </resources>

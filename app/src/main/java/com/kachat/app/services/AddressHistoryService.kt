@@ -22,6 +22,9 @@ class AddressHistoryService @Inject constructor(
         /** What this transaction paid the network, when the API resolved every input's amount.
          *  On a received transaction it is what the sender paid (iOS 9839906). */
         val feeSompi: Long? = null,
+        /** Every output with an address, (address, sompi) in output order: a spending address's
+         *  Sent row splits them into Sent and Change (iOS 2026-11-22, [com.kachat.app.ui.screens.OutgoingBreakdown]). */
+        val outputs: List<Pair<String, Long>> = emptyList(),
     )
 
     /**
@@ -82,7 +85,10 @@ class AddressHistoryService @Inject constructor(
             } else {
                 tx.outputs.filter { it.scriptPublicKeyAddress == address }.sumOf { it.amount }
             }
-            AddressTransaction(tx.transactionId, sent, amount, tx.blockTime, tx.feeSompi)
+            AddressTransaction(
+                tx.transactionId, sent, amount, tx.blockTime, tx.feeSompi,
+                outputs = tx.outputs.mapNotNull { output -> output.scriptPublicKeyAddress?.takeIf { it.isNotEmpty() }?.let { it to output.amount } },
+            )
         }.sortedByDescending { it.blockTimeMillis ?: 0L }
     }
 

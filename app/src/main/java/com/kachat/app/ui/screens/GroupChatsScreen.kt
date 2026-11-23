@@ -135,7 +135,9 @@ internal fun GroupChatRow(
     // messages (they render as a corner pill), so without this the row would keep showing an
     // older message as if nothing happened.
     val reactionPreview = latestReactionByGroup[group.groupId]?.let { reaction ->
-        if (convo.lastMessage != null && convo.lastMessage.blockTimestamp >= reaction.blockTimestamp) return@let null
+        // Same rule as 1:1 (iOS GroupChatRow): chain time on both sides, a message not in a block
+        // yet or within a second of the reaction wins.
+        if (!com.kachat.app.util.ChatListReactionPreview.reactionShows(convo.lastMessage?.blockTimestamp, reaction.blockTimestamp)) return@let null
         val targetIsMine = reaction.targetIsOutgoing == true
         if (reaction.reactorAddress == myAddress) {
             if (targetIsMine) stringResource(R.string.you_reacted_to_your_message) else stringResource(R.string.you_reacted_to_a_message)

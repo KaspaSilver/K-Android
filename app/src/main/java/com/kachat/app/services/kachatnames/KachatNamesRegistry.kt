@@ -227,6 +227,7 @@ class KachatNamesRegistry @Inject constructor(
                 stored.forEach { (k, v) -> identityStoredAt.putIfAbsent(k, v.second) }
                 identities = stored.mapValues { it.value.first } + identities
             }
+            com.kachat.app.services.KnownKachatNames.write(context, knownIdentityNames(com.kachat.app.services.KnownKachatNames.LIMIT))
         }
     }
 
@@ -1557,6 +1558,26 @@ class KachatNamesRegistry @Inject constructor(
         }
         val stored = keep.mapValues { (k, v) -> StoredIdentity(v, identityStoredAt[k] ?: 0L) }
         KachatProfileCache.write(context, IDENTITIES_FILE, gson.toJson(stored).toByteArray(Charsets.UTF_8))
+        // the names a KaPost push may name people by (iOS `syncIdentityNamesForExtension`)
+        com.kachat.app.services.KnownKachatNames.write(context, knownIdentityNames(com.kachat.app.services.KnownKachatNames.LIMIT))
+    }
+
+    /**
+     * Every cached identity with a name, as the app shows it ("alice.kachat"), keyed by lowercased
+     * address: the newest [limit] (iOS `knownIdentityNames`, 2026-11-22). For a KaPost push's actor
+     * ([com.kachat.app.services.KnownKachatNames]); nothing is looked up. Empty while profiles are off.
+     */
+    fun knownIdentityNames(limit: Int): Map<String, String> {
+        if (!KachatNamesService.profilesEnabled) return emptyMap()
+        val out = LinkedHashMap<String, String>()
+        val all = synchronized(identityLock) { identities }
+        for ((key, identity) in all.entries.sortedByDescending { identityStoredAt[it.key] ?: 0L }) {
+            if (out.size >= limit) break
+            if (!KaspaNetwork.isOnActiveNetwork(key)) continue
+            val label = identity.label?.takeIf { it.isNotEmpty() } ?: continue
+            out[key] = com.kachat.app.models.KachatNameLabel.display(label)
+        }
+        return out
     }
 
     /**

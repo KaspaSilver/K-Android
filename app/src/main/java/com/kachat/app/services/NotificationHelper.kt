@@ -134,6 +134,14 @@ class NotificationHelper @Inject constructor(
     fun claimForBanner(txId: String): Boolean = claimTxId(txId)
 
     /**
+     * Whether a push for [key] already reached this phone (iOS `InAppBanner.pushArrived`, owner
+     * 2026-11-22): its txid, a room push's collapse id, or `kaposts:` + a KaPost key
+     * ([PushArrivalRecord]). Every banner the app posts itself checks this first, so opening the
+     * app from a push - which has left the shade by then - never banners it a second time.
+     */
+    fun pushArrived(key: String?): Boolean = PushArrivalRecord.arrived(context, key)
+
+    /**
      * Whether a message the app found itself (its sync, scans, sweeps and polls) may banner now
      * (iOS 428a797b `InAppBanner`, owner 2026-11-22): while the app is open it banners new 1:1,
      * group and room messages itself, one per message, so nothing waits on the push service -
@@ -294,8 +302,9 @@ class NotificationHelper @Inject constructor(
      *  to chat with you." (NO_HANDSHAKE_MESSAGING.md §4). The caller decides it is the first. Its
      *  tap opens Message Requests, where it is answered (iOS 4f8e14bb, the "message_requests"
      *  thread). */
-    suspend fun showMessageRequest(contactId: String, dedupeTxId: String? = null) {
+    suspend fun showMessageRequest(contactId: String, dedupeTxId: String? = null, fromPush: Boolean = false) {
         show(
+            fromPush = fromPush,
             contactId = contactId,
             title = context.getString(com.kachat.app.R.string.new_message_request),
             text = context.getString(
@@ -317,11 +326,15 @@ class NotificationHelper @Inject constructor(
         /** A later part of a photo or voice note (iOS 7c5c22e3/ca013fc8): it updates the chat's
          *  notification without sound, vibration or a heads-up - the note rang once already. */
         quiet: Boolean = false,
+        /** The push's own banner (KaChatFirebaseMessagingService); else the app's, which never
+         *  banners what a push already brought ([pushArrived]). */
+        fromPush: Boolean = false,
     ) {
         if (walletManager.isLoggedOut) return // signed out: no message text on this phone (iOS bfe9f022)
         if (activeContactId.value == contactId) return // already looking at this conversation
         if (!settings.notificationsEnabled.first()) return
         if (notificationOverride == ContactNotificationMode.OFF) return
+        if (!fromPush && pushArrived(dedupeTxId)) return // its push came already (iOS `InAppBanner.pushArrived`)
         if (!claimTxId(dedupeTxId)) return // the other delivery path (poll vs push) got here first
         if (isShowing(dedupeTxId)) return // its push is in the shade already (iOS 428a797b)
 
@@ -493,10 +506,13 @@ class NotificationHelper @Inject constructor(
         subtitle: String? = null,
         /** A later part of a photo or voice note: no sound, vibration or heads-up (see [show]). */
         quiet: Boolean = false,
+        /** The push's own banner; else the app's, skipped when the push came already (see [show]). */
+        fromPush: Boolean = false,
     ) {
         if (walletManager.isLoggedOut) return
         if (activeGroupId.value == groupId) return // already looking at this group's thread
         if (!settings.notificationsEnabled.first()) return
+        if (!fromPush && pushArrived(dedupeTxId)) return // its push came already (iOS `InAppBanner.pushArrived`)
         if (!claimTxId(dedupeTxId)) return // the other delivery path (scan/sync vs push) got here first
         if (isShowing(dedupeTxId)) return // its push is in the shade already (iOS 428a797b)
 
