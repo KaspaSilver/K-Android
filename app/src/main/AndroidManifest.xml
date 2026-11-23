@@ -43,6 +43,9 @@
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
     <uses-feature android:name="android.hardware.nfc" android:required="false" />
+    <!-- MainActivity is locked to portrait, which on its own makes Play require a portrait
+         screen and hides the app from devices without one (Play Console, K 5.3). -->
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
 
     <!-- usesCleartextTraffic stays true DELIBERATELY (2026-08 security audit, decision 3A):
          Kaspa node gRPC (protowire on port 16110/16210) is plaintext by protocol, and a
