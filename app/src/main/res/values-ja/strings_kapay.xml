@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">収益を見積もるにはハッシュレートを入力してください。</string>
     <string name="kp_export_failed_csv">エクスポートに失敗しました。CSVファイルを書き込めませんでした</string>
     <string name="kp_fee_amount">手数料 %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">残高またはドメインのあるアドレスが%1$d件見つかりました。</string>
-    <string name="kp_found_one_address_balance_domain">残高またはドメインのあるアドレスが1件見つかりました。</string>
     <string name="kp_frame_lld_lld_5cb10">フレーム %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">このアカウントを識別できるように名前を付けてください。</string>
     <string name="kp_hide_address">アドレスを非表示</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">新しいポートフォリオ</string>
     <string name="kp_next_block_reward">次のブロック報酬</string>
     <string name="kp_next_block_reward_reduction">次のブロック報酬の減少</string>
-    <string name="kp_no_addresses_balance_domain_found">残高またはドメインのあるアドレスは見つかりませんでした。</string>
     <string name="kp_no_addresses_discovered_yet_15738">まだアドレスが検出されていません。</string>
     <string name="kp_no_used_addresses_yet">使用済みのアドレスはまだありません</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">履歴がまだ足りません - 数日間の取引後にもう一度確認してください。</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">CSV を Nextcloud の KaChat フォルダに保存します。</string>
     <string name="pnc_import_sub">Nextcloud から CSV ファイルを選びます。</string>
     <string name="portfolio">ポートフォリオ</string>
-    <string name="portfolio_add_address_footer_kachat">Kaspaアドレス、またはname.kachatのようなドメインを入力してください(.kachatの名前が最初に検索されます)。このアドレスへの受信は購入、送信は売却として、その日の過去のKAS価格で記録されます。同じアドレスを後で再追加すると、前回のインポート以降の取引のみ取り込まれます。</string>
     <string name="portfolio_add_chatting_address">チャットアドレスを追加</string>
     <string name="portfolio_add_chatting_address_sub">チャットアドレスの購入・売却と、支払ったすべてのネットワーク手数料。</string>
     <string name="portfolio_fees_count_loading">取引：%1$d 件。一部の価格はまだ読み込み中です。</string>

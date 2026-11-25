@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">Yılan</string>
+    <string name="arcade_snake_detail">Ye, büyü; duvarlara ve kendine çarpma. Skorlar Kaspa\'ya kaydedilir.</string>
+    <string name="arcade_2048_detail">Kareleri birleştirmek ve 2048\'e ulaşmak için kaydır. Skorlar Kaspa\'ya kaydedilir.</string>
+    <string name="arcade_other_account">Bu oyun başka bir hesapla oynandı. Skoru kaydetmek için o hesaba giriş yap.</string>
+    <string name="arcade_score_not_sent">Skor gönderilmedi.</string>
+    <string name="arcade_challenge_play">Meydan okuma: %1$s oyununu oyna</string>
+    <string name="arcade_beat_in">%2$s oyununda %1$s puanı geç</string>
+    <string name="arcade_share_boast">K\'te %2$s oyununda %1$s puan aldım. Geçebileceğini düşünüyor musun?</string>
+    <string name="arcade_challenge_named">%1$s, %3$s oyununda %2$s puan aldı. Geçebilir misin?</string>
+    <string name="arcade_challenge_someone">Biri %2$s oyununda %1$s puan aldı. Geçebilir misin?</string>
+    <string name="arcade_your_best">En iyi skorun: %1$s</string>
+    <string name="arcade_fee_note">Biten her oyunun skoru, küçük bir ağ ücreti karşılığında sohbet adresinden Kaspa\'ya kaydedilir.</string>
+    <string name="arcade_hint_period">Liderlik tablosunun dönemini değiştirir</string>
+    <string name="arcade_board_unreachable">Lider tablosu yüklenemedi. Tekrar denemek için aşağı çek.</string>
+    <string name="arcade_board_empty">Henüz skor yok. İlk sen ol.</string>
+    <string name="arcade_posted">KaPost\'ta paylaşıldı</string>
+    <string name="arcade_game_over">Oyun Bitti</string>
+    <string name="arcade_play_again">Tekrar Oyna</string>
+    <string name="arcade_posting">KaPost\'ta paylaşılıyor…</string>
+    <string name="arcade_shared">KaPost\'ta paylaşıldı</string>
+    <string name="arcade_retry_stamp">Kaydı tekrar dene</string>
+    <string name="arcade_stamping">Skor Kaspa\'ya kaydediliyor…</string>
+    <string name="arcade_stamped">Skor Kaspa\'ya kaydedildi</string>
+    <string name="arcade_no_score">Kaydedilecek skor yok.</string>
+    <string name="arcade_score_n">Skor: %1$s</string>
+    <string name="arcade_snake_start_hint">Başlamak için tahtada kaydır veya okları kullan.</string>
+    <string name="arcade_score">Skor</string>
+    <string name="arcade_best_tile">En İyi Kare</string>
+    <string name="arcade_2048_hint">Kareleri hareket ettirmek için kaydır. Eşit kareler birleşir.</string>
+    <string name="arcade_challenge_label">Arcade Meydan Okuması</string>
+</resources>

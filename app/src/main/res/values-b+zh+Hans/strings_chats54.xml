@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">谁可以给你发消息？</string>
+    <string name="c54_who_anyone">任何人</string>
+    <string name="c54_who_usernames">仅限有用户名的用户</string>
+    <string name="c54_who_row_footer">谁可以与你发起聊天。不影响已经在和你聊天的人。</string>
+    <string name="c54_who_anyone_footer">任何人都可以给你发送第一条消息。消息会在消息请求中等待，直到你接受。</string>
+    <string name="c54_who_usernames_footer">只有拥有用户名（.kachat 名称）的人才能进入你的消息请求。其他人的第一条消息会被隐藏，也不会通知你；选择“任何人”即可重新看到。不影响已经在和你聊天的人。</string>
+    <string name="c54_room_clears_unread">清除此公共聊天的未读标记。</string>
+    <string name="c54_room_no_notifications">不接收此公共聊天的通知。</string>
+    <string name="c54_room_notifications_resume">恢复接收此公共聊天的通知。</string>
+    <string name="c54_room_delete_subtitle">从你的聊天中移除此公共聊天。</string>
+    <string name="c54_tip_subtitle">按 设置 &gt; 个性化 &gt; 打赏 中的设定打赏此联系人。</string>
+    <string name="c54_send_tip">发送打赏</string>
+    <string name="c54_send_deferred">正在等待你的币确认。稍后会自动发送，请不要再次发送。</string>
+    <string name="c54_failed_start_recording">无法开始录音：%1$s</string>
+    <string name="c54_failed_encode_audio">无法编码音频：%1$s</string>
+    <string name="c54_failed_prepare_audio">无法准备音频：%1$s</string>
+    <string name="c54_sent_a_link">发送了一个链接</string>
+    <string name="c54_public_chat_room">公开聊天室 #%1$s</string>
+    <string name="c54_search_contacts_address_username">搜索联系人，或地址或用户名</string>
+    <string name="c54_looking_up_username">正在查找用户名...</string>
+    <string name="c54_no_contacts_paste_username">你还没有联系人。在上方粘贴地址或用户名来邀请他人。</string>
+    <string name="c54_no_contacts_match_username">没有匹配的联系人。粘贴地址或用户名来邀请新的人。</string>
+    <string name="c54_invites_resent_all">已向所有成员重新发送邀请。</string>
+    <string name="c54_invite_resent">已重新发送邀请。</string>
+    <string name="c54_room_follows_app_indexer">此房间已恢复使用应用的索引器。</string>
+    <string name="c54_room_indexer_updated">已更新 #%1$s 的索引器。</string>
+    <string name="c54_room_could_not_reach">无法连接：%1$s</string>
+    <string name="c54_tap_open_your_chat">点按以打开你的聊天。</string>
+    <string name="c54_tap_start_chat_on_k">点按以在 K 上开始聊天。</string>
+    <string name="c54_stop_recording">停止录音</string>
+    <string name="c54_send_voice_message">发送语音消息</string>
+</resources>

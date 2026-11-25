@@ -143,6 +143,11 @@ class AddressBookManager @Inject constructor(
         val wallet = walletAddress?.let(::normalize)?.takeIf { it.isNotEmpty() }
         if (wallet == null) {
             publish(Book(null, emptyList(), emptyMap()))
+            // signed out: the last account's assigned photos must not keep showing (iOS audit
+            // 2026-11-24 #17)
+            photoCache.evictAll()
+            photolessAddresses.clear()
+            photoVersion++
             return null
         }
         val stored = readEntries(wallet)
@@ -300,26 +305,29 @@ class AddressBookManager @Inject constructor(
 
     /** The photo you assigned to [address], if any. */
     fun photo(address: String?): android.graphics.Bitmap? {
-        if (address.isNullOrBlank()) return null
+        // no account, no assigned photos (iOS audit 2026-11-24 #17)
+        if (address.isNullOrBlank() || book.wallet == null) return null
         val normalized = normalize(address)
         if (normalized in photolessAddresses) return null
+        // Keyed by the address (the cache is emptied when the wallet changes), so a cached photo
+        // costs no file path: building one hashes the address on every avatar drawn while
+        // scrolling (iOS 2026-11-24, CLAUDE.md "Smooth scrolling").
+        photoCache.get(normalized)?.let { return it }
         val file = photoFile(normalized) ?: return null
-        photoCache.get(file.path)?.let { return it }
         val bitmap = if (file.exists()) decodePhotoFile(file) else null
         if (bitmap == null) {
             photolessAddresses.add(normalized)
             return null
         }
-        photoCache.put(file.path, bitmap)
+        photoCache.put(normalized, bitmap)
         return bitmap
     }
 
     /** [photo] when it is already decoded in memory, else null - never touches the disk, so a
      *  row can show it on its first frame and leave the decode to a background thread. */
     fun cachedPhoto(address: String?): android.graphics.Bitmap? {
-        if (address.isNullOrBlank()) return null
-        val file = photoFile(normalize(address)) ?: return null
-        return photoCache.get(file.path)
+        if (address.isNullOrBlank() || book.wallet == null) return null
+        return photoCache.get(normalize(address))
     }
 
     /**
@@ -424,7 +432,7 @@ class AddressBookManager @Inject constructor(
             tmp.writeBytes(jpeg)
             if (!tmp.renameTo(file)) { file.delete(); tmp.renameTo(file) }
         }.onFailure { Log.w(TAG, "Could not save an Address Book photo", it) }
-        photoCache.remove(file.path)
+        photoCache.remove(normalizedAddress)
         photolessAddresses.remove(normalizedAddress)
         photoVersion++
     }
@@ -433,7 +441,7 @@ class AddressBookManager @Inject constructor(
         val file = photoFile(normalizedAddress) ?: return
         if (!file.exists()) return
         file.delete()
-        photoCache.remove(file.path)
+        photoCache.remove(normalizedAddress)
         photolessAddresses.remove(normalizedAddress)
         photoVersion++
     }

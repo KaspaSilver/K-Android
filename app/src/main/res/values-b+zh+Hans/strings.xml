@@ -69,8 +69,6 @@
     <string name="delete_account">删除账户</string>
     <string name="delete_group">删除群组</string>
     <string name="done">完成</string>
-    <string name="each_transaction_temporarily_uses_2_kas">每笔交易临时使用约 2 KAS;约 1 KAS 会立即作为找零返回,因此只有少量网络手续费是真实成本。</string>
-    <string name="edit_kns_profile">编辑 KNS 个人资料</string>
     <string name="edit_account">编辑账户</string>
     <string name="error">错误</string>
     <string name="every_member_will_see_the_new">每个成员都会看到新名称。</string>
@@ -86,8 +84,6 @@
     <string name="import_account">导入账户</string>
     <string name="import_existing_account">导入现有账户</string>
     <string name="incoming_notifications">传入通知</string>
-    <string name="kns_domains">你的域名</string>
-    <string name="contact_kns_domains">KNS 域名</string>
     <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K 需要连接到一个节点。您希望如何连接?</string>
     <string name="kaspa_explorer">Kaspa 浏览器</string>
@@ -97,14 +93,9 @@
     <string name="manage_addresses">管理地址</string>
     <string name="max">最大</string>
     <string name="message">信息</string>
-    <string name="more_info">更多信息</string>
     <string name="name">名称</string>
     <string name="next">下一步</string>
     <string name="no_conversations_yet">暂无会话</string>
-    <string name="no_domains_yet">还没有域名。</string>
-    <string name="send_domain">发送域名</string>
-    <string name="asset_id">资产ID</string>
-    <string name="primary_domain">主要域名</string>
     <string name="set_as_primary">设为主名称</string>
     <string name="no_hidden_addresses">没有隐藏的地址。</string>
     <string name="no_hidden_users_in_this_group">此群组中没有隐藏的用户。</string>
@@ -152,7 +143,6 @@
     <string name="show_more">显示更多</string>
     <string name="show_qr_code">显示二维码</string>
     <string name="skip">跳过</string>
-    <string name="some_changes_failed_to_save">部分更改未能保存:</string>
     <string name="start_a_new_chat_by_adding">添加联系人以开始新聊天</string>
     <string name="status">状态</string>
     <string name="tap_an_address_below_to_swap">点击下面的地址即可从该地址兑换</string>
@@ -197,7 +187,6 @@
     <string name="created">创建时间</string>
     <string name="customization">自定义</string>
     <string name="diagnostics">诊断</string>
-    <string name="discord">Discord</string>
     <string name="discover_addresses">发现地址</string>
     <string name="email">邮箱</string>
     <string name="explorer">浏览器</string>
@@ -206,7 +195,6 @@
     <string name="ip_address_book">IP 地址簿</string>
     <string name="indexer">索引器</string>
     <string name="info">信息</string>
-    <string name="kns_profile">KNS 简介</string>
     <string name="kaspa_explorer_api">Kaspa Explorer API</string>
     <string name="kaspa_node">Kaspa 节点</string>
     <string name="default_recommended">默认（推荐）</string>
@@ -221,7 +209,6 @@
     <string name="protocol">协议</string>
     <string name="push_notifications">推送通知</string>
     <string name="reconnect">重新连接</string>
-    <string name="redirect">重定向</string>
     <string name="refresh_pool">刷新连接池</string>
     <string name="reply">回复</string>
     <string name="retry_send">重新发送</string>
@@ -234,20 +221,16 @@
     <string name="storage">存储</string>
     <string name="on_this_device">在此设备上</string>
     <string name="cloud_storage">云存储</string>
-    <string name="submitting_commit_transaction">正在发送提交交易...</string>
-    <string name="submitting_reveal_transaction">正在发送揭示交易...</string>
     <string name="support_email">支持邮箱</string>
     <string name="telegram">Telegram</string>
     <string name="total">总计</string>
     <string name="verified">已验证</string>
-    <string name="verifying_new_ownership_on_chain_this">正在链上验证新所有权(可能需要一分钟)...</string>
     <string name="version">版本</string>
     <string name="vibration">振动</string>
     <string name="view_profile">查看资料</string>
     <string name="view_seed_phrase">查看 12 或 24 个单词</string>
     <string name="view_in_explorer">在浏览器中查看</string>
     <string name="website">网站</string>
-    <string name="x">X</string>
     <string name="language">语言</string>
     <string name="system_default">系统</string>
     <string name="welcome_to_kachat">欢迎使用 K</string>
@@ -282,27 +265,16 @@
     <string name="mark_as_read">标记为已读</string>
     <string name="copy_link">复制链接</string>
     <string name="open_link">打开链接</string>
-    <string name="kaspa_qr_or_domain">kaspa:qr... 或域名</string>
     <!-- 5.2 name services (iOS df23b6f, 09e0403, 718724b, 9858bd1) -->
     <string name="x_handle">X手柄</string>
     <string name="discord_user_id">不一致的用户 ID</string>
     <string name="redirect_url">重定向网址</string>
     <string name="none_yet">暂无</string>
-    <string name="customize_profile">自定义资料</string>
-    <string name="settling">确认中</string>
     <string name="kachat_profile_coming_body">.kachat 名称即将推出。领取后，你可以在这里设置头像、横幅、简介和链接——这就是 K 在各处展示的你。</string>
     <string name="kachat_name_section">.kachat 名称</string>
-    <string name="could_not_reach_service">无法连接 %1$s。下拉重试。</string>
-    <string name="no_names_yet">还没有 %1$s 名称。</string>
     <!-- 5.2 name lookups (iOS a0dbc15, 79b6ac8, 9858bd1) -->
-    <string name="no_tld_domain_found">未找到 %1$s 域名</string>
-    <string name="looking_up_domain">正在查找域名...</string>
-    <string name="looking_up">正在查找...</string>
     <string name="no_domain">无域名</string>
-    <string name="other_domains">其他域名</string>
-    <string name="not_registered">未注册</string>
     <string name="couldnt_check">无法检查</string>
-    <string name="kaspa_address_or_domain">Kaspa 地址或域名</string>
     <!-- Public Chats select (iOS e08c4cc) -->
     <!-- Connection Settings tabs (iOS ee01f81) -->
     <string name="connection_tab_indexer">索引器</string>
@@ -313,7 +285,6 @@
     <string name="coming_soon">即将推出</string>
     <string name="not_available_on_this_network">此网络不可用</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
-    <string name="km_no_names">还没有 .kachat 名称</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">完整的新手导览：钱包、聊天、付款等。</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -336,7 +307,6 @@
     <!-- Realized P&L, fees spent, Add Chatting Address (iOS 61eff0f/5e75c89) -->
     <!-- Receive / chatting address QR text (iOS 8bcae2f) -->
     <!-- Account discovery finds .k and .kaspa names (iOS 7a5b157) -->
-    <string name="chatting_picker_other_names_count">.k 和 .kaspa 名称（%1$d）</string>
     <!-- Message Requests and Private chats (iOS f7ca401/ba1b2e3/76faa97/74bd52c) -->
     <string name="message_requests">消息请求</string>
     <string name="message_requests_row_sub">有人和群组在等你回复</string>
@@ -471,7 +441,6 @@
     <string name="chats_new_chat">新聊天</string>
     <string name="chats_new_group_chat">新群聊</string>
     <string name="chats_new_chat_subtitle">通过地址或名称给某人发消息。</string>
-    <string name="qr_chatting_address_subtitle">用于聊天和获取 .kachat 域名。</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="utxo_selection">UTXO 选择</string>
     <string name="utxo_selection_caption">选择这次发送要花费哪些币。</string>
@@ -664,7 +633,6 @@
     <!-- New Chat / New Group: Address Book (iOS 1be4f6e) -->
     <string name="ab_add_count">添加（%1$d）</string>
     <string name="ab_add_members">添加成员</string>
-    <string name="ab_members_footer">从联系人中选择，或通过 Kaspa 地址或域名添加任何人。</string>
     <string name="ab_members_intro">向群组添加成员。作为群组管理员，由你管理成员。</string>
     <string name="ab_members_empty">还没有成员。从联系人中添加，或在下方通过地址添加。</string>
     <string name="ab_actions_a11y">添加、导入或导出</string>
@@ -704,17 +672,8 @@
     <string name="kn_registration_not_open">名称正在迁移到新的注册表。新名称可从 %1$s 起认领。</string>
     <string name="kn_ev_imported">已迁移到新注册表</string>
     <!-- .kachat first: domains in every address field, Other domains, expired-name banner (iOS 6ac48a7) -->
-    <string name="enter_kaspa_address_or_domain_kachat_first">输入 Kaspa 地址(kaspa:...)或域名(例如 alice.kachat)。会先查找 .kachat 名称。</string>
-    <string name="search_contacts_or_address_or_domain">搜索联系人、地址或域名</string>
-    <string name="no_contacts_yet_paste_address_or_domain">你还没有联系人。在上方粘贴地址或域名来邀请他人。</string>
-    <string name="no_contacts_match_paste_address_or_domain">没有匹配的联系人。粘贴地址或域名来邀请新的人。</string>
     <string name="their_profile_kachat_name_address">其个人资料、.kachat 名称和地址。</string>
-    <string name="finds_addresses_balance_or_domain">查找有余额或域名的地址。</string>
-    <string name="enter_kaspa_address_or_domain_short_kachat_first">输入 Kaspa 地址(kaspa:...)或域名。会先查找 .kachat 名称。</string>
-    <string name="other_domains_title">其他域名</string>
-    <string name="chatting_picker_intro_any_name_kachat">如果这些单词已在其他地址上拥有你的身份（.kachat、.kas、.k 或 .kaspa 域名，或聊天余额），请在此选择。仅显示有余额或域名的地址。</string>
     <string name="chatting_picker_kachat_names_count">.kachat 名称(%1$d)</string>
-    <string name="chatting_picker_kas_names_count">.kas 名称(%1$d)</string>
     <!-- Bare names resolve to .kachat only (iOS 5a5122d) -->
     <string name="kachat_names_not_live_here">.kachat 名称尚未在此网络上线</string>
     <!-- Nextcloud sync carries portfolios -->
@@ -839,8 +798,6 @@
     <string name="quantum_safe">抗量子</string>
     <string name="key_revealed_by_a_spend">密钥已因支出而公开</string>
     <!-- KNS domain transfers and quantum-safe (script) addresses (iOS 2a8ca5a) -->
-    <string name="kns_transfer_quantum_source">KNS 无法把域名移出抗量子地址：KNS 通过公钥识别域名所有者，而抗量子地址会隐藏其公钥。</string>
-    <string name="kns_transfer_to_script_address">.kas 域名不能发送到抗量子地址或其他脚本地址：KNS 将再也无法把它移出。请改为发送到普通地址。</string>
     <string name="quantum_next_address_failed">无法准备下一个地址。请重试。</string>
     <!-- Address Visibility: a card per chain (iOS d7e6dd1) -->
     <string name="quantum_addresses">抗量子地址</string>
@@ -891,7 +848,6 @@
     <string name="pr_paid_to">付款至</string>
     <string name="ab_empty_title">还没有联系人</string>
     <string name="settings_title">设置</string>
-    <string name="confirm_sending_domain">确认发送此域名</string>
     <string name="confirm_deleting_account">确认删除此账户</string>
     <string name="group_invites">群组邀请</string>
     <string name="group_invite">群组邀请</string>
@@ -936,7 +892,6 @@
     <string name="welcome_paying_for_messages">消息费用</string>
     <string name="welcome_paying_for_messages_caption">每发送一条消息，都会从这个地址扣除极少量 Kaspa。1 Kaspa 大约可发送 500 条消息。</string>
     <string name="welcome_what_others_can_see">别人能看到什么</string>
-    <string name="welcome_what_others_can_see_caption">任何人都能在 Kaspa 网络上看到这个地址及其余额，但无法读取你的消息。请仅将它用于聊天和 .kachat 域名。</string>
 
     <!-- Localized literals moved out of Kotlin (parity with the iPhone app) -->
     <string name="backup_your_account_to_prevent_loss_of">请备份账户，以免丢失资金</string>
@@ -1099,7 +1054,6 @@
     <string name="anyone_with_this_addresss_private_key_can">任何拥有此地址私钥的人都能动用其中的资金。请绝不要告诉任何人。</string>
     <string name="tap_to_reveal_private_key">轻点显示私钥</string>
     <string name="could_not_load_transactions">无法加载交易。</string>
-    <string name="contains_domain">包含域名</string>
     <string name="private_key_hex_copied_clipboard_will_clear">私钥 Hex 已复制。剪贴板将在 30 秒后清除。</string>
     <string name="cache">缓存</string>
     <string name="failed_to_export_diagnostics">导出诊断失败。</string>
@@ -1257,7 +1211,6 @@
     <string name="hr_min">%1$d 小时 %2$d 分钟</string>
     <string name="min">%1$d 分钟</string>
     <string name="could_not_check_addresses_try_again_when">无法检查地址。请在连接后重试。</string>
-    <string name="no_addresses_with_a_balance_or_domain">未找到有余额或域名的地址。</string>
     <string name="hidden">已隐藏（%1$d）</string>
     <string name="address_hidden_re_enable_it_in_address">地址已隐藏。可在“地址可见性”中重新启用。</string>
     <string name="this_address_cant_be_hidden">此地址无法隐藏。</string>
@@ -1306,12 +1259,6 @@
     <string name="couldnt_load_the_coins">无法加载币。</string>
     <string name="these_words_are_invalid_double_check_the">这些单词无效。请仔细检查：最后一个单词包含校验和，只要错一个单词就无法通过验证。</string>
     <string name="invalid_words_please_enter_12_or_24">单词无效。请输入 12 或 24 个单词。</string>
-    <string name="failed_to_set_primary_domain">无法设置主要域名</string>
-    <string name="invalid_recipient_address">接收地址无效</string>
-    <string name="recipient_must_be_different_from_your_own">接收方必须不同于你自己的钱包</string>
-    <string name="recipient_address_is_on_the_wrong_network">接收地址所在网络不正确</string>
-    <string name="invalid_recipient">接收方无效</string>
-    <string name="transfer_failed">转移失败</string>
     <string name="retry_failed">重试失败</string>
     <string name="saving_keep_the_card_still">正在保存。请保持卡片不动。</string>
     <string name="reading_keep_the_card_still">正在读取。请保持卡片不动。</string>
@@ -1349,8 +1296,6 @@
     <string name="resynced_one_message_n_chats">已在 %1$d 个聊天中重新同步 1 条接收的消息。</string>
     <string name="resynced_n_messages_one_chat">已在 1 个聊天中重新同步 %1$d 条接收的消息。</string>
     <string name="resynced_n_messages_n_chats">已在 %2$d 个聊天中重新同步 %1$d 条接收的消息。</string>
-    <string name="found_one_address_balance_domain">找到 1 个有余额或域名的地址。</string>
-    <string name="found_n_addresses_balance_domain">找到 %1$d 个有余额或域名的地址。</string>
     <string name="resync_one_chat">重新同步 1 个聊天</string>
     <string name="resync_n_chats">重新同步 %1$d 个聊天</string>
     <string name="one_day_ago">1 天前</string>
@@ -1448,9 +1393,6 @@
     <string name="not_sent_you_switched_accounts">未发送：发送前你切换了账户。</string>
     <string name="play_it_again">再走一次</string>
     <string name="couldnt_look_up_name_try_again">目前无法查询 %1$s。请稍后再试。</string>
-    <string name="kns_reveal_will_finish_on_next_open">两笔交易中的第一笔已完成，但第二笔未完成。K 下次打开时会完成它。</string>
-    <string name="kns_transfer_fee_at_most_1_kas">域名转移手续费最多为 1 KAS。</string>
-    <string name="confirm_setting_this_primary_name">确认设置此主名称</string>
     <string name="this_is_the_public_half_of_this_address">这是此地址的公开部分，无法用它花费任何资金。</string>
     <string name="address_number_is_ready">地址 #%1$d 已准备好。</string>
     <string name="chess_menu_title">国际象棋</string>
@@ -1512,32 +1454,18 @@
     <string name="chess_invite_sent">已发送国际象棋邀请</string>
     <string name="chess_invited_you">邀请你下一盘国际象棋</string>
     <string name="more_reactions">更多回应</string>
-    <string name="confirm_changes">确认更改</string>
-    <string name="uploading_avatar">正在上传头像...</string>
-    <string name="uploading_banner">正在上传横幅...</string>
-    <string name="profile_field_removed">%1$s（已移除）</string>
     <string name="create_group">创建群组</string>
     <string name="create_group_fee_estimate">预计网络手续费 ≈ %1$s %2$s，共 %3$d 笔交易。</string>
     <string name="create_chat">创建聊天</string>
     <string name="add_to_group">添加到群组</string>
     <string name="edit_name">编辑名称</string>
     <string name="domain_label">领域</string>
-    <string name="primary_badge">主要</string>
     <string name="notification_mode_off">关闭</string>
     <string name="notification_mode_no_sound">静音</string>
     <string name="notification_mode_sound">声音</string>
     <string name="notification_mode_default">默认（%1$s）</string>
-    <string name="domain_transfer_sending">正在发送 %1$s</string>
-    <string name="domain_transfer_footer">域名转移需要两笔交易，所以要花一点时间。完成前请保持 App 打开。</string>
-    <string name="domain_transfer_stage_preparing">正在准备转让</string>
-    <string name="domain_transfer_stage_fee">正在计算手续费</string>
-    <string name="domain_transfer_stage_commit">正在发送提交交易</string>
-    <string name="domain_transfer_stage_reveal">正在发送揭示交易</string>
-    <string name="domain_transfer_stage_verifying">正在确认新所有者</string>
-    <string name="domain_transfer_stage_working">处理中</string>
     <string name="checking_address_n">正在检查地址 #%1$d</string>
     <string name="n_found_so_far">目前已找到 %1$d 个</string>
-    <string name="no_addresses_with_balance_or_domain_yet">还没有有余额或域名的地址</string>
     <string name="checks_the_first_thousand_addresses">无论中间有无空档，都会检查前一千个地址，之后只要还能找到就继续检查。</string>
     <string name="first_sync_all_set">一切就绪</string>
     <string name="first_sync_up_to_date">你的聊天和历史记录都是最新的。</string>
@@ -1567,9 +1495,6 @@
     <string name="chess_notif_lost_on_time">♟️ 超时判负</string>
     <string name="chess_notif_resigned">♟️ 在国际象棋对局中认输</string>
     <string name="fee_label">费用</string>
-    <plurals name="kns_profile_changes_count">
-        <item quantity="other">%d 项更改。每项都会作为单独的链上交易从你的聊天地址提交：</item>
-    </plurals>
     <plurals name="create_group_and_invite">
         <item quantity="other">要创建“%1$s”并邀请 %2$d 位成员吗？</item>
     </plurals>
@@ -1585,12 +1510,10 @@
     <string name="payment_notice_fee_from_chatting_address">你的聊天地址还会支付 %1$s KAS，用于告知 %2$s 这笔付款。</string>
     <string name="recording_failed_please_try_again">录音失败，请重试。</string>
     <string name="message_needs_too_many_coins">这条消息在一笔交易中需要的币太多。请在你的聊天地址上使用 Compound UTXOs，然后重试。</string>
-    <string name="use_their_domain_name">使用对方的域名</string>
     <string name="show_request_as_qr">以二维码显示请求</string>
     <string name="pr_qr_scan_to_pay_in_kachat">用手机相机扫描，即可在 K 中付款，所有信息都已填好。</string>
     <string name="set_as_name">设为名称</string>
     <string name="their_name">对方名称</string>
-    <string name="get_a_kachat_name">获取 .kachat 名称</string>
     <string name="composer_gif_subtitle">从你的图库发送动图 GIF。</string>
     <string name="group_composer_gif_subtitle">从你的图库向群组发送动图 GIF。</string>
     <string name="gif_quality">GIF 画质</string>
@@ -1620,10 +1543,6 @@
     <string name="token_received_title">已收到 %1$s</string>
     <string name="token_received_on_one">到你的 %1$s</string>
     <string name="token_received_on_many">到你的 %1$d 个地址</string>
-    <string name="address_tab_domains">域名</string>
-    <string name="address_domains_none">此地址没有 %1$s 名称。</string>
-    <string name="address_domains_one">1 个域名</string>
-    <string name="address_domains_couldnt_load">无法加载</string>
     <string name="connection_not_set">未设置</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">复制分享链接</string>
@@ -1739,4 +1658,6 @@
     <string name="history_moved">已转移</string>
     <string name="history_to_address">至 %1$s</string>
     <string name="history_change_to_address">找零 %1$s 至 %2$s</string>
+    <string name="cycle_hint_next_page">切换到下一页</string>
+    <string name="cycle_hint_next_feed">切换到下一个动态</string>
 </resources>

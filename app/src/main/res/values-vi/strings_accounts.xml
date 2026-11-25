@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Account switcher and Connection Status (iOS 8cb4c88e), agent C. -->
+<resources>
+    <string name="accounts_title">Tài khoản</string>
+    <string name="add_another_account">Thêm tài khoản khác</string>
+    <string name="add_another_account_confirm_title">Thêm tài khoản khác?</string>
+    <string name="add_another_account_confirm_message">Bạn sẽ đến màn hình tài khoản để tạo hoặc nhập một tài khoản. Tài khoản này vẫn được lưu trên điện thoại.</string>
+    <string name="recovery_phrase_needed">Cần cụm từ khôi phục</string>
+    <string name="recovery_phrase_needed_message">Khóa của tài khoản này không có trên điện thoại. Hãy đăng xuất, rồi đăng nhập từ màn hình tài khoản bằng cụm từ khôi phục.</string>
+    <string name="account_signed_in">Đã đăng nhập</string>
+    <string name="switch_account">Chuyển tài khoản</string>
+    <string name="node_status">Trạng thái nút</string>
+    <string name="indexer_status">Trạng thái indexer</string>
+    <string name="indexer_status_checking">Đang kiểm tra…</string>
+</resources>

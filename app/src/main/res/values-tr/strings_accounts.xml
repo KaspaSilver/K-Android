@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Account switcher and Connection Status (iOS 8cb4c88e), agent C. -->
+<resources>
+    <string name="accounts_title">Hesaplar</string>
+    <string name="add_another_account">Başka Hesap Ekle</string>
+    <string name="add_another_account_confirm_title">Başka hesap eklensin mi?</string>
+    <string name="add_another_account_confirm_message">Oluşturmak ya da içe aktarmak için hesaplar ekranına gideceksin. Bu hesap bu telefonda kayıtlı kalır.</string>
+    <string name="recovery_phrase_needed">Kurtarma İfadesi Gerekli</string>
+    <string name="recovery_phrase_needed_message">Bu hesabın anahtarları bu telefonda değil. Çıkış yap, sonra hesaplar ekranından kurtarma ifadesiyle giriş yap.</string>
+    <string name="account_signed_in">Giriş yapıldı</string>
+    <string name="switch_account">Hesap Değiştir</string>
+    <string name="node_status">Düğüm Durumu</string>
+    <string name="indexer_status">İndeksleyici Durumu</string>
+    <string name="indexer_status_checking">Kontrol ediliyor…</string>
+</resources>

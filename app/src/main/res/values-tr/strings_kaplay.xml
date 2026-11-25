@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">Henüz biten turnuva yok.</string>
     <string name="kaplay_no_finished_tournaments_this_month">Bu ay henüz biten turnuva yok.</string>
     <string name="kaplay_tab_leaderboard">Lider Tablosu</string>
+    <string name="kp_640de0cb0b2c" formatted="false">Kaydın: %s galibiyet, %s mağlubiyet</string>
+    <string name="kp_5d12bd53552c" formatted="false">Oyna</string>
+    <string name="kp_3ab5950b358f" formatted="false">Katılan ilk kişiyle ya da kodla bir arkadaşınla oyna.</string>
+    <string name="kp_85e2145e7cad" formatted="false">Sekiz oyuncu, tek eleme.</string>
+    <string name="kp_636935a0b48d" formatted="false">Beş bot, seviye 1\'den 5\'e. Sonrakinin kilidini açmak için birini yen.</string>
+    <string name="kp_6fba758f3243" formatted="false">Sonraki liderlik tablosuna geçer</string>
+    <string name="kp_c0fc86977802" formatted="false">Rakibin aldıkları</string>
+    <string name="kp_48cb744b4728" formatted="false">Senin aldıkların</string>
+    <string name="kp_76ccff916d06" formatted="false">İletişim isteği</string>
+    <string name="kp_73eb05867f7b" formatted="false">Süre bitti, kaybetti</string>
+    <string name="kp_6eac413a29b7" formatted="false">Terk etti</string>
+    <string name="kp_8a4d6885363d" formatted="false">Oyunu kabul etti</string>
+    <string name="kp_012794aeafb0" formatted="false">Oyunu reddetti</string>
+    <string name="kp_0ac72bc536b1" formatted="false">Satranç daveti</string>
+    <string name="kp_4bb26afc82d3" formatted="false">Bu ay henüz biten 1v1 oyunu yok.</string>
+    <string name="kp_c56c7d117a52" formatted="false">Bu ay henüz biten turnuva yok.</string>
 </resources>

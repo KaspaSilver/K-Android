@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">نام‌های کاربری شما</string>
+    <string name="names54_no_username_found">نام کاربری پیدا نشد</string>
+    <string name="names54_use_their_username">استفاده از نام کاربری او</string>
+    <string name="names54_kaspa_address_or_username">آدرس Kaspa یا نام کاربری</string>
+    <string name="names54_enter_address_or_username_example">یک آدرس Kaspa (kaspa:...) یا نام کاربری وارد کنید (مثلاً alice.kachat).</string>
+    <string name="names54_members_footer">افرادی را از مخاطبانتان انتخاب کنید، یا هر کسی را با آدرس Kaspa یا نام کاربری اضافه کنید.</string>
+    <string name="names54_finds_addresses_balance_or_username">آدرس‌هایی را که موجودی یا نام کاربری دارند پیدا می‌کند.</string>
+    <string name="names54_no_addresses_balance_or_username_found">آدرسی با موجودی یا نام کاربری پیدا نشد.</string>
+    <string name="names54_found_one_address_balance_username">۱ آدرس با موجودی یا نام کاربری پیدا شد.</string>
+    <string name="names54_found_n_addresses_balance_username">%1$d آدرس با موجودی یا نام کاربری پیدا شد.</string>
+    <string name="names54_no_addresses_balance_or_username_yet">هنوز آدرسی با موجودی یا نام کاربری نیست</string>
+    <string name="names54_contains_username">شامل نام کاربری</string>
+    <string name="names54_get_a_username">دریافت نام کاربری</string>
+    <string name="names54_qr_chatting_address_subtitle">برای گفت‌وگو و گرفتن نام کاربری استفاده کنید.</string>
+    <string name="names54_no_usernames_yet">هنوز نام کاربری ندارید</string>
+    <string name="names54_claim_a_username">گرفتن نام کاربری</string>
+    <string name="names54_discord_invite_not_found">دعوت‌نامهٔ Discord با نام %1$s وجود ندارد. از کد دعوت یک سرور استفاده کنید، مثل discord.gg/abc123: حساب‌های Discord را نمی‌شود با نام کاربری پیدا کرد.</string>
+</resources>

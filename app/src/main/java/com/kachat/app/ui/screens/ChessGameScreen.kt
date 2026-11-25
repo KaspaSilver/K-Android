@@ -868,8 +868,9 @@ private fun CapturedPiecesBar(summary: com.kachat.app.util.ChessGameSummary, myC
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        CapturedGroup(pieces = takenFromMe, pieceColor = myColor, label = "They captured")
-        CapturedGroup(pieces = takenByMe, pieceColor = myColor.opposite, label = "You captured")
+        // Translated, not the English as is (iOS 518fdc8c, audit 2026-11-24 #40).
+        CapturedGroup(pieces = takenFromMe, pieceColor = myColor, label = com.kachat.app.util.ChessText.string("They captured"))
+        CapturedGroup(pieces = takenByMe, pieceColor = myColor.opposite, label = com.kachat.app.util.ChessText.string("You captured"))
     }
 }
 
@@ -953,7 +954,7 @@ private fun ChessChatRow(message: MessageEntity, onRetry: () -> Unit) {
             }
         }
         Text(
-            chessChatPreviewText(message),
+            chessChatPreviewText(message, androidx.compose.ui.platform.LocalContext.current),
             color = if (isSent) Color.White else LocalAppColors.current.textPrimary,
             fontSize = 13.sp,
             modifier = Modifier
@@ -981,11 +982,12 @@ private fun ChessDeliveryIcon(status: String) {
 /** Condensed, text-only rendering for the mini history - unlike the normal message bubbles,
  *  non-text content (photos/voice/payments) collapses to a short label rather than fully
  *  rendering, to keep this secondary surface lightweight. */
-private fun chessChatPreviewText(message: MessageEntity): String {
-    if (message.type == MessageProtocol.TYPE_PAY) return "💰 Payment"
-    if (message.type == MessageProtocol.TYPE_HANDSHAKE) return "👋 Handshake"
+private fun chessChatPreviewText(message: MessageEntity, context: android.content.Context): String {
+    // translated labels (iOS 518fdc8c, audit 2026-11-24 #40)
+    if (message.type == MessageProtocol.TYPE_PAY) return "💰 " + context.getString(R.string.payment)
+    if (message.type == MessageProtocol.TYPE_HANDSHAKE) return "👋 " + com.kachat.app.util.ChessText.string("Handshake")
     val unwrapped = MessageReply.parseOrNull(message.plaintextBody)?.text ?: message.plaintextBody
-    if (VoiceMessage.parseOrNull(unwrapped) != null) return "🎤 Voice message"
-    if (ImageMessage.parseOrNull(unwrapped) != null) return "📷 Photo"
+    if (VoiceMessage.parseOrNull(unwrapped) != null) return "🎤 " + context.getString(R.string.voice_message)
+    if (ImageMessage.parseOrNull(unwrapped) != null) return "📷 " + context.getString(R.string.photo)
     return unwrapped ?: ""
 }

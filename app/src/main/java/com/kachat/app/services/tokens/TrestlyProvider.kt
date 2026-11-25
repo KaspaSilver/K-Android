@@ -63,6 +63,8 @@ class TrestlyApproval(
     val seen: JsonObject?,
     /** The connected address's name. */
     val from: String,
+    /** Asked from K's own Swap screen, not by Trestly's site (iOS 518fdc8c `native`). */
+    val native: Boolean = false,
 ) {
     val id: String = UUID.randomUUID().toString()
     private val answer = CompletableDeferred<Boolean>()
@@ -109,6 +111,7 @@ class TrestlyProviderFactory @Inject constructor(
     internal val addressActivityNotifier: AddressActivityNotifier,
     internal val notificationCenter: GlobalNotificationCenterStore,
     internal val settings: AppSettingsRepository,
+    internal val trade: TrestlyTrade,
     @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context,
 ) {
     fun make(target: TrestlyTarget, siteUrl: String): TrestlyProvider = TrestlyProvider(target, siteUrl, this)
@@ -387,10 +390,9 @@ class TrestlyProvider internal constructor(
     // Trades (Trestly's own wallet logic, KusdtCore.wallet)
 
     /**
-     * A swap, a deposit or a withdrawal (iOS `trade`): Trestly's code checks the pool and quotes
-     * (`prepare`), KaChat shows it ([approval]), and only on Approve hands it this address's key to
-     * build, sign and send (`execute`). A pool that moved to a worse quote comes back as a requote,
-     * prepared again and shown again; their code never goes below the site's minimum.
+     * A swap, a deposit or a withdrawal from the page (iOS 518fdc8c `trade`): [TrestlyTrade.run]
+     * (Trestly's code prepares, K asks in the Approve sheet, then builds, signs and sends), one at a
+     * time, and not again for a moment after a Decline. A swap that went through shows its banner.
      */
     private suspend fun trade(method: String, params: JsonElement?): JsonElement {
         if (closed) throw ProviderError(Code.UNAUTHORIZED, "K closed this page.")
@@ -400,176 +402,21 @@ class TrestlyProvider internal constructor(
         declinedAt?.let { if (System.currentTimeMillis() - it < DECLINE_PAUSE_MS) throw ProviderError(Code.REJECTED, "You declined in K a moment ago.") }
         tradeInFlight = true
         try {
-            heldMinutes(target.address)?.let { minutes ->
-                throw ProviderError(Code.BUSY, "Your last trade from this address gave no answer and may still go through. Check the address's history. K takes trades from it again once that one shows on the network, or in about $minutes min.")
+            val done = try {
+                deps.trade.run(method, params, target, ask = { ask(it) }, isClosed = { closed })
+            } catch (e: ProviderError) {
+                if (e.code == Code.REJECTED) declinedAt = System.currentTimeMillis()
+                throw e
             }
-            val owner = Kusdt.schnorrOwner(target.address)
-                ?: throw ProviderError(Code.FAILED, "K can't trade from this kind of address.")
-            val paramsJSON: JsonElement = params ?: JsonNull.INSTANCE
-            val wallet = JsonObject().apply {
-                addProperty("network", networkName)
-                addProperty("address", target.address)
-                addProperty("ownerHex", Kusdt.hex(owner))
-                addProperty("apiUrl", deps.settings.trestlyApiUrl.first().trim())
-            }
-            fun prepareRequest() = JsonObject().apply {
-                addProperty("method", method)
-                add("params", paramsJSON.deepCopy())
-                add("wallet", wallet.deepCopy())
-            }
-            var prepared = walletCall("prepare", prepareRequest())
-            var seen: JsonObject? = null
-
-            while (true) {
-                val approved = ask(TrestlyApproval(method, prepared, seen, target.label))
-                if (!approved || closed) {
-                    declinedAt = System.currentTimeMillis()
-                    throw ProviderError(Code.REJECTED, "You declined in K. Nothing was sent.")
-                }
-
-                // the address's coins as they were before the trade: if it gives no answer, these
-                // are held, and the hold ends early once one of them is spent (the trade landed)
-                val coinsBefore = try {
-                    withContext(Dispatchers.IO) { deps.nodePoolManager.getUtxosByAddressesFromNode(listOf(target.address)) }
-                        .map { it.outpoint }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    emptyList()
-                }
-
-                // the key goes into this one request only, never into `wallet`
-                val signing = wallet.deepCopy().apply { addProperty("secret", secretHex(owner)) }
-                val request = JsonObject().apply {
-                    addProperty("method", method)
-                    add("params", paramsJSON.deepCopy())
-                    add("wallet", signing)
-                    add("shownFeerate", prepared.get("feerate") ?: JsonNull.INSTANCE)
-                    add("acceptedFee", prepared.get("acceptedFee") ?: JsonNull.INSTANCE)
-                    if (method == "kusdt_removeLiquidity") {
-                        add("quoted", JsonObject().apply {
-                            add("kasOut", prepared.get("kasOut") ?: JsonNull.INSTANCE)
-                            add("tokensOut", prepared.get("tokensOut") ?: JsonNull.INSTANCE)
-                        })
-                    } else {
-                        add("quoted", prepared.get("quote") ?: JsonNull.INSTANCE)
-                    }
-                }
-                val done = try {
-                    walletCall("execute", request)
-                } catch (e: ProviderError) {
-                    if (e.maybeSent) {
-                        // it may have gone out: hold this address's coins and its trades (iOS,
-                        // audit 2026-11-21 #1)
-                        hold(target.address, coinsBefore)
-                        if (coinsBefore.isNotEmpty()) OutpointReservations.shared.reserve(coinsBefore)
-                        scope.launch {
-                            delay(REFRESH_AFTER_TRADE_MS)
-                            try { deps.tokenWallet.refresh() } catch (e: CancellationException) { throw e } catch (e: Exception) {}
-                        }
-                    }
-                    throw e
-                } finally {
-                    // the key leaves this function's hands whether execute answers, throws or
-                    // times out (iOS audit 2026-11-21 #7)
-                    signing.remove("secret")
-                    request.remove("wallet")
-                }
-
-                done.get("steps")?.takeIf { it.isJsonArray }?.asJsonArray?.forEach { step ->
-                    step.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.let { deps.addressActivityNotifier.markOwnTransaction(it.asString) }
-                }
-                // the coins it spent are held like a send's own (ten minutes), so a send from this
-                // address right after can't pick them (iOS audit, 2026-11-20)
-                val spent = done.get("inputs")?.takeIf { it.isJsonArray }?.asJsonArray
-                    ?.mapNotNull { e -> e.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString }
-                    ?.filter { it.length in 66..79 }
-                    .orEmpty()
-                if (spent.isNotEmpty()) {
-                    OutpointReservations.shared.reserve(spent.mapNotNull { key ->
-                        val txid = key.substringBeforeLast(':', "")
-                        val index = key.substringAfterLast(':', "").toIntOrNull()
-                        if (txid.length == 64 && index != null && index >= 0) Outpoint(transactionId = txid, index = index) else null
-                    })
-                }
-
-                if (done.get("requote")?.isJsonNull == false) {
-                    // The pool moved and pays less than approved: nothing was sent. Trestly's code
-                    // prepares it again from scratch, so the sheet shows the new quote with its own
-                    // warnings, fee and minimum check (iOS audit, 2026-11-20).
-                    seen = if (method == "kusdt_removeLiquidity") {
-                        JsonObject().apply {
-                            add("kasOut", prepared.get("kasOut") ?: JsonPrimitive("0"))
-                            add("tokensOut", prepared.get("tokensOut") ?: JsonPrimitive("0"))
-                        }
-                    } else {
-                        JsonObject().apply { add("quote", prepared.get("quote") ?: JsonPrimitive("0")) }
-                    }
-                    prepared = walletCall("prepare", prepareRequest())
-                    continue
-                }
-                val result = done.get("result")?.takeIf { it.isJsonObject }?.asJsonObject
-                    ?: throw ProviderError(Code.FAILED, "Trestly's pool code gave no result.")
-                result.get("txid")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString?.let { txid ->
-                    deps.addressActivityNotifier.markOwnTransaction(txid)
-                    if (method == "kusdt_swap") announceSwap(txid, prepared, result, done.get("fee"))
-                }
-                // TokenWallet looks again once the pool's new coins can be listed (iOS: 4 s)
-                scope.launch {
-                    delay(REFRESH_AFTER_TRADE_MS)
-                    try { deps.tokenWallet.refresh() } catch (e: CancellationException) { throw e } catch (e: Exception) {}
-                }
-                return result
-            }
+            if (method == "kusdt_swap") deps.trade.recordSwap(done, target)?.let { showBanner(it) }
+            return done.result
         } finally {
             tradeInFlight = false
         }
     }
 
-    /** This address's key as hex, for one execute: checked against the address (the account may
-     *  have changed since the page connected), the bytes wiped after. */
-    private suspend fun secretHex(owner: ByteArray): String = withContext(Dispatchers.Default) {
-        val unlocked: ByteArray? = try {
-            val index = target.spendingIndex
-            when {
-                index == null -> deps.walletManager.getPrivateKeyBytes()
-                WalletManager.isQuantumIndex(index) -> null
-                else -> deps.walletManager.getSpendingPrivateKeyBytes(index)
-            }
-        } catch (e: Exception) {
-            null
-        }
-        val secret = unlocked ?: throw ProviderError(Code.FAILED, "K couldn't unlock this address's key.")
-        try {
-            if (!Schnorr.publicKeyXOnly(secret).contentEquals(owner)) {
-                throw ProviderError(Code.FAILED, "K couldn't unlock this address's key.")
-            }
-            Kusdt.hex(secret)
-        } finally {
-            secret.fill(0)
-        }
-    }
-
-    /**
-     * A swap that went through (iOS `announceSwap`, owner's call 2026-11-20): a banner over the
-     * page, a line in Notifications (the bell; its tap opens Manage kUSDT), and the kUSDT side in
-     * that address's history. "Swapped" once the node shows it accepted; "Swap sent" when it went
-     * out and wasn't seen accepted in time (it may still be).
-     */
-    private fun announceSwap(txid: String, prepared: JsonObject, result: JsonObject, fee: JsonElement?) {
-        val amountIn = TrestlyApproval.number(prepared.get("amountIn")) ?: return
-        val amountOut = TrestlyApproval.number(result.get("amountOut")) ?: return
-        val bought = prepared.get("side")?.takeIf { it.isJsonPrimitive }?.asString == "buy"
-        val kas = "${KaspaUnit.plain(if (bought) amountIn else amountOut)} ${KaspaUnit.symbol}"
-        val kusdt = TokenAmount.amount(if (bought) amountOut else amountIn, WalletToken.KUSDT)
-        val confirmedElement = result.get("confirmed")
-        val confirmed = !(confirmedElement != null && confirmedElement.isJsonPrimitive && confirmedElement.asJsonPrimitive.isBoolean && !confirmedElement.asBoolean)
-        val text = tr(
-            if (confirmed) R.string.kp_swapped_x_for_y else R.string.kp_swap_sent_x_for_y,
-            if (bought) kas else kusdt,
-            if (bought) kusdt else kas,
-        )
-
+    /** "Swapped 10 KAS for 0.26 kUSDT" over the page for a few seconds. */
+    private fun showBanner(text: String) {
         bannerToken += 1
         val token = bannerToken
         _banner.value = text
@@ -577,124 +424,6 @@ class TrestlyProvider internal constructor(
             delay(BANNER_MS)
             if (bannerToken == token) _banner.value = null
         }
-        deps.notificationCenter.record(
-            "trestly-swap-$txid", TokenWallet.NOTIFICATION_SOURCE,
-            tr(if (confirmed) R.string.kp_swap_complete else R.string.kp_swap_sent),
-            text, System.currentTimeMillis(), WalletToken.KUSDT.id,
-        )
-        scope.launch {
-            deps.tokenWallet.noteSwap(
-                token = WalletToken.KUSDT, spendingIndex = target.spendingIndex, txid = txid,
-                units = if (bought) amountOut else amountIn, sold = !bought, fee = TrestlyApproval.number(fee),
-            )
-        }
-    }
-
-    /** One call into Trestly's code; its refusal becomes the provider's error (their message, their code). */
-    private suspend fun walletCall(function: String, request: JsonObject): JsonObject {
-        val answer = try {
-            deps.core.wallet(function, request)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: KusdtCore.CoreError.MaybeSent) {
-            throw ProviderError(Code.FAILED, maybeSentMessage(e.message ?: tr(R.string.kp_trestly_pool_code_no_answer)), maybeSent = true)
-        } catch (e: Exception) {
-            throw ProviderError(Code.FAILED, e.message ?: tr(R.string.kp_trestly_pool_code_no_answer))
-        }
-        val error = answer.get("error")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString
-        if (error != null) {
-            val code = answer.get("code")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.let {
-                try { it.asBigDecimal.intValueExact() } catch (e: ArithmeticException) { null }
-            } ?: Code.FAILED
-            val maybeSent = answer.get("maybeSent")?.let { it.isJsonPrimitive && it.asJsonPrimitive.isBoolean && it.asBoolean } == true
-            if (maybeSent) throw ProviderError(code, maybeSentMessage(error), maybeSent = true)
-            throw ProviderError(code, error)
-        }
-        return answer
-    }
-
-    private fun maybeSentMessage(why: String): String =
-        why + " " + tr(R.string.kp_trade_may_have_gone_through) + " " + tr(R.string.kp_check_address_history_before_trying_again)
-
-    // Trades that may have gone out
-
-    /** Minutes left on this address's hold, or null when it may trade: no hold, the hold ran out,
-     *  or a coin it had before is gone from the node (the earlier trade landed). iOS `heldMinutes`. */
-    private suspend fun heldMinutes(address: String): Int? {
-        val held = loadHolds()[address] ?: return null
-        val left = held.until - System.currentTimeMillis()
-        if (left <= 0) {
-            saveHolds(loadHolds() - address)
-            return null
-        }
-        if (held.outpoints.isNotEmpty()) {
-            val now = try {
-                withContext(Dispatchers.IO) { deps.nodePoolManager.getUtxosByAddressesFromNode(listOf(address)) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                null
-            }
-            if (now != null) {
-                val present = now.map { "${it.outpoint.transactionId.lowercase()}:${it.outpoint.index}" }.toSet()
-                if (held.outpoints.any { it !in present }) {
-                    saveHolds(loadHolds() - address)
-                    return null
-                }
-            }
-        }
-        return maxOf(1, ((left + 59_999L) / 60_000L).toInt())
-    }
-
-    /** A trade whose `execute` gave no answer may still land: its address takes no new trade until
-     *  one of the coins it held before is spent or [HOLD_MS] pass. Kept on the phone, so a relaunch
-     *  doesn't drop it (iOS `MaybeSentHold`). */
-    private fun hold(address: String, outpoints: List<Outpoint>) {
-        val keys = outpoints.map { "${it.transactionId.lowercase()}:${it.index}" }
-        saveHolds(loadHolds() + (address to MaybeSentHold(System.currentTimeMillis() + HOLD_MS, keys)))
-    }
-
-    private class MaybeSentHold(val until: Long, val outpoints: List<String>)
-
-    private fun holdsPrefs() = com.kachat.app.util.AppText.context()
-        .getSharedPreferences(HOLDS_PREFS, android.content.Context.MODE_PRIVATE)
-
-    /** `{address: {"until": ms, "outpoints": ["txid:index"]}}`, written by hand (no reflection,
-     *  so a minified build reads what an earlier one wrote). */
-    private fun loadHolds(): Map<String, MaybeSentHold> {
-        val json = holdsPrefs().getString(HOLDS_KEY, null) ?: return emptyMap()
-        return try {
-            val root = org.json.JSONObject(json)
-            val out = HashMap<String, MaybeSentHold>()
-            for (address in root.keys()) {
-                val entry = root.optJSONObject(address) ?: continue
-                val list = entry.optJSONArray("outpoints")
-                val outpoints = if (list == null) emptyList() else (0 until list.length()).mapNotNull { list.optString(it).takeIf { s -> s.isNotEmpty() } }
-                out[address] = MaybeSentHold(entry.optLong("until", 0L), outpoints)
-            }
-            out
-        } catch (e: Exception) {
-            emptyMap()
-        }
-    }
-
-    private fun saveHolds(all: Map<String, MaybeSentHold>) {
-        val now = System.currentTimeMillis()
-        val live = all.filterValues { it.until > now }
-        val editor = holdsPrefs().edit()
-        if (live.isEmpty()) {
-            editor.remove(HOLDS_KEY)
-        } else {
-            val root = org.json.JSONObject()
-            for ((address, held) in live) {
-                root.put(address, org.json.JSONObject().apply {
-                    put("until", held.until)
-                    put("outpoints", org.json.JSONArray(held.outpoints))
-                })
-            }
-            editor.putString(HOLDS_KEY, root.toString())
-        }
-        editor.apply()
     }
 
     /** Shows the approval and waits for Approve or Decline (closing the sheet declines). */
@@ -772,18 +501,13 @@ class TrestlyProvider internal constructor(
         val TRADE_METHODS = setOf("kusdt_swap", "kusdt_addLiquidity", "kusdt_removeLiquidity")
 
         private const val DECLINE_PAUSE_MS = 3_000L
-        private const val REFRESH_AFTER_TRADE_MS = 4_000L
-        /** How long an address that may have a trade out takes no new one (iOS `holdSeconds`). */
-        private const val HOLD_MS = 600_000L
-        private const val HOLDS_PREFS = "kachat_trestly_holds"
-        private const val HOLDS_KEY = "maybe_sent_holds"
         private const val BANNER_MS = 4_000L
         /** The page's wrapper sends at most 4096 characters of params; room for the rest. */
         private const val MAX_MESSAGE_CHARS = 16_384
 
         /** KaChat's running network as the provider names it. */
         val networkName: String
-            get() = if (KaspaNetwork.launch == KaspaNetwork.Type.MAINNET) "mainnet" else "testnet-10"
+            get() = TrestlyTrade.networkName
 
         private val gson = Gson()
 

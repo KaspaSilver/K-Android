@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">Продлите их до окончания льготных периодов, чтобы сохранить.</string>
-    <string name="kachat_expired_many_title">Истёк срок действия доменов .kachat: %1$d</string>
+    <string name="kachat_expired_many_title">Истёк срок ваших имён пользователя: %1$d</string>
     <string name="kachat_expired_one_body">Продлите %1$s до окончания льготного периода %2$s, чтобы сохранить его.</string>
-    <string name="kachat_expired_one_title">Срок действия одного из ваших доменов .kachat истёк</string>
+    <string name="kachat_expired_one_title">Срок одного из ваших имён пользователя истёк</string>
     <string name="kachat_names_on_address_hint">Имена, которые этот адрес получит или купит, появятся здесь после запуска имён .kachat.</string>
-    <string name="kachat_names_this_address_owns">Здесь показаны имена этого адреса.</string>
-    <string name="kachat_no_names_on_address">На этом адресе нет имён .kachat</string>
+    <string name="kachat_names_this_address_owns">Здесь показываются имена пользователя этого адреса.</string>
+    <string name="kachat_no_names_on_address">На этом адресе нет имён пользователя</string>
     <string name="kg_claim_body">Под этим именем вас видят во всём K и в ссылке на профиль. Без него люди видят ваш адрес.</string>
-    <string name="kg_claim_hint">Найдите нужное имя на вкладке .kachat, затем зарегистрируйте его.</string>
+    <string name="kg_claim_hint">Найдите нужное имя на вкладке «Имена пользователей» и займите его.</string>
     <string name="kg_claim_title">Получите имя .kachat</string>
     <string name="kg_close">Закрыть</string>
-    <string name="kg_finished_body">Зарегистрируйте своё имя на вкладке .kachat, когда будете готовы.</string>
+    <string name="kg_finished_body">Займите своё имя на вкладке «Имена пользователей», когда будете готовы.</string>
     <string name="kg_finished_title">Всё готово</string>
     <string name="kg_how_body">Ваше имя живёт в сети Kaspa и принадлежит вашему адресу для чатов. Пока оно ваше, никто не может его забрать или изменить.</string>
     <string name="kg_how_commit">Чтобы занять имя, нужны две быстрые транзакции: первая держит выбор в секрете, вторая регистрирует его.</string>
     <string name="kg_how_miners">Плата уходит майнерам сети, а не K.</string>
     <string name="kg_how_period">Вы платите за один период за раз. Короткие имена стоят дороже.</string>
     <string name="kg_how_title">Как работает имя</string>
-    <string name="kg_keep_body">Ваши имена находятся в разделе Кошелёк &gt; Ваши домены &gt; .kachat.</string>
+    <string name="kg_keep_body">Ваши имена — в разделе «Кошелёк» &gt; «Ваши имена пользователя».</string>
     <string name="kg_keep_grace">После истечения есть льготный период, чтобы продлить имя, прежде чем его сможет занять кто-то другой.</string>
     <string name="kg_keep_renew">Продлевайте до истечения срока. Дата показана у каждого имени.</string>
     <string name="kg_keep_title">Сохраните его</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">Регистрация остановится, а 0.2 KAS коммита вернутся вам за вычетом сетевой комиссии.</string>
     <string name="kn_cancel_commit_title">Отменить коммит?</string>
     <string name="kn_change_price">Изменить цену</string>
-    <string name="kn_claim_a_name">Получить имя</string>
     <string name="kn_claim_name_title">Регистрация имени</string>
     <string name="kn_claim_your_name_on_kaspa">Получите своё имя в Kaspa</string>
     <string name="kn_claiming_name">Получение %1$s</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">Имя освобождено</string>
     <string name="kn_done_transferred">Имя передано</string>
     <string name="kn_err_address_key">Ключ этого адреса недействителен.</string>
-    <string name="kn_err_enter_address_or_domain">Введите адрес или домен.</string>
+    <string name="kn_err_enter_address_or_domain">Введите адрес или имя пользователя.</string>
     <string name="kn_err_lookup">Не удалось найти это имя.</string>
     <string name="kn_err_name_address_cant_own">Адрес этого имени не может владеть именем .kachat.</string>
     <string name="kn_err_not_network_address">Это не Schnorr-адрес этой сети.</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">Ожидание подтверждения коммита...</string>
     <string name="kn_taken">Занято</string>
     <string name="kn_taken_for_sale">Занято · продаётся за %1$s</string>
-    <string name="kn_transfer_footer_domain">Адрес или домен — сначала ищутся имена .kachat; имя заменяется показанным адресом.</string>
+    <string name="kn_transfer_footer_domain">Адрес или имя пользователя — оно преобразуется в показанный адрес.</string>
     <string name="kn_transfer_warning">Передачу нельзя отменить. Новый владелец получает имя с текущим сроком; ваш профиль остаётся на вашем адресе.</string>
     <string name="kn_view_transaction">Открыть транзакцию</string>
     <string name="kn_withdraw">Отозвать</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">Покупка и продажа</string>
     <string name="kcn_kp_claim_pays_first_period">Получение оплачивает первый период (%1$s). Продление — каждый следующий.</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">Регистрация отправляет две транзакции: коммит сейчас и регистрацию примерно через минуту. Обе платят по этой ставке комиссии.</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Не удалось загрузить имена этого адреса. Потяните вниз, чтобы повторить.</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Не удалось загрузить имена пользователя этого адреса. Потяните вниз, чтобы повторить.</string>
     <string name="kcn_kp_d_day_e40b4">%1$s день</string>
     <string name="kcn_kp_d_days_0e3de">%1$s дн.</string>
     <string name="kcn_kp_dismiss_70afe">Закрыть</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">Продавец получает всю указанную цену: комиссии площадки нет.</string>
     <string name="kcn_kp_not_confirmed_b9e09">Не подтверждено</string>
     <string name="kcn_kp_one_character">1 символ</string>
-    <string name="kcn_kp_opens_the_kachat_tab">Открывает вкладку .kachat</string>
+    <string name="kcn_kp_opens_the_kachat_tab">Открывает вкладку «Имена пользователей»</string>
     <string name="kcn_kp_pay_up_to_at_a_time">Можно оплатить до %1$s за раз.</string>
     <string name="kcn_kp_paying_ahead">Оплата вперёд</string>
     <string name="kcn_kp_price_goes_to_miners">Цена уходит майнерам - K ничего не берёт.</string>

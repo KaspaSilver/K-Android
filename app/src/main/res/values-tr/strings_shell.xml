@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">İstatistikler</string>
     <string name="shell_tab_websites">Web Siteleri</string>
     <string name="shell_kaspa_websites">Kaspa Web Siteleri</string>
-    <string name="shell_customize_dock">Dock\'u Özelleştir</string>
-    <string name="shell_your_dock">Dock\'unuz</string>
-    <string name="shell_always_stays">%1$s her zaman dock\'unuzda kalır.</string>
-    <string name="shell_dock_full">Dock\'unuz dolu. Bunlardan birini eklemek için dock\'tan birini çıkarın.</string>
-    <string name="shell_hub_order">%1$s içinde göründükleri sırayla.</string>
-    <string name="shell_move_to">%1$s öğesini %2$s içine taşı</string>
-    <string name="shell_add_to_dock">%1$s öğesini dock\'a ekle</string>
-    <string name="shell_always_in_dock">Her zaman dock\'unuzda</string>
-    <string name="shell_hub_empty_title">Burada şimdilik bir şey yok</string>
-    <string name="shell_hub_empty_body">Dock\'unuzda olmayanlar burada görünür. Dock\'u Özelleştir\'den düzenleyin.</string>
-    <string name="shell_customize_dock_footer">Dock\'unuzda ne olacağını seçin. Gerisi Kaspa Hub\'da.</string>
     <string name="shell_terms_of_use">Kullanım Şartları</string>
     <string name="shell_message_indexer_footer">KaPost, Herkese Açık Sohbetler ve Satranç da bu dizinleyiciden okunur.</string>
     <string name="shell_ks_what_counts">Neler sayılır</string>

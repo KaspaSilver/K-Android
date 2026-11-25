@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">מי יכול לשלוח לכם הודעות?</string>
+    <string name="c54_who_anyone">כולם</string>
+    <string name="c54_who_usernames">רק משתמשים עם שם משתמש</string>
+    <string name="c54_who_row_footer">מי יכול להתחיל איתכם צ\'אט. אנשים שאתם כבר מתכתבים איתם לא מושפעים.</string>
+    <string name="c54_who_anyone_footer">כל אחד יכול לשלוח לכם הודעה ראשונה. היא ממתינה בבקשות הודעה עד שתאשרו אותה.</string>
+    <string name="c54_who_usernames_footer">רק אנשים עם שם משתמש (שם ‎.kachat) יכולים להגיע לבקשות ההודעה שלכם. הודעות ראשונות מכל השאר מוסתרות ולא שולחות לכם התראות; בחרו \"כולם\" כדי לראות אותן שוב. אנשים שאתם כבר מתכתבים איתם לא מושפעים.</string>
+    <string name="c54_room_clears_unread">מנקה את תג הלא נקראו של הצ\'אט הציבורי הזה.</string>
+    <string name="c54_room_no_notifications">אין התראות מהצ\'אט הציבורי הזה.</string>
+    <string name="c54_room_notifications_resume">ההתראות מהצ\'אט הציבורי הזה חוזרות.</string>
+    <string name="c54_room_delete_subtitle">מסיר את הצ\'אט הציבורי הזה מהצ\'אטים שלך.</string>
+    <string name="c54_tip_subtitle">תנו טיפ לאיש הקשר הזה, לפי מה שנקבע בהגדרות &gt; התאמה אישית &gt; מתן טיפים.</string>
+    <string name="c54_send_tip">שלח טיפ</string>
+    <string name="c54_send_deferred">ממתין לאישור המטבעות שלך. זה יישלח מעצמו בעוד רגע, אז אל תשלח שוב.</string>
+    <string name="c54_failed_start_recording">התחלת ההקלטה נכשלה: %1$s</string>
+    <string name="c54_failed_encode_audio">קידוד השמע נכשל: %1$s</string>
+    <string name="c54_failed_prepare_audio">הכנת השמע נכשלה: %1$s</string>
+    <string name="c54_sent_a_link">שלח קישור</string>
+    <string name="c54_public_chat_room">חדר צ\'אט ציבורי #%1$s</string>
+    <string name="c54_search_contacts_address_username">חפשו אנשי קשר, כתובת או שם משתמש</string>
+    <string name="c54_looking_up_username">מחפש שם משתמש...</string>
+    <string name="c54_no_contacts_paste_username">עדיין אין לך אנשי קשר. הדביקו למעלה כתובת או שם משתמש כדי להזמין מישהו.</string>
+    <string name="c54_no_contacts_match_username">אין אנשי קשר שתואמים לחיפוש. הדביקו כתובת או שם משתמש כדי להזמין מישהו חדש.</string>
+    <string name="c54_invites_resent_all">ההזמנות נשלחו מחדש לכל החברים.</string>
+    <string name="c54_invite_resent">ההזמנה נשלחה מחדש.</string>
+    <string name="c54_room_follows_app_indexer">החדר הזה שוב עוקב אחרי האינדקסר של האפליקציה.</string>
+    <string name="c54_room_indexer_updated">האינדקסר של #%1$s עודכן.</string>
+    <string name="c54_room_could_not_reach">לא ניתן להתחבר: %1$s</string>
+    <string name="c54_tap_open_your_chat">הקש כדי לפתוח את הצ\'אט שלך.</string>
+    <string name="c54_tap_start_chat_on_k">הקש כדי להתחיל צ\'אט ב-K.</string>
+    <string name="c54_stop_recording">עצור הקלטה</string>
+    <string name="c54_send_voice_message">שלח הודעה קולית</string>
+</resources>

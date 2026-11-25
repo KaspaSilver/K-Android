@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">Korumak için ek süreleri bitmeden yenileyin.</string>
-    <string name="kachat_expired_many_title">.kachat alan adlarınızdan %1$d tanesinin süresi doldu</string>
+    <string name="kachat_expired_many_title">%1$d kullanıcı adının süresi doldu</string>
     <string name="kachat_expired_one_body">%1$s adını korumak için ek süresi %2$s tarihinde bitmeden yenileyin.</string>
-    <string name="kachat_expired_one_title">.kachat alan adlarınızdan birinin süresi doldu</string>
+    <string name="kachat_expired_one_title">Kullanıcı adlarından birinin süresi doldu</string>
     <string name="kachat_names_on_address_hint">Bu adresin aldığı ya da satın aldığı adlar .kachat adları başladığında burada görünür.</string>
-    <string name="kachat_names_this_address_owns">Bu adresin sahip olduğu adlar burada görünür.</string>
-    <string name="kachat_no_names_on_address">Bu adreste .kachat adı yok</string>
+    <string name="kachat_names_this_address_owns">Bu adresin kullanıcı adları burada görünür.</string>
+    <string name="kachat_no_names_on_address">Bu adreste kullanıcı adı yok</string>
     <string name="kg_claim_body">İnsanların seni K genelinde ve profil bağlantında gördüğü ad budur. Olmazsa adresini görürler.</string>
-    <string name="kg_claim_hint">İstediğin adı .kachat sekmesinde ara, sonra al.</string>
+    <string name="kg_claim_hint">İstediğin adı Kullanıcı Adları sekmesinde ara, sonra al.</string>
     <string name="kg_claim_title">.kachat adını al</string>
     <string name="kg_close">Kapat</string>
-    <string name="kg_finished_body">Hazır olduğunda adını .kachat sekmesinden al.</string>
+    <string name="kg_finished_body">Hazır olduğunda adını Kullanıcı Adları sekmesinden al.</string>
     <string name="kg_finished_title">Hazırsınız</string>
     <string name="kg_how_body">Adınız Kaspa ağında yaşar ve sohbet adresiniz tarafından tutulur. Sizin olduğu sürece kimse onu alamaz veya değiştiremez.</string>
     <string name="kg_how_commit">Almak iki hızlı işlem gerektirir: ilki seçiminizi gizli tutar, ikincisi kaydeder.</string>
     <string name="kg_how_miners">Ücret K\'e değil, ağın madencilerine gider.</string>
     <string name="kg_how_period">Her seferinde bir dönem için ödersiniz. Kısa adlar daha pahalıdır.</string>
     <string name="kg_how_title">Bir ad nasıl çalışır</string>
-    <string name="kg_keep_body">Adların Cüzdan &gt; Alan Adların &gt; .kachat içinde.</string>
+    <string name="kg_keep_body">Adların Cüzdan &gt; Kullanıcı Adların bölümünde.</string>
     <string name="kg_keep_grace">Süre dolduktan sonra, başkası alabilmeden önce yenilemek için bir ek süre vardır.</string>
     <string name="kg_keep_renew">Süresi dolmadan yenileyin. Her adın üzerinde tarihi görünür.</string>
     <string name="kg_keep_title">Koruyun</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">Kayıt durur ve taahhüdün 0.2 KAS\'ı ağ ücreti düşülerek size geri döner.</string>
     <string name="kn_cancel_commit_title">Taahhüt iptal edilsin mi?</string>
     <string name="kn_change_price">Fiyatı Değiştir</string>
-    <string name="kn_claim_a_name">Ad al</string>
     <string name="kn_claim_name_title">Ad Al</string>
     <string name="kn_claim_your_name_on_kaspa">Kaspa\'da adını al</string>
     <string name="kn_claiming_name">%1$s alınıyor</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">Ad bırakıldı</string>
     <string name="kn_done_transferred">Ad aktarıldı</string>
     <string name="kn_err_address_key">Bu adresin anahtarı geçerli değil.</string>
-    <string name="kn_err_enter_address_or_domain">Bir adres veya alan adı girin.</string>
+    <string name="kn_err_enter_address_or_domain">Bir adres veya kullanıcı adı gir.</string>
     <string name="kn_err_lookup">Bu ad aranamadı.</string>
     <string name="kn_err_name_address_cant_own">Bu adın adresi bir .kachat adına sahip olamaz.</string>
     <string name="kn_err_not_network_address">Bu ağda bir Schnorr adresi değil.</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">Taahhüdün onaylanması bekleniyor...</string>
     <string name="kn_taken">Alınmış</string>
     <string name="kn_taken_for_sale">Alınmış · %1$s fiyatla satışta</string>
-    <string name="kn_transfer_footer_domain">Bir adres veya alan adı; önce .kachat adları aranır ve gösterilen adrese çözümlenir.</string>
+    <string name="kn_transfer_footer_domain">Bir adres veya kullanıcı adı; gösterilen adrese çözümlenir.</string>
     <string name="kn_transfer_warning">Devir geri alınamaz. Yeni sahip adı mevcut bitiş tarihiyle alır; profiliniz adresinizde kalır.</string>
     <string name="kn_view_transaction">İşlemi görüntüle</string>
     <string name="kn_withdraw">Geri çek</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">Alım ve satım</string>
     <string name="kcn_kp_claim_pays_first_period">Alma ilk dönemi (%1$s) öder. Yenileme sonraki her dönemi öder.</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">Almak iki işlem gönderir: şimdi taahhüt, yaklaşık bir dakika sonra kayıt. İkisi de bu ücret oranını öder.</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Bu adresin adları yüklenemedi. Tekrar denemek için aşağı çek.</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Bu adresin kullanıcı adları yüklenemedi. Tekrar denemek için aşağı çekin.</string>
     <string name="kcn_kp_d_day_e40b4">%1$s gün</string>
     <string name="kcn_kp_d_days_0e3de">%1$s gün</string>
     <string name="kcn_kp_dismiss_70afe">Kapat</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">Satıcı ilan fiyatının tamamını alır: pazar yeri ücreti yoktur.</string>
     <string name="kcn_kp_not_confirmed_b9e09">Onaylanmadı</string>
     <string name="kcn_kp_one_character">1 karakter</string>
-    <string name="kcn_kp_opens_the_kachat_tab">.kachat sekmesini açar</string>
+    <string name="kcn_kp_opens_the_kachat_tab">Kullanıcı Adları sekmesini açar</string>
     <string name="kcn_kp_pay_up_to_at_a_time">Tek seferde en fazla %1$s ödeyebilirsin.</string>
     <string name="kcn_kp_paying_ahead">Peşin ödeme</string>
     <string name="kcn_kp_price_goes_to_miners">Fiyat madencilere gider - K hiçbir şey almaz.</string>

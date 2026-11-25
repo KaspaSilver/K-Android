@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">आपको कौन मैसेज कर सकता है?</string>
+    <string name="c54_who_anyone">कोई भी</string>
+    <string name="c54_who_usernames">सिर्फ़ उपयोगकर्ता नाम वाले उपयोगकर्ता</string>
+    <string name="c54_who_row_footer">कौन आपके साथ चैट शुरू कर सकता है। जिनसे आप पहले से चैट करते हैं, उन पर इसका असर नहीं पड़ता।</string>
+    <string name="c54_who_anyone_footer">कोई भी आपको पहला मैसेज भेज सकता है। जब तक आप स्वीकार नहीं करते, यह मैसेज अनुरोध में इंतज़ार करता है।</string>
+    <string name="c54_who_usernames_footer">सिर्फ़ उपयोगकर्ता नाम (एक .kachat नाम) वाले लोग आपके मैसेज अनुरोध तक पहुँच सकते हैं। बाकी सभी के पहले मैसेज छिपे रहते हैं और आपको सूचित नहीं करते; उन्हें फिर से देखने के लिए \"कोई भी\" चुनें। जिनसे आप पहले से चैट करते हैं, उन पर इसका असर नहीं पड़ता।</string>
+    <string name="c54_room_clears_unread">इस पब्लिक चैट का अपठित बैज हटाता है।</string>
+    <string name="c54_room_no_notifications">इस पब्लिक चैट से कोई सूचना नहीं।</string>
+    <string name="c54_room_notifications_resume">इस पब्लिक चैट की सूचनाएं फिर से शुरू होती हैं।</string>
+    <string name="c54_room_delete_subtitle">इस पब्लिक चैट को आपकी चैट से हटाता है।</string>
+    <string name="c54_tip_subtitle">इस संपर्क को टिप दें, जैसा सेटिंग्स &gt; कस्टमाइज़ेशन &gt; टिपिंग में सेट है।</string>
+    <string name="c54_send_tip">टिप भेजें</string>
+    <string name="c54_send_deferred">आपके कॉइन की पुष्टि का इंतज़ार है। यह कुछ ही पल में अपने आप भेज दिया जाएगा, इसलिए इसे दोबारा न भेजें।</string>
+    <string name="c54_failed_start_recording">रिकॉर्डिंग शुरू नहीं हो सकी: %1$s</string>
+    <string name="c54_failed_encode_audio">ऑडियो एन्कोड नहीं हो सका: %1$s</string>
+    <string name="c54_failed_prepare_audio">ऑडियो तैयार नहीं हो सका: %1$s</string>
+    <string name="c54_sent_a_link">एक लिंक भेजा</string>
+    <string name="c54_public_chat_room">सार्वजनिक चैट रूम #%1$s</string>
+    <string name="c54_search_contacts_address_username">संपर्क, या कोई पता या यूज़रनेम खोजें</string>
+    <string name="c54_looking_up_username">उपयोगकर्ता नाम खोजा जा रहा है...</string>
+    <string name="c54_no_contacts_paste_username">आपके अभी कोई संपर्क नहीं हैं। किसी को आमंत्रित करने के लिए ऊपर कोई पता या यूज़रनेम पेस्ट करें।</string>
+    <string name="c54_no_contacts_match_username">आपकी खोज से कोई संपर्क नहीं मिला। किसी नए को आमंत्रित करने के लिए कोई पता या यूज़रनेम पेस्ट करें।</string>
+    <string name="c54_invites_resent_all">सभी सदस्यों को आमंत्रण फिर से भेजे गए।</string>
+    <string name="c54_invite_resent">आमंत्रण फिर से भेजा गया।</string>
+    <string name="c54_room_follows_app_indexer">यह रूम फिर से ऐप के इंडेक्सर का उपयोग करता है।</string>
+    <string name="c54_room_indexer_updated">#%1$s के लिए इंडेक्सर अपडेट किया गया।</string>
+    <string name="c54_room_could_not_reach">उस तक नहीं पहुंच सके: %1$s</string>
+    <string name="c54_tap_open_your_chat">अपनी चैट खोलने के लिए टैप करें।</string>
+    <string name="c54_tap_start_chat_on_k">K पर चैट शुरू करने के लिए टैप करें।</string>
+    <string name="c54_stop_recording">रिकॉर्डिंग रोकें</string>
+    <string name="c54_send_voice_message">वॉइस संदेश भेजें</string>
+</resources>

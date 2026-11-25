@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">誰がメッセージを送れますか？</string>
+    <string name="c54_who_anyone">誰でも</string>
+    <string name="c54_who_usernames">ユーザー名のあるユーザーのみ</string>
+    <string name="c54_who_row_footer">あなたとチャットを始められる人です。すでにチャットしている相手には影響しません。</string>
+    <string name="c54_who_anyone_footer">誰でも最初のメッセージを送れます。承認するまでメッセージリクエストで待機します。</string>
+    <string name="c54_who_usernames_footer">ユーザー名（.kachat 名）を持つ人だけがメッセージリクエストに届きます。それ以外の人からの最初のメッセージは非表示になり、通知もされません。再び表示するには「誰でも」を選んでください。すでにチャットしている相手には影響しません。</string>
+    <string name="c54_room_clears_unread">このパブリックチャットの未読バッジを消します。</string>
+    <string name="c54_room_no_notifications">このパブリックチャットからの通知はありません。</string>
+    <string name="c54_room_notifications_resume">このパブリックチャットからの通知が再開します。</string>
+    <string name="c54_room_delete_subtitle">このパブリックチャットをチャットから削除します。</string>
+    <string name="c54_tip_subtitle">設定 &gt; カスタマイズ &gt; チップ の設定どおりにこの連絡先にチップを送ります。</string>
+    <string name="c54_send_tip">チップを送る</string>
+    <string name="c54_send_deferred">コインの承認を待っています。まもなく自動で送信されるので、もう一度送信しないでください。</string>
+    <string name="c54_failed_start_recording">録音を開始できませんでした: %1$s</string>
+    <string name="c54_failed_encode_audio">オーディオをエンコードできませんでした: %1$s</string>
+    <string name="c54_failed_prepare_audio">オーディオを準備できませんでした: %1$s</string>
+    <string name="c54_sent_a_link">リンクを送信しました</string>
+    <string name="c54_public_chat_room">公開チャットルーム #%1$s</string>
+    <string name="c54_search_contacts_address_username">連絡先、またはアドレスやユーザー名を検索</string>
+    <string name="c54_looking_up_username">ユーザー名を検索中...</string>
+    <string name="c54_no_contacts_paste_username">まだ連絡先がありません。誰かを招待するには、上にアドレスかユーザー名を貼り付けてください。</string>
+    <string name="c54_no_contacts_match_username">一致する連絡先がありません。新しい人を招待するには、アドレスかユーザー名を貼り付けてください。</string>
+    <string name="c54_invites_resent_all">すべてのメンバーに招待を再送しました。</string>
+    <string name="c54_invite_resent">招待を再送しました。</string>
+    <string name="c54_room_follows_app_indexer">このルームはアプリのインデクサーを使うようになりました。</string>
+    <string name="c54_room_indexer_updated">#%1$s のインデクサーを更新しました。</string>
+    <string name="c54_room_could_not_reach">接続できませんでした: %1$s</string>
+    <string name="c54_tap_open_your_chat">タップしてチャットを開きます。</string>
+    <string name="c54_tap_start_chat_on_k">タップして K でチャットを始めます。</string>
+    <string name="c54_stop_recording">録音を停止</string>
+    <string name="c54_send_voice_message">ボイスメッセージを送信</string>
+</resources>

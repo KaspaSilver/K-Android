@@ -69,8 +69,6 @@
     <string name="delete_account">アカウントを削除</string>
     <string name="delete_group">グループを削除</string>
     <string name="done">完了</string>
-    <string name="each_transaction_temporarily_uses_2_kas">各取引は一時的に約2 KASを使用します。約1 KASはすぐにお釣りとして戻るため、実際のコストは小さなネットワーク手数料だけです。</string>
-    <string name="edit_kns_profile">KNS プロフィールを編集</string>
     <string name="edit_account">アカウントを編集</string>
     <string name="error">エラー</string>
     <string name="every_member_will_see_the_new">すべてのメンバーが新しい名前を見ることになります。</string>
@@ -86,8 +84,6 @@
     <string name="import_account">アカウントをインポート</string>
     <string name="import_existing_account">既存のアカウントをインポート</string>
     <string name="incoming_notifications">受信通知</string>
-    <string name="kns_domains">あなたのドメイン</string>
-    <string name="contact_kns_domains">KNSドメイン</string>
     <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">Kはノードに接続する必要があります。どのように接続しますか?</string>
     <string name="kaspa_explorer">Kaspaエクスプローラー</string>
@@ -97,14 +93,9 @@
     <string name="manage_addresses">アドレスを管理</string>
     <string name="max">最大</string>
     <string name="message">メッセージ</string>
-    <string name="more_info">詳細情報</string>
     <string name="name">名前</string>
     <string name="next">次へ</string>
     <string name="no_conversations_yet">まだ会話がありません</string>
-    <string name="no_domains_yet">まだドメインがありません。</string>
-    <string name="send_domain">ドメインを送信</string>
-    <string name="asset_id">アセットID</string>
-    <string name="primary_domain">プライマリドメイン</string>
     <string name="set_as_primary">メインに設定</string>
     <string name="no_hidden_addresses">非表示のアドレスはありません。</string>
     <string name="no_hidden_users_in_this_group">このグループに非表示のユーザーはいません。</string>
@@ -152,7 +143,6 @@
     <string name="show_more">もっと見る</string>
     <string name="show_qr_code">QRコードを表示</string>
     <string name="skip">スキップ</string>
-    <string name="some_changes_failed_to_save">一部の変更を保存できませんでした:</string>
     <string name="start_a_new_chat_by_adding">連絡先を追加して新しいチャットを始めましょう</string>
     <string name="status">ステータス</string>
     <string name="tap_an_address_below_to_swap">下のアドレスをタップしてそこからスワップします</string>
@@ -197,7 +187,6 @@
     <string name="created">作成日</string>
     <string name="customization">カスタマイズ</string>
     <string name="diagnostics">診断</string>
-    <string name="discord">Discord</string>
     <string name="discover_addresses">アドレスを検出</string>
     <string name="email">メール</string>
     <string name="explorer">エクスプローラー</string>
@@ -206,7 +195,6 @@
     <string name="ip_address_book">IPアドレス帳</string>
     <string name="indexer">インデクサー</string>
     <string name="info">情報</string>
-    <string name="kns_profile">KNS プロフィール</string>
     <string name="kaspa_explorer_api">Kaspa Explorer API</string>
     <string name="kaspa_node">Kaspaノード</string>
     <string name="default_recommended">デフォルト（推奨）</string>
@@ -221,7 +209,6 @@
     <string name="protocol">プロトコル</string>
     <string name="push_notifications">プッシュ通知</string>
     <string name="reconnect">再接続</string>
-    <string name="redirect">リダイレクト</string>
     <string name="refresh_pool">プールを更新</string>
     <string name="reply">返信</string>
     <string name="retry_send">再送信</string>
@@ -234,20 +221,16 @@
     <string name="storage">ストレージ</string>
     <string name="on_this_device">このデバイス上</string>
     <string name="cloud_storage">クラウドストレージ</string>
-    <string name="submitting_commit_transaction">コミット取引を送信中...</string>
-    <string name="submitting_reveal_transaction">リビール取引を送信中...</string>
     <string name="support_email">サポートメール</string>
     <string name="telegram">Telegram</string>
     <string name="total">合計</string>
     <string name="verified">検証済み</string>
-    <string name="verifying_new_ownership_on_chain_this">チェーン上で新しい所有権を確認中 (1分ほどかかる場合があります)...</string>
     <string name="version">バージョン</string>
     <string name="vibration">バイブレーション</string>
     <string name="view_profile">プロフィールを表示</string>
     <string name="view_seed_phrase">12語または24語を表示</string>
     <string name="view_in_explorer">エクスプローラーで表示</string>
     <string name="website">ウェブサイト</string>
-    <string name="x">X</string>
     <string name="language">言語</string>
     <string name="system_default">システム</string>
     <string name="welcome_to_kachat">Kへようこそ</string>
@@ -282,27 +265,16 @@
     <string name="mark_as_read">既読にする</string>
     <string name="copy_link">リンクをコピー</string>
     <string name="open_link">リンクを開く</string>
-    <string name="kaspa_qr_or_domain">kaspa:qr... またはドメイン</string>
     <!-- 5.2 name services (iOS df23b6f, 09e0403, 718724b, 9858bd1) -->
     <string name="x_handle">Xハンドル</string>
     <string name="discord_user_id">DiscordのユーザーID</string>
     <string name="redirect_url">リダイレクトURL</string>
     <string name="none_yet">まだありません</string>
-    <string name="customize_profile">プロフィールをカスタマイズ</string>
-    <string name="settling">確定待ち</string>
     <string name="kachat_profile_coming_body">.kachat 名はまもなく登場します。取得すると、ここでアバター、バナー、自己紹介、リンクを設定でき、それが K のあらゆる場所であなたとして表示されます。</string>
     <string name="kachat_name_section">.kachat 名</string>
-    <string name="could_not_reach_service">%1$s に接続できません。下に引いて再試行してください。</string>
-    <string name="no_names_yet">%1$s の名前はまだありません。</string>
     <!-- 5.2 name lookups (iOS a0dbc15, 79b6ac8, 9858bd1) -->
-    <string name="no_tld_domain_found">%1$s ドメインが見つかりません</string>
-    <string name="looking_up_domain">ドメインを検索中...</string>
-    <string name="looking_up">検索中...</string>
     <string name="no_domain">ドメインなし</string>
-    <string name="other_domains">その他のドメイン</string>
-    <string name="not_registered">未登録</string>
     <string name="couldnt_check">確認できませんでした</string>
-    <string name="kaspa_address_or_domain">Kaspaアドレスまたはドメイン</string>
     <!-- Public Chats select (iOS e08c4cc) -->
     <!-- Connection Settings tabs (iOS ee01f81) -->
     <string name="connection_tab_indexer">インデクサー</string>
@@ -313,7 +285,6 @@
     <string name="coming_soon">近日公開</string>
     <string name="not_available_on_this_network">このネットワークでは利用できません</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
-    <string name="km_no_names">.kachat 名はまだありません</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">はじめてのツアー：ウォレット、チャット、支払いなど。</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -336,7 +307,6 @@
     <!-- Realized P&L, fees spent, Add Chatting Address (iOS 61eff0f/5e75c89) -->
     <!-- Receive / chatting address QR text (iOS 8bcae2f) -->
     <!-- Account discovery finds .k and .kaspa names (iOS 7a5b157) -->
-    <string name="chatting_picker_other_names_count">.k と .kaspa の名前（%1$d）</string>
     <!-- Message Requests and Private chats (iOS f7ca401/ba1b2e3/76faa97/74bd52c) -->
     <string name="message_requests">メッセージリクエスト</string>
     <string name="message_requests_row_sub">相手やグループが返答を待っています</string>
@@ -471,7 +441,6 @@
     <string name="chats_new_chat">新しいチャット</string>
     <string name="chats_new_group_chat">新しいグループチャット</string>
     <string name="chats_new_chat_subtitle">アドレスまたは名前でメッセージを送ります。</string>
-    <string name="qr_chatting_address_subtitle">チャットと.kachatドメインの取得に使用します。</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="utxo_selection">UTXO の選択</string>
     <string name="utxo_selection_caption">この送金で使うコインを選びます。</string>
@@ -664,7 +633,6 @@
     <!-- New Chat / New Group: Address Book (iOS 1be4f6e) -->
     <string name="ab_add_count">追加（%1$d）</string>
     <string name="ab_add_members">メンバーを追加</string>
-    <string name="ab_members_footer">連絡先から選ぶか、Kaspa アドレスやドメインで誰でも追加できます。</string>
     <string name="ab_members_intro">グループに人を追加します。グループ管理者としてメンバーを管理できます。</string>
     <string name="ab_members_empty">まだメンバーがいません。連絡先から、または下のアドレスで追加してください。</string>
     <string name="ab_actions_a11y">追加、インポート、エクスポート</string>
@@ -704,17 +672,8 @@
     <string name="kn_registration_not_open">名前を新しいレジストリに移行しています。新しい名前は%1$sから取得できます。</string>
     <string name="kn_ev_imported">新しいレジストリに移行済み</string>
     <!-- .kachat first: domains in every address field, Other domains, expired-name banner (iOS 6ac48a7) -->
-    <string name="enter_kaspa_address_or_domain_kachat_first">Kaspaアドレス(kaspa:...)またはドメイン(例: alice.kachat)を入力してください。.kachatの名前が最初に検索されます。</string>
-    <string name="search_contacts_or_address_or_domain">連絡先、アドレス、ドメインを検索</string>
-    <string name="no_contacts_yet_paste_address_or_domain">まだ連絡先がありません。上にアドレスかドメインを貼り付けて招待しましょう。</string>
-    <string name="no_contacts_match_paste_address_or_domain">一致する連絡先がありません。アドレスかドメインを貼り付けて新しい人を招待しましょう。</string>
     <string name="their_profile_kachat_name_address">プロフィール、.kachatの名前、アドレス。</string>
-    <string name="finds_addresses_balance_or_domain">残高またはドメインを持つアドレスを探します。</string>
-    <string name="enter_kaspa_address_or_domain_short_kachat_first">Kaspaアドレス(kaspa:...)またはドメインを入力してください。.kachatの名前が最初に検索されます。</string>
-    <string name="other_domains_title">その他のドメイン</string>
-    <string name="chatting_picker_intro_any_name_kachat">これらの単語の別のアドレスにすでにあなたのIDがある場合（.kachat、.kas、.k、.kaspaドメインまたはチャット残高）、ここで選択してください。残高またはドメインのあるアドレスのみ表示されます。</string>
     <string name="chatting_picker_kachat_names_count">.kachatの名前 (%1$d)</string>
-    <string name="chatting_picker_kas_names_count">.kasの名前 (%1$d)</string>
     <!-- Bare names resolve to .kachat only (iOS 5a5122d) -->
     <string name="kachat_names_not_live_here">このネットワークでは.kachatの名前はまだ利用できません</string>
     <!-- Nextcloud sync carries portfolios -->
@@ -839,8 +798,6 @@
     <string name="quantum_safe">量子耐性</string>
     <string name="key_revealed_by_a_spend">送金で鍵が公開済み</string>
     <!-- KNS domain transfers and quantum-safe (script) addresses (iOS 2a8ca5a) -->
-    <string name="kns_transfer_quantum_source">KNS は量子耐性アドレスからドメインを移動できません。KNS はドメインの所有者を公開鍵で識別しますが、量子耐性アドレスは鍵を隠しています。</string>
-    <string name="kns_transfer_to_script_address">.kas ドメインは量子耐性アドレスやその他のスクリプトアドレスには送れません。KNS が二度と移動できなくなります。通常のアドレスに送ってください。</string>
     <string name="quantum_next_address_failed">次のアドレスを準備できませんでした。もう一度お試しください。</string>
     <!-- Address Visibility: a card per chain (iOS d7e6dd1) -->
     <string name="quantum_addresses">量子耐性アドレス</string>
@@ -891,7 +848,6 @@
     <string name="pr_paid_to">支払先</string>
     <string name="ab_empty_title">連絡先はまだありません</string>
     <string name="settings_title">設定</string>
-    <string name="confirm_sending_domain">このドメインの送信を確認</string>
     <string name="confirm_deleting_account">このアカウントの削除を確認</string>
     <string name="group_invites">グループへの招待</string>
     <string name="group_invite">グループへの招待</string>
@@ -936,7 +892,6 @@
     <string name="welcome_paying_for_messages">メッセージの支払い</string>
     <string name="welcome_paying_for_messages_caption">メッセージを送るたびに、このアドレスからごく少額のKaspaが使われます。1 Kaspaで約500件送れます。</string>
     <string name="welcome_what_others_can_see">他の人に見えるもの</string>
-    <string name="welcome_what_others_can_see_caption">このアドレスと残高はKaspaネットワーク上で誰でも見られますが、メッセージは読めません。チャットと.kachatドメインにのみ使用してください。</string>
 
     <!-- Localized literals moved out of Kotlin (parity with the iPhone app) -->
     <string name="backup_your_account_to_prevent_loss_of">資金を失わないよう、アカウントをバックアップしましょう</string>
@@ -1099,7 +1054,6 @@
     <string name="anyone_with_this_addresss_private_key_can">このアドレスの秘密鍵を持つ人は、誰でもその資金を使えます。絶対に誰にも教えないでください。</string>
     <string name="tap_to_reveal_private_key">タップして秘密鍵を表示</string>
     <string name="could_not_load_transactions">トランザクションを読み込めませんでした。</string>
-    <string name="contains_domain">ドメインを含む</string>
     <string name="private_key_hex_copied_clipboard_will_clear">秘密鍵Hexをコピーしました。クリップボードは30秒後にクリアされます。</string>
     <string name="cache">キャッシュ</string>
     <string name="failed_to_export_diagnostics">診断のエクスポートに失敗しました。</string>
@@ -1257,7 +1211,6 @@
     <string name="hr_min">%1$d時間%2$d分</string>
     <string name="min">%1$d分</string>
     <string name="could_not_check_addresses_try_again_when">アドレスを確認できませんでした。接続してからもう一度お試しください。</string>
-    <string name="no_addresses_with_a_balance_or_domain">残高またはドメインのあるアドレスは見つかりませんでした。</string>
     <string name="hidden">非表示（%1$d）</string>
     <string name="address_hidden_re_enable_it_in_address">アドレスを非表示にしました。「アドレスの表示設定」で再度有効にできます。</string>
     <string name="this_address_cant_be_hidden">このアドレスは非表示にできません。</string>
@@ -1306,12 +1259,6 @@
     <string name="couldnt_load_the_coins">コインを読み込めませんでした。</string>
     <string name="these_words_are_invalid_double_check_the">これらの単語は無効です。もう一度確認してください。最後の単語にはチェックサムが含まれているため、1語でも間違っていると検証に失敗します。</string>
     <string name="invalid_words_please_enter_12_or_24">単語が無効です。12語または24語を入力してください。</string>
-    <string name="failed_to_set_primary_domain">プライマリドメインを設定できませんでした</string>
-    <string name="invalid_recipient_address">受信者のアドレスが無効です</string>
-    <string name="recipient_must_be_different_from_your_own">受信者は自分のウォレットとは別のものにしてください</string>
-    <string name="recipient_address_is_on_the_wrong_network">受信者のアドレスが別のネットワークのものです</string>
-    <string name="invalid_recipient">受信者が無効です</string>
-    <string name="transfer_failed">移管に失敗しました</string>
     <string name="retry_failed">再試行に失敗しました</string>
     <string name="saving_keep_the_card_still">保存中です。カードを動かさないでください。</string>
     <string name="reading_keep_the_card_still">読み取り中です。カードを動かさないでください。</string>
@@ -1349,8 +1296,6 @@
     <string name="resynced_one_message_n_chats">%1$d件のチャットで1件の受信メッセージを再同期しました。</string>
     <string name="resynced_n_messages_one_chat">1件のチャットで%1$d件の受信メッセージを再同期しました。</string>
     <string name="resynced_n_messages_n_chats">%2$d件のチャットで%1$d件の受信メッセージを再同期しました。</string>
-    <string name="found_one_address_balance_domain">残高またはドメインのあるアドレスが1件見つかりました。</string>
-    <string name="found_n_addresses_balance_domain">残高またはドメインのあるアドレスが%1$d件見つかりました。</string>
     <string name="resync_one_chat">1件のチャットを再同期</string>
     <string name="resync_n_chats">%1$d件のチャットを再同期</string>
     <string name="one_day_ago">1日前</string>
@@ -1448,9 +1393,6 @@
     <string name="not_sent_you_switched_accounts">未送信：送信前にアカウントを切り替えました。</string>
     <string name="play_it_again">もう一度指す</string>
     <string name="couldnt_look_up_name_try_again">現在 %1$s を検索できません。しばらくしてからもう一度お試しください。</string>
-    <string name="kns_reveal_will_finish_on_next_open">2 件のトランザクションのうち最初の 1 件は完了しましたが、2 件目は完了していません。次回 K を開いたときに完了します。</string>
-    <string name="kns_transfer_fee_at_most_1_kas">ドメイン移転の手数料は最大 1 KAS です。</string>
-    <string name="confirm_setting_this_primary_name">このプライマリ名の設定を確認</string>
     <string name="this_is_the_public_half_of_this_address">これはこのアドレスの公開部分です。何も使うことはできません。</string>
     <string name="address_number_is_ready">アドレス #%1$d の準備ができました。</string>
     <string name="chess_menu_title">チェス</string>
@@ -1512,32 +1454,18 @@
     <string name="chess_invite_sent">チェスの招待を送信しました</string>
     <string name="chess_invited_you">チェスの対局に招待されました</string>
     <string name="more_reactions">その他のリアクション</string>
-    <string name="confirm_changes">変更を確定</string>
-    <string name="uploading_avatar">アバターをアップロードしています...</string>
-    <string name="uploading_banner">バナーをアップロードしています...</string>
-    <string name="profile_field_removed">%1$s（削除）</string>
     <string name="create_group">グループを作成</string>
     <string name="create_group_fee_estimate">推定ネットワーク手数料 ≈ %1$s %2$s（%3$d 件の取引）</string>
     <string name="create_chat">チャットを作成</string>
     <string name="add_to_group">グループに追加</string>
     <string name="edit_name">名前を編集</string>
     <string name="domain_label">ドメイン</string>
-    <string name="primary_badge">プライマリ</string>
     <string name="notification_mode_off">オフ</string>
     <string name="notification_mode_no_sound">サウンドなし</string>
     <string name="notification_mode_sound">サウンド</string>
     <string name="notification_mode_default">デフォルト（%1$s）</string>
-    <string name="domain_transfer_sending">%1$sを送信中</string>
-    <string name="domain_transfer_footer">ドメインの移管は2回のトランザクションで行うため、少し時間がかかります。完了するまでアプリを開いたままにしてください。</string>
-    <string name="domain_transfer_stage_preparing">譲渡を準備中</string>
-    <string name="domain_transfer_stage_fee">手数料を計算中</string>
-    <string name="domain_transfer_stage_commit">コミット取引を送信中</string>
-    <string name="domain_transfer_stage_reveal">リビール取引を送信中</string>
-    <string name="domain_transfer_stage_verifying">新しい所有者を確認中</string>
-    <string name="domain_transfer_stage_working">処理中</string>
     <string name="checking_address_n">アドレス #%1$d を確認中</string>
     <string name="n_found_so_far">これまでに%1$d件見つかりました</string>
-    <string name="no_addresses_with_balance_or_domain_yet">残高またはドメインのあるアドレスはまだありません</string>
     <string name="checks_the_first_thousand_addresses">途中に空きがあっても最初の1,000個のアドレスを確認し、その後も見つかる限り続けます。</string>
     <string name="first_sync_all_set">準備完了</string>
     <string name="first_sync_up_to_date">チャットと履歴は最新です。</string>
@@ -1567,9 +1495,6 @@
     <string name="chess_notif_lost_on_time">♟️ 時間切れで負けました</string>
     <string name="chess_notif_resigned">♟️ チェスの対局を投了しました</string>
     <string name="fee_label">手数料</string>
-    <plurals name="kns_profile_changes_count">
-        <item quantity="other">%d 件の変更。それぞれがチャットアドレスから個別のオンチェーン取引として送信されます：</item>
-    </plurals>
     <plurals name="create_group_and_invite">
         <item quantity="other">「%1$s」を作成して、メンバー %2$d 人を招待しますか？</item>
     </plurals>
@@ -1585,12 +1510,10 @@
     <string name="payment_notice_fee_from_chatting_address">チャットアドレスは、この支払いを %2$s に知らせるために、さらに %1$s KAS を支払います。</string>
     <string name="recording_failed_please_try_again">録音に失敗しました。もう一度お試しください。</string>
     <string name="message_needs_too_many_coins">このメッセージは 1 つのトランザクションに必要なコインが多すぎます。チャットアドレスで Compound UTXOs を使ってから、もう一度お試しください。</string>
-    <string name="use_their_domain_name">相手のドメイン名を使う</string>
     <string name="show_request_as_qr">リクエストを QR で表示</string>
     <string name="pr_qr_scan_to_pay_in_kachat">スマートフォンのカメラでスキャンすると、すべて入力済みの状態で K で支払えます。</string>
     <string name="set_as_name">名前に設定</string>
     <string name="their_name">相手の名前</string>
-    <string name="get_a_kachat_name">.kachat 名を入手</string>
     <string name="composer_gif_subtitle">ライブラリからアニメーションGIFを送信します。</string>
     <string name="group_composer_gif_subtitle">ライブラリからアニメーションGIFをグループに送信します。</string>
     <string name="gif_quality">GIFの画質</string>
@@ -1620,10 +1543,6 @@
     <string name="token_received_title">%1$s を受け取りました</string>
     <string name="token_received_on_one">あなたの %1$s に</string>
     <string name="token_received_on_many">あなたの %1$d 件のアドレスに</string>
-    <string name="address_tab_domains">ドメイン</string>
-    <string name="address_domains_none">このアドレスに %1$s の名前はありません。</string>
-    <string name="address_domains_one">1 件のドメイン</string>
-    <string name="address_domains_couldnt_load">読み込めませんでした</string>
     <string name="connection_not_set">未設定</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">共有リンクをコピー</string>
@@ -1739,4 +1658,6 @@
     <string name="history_moved">移動</string>
     <string name="history_to_address">%1$s へ</string>
     <string name="history_change_to_address">おつり %1$s → %2$s</string>
+    <string name="cycle_hint_next_page">次のページに切り替えます</string>
+    <string name="cycle_hint_next_feed">次のフィードに切り替えます</string>
 </resources>

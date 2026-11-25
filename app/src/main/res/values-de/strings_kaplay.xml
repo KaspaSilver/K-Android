@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">Noch keine beendeten Turniere.</string>
     <string name="kaplay_no_finished_tournaments_this_month">Diesen Monat noch keine beendeten Turniere.</string>
     <string name="kaplay_tab_leaderboard">Bestenliste</string>
+    <string name="kp_640de0cb0b2c" formatted="false">Deine Bilanz: %s gewonnen, %s verloren</string>
+    <string name="kp_5d12bd53552c" formatted="false">Spielen</string>
+    <string name="kp_3ab5950b358f" formatted="false">Spiel gegen die nächste Person, die beitritt, oder einen Freund per Code.</string>
+    <string name="kp_85e2145e7cad" formatted="false">Acht Spieler, K.-o.-System.</string>
+    <string name="kp_636935a0b48d" formatted="false">Fünf Bots, Stufe 1 bis 5. Besiege einen, um den nächsten freizuschalten.</string>
+    <string name="kp_6fba758f3243" formatted="false">Wechselt zur nächsten Bestenliste</string>
+    <string name="kp_c0fc86977802" formatted="false">Vom Gegner geschlagen</string>
+    <string name="kp_48cb744b4728" formatted="false">Von dir geschlagen</string>
+    <string name="kp_76ccff916d06" formatted="false">Kommunikationsanfrage</string>
+    <string name="kp_73eb05867f7b" formatted="false">Auf Zeit verloren</string>
+    <string name="kp_6eac413a29b7" formatted="false">Aufgegeben</string>
+    <string name="kp_8a4d6885363d" formatted="false">Hat die Partie angenommen</string>
+    <string name="kp_012794aeafb0" formatted="false">Hat die Partie abgelehnt</string>
+    <string name="kp_0ac72bc536b1" formatted="false">Schach-Einladung</string>
+    <string name="kp_4bb26afc82d3" formatted="false">Diesen Monat noch keine beendeten 1v1-Partien.</string>
+    <string name="kp_c56c7d117a52" formatted="false">Diesen Monat noch keine beendeten Turniere.</string>
 </resources>

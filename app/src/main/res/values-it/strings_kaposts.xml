@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">La mancia non è partita: al momento non è possibile leggere l\'indirizzo Mance da.</string>
     <string name="feed54_tip_minimum_footer">La mancia più piccola accettata dalla rete è %1$s.</string>
     <string name="feed54_tip_no_price">Mancia non inviata: non c\'è un prezzo recente del KAS per convertire %1$s in KAS.</string>
-    <string name="feed54_tip_too_small">La mancia non è partita: la mancia più piccola accettata dalla rete è %1$s. Cambia la mancia predefinita in Impostazioni &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">La mancia non è partita: la mancia più piccola accettata dalla rete è %1$s. Cambia la mancia predefinita in Impostazioni &gt; Personalizzazione &gt; Mance.</string>
     <string name="feed54_tipped">Mancia di %1$s inviata a %2$s</string>
     <string name="feed54_tipped_privately">Mancia di %1$s inviata a %2$s in privato</string>
     <string name="feed54_unfollow_posted">Unfollow pubblicato sulla rete</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">Mancia</string>
     <string name="kaposts_tips">Mance</string>
     <string name="kaposts_tips_from">Mance da</string>
-    <string name="kaposts_tips_from_footnote">Le mance dal tuo Chatting Address contano sul post e compari tra chi ha lasciato mance. Da un altro indirizzo una mancia è privata: l\'autore la riceve e la vede nella vostra chat, ma non conta sul post e non ti nomina.</string>
+    <string name="kaposts_tips_from_footnote">Le mance dal tuo Chatting Address contano sul post e compari tra chi ha lasciato mance. Da un altro indirizzo una mancia è privata: l\'autore la riceve e la vede nella vostra chat, ma non conta sul post e non ti nomina. Anche una mancia in una chat parte da qui.</string>
     <string name="kaposts_tips_from_not_available">Non disponibile</string>
     <string name="kaposts_who_tipped">Chi ha dato una mancia a questo post</string>
     <string name="kn53_kaplay_beat_in_move">Batti %1$s in %2$d mossa</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">Mancia in</string>
     <string name="kp5_tip_in_ask">Chiedi ogni volta</string>
     <string name="kp5_tip_in_ask_footer">Mancia chiede ogni volta se inviare Kaspa o kUSDT.</string>
-    <string name="kp5_tip_in_kusdt_footer">Mancia invia kUSDT all\'indirizzo di chat dell\'autore. Le mance in kUSDT non vengono conteggiate sul post.</string>
+    <string name="kp5_tip_in_kusdt_footer">Mancia invia kUSDT al suo indirizzo di chat. Le mance in kUSDT non vengono conteggiate su un post.</string>
     <string name="kp5_tip_not_counted">Non conteggiata sul post</string>
-    <string name="kp5_tip_set_in_settings">Scegli cosa invia Mancia in Impostazioni > KaPost > Mancia in.</string>
+    <string name="kp5_tip_set_in_settings">Scegli cosa invia Mancia in Impostazioni &gt; Personalizzazione &gt; Mance.</string>
     <string name="kp5_tip_title">Mancia</string>
     <string name="kp5_tip_what_in">In cosa dai la mancia?</string>
     <string name="l53_already_in_your_language">Già nella tua lingua</string>

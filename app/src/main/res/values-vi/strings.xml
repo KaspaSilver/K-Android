@@ -69,8 +69,6 @@
     <string name="delete_account">Xóa tài khoản</string>
     <string name="delete_group">Xóa nhóm</string>
     <string name="done">Xong</string>
-    <string name="each_transaction_temporarily_uses_2_kas">Mỗi giao dịch tạm thời sử dụng ~2 KAS; ~1 KAS quay lại ngay lập tức dưới dạng tiền thối, vì vậy chỉ có phí mạng nhỏ mới là chi phí thực sự.</string>
-    <string name="edit_kns_profile">Chỉnh sửa hồ sơ KNS</string>
     <string name="edit_account">Chỉnh sửa tài khoản</string>
     <string name="error">Lỗi</string>
     <string name="every_member_will_see_the_new">Mọi thành viên sẽ thấy tên mới.</string>
@@ -86,8 +84,6 @@
     <string name="import_account">Nhập tài khoản</string>
     <string name="import_existing_account">Nhập tài khoản hiện có</string>
     <string name="incoming_notifications">Thông báo đến</string>
-    <string name="kns_domains">Tên miền của bạn</string>
-    <string name="contact_kns_domains">Tên miền KNS</string>
     <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K cần kết nối với một nút. Bạn muốn kết nối như thế nào?</string>
     <string name="kaspa_explorer">Trình khám phá Kaspa</string>
@@ -97,14 +93,9 @@
     <string name="manage_addresses">Quản lý địa chỉ</string>
     <string name="max">Tối đa</string>
     <string name="message">Tin nhắn</string>
-    <string name="more_info">Thêm thông tin</string>
     <string name="name">Tên</string>
     <string name="next">Tiếp theo</string>
     <string name="no_conversations_yet">Chưa có cuộc trò chuyện nào</string>
-    <string name="no_domains_yet">Chưa có tên miền nào.</string>
-    <string name="send_domain">Gửi tên miền</string>
-    <string name="asset_id">ID nội dung</string>
-    <string name="primary_domain">Tên miền chính</string>
     <string name="set_as_primary">Đặt làm tên chính</string>
     <string name="no_hidden_addresses">Không có địa chỉ ẩn.</string>
     <string name="no_hidden_users_in_this_group">Không có người dùng ẩn trong nhóm này.</string>
@@ -152,7 +143,6 @@
     <string name="show_more">Hiện thêm</string>
     <string name="show_qr_code">Hiện mã QR</string>
     <string name="skip">Bỏ qua</string>
-    <string name="some_changes_failed_to_save">Một số thay đổi không thể lưu:</string>
     <string name="start_a_new_chat_by_adding">Bắt đầu cuộc trò chuyện mới bằng cách thêm liên hệ</string>
     <string name="status">Trạng thái</string>
     <string name="tap_an_address_below_to_swap">Chạm vào một địa chỉ bên dưới để hoán đổi từ đó</string>
@@ -197,7 +187,6 @@
     <string name="created">Đã tạo</string>
     <string name="customization">Tùy chỉnh</string>
     <string name="diagnostics">Chẩn đoán</string>
-    <string name="discord">Discord</string>
     <string name="discover_addresses">Khám phá địa chỉ</string>
     <string name="email">Email</string>
     <string name="explorer">Trình khám phá</string>
@@ -206,7 +195,6 @@
     <string name="ip_address_book">Sổ địa chỉ IP</string>
     <string name="indexer">Trình lập chỉ mục</string>
     <string name="info">Thông tin</string>
-    <string name="kns_profile">KNS Hồ sơ</string>
     <string name="kaspa_explorer_api">Kaspa Explorer API</string>
     <string name="kaspa_node">Nút Kaspa</string>
     <string name="default_recommended">Mặc định (Khuyến nghị)</string>
@@ -221,7 +209,6 @@
     <string name="protocol">Giao thức</string>
     <string name="push_notifications">Thông báo đẩy</string>
     <string name="reconnect">Kết nối lại</string>
-    <string name="redirect">Chuyển hướng</string>
     <string name="refresh_pool">Làm mới nhóm</string>
     <string name="reply">Trả lời</string>
     <string name="retry_send">Gửi lại</string>
@@ -234,20 +221,16 @@
     <string name="storage">Lưu trữ</string>
     <string name="on_this_device">Trên thiết bị này</string>
     <string name="cloud_storage">Lưu trữ đám mây</string>
-    <string name="submitting_commit_transaction">Đang gửi giao dịch cam kết...</string>
-    <string name="submitting_reveal_transaction">Đang gửi giao dịch tiết lộ...</string>
     <string name="support_email">Email hỗ trợ</string>
     <string name="telegram">Telegram</string>
     <string name="total">Tổng</string>
     <string name="verified">Đã xác minh</string>
-    <string name="verifying_new_ownership_on_chain_this">Đang xác minh quyền sở hữu mới trên chuỗi (có thể mất một phút)...</string>
     <string name="version">Phiên bản</string>
     <string name="vibration">Rung</string>
     <string name="view_profile">Xem hồ sơ</string>
     <string name="view_seed_phrase">Xem 12 hoặc 24 từ</string>
     <string name="view_in_explorer">Xem trong trình khám phá</string>
     <string name="website">Trang web</string>
-    <string name="x">X</string>
     <string name="language">Ngon ngu</string>
     <string name="system_default">Hệ thống</string>
     <string name="welcome_to_kachat">Chao mung ban den voi K</string>
@@ -282,27 +265,16 @@
     <string name="mark_as_read">Đánh dấu là đã đọc</string>
     <string name="copy_link">Sao chép liên kết</string>
     <string name="open_link">Mở liên kết</string>
-    <string name="kaspa_qr_or_domain">kaspa:qr... hoặc tên miền</string>
     <!-- 5.2 name services (iOS df23b6f, 09e0403, 718724b, 9858bd1) -->
     <string name="x_handle">Tay cầm chữ X</string>
     <string name="discord_user_id">Id người dùng Discord</string>
     <string name="redirect_url">URL chuyển hướng</string>
     <string name="none_yet">Chưa có</string>
-    <string name="customize_profile">Tùy chỉnh hồ sơ</string>
-    <string name="settling">Đang xác nhận</string>
     <string name="kachat_profile_coming_body">Tên .kachat sắp ra mắt. Khi bạn nhận một tên, bạn đặt ảnh đại diện, ảnh bìa, giới thiệu và liên kết tại đây - đó là những gì K hiển thị về bạn ở mọi nơi.</string>
     <string name="kachat_name_section">Tên .kachat</string>
-    <string name="could_not_reach_service">Không thể kết nối %1$s. Kéo xuống để thử lại.</string>
-    <string name="no_names_yet">Chưa có tên %1$s.</string>
     <!-- 5.2 name lookups (iOS a0dbc15, 79b6ac8, 9858bd1) -->
-    <string name="no_tld_domain_found">Không tìm thấy tên miền %1$s</string>
-    <string name="looking_up_domain">Đang tìm tên miền...</string>
-    <string name="looking_up">Đang tra cứu...</string>
     <string name="no_domain">Không có tên miền</string>
-    <string name="other_domains">Tên miền khác</string>
-    <string name="not_registered">Chưa đăng ký</string>
     <string name="couldnt_check">Không thể kiểm tra</string>
-    <string name="kaspa_address_or_domain">Địa chỉ Kaspa hoặc tên miền</string>
     <!-- Public Chats select (iOS e08c4cc) -->
     <!-- Connection Settings tabs (iOS ee01f81) -->
     <string name="connection_tab_indexer">Trình lập chỉ mục</string>
@@ -313,7 +285,6 @@
     <string name="coming_soon">Sắp ra mắt</string>
     <string name="not_available_on_this_network">Không khả dụng trên mạng này</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
-    <string name="km_no_names">Chưa có tên .kachat</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">Hướng dẫn đầy đủ khi bắt đầu: ví, trò chuyện, thanh toán và hơn thế.</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -336,7 +307,6 @@
     <!-- Realized P&L, fees spent, Add Chatting Address (iOS 61eff0f/5e75c89) -->
     <!-- Receive / chatting address QR text (iOS 8bcae2f) -->
     <!-- Account discovery finds .k and .kaspa names (iOS 7a5b157) -->
-    <string name="chatting_picker_other_names_count">Tên .k và .kaspa (%1$d)</string>
     <!-- Message Requests and Private chats (iOS f7ca401/ba1b2e3/76faa97/74bd52c) -->
     <string name="message_requests">Yêu cầu nhắn tin</string>
     <string name="message_requests_row_sub">Mọi người và các nhóm đang chờ bạn</string>
@@ -471,7 +441,6 @@
     <string name="chats_new_chat">Cuộc trò chuyện mới</string>
     <string name="chats_new_group_chat">Nhóm trò chuyện mới</string>
     <string name="chats_new_chat_subtitle">Nhắn tin cho ai đó bằng địa chỉ hoặc tên.</string>
-    <string name="qr_chatting_address_subtitle">Dùng để trò chuyện và nhận tên miền .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="utxo_selection">Chọn UTXO</string>
     <string name="utxo_selection_caption">Chọn những đồng coin mà lần gửi này sẽ dùng.</string>
@@ -664,7 +633,6 @@
     <!-- New Chat / New Group: Address Book (iOS 1be4f6e) -->
     <string name="ab_add_count">Thêm (%1$d)</string>
     <string name="ab_add_members">Thêm thành viên</string>
-    <string name="ab_members_footer">Chọn người từ danh bạ, hoặc thêm bất kỳ ai bằng địa chỉ Kaspa hay tên miền.</string>
     <string name="ab_members_intro">Thêm người vào nhóm. Là quản trị viên, bạn quản lý thành viên.</string>
     <string name="ab_members_empty">Chưa có thành viên. Thêm người từ danh bạ hoặc bằng địa chỉ bên dưới.</string>
     <string name="ab_actions_a11y">Thêm, nhập hoặc xuất</string>
@@ -704,17 +672,8 @@
     <string name="kn_registration_not_open">Các tên đang được chuyển sang sổ đăng ký mới. Bạn có thể nhận tên mới từ %1$s.</string>
     <string name="kn_ev_imported">Đã chuyển sang sổ đăng ký mới</string>
     <!-- .kachat first: domains in every address field, Other domains, expired-name banner (iOS 6ac48a7) -->
-    <string name="enter_kaspa_address_or_domain_kachat_first">Nhập địa chỉ Kaspa (kaspa:...) hoặc tên miền (vd. alice.kachat). Tên .kachat được tra trước.</string>
-    <string name="search_contacts_or_address_or_domain">Tìm liên hệ, địa chỉ hoặc tên miền</string>
-    <string name="no_contacts_yet_paste_address_or_domain">Bạn chưa có liên hệ nào. Dán địa chỉ hoặc tên miền ở trên để mời ai đó.</string>
-    <string name="no_contacts_match_paste_address_or_domain">Không có liên hệ phù hợp. Dán địa chỉ hoặc tên miền để mời người mới.</string>
     <string name="their_profile_kachat_name_address">Hồ sơ, tên .kachat và địa chỉ của họ.</string>
-    <string name="finds_addresses_balance_or_domain">Tìm các địa chỉ có số dư hoặc tên miền.</string>
-    <string name="enter_kaspa_address_or_domain_short_kachat_first">Nhập địa chỉ Kaspa (kaspa:...) hoặc tên miền. Tên .kachat được tra trước.</string>
-    <string name="other_domains_title">Tên miền khác</string>
-    <string name="chatting_picker_intro_any_name_kachat">Nếu các từ này đã giữ danh tính của bạn ở một địa chỉ khác (tên miền .kachat, .kas, .k hoặc .kaspa, hoặc số dư trò chuyện), hãy chọn ở đây. Chỉ hiện các địa chỉ có số dư hoặc tên miền.</string>
     <string name="chatting_picker_kachat_names_count">Tên .kachat (%1$d)</string>
-    <string name="chatting_picker_kas_names_count">Tên .kas (%1$d)</string>
     <!-- Bare names resolve to .kachat only (iOS 5a5122d) -->
     <string name="kachat_names_not_live_here">Tên .kachat chưa hoạt động trên mạng này</string>
     <!-- Nextcloud sync carries portfolios -->
@@ -839,8 +798,6 @@
     <string name="quantum_safe">An toàn lượng tử</string>
     <string name="key_revealed_by_a_spend">Khóa đã lộ do một lần chi tiêu</string>
     <!-- KNS domain transfers and quantum-safe (script) addresses (iOS 2a8ca5a) -->
-    <string name="kns_transfer_quantum_source">KNS không thể chuyển tên miền ra khỏi địa chỉ an toàn lượng tử: KNS nhận diện chủ tên miền bằng khóa công khai, còn địa chỉ an toàn lượng tử giữ kín khóa của nó.</string>
-    <string name="kns_transfer_to_script_address">Không thể gửi tên miền .kas đến địa chỉ an toàn lượng tử hoặc địa chỉ script khác: KNS sẽ không bao giờ chuyển nó ra được nữa. Hãy gửi đến một địa chỉ thông thường.</string>
     <string name="quantum_next_address_failed">Không thể chuẩn bị địa chỉ tiếp theo. Hãy thử lại.</string>
     <!-- Address Visibility: a card per chain (iOS d7e6dd1) -->
     <string name="quantum_addresses">Địa chỉ lượng tử</string>
@@ -891,7 +848,6 @@
     <string name="pr_paid_to">Trả cho</string>
     <string name="ab_empty_title">Chưa có liên hệ</string>
     <string name="settings_title">Cài đặt</string>
-    <string name="confirm_sending_domain">Xác nhận gửi tên miền này</string>
     <string name="confirm_deleting_account">Xác nhận xóa tài khoản này</string>
     <string name="group_invites">Lời mời vào nhóm</string>
     <string name="group_invite">Lời mời vào nhóm</string>
@@ -936,7 +892,6 @@
     <string name="welcome_paying_for_messages">Trả phí tin nhắn</string>
     <string name="welcome_paying_for_messages_caption">Mỗi tin nhắn bạn gửi dùng một lượng Kaspa rất nhỏ từ địa chỉ này. 1 Kaspa đủ cho khoảng 500 tin nhắn.</string>
     <string name="welcome_what_others_can_see">Người khác có thể thấy gì</string>
-    <string name="welcome_what_others_can_see_caption">Ai cũng có thể thấy địa chỉ này và số dư của nó trên mạng Kaspa, nhưng không thể đọc tin nhắn của bạn. Chỉ dùng nó để trò chuyện và cho tên miền .kachat.</string>
 
     <!-- Localized literals moved out of Kotlin (parity with the iPhone app) -->
     <string name="backup_your_account_to_prevent_loss_of">Sao lưu tài khoản để tránh mất tiền</string>
@@ -1099,7 +1054,6 @@
     <string name="anyone_with_this_addresss_private_key_can">Bất kỳ ai có khóa riêng của địa chỉ này đều có thể tiêu tiền trong đó. Đừng bao giờ chia sẻ khóa này với bất kỳ ai.</string>
     <string name="tap_to_reveal_private_key">Chạm để hiện khóa riêng</string>
     <string name="could_not_load_transactions">Không thể tải các giao dịch.</string>
-    <string name="contains_domain">Chứa tên miền</string>
     <string name="private_key_hex_copied_clipboard_will_clear">Đã sao chép khóa riêng hex. Bộ nhớ tạm sẽ xóa sau 30 giây.</string>
     <string name="cache">Bộ nhớ đệm</string>
     <string name="failed_to_export_diagnostics">Không thể xuất chẩn đoán.</string>
@@ -1259,7 +1213,6 @@
     <string name="hr_min">%1$d giờ, %2$d phút</string>
     <string name="min">%1$d phút</string>
     <string name="could_not_check_addresses_try_again_when">Không thể kiểm tra địa chỉ. Hãy thử lại khi đã kết nối.</string>
-    <string name="no_addresses_with_a_balance_or_domain">Không tìm thấy địa chỉ nào có số dư hoặc tên miền.</string>
     <string name="hidden">Đã ẩn (%1$d)</string>
     <string name="address_hidden_re_enable_it_in_address">Đã ẩn địa chỉ. Bật lại trong Hiển thị địa chỉ.</string>
     <string name="this_address_cant_be_hidden">Không thể ẩn địa chỉ này.</string>
@@ -1306,12 +1259,6 @@
     <string name="couldnt_load_the_coins">Không thể tải các đồng coin.</string>
     <string name="these_words_are_invalid_double_check_the">Các từ này không hợp lệ. Hãy kiểm tra lại - từ cuối chứa mã kiểm tra, nên chỉ một từ sai cũng khiến xác thực thất bại.</string>
     <string name="invalid_words_please_enter_12_or_24">Các từ không hợp lệ. Vui lòng nhập 12 hoặc 24 từ.</string>
-    <string name="failed_to_set_primary_domain">Không thể đặt tên miền chính</string>
-    <string name="invalid_recipient_address">Địa chỉ người nhận không hợp lệ</string>
-    <string name="recipient_must_be_different_from_your_own">Người nhận phải khác với ví của chính bạn</string>
-    <string name="recipient_address_is_on_the_wrong_network">Địa chỉ người nhận ở sai mạng</string>
-    <string name="invalid_recipient">Người nhận không hợp lệ</string>
-    <string name="transfer_failed">Chuyển thất bại</string>
     <string name="retry_failed">Thử lại thất bại</string>
     <string name="saving_keep_the_card_still">Đang lưu. Giữ yên thẻ.</string>
     <string name="reading_keep_the_card_still">Đang đọc. Giữ yên thẻ.</string>
@@ -1349,8 +1296,6 @@
     <string name="resynced_one_message_n_chats">Đã đồng bộ lại 1 tin nhắn đến trong %1$d cuộc trò chuyện.</string>
     <string name="resynced_n_messages_one_chat">Đã đồng bộ lại %1$d tin nhắn đến trong 1 cuộc trò chuyện.</string>
     <string name="resynced_n_messages_n_chats">Đã đồng bộ lại %1$d tin nhắn đến trong %2$d cuộc trò chuyện.</string>
-    <string name="found_one_address_balance_domain">Đã tìm thấy 1 địa chỉ có số dư hoặc tên miền.</string>
-    <string name="found_n_addresses_balance_domain">Đã tìm thấy %1$d địa chỉ có số dư hoặc tên miền.</string>
     <string name="resync_one_chat">Đồng bộ lại 1 cuộc trò chuyện</string>
     <string name="resync_n_chats">Đồng bộ lại %1$d cuộc trò chuyện</string>
     <string name="one_day_ago">1 ngày trước</string>
@@ -1448,9 +1393,6 @@
     <string name="not_sent_you_switched_accounts">Chưa gửi: bạn đã đổi tài khoản trước khi gửi.</string>
     <string name="play_it_again">Chơi lại</string>
     <string name="couldnt_look_up_name_try_again">Hiện không thể tra cứu %1$s. Hãy thử lại sau giây lát.</string>
-    <string name="kns_reveal_will_finish_on_next_open">Giao dịch đầu tiên trong hai giao dịch đã thành công, nhưng giao dịch thứ hai thì chưa. K sẽ hoàn tất ở lần mở tiếp theo.</string>
-    <string name="kns_transfer_fee_at_most_1_kas">Phí chuyển tên miền tối đa là 1 KAS.</string>
-    <string name="confirm_setting_this_primary_name">Xác nhận đặt tên chính này</string>
     <string name="this_is_the_public_half_of_this_address">Đây là phần công khai của địa chỉ này. Nó không thể chi tiêu gì.</string>
     <string name="address_number_is_ready">Địa chỉ #%1$d đã sẵn sàng.</string>
     <string name="chess_menu_title">Cờ vua</string>
@@ -1512,32 +1454,18 @@
     <string name="chess_invite_sent">Đã gửi lời mời chơi cờ vua</string>
     <string name="chess_invited_you">Đã mời bạn chơi một ván cờ vua</string>
     <string name="more_reactions">Thêm cảm xúc</string>
-    <string name="confirm_changes">Xác nhận thay đổi</string>
-    <string name="uploading_avatar">Đang tải hình đại diện lên...</string>
-    <string name="uploading_banner">Đang tải biểu ngữ lên...</string>
-    <string name="profile_field_removed">%1$s (đã xóa)</string>
     <string name="create_group">Tạo nhóm</string>
     <string name="create_group_fee_estimate">Phí mạng ước tính ≈ %1$s %2$s cho %3$d giao dịch.</string>
     <string name="create_chat">Tạo cuộc trò chuyện</string>
     <string name="add_to_group">Thêm vào nhóm</string>
     <string name="edit_name">Sửa tên</string>
     <string name="domain_label">Lãnh địa</string>
-    <string name="primary_badge">CHÍNH</string>
     <string name="notification_mode_off">Tắt</string>
     <string name="notification_mode_no_sound">Không có âm thanh</string>
     <string name="notification_mode_sound">Âm thanh</string>
     <string name="notification_mode_default">Mặc định (%1$s)</string>
-    <string name="domain_transfer_sending">Đang gửi %1$s</string>
-    <string name="domain_transfer_footer">Chuyển tên miền gồm hai giao dịch nên sẽ mất một lúc. Hãy giữ ứng dụng mở cho đến khi hoàn tất.</string>
-    <string name="domain_transfer_stage_preparing">Đang chuẩn bị chuyển</string>
-    <string name="domain_transfer_stage_fee">Đang tính phí</string>
-    <string name="domain_transfer_stage_commit">Đang gửi giao dịch commit</string>
-    <string name="domain_transfer_stage_reveal">Đang gửi giao dịch reveal</string>
-    <string name="domain_transfer_stage_verifying">Đang xác nhận chủ sở hữu mới</string>
-    <string name="domain_transfer_stage_working">Đang xử lý</string>
     <string name="checking_address_n">Đang kiểm tra địa chỉ #%1$d</string>
     <string name="n_found_so_far">Đã tìm thấy %1$d cho đến nay</string>
-    <string name="no_addresses_with_balance_or_domain_yet">Chưa có địa chỉ nào có số dư hoặc tên miền</string>
     <string name="checks_the_first_thousand_addresses">Kiểm tra một nghìn địa chỉ đầu tiên dù có khoảng trống, rồi tiếp tục chừng nào còn tìm thấy.</string>
     <string name="first_sync_all_set">Đã xong</string>
     <string name="first_sync_up_to_date">Các cuộc trò chuyện và lịch sử của bạn đã được cập nhật.</string>
@@ -1567,9 +1495,6 @@
     <string name="chess_notif_lost_on_time">♟️ Đã thua do hết giờ</string>
     <string name="chess_notif_resigned">♟️ Đã đầu hàng ván cờ vua</string>
     <string name="fee_label">Phí</string>
-    <plurals name="kns_profile_changes_count">
-        <item quantity="other">%d thay đổi. Mỗi thay đổi được gửi thành một giao dịch on-chain riêng từ địa chỉ trò chuyện của bạn:</item>
-    </plurals>
     <plurals name="create_group_and_invite">
         <item quantity="other">Tạo \"%1$s\" và mời %2$d thành viên?</item>
     </plurals>
@@ -1585,12 +1510,10 @@
     <string name="payment_notice_fee_from_chatting_address">Địa chỉ trò chuyện của bạn cũng trả %1$s KAS để báo cho %2$s về khoản thanh toán này.</string>
     <string name="recording_failed_please_try_again">Ghi âm thất bại. Vui lòng thử lại.</string>
     <string name="message_needs_too_many_coins">Tin nhắn này cần quá nhiều coin cho một giao dịch. Hãy dùng Compound UTXOs cho địa chỉ trò chuyện, rồi thử lại.</string>
-    <string name="use_their_domain_name">Dùng tên miền của họ</string>
     <string name="show_request_as_qr">Hiện yêu cầu dưới dạng QR</string>
     <string name="pr_qr_scan_to_pay_in_kachat">Quét bằng camera điện thoại để thanh toán trong K, mọi thứ đã được điền sẵn.</string>
     <string name="set_as_name">Đặt làm tên</string>
     <string name="their_name">Tên của họ</string>
-    <string name="get_a_kachat_name">Nhận tên .kachat</string>
     <string name="composer_gif_subtitle">Gửi một GIF động từ thư viện của bạn.</string>
     <string name="group_composer_gif_subtitle">Gửi một GIF động từ thư viện của bạn vào nhóm.</string>
     <string name="gif_quality">Chất lượng GIF</string>
@@ -1620,10 +1543,6 @@
     <string name="token_received_title">Đã nhận %1$s</string>
     <string name="token_received_on_one">Vào %1$s của bạn</string>
     <string name="token_received_on_many">Vào %1$d địa chỉ của bạn</string>
-    <string name="address_tab_domains">Tên miền</string>
-    <string name="address_domains_none">Địa chỉ này không có tên %1$s.</string>
-    <string name="address_domains_one">1 tên miền</string>
-    <string name="address_domains_couldnt_load">Không thể tải</string>
     <string name="connection_not_set">Chưa đặt</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">Sao chép liên kết chia sẻ</string>
@@ -1739,4 +1658,6 @@
     <string name="history_moved">Đã chuyển</string>
     <string name="history_to_address">Đến %1$s</string>
     <string name="history_change_to_address">Tiền thừa %1$s đến %2$s</string>
+    <string name="cycle_hint_next_page">Chuyển sang trang tiếp theo</string>
+    <string name="cycle_hint_next_feed">Chuyển sang bảng tin tiếp theo</string>
 </resources>

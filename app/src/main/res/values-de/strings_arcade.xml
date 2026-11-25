@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">Snake</string>
+    <string name="arcade_snake_detail">Fressen, wachsen und weder die Wände noch dich selbst treffen. Punktzahlen kommen auf Kaspa.</string>
+    <string name="arcade_2048_detail">Wische, um Kacheln zu verbinden, und erreiche 2048. Punktzahlen kommen auf Kaspa.</string>
+    <string name="arcade_other_account">Dieses Spiel wurde mit einem anderen Konto gespielt. Melde dich dort an, um die Punktzahl einzutragen.</string>
+    <string name="arcade_score_not_sent">Die Punktzahl wurde nicht gesendet.</string>
+    <string name="arcade_challenge_play">Herausforderung: Spiele %1$s</string>
+    <string name="arcade_beat_in">Schlage %1$s in %2$s</string>
+    <string name="arcade_share_boast">Ich habe %1$s Punkte in %2$s auf K erzielt. Meinst du, du kannst das schlagen?</string>
+    <string name="arcade_challenge_named">%1$s hat %2$s Punkte in %3$s erzielt. Kannst du das schlagen?</string>
+    <string name="arcade_challenge_someone">Jemand hat %1$s Punkte in %2$s erzielt. Kannst du das schlagen?</string>
+    <string name="arcade_your_best">Dein Bestwert: %1$s</string>
+    <string name="arcade_fee_note">Die Punktzahl jedes beendeten Spiels wird von deiner Chat-Adresse auf Kaspa eingetragen, für eine kleine Netzwerkgebühr.</string>
+    <string name="arcade_hint_period">Wechselt den Zeitraum der Bestenliste</string>
+    <string name="arcade_board_unreachable">Die Bestenliste konnte nicht geladen werden. Zum erneuten Versuch nach unten ziehen.</string>
+    <string name="arcade_board_empty">Noch keine Punktzahlen. Mach den Anfang.</string>
+    <string name="arcade_posted">Auf KaPost gepostet</string>
+    <string name="arcade_game_over">Spiel vorbei</string>
+    <string name="arcade_play_again">Noch einmal spielen</string>
+    <string name="arcade_posting">Wird auf KaPost gepostet…</string>
+    <string name="arcade_shared">Auf KaPost geteilt</string>
+    <string name="arcade_retry_stamp">Eintrag erneut versuchen</string>
+    <string name="arcade_stamping">Punktzahl wird auf Kaspa eingetragen…</string>
+    <string name="arcade_stamped">Punktzahl auf Kaspa eingetragen</string>
+    <string name="arcade_no_score">Keine Punktzahl zum Eintragen.</string>
+    <string name="arcade_score_n">Punkte: %1$s</string>
+    <string name="arcade_snake_start_hint">Wische auf dem Spielfeld oder nutze die Pfeile, um zu starten.</string>
+    <string name="arcade_score">Punkte</string>
+    <string name="arcade_best_tile">Beste Kachel</string>
+    <string name="arcade_2048_hint">Wische, um die Kacheln zu bewegen. Gleiche Kacheln verschmelzen.</string>
+    <string name="arcade_challenge_label">Arcade-Herausforderung</string>
+</resources>

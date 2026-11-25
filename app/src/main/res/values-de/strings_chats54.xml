@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">Wer darf dir schreiben?</string>
+    <string name="c54_who_anyone">Jeder</string>
+    <string name="c54_who_usernames">Nur Nutzer mit Benutzername</string>
+    <string name="c54_who_row_footer">Wer einen Chat mit dir beginnen kann. Personen, mit denen du bereits chattest, sind nicht betroffen.</string>
+    <string name="c54_who_anyone_footer">Jeder kann dir eine erste Nachricht senden. Sie wartet in den Nachrichtenanfragen, bis du sie annimmst.</string>
+    <string name="c54_who_usernames_footer">Nur Personen mit einem Benutzernamen (einem .kachat-Namen) erreichen deine Nachrichtenanfragen. Erste Nachrichten von allen anderen werden ausgeblendet und lösen keine Benachrichtigung aus; wähle „Jeder“, um sie wieder zu sehen. Personen, mit denen du bereits chattest, sind nicht betroffen.</string>
+    <string name="c54_room_clears_unread">Entfernt das Ungelesen-Abzeichen dieses öffentlichen Chats.</string>
+    <string name="c54_room_no_notifications">Keine Benachrichtigungen aus diesem öffentlichen Chat.</string>
+    <string name="c54_room_notifications_resume">Benachrichtigungen aus diesem öffentlichen Chat kommen wieder.</string>
+    <string name="c54_room_delete_subtitle">Entfernt diesen öffentlichen Chat aus deinen Chats.</string>
+    <string name="c54_tip_subtitle">Diesem Kontakt Trinkgeld geben, wie unter Einstellungen &gt; Anpassung &gt; Trinkgeld festgelegt.</string>
+    <string name="c54_send_tip">Trinkgeld senden</string>
+    <string name="c54_send_deferred">Warte auf die Bestätigung deiner Coins. Es wird gleich von selbst gesendet, also sende es nicht noch einmal.</string>
+    <string name="c54_failed_start_recording">Aufnahme konnte nicht gestartet werden: %1$s</string>
+    <string name="c54_failed_encode_audio">Audio konnte nicht codiert werden: %1$s</string>
+    <string name="c54_failed_prepare_audio">Audio konnte nicht vorbereitet werden: %1$s</string>
+    <string name="c54_sent_a_link">Hat einen Link gesendet</string>
+    <string name="c54_public_chat_room">Öffentlicher Chatraum #%1$s</string>
+    <string name="c54_search_contacts_address_username">Kontakte suchen oder eine Adresse oder einen Benutzernamen</string>
+    <string name="c54_looking_up_username">Benutzername wird gesucht …</string>
+    <string name="c54_no_contacts_paste_username">Du hast noch keine Kontakte. Füge oben eine Adresse oder einen Benutzernamen ein, um jemanden einzuladen.</string>
+    <string name="c54_no_contacts_match_username">Keine Kontakte passen zu deiner Suche. Füge eine Adresse oder einen Benutzernamen ein, um jemand Neues einzuladen.</string>
+    <string name="c54_invites_resent_all">Einladungen an alle Mitglieder erneut gesendet.</string>
+    <string name="c54_invite_resent">Einladung erneut gesendet.</string>
+    <string name="c54_room_follows_app_indexer">Dieser Raum folgt wieder dem Indexer der App.</string>
+    <string name="c54_room_indexer_updated">Indexer für #%1$s aktualisiert.</string>
+    <string name="c54_room_could_not_reach">Nicht erreichbar: %1$s</string>
+    <string name="c54_tap_open_your_chat">Tippen, um deinen Chat zu öffnen.</string>
+    <string name="c54_tap_start_chat_on_k">Tippen, um einen Chat in K zu starten.</string>
+    <string name="c54_stop_recording">Aufnahme beenden</string>
+    <string name="c54_send_voice_message">Sprachnachricht senden</string>
+</resources>

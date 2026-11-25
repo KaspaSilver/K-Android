@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">لا توجد بطولات منتهية بعد.</string>
     <string name="kaplay_no_finished_tournaments_this_month">لا توجد بطولات منتهية هذا الشهر بعد.</string>
     <string name="kaplay_tab_leaderboard">لوحة المتصدرين</string>
+    <string name="kp_640de0cb0b2c" formatted="false">سجلّك: %s فوز، %s خسارة</string>
+    <string name="kp_5d12bd53552c" formatted="false">العب</string>
+    <string name="kp_3ab5950b358f" formatted="false">العب مع أول حد يدخل، أو مع صاحبك بكود.</string>
+    <string name="kp_85e2145e7cad" formatted="false">تمن لعيبة، خروج المغلوب.</string>
+    <string name="kp_636935a0b48d" formatted="false">خمس روبوتات، من مستوى 1 لـ 5. اغلب واحد عشان تفتح اللي بعده.</string>
+    <string name="kp_6fba758f3243" formatted="false">بيروح للوحة المتصدرين اللي بعدها</string>
+    <string name="kp_c0fc86977802" formatted="false">اللي الخصم أخده</string>
+    <string name="kp_48cb744b4728" formatted="false">اللي إنت أخدته</string>
+    <string name="kp_76ccff916d06" formatted="false">طلب تواصل</string>
+    <string name="kp_73eb05867f7b" formatted="false">خسر علشان الوقت خلص</string>
+    <string name="kp_6eac413a29b7" formatted="false">استسلم</string>
+    <string name="kp_8a4d6885363d" formatted="false">قبل الماتش</string>
+    <string name="kp_012794aeafb0" formatted="false">رفض الماتش</string>
+    <string name="kp_0ac72bc536b1" formatted="false">دعوة شطرنج</string>
+    <string name="kp_4bb26afc82d3" formatted="false">لا توجد مباريات 1v1 منتهية هذا الشهر بعد.</string>
+    <string name="kp_c56c7d117a52" formatted="false">لا توجد بطولات منتهية هذا الشهر بعد.</string>
 </resources>

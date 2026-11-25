@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">স্নেক</string>
+    <string name="arcade_snake_detail">খান, বড় হন, দেয়ালে বা নিজের গায়ে ধাক্কা খাবেন না। স্কোর Kaspa-তে রেকর্ড হয়।</string>
+    <string name="arcade_2048_detail">টাইল মেলাতে সোয়াইপ করুন এবং 2048-এ পৌঁছান। স্কোর Kaspa-তে রেকর্ড হয়।</string>
+    <string name="arcade_other_account">এই গেমটি অন্য একটি অ্যাকাউন্টে খেলা হয়েছিল। স্কোর রেকর্ড করতে সেই অ্যাকাউন্টে সাইন ইন করুন।</string>
+    <string name="arcade_score_not_sent">স্কোর পাঠানো হয়নি।</string>
+    <string name="arcade_challenge_play">চ্যালেঞ্জ: %1$s খেলুন</string>
+    <string name="arcade_beat_in">%2$s-এ %1$s ছাড়িয়ে যান</string>
+    <string name="arcade_share_boast">আমি K-তে %2$s-এ %1$s স্কোর করেছি। আপনি কি এটা ছাড়াতে পারবেন?</string>
+    <string name="arcade_challenge_named">%1$s %3$s-এ %2$s স্কোর করেছেন। আপনি কি এটা ছাড়াতে পারবেন?</string>
+    <string name="arcade_challenge_someone">কেউ একজন %2$s-এ %1$s স্কোর করেছেন। আপনি কি এটা ছাড়াতে পারবেন?</string>
+    <string name="arcade_your_best">আপনার সেরা: %1$s</string>
+    <string name="arcade_fee_note">প্রতিটি শেষ হওয়া গেমের স্কোর আপনার চ্যাটিং ঠিকানা থেকে অল্প নেটওয়ার্ক ফি দিয়ে Kaspa-তে রেকর্ড হয়।</string>
+    <string name="arcade_hint_period">লিডারবোর্ডের সময়কাল বদলায়</string>
+    <string name="arcade_board_unreachable">লিডারবোর্ড লোড করা যায়নি। আবার চেষ্টা করতে নিচে টানুন।</string>
+    <string name="arcade_board_empty">এখনও কোনো স্কোর নেই। প্রথম হোন।</string>
+    <string name="arcade_posted">KaPost-এ পোস্ট হয়েছে</string>
+    <string name="arcade_game_over">গেম ওভার</string>
+    <string name="arcade_play_again">আবার খেলুন</string>
+    <string name="arcade_posting">KaPost-এ পোস্ট হচ্ছে…</string>
+    <string name="arcade_shared">KaPost-এ শেয়ার হয়েছে</string>
+    <string name="arcade_retry_stamp">আবার রেকর্ড করুন</string>
+    <string name="arcade_stamping">Kaspa-তে স্কোর রেকর্ড হচ্ছে…</string>
+    <string name="arcade_stamped">স্কোর Kaspa-তে রেকর্ড হয়েছে</string>
+    <string name="arcade_no_score">রেকর্ড করার মতো কোনো স্কোর নেই।</string>
+    <string name="arcade_score_n">স্কোর: %1$s</string>
+    <string name="arcade_snake_start_hint">শুরু করতে বোর্ডে সোয়াইপ করুন বা তীরচিহ্ন ব্যবহার করুন।</string>
+    <string name="arcade_score">স্কোর</string>
+    <string name="arcade_best_tile">সেরা টাইল</string>
+    <string name="arcade_2048_hint">টাইল সরাতে সোয়াইপ করুন। সমান টাইল মিলে যায়।</string>
+    <string name="arcade_challenge_label">আর্কেড চ্যালেঞ্জ</string>
+</resources>

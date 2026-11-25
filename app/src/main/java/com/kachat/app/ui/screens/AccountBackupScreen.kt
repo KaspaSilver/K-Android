@@ -57,9 +57,11 @@ internal fun unlockAccountBackup(context: Context, biometricEnabled: Boolean, sh
 }
 
 /**
- * The strip under the balance on every main screen while an account isn't backed up (iOS d1844582
- * `AccountBackupBanner`). It stays until the backup steps are finished, and turns red once the
- * chatting address holds funds. [onOpenBackup] runs behind the seed phrase's biometric gate.
+ * The strip at the top of Profile while an account isn't backed up (iOS `AccountBackupBanner`;
+ * Profile only since iOS 518fdc8c, owner's call 2026-11-23: the dock's Profile icon carries a
+ * yellow dot meanwhile, `ProfileDockIcon`). It stays until the backup steps are finished, and
+ * turns red once the chatting address holds funds. [onOpenBackup] runs behind the seed phrase's
+ * biometric gate.
  */
 @Composable
 internal fun AccountBackupBanner(viewModel: WalletViewModel, onOpenBackup: () -> Unit) {

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">Имена пользователей</string>
+    <string name="shell54_tipping_footer">Что отправляет «Чаевые» — в посте и в чате.</string>
+    <string name="shell54_chatting_picker_intro">Если эти слова уже хранят вашу личность на другом адресе - имя .kachat или пополненный баланс для чатов, - выберите его здесь. Показаны только адреса с балансом или именами.</string>
+    <string name="shell54_what_others_can_see_caption">Любой может видеть этот адрес и его баланс в сети Kaspa, но не может читать ваши сообщения. Используйте его только для чатов и имён пользователя.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... или имя пользователя</string>
+    <string name="shell54_looking_up_username">Поиск имени пользователя...</string>
+    <string name="shell54_portfolio_add_address_footer">Введите адрес Kaspa или имя пользователя, например name.kachat. Каждая входящая транзакция на этот адрес станет покупкой, каждая исходящая — продажей по исторической цене KAS в тот день. Повторное добавление того же адреса позже импортирует только транзакции, найденные после последнего импорта.</string>
+    <string name="shell54_report_copied">Жалоба скопирована</string>
+    <string name="shell54_report_no_mail_app">Ни одно почтовое приложение не смогло её открыть. Вставьте жалобу в письмо на %1$s.</string>
+    <string name="shell54_show_amounts">Показать суммы</string>
+    <string name="shell54_hide_amounts">Скрыть суммы</string>
+    <string name="shell54_amount_unit">Сумма (%1$s)</string>
+    <string name="shell54_price_per_kas">Цена за KAS</string>
+    <string name="shell54_total_spent">Всего потрачено</string>
+    <string name="shell54_total_received">Всего получено</string>
+    <string name="shell54_chart_settings">Настройки графика</string>
+    <string name="shell54_import_failed">Импорт не удался.</string>
+    <string name="shell54_export_csv">Экспорт в CSV</string>
+    <string name="shell54_sent_on">Отправлено %1$s (%2$s)</string>
+    <string name="shell54_received_on">Получено %1$s (%2$s)</string>
+    <string name="shell54_this_portfolio">этом портфеле</string>
+    <string name="shell54_new_portfolio">Новый портфель</string>
+    <string name="shell54_time">Время</string>
+    <string name="shell54_total_value">Итого %1$s</string>
+    <string name="shell54_move_up">Переместить «%1$s» вверх</string>
+    <string name="shell54_move_down">Переместить «%1$s» вниз</string>
+    <string name="shell54_selected">Выбрано</string>
+    <string name="shell54_not_selected">Не выбрано</string>
+    <string name="shell54_not_valid_kpub">Это не действительный kpub</string>
+    <string name="shell54_new_address_failed">Не удалось создать новый адрес. Попробуйте ещё раз.</string>
+</resources>

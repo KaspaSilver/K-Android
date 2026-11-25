@@ -4,7 +4,7 @@ import com.kachat.app.services.UtxoEntry
 
 /**
  * Pure UTXO selection + mass-based fee estimation, shared by every transaction builder
- * (regular sends in `KaspaWalletEngine`, KNS commit transactions in `KnsInscriptionEngine`) —
+ * (regular sends in `KaspaWalletEngine`, and the rest) —
  * extracted so the logic exists in exactly one place rather than being duplicated per builder.
  */
 object KaspaUtxoSelector {

@@ -19,8 +19,9 @@ import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// MARK: - Wire models (verbatim K field names; identity fields deliberately ignored - KNS owns
-// ALL identity via the pubkey -> Kaspa address bridge, so userNickname/avatar fields never map)
+// MARK: - Wire models (verbatim K field names; identity fields deliberately ignored - the app owns
+// ALL identity (contact alias, .kachat name) via the pubkey -> Kaspa address bridge, so
+// userNickname/avatar fields never map)
 
 /** Embedded reference the indexer attaches to quote posts. */
 data class KQuoteRef(
@@ -380,8 +381,8 @@ class KaPostsService @Inject constructor(
 
         /**
          * Compressed (02/03 + x) or raw x-only pubkey hex -> Kaspa address. THE bridge that
-         * keeps identity in KNS: every K pubkey maps to an address and resolves through the
-         * app's normal contacts/KNS chain.
+         * keeps identity in the app: every K pubkey maps to an address and resolves through the
+         * app's normal contacts/.kachat chain.
          */
         fun kaspaAddressFromPubkey(pubkeyHex: String): String? {
             val raw = decodeHex(pubkeyHex) ?: return null
@@ -396,7 +397,7 @@ class KaPostsService @Inject constructor(
         /**
          * The inverse bridge for @mentions: a Kaspa address' 32-byte x-only payload as the
          * compressed KaPost pubkey (BIP-340 even-Y convention, matching desktop/iOS). Used to
-         * fill mentioned_pubkeys from a KNS-domain contact's address alone.
+         * fill mentioned_pubkeys from a .kachat owner's address alone.
          */
         fun kapostPubkeyFromAddress(address: String): String? = try {
             val (version, payload) = KaspaAddress.decode(address)

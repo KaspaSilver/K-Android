@@ -28,8 +28,9 @@ object NextcloudShareSniff {
         return caption.ifEmpty { "📎 Shared a file" }
     }
 
-    /** The preview a link-bearing message gets in the chat and group lists. */
-    const val SENT_A_LINK = "📎 Sent a link"
+    /** The preview a link-bearing message gets in the chat and group lists, translated each time
+     *  it's read (iOS audit 2026-11-24 #33). */
+    val SENT_A_LINK: String get() = "📎 " + runCatching { tr(com.kachat.app.R.string.c54_sent_a_link) }.getOrDefault("Sent a link")
 
     /**
      * The preview a message gets in the chat and group lists: never a link. Any message carrying

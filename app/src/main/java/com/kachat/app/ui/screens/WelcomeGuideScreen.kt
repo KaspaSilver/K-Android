@@ -740,7 +740,7 @@ private fun WelcomeGuideAddressExplainerStep(chattingAddress: String?, onPreviou
             icon = Icons.Filled.Visibility,
             title = stringResource(R.string.welcome_what_others_can_see),
             address = "",
-            caption = stringResource(R.string.welcome_what_others_can_see_caption)
+            caption = stringResource(R.string.shell54_what_others_can_see_caption)
         )
     }
         Spacer(Modifier.height(16.dp))

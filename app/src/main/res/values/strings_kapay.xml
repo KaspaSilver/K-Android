@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">Enter your hashrate to estimate earnings.</string>
     <string name="kp_export_failed_csv">Export failed. Couldn\'t write the CSV file</string>
     <string name="kp_fee_amount">Fee %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">Found %1$d addresses with a balance or domain.</string>
-    <string name="kp_found_one_address_balance_domain">Found 1 address with a balance or domain.</string>
     <string name="kp_frame_lld_lld_5cb10">Frame %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">Give this account a name so you can recognize it.</string>
     <string name="kp_hide_address">Hide Address</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">New Portfolio</string>
     <string name="kp_next_block_reward">Next Block Reward</string>
     <string name="kp_next_block_reward_reduction">Next Block Reward Reduction</string>
-    <string name="kp_no_addresses_balance_domain_found">No addresses with a balance or domain found.</string>
     <string name="kp_no_addresses_discovered_yet_15738">No addresses discovered yet.</string>
     <string name="kp_no_used_addresses_yet">No used addresses yet</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Not enough history yet - check back after a few days of activity.</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">Save the CSV to the KaChat folder in your Nextcloud.</string>
     <string name="pnc_import_sub">Pick a CSV file from your Nextcloud.</string>
     <string name="portfolio">Portfolio</string>
-    <string name="portfolio_add_address_footer_kachat">Enter a Kaspa address or a domain like name.kachat (.kachat names are looked up first). Every received transaction on this address becomes a buy, every sent transaction becomes a sell, priced at that day\'s historical KAS price. Re-adding the same address later only imports transactions found since the last import.</string>
     <string name="portfolio_add_chatting_address">Add Chatting Address</string>
     <string name="portfolio_add_chatting_address_sub">Your chatting address\'s buys and sells, and every network fee it has paid.</string>
     <string name="portfolio_fees_count_loading">Transactions: %1$d. Some prices are still loading.</string>

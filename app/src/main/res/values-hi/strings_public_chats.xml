@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">नई सार्वजनिक चैट</string>
     <string name="pc_new_public_chat_subtitle">किसी सार्वजनिक रूम से जुड़ें या नया बनाएँ।</string>
     <string name="pc_edit_default_public_chats">डिफ़ॉल्ट सार्वजनिक चैट बदलें</string>
-    <string name="pc_edit_default_public_chats_subtitle">डिफ़ॉल्ट रूम और भाषा रूम चालू या बंद करें।</string>
     <string name="pc_new_public_chat_explainer">जो कोई भी उसी चैनल नाम से जुड़ता है वह वहाँ संदेश देख और पोस्ट कर सकता है - कोई मालिक नहीं है और कोई आमंत्रण नहीं।</string>
     <string name="pc_join">शामिल हों</string>
     <string name="pc_back">वापस</string>

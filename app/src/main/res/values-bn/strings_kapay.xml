@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">আয় অনুমান করতে আপনার হ্যাশরেট লিখুন।</string>
     <string name="kp_export_failed_csv">এক্সপোর্ট ব্যর্থ। CSV ফাইল লেখা যায়নি</string>
     <string name="kp_fee_amount">ফি %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">ব্যালেন্স বা ডোমেইনসহ %1$dটি ঠিকানা পাওয়া গেছে।</string>
-    <string name="kp_found_one_address_balance_domain">ব্যালেন্স বা ডোমেইনসহ ১টি ঠিকানা পাওয়া গেছে।</string>
     <string name="kp_frame_lld_lld_5cb10">ফ্রেম %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">এই অ্যাকাউন্টটি চিনতে পারার জন্য একটি নাম দিন।</string>
     <string name="kp_hide_address">ঠিকানা লুকান</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">নতুন পোর্টফোলিও</string>
     <string name="kp_next_block_reward">পরবর্তী ব্লক পুরস্কার</string>
     <string name="kp_next_block_reward_reduction">পরবর্তী ব্লক পুরস্কার হ্রাস</string>
-    <string name="kp_no_addresses_balance_domain_found">ব্যালেন্স বা ডোমেইনসহ কোনো ঠিকানা পাওয়া যায়নি।</string>
     <string name="kp_no_addresses_discovered_yet_15738">এখনও কোনো ঠিকানা আবিষ্কৃত হয়নি।</string>
     <string name="kp_no_used_addresses_yet">এখনো কোনো ব্যবহৃত ঠিকানা নেই</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">এখনো যথেষ্ট ইতিহাস নেই - কয়েক দিনের কার্যকলাপের পরে আবার দেখুন।</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">CSV ফাইলটি আপনার Nextcloud-এর KaChat ফোল্ডারে সংরক্ষণ করে।</string>
     <string name="pnc_import_sub">আপনার Nextcloud থেকে একটি CSV ফাইল বেছে নিন।</string>
     <string name="portfolio">পোর্টফোলিও</string>
-    <string name="portfolio_add_address_footer_kachat">একটি Kaspa ঠিকানা বা name.kachat-এর মতো ডোমেইন লিখুন (আগে .kachat নাম খোঁজা হয়)। এই ঠিকানায় পাওয়া প্রতিটি লেনদেন কেনা এবং পাঠানো প্রতিটি লেনদেন বিক্রি হিসেবে সেই দিনের ঐতিহাসিক KAS দামে ধরা হয়। পরে একই ঠিকানা আবার যোগ করলে শুধু শেষ ইমপোর্টের পরের লেনদেন আনা হয়।</string>
     <string name="portfolio_add_chatting_address">চ্যাট ঠিকানা যোগ করুন</string>
     <string name="portfolio_add_chatting_address_sub">আপনার চ্যাট ঠিকানার কেনা-বেচা এবং এর দেওয়া প্রতিটি নেটওয়ার্ক ফি।</string>
     <string name="portfolio_fees_count_loading">লেনদেন: %1$d। কিছু দাম এখনো লোড হচ্ছে।</string>

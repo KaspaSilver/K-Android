@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">统计</string>
     <string name="shell_tab_websites">网站</string>
     <string name="shell_kaspa_websites">Kaspa 网站</string>
-    <string name="shell_customize_dock">自定义程序坞</string>
-    <string name="shell_your_dock">你的程序坞</string>
-    <string name="shell_always_stays">%1$s 始终保留在程序坞中。</string>
-    <string name="shell_dock_full">程序坞已满。请先移出一项，再添加这里的项目。</string>
-    <string name="shell_hub_order">按 %1$s 显示的顺序。</string>
-    <string name="shell_move_to">将 %1$s 移到 %2$s</string>
-    <string name="shell_add_to_dock">将 %1$s 添加到程序坞</string>
-    <string name="shell_always_in_dock">始终在程序坞中</string>
-    <string name="shell_hub_empty_title">这里暂时没有内容</string>
-    <string name="shell_hub_empty_body">不在程序坞中的项目会显示在这里。可在“自定义程序坞”中整理。</string>
-    <string name="shell_customize_dock_footer">选择程序坞里放什么。其余都在 Kaspa Hub 中。</string>
     <string name="shell_terms_of_use">使用条款</string>
     <string name="shell_message_indexer_footer">KaPost、公共聊天和国际象棋也从此索引器读取。</string>
     <string name="shell_ks_what_counts">统计范围</string>

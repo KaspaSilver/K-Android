@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">ব্যবহারকারীর নাম</string>
+    <string name="shell54_tipping_footer">টিপ কী পাঠায়, পোস্টে ও চ্যাটে।</string>
+    <string name="shell54_chatting_picker_intro">এই শব্দগুলো যদি আগে থেকেই অন্য কোনো ঠিকানায় আপনার পরিচয় রাখে - একটি .kachat নাম বা ব্যালান্সসহ চ্যাটিং ঠিকানা - তাহলে এখানে সেটি বেছে নিন। শুধু ব্যালান্স বা নাম থাকা ঠিকানাগুলো দেখানো হয়।</string>
+    <string name="shell54_what_others_can_see_caption">Kaspa নেটওয়ার্কে যে কেউ এই ঠিকানা ও এর ব্যালেন্স দেখতে পারে, কিন্তু আপনার বার্তা পড়তে পারে না। এটি শুধু চ্যাট ও ব্যবহারকারীর নামের জন্য ব্যবহার করুন।</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... বা ব্যবহারকারীর নাম</string>
+    <string name="shell54_looking_up_username">ব্যবহারকারীর নাম খোঁজা হচ্ছে...</string>
+    <string name="shell54_portfolio_add_address_footer">একটি Kaspa ঠিকানা বা name.kachat-এর মতো একটি ব্যবহারকারীর নাম লিখুন। এই ঠিকানায় প্রতিটি প্রাপ্ত লেনদেন একটি ক্রয় এবং প্রতিটি পাঠানো লেনদেন একটি বিক্রয় হবে, সেই দিনের ঐতিহাসিক KAS দামে। পরে একই ঠিকানা আবার যোগ করলে শুধু শেষ ইমপোর্টের পর পাওয়া লেনদেনগুলো ইমপোর্ট হয়।</string>
+    <string name="shell54_report_copied">রিপোর্ট কপি হয়েছে</string>
+    <string name="shell54_report_no_mail_app">কোনো মেইল অ্যাপ এটি খুলতে পারেনি। রিপোর্টটি %1$s-এ একটি ইমেলে পেস্ট করুন।</string>
+    <string name="shell54_show_amounts">পরিমাণ দেখান</string>
+    <string name="shell54_hide_amounts">পরিমাণ লুকান</string>
+    <string name="shell54_amount_unit">পরিমাণ (%1$s)</string>
+    <string name="shell54_price_per_kas">প্রতি KAS দাম</string>
+    <string name="shell54_total_spent">মোট খরচ</string>
+    <string name="shell54_total_received">মোট প্রাপ্ত</string>
+    <string name="shell54_chart_settings">চার্ট সেটিংস</string>
+    <string name="shell54_import_failed">ইমপোর্ট ব্যর্থ হয়েছে।</string>
+    <string name="shell54_export_csv">CSV এক্সপোর্ট করুন</string>
+    <string name="shell54_sent_on">%1$s পাঠানো হয়েছে (%2$s)</string>
+    <string name="shell54_received_on">%1$s পাওয়া গেছে (%2$s)</string>
+    <string name="shell54_this_portfolio">এই পোর্টফোলিও</string>
+    <string name="shell54_new_portfolio">নতুন পোর্টফোলিও</string>
+    <string name="shell54_time">সময়</string>
+    <string name="shell54_total_value">মোট %1$s</string>
+    <string name="shell54_move_up">%1$s উপরে সরান</string>
+    <string name="shell54_move_down">%1$s নিচে সরান</string>
+    <string name="shell54_selected">নির্বাচিত</string>
+    <string name="shell54_not_selected">নির্বাচিত নয়</string>
+    <string name="shell54_not_valid_kpub">বৈধ kpub নয়</string>
+    <string name="shell54_new_address_failed">নতুন ঠিকানা তৈরি করা যায়নি। আবার চেষ্টা করুন।</string>
+</resources>

@@ -21,6 +21,9 @@ import javax.inject.Inject
 /** How long the pool must stay empty before the dot is allowed to turn red. */
 private const val DISCONNECT_GRACE_MS = 8_000L
 
+/** How often Connection Status re-reads the indexer's state (iOS: with the node list, every 2 s). */
+private const val INDEXER_STATE_POLL_MS = 2_000L
+
 enum class ConnectionStatus {
     CONNECTED, DEGRADED, DISCONNECTED
 }
@@ -72,7 +75,8 @@ data class NodeInfo(
 @HiltViewModel
 class ConnectionViewModel @Inject constructor(
     private val settings: AppSettingsRepository,
-    private val nodePoolManager: com.kachat.app.services.NodePoolManager
+    private val nodePoolManager: com.kachat.app.services.NodePoolManager,
+    private val networkService: com.kachat.app.services.NetworkService,
 ) : ViewModel() {
 
     val activeNodes: StateFlow<List<NodeInfo>> = nodePoolManager.activeNodes
@@ -125,6 +129,40 @@ class ConnectionViewModel @Inject constructor(
     val status: StateFlow<ConnectionStatus> = statusFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialGracedStatus())
 
+    /**
+     * The message indexer's state for Connection Status's Indexer Status row (iOS 8cb4c88e): null
+     * ("Checking…") until the first read, then read every 2 s while the screen shows it, with one
+     * `/metrics` request as it opens so the row says how the indexer is now, not how it was. The
+     * request goes through the indexer client, so its answer counts in [IndexerHealth] like any
+     * other. Restarts (and asks again) each time the screen opens.
+     */
+    val indexerState: StateFlow<com.kachat.app.services.IndexerHealth.ConnectionState?> = kotlinx.coroutines.flow.channelFlow {
+        fun read() = com.kachat.app.services.IndexerHealth.connectionState(indexerConfigured = networkService.indexerApi.value != null)
+        send(read())
+        launch {
+            checkIndexerNow()
+            send(read())
+        }
+        while (true) {
+            delay(INDEXER_STATE_POLL_MS)
+            send(read())
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(stopTimeoutMillis = 0, replayExpirationMillis = 0), null)
+
+    /** One cheap request (iOS `KasiaAPIClient.checkIndexerNow`); nothing when no indexer is set. */
+    private suspend fun checkIndexerNow() {
+        val api = networkService.indexerApi.value ?: return
+        try {
+            val response = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { api.getMetrics() }
+            response.body()?.close()
+            response.errorBody()?.close()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // the indexer client's interceptor has already counted it
+        }
+    }
+
     /** Connection dot color: green under 300ms, orange at 300ms+, red only after sustained disconnection. */
     val dotColorHex: StateFlow<Long> = statusFlow()
         .map(::dotColorHexFor)
@@ -156,7 +194,6 @@ class ConnectionViewModel @Inject constructor(
     // running app keeps using its own network's until then (AppSettingsRepository).
     val indexerUrl: StateFlow<String> = settings.selectedIndexerUrl.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
     val kachatNamesIndexerUrl: StateFlow<String> = settings.selectedKachatNamesIndexerUrl.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
-    val knsApiUrl: StateFlow<String> = settings.selectedKnsApiUrl.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
     val kaspaRestApiUrl: StateFlow<String> = settings.selectedKaspaRestUrl.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
     /** The indexer the running app is connected to, for the connection status screen. */
     val runningIndexerUrl: StateFlow<String> = settings.indexerUrl.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")

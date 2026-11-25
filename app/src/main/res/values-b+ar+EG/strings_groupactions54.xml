@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 group create / add members sheets (iOS GroupActionSheets.swift, 2026-11-24): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="ga54_not_sent">ماتبعتش</string>
+    <string name="ga54_x_of_y">%1$d من %2$d</string>
+    <string name="ga54_some_steps_failed">شوية خطوات ماكملتش. تقدر تبعتها تاني من معلومات المجموعة &gt; إعادة إرسال الدعوات للكل.</string>
+    <string name="ga54_each_step_is_tx">كل خطوة معاملة على Kaspa وممكن تاخد كام ثانية. خلّي K مفتوح لحد ما تخلص.</string>
+    <string name="ga54_setting_up_group">بنجهّز المجموعة</string>
+    <string name="ga54_inviting">بنعزم %1$s</string>
+    <string name="ga54_saving_recovery_copy">بنحفظ نسخة استرجاع</string>
+    <string name="ga54_adding_group_photo">بنضيف صورة المجموعة</string>
+    <string name="ga54_creating">بنعمل «%1$s»</string>
+    <string name="ga54_adding">بنضيف %1$s</string>
+    <string name="ga54_adding_one_member">بنضيف عضو واحد</string>
+    <string name="ga54_adding_n_members">بنضيف %1$d أعضاء</string>
+    <string name="ga54_sending_group_key">بنبعت مفتاح المجموعة الجديد: %1$d من %2$d</string>
+    <string name="ga54_add_one_member">تضيف عضو واحد للمجموعة؟</string>
+    <string name="ga54_add_n_members">تضيف %1$d أعضاء للمجموعة؟</string>
+    <string name="ga54_joined_group">%1$s دخل المجموعة</string>
+    <string name="ga54_declined_invite">%1$s رفض الدعوة</string>
+    <string name="ga54_invited_to_group">اتعزم %1$s على شات المجموعة</string>
+    <string name="ga54_removed_from_group">اتشال %1$s من شات المجموعة</string>
+</resources>

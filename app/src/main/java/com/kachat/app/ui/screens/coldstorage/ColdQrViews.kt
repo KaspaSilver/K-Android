@@ -142,17 +142,18 @@ internal fun AnimatedQrDisplay(frames: List<ByteArray>, modifier: Modifier = Mod
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { frameIndex = (frameIndex - 1 + frames.size) % frames.size }) {
-                    Icon(Icons.Default.SkipPrevious, "Previous frame", tint = KaspaTeal)
+                    // Translated (iOS 518fdc8c: the multi-frame QR was among the texts with no key).
+                    Icon(Icons.Default.SkipPrevious, stringResource(R.string.previous), tint = KaspaTeal)
                 }
                 IconButton(onClick = { isPlaying = !isPlaying }) {
                     Icon(
                         if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        if (isPlaying) "Pause" else "Play",
+                        if (isPlaying) stringResource(R.string.kpui_pause) else stringResource(R.string.kpui_play),
                         tint = KaspaTeal
                     )
                 }
                 IconButton(onClick = { frameIndex = (frameIndex + 1) % frames.size }) {
-                    Icon(Icons.Default.SkipNext, "Next frame", tint = KaspaTeal)
+                    Icon(Icons.Default.SkipNext, stringResource(R.string.next), tint = KaspaTeal)
                 }
                 Text(tr(R.string.kp_frame_lld_lld_5cb10, frameIndex + 1, frames.size), color = Color(0xFF6B6B70), style = MaterialTheme.typography.bodySmall)
             }

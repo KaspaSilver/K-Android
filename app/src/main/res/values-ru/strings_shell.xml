@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">Статистика</string>
     <string name="shell_tab_websites">Сайты</string>
     <string name="shell_kaspa_websites">Сайты Kaspa</string>
-    <string name="shell_customize_dock">Настроить док</string>
-    <string name="shell_your_dock">Ваш док</string>
-    <string name="shell_always_stays">%1$s всегда остаётся в доке.</string>
-    <string name="shell_dock_full">Док заполнен. Уберите из него один раздел, чтобы добавить один из этих.</string>
-    <string name="shell_hub_order">В том порядке, в каком их показывает %1$s.</string>
-    <string name="shell_move_to">Переместить %1$s в %2$s</string>
-    <string name="shell_add_to_dock">Добавить %1$s в док</string>
-    <string name="shell_always_in_dock">Всегда в доке</string>
-    <string name="shell_hub_empty_title">Здесь пока ничего нет</string>
-    <string name="shell_hub_empty_body">То, чего нет в доке, показывается здесь. Упорядочьте это в разделе «Настроить док».</string>
-    <string name="shell_customize_dock_footer">Выберите, что будет в доке. Всё остальное — в Kaspa Hub.</string>
     <string name="shell_terms_of_use">Условия использования</string>
     <string name="shell_message_indexer_footer">KaPost, публичные чаты и шахматы тоже читаются с этого индексатора.</string>
     <string name="shell_ks_what_counts">Что считается</string>

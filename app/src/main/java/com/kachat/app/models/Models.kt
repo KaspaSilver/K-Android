@@ -222,9 +222,9 @@ data class ContactEntity(
  * until some later path happened to copy it into [alias]. The name was already there; nothing was
  * reading it.
  */
-// A contact's stored .kas name is not shown since 5.2 (KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY):
-// the name you gave them, else their Address Book name, else (testnet) their .kachat name, else
-// their address.
+// A contact's stored .kas name is not shown since 5.2, and K reads no .kas names since 2026-11-23:
+// the name you gave them, else their Address Book name, else their .kachat name, else their
+// address.
 /**
  * True for a bare `.kas` domain ("bob.kas") (iOS `Contact.isKasDomainName`, ce0b636): since 5.2
  * never anyone's name in the app (a person is the name you gave them, their .kachat name or their
@@ -237,9 +237,7 @@ fun isKasDomainName(name: String?): Boolean {
 }
 
 val ContactEntity.displayName: String
-    get() = addressDisplayName(
-        id, alias, knsName?.takeIf { com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY }
-    )
+    get() = addressDisplayName(id, alias)
 
 /**
  * The app's one display-name rule for an address (iOS `ContactsManager.displayName`, e52357d):
@@ -284,7 +282,6 @@ fun Map<String, String>.liveNameFor(address: String): String? =
 /** Avatar initial source - same order, but the raw tail rather than the formatted short address. */
 val ContactEntity.avatarFallbackText: String
     get() = alias?.takeIf { it.isNotBlank() }
-        ?: knsName?.takeIf { it.isNotBlank() && com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY }
         ?: id.takeLast(8)
 
 

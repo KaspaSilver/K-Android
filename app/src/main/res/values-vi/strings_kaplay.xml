@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">Chưa có giải đấu nào kết thúc.</string>
     <string name="kaplay_no_finished_tournaments_this_month">Chưa có giải đấu nào kết thúc trong tháng này.</string>
     <string name="kaplay_tab_leaderboard">Bảng xếp hạng</string>
+    <string name="kp_640de0cb0b2c" formatted="false">Thành tích: thắng %s, thua %s</string>
+    <string name="kp_5d12bd53552c" formatted="false">Chơi</string>
+    <string name="kp_3ab5950b358f" formatted="false">Chơi với người tiếp theo tham gia, hoặc với bạn bè bằng mã.</string>
+    <string name="kp_85e2145e7cad" formatted="false">Tám người chơi, loại trực tiếp.</string>
+    <string name="kp_636935a0b48d" formatted="false">Năm bot, cấp 1 đến 5. Thắng một bot để mở khóa bot tiếp theo.</string>
+    <string name="kp_6fba758f3243" formatted="false">Chuyển sang bảng xếp hạng tiếp theo</string>
+    <string name="kp_c0fc86977802" formatted="false">Đối thủ đã ăn</string>
+    <string name="kp_48cb744b4728" formatted="false">Bạn đã ăn</string>
+    <string name="kp_76ccff916d06" formatted="false">Yêu cầu liên lạc</string>
+    <string name="kp_73eb05867f7b" formatted="false">Thua vì hết giờ</string>
+    <string name="kp_6eac413a29b7" formatted="false">Đã đầu hàng</string>
+    <string name="kp_8a4d6885363d" formatted="false">Đã chấp nhận ván cờ</string>
+    <string name="kp_012794aeafb0" formatted="false">Đã từ chối ván cờ</string>
+    <string name="kp_0ac72bc536b1" formatted="false">Lời mời chơi cờ vua</string>
+    <string name="kp_4bb26afc82d3" formatted="false">Chưa có ván 1v1 nào kết thúc trong tháng này.</string>
+    <string name="kp_c56c7d117a52" formatted="false">Chưa có giải đấu nào kết thúc trong tháng này.</string>
 </resources>

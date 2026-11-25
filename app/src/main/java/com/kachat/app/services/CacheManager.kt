@@ -30,8 +30,6 @@ import javax.inject.Singleton
 @Singleton
 class CacheManager @Inject constructor(
     @ApplicationContext private val context: Context,
-    /** Not a directory - its records live in SharedPreferences; see [Category.PROFILES]. */
-    private val knsProfileCache: KnsProfileCacheStore,
     /** The profile records (identities) held in memory too - reset with the folder. Lazy: the
      *  registry is built at startup anyway, and this keeps the graph acyclic. */
     private val kachatRegistry: dagger.Lazy<KachatNamesRegistry>,
@@ -94,9 +92,6 @@ class CacheManager @Inject constructor(
         if (category == Category.TEMPORARY_FILES) {
             total += looseTempFiles().sumOf { it.length() }
         }
-        if (category == Category.PROFILES) {
-            total += knsProfileCache.approximateSizeBytes()
-        }
         total
     }
 
@@ -125,7 +120,8 @@ class CacheManager @Inject constructor(
      *  `resetProfilesInMemory`). This device's own saved profile record is not cache and stays. */
     private fun resetProfilesInMemory() {
         context.imageLoader.memoryCache?.clear()
-        knsProfileCache.clear()
+        // the .kas profile records an older version kept (K reads no .kas names since 2026-11-23)
+        context.deleteSharedPreferences("kns_profile_cache")
         kachatSocialImages.get().clearAll()
         kachatRegistry.get().clearProfileCache()
     }

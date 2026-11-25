@@ -95,6 +95,7 @@ import com.kachat.app.repository.ChatRepository
 import com.kachat.app.repository.GroupMessage
 import com.kachat.app.repository.isSystemMessage
 import com.kachat.app.ui.theme.KaspaTeal
+import com.kachat.app.ui.theme.iosGlass
 import com.kachat.app.ui.theme.LocalAppColors
 import com.kachat.app.util.ChatTimeFormat
 import com.kachat.app.util.ImageMessage
@@ -117,6 +118,8 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PersonAdd
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.filled.Notifications
 
 // Shared, reused across every parseGroupMembers call. Allocating a fresh Gson + TypeToken per call
 // (the old behaviour) was measurable: parseGroupMembers runs inside chat-list item builders and per
@@ -197,6 +200,18 @@ fun parseGroupMembers(group: com.kachat.app.models.GroupEntity): List<GroupMembe
  * `GroupMentionCodec` exactly.
  */
 object GroupMentionCodec {
+    /** Every member's `@username` / `@username.kachat` in [text] as `@<their address>` - the
+     *  mentions the composer's @ suggestions insert (iOS 2026-11-24 `encodeMentions`). Members
+     *  with no username can't be mentioned. */
+    fun encodeUsernames(text: String, members: List<GroupMember>): String {
+        val named = HashMap<String, String>()
+        for (member in members) {
+            val handle = com.kachat.app.util.UsernameMention.handle(member.address) ?: continue
+            named[com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(handle)] = member.address
+        }
+        return com.kachat.app.util.UsernameMention.encodeGroupMentions(text, named)
+    }
+
     fun encodeForSending(text: String, members: List<GroupMember>, resolveDisplayName: (String) -> String): String {
         var result = text
         // Longest name first, so e.g. "@Alice2" doesn't get partially clobbered by a "@Alice" replacement first.
@@ -249,7 +264,6 @@ fun GroupChatThreadScreen(
     connectionViewModel: com.kachat.app.viewmodels.ConnectionViewModel = hiltViewModel()
 ) {
     val myAddress by walletViewModel.address.collectAsState()
-    val myKnsProfile by walletViewModel.knsProfile.collectAsState()
     // Zero-balance funding gate — same behavior as the 1:1 chat thread (confirmed 0 KAS only,
     // on-entry refresh + 10s re-poll while gated); see ZeroBalanceFundingUi.kt.
     val fundingGate = rememberZeroBalanceFundingGate()
@@ -283,6 +297,9 @@ fun GroupChatThreadScreen(
     // avatars + KNS names instead of raw addresses.
     val contactAvatarsByAddress by chatViewModel.groupMemberAvatarsByAddress.collectAsState()
     val contactAliasesByAddress by chatViewModel.groupMemberNamesByAddress.collectAsState()
+    // Address Book names show in mentions too: the bubbles' memo follows them (iOS
+    // `GroupDisplayNamesRevision`, audit 2026-11-24 #10).
+    val groupAddressBookEntries = rememberAddressBookEntries()
     val pendingPhotoUri by chatViewModel.groupPendingPhotoUri.collectAsState()
     // An animated GIF going on chain: "GIF Quality", its tiers GIFs, a GIF badge (iOS d7c56280).
     val pendingPhotoIsGif by chatViewModel.groupPendingPhotoIsGif.collectAsState()
@@ -351,26 +368,23 @@ fun GroupChatThreadScreen(
     // @mention inline autocomplete - the text typed after an unclosed "@" at the cursor, or null
     // when the cursor isn't currently in a mention context. See detectMentionQuery/mentionCandidates.
     var mentionQuery by remember { mutableStateOf<String?>(null) }
-    val primaryKnsByAddress by chatViewModel.groupMemberPrimaryKnsByAddress.collectAsState()
     val groupMembers = remember(group?.membersJson) { group?.let(::parseGroupMembers) ?: emptyList() }
     val resolveDisplayName: (String) -> String = { address ->
         contactAliasesByAddress.liveNameFor(address)
             ?: groupMembers.firstOrNull { it.address == address }?.displayName?.takeIf { it.isNotBlank() }
             ?: KaspaAddress.shortDisplay(address)
     }
-    // Members mentionable via the inline "@" autocomplete - only those with an explicit primary
-    // KNS domain set (see groupMemberPrimaryKnsByAddress's doc comment for why this can't reuse
-    // the general fallback-inclusive resolveDisplayName/knsProfiles), excluding self, filtered
-    // by `query` (case-insensitive substring match against the domain) when non-empty.
+    // Members mentionable via the inline "@" autocomplete: those with a .kachat username (owner,
+    // 2026-11-24: you can @ someone only if they have one), whose username starts with what's
+    // typed after the "@", yourself left out, sorted, 30 at most (iOS mentionCandidates(for:)).
     val mentionCandidates: (String) -> List<Pair<GroupMember, String>> = { query ->
-        val normalizedQuery = query.trim().lowercase()
+        val typed = com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(query)
         groupMembers.mapNotNull { member ->
-            if (member.address == myAddress) return@mapNotNull null
-            val domain = primaryKnsByAddress[member.address]
-            if (domain.isNullOrEmpty()) return@mapNotNull null
-            if (normalizedQuery.isNotEmpty() && !domain.lowercase().contains(normalizedQuery)) return@mapNotNull null
-            member to domain
-        }
+            if (member.address.equals(myAddress, ignoreCase = true)) return@mapNotNull null
+            val handle = com.kachat.app.util.UsernameMention.handle(member.address) ?: return@mapNotNull null
+            if (typed.isNotEmpty() && !com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(handle).startsWith(typed)) return@mapNotNull null
+            member to handle
+        }.sortedBy { it.second }.take(30)
     }
     // Range of the unclosed "@query" run ending at the cursor (a collapsed selection), if any -
     // mirrors iOS's ComposerTextView.Coordinator.mentionTokenRange exactly.
@@ -427,6 +441,11 @@ fun GroupChatThreadScreen(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
+    // The header bell (iOS 8cb4c88e): this group silenced, the Chats list swipe's switch.
+    val silentGroupIds by chatViewModel.groupSilent.collectAsState()
+    val groupSilenced = groupId in silentGroupIds
+    val bellHaptic = com.kachat.app.util.rememberHaptics()
+    val bellContext = LocalContext.current
     var highlightedMessageId by remember { mutableStateOf<String?>(null) }
     val jumpToReply: (String) -> Unit = { originalTargetId ->
         // A reply to a later part of a long voice note lands on the note's one bubble.
@@ -462,10 +481,15 @@ fun GroupChatThreadScreen(
     }
     // A snapshotFlow, not LaunchedEffect(draft.text): reading the text here made every keystroke
     // recompose the whole screen.
+    // The account the draft was loaded for: after an account switch it must not be filed under
+    // the new account's drafts (iOS audit 2026-11-24 #16).
+    val draftOwnerAddress = remember(groupId) { chatViewModel.currentAccountAddress() }
     LaunchedEffect(draftState) {
         snapshotFlow { draftState.value.text }.collect { text ->
             chatViewModel.setGroupMessageText(text, fromTyping = text == lastTypedDraft[0])
-            chatViewModel.saveGroupDraft(groupId, text)
+            if (draftOwnerAddress != null && draftOwnerAddress == chatViewModel.currentAccountAddress()) {
+                chatViewModel.saveGroupDraft(groupId, text)
+            }
         }
     }
 
@@ -593,15 +617,6 @@ fun GroupChatThreadScreen(
         }
     }
 
-    // KNS name/avatar for each member isn't fetched automatically - the roster's own
-    // `displayName` is a one-time snapshot from add/join time, so refresh live contact
-    // alias/avatar the same way the chat list does on appear (see contactAliasesByAddress/
-    // contactAvatarsByAddress above, which this populates).
-    LaunchedEffect(group?.groupId) {
-        val addresses = group?.let(::parseGroupMembers)?.map { it.address } ?: return@LaunchedEffect
-        chatViewModel.refreshKnsProfilesForGroupMembers(addresses)
-    }
-
     Scaffold(
         containerColor = LocalAppColors.current.background,
         topBar = {
@@ -651,11 +666,26 @@ fun GroupChatThreadScreen(
                         }
                     }
                 } else {
-                    // No info button: tapping the header opens Group Info, exactly as tapping
-                    // the 1:1 header opens Chat Info - which leaves the trailing slot for the
-                    // connection dot (iOS ConnectionStatusIndicator: a 44pt glass disc).
-                    ConnectionDotButton(onClick = { ConnectionStatusOverlayState.open() })
+                    // The bell (iOS 8cb4c88e, owner 2026-11-24): Silence or Unsilence this group,
+                    // the same switch as the Chats list's swipe.
+                    ToolbarGlassGroup {
+                        ToolbarIconButton(
+                            if (groupSilenced) Icons.Outlined.NotificationsOff else Icons.Filled.Notifications,
+                            if (groupSilenced) stringResource(R.string.kpui_notifications_off) else stringResource(R.string.kpui_notifications_on),
+                            onClick = {
+                                chatViewModel.setGroupSilent(groupId, !groupSilenced)
+                                bellHaptic(com.kachat.app.util.IosHaptic.SELECTION)
+                                IosToasts.show(
+                                    bellContext.getString(if (groupSilenced) R.string.bells_notifications_on else R.string.bells_group_silenced),
+                                    durationMs = IosToastDuration.LONG,
+                                )
+                            },
+                        )
+                    }
                 }
+                // No info button: tapping the header opens Group Info, exactly as tapping the 1:1
+                // header opens Chat Info. No connection dot either (iOS 518fdc8c: only at the top
+                // of Settings and on the dock's Settings icon).
             }
             GroupChatHeaderCard(
                 photoHex = group?.photoHex,
@@ -1057,12 +1087,12 @@ fun GroupChatThreadScreen(
                             } else {
                                 IconButton(
                                     onClick = {
-                                        // Off until mentions are rebuilt on .kachat (MentionsFeature):
-                                        // an "@name" typed now is sent as the plain text it is.
+                                        // Each member with a username: "@alice" or "@alice.kachat"
+                                        // (any case) becomes "@<their address>", the group wire
+                                        // format (iOS encodeMentions, 2026-11-24). A name that
+                                        // isn't a member's stays text.
                                         val text = if (!com.kachat.app.util.MentionsFeature.ENABLED) draft.text.trim()
-                                        else GroupMentionCodec.encodeForSending(draft.text.trim(), groupMembers) { address ->
-                                            primaryKnsByAddress[address] ?: ""
-                                        }
+                                        else GroupMentionCodec.encodeUsernames(draft.text.trim(), groupMembers)
                                         if (text.isEmpty()) return@IconButton
                                         // Editing: the composer's text replaces the message being
                                         // edited - one edit transaction, no new bubble.
@@ -1075,14 +1105,17 @@ fun GroupChatThreadScreen(
                                             chatViewModel.sendGroupMessage(text, groupId) { error -> errorMessage = error }
                                         }
                                     },
-                                    // iOS: arrow.up.circle.fill at 30 in the accent colour, bare.
-                                    modifier = Modifier.size(36.dp)
+                                    // The same send button as a 1:1 chat's (iOS 2026-11-24): the
+                                    // arrow at title size on a 44 x 44 glass square, radius 14.
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .iosGlass(cornerRadius = 14.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.ArrowCircleUp,
                                         contentDescription = stringResource(R.string.send),
                                         tint = KaspaTeal,
-                                        modifier = Modifier.size(36.dp)
+                                        modifier = Modifier.size(32.dp)
                                     )
                                 }
                             }
@@ -1159,10 +1192,15 @@ fun GroupChatThreadScreen(
                         )
                     }
                     if (message.isSystemMessage()) {
-                        // iMessage-style membership line — centered, no bubble/avatar.
+                        // iMessage-style membership line — centered, no bubble/avatar, in the
+                        // reader's language with each address as that person's current name
+                        // (iOS GroupSystemLine, 2026-11-24).
+                        val systemLineContext = LocalContext.current
                         Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), contentAlignment = Alignment.Center) {
                             Text(
-                                message.content,
+                                com.kachat.app.util.GroupSystemLine.display(systemLineContext, message.content) { address ->
+                                    com.kachat.app.models.addressDisplayName(address, contactAliasesByAddress[address])
+                                },
                                 color = LocalAppColors.current.textSecondary,
                                 fontSize = 12.sp,
                                 textAlign = TextAlign.Center,
@@ -1182,7 +1220,7 @@ fun GroupChatThreadScreen(
                             linkPreviewAutoFetch = message.senderAddress?.let { it == myAddress || it in acceptedContacts } ?: false,
                             liveAlias = message.senderAddress?.let { contactAliasesByAddress.liveNameFor(it) },
                             myAddress = myAddress,
-                            myAvatarUrl = myKnsProfile?.avatarUrl,
+                            myAvatarUrl = null,
                             navController = navController,
                             onRetry = {
                                 // A long voice note's Retry resends only its failed parts, in order.
@@ -1222,7 +1260,7 @@ fun GroupChatThreadScreen(
                             onJumpToReply = jumpToReply,
                             isHighlighted = message.txId == highlightedMessageId,
                             resolveMentionName = resolveDisplayName,
-                            mentionDomains = primaryKnsByAddress,
+                            namesKey = contactAliasesByAddress to groupAddressBookEntries,
                             onAvatarTap = { address -> senderSheetTarget = SenderSheetTarget(address, isOwnMessage = address == myAddress) },
                             onSelect = {
                                 isSelectingMessages = true
@@ -1494,6 +1532,10 @@ private fun GroupMessageBubble(
     resolveMentionName: (String) -> String = { KaspaAddress.shortDisplay(it) },
     /** Address → explicit-primary KNS domain, so @mentions render as the domain (what the user asked). */
     mentionDomains: Map<String, String?> = emptyMap(),
+    /** What the names shown in mentions come from (contact names, the Address Book): the mention
+     *  memo is worked out again when it changes, so a rename shows at once (iOS audit 2026-11-24
+     *  #10). `.kachat` names landing are followed by the memo itself (derivedStateOf). */
+    namesKey: Any? = null,
     /** Tapping an avatar. The parent presents the sender half sheet for this address (see
      *  [SenderActionsSheet]); the row itself no longer owns a menu. */
     onAvatarTap: (String) -> Unit = {},
@@ -1526,9 +1568,15 @@ private fun GroupMessageBubble(
     val resolveMentionLabel: (String) -> String = { addr ->
         mentionDomains[addr]?.takeIf { it.isNotBlank() } ?: resolveMentionName(addr)
     }
-    val displayContent = remember(replyContent, message.content, groupMembersForMentions, mentionDomains) {
-        GroupMentionCodec.decodeForDisplay(replyContent?.text ?: message.content, groupMembersForMentions, resolveMentionLabel)
+    // Keyed on the text itself (an edit keeps the id), the roster and the names it shows; a
+    // `.kachat` name landing for a mentioned member is read as state, so it redraws too (iOS
+    // audit 2026-11-24 #10).
+    val displayContentState = remember(replyContent, message.content, groupMembersForMentions, mentionDomains, namesKey) {
+        derivedStateOf {
+            GroupMentionCodec.decodeForDisplay(replyContent?.text ?: message.content, groupMembersForMentions, resolveMentionLabel)
+        }
     }
+    val displayContent = displayContentState.value
     val replySenderName = remember(replyContent, groupMembersForMentions, myAddress) {
         val reply = replyContent ?: return@remember null
         if (reply.replyToSender == myAddress) return@remember context.getString(R.string.reactions_you)
@@ -1963,11 +2011,6 @@ fun GroupChatInfoScreen(
         group?.let(::parseGroupMembers) ?: emptyList()
     }
 
-    LaunchedEffect(group?.groupId) {
-        val addresses = group?.let(::parseGroupMembers)?.map { it.address } ?: return@LaunchedEffect
-        chatViewModel.refreshKnsProfilesForGroupMembers(addresses)
-    }
-
     // Blocking progress for "Refresh Messages". The repair walks the invite stream, then every
     // epoch key, then each member's message stream from the very beginning - real work that took
     // real time behind a spinner too small to mean anything, which is why the button read as
@@ -2234,9 +2277,11 @@ fun GroupChatInfoScreen(
                                 else -> Unit
                             }
                             if (group?.isAdmin == true && !member.isAdmin) {
+                                // Named for TalkBack and given a 44 target: icon only, they were
+                                // small (iOS audit 2026-11-24 #39).
                                 Box(
                                     modifier = Modifier
-                                        .size(32.dp)
+                                        .size(44.dp)
                                         .clip(CircleShape)
                                         .clickable { memberToResend = member },
                                     contentAlignment = Alignment.Center
@@ -2245,12 +2290,12 @@ fun GroupChatInfoScreen(
                                 }
                                 Box(
                                     modifier = Modifier
-                                        .size(32.dp)
+                                        .size(44.dp)
                                         .clip(CircleShape)
                                         .clickable { memberToRemove = member },
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.remove_from_group), tint = LocalAppColors.current.danger, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.remove_member), tint = LocalAppColors.current.danger, modifier = Modifier.size(20.dp))
                                 }
                             }
                         }
@@ -2654,7 +2699,7 @@ fun GroupChatInfoScreen(
                     TextField(
                         value = addSearch,
                         onValueChange = { addSearch = it },
-                        placeholder = { Text(stringResource(R.string.search_contacts_or_address_or_domain), color = LocalAppColors.current.textTertiary) },
+                        placeholder = { Text(stringResource(R.string.c54_search_contacts_address_username), color = LocalAppColors.current.textTertiary) },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = LocalAppColors.current.textSecondary) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)),
@@ -2673,7 +2718,7 @@ fun GroupChatInfoScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal, strokeWidth = 2.dp, modifier = Modifier.size(14.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.looking_up_domain), color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.c54_looking_up_username), color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodySmall)
                         }
                         Spacer(Modifier.height(8.dp))
                     } else if (addResolvedDomain != null && addResolvedName != null) {
@@ -2695,10 +2740,7 @@ fun GroupChatInfoScreen(
                             Text(addDomainNotFound ?: "", color = LocalAppColors.current.danger, fontSize = 12.sp)
                         }
                     }
-                    if (!addResolvingDomain) {
-                        OtherDomainsDropdown(addResolutions, addSelectedTld, addSelectResolution)
-                    }
-                    if (!addResolvingDomain && (addResolvedDomain != null || addDomainNotFound != null || addResolutions.isNotEmpty())) {
+                    if (!addResolvingDomain && (addResolvedDomain != null || addDomainNotFound != null)) {
                         Spacer(Modifier.height(8.dp))
                     }
                     if (typedAddress != null) {
@@ -2728,10 +2770,10 @@ fun GroupChatInfoScreen(
                         Spacer(Modifier.height(8.dp))
                     }
                     if (conversations.isEmpty() && typedAddress == null) {
-                        Text(stringResource(R.string.no_contacts_yet_paste_address_or_domain),
+                        Text(stringResource(R.string.c54_no_contacts_paste_username),
                             color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodySmall)
                     } else if (candidates.isEmpty() && typedAddress == null) {
-                        Text(if (query.isEmpty()) stringResource(R.string.everyone_in_your_contacts_is_already_in) else stringResource(R.string.no_contacts_match_paste_address_or_domain),
+                        Text(if (query.isEmpty()) stringResource(R.string.everyone_in_your_contacts_is_already_in) else stringResource(R.string.c54_no_contacts_match_username),
                             color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodySmall)
                     } else if (candidates.isNotEmpty()) {
                         LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
@@ -2795,37 +2837,43 @@ fun GroupChatInfoScreen(
             }
         )
         // Fee confirmation shown after tapping Add — each added member rotates the group key.
+        // A half sheet, then the progress of every add on its own half sheet, which says what
+        // didn't go through (iOS AddGroupMembersView, owner 2026-11-24).
+        var addProgress by remember { mutableStateOf<com.kachat.app.models.GroupActionProgress?>(null) }
+        var addedAll by remember { mutableStateOf(false) }
         if (showAddFeeConfirm) {
             val k = addChosen.size
             val finalOthers = (members.size - 1).coerceAtLeast(0) + k
             val hasPhoto = group?.photoHex != null
-            com.kachat.app.ui.theme.IosAlertDialog(
-                onDismissRequest = { showAddFeeConfirm = false },
-                containerColor = LocalAppColors.current.surface,
-                title = { Text(stringResource(R.string.add_members), color = LocalAppColors.current.textPrimary) },
-                text = { Text(if (k == 1) stringResource(R.string.add_one_member_to_group, groupFeeText(k * (2 * finalOthers + 1), if (hasPhoto) k * finalOthers else 0)) else stringResource(R.string.add_n_members_to_group, k, groupFeeText(k * (2 * finalOthers + 1), if (hasPhoto) k * finalOthers else 0)), color = LocalAppColors.current.textSecondary) },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showAddFeeConfirm = false
-                        addBusy = true
-                        addError = null
-                        addDone = 0
-                        addTotal = addChosen.size
-                        chatViewModel.addGroupMembers(
-                            addChosen,
-                            groupId,
-                            onProgress = { done, total -> addDone = done; addTotal = total },
-                        ) { added, failed ->
-                            addBusy = false
-                            if (failed == 0) showAddMembers = false
-                            else addError = context.getString(R.string.member_s_could_not_be_added_added, failed, added)
-                        }
-                    }) { Text(stringResource(R.string.add), color = KaspaTeal, fontWeight = FontWeight.Bold) }
+            GroupActionConfirmSheet(
+                title = stringResource(R.string.add_members),
+                message = if (k == 1) stringResource(R.string.ga54_add_one_member) else stringResource(R.string.ga54_add_n_members, k),
+                feeLine = groupFeeText(k * (2 * finalOthers + 1), if (hasPhoto) k * finalOthers else 0).trim(),
+                confirmTitle = stringResource(R.string.add),
+                onConfirm = {
+                    addBusy = true
+                    addError = null
+                    addDone = 0
+                    addTotal = addChosen.size
+                    addedAll = false
+                    chatViewModel.addGroupMembers(
+                        addChosen,
+                        groupId,
+                        onProgress = { done, total -> addDone = done; addTotal = total },
+                        onSteps = { addProgress = it },
+                    ) { _, failed ->
+                        addBusy = false
+                        addedAll = failed == 0
+                    }
                 },
-                dismissButton = {
-                    TextButton(onClick = { showAddFeeConfirm = false }) { Text(stringResource(R.string.cancel), color = LocalAppColors.current.textSecondary) }
-                }
+                onDismiss = { showAddFeeConfirm = false },
             )
+        }
+        addProgress?.let { progress ->
+            GroupActionProgressSheet(progress) {
+                addProgress = null
+                if (addedAll) showAddMembers = false
+            }
         }
     }
 
@@ -2955,7 +3003,7 @@ private fun GroupChatHeaderCard(
     modifier: Modifier = Modifier,
 ) {
     ChatHeaderChipLayout(name = name, onClick = onClick, modifier = modifier) {
-        GroupAvatar(photoHex = photoHex, size = 46.dp)
+        GroupAvatar(photoHex = photoHex, size = CHAT_HEADER_CHIP_AVATAR)
     }
 }
 

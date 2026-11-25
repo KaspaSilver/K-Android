@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">あなたのユーザー名</string>
+    <string name="names54_no_username_found">ユーザー名が見つかりません</string>
+    <string name="names54_use_their_username">相手のユーザー名を使う</string>
+    <string name="names54_kaspa_address_or_username">Kaspaアドレスまたはユーザー名</string>
+    <string name="names54_enter_address_or_username_example">Kaspaアドレス（kaspa:...）またはユーザー名（例: alice.kachat）を入力してください。</string>
+    <string name="names54_members_footer">連絡先から選ぶか、Kaspaアドレスまたはユーザー名で誰でも追加できます。</string>
+    <string name="names54_finds_addresses_balance_or_username">残高またはユーザー名のあるアドレスを探します。</string>
+    <string name="names54_no_addresses_balance_or_username_found">残高またはユーザー名のあるアドレスは見つかりませんでした。</string>
+    <string name="names54_found_one_address_balance_username">残高またはユーザー名のあるアドレスが1件見つかりました。</string>
+    <string name="names54_found_n_addresses_balance_username">残高またはユーザー名のあるアドレスが%1$d件見つかりました。</string>
+    <string name="names54_no_addresses_balance_or_username_yet">残高またはユーザー名のあるアドレスはまだありません</string>
+    <string name="names54_contains_username">ユーザー名を含む</string>
+    <string name="names54_get_a_username">ユーザー名を入手</string>
+    <string name="names54_qr_chatting_address_subtitle">チャットとユーザー名の取得に使います。</string>
+    <string name="names54_no_usernames_yet">まだユーザー名がありません</string>
+    <string name="names54_claim_a_username">ユーザー名を取得</string>
+    <string name="names54_discord_invite_not_found">%1$s という Discord の招待はありません。discord.gg/abc123 のようなサーバーの招待コードを使ってください。Discord のアカウントはユーザー名では検索できません。</string>
+</resources>

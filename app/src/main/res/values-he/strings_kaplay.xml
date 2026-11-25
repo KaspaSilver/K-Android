@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">עדיין אין טורנירים שהסתיימו.</string>
     <string name="kaplay_no_finished_tournaments_this_month">עדיין אין טורנירים שהסתיימו החודש.</string>
     <string name="kaplay_tab_leaderboard">טבלת המובילים</string>
+    <string name="kp_640de0cb0b2c" formatted="false">המאזן שלך: %s ניצחונות, %s הפסדים</string>
+    <string name="kp_5d12bd53552c" formatted="false">שחק</string>
+    <string name="kp_3ab5950b358f" formatted="false">שחקו מול האדם הבא שמצטרף, או מול חבר עם קוד.</string>
+    <string name="kp_85e2145e7cad" formatted="false">שמונה שחקנים, הדחה אחת.</string>
+    <string name="kp_636935a0b48d" formatted="false">חמישה בוטים, רמות 1 עד 5. נצחו אחד כדי לפתוח את הבא.</string>
+    <string name="kp_6fba758f3243" formatted="false">עובר לטבלת המובילים הבאה</string>
+    <string name="kp_c0fc86977802" formatted="false">היריב לכד</string>
+    <string name="kp_48cb744b4728" formatted="false">אתם לכדתם</string>
+    <string name="kp_76ccff916d06" formatted="false">בקשת תקשורת</string>
+    <string name="kp_73eb05867f7b" formatted="false">הפסיד בזמן</string>
+    <string name="kp_6eac413a29b7" formatted="false">פרש</string>
+    <string name="kp_8a4d6885363d" formatted="false">קיבל את המשחק</string>
+    <string name="kp_012794aeafb0" formatted="false">דחה את המשחק</string>
+    <string name="kp_0ac72bc536b1" formatted="false">הזמנה לשחמט</string>
+    <string name="kp_4bb26afc82d3" formatted="false">עדיין אין משחקי 1v1 שהסתיימו החודש.</string>
+    <string name="kp_c56c7d117a52" formatted="false">עדיין אין טורנירים שהסתיימו החודש.</string>
 </resources>

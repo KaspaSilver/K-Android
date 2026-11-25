@@ -37,15 +37,13 @@ class WalletService @Inject constructor(
     private val walletManager: WalletManager,
     private val walletEngine: KaspaWalletEngine,
     private val chatRepository: ChatRepository,
-    private val knsService: KnsService,
-    /** .k and .kaspa names for the chatting-address scan (iOS 7a5b157). */
+    /** .kachat names for the chatting-address scan. */
     private val nameServices: NameServicesClient,
-    private val knsInscriptionEngine: KnsInscriptionEngine,
+    /** Finishes a KNS reveal an older version left unfinished (audit 2026-11-24 #4). */
+    private val knsRevealRecovery: KnsRevealRecovery,
     /** Writes the `saved_handshake` note after every handshake (XP-003). Lazy: the note service
      *  sends through this one. */
     private val contactNotesLazy: dagger.Lazy<ContactNoteService>,
-    /** For the KNS transfer refusals' localized text (iOS 2a8ca5a). */
-    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context,
 ) {
     private val gson = Gson()
 
@@ -515,23 +513,18 @@ class WalletService @Inject constructor(
     /**
      * One scanned identity-chain slot for the import wizard's "Change Chatting Address" picker —
      * mirrors iOS's `ChattingAddressCandidate`. The picker lists only the interesting ones
-     * (balance or domains), always including index 0 and the current index.
+     * (balance or usernames), always including index 0 and the current index.
      */
     data class ChattingAddressCandidate(
         val index: Int,
         val address: String,
         val balanceSompi: Long,
-        val domains: List<KnsAsset>,
-        val primaryDomain: String?,
-        /** Names on the other services (.k, .kaspa). */
-        val otherNames: List<OwnedServiceName> = emptyList(),
-        /** .kachat names (active or in grace) where the registry is live - listed first (iOS 6ac48a7). */
+        /** .kachat names (active or in grace) where the registry is live. */
         val kachatNames: List<OwnedServiceName> = emptyList(),
     ) {
-        val nameCount: Int get() = kachatNames.size + domains.size + otherNames.size
+        val nameCount: Int get() = kachatNames.size
         /** The one name to show on the row when there is exactly one. */
-        val onlyName: String? get() = if (nameCount != 1) null
-            else kachatNames.firstOrNull()?.display ?: domains.firstOrNull()?.asset ?: otherNames.firstOrNull()?.display
+        val onlyName: String? get() = if (nameCount != 1) null else kachatNames.firstOrNull()?.display
         val isInteresting: Boolean get() = balanceSompi > 0L || nameCount > 0
     }
 
@@ -539,9 +532,7 @@ class WalletService @Inject constructor(
      * Derives [indices] on the active account's identity chain — WITHIN its own source family,
      * see [WalletManager.deriveChattingAddresses] — and checks the whole batch for KAS balance
      * (one batched `POST addresses/balances` call, with a bounded-concurrency per-address sweep as
-     * fallback) and KNS domains (the existing [KnsService.getOwnedDomainsCached] batch, four
-     * concurrent requests at a time, same as the address lists' "Contains domain" tags). Never
-     * fires 50 raw balance requests.
+     * fallback) and .kachat names. Never fires 50 raw balance requests.
      *
      * Returns ALL derived candidates in index order; the caller filters for interesting ones. Null
      * when derivation itself fails (no active account / unusable seed), which the UI surfaces as
@@ -554,31 +545,13 @@ class WalletService @Inject constructor(
 
         val balanceByAddress = fetchBalancesBatched(addresses)
 
-        // Domains + primary domain, both off the cached-per-address KNS lookups.
-        val domainsByAddress = mutableMapOf<String, List<KnsAsset>>()
-        for (chunk in addresses.chunked(4)) {
-            val results = chunk.map { address ->
-                async { address to (try { knsService.getOwnedDomainsCached(address) } catch (e: Exception) { emptyList<KnsAsset>() }) }
-            }.awaitAll()
-            results.forEach { (address, domains) -> domainsByAddress[address] = domains }
-        }
-        // .k and .kaspa too: an identity can live at an address whose only trace is a name on
-        // one of them.
-        val otherNamesByAddress = nameServices.ownedNames(of = addresses)
         val kachatNamesByAddress = runCatching { nameServices.kachatNames(addresses) }.getOrDefault(emptyMap())
 
         derived.map { (index, address) ->
-            val domains = domainsByAddress[address].orEmpty()
             ChattingAddressCandidate(
                 index = index,
                 address = address,
                 balanceSompi = balanceByAddress[address] ?: 0L,
-                domains = domains,
-                // Only worth a reverse-lookup round trip for addresses that actually own domains.
-                primaryDomain = if (domains.isEmpty()) null else {
-                    try { knsService.reverseResolve(address) } catch (e: Exception) { null }
-                },
-                otherNames = otherNamesByAddress[address].orEmpty(),
                 kachatNames = kachatNamesByAddress[address].orEmpty(),
             )
         }
@@ -872,220 +845,6 @@ class WalletService @Inject constructor(
 
     private fun ByteArray.toHexString(): String = joinToString("") { "%02x".format(it) }
 
-    enum class KnsInscribeStep { CHECKING_AVAILABILITY, FETCHING_FEE, SUBMITTING_COMMIT, SUBMITTING_REVEAL, VERIFYING }
-
-    data class ProfileUpdateResult(val fieldKey: String, val commitTxId: String, val revealTxId: String, val verified: Boolean)
-
-    private data class KnsAddProfilePayload(val op: String, val id: String, val key: String, val value: String)
-
-    /** Flat, self-funded commit/reveal amounts for profile field updates — not tiered like domain registration, and the reveal goes back to the wallet itself (matches iOS's `submitAddProfile` defaults). */
-    private val PROFILE_COMMIT_SOMPI = 200_000_000L
-    private val PROFILE_REVEAL_SOMPI = 100_000_000L
-
-    /**
-     * Sets one on-chain KNS profile field (bio, social links, etc.) on the given domain asset —
-     * the KNS commit/reveal engine, at a flat, small, self-funded cost.
-     * Verified against iOS's `KNSProfileWriteService.submitAddProfile` (`KNSService.swift:1150-1277`).
-     */
-    suspend fun updateKnsProfileField(assetId: String, fieldKey: String, value: String, onStep: (KnsInscribeStep) -> Unit = {}): ProfileUpdateResult {
-        val trimmedAssetId = assetId.trim()
-        require(trimmedAssetId.isNotEmpty()) { "Missing KNS asset id" }
-        val trimmedValue = value.trim()
-
-        val payloadJson = Gson().toJson(KnsAddProfilePayload(op = "addProfile", id = trimmedAssetId, key = fieldKey, value = trimmedValue)).toByteArray()
-
-        // KNS activity is funded and settled entirely on the identity/chatting address chain -
-        // no spending-address split, so nothing ends up scattered across two addresses.
-        val myAddress = walletManager.getAddress()
-        val identityPrivateKey = walletManager.getPrivateKeyBytes()
-
-        onStep(KnsInscribeStep.SUBMITTING_COMMIT)
-        val commit = knsInscriptionEngine.buildAndSubmitCommit(
-            payloadJson = payloadJson,
-            commitAmountSompi = PROFILE_COMMIT_SOMPI,
-            revealAmountSompi = PROFILE_REVEAL_SOMPI,
-            revealTargetAddress = myAddress,
-            operationType = "profile",
-            fundingAddress = myAddress,
-            fundingPrivateKey = identityPrivateKey,
-            ownerPrivateKey = identityPrivateKey
-        )
-        onStep(KnsInscribeStep.SUBMITTING_REVEAL)
-        val revealTxId = knsInscriptionEngine.buildAndSubmitReveal(commit, myAddress, myAddress, identityPrivateKey)
-
-        onStep(KnsInscribeStep.VERIFYING)
-        val verified = verifyProfileField(trimmedAssetId, fieldKey, trimmedValue)
-        refreshBalance()
-        // We just changed this profile, so the cached copy of it is wrong by our own doing -
-        // drop it rather than let the owner see their old avatar or bio read back at them.
-        knsService.invalidateCache(myAddress)
-
-        return ProfileUpdateResult(fieldKey = fieldKey, commitTxId = commit.commitTxId, revealTxId = revealTxId, verified = verified)
-    }
-
-    data class TransferDomainResult(val domain: String, val toAddress: String, val commitTxId: String, val revealTxId: String, val verified: Boolean)
-
-    private data class KnsTransferDomainPayload(val op: String, val p: String, val id: String, val to: String)
-
-    /** Same flat commit cost as a profile edit, but reveal is 0 — ownership moves via the inscription payload's "to" field, not by paying the recipient (matches iOS's `KNSDomainTransferService.transferDomain`, `KNSService.swift:1517-1630`, which reuses the exact same `addProfile` builder functions). */
-    private val TRANSFER_COMMIT_SOMPI = 200_000_000L
-    private val TRANSFER_REVEAL_SOMPI = 0L
-
-    /**
-     * Transfers ownership of an owned domain to another address — irreversible once the reveal
-     * confirms. [toAddress] must already be a resolved, validated Kaspa address (any ".kas"
-     * resolution and format validation happens earlier, in the caller, so the UI can show the
-     * user exactly what address they're sending to before they confirm). Re-validates here too
-     * as a backend safety net: rejects sending to your own address, a different network's
-     * address, or a domain you no longer actually own.
-     *
-     * [fromSpendingAddressIndex] non-null makes THAT spending-chain address the transfer source
-     * (mirrors iOS `KNSDomainTransferService.transferDomain(fromSpendingAddressIndex:)`): it is
-     * the domain's owner — it funds the commit, its pubkey goes into the redeem script, its key
-     * signs both transactions, and it receives all change. Null keeps the historical
-     * identity/chatting-address behavior.
-     */
-    suspend fun transferDomain(fullDomain: String, assetId: String, toAddress: String, priorityFeeSompi: Long = KnsInscriptionEngine.REVEAL_PRIORITY_FEE_SOMPI, fromSpendingAddressIndex: Int? = null, onStep: (KnsInscribeStep) -> Unit = {}): TransferDomainResult {
-        val trimmedAssetId = assetId.trim()
-        require(trimmedAssetId.isNotEmpty()) { "Missing KNS asset id" }
-        if (priorityFeeSompi > KnsInscriptionEngine.MAX_TRANSFER_PRIORITY_FEE_SOMPI) {
-            throw IllegalStateException(com.kachat.app.util.KaspaUnit.label(appContext.getString(com.kachat.app.R.string.kns_transfer_fee_at_most_1_kas)))
-        }
-        // One key does everything — no split between funder and owner.
-        // Said plainly, before anything is built or spent (iOS 2a8ca5a): KNS cannot move a domain
-        // out of a quantum-safe address, nor ever out of a script address it is sent to.
-        knsTransferRefusalRes(fromSpendingAddressIndex, toAddress)?.let {
-            throw IllegalStateException(appContext.getString(it))
-        }
-        val sourceAddress: String
-        val sourcePrivateKey: ByteArray
-        // The account the source is derived from: a fresh change slot is probed and picked there
-        // too, even if another account is active by then (iOS fb2323e, IOS-109 / AND-056
-        // follow-up).
-        val sourceOwner = walletManager.getActiveAccount()?.address
-        if (fromSpendingAddressIndex != null) {
-            sourceAddress = walletManager.deriveSpendingAddress(fromSpendingAddressIndex)
-            sourcePrivateKey = walletManager.getSpendingPrivateKeyBytes(fromSpendingAddressIndex)
-        } else {
-            sourceAddress = walletManager.getAddress()
-            sourcePrivateKey = walletManager.getPrivateKeyBytes()
-        }
-
-        KaspaAddress.requireActiveNetwork(toAddress)
-        require(KaspaAddress.isValid(toAddress)) { "Invalid recipient address" }
-        require(toAddress != sourceAddress) { "Recipient address must be different from your wallet" }
-        require(toAddress.substringBefore(":") == sourceAddress.substringBefore(":")) { "Recipient address is on the wrong network" }
-
-        val currentOwner = knsService.resolve(fullDomain)
-        if (currentOwner != sourceAddress) {
-            throw IllegalStateException(
-                if (fromSpendingAddressIndex != null) "Domain is not owned by this spending address"
-                else "Domain is not owned by current wallet"
-            )
-        }
-
-        val payloadJson = Gson().toJson(KnsTransferDomainPayload(op = "transfer", p = "domain", id = trimmedAssetId, to = toAddress)).toByteArray()
-
-        // A transfer funded by the PRIMARY spending address is a send out of it, so both
-        // transactions' change lands on a fresh quantum-safe slot (KIP-22, iOS
-        // `nextFreshQuantumIndex`: never revealed, funded or offered, key hidden until it spends)
-        // and the primary rotates there once the commit is accepted - the
-        // same rule as chat payments and withdrawals. The domain itself leaves anyway; the old
-        // address keeps any other domains it holds and stays listed in Manage Addresses. If the
-        // fresh address cannot be derived, change stays on the source and nothing rotates - a
-        // pointer must never move to an address the funds did not reach. The slot is picked, not
-        // revealed: held as in flight until the commit is decided, given back if it fails
-        // ([WalletManager.pickFreshQuantumChange]).
-        val activeSpendingIndex = walletManager.getActiveAccount()?.spendingAddressIndex
-        val fresh = if (fromSpendingAddressIndex != null && fromSpendingAddressIndex == activeSpendingIndex) {
-            // checked on chain first: a slot that already has history is skipped (iOS da2c8e2
-            // `verifiedFreshQuantumIndex`, IOS-101 / AND-049); slot and address from the source's
-            // account (iOS fb2323e `verifiedFreshQuantumSlot`)
-            sourceOwner?.let { owner -> walletManager.verifiedFreshQuantumChange(owner = owner) { spendingAddressUsedState(it) } }
-        } else null
-        val changeAddress = fresh?.address ?: sourceAddress
-
-        onStep(KnsInscribeStep.SUBMITTING_COMMIT)
-        val commit = try {
-            knsInscriptionEngine.buildAndSubmitCommit(
-                payloadJson = payloadJson,
-                commitAmountSompi = TRANSFER_COMMIT_SOMPI,
-                revealAmountSompi = TRANSFER_REVEAL_SOMPI,
-                revealTargetAddress = sourceAddress,
-                operationType = "transfer",
-                fundingAddress = sourceAddress,
-                fundingPrivateKey = sourcePrivateKey,
-                ownerPrivateKey = sourcePrivateKey,
-                changeAddress = changeAddress,
-                revealPriorityFeeSompi = priorityFeeSompi
-            )
-        } catch (e: Throwable) {
-            // A commit that failed gives the slot back; one interrupted with its outcome unknown
-            // reveals it - revealing is always safe, handing a slot that may hold change out
-            // again is not. An unknown outcome may have put its change there too (iOS 4f8e14bb).
-            fresh?.let { walletManager.finishQuantumChangePick(it, reveal = e is kotlinx.coroutines.CancellationException || e is SendOutcomeUnknownException) }
-            throw e
-        }
-        if (fresh != null) {
-            // The commit is accepted and its change is already on the fresh address, so it is
-            // revealed and the primary follows it now. Should the reveal still fail, it is
-            // finished on the next launch ([resumePendingKnsReveal], iOS 4f8e14bb), and the pointer
-            // no longer names an address that just spent. Both on the account this transfer started on
-            // (the pick's own, [sourceOwner]) even if another is active by now, and nothing once
-            // it was removed (iOS ca09dd0, IOS-109 / AND-056).
-            walletManager.finishQuantumChangePick(fresh, reveal = true)
-            walletManager.setSpendingAddressIndex(fresh.walletAddress, fresh.index)
-        }
-        onStep(KnsInscribeStep.SUBMITTING_REVEAL)
-        val revealTxId = knsInscriptionEngine.buildAndSubmitReveal(commit, sourceAddress, changeAddress, sourcePrivateKey, priorityFeeSompi)
-        // The chat with the recipient shows "Sent <domain> domain" as soon as the payment sync
-        // sees the reveal (iOS KNSService transfer -> registerKNSTransferChatHint).
-        chatRepository.registerKnsTransferHint(
-            txId = revealTxId,
-            domainName = fullDomain,
-            domainId = trimmedAssetId,
-            counterpartyAddress = toAddress,
-            isOutgoing = true,
-        )
-
-        onStep(KnsInscribeStep.VERIFYING)
-        val verified = verifyDomainOwnership(fullDomain, toAddress)
-        refreshBalance()
-
-        return TransferDomainResult(domain = fullDomain, toAddress = toAddress, commitTxId = commit.commitTxId, revealTxId = revealTxId, verified = verified)
-    }
-
-    /**
-     * Uploads a profile avatar/banner image (already downscaled + PNG-encoded by the caller) and
-     * writes the resulting URL on-chain — reuses [updateKnsProfileField] for the on-chain half, so
-     * this costs exactly one more real commit/reveal transaction (~2/1 KAS) on top of the upload
-     * itself, same as any other profile field.
-     */
-    suspend fun uploadKnsProfileImage(assetId: String, uploadType: String, imageBytes: ByteArray, onStep: (KnsInscribeStep) -> Unit = {}): ProfileUpdateResult {
-        val url = knsService.uploadProfileImageWithFallback(assetId, uploadType, imageBytes, walletManager.getPrivateKeyBytes())
-        val fieldKey = if (uploadType == "avatar") "avatarUrl" else "bannerUrl"
-        return updateKnsProfileField(assetId, fieldKey, url, onStep)
-    }
-
-    /** Marks an owned domain as primary — off-chain, free, no transaction. */
-    suspend fun setPrimaryDomain(assetId: String) {
-        knsService.setPrimaryDomain(
-            assetId.trim(),
-            walletManager.getPrivateKeyBytes(),
-            ownerAddress = try { walletManager.getAddress() } catch (e: Exception) { null },
-        )
-    }
-
-    /** Polls the profile endpoint until the new field value is indexed, up to 90s — a UX confirmation step only. */
-    private suspend fun verifyProfileField(assetId: String, fieldKey: String, expectedValue: String): Boolean {
-        val deadlineMs = System.currentTimeMillis() + 90_000L
-        while (System.currentTimeMillis() < deadlineMs) {
-            if (fieldValue(knsService.getProfileForEditing(assetId), fieldKey) == expectedValue) return true
-            delay(2_000L)
-        }
-        return false
-    }
-
     /** The key of the address that made [pending] (its reveal target), when it is this account's:
      *  the chatting key or a legacy spending address's (KNS can't move anything out of a quantum
      *  one, iOS 2a8ca5a). Null when it is another account's. */
@@ -1104,23 +863,27 @@ class WalletService @Inject constructor(
     private val knsResumeChecked = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
 
     /**
-     * Finishes this account's KNS reveal left by an earlier run (iOS 4f8e14bb
-     * `KNSRevealRecovery.resumeIfNeeded`): called when the app comes up and when an account is
-     * loaded. Once per account while it goes through; a reveal that can't be settled is left for
-     * the next launch (or the Profile screen's Retry). The node pool may still be coming up, so
-     * it is given a few tries.
+     * Finishes this account's KNS reveal left by an earlier version (iOS `KNSRevealRecovery
+     * .resumeIfNeeded`, audit 2026-11-24 #4): KNS left K on 2026-11-23, but a commit whose reveal
+     * failed before then still holds coins only its saved redeem script can spend. Called when the
+     * app comes to the front and when an account is loaded. Once per account while it goes
+     * through; a reveal that can't be settled is tried again on the next return to the app. The
+     * node pool may still be coming up, so it is given a few tries. Starts nothing new.
      */
     suspend fun resumePendingKnsReveal() {
         val account = walletManager.getActiveAccount()?.address ?: return
         if (!knsResumeChecked.add(account)) return
-        val pending = knsInscriptionEngine.pendingCommitFromEarlierRun() ?: return
         var settled = false
         try {
+            val pending = knsRevealRecovery.pendingCommit() ?: run {
+                settled = true
+                return
+            }
             for (attempt in 0 until KNS_RESUME_TRIES) {
                 if (attempt > 0) delay(KNS_RESUME_RETRY_MS)
                 if (walletManager.getActiveAccount()?.address != account) return
                 val key = knsRevealOwnerKey(pending) ?: return
-                if (knsInscriptionEngine.resumeReveal(pending, key)) {
+                if (knsRevealRecovery.resumeReveal(pending, key)) {
                     settled = true
                     break
                 }
@@ -1129,16 +892,6 @@ class WalletService @Inject constructor(
         } finally {
             if (!settled) knsResumeChecked.remove(account)
         }
-    }
-
-    /** Polls forward resolution until the new domain's owner matches, up to 90s — a UX confirmation step, not something the broadcast itself depends on. */
-    private suspend fun verifyDomainOwnership(fullDomain: String, expectedOwnerAddress: String): Boolean {
-        val deadlineMs = System.currentTimeMillis() + 90_000L
-        while (System.currentTimeMillis() < deadlineMs) {
-            if (knsService.resolve(fullDomain) == expectedOwnerAddress) return true
-            delay(2_000L)
-        }
-        return false
     }
 
     companion object {
@@ -1178,21 +931,6 @@ class WalletService @Inject constructor(
             return null
         }
 
-        /**
-         * Why a KNS domain transfer is refused up front, or null (iOS 2a8ca5a). KNS names a
-         * domain's owner by the public key in the reveal script, and a quantum-safe (KIP-22)
-         * address keeps its key hidden behind a hash - so KNS cannot move a domain out of one,
-         * and a domain sent to any script (P2SH) address, quantum-safe ones included, would be
-         * stuck there for good.
-         */
-        @androidx.annotation.StringRes
-        internal fun knsTransferRefusalRes(fromSpendingAddressIndex: Int?, toAddress: String): Int? = when {
-            fromSpendingAddressIndex != null && WalletManager.isQuantumIndex(fromSpendingAddressIndex) ->
-                com.kachat.app.R.string.kns_transfer_quantum_source
-            ChatRepository.isScriptAddress(toAddress) -> com.kachat.app.R.string.kns_transfer_to_script_address
-            else -> null
-        }
-
         /** Legacy per-conversation random alias — 6 random bytes as 12 lowercase hex chars, the
          *  format Kasia web and iOS KaChat validate. No longer used for new chats (XP-003: a
          *  handshake carries the deterministic alias); kept for its format test. */
@@ -1200,21 +938,6 @@ class WalletService @Inject constructor(
             val bytes = ByteArray(6)
             SecureRandom().nextBytes(bytes)
             return bytes.joinToString("") { "%02x".format(it) }
-        }
-
-        /** Maps a KNS profile field key (e.g. "bio", "avatarUrl") to its current value — shared by verification polling and the Edit KNS Profile screen's change-diffing. */
-        internal fun fieldValue(profile: KnsProfileFields?, fieldKey: String): String? = when (fieldKey) {
-            "bio" -> profile?.bio
-            "avatarUrl" -> profile?.avatarUrl
-            "x" -> profile?.x
-            "website" -> profile?.website
-            "telegram" -> profile?.telegram
-            "discord" -> profile?.discord
-            "contactEmail" -> profile?.contactEmail
-            "github" -> profile?.github
-            "redirectUrl" -> profile?.redirectUrl
-            "bannerUrl" -> profile?.bannerUrl
-            else -> null
         }
     }
 }

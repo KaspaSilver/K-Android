@@ -16,8 +16,8 @@ object BroadcastRetention {
 
 /** Curated rooms shown in the Broadcasts "Popular" tab — recommended channels baked into the app, not derived from any usage/activity data. */
 object FeaturedBroadcastChannels {
-    /** The two rooms pinned to the top of Public Chats, which start with notifications on (see
-     *  `BroadcastViewModel.ensureDefaultRoomsJoined`). */
+    /** The two rooms pinned to the top of Public Chats. Since iOS 8cb4c88e (owner, 2026-11-24)
+     *  they start silenced like every room (see `BroadcastViewModel.ensureDefaultRoomsJoined`). */
     val NAMES: List<String> = listOf("kaspa", "kachat-bugs")
 
     /**

@@ -17,9 +17,10 @@ import androidx.compose.runtime.getValue
 /**
  * Whether the Connection Status page is showing.
  *
- * The green dot appears in nine headers across the app and none of them own the page - it is
- * hosted once, above the NavHost. A single flag rather than a CompositionLocal because every one
- * of those dots opens it from inside a plain (non-composable) click lambda.
+ * The connection dot sits at the top of Settings only (iOS 518fdc8c, owner's call 2026-11-23; the
+ * dock's Settings icon carries the same color) and does not own the page - it is hosted once,
+ * above the NavHost. A single flag rather than a CompositionLocal because the dot opens it from
+ * inside a plain (non-composable) click lambda.
  */
 object ConnectionStatusOverlayState {
     var isOpen by mutableStateOf(false)

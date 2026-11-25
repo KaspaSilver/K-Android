@@ -68,7 +68,8 @@ class VoiceNoteComposer(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Could not start voice recording", e)
-            onFailure("Failed to start recording: ${com.kachat.app.util.UserFacingError.message(e, "Recording failed. Please try again.")}")
+            // translated (iOS 2026-11-24 "Failed to start recording: %@")
+            onFailure(com.kachat.app.util.tr(com.kachat.app.R.string.c54_failed_start_recording, com.kachat.app.util.UserFacingError.message(e, com.kachat.app.util.tr(com.kachat.app.R.string.recording_failed_please_try_again))))
             return false
         }
         state.value = ChatViewModel.VoiceRecordingState(
@@ -146,7 +147,7 @@ class VoiceNoteComposer(
                 (recording as? VoiceRecorderService.Recording.SingleFile)?.file?.delete()
                 if (token != generation) return@launch
                 state.value = ChatViewModel.VoiceRecordingState()
-                onFailure("Failed to encode audio: ${com.kachat.app.util.UserFacingError.message(e, "Recording failed. Please try again.")}")
+                onFailure(com.kachat.app.util.tr(com.kachat.app.R.string.c54_failed_encode_audio, com.kachat.app.util.UserFacingError.message(e, com.kachat.app.util.tr(com.kachat.app.R.string.recording_failed_please_try_again))))
             }
         }
     }

@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">끝난 토너먼트가 아직 없습니다.</string>
     <string name="kaplay_no_finished_tournaments_this_month">이번 달에 끝난 토너먼트가 아직 없습니다.</string>
     <string name="kaplay_tab_leaderboard">순위표</string>
+    <string name="kp_640de0cb0b2c" formatted="false">내 전적: %s승 %s패</string>
+    <string name="kp_5d12bd53552c" formatted="false">플레이</string>
+    <string name="kp_3ab5950b358f" formatted="false">다음에 참가하는 사람이나 코드로 친구와 대국하세요.</string>
+    <string name="kp_85e2145e7cad" formatted="false">8명, 싱글 엘리미네이션.</string>
+    <string name="kp_636935a0b48d" formatted="false">봇 다섯, 레벨 1~5. 하나를 이기면 다음이 열립니다.</string>
+    <string name="kp_6fba758f3243" formatted="false">다음 리더보드로 바꿉니다</string>
+    <string name="kp_c0fc86977802" formatted="false">상대가 잡은 말</string>
+    <string name="kp_48cb744b4728" formatted="false">내가 잡은 말</string>
+    <string name="kp_76ccff916d06" formatted="false">통신 요청</string>
+    <string name="kp_73eb05867f7b" formatted="false">시간 초과로 패배</string>
+    <string name="kp_6eac413a29b7" formatted="false">기권</string>
+    <string name="kp_8a4d6885363d" formatted="false">게임을 수락함</string>
+    <string name="kp_012794aeafb0" formatted="false">게임을 거절함</string>
+    <string name="kp_0ac72bc536b1" formatted="false">체스 초대</string>
+    <string name="kp_4bb26afc82d3" formatted="false">이번 달에 끝난 1v1 게임이 아직 없습니다.</string>
+    <string name="kp_c56c7d117a52" formatted="false">이번 달에 끝난 토너먼트가 아직 없습니다.</string>
 </resources>

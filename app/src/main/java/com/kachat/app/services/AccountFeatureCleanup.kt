@@ -36,6 +36,8 @@ class AccountFeatureCleanup @Inject constructor(
     private val coldStorageManager: dagger.Lazy<ColdStorageManager>,
     private val portfolioLedgerStore: dagger.Lazy<PortfolioLedgerStore>,
     private val kaPostsNotificationPoller: dagger.Lazy<KaPostsNotificationPoller>,
+    // KaPlay's arcade (iOS 518fdc8c `ArcadeProgress.removeAll(forAddress:)`).
+    private val arcadeProgress: dagger.Lazy<com.kachat.app.services.arcade.ArcadeProgress>,
 ) {
     /**
      * [variant] is one of the deleted account's addresses (any network's form). [allDeleted] is
@@ -45,6 +47,8 @@ class AccountFeatureCleanup @Inject constructor(
         step("KaPost") { kaPostsAccountCleanup.get().removeAccount(variant) }
         // its bot games' records and stamped wins (both networks' addresses, any case)
         step("chess bot records") { chessBotProgress.get().removeAll(variant) }
+        // its arcade scores, stamped and waiting (Snake, 2048; iOS 518fdc8c WalletManager)
+        step("arcade records") { arcadeProgress.get().removeAll(variant) }
         // Public Chats (iOS `PublicChatStore.destroyLocalStore`): the rooms it joined, the senders
         // it hid, the rows it never got out; then rows of rooms no account is in any more.
         step("public chat rooms") {
@@ -111,9 +115,15 @@ class AccountFeatureCleanup @Inject constructor(
         step("push arrivals and known names") {
             PushArrivalRecord.clear(context)
             KnownKachatNames.clear(context)
+            // the request senders Who Can Message You? silenced (iOS `chat_hidden_request_addresses`)
+            HiddenRequestSenders.clear(context)
         }
         // Which chat payments were KaPost tips (iOS 2026-11-22 `KaPostTipLedger.clear`).
         step("KaPost tips") { KaPostTipLedger.clear(context) }
+        // Swap: its history (ChangeNOW ids, payout addresses) and the accepted agreements, both
+        // filed under the lowercased address (iOS 518fdc8c `SwapService.removeAllData`, audit
+        // 2026-11-24 #5).
+        step("Swap") { SwapService.removeAllData(context, variant) }
     }
 
     /** iOS 428a797b `KachatNamesActions.removeAllLocalData(forWallet:addresses:)`, in this app's

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">שמות המשתמש שלכם</string>
+    <string name="names54_no_username_found">לא נמצא שם משתמש</string>
+    <string name="names54_use_their_username">השתמשו בשם המשתמש שלו</string>
+    <string name="names54_kaspa_address_or_username">כתובת Kaspa או שם משתמש</string>
+    <string name="names54_enter_address_or_username_example">הזינו כתובת Kaspa ‏(kaspa:...) או שם משתמש (למשל alice.kachat).</string>
+    <string name="names54_members_footer">בחרו אנשים מאנשי הקשר, או הוסיפו כל אחד לפי כתובת Kaspa או שם משתמש.</string>
+    <string name="names54_finds_addresses_balance_or_username">מוצא כתובות עם יתרה או שם משתמש.</string>
+    <string name="names54_no_addresses_balance_or_username_found">לא נמצאו כתובות עם יתרה או שם משתמש.</string>
+    <string name="names54_found_one_address_balance_username">נמצאה כתובת אחת עם יתרה או שם משתמש.</string>
+    <string name="names54_found_n_addresses_balance_username">נמצאו %1$d כתובות עם יתרה או שם משתמש.</string>
+    <string name="names54_no_addresses_balance_or_username_yet">עדיין אין כתובות עם יתרה או שם משתמש</string>
+    <string name="names54_contains_username">מכיל שם משתמש</string>
+    <string name="names54_get_a_username">השיגו שם משתמש</string>
+    <string name="names54_qr_chatting_address_subtitle">לשימוש בצ\'אט ולהשגת שמות משתמש.</string>
+    <string name="names54_no_usernames_yet">עדיין אין שמות משתמש</string>
+    <string name="names54_claim_a_username">קבלת שם משתמש</string>
+    <string name="names54_discord_invite_not_found">אין הזמנת Discord בשם %1$s. השתמשו בקוד הזמנה של שרת, כמו discord.gg/abc123: אי אפשר לחפש חשבונות Discord לפי שם משתמש.</string>
+</resources>

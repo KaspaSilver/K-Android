@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.MarkEmailRead
 import androidx.compose.material.icons.outlined.MarkEmailUnread
@@ -128,6 +130,9 @@ internal fun PublicRoomChatsRow(
     onOpen: () -> Unit,
     onToggleSelection: () -> Unit,
     onDelete: () -> Unit,
+    /** Pinned up into the circles row (iOS 2026-11-23 `roomPins`); only the search lists it here. */
+    isPinned: Boolean = false,
+    onTogglePin: (() -> Unit)? = null,
 ) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
@@ -175,25 +180,23 @@ internal fun PublicRoomChatsRow(
                         }
                     }
                 ),
-                trailingActions = listOf(
+                // Delete, Mute and Pin (iOS 2026-11-23); no full swipe, so a long swipe can't
+                // start a delete.
+                trailingActions = listOfNotNull(
                     SwipeAction(Icons.Outlined.Delete, stringResource(R.string.delete), colors.danger) { onDelete() },
                     SwipeAction(
                         icon = if (muted) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                         title = if (muted) stringResource(R.string.pc_unmute) else stringResource(R.string.pc_mute),
                         tint = colors.warning,
                     ) {
-                        val on = muted
-                        broadcastViewModel.setNotifyEnabled(name, on)
-                        val indexed = FeaturedBroadcastChannels.isIndexerTracked(name)
-                        IosToasts.show(
-                            context.getString(
-                                when {
-                                    !on -> R.string.pc_notifications_off_toast
-                                    indexed -> R.string.pc_notifications_on_closed_toast
-                                    else -> R.string.pc_notifications_on_open_toast
-                                }
-                            )
-                        )
+                        togglePublicRoomNotify(context, broadcastViewModel, name, on = muted)
+                    },
+                    onTogglePin?.let { toggle ->
+                        SwipeAction(
+                            icon = if (isPinned) Icons.Default.PushPin else Icons.Outlined.PushPin,
+                            title = stringResource(if (isPinned) R.string.chats_circle_unpin else R.string.pin),
+                            tint = KaspaTeal,
+                        ) { toggle() }
                     },
                 ),
             ) {
@@ -215,6 +218,27 @@ internal fun PublicRoomChatsRow(
             )
         }
     }
+}
+
+/** Mute or Unmute a room from the Chats list, with the toast saying what it means now (iOS
+ *  `toggleRoomNotify`): a row's swipe and a pinned room's half sheet. */
+internal fun togglePublicRoomNotify(
+    context: android.content.Context,
+    broadcastViewModel: BroadcastViewModel,
+    channelName: String,
+    on: Boolean,
+) {
+    broadcastViewModel.setNotifyEnabled(channelName, on)
+    val indexed = FeaturedBroadcastChannels.isIndexerTracked(channelName)
+    IosToasts.show(
+        context.getString(
+            when {
+                !on -> R.string.pc_notifications_off_toast
+                indexed -> R.string.pc_notifications_on_closed_toast
+                else -> R.string.pc_notifications_on_open_toast
+            }
+        )
+    )
 }
 
 /**

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">Кто может вам писать?</string>
+    <string name="c54_who_anyone">Все</string>
+    <string name="c54_who_usernames">Только пользователи с именем пользователя</string>
+    <string name="c54_who_row_footer">Кто может начать с вами чат. На тех, с кем вы уже переписываетесь, это не влияет.</string>
+    <string name="c54_who_anyone_footer">Любой может отправить вам первое сообщение. Оно ждёт в «Запросах на переписку», пока вы его не примете.</string>
+    <string name="c54_who_usernames_footer">Только люди с именем пользователя (именем .kachat) попадают в ваши «Запросы на переписку». Первые сообщения от остальных скрываются и не присылают уведомлений; выберите «Все», чтобы снова их видеть. На тех, с кем вы уже переписываетесь, это не влияет.</string>
+    <string name="c54_room_clears_unread">Убирает значок непрочитанных у этого публичного чата.</string>
+    <string name="c54_room_no_notifications">Никаких уведомлений из этого публичного чата.</string>
+    <string name="c54_room_notifications_resume">Уведомления из этого публичного чата возобновятся.</string>
+    <string name="c54_room_delete_subtitle">Убирает этот публичный чат из ваших чатов.</string>
+    <string name="c54_tip_subtitle">Отправить чаевые этому контакту, как задано в Настройки &gt; Персонализация &gt; Чаевые.</string>
+    <string name="c54_send_tip">Отправить чаевые</string>
+    <string name="c54_send_deferred">Ждём подтверждения ваших монет. Отправка произойдёт сама через мгновение, поэтому не отправляйте повторно.</string>
+    <string name="c54_failed_start_recording">Не удалось начать запись: %1$s</string>
+    <string name="c54_failed_encode_audio">Не удалось закодировать аудио: %1$s</string>
+    <string name="c54_failed_prepare_audio">Не удалось подготовить аудио: %1$s</string>
+    <string name="c54_sent_a_link">Отправил(а) ссылку</string>
+    <string name="c54_public_chat_room">Публичная комната #%1$s</string>
+    <string name="c54_search_contacts_address_username">Поиск контактов, адреса или имени пользователя</string>
+    <string name="c54_looking_up_username">Поиск имени пользователя...</string>
+    <string name="c54_no_contacts_paste_username">У вас пока нет контактов. Вставьте выше адрес или имя пользователя, чтобы пригласить кого-нибудь.</string>
+    <string name="c54_no_contacts_match_username">Нет контактов по вашему запросу. Вставьте адрес или имя пользователя, чтобы пригласить кого-то нового.</string>
+    <string name="c54_invites_resent_all">Приглашения повторно отправлены всем участникам.</string>
+    <string name="c54_invite_resent">Приглашение отправлено повторно.</string>
+    <string name="c54_room_follows_app_indexer">Эта комната снова использует индексатор приложения.</string>
+    <string name="c54_room_indexer_updated">Индексатор для #%1$s обновлён.</string>
+    <string name="c54_room_could_not_reach">Не удалось подключиться: %1$s</string>
+    <string name="c54_tap_open_your_chat">Нажмите, чтобы открыть ваш чат.</string>
+    <string name="c54_tap_start_chat_on_k">Нажмите, чтобы начать чат в K.</string>
+    <string name="c54_stop_recording">Остановить запись</string>
+    <string name="c54_send_voice_message">Отправить голосовое сообщение</string>
+</resources>

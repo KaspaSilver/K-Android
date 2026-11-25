@@ -3,35 +3,31 @@ package com.kachat.app.viewmodels
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** KaPosts poster names: alias, else the .kachat name, else the short address (iOS 3d6fb7c). */
+/** KaPosts poster names: alias, else the .kachat name, else the short address (iOS 3d6fb7c,
+ *  518fdc8c: .kachat only). */
 class KaPostsPosterNameTest {
     private val address = "kaspatest:qr0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdef"
 
     @Test
     fun `your alias wins`() {
-        assertEquals("Bob", KaPostsViewModel.posterName(address, " Bob ", "alice.kachat", "alice.kas", showsKnsNames = false))
+        assertEquals("Bob", KaPostsViewModel.posterName(address, " Bob ", "alice.kachat"))
     }
 
     @Test
     fun `the kachat name comes next`() {
-        assertEquals("alice.kachat", KaPostsViewModel.posterName(address, null, "alice.kachat", "alice.kas", showsKnsNames = false))
-        assertEquals("alice.kachat", KaPostsViewModel.posterName(address, "  ", "alice.kachat", null, showsKnsNames = false))
+        assertEquals("alice.kachat", KaPostsViewModel.posterName(address, null, "alice.kachat"))
+        assertEquals("alice.kachat", KaPostsViewModel.posterName(address, "  ", "alice.kachat"))
     }
 
     @Test
-    fun `a kns domain is not identity with the kachat UI on`() {
-        assertEquals("kaspatest:qr01....cdef", KaPostsViewModel.posterName(address, null, null, "alice.kas", showsKnsNames = false))
-        assertEquals("kaspatest:qr01....cdef", KaPostsViewModel.posterName(address, null, null, "alice.kas"))
+    fun `no name is the short address`() {
+        assertEquals("kaspatest:qr01....cdef", KaPostsViewModel.posterName(address, null, null))
     }
 
     @Test
-    fun `the kns switch-back still reads the domain`() {
-        assertEquals("alice.kas", KaPostsViewModel.posterName(address, null, null, " alice.kas ", showsKnsNames = true))
-    }
-
-    @Test
-    fun `no address is Unknown`() {
-        assertEquals("Unknown", KaPostsViewModel.posterName("", "Bob", "alice.kachat", null, showsKnsNames = false))
+    fun `no address is Unknown, in the language given`() {
+        assertEquals("Unknown", KaPostsViewModel.posterName("", "Bob", "alice.kachat"))
+        assertEquals("Desconocido", KaPostsViewModel.posterName("", "Bob", "alice.kachat", unknown = "Desconocido"))
     }
 
     // The key a profile resolves to is the one the indexer's data names, never the probe

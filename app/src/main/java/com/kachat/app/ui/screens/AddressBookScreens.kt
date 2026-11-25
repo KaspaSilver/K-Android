@@ -892,19 +892,18 @@ fun AddressBookEntryEditor(
             // The name stays as typed: "Use Their Domain Name" offers the domain (iOS 413f6d6d).
         }
     }
-    // What "Use Their Domain Name" fills in: a typed domain that resolved, else the address's
+    // What "Use Their Username" fills in: a typed name that resolved, else the address's
     // .kachat name. Saved in full ("alice.kachat"), never the shortened form the hide-endings
     // setting shows, since the book syncs to Nextcloud and KaPay, where that setting doesn't
-    // apply. Never a .kas domain: a .kas name is cleared from contacts on every load, so it
-    // wouldn't stay (iOS 413f6d6d).
+    // apply (iOS 413f6d6d, 518fdc8c).
     val domainSuggestion: String? = run {
         val tld = selectedTld
         val shown = resolvedName
-        if (resolvedAddress != null && shown != null && tld != null && tld != com.kachat.app.services.NameServiceTLD.KAS) {
+        if (resolvedAddress != null && shown != null && tld != null) {
             if (shown.lowercase().endsWith(tld.suffix)) shown else shown + tld.suffix
         } else kachatName
     }
-    // A typed name resolves on every service, .kachat first; the entry saves the address.
+    // A typed name resolves as .kachat (iOS 518fdc8c); the entry saves the address.
     LaunchedEffect(addressInput) {
         resolvedAddress = null
         resolvedName = null
@@ -1047,7 +1046,7 @@ fun AddressBookEntryEditor(
                         ) {
                             Icon(Icons.Default.AlternateEmail, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(22.dp))
                             Spacer(Modifier.width(14.dp))
-                            val useDomainLabel = stringResource(R.string.use_their_domain_name)
+                            val useDomainLabel = stringResource(R.string.names54_use_their_username)
                             Text(
                                 androidx.compose.ui.text.buildAnnotatedString {
                                     append(useDomainLabel)
@@ -1073,7 +1072,7 @@ fun AddressBookEntryEditor(
                         )
                     } else {
                         AddressBookFormField(
-                            addressInput, { addressInput = it }, stringResource(R.string.kaspa_qr_or_domain),
+                            addressInput, { addressInput = it }, stringResource(R.string.shell54_kaspa_qr_or_username),
                             singleLine = false, maxLines = 3, monospace = true,
                             capitalization = KeyboardCapitalization.None,
                         )
@@ -1082,7 +1081,7 @@ fun AddressBookEntryEditor(
                                 when {
                                     isResolving -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                         com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(14.dp), color = colors.textSecondary, strokeWidth = 2.dp)
-                                        Text(stringResource(R.string.looking_up_domain), color = colors.textSecondary, fontSize = 12.sp)
+                                        Text(stringResource(R.string.shell54_looking_up_username), color = colors.textSecondary, fontSize = 12.sp)
                                     }
                                     resolvedAddress != null -> Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1100,9 +1099,6 @@ fun AddressBookEntryEditor(
                                         Icon(Icons.Default.Cancel, contentDescription = null, tint = colors.danger, modifier = Modifier.size(14.dp))
                                         Text(lookupError ?: "", color = colors.danger, fontSize = 12.sp)
                                     }
-                                }
-                                if (!isResolving) {
-                                    OtherDomainsDropdown(nameResolutions, selectedTld, selectResolution)
                                 }
                             }
                         }

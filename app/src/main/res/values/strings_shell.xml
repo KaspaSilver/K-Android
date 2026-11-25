@@ -7,17 +7,6 @@
     <string name="shell_tab_stats">Stats</string>
     <string name="shell_tab_websites">Websites</string>
     <string name="shell_kaspa_websites">Kaspa Websites</string>
-    <string name="shell_customize_dock">Customize Dock</string>
-    <string name="shell_your_dock">Your Dock</string>
-    <string name="shell_always_stays">%1$s always stays in your dock.</string>
-    <string name="shell_dock_full">Your dock is full. Remove one from it to add one of these.</string>
-    <string name="shell_hub_order">In the order %1$s shows them.</string>
-    <string name="shell_move_to">Move %1$s to %2$s</string>
-    <string name="shell_add_to_dock">Add %1$s to your dock</string>
-    <string name="shell_always_in_dock">Always in your dock</string>
-    <string name="shell_hub_empty_title">Nothing here right now</string>
-    <string name="shell_hub_empty_body">What isn\'t in your dock shows here. Arrange them in Customize Dock.</string>
-    <string name="shell_customize_dock_footer">Pick what\'s in your dock. Everything else is in Kaspa Hub.</string>
     <string name="shell_terms_of_use">Terms of Use</string>
     <string name="shell_message_indexer_footer">KaPost, Public Chats and Chess are read from this indexer too.</string>
     <string name="shell_ks_what_counts">What counts</string>
@@ -69,7 +58,6 @@
     <string name="shell_ks_info_header">Every KaChat action is its own Kaspa transaction. These totals come from KaChat\'s indexer, counting what it has seen on chain - nothing is read from your phone.</string>
     <string name="shell_ks_info_footer">1:1 messages are encrypted, so voice notes, reactions and 1:1 chess moves count as direct messages: nobody, the indexer included, can tell them apart.</string>
     <string name="shell_ks_try_again">Try Again</string>
-    <string name="shell_ks_kachat_domains">.kachat Domains</string>
     <string name="shell_ks_kachat_transactions">Transactions on the .kachat registry</string>
     <string name="shell_ks_kachat_fees_detail">Paid for registrations and renewals</string>
     <string name="shell_ks_fees_unavailable">Fees aren\'t available yet</string>

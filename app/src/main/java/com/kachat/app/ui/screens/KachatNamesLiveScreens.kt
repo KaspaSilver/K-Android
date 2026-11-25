@@ -952,7 +952,11 @@ fun KachatNameTile(
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
             if (name != null) {
                 Text(name, color = colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 17.sp, textAlign = TextAlign.Center)
-                Text(".kachat", color = KaspaTeal, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                // the ending only when Show .kachat Endings is on (off by default): the marketplace
+                // sells names, and a name is just the name (iOS 518fdc8c)
+                if (com.kachat.app.models.KachatNameLabel.showsEnding) {
+                    Text(".kachat", color = KaspaTeal, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+                }
             } else {
                 Box(Modifier.size(90.dp, 17.dp).clip(RoundedCornerShape(4.dp)).background(redacted))
                 Box(Modifier.size(44.dp, 12.dp).clip(RoundedCornerShape(4.dp)).background(redacted))
@@ -1033,7 +1037,7 @@ fun KachatLiveSearchResult(
     @Composable
     fun row(subtitle: String) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text("$name.kachat", color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(com.kachat.app.models.KachatNameLabel.display(name), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(subtitle, color = colors.textSecondary, fontSize = 12.sp)
         }
     }
@@ -1065,7 +1069,7 @@ fun KachatLiveSearchResult(
             is KachatLiveViewModel.Search.Free -> if (s.name == name) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("${s.name}.kachat", color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(com.kachat.app.models.KachatNameLabel.display(s.name), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         // no price here: a name's first year and later years cost differently (the
                         // claim's "For how long?" shows each; iOS 05db583)
                         Text(stringResource(R.string.kn_available), color = colors.success, fontSize = 12.sp)
@@ -1087,7 +1091,7 @@ fun KachatLiveSearchResult(
 @Composable
 private fun SearchChecking(name: String) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text("$name.kachat", color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text(com.kachat.app.models.KachatNameLabel.display(name), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         IosActivityIndicator(color = KaspaTeal, modifier = Modifier.size(20.dp))
     }
 }
@@ -1305,7 +1309,7 @@ private fun KachatRegistrationProgressContent(registration: PendingRegistration,
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Text(
-            stringResource(R.string.kn_claiming_name, "${registration.name}.kachat"),
+            stringResource(R.string.kn_claiming_name, com.kachat.app.models.KachatNameLabel.display(registration.name)),
             color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, textAlign = TextAlign.Center,
             // 22 from the sheet's top edge, the grabber's 10 included
             modifier = Modifier.padding(top = 12.dp, start = 24.dp, end = 24.dp)
@@ -1540,7 +1544,7 @@ fun KachatRegistrationCard(registration: PendingRegistration, vm: KachatLiveView
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("${registration.name}.kachat", color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, modifier = Modifier.weight(1f))
+            Text(com.kachat.app.models.KachatNameLabel.display(registration.name), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, modifier = Modifier.weight(1f))
             when {
                 registration.needsDriving -> IosActivityIndicator(color = KaspaTeal, modifier = Modifier.size(20.dp))
                 registration.stage == PendingRegistration.Stage.REGISTERED -> Icon(Icons.Default.Verified, null, tint = colors.success)
@@ -1848,7 +1852,7 @@ internal fun KachatEventRow(event: Event, showName: Boolean = false) {
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            val title = stringResource(KachatLive.eventTitle(event.op)) + (event.name?.takeIf { showName }?.let { " $it.kachat" } ?: "")
+            val title = stringResource(KachatLive.eventTitle(event.op)) + (event.name?.takeIf { showName }?.let { " " + com.kachat.app.models.KachatNameLabel.display(it) } ?: "")
             Text(title, color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val line = listOfNotNull(
                 KachatLive.party(event.to)?.takeIf { event.op != "offer" }?.let { "→ $it" },
@@ -1972,7 +1976,7 @@ fun KachatOfferTile(state: KachatOfferState, showsName: Boolean = false, onTap: 
         val offerName = state.offer.name
         if (showsName && offerName != null) {
             Text(
-                "$offerName.kachat", color = KaspaTeal, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                com.kachat.app.models.KachatNameLabel.display(offerName), color = KaspaTeal, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center
             )
         }
@@ -2094,7 +2098,7 @@ fun KachatOfferDetailSheet(state: KachatOfferState, onClose: () -> Unit, vm: Kac
                                     fontWeight = FontWeight.Bold, minScale = 0.5f, textAlign = TextAlign.Center
                                 )
                                 (state.offer.name ?: state.name?.name)?.let { n ->
-                                    Text("$n.kachat", color = KaspaTeal, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(com.kachat.app.models.KachatNameLabel.display(n), color = KaspaTeal, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
 
@@ -2928,7 +2932,7 @@ fun KachatClaimSheet(target: KachatClaimTarget, onClose: () -> Unit, onStarted: 
                                 verticalArrangement = Arrangement.spacedBy(14.dp)
                             ) {
                                 SendStepQuestion(tr(R.string.kcn_kp_for_how_long))
-                                Text("${target.name}.kachat", color = KaspaTeal, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                                Text(com.kachat.app.models.KachatNameLabel.display(target.name), color = KaspaTeal, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                                 for (y in 1..maxOf(1, maxYears.toInt())) {
                                     KachatClaimLengthButton(yearsText(y, params), price(y.toLong())?.let { KaspaUnit.amount(it) }) {
                                         haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
@@ -2953,7 +2957,7 @@ fun KachatClaimSheet(target: KachatClaimTarget, onClose: () -> Unit, onStarted: 
                             isBusy = starting,
                             isEnabled = quote?.affordable == true,
                             amountSompi = quote?.total,
-                            recipient = "${target.name}.kachat",
+                            recipient = com.kachat.app.models.KachatNameLabel.display(target.name),
                             sent = null,
                             failureMessage = startError,
                             labels = KachatSwipeUpLabels.Claim,
@@ -2986,7 +2990,7 @@ fun KachatClaimSheet(target: KachatClaimTarget, onClose: () -> Unit, onStarted: 
                                 }
 
                                 KachatCard {
-                                    KachatCardRow(stringResource(R.string.kl_name), "${target.name}.kachat")
+                                    KachatCardRow(stringResource(R.string.kl_name), com.kachat.app.models.KachatNameLabel.display(target.name))
                                     KachatCardRow(tr(R.string.kcn_kp_length_3bade), yearsText(years.toInt(), params))
                                     HorizontalDivider(color = colors.divider)
                                     val q = quote
@@ -3531,7 +3535,7 @@ fun KachatLiveNameDetailScreen(
                                         stringResource(R.string.kn_your_kassigner_address, held.account, held.index),
                                         color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp
                                     )
-                                    else -> ownerLabel?.let { Text("$it.kachat", color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp) }
+                                    else -> ownerLabel?.let { Text(com.kachat.app.models.KachatNameLabel.display(it), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp) }
                                 }
                                 ownerAddress?.let { address ->
                                     // The whole address doesn't fit on two lines: show its network
@@ -3774,7 +3778,7 @@ fun KachatLiveOfferSheet(
     val belowListing = info.isListed && amount != null && info.price < amount
 
     val rows = buildList {
-        add(KachatTxRow(stringResource(R.string.kl_name), "${info.name}.kachat"))
+        add(KachatTxRow(stringResource(R.string.kl_name), com.kachat.app.models.KachatNameLabel.display(info.name)))
         if (info.isListed) add(KachatTxRow(stringResource(R.string.kl_listed_at), KaspaUnit.amount(info.price)))
         add(KachatTxRow(stringResource(R.string.kn_expires), KachatLive.day(info.expiresAt)))
         if (amount != null) add(KachatTxRow(stringResource(R.string.kl_offer), KaspaUnit.amount(amount)))
@@ -3800,7 +3804,7 @@ fun KachatLiveOfferSheet(
         swipeUp = KachatSwipeUp(
             bar = tr(R.string.kcn_kp_swipe_up_to_offer),
             labels = KachatSwipeUpLabels.transaction(done = stringResource(R.string.kn_done_offer_sent)),
-            recipient = "${info.name}.kachat",
+            recipient = com.kachat.app.models.KachatNameLabel.display(info.name),
         ),
         entryQuestion = tr(R.string.kcn_kp_how_much_do_you_offer),
         canContinue = operation != null,
@@ -4446,7 +4450,7 @@ fun KachatLiveDomainsTab(
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Icon(KachatSymbols.AtCircle, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(44.dp))
-                            Text(stringResource(R.string.km_no_names), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
+                            Text(stringResource(R.string.names54_no_usernames_yet), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
                         }
                     } else {
                         names.forEach { n ->
@@ -4492,7 +4496,7 @@ fun KachatLiveDomainsTab(
             contentAlignment = Alignment.Center
         ) {
             // "Claim a Name", which opens the .kachat screen (iOS 5848fb0; was "Inscribe")
-            Text(stringResource(R.string.kn_claim_a_name), color = KaspaTeal, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text(stringResource(R.string.names54_claim_a_username), color = KaspaTeal, fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
     }
     }
@@ -4517,7 +4521,7 @@ fun KachatNameLookupScreen(name: String, onBack: () -> Unit, onRetry: (() -> Uni
             } else {
                 val colors = LocalAppColors.current
                 Column(Modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("$name.kachat", color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, textAlign = TextAlign.Center)
+                    Text(com.kachat.app.models.KachatNameLabel.display(name), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, textAlign = TextAlign.Center)
                     Text(stringResource(R.string.kn_err_lookup), color = colors.textSecondary, fontSize = 15.sp, textAlign = TextAlign.Center)
                     KachatButton(stringResource(R.string.try_again), onClick = onRetry)
                 }
@@ -4541,7 +4545,7 @@ fun KachatFreeNameScreen(name: String, gap: GapInfo?, onBack: () -> Unit, onClai
             Column(Modifier.fillMaxWidth().kachatGlass(colors).padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Box(Modifier.fillMaxWidth().height(110.dp).clip(RoundedCornerShape(18.dp)).background(KaspaTeal), contentAlignment = Alignment.Center) {
                     KachatFitText(
-                        "$name.kachat", color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Black, minScale = 0.5f,
+                        com.kachat.app.models.KachatNameLabel.display(name), color = Color.Black, fontSize = 22.sp, fontWeight = FontWeight.Black, minScale = 0.5f,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
@@ -4938,7 +4942,7 @@ fun KachatExpiredNamesBanner(walletAddress: String?, vm: KachatExpiredNamesViewM
                 color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
             )
             Text(
-                if (visible.size == 1) stringResource(R.string.kachat_expired_one_body, "${n.name}.kachat", KachatLive.day(kachatClampedSum(n.expiresAt, vm.graceMs)))
+                if (visible.size == 1) stringResource(R.string.kachat_expired_one_body, com.kachat.app.models.KachatNameLabel.display(n.name), KachatLive.day(kachatClampedSum(n.expiresAt, vm.graceMs)))
                 else stringResource(R.string.kachat_expired_many_body),
                 color = colors.textSecondary, fontSize = 12.sp,
             )
@@ -5088,7 +5092,11 @@ private fun KachatSocialPreview(
                     SocialSource.Kind.BANNER -> R.string.kn_social_no_banner
                     SocialSource.Kind.BIO -> R.string.kn_social_no_bio
                 }
-                Text(stringResource(missing, name), color = colors.textSecondary, fontSize = 13.sp)
+                // Discord is read from a server invite: a username isn't one (iOS 518fdc8c)
+                val text = if (source.platform == SocialSource.Platform.DISCORD && resolved?.notFound == true) {
+                    stringResource(R.string.names54_discord_invite_not_found, source.handle)
+                } else stringResource(missing, name)
+                Text(text, color = colors.textSecondary, fontSize = 13.sp)
             }
             KachatSocialLookup.UNREACHABLE -> Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.SignalWifiStatusbarConnectedNoInternet4, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(20.dp))
@@ -5287,26 +5295,8 @@ fun KachatLiveProfileEditorScreen(
     fun invalidHandleNote() = FormFooter(stringResource(R.string.kn_handle_bad), colors.danger)
 
     KachatLiveForm(title = stringResource(R.string.edit_kachat_profile), onClose = onBack, scrollState = formScroll) {
-        FormSection(header = stringResource(R.string.avatar), footer = if (avatarIn.isBad(SocialSource.Kind.AVATAR)) ({ invalidHandleNote() }) else null) {
-            KachatSourceField(avatarIn, { avatarIn = it }, SocialSource.Kind.AVATAR, avatarLookup, { avatarLookup = it }, social)
-        }
-        FormSection(header = stringResource(R.string.banner), footer = if (bannerIn.isBad(SocialSource.Kind.BANNER)) ({ invalidHandleNote() }) else null) {
-            KachatSourceField(bannerIn, { bannerIn = it }, SocialSource.Kind.BANNER, bannerLookup, { bannerLookup = it }, social)
-        }
-        FormSection(header = stringResource(R.string.bio), footer = if (bioIn.isBad(SocialSource.Kind.BIO)) ({ invalidHandleNote() }) else null) {
-            KachatSourceField(bioIn, { bioIn = it }, SocialSource.Kind.BIO, bioLookup, { bioLookup = it }, social)
-        }
-        FormSection(
-            header = stringResource(R.string.kn_links),
-            footer = if (badLinktree) ({ FormFooter(stringResource(R.string.kn_linktree_username_bad), colors.danger) }) else null
-        ) {
-            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("linktr.ee/", color = colors.textSecondary)
-                com.kachat.app.ui.theme.IosPlainTextField(linktree, { linktree = it }, stringResource(R.string.kn_username), Modifier.weight(1f), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrect = false, keyboardType = KeyboardType.Uri))
-                if (linktree.isNotEmpty()) FormClearButton { linktree = "" }
-            }
-        }
-        FormSection(header = stringResource(R.string.kachat_name_section)) {
+        // First, and called Username (owner's call, iOS 518fdc8c, 2026-11-23).
+        FormSection(header = stringResource(R.string.nc_username)) {
             // The primary name needs the registry: until it launches on this network (mainnet)
             // there's no name to pick, so the profile saves without one (iOS d36fc42).
             if (!KachatNamesService.isLaunched) {
@@ -5335,8 +5325,8 @@ fun KachatLiveProfileEditorScreen(
                     }
                 }
             }
-            // Get a .kachat name: names are claimed right here in KaChat now, so this closes and
-            // the .kachat tab opens, wherever it lives (dock or Kaspa Hub; iOS 148a5331).
+            // Get a username: names are claimed right here in KaChat now, so this closes and the
+            // Usernames tab opens, wherever it lives (dock or Kaspa Hub; iOS 148a5331, 518fdc8c).
             // (The shell takes [KachatDeepLink.pendingTab] once this screen has closed.)
             SettingsDivider()
             Row(
@@ -5348,7 +5338,26 @@ fun KachatLiveProfileEditorScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Icon(Icons.Default.AlternateEmail, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
-                Text(stringResource(R.string.get_a_kachat_name), color = KaspaTeal)
+                Text(stringResource(R.string.names54_get_a_username), color = KaspaTeal)
+            }
+        }
+        FormSection(header = stringResource(R.string.avatar), footer = if (avatarIn.isBad(SocialSource.Kind.AVATAR)) ({ invalidHandleNote() }) else null) {
+            KachatSourceField(avatarIn, { avatarIn = it }, SocialSource.Kind.AVATAR, avatarLookup, { avatarLookup = it }, social)
+        }
+        FormSection(header = stringResource(R.string.banner), footer = if (bannerIn.isBad(SocialSource.Kind.BANNER)) ({ invalidHandleNote() }) else null) {
+            KachatSourceField(bannerIn, { bannerIn = it }, SocialSource.Kind.BANNER, bannerLookup, { bannerLookup = it }, social)
+        }
+        FormSection(header = stringResource(R.string.bio), footer = if (bioIn.isBad(SocialSource.Kind.BIO)) ({ invalidHandleNote() }) else null) {
+            KachatSourceField(bioIn, { bioIn = it }, SocialSource.Kind.BIO, bioLookup, { bioLookup = it }, social)
+        }
+        FormSection(
+            header = stringResource(R.string.kn_links),
+            footer = if (badLinktree) ({ FormFooter(stringResource(R.string.kn_linktree_username_bad), colors.danger) }) else null
+        ) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("linktr.ee/", color = colors.textSecondary)
+                com.kachat.app.ui.theme.IosPlainTextField(linktree, { linktree = it }, stringResource(R.string.kn_username), Modifier.weight(1f), keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrect = false, keyboardType = KeyboardType.Uri))
+                if (linktree.isNotEmpty()) FormClearButton { linktree = "" }
             }
         }
         // Saves on every network: a profile is a self-send, with no registry behind it (iOS d36fc42).

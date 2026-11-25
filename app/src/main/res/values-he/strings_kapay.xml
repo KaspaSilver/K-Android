@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">הזינו את קצב הגיבוב שלכם כדי להעריך את הרווחים.</string>
     <string name="kp_export_failed_csv">הייצוא נכשל. לא ניתן היה לכתוב את קובץ ה-CSV</string>
     <string name="kp_fee_amount">עמלה %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">נמצאו %1$d כתובות עם יתרה או דומיין.</string>
-    <string name="kp_found_one_address_balance_domain">נמצאה כתובת אחת עם יתרה או דומיין.</string>
     <string name="kp_frame_lld_lld_5cb10">פריים %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">תן לחשבון הזה שם כדי שתוכל לזהות אותו.</string>
     <string name="kp_hide_address">הסתרת הכתובת</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">תיק השקעות חדש</string>
     <string name="kp_next_block_reward">תגמול הבלוק הבא</string>
     <string name="kp_next_block_reward_reduction">ההפחתה הבאה בתגמול הבלוק</string>
-    <string name="kp_no_addresses_balance_domain_found">לא נמצאו כתובות עם יתרה או דומיין.</string>
     <string name="kp_no_addresses_discovered_yet_15738">טרם התגלו כתובות.</string>
     <string name="kp_no_used_addresses_yet">עדיין אין כתובות בשימוש</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">עדיין אין מספיק היסטוריה - חזרו אחרי כמה ימים של פעילות.</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">שומר את קובץ ה-CSV בתיקיית KaChat ב-Nextcloud שלכם.</string>
     <string name="pnc_import_sub">בחרו קובץ CSV מה-Nextcloud שלכם.</string>
     <string name="portfolio">תיק השקעות</string>
-    <string name="portfolio_add_address_footer_kachat">הזן כתובת Kaspa או דומיין כמו name.kachat (שמות .kachat נבדקים קודם). כל עסקה שהתקבלה בכתובת הזו נרשמת כקנייה, וכל עסקה שנשלחה כמכירה, לפי מחיר ה-KAS ההיסטורי של אותו יום. הוספה חוזרת של אותה כתובת מייבאת רק עסקאות מאז הייבוא האחרון.</string>
     <string name="portfolio_add_chatting_address">הוספת כתובת הצ\'אט</string>
     <string name="portfolio_add_chatting_address_sub">הקניות והמכירות של כתובת הצ\'אט שלכם, וכל עמלת רשת ששילמה.</string>
     <string name="portfolio_fees_count_loading">עסקאות: %1$d. חלק מהמחירים עדיין נטענים.</string>

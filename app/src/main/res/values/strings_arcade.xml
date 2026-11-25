@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPlay's arcade (Snake, 2048; iOS 518fdc8c ArcadeViews.swift, ArcadeServices.swift,
+     KaPlayChallengeViews.swift), translated from the iOS Localizable.strings keys. -->
+<resources>
+    <string name="arcade_snake">Snake</string>
+    <string name="arcade_snake_detail">Eat, grow, don\'t hit the walls or yourself. Scores go on Kaspa.</string>
+    <string name="arcade_2048_detail">Swipe to merge tiles and reach 2048. Scores go on Kaspa.</string>
+    <string name="arcade_other_account">This game was played on another account. Sign in to it to stamp the score.</string>
+    <string name="arcade_score_not_sent">The score was not sent.</string>
+    <string name="arcade_challenge_play">Challenge: play %1$s</string>
+    <string name="arcade_beat_in">Beat %1$s in %2$s</string>
+    <string name="arcade_share_boast">I scored %1$s in %2$s on K. Think you can beat it?</string>
+    <string name="arcade_challenge_named">%1$s scored %2$s in %3$s. Can you beat it?</string>
+    <string name="arcade_challenge_someone">Someone scored %1$s in %2$s. Can you beat it?</string>
+    <string name="arcade_your_best">Your best: %1$s</string>
+    <string name="arcade_fee_note">Each finished game\'s score is stamped on Kaspa from your chatting address, for a small network fee.</string>
+    <string name="arcade_hint_period">Switches the leaderboard period</string>
+    <string name="arcade_board_unreachable">The leaderboard couldn\'t be loaded. Pull down to try again.</string>
+    <string name="arcade_board_empty">No scores yet. Be the first.</string>
+    <string name="arcade_posted">Posted to KaPost</string>
+    <string name="arcade_game_over">Game Over</string>
+    <string name="arcade_play_again">Play Again</string>
+    <string name="arcade_posting">Posting to KaPost…</string>
+    <string name="arcade_shared">Shared to KaPost</string>
+    <string name="arcade_retry_stamp">Retry the Stamp</string>
+    <string name="arcade_stamping">Stamping the score on Kaspa…</string>
+    <string name="arcade_stamped">Score stamped on Kaspa</string>
+    <string name="arcade_no_score">No score to stamp.</string>
+    <string name="arcade_score_n">Score: %1$s</string>
+    <string name="arcade_snake_start_hint">Swipe on the board or use the arrows to start.</string>
+    <string name="arcade_score">Score</string>
+    <string name="arcade_best_tile">Best Tile</string>
+    <string name="arcade_2048_hint">Swipe to move the tiles. Equal tiles merge.</string>
+    <string name="arcade_challenge_label">Arcade Challenge</string>
+</resources>

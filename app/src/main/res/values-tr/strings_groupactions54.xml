@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 group create / add members sheets (iOS GroupActionSheets.swift, 2026-11-24): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="ga54_not_sent">Gönderilmedi</string>
+    <string name="ga54_x_of_y">%1$d / %2$d</string>
+    <string name="ga54_some_steps_failed">Bazı adımlar tamamlanmadı. Grup Bilgisi &gt; Davetleri herkese yeniden gönder ile tekrar gönderebilirsin.</string>
+    <string name="ga54_each_step_is_tx">Her adım Kaspa üzerinde bir işlemdir ve birkaç saniye sürebilir. Bitene kadar K\'yi açık tut.</string>
+    <string name="ga54_setting_up_group">Grup kuruluyor</string>
+    <string name="ga54_inviting">%1$s davet ediliyor</string>
+    <string name="ga54_saving_recovery_copy">Kurtarma kopyası kaydediliyor</string>
+    <string name="ga54_adding_group_photo">Grup fotoğrafı ekleniyor</string>
+    <string name="ga54_creating">“%1$s” oluşturuluyor</string>
+    <string name="ga54_adding">%1$s ekleniyor</string>
+    <string name="ga54_adding_one_member">1 üye ekleniyor</string>
+    <string name="ga54_adding_n_members">%1$d üye ekleniyor</string>
+    <string name="ga54_sending_group_key">Yeni grup anahtarı gönderiliyor: %1$d / %2$d</string>
+    <string name="ga54_add_one_member">Gruba 1 üye eklensin mi?</string>
+    <string name="ga54_add_n_members">Gruba %1$d üye eklensin mi?</string>
+    <string name="ga54_joined_group">%1$s gruba katıldı</string>
+    <string name="ga54_declined_invite">%1$s daveti reddetti</string>
+    <string name="ga54_invited_to_group">%1$s grup sohbetine davet edildi</string>
+    <string name="ga54_removed_from_group">%1$s grup sohbetinden çıkarıldı</string>
+</resources>

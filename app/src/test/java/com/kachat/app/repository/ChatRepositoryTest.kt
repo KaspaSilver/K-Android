@@ -417,11 +417,11 @@ class ChatRepositoryTest {
         assertEquals(null, ChatRepository.indexedPaymentSender(rows, "dd44"))
     }
 
-    // MARK: KNS domain transfers in the payment scan (iOS ingestKNSTransferMessage)
+    // MARK: KNS reveals in the payment scan (iOS handleKNSOperationTransactionIfNeeded)
 
-    /** A reveal input's signature script, built the way the app's own reveal is
-     *  (KnsInscriptionEngine + KaspaTransactionSigner.signRevealInput): push(sig + SIGHASH_ALL)
-     *  then push(redeem script carrying [json]). */
+    /** A reveal input's signature script, built the way a KNS reveal is (KnsRevealRecovery +
+     *  KaspaTransactionSigner.signRevealInput): push(sig + SIGHASH_ALL) then push(redeem script
+     *  carrying [json]). */
     private fun revealSignatureScript(json: String): String {
         val redeem = com.kachat.app.util.KnsInscriptionScript.buildRedeemScript(ByteArray(32) { 7 }, "kns", json.toByteArray())
         val sig = byteArrayOf(0x41) + ByteArray(64) { 1 } + byteArrayOf(0x01)
@@ -429,51 +429,13 @@ class ChatRepositoryTest {
         return script.joinToString("") { "%02x".format(it) }
     }
 
-    private val transferJson = """{"op":"transfer","p":"domain","id":"asset123","to":"$payee"}"""
-
     @Test
-    fun `a domain transfer reveal is recognised and parsed`() {
-        val script = revealSignatureScript(transferJson)
-        org.junit.Assert.assertTrue(ChatRepository.isKnsRevealSignatureScript(script))
-        assertEquals(
-            KnsTransferOperation("asset123", payee),
-            ChatRepository.parseKnsTransferOperation(listOf("41" + "00".repeat(65), script))
-        )
-    }
-
-    @Test
-    fun `other KNS operations and ordinary inputs are no transfer`() {
-        val plainSig = "41" + "11".repeat(64) + "01"
-        org.junit.Assert.assertFalse(ChatRepository.isKnsRevealSignatureScript(plainSig))
-        org.junit.Assert.assertNull(ChatRepository.parseKnsTransferOperation(listOf(plainSig, null)))
-        val profile = revealSignatureScript("""{"op":"addProfile","id":"asset123","key":"bio","value":"hi"}""")
-        org.junit.Assert.assertTrue(ChatRepository.isKnsRevealSignatureScript(profile))
-        org.junit.Assert.assertNull(ChatRepository.parseKnsTransferOperation(listOf(profile)))
-        val otherProtocol = revealSignatureScript("""{"op":"transfer","p":"token","id":"asset123","to":"$payee"}""")
-        org.junit.Assert.assertNull(ChatRepository.parseKnsTransferOperation(listOf(otherProtocol)))
-        val noId = revealSignatureScript("""{"op":"transfer","p":"domain","id":" ","to":"$payee"}""")
-        org.junit.Assert.assertNull(ChatRepository.parseKnsTransferOperation(listOf(noId)))
-    }
-
-    @Test
-    fun `a transfer is ours only as its recipient or signer`() {
-        val mine = setOf(me.lowercase())
-        // we signed it: sent, in the chat with the recipient
-        assertEquals(true to payee, ChatRepository.knsTransferCounterparty(me, payee, mine, listOf(me), listOf(me)))
-        // we are the recipient: received, from the first input that is not us
-        assertEquals(false to payer, ChatRepository.knsTransferCounterparty(me, me, mine, listOf(payer), listOf(me)))
-        // received with no foreign input: the first output that is neither us nor the recipient
-        assertEquals(false to payee, ChatRepository.knsTransferCounterparty(me, me, mine, emptyList(), listOf(me, payee)))
-        // a stranger's transfer seen in passing is nobody's business here (iOS leak fix)
-        org.junit.Assert.assertNull(ChatRepository.knsTransferCounterparty(me, payee, mine, listOf(payer), listOf(payee, payer)))
-    }
-
-    @Test
-    fun `domain transfer wording matches iOS`() {
-        assertEquals("Sent alice.kas domain", ChatRepository.knsTransferMessageText("alice.kas", isOutgoing = true))
-        assertEquals("Received alice.kas domain", ChatRepository.knsTransferMessageText("alice.kas", isOutgoing = false))
-        assertEquals("Sent domain transfer", ChatRepository.knsTransferMessageText(null, isOutgoing = true))
-        assertEquals("Received domain transfer", ChatRepository.knsTransferMessageText(" ", isOutgoing = false))
+    fun `KNS reveals are recognised, so they stay out of chats as payments`() {
+        org.junit.Assert.assertTrue(ChatRepository.isKnsRevealSignatureScript(
+            revealSignatureScript("""{"op":"transfer","p":"domain","id":"asset123","to":"$payee"}""")))
+        org.junit.Assert.assertTrue(ChatRepository.isKnsRevealSignatureScript(
+            revealSignatureScript("""{"op":"addProfile","id":"asset123","key":"bio","value":"hi"}""")))
+        org.junit.Assert.assertFalse(ChatRepository.isKnsRevealSignatureScript("41" + "11".repeat(64) + "01"))
     }
 
     // MARK: payments held for their signature check (iOS 5806362 heldPaymentTxIds)

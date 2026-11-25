@@ -166,6 +166,8 @@ class KachatNamesRegistry @Inject constructor(
                 identityMap = value
                 identityStates.publish()
             }
+            // flows that depend on who has a name (Who Can Message You?) re-read
+            identityRevisionState.update { it + 1 }
         }
     @Volatile private var identityMap: Map<String, Identity> = emptyMap()
     /** [identities] per address, as snapshot state: what [cachedIdentity] reads in composition. */
@@ -1877,6 +1879,11 @@ class KachatNamesRegistry @Inject constructor(
         /** The address's cached `.kachat` identity ([cachedIdentity]); profile only on mainnet. */
         fun cachedIdentityOf(address: String): Identity? = instance?.cachedIdentity(address)
 
+        private val identityRevisionState = MutableStateFlow(0)
+        /** Moves whenever the cached identities change (iOS `identityRevision`): Message Requests
+         *  re-check Who Can Message You? when a sender's name lands. */
+        val identityRevision: StateFlow<Int> = identityRevisionState.asStateFlow()
+
         /** Testnet: `<label>.kachat` for an address with an active name (its primary one), null
          *  otherwise or while it is looked up; always null on mainnet. Bare `<label>` when Show
          *  .kachat Endings is off - display only ([com.kachat.app.models.KachatNameLabel], iOS
@@ -2328,7 +2335,8 @@ class KachatSocialImageResolver @Inject constructor(
         when (source.platform) {
             SocialSource.Platform.DISCORD -> {
                 val (body, status) = fetch("https://discord.com/api/v10/invites/${source.handle}", BROWSER_AGENT) ?: return null
-                if (status == 404) return SocialProfile()
+                // no such invite (a username typed instead of an invite code, or one that expired)
+                if (status == 404) return SocialProfile(notFound = true)
                 if (status != 200) return null
                 return SocialProfile(
                     avatar = SocialSource.discordImage(body, SocialSource.Kind.AVATAR),

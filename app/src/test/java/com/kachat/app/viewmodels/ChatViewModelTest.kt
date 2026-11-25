@@ -129,24 +129,4 @@ class ChatViewModelTest {
         val received = message(MessageProtocol.TYPE_COMM, "received", deliveryStatus = "failed")
         assertFalse(ChatViewModel.shouldShowRetryOption(received))
     }
-
-    @Test
-    fun `alias can be auto-set to a domain when it was never set`() {
-        assertTrue(ChatViewModel.canAutoUpdateAliasToDomain(null))
-    }
-
-    @Test
-    fun `a real custom nickname is never auto-overwritten`() {
-        assertFalse(ChatViewModel.canAutoUpdateAliasToDomain("Mom"))
-        assertFalse(ChatViewModel.canAutoUpdateAliasToDomain("My Best Friend"))
-    }
-
-    @Test
-    fun `once any domain is associated with a contact, auto-refresh never touches it again`() {
-        // Regression: previously this returned true because "oldname.kas" still "looks like" a
-        // domain, so refreshKnsNamesForAllContacts would silently revert an explicit non-primary
-        // domain selection back to the contact's on-chain primary.
-        assertFalse(ChatViewModel.canAutoUpdateAliasToDomain("oldname.kas", knsName = "oldname.kas"))
-        assertFalse(ChatViewModel.canAutoUpdateAliasToDomain("chosen.kas", knsName = "chosen.kas"))
-    }
 }

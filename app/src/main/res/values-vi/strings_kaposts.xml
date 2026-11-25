@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">Không gửi được tiền tip: hiện không đọc được địa chỉ Tip từ của bạn.</string>
     <string name="feed54_tip_minimum_footer">Mạng chỉ nhận tiền tip từ %1$s trở lên.</string>
     <string name="feed54_tip_no_price">Không gửi được tip: không có giá KAS gần đây để quy đổi %1$s sang KAS.</string>
-    <string name="feed54_tip_too_small">Không gửi được tiền tip: mạng chỉ nhận tiền tip từ %1$s trở lên. Hãy đổi tiền tip mặc định trong Cài đặt &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">Không gửi được tiền tip: mạng chỉ nhận tiền tip từ %1$s trở lên. Hãy đổi tiền tip mặc định trong Cài đặt &gt; Tùy chỉnh &gt; Tip.</string>
     <string name="feed54_tipped">Đã tip %1$s cho %2$s</string>
     <string name="feed54_tipped_privately">Đã tip riêng %1$s cho %2$s</string>
     <string name="feed54_unfollow_posted">Đã đăng lượt bỏ theo dõi lên mạng</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">Tiền tip</string>
     <string name="kaposts_tips">Tiền tip</string>
     <string name="kaposts_tips_from">Tiền tip từ</string>
-    <string name="kaposts_tips_from_footnote">Tiền tip từ Chatting Address được tính trên bài đăng và bạn có tên trong danh sách người tip. Từ địa chỉ khác, tiền tip là riêng tư: tác giả nhận và thấy trong cuộc trò chuyện, nhưng không tính trên bài đăng và không nêu tên bạn.</string>
+    <string name="kaposts_tips_from_footnote">Tiền tip từ Chatting Address được tính trên bài đăng và bạn có tên trong danh sách người tip. Từ địa chỉ khác, tiền tip là riêng tư: tác giả nhận và thấy trong cuộc trò chuyện, nhưng không tính trên bài đăng và không nêu tên bạn. Tiền tip trong cuộc trò chuyện cũng được gửi từ đây.</string>
     <string name="kaposts_tips_from_not_available">Không khả dụng</string>
     <string name="kaposts_who_tipped">Ai đã tip cho bài viết này</string>
     <string name="kn53_kaplay_beat_in_move">Đánh bại %1$s trong %2$d nước</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">Tip bằng</string>
     <string name="kp5_tip_in_ask">Hỏi mỗi lần</string>
     <string name="kp5_tip_in_ask_footer">Tip hỏi mỗi lần nên gửi Kaspa hay kUSDT.</string>
-    <string name="kp5_tip_in_kusdt_footer">Tip gửi kUSDT đến địa chỉ trò chuyện của người đăng. Tiền tip bằng kUSDT không được tính trên bài đăng.</string>
+    <string name="kp5_tip_in_kusdt_footer">Tip gửi kUSDT đến địa chỉ trò chuyện của họ. Tiền tip bằng kUSDT không được tính trên bài đăng.</string>
     <string name="kp5_tip_not_counted">Không được tính trên bài đăng</string>
-    <string name="kp5_tip_set_in_settings">Chọn thứ mà Tip gửi trong Cài đặt > KaPost > Tip bằng.</string>
+    <string name="kp5_tip_set_in_settings">Chọn thứ mà Tip gửi trong Cài đặt &gt; Tùy chỉnh &gt; Tip.</string>
     <string name="kp5_tip_title">Tiền tip</string>
     <string name="kp5_tip_what_in">Bạn tip bằng gì?</string>
     <string name="l53_already_in_your_language">Đã ở ngôn ngữ của bạn</string>

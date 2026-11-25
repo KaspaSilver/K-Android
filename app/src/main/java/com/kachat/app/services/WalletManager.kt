@@ -674,6 +674,14 @@ class WalletManager @Inject constructor(
 
     fun getAllAccounts(): List<Account> = getAccounts()
 
+    /**
+     * Whether this phone holds [address]'s keys (iOS 8cb4c88e `hasKeysOnThisPhone`): every saved
+     * account keeps its recovery phrase in the encrypted store here, so this is false only for a
+     * record without one. Without them signing in needs the recovery phrase.
+     */
+    fun hasKeysOnThisPhone(address: String): Boolean =
+        getAccounts().any { com.kachat.app.util.KaspaNetwork.isSameAccount(it.address, address) && it.mnemonic.isNotBlank() }
+
     /** One spending-chain address a user chose to hide from Manage Addresses — flat (walletAddress, index) keying, same pattern as Cold Storage's [ColdStorageManager] hidden addresses. Hiding never deletes anything; it's purely a display preference. */
     private data class HiddenSpendingAddress(val walletAddress: String, val index: Int)
 
@@ -1045,6 +1053,9 @@ class WalletManager @Inject constructor(
             editor.remove(previousChattingKey(variant))
         }
         editor.apply()
+        // its picture on the sign-in screen and in the account switcher (iOS 8cb4c88e
+        // `SavedAccountAvatars.remove`)
+        runCatching { SavedAccountAvatars.removeFor(context, address) }
         // .kachat (iOS 148a5331 `deleteAllKachatCommitSalts`, `KachatNameReminders.removeAll`):
         // the claims' commit salts and the names' local reminders go with the account
         for (variant in owned.flatMap { com.kachat.app.util.KaspaNetwork.accountAddressVariants(it) }) {

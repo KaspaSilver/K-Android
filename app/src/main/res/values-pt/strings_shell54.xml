@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">Nomes de usuário</string>
+    <string name="shell54_tipping_footer">O que Gorjeta envia, em uma publicação e em um chat.</string>
+    <string name="shell54_chatting_picker_intro">Se estas palavras já guardam sua identidade em outro endereço - um nome .kachat ou um saldo de chat com fundos -, escolha-o aqui. Só aparecem endereços com saldo ou nomes.</string>
+    <string name="shell54_what_others_can_see_caption">Qualquer pessoa pode ver este endereço e o saldo dele na rede Kaspa, mas ninguém pode ler suas mensagens. Use-o só para conversar e para nomes de usuário.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... ou nome de usuário</string>
+    <string name="shell54_looking_up_username">Procurando nome de usuário...</string>
+    <string name="shell54_portfolio_add_address_footer">Digite um endereço Kaspa ou um nome de usuário como name.kachat. Cada transação recebida neste endereço vira uma compra, cada transação enviada vira uma venda, pelo preço histórico do KAS naquele dia. Adicionar o mesmo endereço de novo depois importa só as transações encontradas desde a última importação.</string>
+    <string name="shell54_report_copied">Denúncia copiada</string>
+    <string name="shell54_report_no_mail_app">Nenhum app de e-mail conseguiu abri-la. Cole a denúncia em um e-mail para %1$s.</string>
+    <string name="shell54_show_amounts">Mostrar valores</string>
+    <string name="shell54_hide_amounts">Ocultar valores</string>
+    <string name="shell54_amount_unit">Valor (%1$s)</string>
+    <string name="shell54_price_per_kas">Preço por KAS</string>
+    <string name="shell54_total_spent">Total gasto</string>
+    <string name="shell54_total_received">Total recebido</string>
+    <string name="shell54_chart_settings">Ajustes do gráfico</string>
+    <string name="shell54_import_failed">Falha na importação.</string>
+    <string name="shell54_export_csv">Exportar CSV</string>
+    <string name="shell54_sent_on">Enviado %1$s em %2$s</string>
+    <string name="shell54_received_on">Recebido %1$s em %2$s</string>
+    <string name="shell54_this_portfolio">este portfólio</string>
+    <string name="shell54_new_portfolio">Novo portfólio</string>
+    <string name="shell54_time">Hora</string>
+    <string name="shell54_total_value">Total %1$s</string>
+    <string name="shell54_move_up">Mover %1$s para cima</string>
+    <string name="shell54_move_down">Mover %1$s para baixo</string>
+    <string name="shell54_selected">Selecionado</string>
+    <string name="shell54_not_selected">Não selecionado</string>
+    <string name="shell54_not_valid_kpub">Não é um kpub válido</string>
+    <string name="shell54_new_address_failed">Não foi possível criar um endereço novo. Tente de novo.</string>
+</resources>

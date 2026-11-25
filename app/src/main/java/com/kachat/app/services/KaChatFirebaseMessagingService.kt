@@ -79,12 +79,19 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
     override fun handleIntent(intent: android.content.Intent) {
         val action = intent.action
         val messageType = runCatching { intent.getStringExtra("message_type") }.getOrNull()
-        if ((action == "com.google.android.c2dm.intent.RECEIVE" || action == "com.google.firebase.messaging.RECEIVE_DIRECT_BOOT") &&
+        val isMessage = (action == "com.google.android.c2dm.intent.RECEIVE" || action == "com.google.firebase.messaging.RECEIVE_DIRECT_BOOT") &&
             (messageType == null || messageType == "gcm")
-        ) {
+        if (isMessage) {
             pushSeenBefore = runCatching {
                 intent.extras?.let { PushArrivalRecord.record(applicationContext, RemoteMessage(it)) } ?: false
             }.getOrDefault(false)
+            // A push the system would draw itself while the app is away that a switch has turned
+            // off since the registration: dropped here, before it is drawn - Android's version of
+            // iOS's push extension silencing it (iOS 8cb4c88e, audit 2026-11-24 notifications).
+            // Recorded above all the same.
+            val dropped = runCatching { intent.extras?.let { dropsBeforeTheSystemDraws(RemoteMessage(it)) } ?: false }
+                .getOrDefault(false)
+            if (dropped) return
         }
         super.handleIntent(intent)
         // A KaPost tip push the system just drew (app away) after the tip's payment notice.
@@ -114,6 +121,85 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             manager.activeNotifications.filter { it.tag.equals(tag, ignoreCase = true) }
                 .forEach { manager.cancel(it.tag, it.id) }
         }
+    }
+
+    /**
+     * Whether a push with a `notification` block (rooms, KaPost, Received KAS, .kachat names),
+     * which the system draws by itself while the app is away, is one this phone no longer wants
+     * (iOS 8cb4c88e NotificationService, audit 2026-11-24 notifications): Push Notifications off
+     * or signed out, a room whose bell is off unless the push @'s you (`mention: true`), a
+     * KaPost kind switched off or its actor muted or blocked, a Received KAS address that no
+     * longer notifies. The push service can still send these until the registration update
+     * lands. While the app is open [onMessageReceived] decides, as before. Unreadable stores, or
+     * no answer in time: drawn as sent.
+     */
+    private fun dropsBeforeTheSystemDraws(message: RemoteMessage): Boolean {
+        if (message.notification == null) return false
+        if (!com.kachat.app.util.SecureStores.accountStoresOpen(applicationContext)) return false
+        if (notificationHelper.isAppInForeground) return false
+        val data = message.data
+        val wanted = runBlocking {
+            kotlinx.coroutines.withTimeoutOrNull(PRE_DRAW_BUDGET_MS) {
+                systemDrawnPushWanted(data, message.notification?.body ?: data["body"].orEmpty())
+            }
+        } ?: true
+        if (!wanted) {
+            data["tx_id"]?.takeIf { it.isNotBlank() }?.let { notificationHelper.claimWithoutNotifying(it) }
+            Log.i(TAG, "Dropped a ${data["type"].orEmpty()} push the system would have drawn: switched off")
+        }
+        return !wanted
+    }
+
+    private suspend fun systemDrawnPushWanted(data: Map<String, String>, body: String): Boolean {
+        if (!settingsRepository.notificationsEnabled.first()) return false
+        if (walletManager.isLoggedOut || walletManager.getActiveAccount() == null) return false
+        val type = data["type"].orEmpty()
+        val threadId = data["thread_id"].orEmpty()
+        return when {
+            type == "broadcast" || threadId.startsWith("broadcast:") -> {
+                val channel = (data["channel"] ?: threadId.removePrefix("broadcast:"))
+                    .let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(it) }
+                    ?: return true
+                roomPushWanted(channel, data)
+            }
+            type == "kaposts" || threadId.startsWith("kaposts") ->
+                !kaPostsActorHidden(data["actor_pubkey"]) &&
+                    settingsRepository.shouldNotifyKaPostsPush(data["kaposts_kind"], body.ifEmpty { data["title"].orEmpty() })
+            type == "address_activity" -> addressActivityWatched(data["address"])
+            else -> true
+        }
+    }
+
+    /**
+     * Whether this account wants a room's push (iOS 8cb4c88e `willPresent` / NotificationService
+     * `isRoomBellOn`): a joined room with its bell on, not a service room. Except a push that @'s
+     * you (`mention: true`, INDEXER_HANDOFF 2026-11-24): the indexer sends those whatever the
+     * bell, and with every room silenced on a new install it's the only way a mention reaches a
+     * closed app. Never for a service room.
+     */
+    private suspend fun roomPushWanted(channel: String, data: Map<String, String>): Boolean =
+        broadcastRepositoryLazy.get().wantsRoomPush(channel) ||
+            (isTruePushFlag(data["mention"]) &&
+                com.kachat.app.util.MessageProtocol.normalizeChannelName(channel) !in com.kachat.app.models.FeaturedBroadcastChannels.SERVICE_CHANNELS)
+
+    /** A KaPost actor (`actor_pubkey`) this account muted or blocked on KaPost. */
+    private suspend fun kaPostsActorHidden(actorPubkey: String?): Boolean {
+        val actor = actorPubkey?.let { KaPostsService.kaspaAddressFromPubkey(it) } ?: return false
+        val wallet = runCatching { walletManager.getAddress() }.getOrNull() ?: return false
+        return actor in settingsRepository.kapostsMuted(wallet).first() ||
+            actor in settingsRepository.kapostsBlocked(wallet).first()
+    }
+
+    /**
+     * Whether a Received KAS push's address still notifies (iOS 8cb4c88e `willPresent`): one of
+     * the registration's `watch_only_addresses` as they are now - its switch, its Cold Storage
+     * account's, or Address Activity may have been turned off since the registration, and the
+     * push service can still send until the update lands. None at all with Address Activity off.
+     */
+    private suspend fun addressActivityWatched(address: String?): Boolean {
+        val lowered = address?.trim()?.lowercase()?.takeIf { it.isNotEmpty() } ?: return false
+        val watched = runCatching { addressActivityNotifierLazy.get().pushWatchOnlyAddresses() }.getOrNull() ?: return true
+        return watched.any { it.lowercase() == lowered }
     }
 
     /** The account stores open: the app's problem screen covers the rest; a push or a token
@@ -207,6 +293,12 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                     // "Started a conversation") — no decryption needed.
                     "payment", "handshake" -> {
                         val sender = data["sender"] ?: return@runBlocking
+                        // A blocked address rings nothing, payments included: the request rule
+                        // below skips payments (iOS 8cb4c88e, audit 2026-11-24 notifications).
+                        if (type == "payment" && chatRepository.isChatBlocked(sender)) {
+                            data["tx_id"]?.takeIf { it.isNotBlank() }?.let { notificationHelper.claimWithoutNotifying(it) }
+                            return@runBlocking
+                        }
                         // Payments land in your own chat and ring as before; a handshake is
                         // first contact like any other (Message Requests).
                         if (type == "handshake" && applyMessageRequestRule(sender, data)) return@runBlocking
@@ -218,6 +310,9 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                             title = contactTitle(sender, sender),
                             // A payment: "<who> - Sent you 1.5 KAS" (iOS dcb329a).
                             text = tipText ?: if (type == "payment") paymentPushBody(data["amount"]) else body.ifEmpty { getString(R.string.dm_notif_new_message) },
+                            // The contact's own Notifications choice (Off, No Sound, Sound), as
+                            // for their messages (iOS NotificationService `effectiveMode`).
+                            notificationOverride = contactOverride(sender),
                             dedupeTxId = data["tx_id"]?.takeIf { it.isNotBlank() },
                             fromPush = true,
                             // the tip's KaPost push the system drew came first: replaced quietly
@@ -251,7 +346,8 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         val channel = data["channel"]
             ?.let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(it) }
             ?: return
-        if (!broadcastRepositoryLazy.get().wantsRoomPush(channel)) {
+        // A push that @'s you passes a bell-off room (iOS 8cb4c88e, see [roomPushWanted]).
+        if (!roomPushWanted(channel, data)) {
             txId?.let { notificationHelper.claimWithoutNotifying(it) }
             Log.i(TAG, "Room push dropped: the room isn't joined, or its bell is off")
             return
@@ -297,7 +393,9 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
      */
     private suspend fun handleAddressActivityPush(data: Map<String, String>, body: String) {
         val txId = data["tx_id"]?.trim()?.takeIf { it.isNotEmpty() }
-        if (!settingsRepository.addressActivityNotificationsEnabled.first()) {
+        // Address Activity off, or an address that no longer notifies (its switch, its Cold
+        // Storage account's): the registration may not have caught up yet (iOS 8cb4c88e).
+        if (!settingsRepository.addressActivityNotificationsEnabled.first() || !addressActivityWatched(data["address"])) {
             txId?.let { notificationHelper.claimWithoutNotifying(it) }
             return
         }
@@ -327,14 +425,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         // The bell's count comes from the poll: a push while the app is open asks for one now
         // (iOS 428a797b `pollSoon`).
         if (notificationHelper.isAppInForeground) kaPostsNotificationPollerLazy.get().pollSoon()
-        val actorHidden = data["actor_pubkey"]
-            ?.let { KaPostsService.kaspaAddressFromPubkey(it) }
-            ?.let { actor ->
-                val wallet = runCatching { walletManager.getAddress() }.getOrNull()
-                wallet != null && (actor in settingsRepository.kapostsMuted(wallet).first() ||
-                    actor in settingsRepository.kapostsBlocked(wallet).first())
-            } ?: false
-        if (actorHidden) {
+        if (kaPostsActorHidden(data["actor_pubkey"])) {
             Log.i(TAG, "KaPosts push from a muted or blocked account dropped")
             return
         }
@@ -396,11 +487,19 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             ?.let { KaPostTipLedger.record(applicationContext, txId, it) }
         // no KaPost banner for it from the poll either
         kaPostsNotifierLazy.get().claim(txId)
+        // It reads as a payment in the tipper's chat, so it follows that chat's rules: nothing
+        // from a blocked address, nothing for a contact set to Off, no sound for No Sound (iOS
+        // 8cb4c88e `applyKaPostsTip`, audit 2026-11-24 notifications). Handled either way.
+        if (chatRepository.isChatBlocked(tipper)) {
+            notificationHelper.claimWithoutNotifying(txId)
+            return true
+        }
         val kas = KaPostTipLedger.amountFromTipPushBody(body) ?: KaPostTipLedger.kasText(data["amount"])
         notificationHelper.show(
             contactId = tipper,
             title = contactTitle(tipper, tipper),
             text = tipWording(kas),
+            notificationOverride = contactOverride(tipper),
             dedupeTxId = txId,
             // the push's own notice ([PushArrivalRecord] holds back only the app's banners)
             fromPush = true,
@@ -510,6 +609,13 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         }
         if (suppressed) {
             Log.i(TAG, "Generic group fallback suppressed by notification settings")
+            return
+        }
+        // While K is open it banners the group messages it reads itself, so a group push it
+        // couldn't read is never shown as the generic line (iOS KaChatApp `rawGroupPush`,
+        // 2026-11-24). The txId stays unclaimed, so the app's own banner can follow.
+        if (notificationHelper.isAppInForeground) {
+            Log.i(TAG, "Generic group fallback skipped: the app is open")
             return
         }
         // Read off chain and still unreadable (most often: not on the API yet after every
@@ -752,7 +858,20 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                 if (contact != null) {
                     if (!chatRepository.isMessageRequest(contact, myAddress)) return false
                     true
+                } else if (
+                    WhoCanMessage.current(applicationContext) == WhoCanMessage.USERNAMES &&
+                    KnownKachatNames.name(applicationContext, sender) == null
+                ) {
+                    // Who Can Message You? set to usernames only (iOS NotificationService, audit
+                    // 2026-11-24 #13): a first message from someone with no .kachat name this phone
+                    // knows rings nothing and isn't recorded as rung. The name may only be unknown
+                    // HERE (nothing is looked up), so the sender is filed for the app, which rings
+                    // the request once when it learns their name.
+                    HiddenRequestSenders.add(applicationContext, myAddress, sender)
+                    true
                 } else if (chatRepository.markRequestNotified(sender)) {
+                    // Rung here now: the app has nothing left to announce.
+                    HiddenRequestSenders.remove(applicationContext, myAddress, sender)
                     notificationHelper.showMessageRequest(sender, dedupeTxId = txId, fromPush = true)
                     runCatching {
                         syncBudgetMs().takeIf { it > 0L }?.let { budget ->
@@ -808,11 +927,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         // .kachat name, else the short address - so a push from someone with a .kachat name says
         // it, not their address (iOS dcb329a, ContactsManager.displayName).
         if (contact != null) {
-            return com.kachat.app.models.addressDisplayName(
-                senderId,
-                alias = contact.alias,
-                knsName = contact.knsName?.takeIf { com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY },
-            )
+            return com.kachat.app.models.addressDisplayName(senderId, alias = contact.alias)
         }
         return AddressBookManager.nameFor(senderId) ?: default.takeLast(12)
     }
@@ -868,6 +983,16 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
 
         /** Kept back from a catch-up for the fallback banner that may follow it. */
         private const val FALLBACK_RESERVE_MS = 1_500L
+
+        /** How long [dropsBeforeTheSystemDraws] may take to decide before the push is drawn as sent. */
+        private const val PRE_DRAW_BUDGET_MS = 3_000L
+
+        /** A push flag as the server may send it: "true" or "1" (FCM data values are strings;
+         *  iOS `isTrue`). */
+        internal fun isTruePushFlag(value: String?): Boolean {
+            val text = value?.trim() ?: return false
+            return text.equals("true", ignoreCase = true) || text == "1"
+        }
 
         /** The 1:1 push types whose sender can be this wallet itself. */
         private val OWN_SEND_PUSH_TYPES = setOf("contextual", "payment", "handshake")

@@ -22,7 +22,6 @@ import javax.inject.Singleton
 class GlobalNotificationCenterStore @Inject constructor(
     @ApplicationContext context: Context,
     private val walletManager: WalletManager,
-    private val knsService: KnsService,
 ) {
     data class Entry(
         val id: String,
@@ -55,10 +54,6 @@ class GlobalNotificationCenterStore @Inject constructor(
      *  key. Null while no one is signed in: nothing is shown and nothing is saved (iOS 428a797b
      *  `loadedAddress`, audit 2026-11-21 #8). */
     private var loadedWallet: String? = null
-
-    /** My own bare KNS domain, cached per wallet, for group @mention detection. */
-    private var myDomainWallet: String? = null
-    private var myDomain: String? = null
 
     init {
         // Log Out, sign-in, import and account switches all change the signed-in account.
@@ -164,27 +159,6 @@ class GlobalNotificationCenterStore @Inject constructor(
         txId: String?,
         timestampMs: Long,
     ) {}
-
-    /**
-     * Whether [text] @mentions the current wallet's own primary KNS domain, using the same
-     * @token grammar the group composer's mention autocomplete inserts ("@domain", see
-     * [MENTION_TOKEN_REGEX]; ".kas" suffix optional, case-insensitive). This is the single
-     * definition of "mentions me": the notification-center entry above and GroupRepository's
-     * mentions-only banner gate both go through it, so they can never disagree on what counts
-     * as a mention. Reverse resolution of our own domain is cached per wallet.
-     */
-    suspend fun mentionsMyDomain(text: String): Boolean {
-        val myAddress = walletAddressOrNull() ?: return false
-        if (myDomainWallet != myAddress) {
-            myDomain = try { knsService.reverseResolve(myAddress) } catch (_: Exception) { null }
-                ?.lowercase()?.removeSuffix(".kas")
-            myDomainWallet = myAddress
-        }
-        val domain = myDomain ?: return false
-        return MENTION_TOKEN_REGEX.findAll(text).any {
-            it.groupValues[2].lowercase().removeSuffix(".kas") == domain
-        }
-    }
 
     companion object {
         private const val TAG = "GlobalNotifCenter"

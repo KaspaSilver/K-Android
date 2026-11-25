@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">Seus nomes de usuário</string>
+    <string name="names54_no_username_found">Nenhum nome de usuário encontrado</string>
+    <string name="names54_use_their_username">Usar o nome de usuário</string>
+    <string name="names54_kaspa_address_or_username">Endereço Kaspa ou nome de usuário</string>
+    <string name="names54_enter_address_or_username_example">Digite um endereço Kaspa (kaspa:...) ou um nome de usuário (ex.: alice.kachat).</string>
+    <string name="names54_members_footer">Escolha pessoas dos seus contatos ou adicione qualquer um por endereço Kaspa ou nome de usuário.</string>
+    <string name="names54_finds_addresses_balance_or_username">Encontra endereços com saldo ou um nome de usuário.</string>
+    <string name="names54_no_addresses_balance_or_username_found">Nenhum endereço com saldo ou nome de usuário encontrado.</string>
+    <string name="names54_found_one_address_balance_username">1 endereço com saldo ou nome de usuário encontrado.</string>
+    <string name="names54_found_n_addresses_balance_username">%1$d endereços com saldo ou nome de usuário encontrados.</string>
+    <string name="names54_no_addresses_balance_or_username_yet">Nenhum endereço com saldo ou nome de usuário ainda</string>
+    <string name="names54_contains_username">Contém nome de usuário</string>
+    <string name="names54_get_a_username">Obter um nome de usuário</string>
+    <string name="names54_qr_chatting_address_subtitle">Use para conversar e adquirir nomes de usuário.</string>
+    <string name="names54_no_usernames_yet">Nenhum nome de usuário ainda</string>
+    <string name="names54_claim_a_username">Reivindicar um nome de usuário</string>
+    <string name="names54_discord_invite_not_found">Não existe um convite do Discord chamado %1$s. Use o código de convite de um servidor, como discord.gg/abc123: contas do Discord não podem ser buscadas pelo nome de usuário.</string>
+</resources>

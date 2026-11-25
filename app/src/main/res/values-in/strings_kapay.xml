@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">Masukkan hashrate Anda untuk memperkirakan pendapatan.</string>
     <string name="kp_export_failed_csv">Ekspor gagal. Tidak dapat menulis file CSV</string>
     <string name="kp_fee_amount">Biaya %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">Ditemukan %1$d alamat dengan saldo atau domain.</string>
-    <string name="kp_found_one_address_balance_domain">Ditemukan 1 alamat dengan saldo atau domain.</string>
     <string name="kp_frame_lld_lld_5cb10">Bingkai %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">Beri nama akun ini agar Anda dapat mengenalinya.</string>
     <string name="kp_hide_address">Sembunyikan Alamat</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">Portofolio Baru</string>
     <string name="kp_next_block_reward">Imbalan Blok Berikutnya</string>
     <string name="kp_next_block_reward_reduction">Penurunan Imbalan Blok Berikutnya</string>
-    <string name="kp_no_addresses_balance_domain_found">Tidak ada alamat dengan saldo atau domain yang ditemukan.</string>
     <string name="kp_no_addresses_discovered_yet_15738">Belum ada alamat yang ditemukan.</string>
     <string name="kp_no_used_addresses_yet">Belum ada alamat yang dipakai</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Riwayat belum cukup - periksa lagi setelah beberapa hari aktivitas.</string>
@@ -240,7 +237,6 @@
     <string name="pnc_export_sub">Simpan CSV ke folder KaChat di Nextcloud-mu.</string>
     <string name="pnc_import_sub">Pilih file CSV dari Nextcloud-mu.</string>
     <string name="portfolio">Portofolio</string>
-    <string name="portfolio_add_address_footer_kachat">Masukkan alamat Kaspa atau domain seperti name.kachat (nama .kachat dicari lebih dulu). Setiap transaksi masuk ke alamat ini menjadi pembelian dan setiap transaksi keluar menjadi penjualan, dengan harga historis KAS hari itu. Menambahkan alamat yang sama lagi nanti hanya mengimpor transaksi sejak impor terakhir.</string>
     <string name="portfolio_add_chatting_address">Tambah Alamat Obrolan</string>
     <string name="portfolio_add_chatting_address_sub">Pembelian dan penjualan alamat obrolanmu, serta setiap biaya jaringan yang telah dibayarnya.</string>
     <string name="portfolio_fees_count_loading">Transaksi: %1$d. Beberapa harga masih dimuat.</string>

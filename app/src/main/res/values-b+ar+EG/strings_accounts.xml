@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Account switcher and Connection Status (iOS 8cb4c88e), agent C. -->
+<resources>
+    <string name="accounts_title">الحسابات</string>
+    <string name="add_another_account">ضيف حساب تاني</string>
+    <string name="add_another_account_confirm_title">تضيف حساب تاني؟</string>
+    <string name="add_another_account_confirm_message">هتروح لشاشة الحسابات عشان تعمل حساب أو تستورده. الحساب ده هيفضل محفوظ على التليفون.</string>
+    <string name="recovery_phrase_needed">محتاج عبارة الاسترجاع</string>
+    <string name="recovery_phrase_needed_message">مفاتيح الحساب ده مش على التليفون. اعمل تسجيل خروج، وبعدين ادخل عليه من شاشة الحسابات بعبارة الاسترجاع.</string>
+    <string name="account_signed_in">داخل</string>
+    <string name="switch_account">غيّر الحساب</string>
+    <string name="node_status">حالة النود</string>
+    <string name="indexer_status">حالة المفهرس</string>
+    <string name="indexer_status_checking">بيتحقق…</string>
+</resources>

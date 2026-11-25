@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">Who Can Message You?</string>
+    <string name="c54_who_anyone">Anyone</string>
+    <string name="c54_who_usernames">Only Users with a Username</string>
+    <string name="c54_who_row_footer">Who can start a chat with you. People you already chat with aren\'t affected.</string>
+    <string name="c54_who_anyone_footer">Anyone can send you a first message. It waits in Message Requests until you accept it.</string>
+    <string name="c54_who_usernames_footer">Only people with a username (a .kachat name) can reach your Message Requests. First messages from anyone else are hidden and don\'t notify you; choose Anyone to see them again. People you already chat with aren\'t affected.</string>
+    <string name="c54_room_clears_unread">Clears the unread badge on this public chat.</string>
+    <string name="c54_room_no_notifications">No notifications from this public chat.</string>
+    <string name="c54_room_notifications_resume">Notifications from this public chat resume.</string>
+    <string name="c54_room_delete_subtitle">Removes this public chat from your chats.</string>
+    <string name="c54_tip_subtitle">Tip this contact, as set in Settings &gt; Customization &gt; Tipping.</string>
+    <string name="c54_send_tip">Send Tip</string>
+    <string name="c54_send_deferred">Waiting for your coins to confirm. It sends on its own in a moment, so don\'t send it again.</string>
+    <string name="c54_failed_start_recording">Failed to start recording: %1$s</string>
+    <string name="c54_failed_encode_audio">Failed to encode audio: %1$s</string>
+    <string name="c54_failed_prepare_audio">Failed to prepare audio: %1$s</string>
+    <string name="c54_sent_a_link">Sent a link</string>
+    <string name="c54_public_chat_room">Public chat room #%1$s</string>
+    <string name="c54_search_contacts_address_username">Search contacts, or an address or username</string>
+    <string name="c54_looking_up_username">Looking up username...</string>
+    <string name="c54_no_contacts_paste_username">You have no contacts yet. Paste an address or a username above to invite someone.</string>
+    <string name="c54_no_contacts_match_username">No contacts match your search. Paste an address or a username to invite someone new.</string>
+    <string name="c54_invites_resent_all">Invites resent to all members.</string>
+    <string name="c54_invite_resent">Invite resent.</string>
+    <string name="c54_room_follows_app_indexer">This room follows the app\'s indexer again.</string>
+    <string name="c54_room_indexer_updated">Indexer updated for #%1$s.</string>
+    <string name="c54_room_could_not_reach">Could not reach it: %1$s</string>
+    <string name="c54_tap_open_your_chat">Tap to open your chat.</string>
+    <string name="c54_tap_start_chat_on_k">Tap to start a chat on K.</string>
+    <string name="c54_stop_recording">Stop Recording</string>
+    <string name="c54_send_voice_message">Send Voice Message</string>
+</resources>

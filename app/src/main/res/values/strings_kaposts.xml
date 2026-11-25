@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">Tip didn\'t send: your Tips From address can\'t be read right now.</string>
     <string name="feed54_tip_minimum_footer">The smallest tip the network takes is %1$s.</string>
     <string name="feed54_tip_no_price">Tip didn\'t send: there is no recent KAS price to turn %1$s into KAS.</string>
-    <string name="feed54_tip_too_small">Tip didn\'t send: the smallest tip the network takes is %1$s. Change your default tip in Settings &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">Tip didn\'t send: the smallest tip the network takes is %1$s. Change your default tip in Settings &gt; Customization &gt; Tipping.</string>
     <string name="feed54_tipped">Tipped %1$s to %2$s</string>
     <string name="feed54_tipped_privately">Tipped %1$s to %2$s privately</string>
     <string name="feed54_unfollow_posted">Unfollow posted to the network</string>
@@ -72,7 +72,7 @@
     <string name="kaposts_tip_title">Tip</string>
     <string name="kaposts_tips">Tips</string>
     <string name="kaposts_tips_from">Tips From</string>
-    <string name="kaposts_tips_from_footnote">Tips from your Chatting Address count on the post, and you\'re listed as a tipper. From another address a tip is private: the author gets it, and sees it in your chat, but it doesn\'t count on the post or name you.</string>
+    <string name="kaposts_tips_from_footnote">Tips from your Chatting Address count on the post, and you\'re listed as a tipper. From another address a tip is private: the author gets it, and sees it in your chat, but it doesn\'t count on the post or name you. A tip in a chat comes from here too.</string>
     <string name="kaposts_tips_from_not_available">Not available</string>
     <string name="kaposts_who_tipped">Who tipped this post</string>
     <string name="kn53_kaplay_beat_in_move">Beat %1$s in %2$d move</string>
@@ -86,9 +86,9 @@
     <string name="kp5_tip_in_ask_footer">Tip asks whether to send Kaspa or kUSDT each time.</string>
     <string name="kp5_tip_in_kaspa" translatable="false">Kaspa</string>
     <string name="kp5_tip_in_kusdt" translatable="false">kUSDT</string>
-    <string name="kp5_tip_in_kusdt_footer">Tip sends kUSDT to the poster\'s chatting address. kUSDT tips aren\'t counted on the post.</string>
+    <string name="kp5_tip_in_kusdt_footer">Tip sends kUSDT to their chatting address. kUSDT tips aren\'t counted on a post.</string>
     <string name="kp5_tip_not_counted">Not counted on the post</string>
-    <string name="kp5_tip_set_in_settings">Set what Tip sends in Settings > KaPost > Tip In.</string>
+    <string name="kp5_tip_set_in_settings">Set what Tip sends in Settings &gt; Customization &gt; Tipping.</string>
     <string name="kp5_tip_title">Tip</string>
     <string name="kp5_tip_what_in">What are you tipping in?</string>
     <string name="l53_already_in_your_language">Already in your language</string>

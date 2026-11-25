@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">חדש אותם לפני שתקופות החסד מסתיימות כדי לשמור עליהם.</string>
-    <string name="kachat_expired_many_title">פג תוקפם של %1$d מדומייני ה-.kachat שלך</string>
+    <string name="kachat_expired_many_title">%1$d משמות המשתמש שלכם פג תוקפם</string>
     <string name="kachat_expired_one_body">חדש את %1$s לפני שתקופת החסד מסתיימת ב-%2$s כדי לשמור עליו.</string>
-    <string name="kachat_expired_one_title">פג תוקפו של אחד מדומייני ה-.kachat שלך</string>
+    <string name="kachat_expired_one_title">אחד משמות המשתמש שלכם פג תוקף</string>
     <string name="kachat_names_on_address_hint">שמות שהכתובת הזו מקבלת או קונה יופיעו כאן עם השקת שמות ‎.kachat.</string>
-    <string name="kachat_names_this_address_owns">השמות שבבעלות הכתובת הזו מופיעים כאן.</string>
-    <string name="kachat_no_names_on_address">אין שמות ‎.kachat בכתובת הזו</string>
+    <string name="kachat_names_this_address_owns">שמות המשתמש של הכתובת הזו מופיעים כאן.</string>
+    <string name="kachat_no_names_on_address">אין שמות משתמש בכתובת הזו</string>
     <string name="kg_claim_body">זה השם שבו רואים אתכם בכל K ובקישור לפרופיל שלכם. בלעדיו רואים את הכתובת שלכם.</string>
-    <string name="kg_claim_hint">חפשו את השם הרצוי בלשונית .kachat, ואז תפסו אותו.</string>
+    <string name="kg_claim_hint">חפשו את השם שאתם רוצים בלשונית שמות משתמש, ואז תבעו אותו.</string>
     <string name="kg_claim_title">קבלו את שם ה-‎.kachat שלכם</string>
     <string name="kg_close">סגור</string>
-    <string name="kg_finished_body">תפסו את השם שלכם בלשונית .kachat מתי שתהיו מוכנים.</string>
+    <string name="kg_finished_body">תבעו את השם שלכם בלשונית שמות משתמש מתי שתרצו.</string>
     <string name="kg_finished_title">הכול מוכן</string>
     <string name="kg_how_body">השם שלך נמצא ברשת Kaspa ומוחזק על ידי כתובת הצ׳אט שלך. כל עוד הוא שלך, אף אחד לא יכול לקחת או לשנות אותו.</string>
     <string name="kg_how_commit">תביעה דורשת שתי עסקאות מהירות: הראשונה שומרת את הבחירה בסוד, השנייה רושמת אותו.</string>
     <string name="kg_how_miners">המחיר הולך לכורי הרשת, לא ל-K.</string>
     <string name="kg_how_period">משלמים על תקופה אחת בכל פעם. שמות קצרים יקרים יותר.</string>
     <string name="kg_how_title">איך שם עובד</string>
-    <string name="kg_keep_body">השמות שלכם נמצאים בארנק &gt; הדומיינים שלכם &gt; .kachat.</string>
+    <string name="kg_keep_body">השמות שלכם נמצאים בארנק &gt; שמות המשתמש שלכם.</string>
     <string name="kg_keep_grace">אחרי שפג יש תקופת חסד לחידוש לפני שמישהו אחר יוכל לתבוע אותו.</string>
     <string name="kg_keep_renew">חדשו לפני שיפוג. התאריך מופיע על כל שם.</string>
     <string name="kg_keep_title">שמרו עליו</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">הרישום נעצר ו-0.2 KAS של ההתחייבות חוזרים אליך, פחות עמלת הרשת.</string>
     <string name="kn_cancel_commit_title">לבטל את ההתחייבות?</string>
     <string name="kn_change_price">שינוי מחיר</string>
-    <string name="kn_claim_a_name">קבלת שם</string>
     <string name="kn_claim_name_title">רישום שם</string>
     <string name="kn_claim_your_name_on_kaspa">קבלו את השם שלכם ב-Kaspa</string>
     <string name="kn_claiming_name">תובע את %1$s</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">השם שוחרר</string>
     <string name="kn_done_transferred">השם הועבר</string>
     <string name="kn_err_address_key">המפתח של הכתובת הזו אינו תקין.</string>
-    <string name="kn_err_enter_address_or_domain">הזן כתובת או דומיין.</string>
+    <string name="kn_err_enter_address_or_domain">הזינו כתובת או שם משתמש.</string>
     <string name="kn_err_lookup">לא ניתן היה לחפש את השם.</string>
     <string name="kn_err_name_address_cant_own">הכתובת של השם הזה לא יכולה להחזיק שם .kachat.</string>
     <string name="kn_err_not_network_address">זו לא כתובת Schnorr ברשת הזו.</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">ממתין לאישור ההתחייבות...</string>
     <string name="kn_taken">תפוס</string>
     <string name="kn_taken_for_sale">תפוס · למכירה ב-%1$s</string>
-    <string name="kn_transfer_footer_domain">כתובת או דומיין - שמות .kachat נבדקים קודם, והשם מומר לכתובת המוצגת.</string>
+    <string name="kn_transfer_footer_domain">כתובת או שם משתמש - הוא מתורגם לכתובת שמוצגת.</string>
     <string name="kn_transfer_warning">אי אפשר לבטל העברה. הבעלים החדש מקבל את השם עם תאריך התפוגה הנוכחי; הפרופיל שלך נשאר עם הכתובת שלך.</string>
     <string name="kn_view_transaction">הצג עסקה</string>
     <string name="kn_withdraw">משיכה</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">קנייה ומכירה</string>
     <string name="kcn_kp_claim_pays_first_period">תביעה משלמת על התקופה הראשונה (%1$s). חידוש משלם על כל תקופה שאחריה.</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">תפיסת שם שולחת שתי עסקאות: ההתחייבות עכשיו, והרישום כדקה לאחר מכן. שתיהן משלמות לפי שיעור העמלה הזה.</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">לא ניתן היה לטעון את השמות של הכתובת הזו. משכו למטה כדי לנסות שוב.</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">לא ניתן לטעון את שמות המשתמש של הכתובת הזו. משכו למטה כדי לנסות שוב.</string>
     <string name="kcn_kp_d_day_e40b4">%1$s יום</string>
     <string name="kcn_kp_d_days_0e3de">%1$s ימים</string>
     <string name="kcn_kp_dismiss_70afe">סגור</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">המוכר מקבל את מלוא המחיר שפורסם: אין עמלת שוק.</string>
     <string name="kcn_kp_not_confirmed_b9e09">לא אושר</string>
     <string name="kcn_kp_one_character">תו אחד</string>
-    <string name="kcn_kp_opens_the_kachat_tab">פותח את הלשונית ‎.kachat</string>
+    <string name="kcn_kp_opens_the_kachat_tab">פותח את הלשונית שמות משתמש</string>
     <string name="kcn_kp_pay_up_to_at_a_time">אפשר לשלם עד %1$s בבת אחת.</string>
     <string name="kcn_kp_paying_ahead">תשלום מראש</string>
     <string name="kcn_kp_price_goes_to_miners">המחיר הולך לכורים - K לא לוקח כלום.</string>

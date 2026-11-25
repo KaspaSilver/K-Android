@@ -16,7 +16,6 @@ import com.kachat.app.repository.AddressImportResult
 import com.kachat.app.repository.AppSettingsRepository
 import com.kachat.app.repository.PortfolioRepository
 import com.kachat.app.services.KaspaNetworkStatsService
-import com.kachat.app.services.KnsService
 import com.kachat.app.services.PortfolioManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ensureActive
@@ -70,7 +69,6 @@ class PortfolioViewModel @Inject constructor(
     /** Portfolio's chart pair and eye button (KaPay kept them in its AppSettingsRepository). */
     private val portfolioPreferences: com.kachat.app.services.PortfolioPreferences,
     private val portfolioManager: PortfolioManager,
-    private val knsService: KnsService,
     private val networkStats: KaspaNetworkStatsService,
     private val marketPairs: com.kachat.app.services.MarketPairService,
     private val nameServices: com.kachat.app.services.NameServicesClient,

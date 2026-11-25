@@ -69,8 +69,6 @@
     <string name="delete_account">계정 삭제</string>
     <string name="delete_group">그룹 삭제</string>
     <string name="done">완료</string>
-    <string name="each_transaction_temporarily_uses_2_kas">각 거래는 일시적으로 ~2 KAS를 사용합니다; ~1 KAS는 즉시 잔돈으로 돌아오므로 실제 비용은 작은 네트워크 수수료뿐입니다.</string>
-    <string name="edit_kns_profile">KNS 프로필 편집</string>
     <string name="edit_account">계정 편집</string>
     <string name="error">오류</string>
     <string name="every_member_will_see_the_new">모든 멤버가 새 이름을 보게 됩니다.</string>
@@ -86,8 +84,6 @@
     <string name="import_account">계정 가져오기</string>
     <string name="import_existing_account">기존 계정 가져오기</string>
     <string name="incoming_notifications">수신 알림</string>
-    <string name="kns_domains">내 도메인</string>
-    <string name="contact_kns_domains">KNS 도메인</string>
     <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K이 노드에 연결해야 합니다. 어떻게 연결하시겠습니까?</string>
     <string name="kaspa_explorer">Kaspa 탐색기</string>
@@ -97,14 +93,9 @@
     <string name="manage_addresses">주소 관리</string>
     <string name="max">최대</string>
     <string name="message">메시지</string>
-    <string name="more_info">더 많은 정보</string>
     <string name="name">이름</string>
     <string name="next">다음</string>
     <string name="no_conversations_yet">아직 대화가 없습니다</string>
-    <string name="no_domains_yet">아직 도메인이 없습니다.</string>
-    <string name="send_domain">도메인 보내기</string>
-    <string name="asset_id">자산 ID</string>
-    <string name="primary_domain">기본 도메인</string>
     <string name="set_as_primary">대표 이름으로 설정</string>
     <string name="no_hidden_addresses">숨겨진 주소가 없습니다.</string>
     <string name="no_hidden_users_in_this_group">이 그룹에 숨겨진 사용자가 없습니다.</string>
@@ -152,7 +143,6 @@
     <string name="show_more">더 보기</string>
     <string name="show_qr_code">QR 코드 표시</string>
     <string name="skip">건너뛰기</string>
-    <string name="some_changes_failed_to_save">일부 변경 사항을 저장하지 못했습니다:</string>
     <string name="start_a_new_chat_by_adding">연락처를 추가해 새 채팅을 시작하세요</string>
     <string name="status">상태</string>
     <string name="tap_an_address_below_to_swap">아래 주소를 탭하여 그곳에서 스왑하세요</string>
@@ -197,7 +187,6 @@
     <string name="created">생성일</string>
     <string name="customization">사용자 지정</string>
     <string name="diagnostics">진단</string>
-    <string name="discord">Discord</string>
     <string name="discover_addresses">주소 검색</string>
     <string name="email">이메일</string>
     <string name="explorer">탐색기</string>
@@ -206,7 +195,6 @@
     <string name="ip_address_book">IP 주소록</string>
     <string name="indexer">인덱서</string>
     <string name="info">정보</string>
-    <string name="kns_profile">KNS 프로필</string>
     <string name="kaspa_explorer_api">Kaspa Explorer API</string>
     <string name="kaspa_node">Kaspa 노드</string>
     <string name="default_recommended">기본값 (권장)</string>
@@ -221,7 +209,6 @@
     <string name="protocol">프로토콜</string>
     <string name="push_notifications">푸시 알림</string>
     <string name="reconnect">재연결</string>
-    <string name="redirect">리디렉션</string>
     <string name="refresh_pool">풀 새로고침</string>
     <string name="reply">답장</string>
     <string name="retry_send">다시 보내기</string>
@@ -234,20 +221,16 @@
     <string name="storage">저장 공간</string>
     <string name="on_this_device">이 기기에</string>
     <string name="cloud_storage">클라우드 저장소</string>
-    <string name="submitting_commit_transaction">커밋 거래 전송 중...</string>
-    <string name="submitting_reveal_transaction">리빌 거래 전송 중...</string>
     <string name="support_email">지원 이메일</string>
     <string name="telegram">Telegram</string>
     <string name="total">합계</string>
     <string name="verified">검증됨</string>
-    <string name="verifying_new_ownership_on_chain_this">체인에서 새 소유권 확인 중 (1분 정도 걸릴 수 있음)...</string>
     <string name="version">버전</string>
     <string name="vibration">진동</string>
     <string name="view_profile">프로필 보기</string>
     <string name="view_seed_phrase">12개 또는 24개 단어 보기</string>
     <string name="view_in_explorer">탐색기에서 보기</string>
     <string name="website">웹사이트</string>
-    <string name="x">X</string>
     <string name="language">언어</string>
     <string name="system_default">시스템</string>
     <string name="welcome_to_kachat">K에 오신 것을 환영합니다</string>
@@ -282,27 +265,16 @@
     <string name="mark_as_read">읽음으로 표시</string>
     <string name="copy_link">링크 복사</string>
     <string name="open_link">링크 열기</string>
-    <string name="kaspa_qr_or_domain">kaspa:qr... 또는 도메인</string>
     <!-- 5.2 name services (iOS df23b6f, 09e0403, 718724b, 9858bd1) -->
     <string name="x_handle">X 핸들</string>
     <string name="discord_user_id">디스코드 사용자 아이디</string>
     <string name="redirect_url">리디렉션 URL</string>
     <string name="none_yet">아직 없음</string>
-    <string name="customize_profile">프로필 맞춤 설정</string>
-    <string name="settling">확정 중</string>
     <string name="kachat_profile_coming_body">.kachat 이름이 곧 나옵니다. 이름을 받으면 여기서 아바타, 배너, 소개, 링크를 설정하며, K은 어디서나 이것으로 당신을 보여줍니다.</string>
     <string name="kachat_name_section">.kachat 이름</string>
-    <string name="could_not_reach_service">%1$s에 연결할 수 없습니다. 아래로 당겨 다시 시도하세요.</string>
-    <string name="no_names_yet">아직 %1$s 이름이 없습니다.</string>
     <!-- 5.2 name lookups (iOS a0dbc15, 79b6ac8, 9858bd1) -->
-    <string name="no_tld_domain_found">%1$s 도메인을 찾을 수 없음</string>
-    <string name="looking_up_domain">도메인 찾는 중...</string>
-    <string name="looking_up">찾는 중...</string>
     <string name="no_domain">도메인 없음</string>
-    <string name="other_domains">다른 도메인</string>
-    <string name="not_registered">등록되지 않음</string>
     <string name="couldnt_check">확인할 수 없음</string>
-    <string name="kaspa_address_or_domain">Kaspa 주소 또는 도메인</string>
     <!-- Public Chats select (iOS e08c4cc) -->
     <!-- Connection Settings tabs (iOS ee01f81) -->
     <string name="connection_tab_indexer">인덱서</string>
@@ -313,7 +285,6 @@
     <string name="coming_soon">곧 제공</string>
     <string name="not_available_on_this_network">이 네트워크에서는 사용할 수 없음</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
-    <string name="km_no_names">아직 .kachat 이름이 없습니다</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">처음 사용자를 위한 전체 안내: 지갑, 채팅, 결제 등.</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -336,7 +307,6 @@
     <!-- Realized P&L, fees spent, Add Chatting Address (iOS 61eff0f/5e75c89) -->
     <!-- Receive / chatting address QR text (iOS 8bcae2f) -->
     <!-- Account discovery finds .k and .kaspa names (iOS 7a5b157) -->
-    <string name="chatting_picker_other_names_count">.k 및 .kaspa 이름 (%1$d)</string>
     <!-- Message Requests and Private chats (iOS f7ca401/ba1b2e3/76faa97/74bd52c) -->
     <string name="message_requests">메시지 요청</string>
     <string name="message_requests_row_sub">사람과 그룹이 기다리고 있습니다</string>
@@ -471,7 +441,6 @@
     <string name="chats_new_chat">새 채팅</string>
     <string name="chats_new_group_chat">새 그룹 채팅</string>
     <string name="chats_new_chat_subtitle">주소나 이름으로 메시지를 보냅니다.</string>
-    <string name="qr_chatting_address_subtitle">채팅과 .kachat 도메인 획득에 사용하세요.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="utxo_selection">UTXO 선택</string>
     <string name="utxo_selection_caption">이번 전송에 쓸 코인을 고르세요.</string>
@@ -664,7 +633,6 @@
     <!-- New Chat / New Group: Address Book (iOS 1be4f6e) -->
     <string name="ab_add_count">추가 (%1$d)</string>
     <string name="ab_add_members">멤버 추가</string>
-    <string name="ab_members_footer">연락처에서 사람을 고르거나 Kaspa 주소나 도메인으로 누구든 추가하세요.</string>
     <string name="ab_members_intro">그룹에 사람을 추가하세요. 그룹 관리자로서 멤버를 관리합니다.</string>
     <string name="ab_members_empty">아직 멤버가 없습니다. 연락처에서 또는 아래 주소로 추가하세요.</string>
     <string name="ab_actions_a11y">추가, 가져오기 또는 내보내기</string>
@@ -704,17 +672,8 @@
     <string name="kn_registration_not_open">이름을 새 레지스트리로 옮기는 중입니다. 새 이름은 %1$s부터 받을 수 있습니다.</string>
     <string name="kn_ev_imported">새 레지스트리로 이동됨</string>
     <!-- .kachat first: domains in every address field, Other domains, expired-name banner (iOS 6ac48a7) -->
-    <string name="enter_kaspa_address_or_domain_kachat_first">Kaspa 주소(kaspa:...) 또는 도메인(예: alice.kachat)을 입력하세요. .kachat 이름을 먼저 찾습니다.</string>
-    <string name="search_contacts_or_address_or_domain">연락처, 주소 또는 도메인 검색</string>
-    <string name="no_contacts_yet_paste_address_or_domain">아직 연락처가 없습니다. 위에 주소나 도메인을 붙여넣어 초대하세요.</string>
-    <string name="no_contacts_match_paste_address_or_domain">검색과 일치하는 연락처가 없습니다. 주소나 도메인을 붙여넣어 새로운 사람을 초대하세요.</string>
     <string name="their_profile_kachat_name_address">프로필, .kachat 이름, 주소.</string>
-    <string name="finds_addresses_balance_or_domain">잔액이나 도메인이 있는 주소를 찾습니다.</string>
-    <string name="enter_kaspa_address_or_domain_short_kachat_first">Kaspa 주소(kaspa:...) 또는 도메인을 입력하세요. .kachat 이름을 먼저 찾습니다.</string>
-    <string name="other_domains_title">다른 도메인</string>
-    <string name="chatting_picker_intro_any_name_kachat">이 단어들의 다른 주소에 이미 내 신원이 있다면(.kachat, .kas, .k, .kaspa 도메인 또는 채팅 잔액) 여기서 선택하세요. 잔액이나 도메인이 있는 주소만 표시됩니다.</string>
     <string name="chatting_picker_kachat_names_count">.kachat 이름 (%1$d)</string>
-    <string name="chatting_picker_kas_names_count">.kas 이름 (%1$d)</string>
     <!-- Bare names resolve to .kachat only (iOS 5a5122d) -->
     <string name="kachat_names_not_live_here">이 네트워크에서는 아직 .kachat 이름을 사용할 수 없습니다</string>
     <!-- Nextcloud sync carries portfolios -->
@@ -839,8 +798,6 @@
     <string name="quantum_safe">양자 안전</string>
     <string name="key_revealed_by_a_spend">지출로 키 공개됨</string>
     <!-- KNS domain transfers and quantum-safe (script) addresses (iOS 2a8ca5a) -->
-    <string name="kns_transfer_quantum_source">KNS는 양자 내성 주소에서 도메인을 옮길 수 없습니다. KNS는 공개 키로 도메인 소유자를 식별하는데, 양자 내성 주소는 키를 숨겨 둡니다.</string>
-    <string name="kns_transfer_to_script_address">.kas 도메인은 양자 내성 주소나 다른 스크립트 주소로 보낼 수 없습니다. KNS가 다시는 옮길 수 없게 됩니다. 대신 일반 주소로 보내세요.</string>
     <string name="quantum_next_address_failed">다음 주소를 준비하지 못했습니다. 다시 시도하세요.</string>
     <!-- Address Visibility: a card per chain (iOS d7e6dd1) -->
     <string name="quantum_addresses">양자 내성 주소</string>
@@ -891,7 +848,6 @@
     <string name="pr_paid_to">받는 주소</string>
     <string name="ab_empty_title">아직 연락처가 없습니다</string>
     <string name="settings_title">설정</string>
-    <string name="confirm_sending_domain">이 도메인 보내기 확인</string>
     <string name="confirm_deleting_account">이 계정 삭제 확인</string>
     <string name="group_invites">그룹 초대</string>
     <string name="group_invite">그룹 초대</string>
@@ -936,7 +892,6 @@
     <string name="welcome_paying_for_messages">메시지 비용</string>
     <string name="welcome_paying_for_messages_caption">메시지를 보낼 때마다 이 주소에서 아주 적은 양의 Kaspa가 사용됩니다. 1 Kaspa로 약 500개를 보낼 수 있습니다.</string>
     <string name="welcome_what_others_can_see">다른 사람이 볼 수 있는 것</string>
-    <string name="welcome_what_others_can_see_caption">이 주소와 잔액은 Kaspa 네트워크에서 누구나 볼 수 있지만 메시지는 읽을 수 없습니다. 채팅과 .kachat 도메인에만 사용하세요.</string>
 
     <!-- Localized literals moved out of Kotlin (parity with the iPhone app) -->
     <string name="backup_your_account_to_prevent_loss_of">자금을 잃지 않도록 계정을 백업하세요</string>
@@ -1099,7 +1054,6 @@
     <string name="anyone_with_this_addresss_private_key_can">이 주소의 개인 키를 가진 사람은 누구나 이 주소의 자금을 쓸 수 있습니다. 절대로 누구에게도 공유하지 마세요.</string>
     <string name="tap_to_reveal_private_key">탭하여 개인 키 보기</string>
     <string name="could_not_load_transactions">거래를 불러올 수 없습니다.</string>
-    <string name="contains_domain">도메인 포함</string>
     <string name="private_key_hex_copied_clipboard_will_clear">개인 키 Hex가 복사되었습니다. 클립보드는 30초 후 지워집니다.</string>
     <string name="cache">캐시</string>
     <string name="failed_to_export_diagnostics">진단 내보내기에 실패했습니다.</string>
@@ -1257,7 +1211,6 @@
     <string name="hr_min">%1$d시간 %2$d분</string>
     <string name="min">%1$d분</string>
     <string name="could_not_check_addresses_try_again_when">주소를 확인할 수 없습니다. 연결되면 다시 시도해 주세요.</string>
-    <string name="no_addresses_with_a_balance_or_domain">잔액이나 도메인이 있는 주소를 찾지 못했습니다.</string>
     <string name="hidden">숨김 (%1$d)</string>
     <string name="address_hidden_re_enable_it_in_address">주소를 숨겼습니다. 주소 공개 설정에서 다시 켤 수 있습니다.</string>
     <string name="this_address_cant_be_hidden">이 주소는 숨길 수 없습니다.</string>
@@ -1306,12 +1259,6 @@
     <string name="couldnt_load_the_coins">코인을 불러올 수 없습니다.</string>
     <string name="these_words_are_invalid_double_check_the">이 단어들은 유효하지 않습니다. 단어를 다시 확인해 주세요. 마지막 단어에 체크섬이 들어 있어 한 단어만 틀려도 검증에 실패합니다.</string>
     <string name="invalid_words_please_enter_12_or_24">유효하지 않은 단어입니다. 12개 또는 24개 단어를 입력하세요.</string>
-    <string name="failed_to_set_primary_domain">기본 도메인을 설정하지 못했습니다</string>
-    <string name="invalid_recipient_address">받는 사람 주소가 유효하지 않습니다</string>
-    <string name="recipient_must_be_different_from_your_own">받는 사람은 내 지갑과 달라야 합니다</string>
-    <string name="recipient_address_is_on_the_wrong_network">받는 사람 주소가 다른 네트워크의 주소입니다</string>
-    <string name="invalid_recipient">받는 사람이 유효하지 않습니다</string>
-    <string name="transfer_failed">이전 실패</string>
     <string name="retry_failed">다시 시도 실패</string>
     <string name="saving_keep_the_card_still">저장 중입니다. 카드를 움직이지 마세요.</string>
     <string name="reading_keep_the_card_still">읽는 중입니다. 카드를 움직이지 마세요.</string>
@@ -1349,8 +1296,6 @@
     <string name="resynced_one_message_n_chats">채팅 %1$d개에서 수신 메시지 1개를 다시 동기화했습니다.</string>
     <string name="resynced_n_messages_one_chat">채팅 1개에서 수신 메시지 %1$d개를 다시 동기화했습니다.</string>
     <string name="resynced_n_messages_n_chats">채팅 %2$d개에서 수신 메시지 %1$d개를 다시 동기화했습니다.</string>
-    <string name="found_one_address_balance_domain">잔액이나 도메인이 있는 주소 1개를 찾았습니다.</string>
-    <string name="found_n_addresses_balance_domain">잔액이나 도메인이 있는 주소 %1$d개를 찾았습니다.</string>
     <string name="resync_one_chat">채팅 1개 다시 동기화</string>
     <string name="resync_n_chats">채팅 %1$d개 다시 동기화</string>
     <string name="one_day_ago">1일 전</string>
@@ -1448,9 +1393,6 @@
     <string name="not_sent_you_switched_accounts">전송되지 않음: 전송 전에 계정을 전환했습니다.</string>
     <string name="play_it_again">다시 두기</string>
     <string name="couldnt_look_up_name_try_again">지금은 %1$s을(를) 조회할 수 없습니다. 잠시 후 다시 시도해 주세요.</string>
-    <string name="kns_reveal_will_finish_on_next_open">두 트랜잭션 중 첫 번째는 완료되었지만 두 번째는 완료되지 않았습니다. K을 다음에 열 때 마무리합니다.</string>
-    <string name="kns_transfer_fee_at_most_1_kas">도메인 이전 수수료는 최대 1 KAS입니다.</string>
-    <string name="confirm_setting_this_primary_name">이 기본 이름 설정 확인</string>
     <string name="this_is_the_public_half_of_this_address">이 주소의 공개 부분입니다. 이것으로는 아무것도 사용할 수 없습니다.</string>
     <string name="address_number_is_ready">주소 #%1$d이(가) 준비되었습니다.</string>
     <string name="chess_menu_title">체스</string>
@@ -1512,32 +1454,18 @@
     <string name="chess_invite_sent">체스 초대를 보냈습니다</string>
     <string name="chess_invited_you">체스 대국에 초대했습니다</string>
     <string name="more_reactions">반응 더 보기</string>
-    <string name="confirm_changes">변경 사항 확인</string>
-    <string name="uploading_avatar">아바타 업로드 중...</string>
-    <string name="uploading_banner">배너 업로드 중...</string>
-    <string name="profile_field_removed">%1$s(삭제됨)</string>
     <string name="create_group">그룹 만들기</string>
     <string name="create_group_fee_estimate">예상 네트워크 수수료 ≈ %1$s %2$s(거래 %3$d건)</string>
     <string name="create_chat">채팅 시작</string>
     <string name="add_to_group">그룹에 추가</string>
     <string name="edit_name">이름 편집</string>
     <string name="domain_label">도메인</string>
-    <string name="primary_badge">기본</string>
     <string name="notification_mode_off">끄기</string>
     <string name="notification_mode_no_sound">소리 없음</string>
     <string name="notification_mode_sound">소리</string>
     <string name="notification_mode_default">기본값 (%1$s)</string>
-    <string name="domain_transfer_sending">%1$s 보내는 중</string>
-    <string name="domain_transfer_footer">도메인 이전은 거래 두 건으로 이루어지므로 잠시 걸립니다. 끝날 때까지 앱을 열어 두세요.</string>
-    <string name="domain_transfer_stage_preparing">이전 준비 중</string>
-    <string name="domain_transfer_stage_fee">수수료 계산 중</string>
-    <string name="domain_transfer_stage_commit">커밋 거래 전송 중</string>
-    <string name="domain_transfer_stage_reveal">리빌 거래 전송 중</string>
-    <string name="domain_transfer_stage_verifying">새 소유자 확인 중</string>
-    <string name="domain_transfer_stage_working">처리 중</string>
     <string name="checking_address_n">주소 #%1$d 확인 중</string>
     <string name="n_found_so_far">지금까지 %1$d개 찾음</string>
-    <string name="no_addresses_with_balance_or_domain_yet">잔액이나 도메인이 있는 주소가 아직 없습니다</string>
     <string name="checks_the_first_thousand_addresses">중간에 빈 곳이 있어도 처음 1,000개 주소를 확인하고, 계속 발견되는 동안 이어서 확인합니다.</string>
     <string name="first_sync_all_set">준비 완료</string>
     <string name="first_sync_up_to_date">채팅과 기록이 최신 상태입니다.</string>
@@ -1567,9 +1495,6 @@
     <string name="chess_notif_lost_on_time">♟️ 시간 초과로 패배했습니다</string>
     <string name="chess_notif_resigned">♟️ 체스 대국에서 기권했습니다</string>
     <string name="fee_label">요금</string>
-    <plurals name="kns_profile_changes_count">
-        <item quantity="other">변경 사항 %d개. 각 변경 사항은 채팅 주소에서 별도의 온체인 거래로 제출됩니다:</item>
-    </plurals>
     <plurals name="create_group_and_invite">
         <item quantity="other">\"%1$s\" 그룹을 만들고 멤버 %2$d명을 초대할까요?</item>
     </plurals>
@@ -1585,12 +1510,10 @@
     <string name="payment_notice_fee_from_chatting_address">채팅 주소가 이 결제를 %2$s에게 알리기 위해 %1$s KAS를 추가로 냅니다.</string>
     <string name="recording_failed_please_try_again">녹음에 실패했습니다. 다시 시도하세요.</string>
     <string name="message_needs_too_many_coins">이 메시지는 한 거래에 필요한 코인이 너무 많습니다. 채팅 주소에서 Compound UTXOs를 사용한 뒤 다시 시도하세요.</string>
-    <string name="use_their_domain_name">상대의 도메인 이름 사용</string>
     <string name="show_request_as_qr">요청을 QR로 보기</string>
     <string name="pr_qr_scan_to_pay_in_kachat">휴대폰 카메라로 스캔하면 모든 내용이 채워진 채로 K에서 결제할 수 있습니다.</string>
     <string name="set_as_name">이름으로 설정</string>
     <string name="their_name">상대 이름</string>
-    <string name="get_a_kachat_name">.kachat 이름 받기</string>
     <string name="composer_gif_subtitle">라이브러리에서 움직이는 GIF를 보냅니다.</string>
     <string name="group_composer_gif_subtitle">라이브러리에서 움직이는 GIF를 그룹에 보냅니다.</string>
     <string name="gif_quality">GIF 화질</string>
@@ -1620,10 +1543,6 @@
     <string name="token_received_title">%1$s 받음</string>
     <string name="token_received_on_one">당신의 %1$s(으)로</string>
     <string name="token_received_on_many">당신의 주소 %1$d개로</string>
-    <string name="address_tab_domains">도메인</string>
-    <string name="address_domains_none">이 주소에 %1$s 이름이 없습니다.</string>
-    <string name="address_domains_one">도메인 1개</string>
-    <string name="address_domains_couldnt_load">불러올 수 없음</string>
     <string name="connection_not_set">설정 안 됨</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">공유 링크 복사</string>
@@ -1739,4 +1658,6 @@
     <string name="history_moved">이동됨</string>
     <string name="history_to_address">%1$s(으)로</string>
     <string name="history_change_to_address">잔돈 %1$s → %2$s</string>
+    <string name="cycle_hint_next_page">다음 페이지로 바꿉니다</string>
+    <string name="cycle_hint_next_feed">다음 피드로 전환합니다</string>
 </resources>

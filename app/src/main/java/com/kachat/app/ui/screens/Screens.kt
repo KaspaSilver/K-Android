@@ -36,6 +36,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -70,6 +71,7 @@ import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.material.icons.outlined.CardGiftcard
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.MonitorHeart
@@ -148,8 +150,6 @@ import com.kachat.app.models.MessageEntity
 import com.kachat.app.models.ReactionEntity
 import com.kachat.app.repository.ChatRepository
 import com.kachat.app.services.AddressHistoryService
-import com.kachat.app.services.KnsInscriptionEngine
-import com.kachat.app.services.KnsService
 import com.kachat.app.services.UtxoEntry
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
@@ -294,7 +294,6 @@ fun ChatThreadScreen(
     val handshakeSendInFlight by chatViewModel.handshakeSendInFlight.collectAsState()
 
     val dotColorHex by connectionViewModel.dotColorHex.collectAsState()
-    val myKnsProfile by walletViewModel.knsProfile.collectAsState()
     val myAddress by walletViewModel.address.collectAsState()
     val handshakeAcceptInFlight by chatViewModel.handshakeAcceptInFlight.collectAsState()
     val handshakeAcceptError by chatViewModel.handshakeAcceptError.collectAsState()
@@ -452,6 +451,111 @@ fun ChatThreadScreen(
     var showDollarChooser by remember { mutableStateOf(false) }
     /** Send Dollars' pick: the token's send sheet, to this chat (iOS `dollarSendToken`). */
     var dollarSendToken by remember { mutableStateOf<com.kachat.app.services.tokens.WalletToken?>(null) }
+    // + > Tip (iOS 2026-11-23, ChatTip.kt): the default Kaspa tip waits in the composer as a card
+    // until Send (never straight out of the + sheet); otherwise the tip screen.
+    var pendingTip by remember(contactId) { mutableStateOf<ChatTip.Pending?>(null) }
+    var isSendingInstantTip by remember { mutableStateOf(false) }
+    var chatTipTarget by remember { mutableStateOf<ChatTip.Target?>(null) }
+    val tipSettings: com.kachat.app.viewmodels.KaPostsSettingsViewModel = hiltViewModel()
+    val tipContext = LocalContext.current
+    val tipScope = rememberCoroutineScope()
+    val tipHaptic = com.kachat.app.util.rememberHaptics()
+    /** The + sheet's Tip (iOS `tipFromChat`): Tip In picks Kaspa, kUSDT or asking; a Kaspa tip
+     *  with a default amount (at most 10 KAS) waits in the composer; kUSDT is Send Dollars. */
+    fun tipFromChat() {
+        tipScope.launch {
+            when (tipSettings.loadKaPostsTipAssetInUse()) {
+                com.kachat.app.repository.KaPostsTipAsset.KUSDT -> {
+                    dollarSendToken = com.kachat.app.services.tokens.WalletToken.KUSDT
+                    return@launch
+                }
+                com.kachat.app.repository.KaPostsTipAsset.ASK -> {
+                    chatTipTarget = ChatTip.Target(com.kachat.app.repository.KaPostsTipAsset.ASK)
+                    return@launch
+                }
+                com.kachat.app.repository.KaPostsTipAsset.KASPA -> Unit
+            }
+            val fiat = tipSettings.kaPostsDefaultTipFiat.value
+            val decision = ChatTip.decide(
+                defaultSompi = tipSettings.kaPostsDefaultTipSompi.value,
+                fiatAmount = fiat?.first,
+                fiatText = fiat?.let { com.kachat.app.util.formatFiatAmount(it.first, it.second) },
+                fiatPrice = fiat?.let { tipSettings.freshPriceIn(it.second) },
+                minimumSompi = KAPOST_INSTANT_TIP_MINIMUM_SOMPI,
+                limitSompi = KAPOST_INSTANT_TIP_LIMIT_SOMPI,
+                convert = ::kaPostTipSompi,
+            )
+            when (decision) {
+                ChatTip.Instant.None -> chatTipTarget = ChatTip.Target(com.kachat.app.repository.KaPostsTipAsset.KASPA)
+                ChatTip.Instant.OverLimit -> chatTipTarget = ChatTip.Target(com.kachat.app.repository.KaPostsTipAsset.KASPA, KAPOST_INSTANT_TIP_LIMIT_NOTICE)
+                ChatTip.Instant.TooSmall -> {
+                    tipHaptic(com.kachat.app.util.IosHaptic.ERROR)
+                    IosToasts.error(tipContext.getString(R.string.feed54_tip_too_small, kaPostInstantTipMinimumText()))
+                }
+                is ChatTip.Instant.NoPrice -> {
+                    tipHaptic(com.kachat.app.util.IosHaptic.ERROR)
+                    IosToasts.error(tipContext.getString(R.string.feed54_tip_no_price, decision.fiatText))
+                }
+                // waits in the composer until Send
+                is ChatTip.Instant.Send -> pendingTip = ChatTip.Pending(decision.sompi, decision.fiatText)
+            }
+        }
+    }
+    /** Send on a waiting tip (iOS `sendPendingTip`): it goes from Tips From, as an ordinary
+     *  payment in this chat; the card leaves once it has (a failure keeps it, to try again or
+     *  take back; an unknown outcome takes it too, so it can't go twice). */
+    fun sendPendingTip() {
+        val tip = pendingTip ?: return
+        if (isSendingInstantTip) return
+        isSendingInstantTip = true
+        tipHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+        val name = conversation?.contact?.displayName ?: com.kachat.app.util.KaspaAddress.shortDisplay(contactId)
+        tipScope.launch {
+            // Tips From: one that can't be read must not quietly become a tip from somewhere else
+            val source = runCatching {
+                kaPostDefaultTipSource(tipSettings.kaPostsTipSourceIndex(), tipSettings, walletViewModel)
+            }.getOrElse { e -> if (e is kotlinx.coroutines.CancellationException) throw e else null }
+            if (source == null) {
+                isSendingInstantTip = false
+                tipHaptic(com.kachat.app.util.IosHaptic.ERROR)
+                IosToasts.error(tipContext.getString(R.string.feed54_tip_from_unreadable))
+                return@launch
+            }
+            chatViewModel.sendPayment(
+                contactId = contactId,
+                amount = KaspaUnit.plain(tip.sompi),
+                sourceSpendingIndex = source.spendingIndex,
+            ) { ok, error, txId ->
+                isSendingInstantTip = false
+                when {
+                    ok && txId == null -> {
+                        // put off until the coins confirm: the retry timer sends it
+                        IosToasts.show(tipContext.getString(R.string.c54_send_deferred))
+                        pendingTip = null
+                    }
+                    ok -> {
+                        tipHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
+                        IosToasts.show(tipContext.getString(R.string.feed54_tipped, ChatTip.amountText(tip.sompi, tip.fiatText), name))
+                        pendingTip = null
+                    }
+                    txId != null -> {
+                        // it may have gone: the card goes too, so it can't be sent twice
+                        IosToasts.error(tipContext.getString(R.string.l53_send_outcome_unknown))
+                        pendingTip = null
+                    }
+                    else -> {
+                        tipHaptic(com.kachat.app.util.IosHaptic.ERROR)
+                        IosToasts.error(
+                            tipContext.getString(
+                                R.string.kaposts_tip_didnt_send,
+                                com.kachat.app.util.UserFacingError.message(error, tipContext.getString(R.string.something_went_wrong)),
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
     /** + > Request Payment: a payment request made for this contact and sent into this chat
      *  (iOS 6594936). */
     var showPaymentRequestSheet by remember { mutableStateOf(false) }
@@ -591,14 +695,6 @@ fun ChatThreadScreen(
         chatViewModel.markAsRead(contactId)
     }
 
-    // Keeps this contact's `knsAvatarUrl` (read by `contactAvatarUrl` below) current - it's
-    // otherwise only ever refreshed from ChatInfoScreen, so a contact whose Chat Info was never
-    // opened would never get their real KNS avatar here, even mid-conversation. Matches iOS's
-    // fetchKNSDomainsForAllContacts, which keeps the avatar cache warm unconditionally.
-    LaunchedEffect(contactId) {
-        chatViewModel.refreshKnsProfile(contactId)
-    }
-
     DisposableEffect(contactId) {
         chatViewModel.enterContact(contactId)
         onDispose { chatViewModel.leaveContact(contactId) }
@@ -660,6 +756,12 @@ fun ChatThreadScreen(
     val scrollState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val haptic = com.kachat.app.util.rememberHaptics()
+    // The header bell (iOS 8cb4c88e `isChatSilenced`): the contact's notification override is
+    // Off. Flipped at once on a tap, and taken from the stored contact again whenever it changes.
+    val storedChatSilenced = com.kachat.app.models.ContactNotificationMode
+        .fromName(conversation?.contact?.notificationOverride) == com.kachat.app.models.ContactNotificationMode.OFF
+    var chatSilenced by remember(contactId, storedChatSilenced) { mutableStateOf(storedChatSilenced) }
+    val bellContext = LocalContext.current
 
     Scaffold(
         modifier = Modifier.imePadding(),
@@ -726,10 +828,28 @@ fun ChatThreadScreen(
                     // Entry point into select mode is a message's long-press "Select" menu
                     // item, not a toolbar button.
                     // The connection dot is gone from inside a 1:1 chat (the chat list and
-                    // group chats still have it). Calls left the app (iOS 7c5c22e3), so only a
-                    // game in progress puts a button here.
-                    if (activeChessGame != null) {
-                        ToolbarGlassGroup {
+                    // group chats still have it). Calls left the app (iOS 7c5c22e3). This chat's
+                    // bell (iOS 8cb4c88e, owner 2026-11-24): Silence or Unsilence it, the same
+                    // switch as the Chats list's swipe (the contact's override at Off) - then a
+                    // game in progress, on the same glass.
+                    ToolbarGlassGroup {
+                        ToolbarIconButton(
+                            if (chatSilenced) Icons.Outlined.NotificationsOff else Icons.Filled.Notifications,
+                            if (chatSilenced) stringResource(R.string.kpui_notifications_off) else stringResource(R.string.kpui_notifications_on),
+                            onClick = {
+                                val silence = !chatSilenced
+                                chatSilenced = silence
+                                chatViewModel.updateContactNotificationOverride(
+                                    contactId,
+                                    if (silence) com.kachat.app.models.ContactNotificationMode.OFF else null,
+                                )
+                                haptic(com.kachat.app.util.IosHaptic.SELECTION)
+                                IosToasts.show(
+                                    bellContext.getString(if (silence) R.string.bells_chat_silenced else R.string.bells_notifications_on)
+                                )
+                            },
+                        )
+                        if (activeChessGame != null) {
                             // iOS: a 22pt circle of secondary at 15% holding the caption
                             // checkerboard glyph.
                             Box(
@@ -1029,9 +1149,40 @@ fun ChatThreadScreen(
                             )
                         }
 
+                        // The default tip waiting in place of the field, with the send button
+                        // beside it: the tip goes on Send, and only then (iOS `pendingTipRow`).
+                        pendingTip?.let { tip ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                ChatPendingTipRow(
+                                    tip = tip,
+                                    isSending = isSendingInstantTip,
+                                    onRemove = { pendingTip = null },
+                                    modifier = Modifier.weight(1f),
+                                )
+                                IconButton(
+                                    onClick = { sendPendingTip() },
+                                    enabled = !isSendingInstantTip,
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .iosGlass(cornerRadius = 14.dp)
+                                        .alpha(if (isSendingInstantTip) 0.5f else 1f)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowCircleUp,
+                                        contentDescription = stringResource(R.string.c54_send_tip),
+                                        tint = KaspaTeal,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+                            }
+                        }
                         // iOS inputBar: the field and the 44pt "+" / send side by side,
                         // 12 apart.
-                        Row(
+                        if (pendingTip == null) Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -1122,7 +1273,9 @@ fun ChatThreadScreen(
                                         // handshake when they apply.
                                         height = ActionSheetTileMetrics.sheetHeight(
                                             tiles = if (isBotChat) 1 else 8 + (if (nextcloudAccount != null) 1 else 0) +
-                                                (if (contactId != myAddress && !inboxSupported) 1 else 0)
+                                                (if (contactId != myAddress && !inboxSupported) 1 else 0) +
+                                                // Tip, not in your own chat
+                                                (if (!contactId.equals(myAddress, ignoreCase = true)) 1 else 0)
                                         ),
                                         // iOS: [.height(composerPlusSheetHeight), .large].
                                         largeDetent = true,
@@ -1148,6 +1301,18 @@ fun ChatThreadScreen(
                                                 title = stringResource(R.string.send_dollars),
                                                 subtitle = stringResource(R.string.composer_send_dollars_subtitle),
                                             ) { showDollarChooser = true }
+                                            // Tip (iOS 2026-11-23): what Settings > Customization >
+                                            // Tipping sets, as on a KaPost. Not in your own chat.
+                                            if (!contactId.equals(myAddress, ignoreCase = true)) {
+                                                ActionSheetRow(
+                                                    icon = Icons.Outlined.CardGiftcard,
+                                                    title = stringResource(R.string.kaposts_tip_title),
+                                                    subtitle = stringResource(R.string.c54_tip_subtitle),
+                                                ) {
+                                                    showComposerMenu = false
+                                                    tipFromChat()
+                                                }
+                                            }
                                             // Camera, Photo and Voice Message each ask on chain or via
                                             // Nextcloud when a server is connected (that choice replaced
                                             // the "Send Media via Nextcloud" setting), and go straight
@@ -1687,7 +1852,7 @@ fun ChatThreadScreen(
                                 contactAvatarFallback = conversation?.contact?.avatarFallbackText ?: contactId.takeLast(8),
                                 contactAddress = contactId,
                                 contactDisplayName = conversation?.contact?.displayName.orEmpty(),
-                                myAvatarUrl = myKnsProfile?.avatarUrl,
+                                myAvatarUrl = null,
                                 myAvatarFallback = myAddress?.takeLast(8) ?: "",
                                 // No Accept/Decline bubble: an incoming handshake (old clients,
                                 // Kasia) is just the first line of a Message Request, accepted or
@@ -2176,6 +2341,22 @@ fun ChatThreadScreen(
             chatRecipient = contactId,
             name = conversation?.contact?.displayName ?: com.kachat.app.util.KaspaAddress.shortDisplay(contactId),
             onDismiss = { dollarSendToken = null },
+        )
+    }
+    chatTipTarget?.let { target ->
+        // + > Tip when it needs a screen (iOS `chatTipTarget`): the tip amount, or "What are you
+        // tipping in?"; kUSDT is this chat's Send Dollars, once the sheet is gone.
+        ChatTipFlow(
+            address = contactId,
+            displayName = conversation?.contact?.displayName ?: com.kachat.app.util.KaspaAddress.shortDisplay(contactId),
+            target = target,
+            onPickKusdt = {
+                tipScope.launch {
+                    delay(450)
+                    dollarSendToken = com.kachat.app.services.tokens.WalletToken.KUSDT
+                }
+            },
+            onDismiss = { chatTipTarget = null },
         )
     }
 }
@@ -3360,10 +3541,12 @@ private fun ChessLogEntry(
             val promo = envelope.content.promotion?.let { " (${it.uppercase()})" } ?: ""
             "${envelope.content.from} → ${envelope.content.to}$promo"
         }
+        // Translated, not the English as is (iOS 518fdc8c, audit 2026-11-24 #40).
         is com.kachat.app.util.ChessEnvelope.Resign ->
-            if (envelope.content.reason == "timeout") "Lost on time" else "Resigned"
-        is com.kachat.app.util.ChessEnvelope.Response -> if (envelope.content.accepted) "Accepted the game" else "Declined the game"
-        is com.kachat.app.util.ChessEnvelope.Invite -> "Chess invite"
+            com.kachat.app.util.ChessText.string(if (envelope.content.reason == "timeout") "Lost on time" else "Resigned")
+        is com.kachat.app.util.ChessEnvelope.Response ->
+            com.kachat.app.util.ChessText.string(if (envelope.content.accepted) "Accepted the game" else "Declined the game")
+        is com.kachat.app.util.ChessEnvelope.Invite -> com.kachat.app.util.ChessText.string("Chess invite")
     }
     Surface(
         color = LocalAppColors.current.surfaceVariant,
@@ -3906,147 +4089,31 @@ fun ImageBubble(
 }
 
 /**
- * Dedicated KNS domain-management screen — the owned-domain list (star to mark primary, swap
- * icon to transfer), plus inscribing a new domain. Used to live inline as a collapsible section
- * on the old Profile screen; broken out once the list plus its two dialogs (inscribe/transfer)
- * made that screen too crowded to scan at a glance.
+ * Your Usernames, from Wallet's card (iOS 518fdc8c: `YourDomainsCard` opens
+ * `KachatLiveDomainsTab`, titled Your Usernames). The account's .kachat names - each opens its
+ * page, to renew, list, transfer or set as primary; Claim a Username opens the Usernames tab.
+ * Every other name service (KNS's .kas, dotk's .k, Kaspa Names' .kaspa) is gone since 2026-11-23
+ * (owner's call).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KnsDomainsScreen(viewModel: WalletViewModel, onBack: () -> Unit, onOpenChat: (String) -> Unit = {}) {
-    val ownedDomainAssets by viewModel.ownedDomainAssets.collectAsState()
-    // The name service whose card was tapped (iOS debd6fd), null on the cards themselves.
-    var openedService by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<com.kachat.app.services.NameServiceTLD?>(null) }
+fun YourUsernamesScreen(viewModel: WalletViewModel, onBack: () -> Unit) {
     val walletAddress by viewModel.address.collectAsState()
-    // The cards' counts (iOS 2ee667c), kept while a card's screen is open.
-    val ownedServiceNames by viewModel.nameServices.owned.collectAsState()
-    val kachatCount = rememberKachatHeldCount(walletAddress ?: "")
-    val primaryDomainName by viewModel.primaryDomainName.collectAsState()
-    val setPrimaryState by viewModel.setPrimaryState.collectAsState()
-    val setPrimaryContext = LocalContext.current
-    var selectedDomain by remember { mutableStateOf<com.kachat.app.services.KnsAsset?>(null) }
-    var showSendScreen by remember { mutableStateOf(false) }
-    var editingDomain by remember { mutableStateOf<com.kachat.app.services.KnsAsset?>(null) }
-    // A .kachat name opened from its card's list: its page, to renew, list, transfer (iOS 148a5331).
+    // A name opened from the list: its page (iOS 148a5331).
     var selectedKachat by remember { mutableStateOf<com.kachat.app.services.kachatnames.NameInfo?>(null) }
-
-    LaunchedEffect(Unit) {
-        viewModel.refreshOwnedDomainsAndAwait()
-    }
-    LaunchedEffect(Unit) {
-        viewModel.refreshServiceNamesAndAwait()
-    }
 
     selectedKachat?.let { info ->
         AboveDock { KachatLiveNameDetailScreen(info, onBack = { selectedKachat = null }) }
         return
     }
 
-    // A .kas domain's own profile, edited on its own (iOS 09e0403): .kas profiles are no longer
-    // shown in the app, but a domain's profile is still its owner's to change.
-    editingDomain?.let { domain ->
-        AboveDock { KnsDomainProfileEditorScreen(domain = domain, viewModel = viewModel, onBack = { editingDomain = null }) }
-        return
-    }
-
-    // Full-screen swap: domain detail (card, primary status, Send entry point) - reached by
-    // tapping a card in the list below. No transfer-history section: KNS only exposes a
-    // "currently owned assets" endpoint, and this app's own KNS-transfer tracking is a one-shot
-    // chat notification, not a persisted per-domain log, so there's no reliable data source yet.
-    selectedDomain?.let { domain ->
-        if (!showSendScreen) {
-            val isPrimary = domain.asset != null && domain.asset == primaryDomainName
-            val settingThisOne = setPrimaryState.inFlight && setPrimaryState.assetId == domain.assetId
-            AboveDock {
-                KnsDomainDetailScreen(
-                    domain = domain,
-                    isPrimary = isPrimary,
-                    settingInFlight = settingThisOne,
-                    onSetPrimary = {
-                        domain.assetId?.let { assetId ->
-                            // an on-chain change of what the name says about you, like sending it
-                            // (iOS 4f8e14bb)
-                            setPrimaryContext.authenticateWithDeviceCredential(
-                                title = setPrimaryContext.getString(R.string.confirm_setting_this_primary_name),
-                                onSuccess = { viewModel.setPrimaryDomain(assetId) },
-                            )
-                        }
-                    },
-                    onSend = {
-                        viewModel.resetTransferDomainState()
-                        showSendScreen = true
-                    },
-                    onCustomizeProfile = { editingDomain = domain },
-                    onBack = { selectedDomain = null }
-                )
-            }
-            return
-        } else {
-            AboveDock {
-                KnsDomainSendScreen(
-                    domain = domain,
-                    viewModel = viewModel,
-                    onDone = {
-                        showSendScreen = false
-                        selectedDomain = null
-                    },
-                    onBack = { showSendScreen = false }
-                )
-            }
-            return
-        }
-    }
-
-    // The service a card opened: its own screen, titled by its ending, holding the list each
-    // service's tab used to show (iOS debd6fd - these used to be tabs on this screen).
-    openedService?.let { tld ->
-        androidx.activity.compose.BackHandler { openedService = null }
-        Scaffold(
-            containerColor = LocalAppColors.current.background,
-            // Runs on under the dock, as iOS's content runs on under its tab bar; each list clears
-            // it (its pinned button above the dock, or its scroll's end).
-            contentWindowInsets = WindowInsets(0),
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = { Text(tld.suffix, color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold) },
-                    navigationIcon = {
-                        SheetBarBackButton(onClick = { openedService = null }, modifier = Modifier.padding(start = 12.dp))
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LocalAppColors.current.background)
-                )
-            },
-        ) { padding ->
-            Box(Modifier.fillMaxSize().padding(padding)) {
-                when (tld) {
-                    com.kachat.app.services.NameServiceTLD.KAS -> KnsDomainListTab(
-                        domains = ownedDomainAssets.filter { it.asset != null },
-                        primaryDomainName = primaryDomainName,
-                        onRefresh = { viewModel.refreshOwnedDomainsAndAwait() },
-                        onSelect = { selectedDomain = it },
-                    )
-                    com.kachat.app.services.NameServiceTLD.K, com.kachat.app.services.NameServiceTLD.KASPA ->
-                        ServiceNameListTab(tld = tld, viewModel = viewModel)
-                    // KaPay's list, back with the .kachat market (iOS 148a5331 `KachatLiveDomainsTab`):
-                    // each name opens its page; Claim a Name opens the .kachat tab.
-                    com.kachat.app.services.NameServiceTLD.KACHAT ->
-                        KachatLiveDomainsTab(
-                            walletAddress = walletAddress ?: "",
-                            onOpen = { selectedKachat = it },
-                            onInscribe = { KachatDeepLink.pendingTab.value = true },
-                        )
-                }
-            }
-        }
-        return
-    }
-
     Scaffold(
         containerColor = LocalAppColors.current.background,
-        // Runs on under the dock, as iOS's scroll runs on under its tab bar.
+        // Runs on under the dock, as iOS's list runs on under its tab bar.
         contentWindowInsets = WindowInsets(0),
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.kns_domains), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.names54_your_usernames), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     SheetBarBackButton(onClick = onBack, modifier = Modifier.padding(start = 12.dp))
                 },
@@ -4054,174 +4121,18 @@ fun KnsDomainsScreen(viewModel: WalletViewModel, onBack: () -> Unit, onOpenChat:
             )
         },
     ) { padding ->
-        // One card per name ending, KaChat's own first: .kachat, KNS (.kas), dotk (.k), Kaspa Names
-        // (.kaspa), drawn like Connection Settings' cards (iOS 5b7c772c, as KaPay has it). The
-        // .kachat one lists your names, which are claimed, renewed and sold in the .kachat tab.
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp + LocalDockInset.current),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            com.kachat.app.services.NameServiceTLD.entries.forEach { tld ->
-                // How many names this wallet has with each service, 0 included; null while the
-                // answer is not in yet (first load, or the service unreachable) - iOS 2ee667c.
-                val count = when (tld) {
-                    com.kachat.app.services.NameServiceTLD.KAS -> ownedDomainAssets.count { it.asset != null }
-                    com.kachat.app.services.NameServiceTLD.K, com.kachat.app.services.NameServiceTLD.KASPA -> ownedServiceNames[tld]?.size
-                    com.kachat.app.services.NameServiceTLD.KACHAT -> kachatCount
-                }
-                DomainServiceCard(tld = tld, count = count, onClick = { openedService = tld })
-            }
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            KachatLiveDomainsTab(
+                walletAddress = walletAddress ?: "",
+                onOpen = { selectedKachat = it },
+                onInscribe = { KachatDeepLink.pendingTab.value = true },
+            )
         }
     }
 }
 
-/**
- * A card like Connection Settings' (iOS 5b7c772c `serviceCard`, as KaPay has it): the "at" symbol in
- * its circle, the name ending with who runs it under it, how many you have there (0 included, a
- * dash until the answer is in), and the chevron.
- */
-@Composable
-private fun DomainServiceCard(
-    tld: com.kachat.app.services.NameServiceTLD,
-    /** How many names you hold there; null draws a dash until the answer is in (iOS 2ee667c). */
-    count: Int?,
-    onClick: () -> Unit,
-) {
-    ConnectionStyleCard(
-        icon = Icons.Default.AlternateEmail,
-        title = tld.suffix,
-        onClick = onClick,
-        subtitle = { ConnectionCardCaption(tld.serviceName) },
-        trailing = {
-            Box(
-                modifier = Modifier
-                    .defaultMinSize(minWidth = 28.dp, minHeight = 22.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(KaspaTeal.copy(alpha = 0.14f))
-                    .padding(horizontal = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    count?.toString() ?: "\u2013",
-                    color = KaspaTeal,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                )
-            }
-        },
-    )
-}
-
-/** A pull-to-refresh list of one service's domains. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DomainTabList(
-    tld: com.kachat.app.services.NameServiceTLD,
-    onRefresh: suspend () -> Unit,
-    content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit,
-) {
-    val pullRefreshState = rememberPullToRefreshState()
-    LaunchedEffect(pullRefreshState.isRefreshing) {
-        if (pullRefreshState.isRefreshing) {
-            onRefresh()
-            pullRefreshState.endRefresh()
-        }
-    }
-    val dockInset = LocalDockInset.current
-    Column(Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .nestedScroll(pullRefreshState.nestedScrollConnection)
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item { Spacer(Modifier.height(16.dp)) }
-                content()
-                item { Spacer(Modifier.height(16.dp + dockInset)) }
-            }
-            PullToRefreshContainer(state = pullRefreshState, modifier = Modifier.align(Alignment.TopCenter))
-        }
-    }
-}
-
-@Composable
-private fun KnsDomainListTab(
-    domains: List<com.kachat.app.services.KnsAsset>,
-    primaryDomainName: String?,
-    onRefresh: suspend () -> Unit,
-    onSelect: (com.kachat.app.services.KnsAsset) -> Unit,
-) {
-    DomainTabList(tld = com.kachat.app.services.NameServiceTLD.KAS, onRefresh = onRefresh) {
-        if (domains.isEmpty()) {
-            item {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text(text = stringResource(R.string.no_domains_yet), color = LocalAppColors.current.textSecondary, modifier = Modifier.padding(16.dp))
-                }
-            }
-        } else {
-            items(domains, key = { it.assetId ?: it.asset ?: it.hashCode().toString() }) { domainAsset ->
-                KnsDomainCard(
-                    domain = domainAsset,
-                    isPrimary = domainAsset.asset == primaryDomainName,
-                    modifier = Modifier.clickable { onSelect(domainAsset) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ServiceNameListTab(tld: com.kachat.app.services.NameServiceTLD, viewModel: WalletViewModel) {
-    val owned by viewModel.nameServices.owned.collectAsState()
-    val loading by viewModel.nameServices.loading.collectAsState()
-    val failed by viewModel.nameServices.failed.collectAsState()
-    val names = owned[tld].orEmpty()
-    DomainTabList(tld = tld, onRefresh = { viewModel.refreshServiceNamesAndAwait() }) {
-        if (names.isEmpty()) {
-            item {
-                Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
-                    when {
-                        tld in loading && owned[tld] == null -> com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal)
-                        tld in failed -> Text(
-                            stringResource(R.string.could_not_reach_service, tld.serviceName),
-                            color = LocalAppColors.current.textSecondary,
-                            textAlign = TextAlign.Center,
-                        )
-                        else -> Text(
-                            stringResource(R.string.no_names_yet, tld.suffix),
-                            color = LocalAppColors.current.textSecondary,
-                        )
-                    }
-                }
-            }
-        } else {
-            items(names, key = { it.display }) { name ->
-                DomainNameCard(
-                    title = name.display,
-                    badge = if (name.isProvisional) stringResource(R.string.settling) else null,
-                )
-            }
-        }
-    }
-}
-
-/** Teal card matching the app's KNS domain branding - used both as the row style in [KnsDomainsScreen] and as the header of [KnsDomainDetailScreen]. */
-@Composable
-fun KnsDomainCard(domain: com.kachat.app.services.KnsAsset, isPrimary: Boolean = false, modifier: Modifier = Modifier) {
-    DomainNameCard(title = domain.asset ?: "", badge = if (isPrimary) stringResource(R.string.primary) else null, modifier = modifier)
-}
-
-/** The teal name card, for any name service: the name, and an optional corner badge ("Primary"
- *  on KNS, "Settling" on a `.kaspa` name still inside its settling window) - iOS DomainNameCardView. */
+/** The teal name card: the name, and an optional corner badge (a .kachat name's Listed or
+ *  Expired) - iOS DomainNameCardView. */
 @Composable
 fun DomainNameCard(
     title: String,
@@ -4275,402 +4186,6 @@ fun DomainNameCard(
     }
 }
 
-/**
- * Detail screen for a single owned domain - the card itself, primary/status info, and a
- * dedicated Send entry point. Reached by tapping a card in [KnsDomainsScreen]. No transfer
- * history section: KNS only exposes a "currently owned assets" endpoint, and this app's own
- * KNS-transfer tracking isn't a persisted per-domain log, so there's no reliable data source yet.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun KnsDomainDetailScreen(
-    domain: com.kachat.app.services.KnsAsset,
-    isPrimary: Boolean,
-    settingInFlight: Boolean,
-    onSetPrimary: () -> Unit,
-    onSend: () -> Unit,
-    /** Opens the full profile editor for this domain (avatar, banner, bio, links). KaChat does not
-     *  SHOW .kas profiles anymore - .kachat profiles take priority - but a .kas domain's own
-     *  profile can still be customized here (iOS 09e0403). Null where the host offers no editor. */
-    onCustomizeProfile: (() -> Unit)? = null,
-    onBack: () -> Unit
-) {
-    Scaffold(
-        containerColor = LocalAppColors.current.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(domain.asset ?: "", color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    SheetBarBackButton(onClick = onBack, modifier = Modifier.padding(start = 12.dp))
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LocalAppColors.current.background)
-            )
-        },
-        bottomBar = {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Button(
-                    onClick = onSend,
-                    enabled = domain.assetId != null,
-                    colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal, disabledContainerColor = KaspaTeal.copy(alpha = 0.5f)),
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Send, null, tint = Color.Black, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.send), color = Color.Black, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
-            KnsDomainCard(domain = domain, isPrimary = isPrimary)
-            Spacer(Modifier.height(20.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(LocalAppColors.current.surface)
-            ) {
-                Row(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.asset_id), color = LocalAppColors.current.textPrimary, modifier = Modifier.weight(1f))
-                    Text(
-                        domain.assetId ?: "",
-                        color = LocalAppColors.current.textSecondary,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1
-                    )
-                }
-                if (onCustomizeProfile != null && domain.assetId != null) {
-                    HorizontalDivider(color = LocalAppColors.current.background)
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clickable { onCustomizeProfile() }.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.customize_profile), color = LocalAppColors.current.textPrimary, modifier = Modifier.weight(1f))
-                        Icon(Icons.Default.AccountCircle, contentDescription = null, tint = KaspaTeal)
-                    }
-                }
-                HorizontalDivider(color = LocalAppColors.current.background)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(
-                            if (!isPrimary && domain.assetId != null) Modifier.clickable(enabled = !settingInFlight) { onSetPrimary() }
-                            else Modifier
-                        )
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        if (isPrimary) stringResource(R.string.primary_domain) else stringResource(R.string.set_as_primary),
-                        color = LocalAppColors.current.textPrimary,
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (settingInFlight) {
-                        com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                    } else {
-                        Icon(
-                            if (isPrimary) Icons.Default.Star else Icons.Default.StarBorder,
-                            contentDescription = null,
-                            tint = KaspaTeal
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-/** The largest custom fee a domain transfer takes: the reveal pays it out of the commit's 2 KAS. */
-private const val KNS_TRANSFER_MAX_PRIORITY_FEE_SOMPI = 100_000_000L
-
-/**
- * Sends (transfers) a single KNS domain inscription to a recipient address or KNS domain - same
- * UX conventions as the app's KAS send flows (KNS-domain-aware recipient, editable network fee)
- * but with no amount field or coin control, since a domain transfer moves the whole inscription
- * rather than a chosen KAS amount.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun KnsDomainSendScreen(
-    domain: com.kachat.app.services.KnsAsset,
-    viewModel: WalletViewModel,
-    onDone: () -> Unit,
-    onBack: () -> Unit,
-    /** Non-null: sign/fund the transfer from this spending-chain address index instead of the
-     *  identity address (the spending-address detail screen's KNS Domains tab passes it). */
-    fromSpendingAddressIndex: Int? = null,
-    /** The source address matching [fromSpendingAddressIndex] — recipient validation checks the
-     *  recipient differs from the SOURCE, not necessarily from the identity address. */
-    sourceAddress: String? = null
-) {
-    val recipientPreview by viewModel.transferRecipientPreview.collectAsState()
-    val transferState by viewModel.transferDomainState.collectAsState()
-    val kaspaExplorer by viewModel.kaspaExplorer.collectAsState()
-    val uriHandler = LocalUriHandler.current
-    val context = LocalContext.current
-
-    var recipientInput by remember { mutableStateOf("") }
-    var feeTier by remember { mutableStateOf(FeeTier.NORMAL) }
-    var customFeeSompi by remember { mutableStateOf<Long?>(null) }
-    var isEditingFee by remember { mutableStateOf(false) }
-    var customFeeText by remember { mutableStateOf("") }
-
-    val domainName = domain.asset ?: ""
-    val assetId = domain.assetId ?: ""
-    val baseFeeSompi = KnsInscriptionEngine.REVEAL_PRIORITY_FEE_SOMPI
-    val priorityFeeSompi = customFeeSompi ?: (baseFeeSompi * feeTier.multiplier)
-    val inFlight = transferState.status !in listOf(
-        WalletViewModel.KnsInscribeUiStatus.IDLE,
-        WalletViewModel.KnsInscribeUiStatus.SUCCESS,
-        WalletViewModel.KnsInscribeUiStatus.FAILED
-    )
-
-    // Progress in its own sheet rather than a spinner inside the Send button: a transfer is a
-    // commit, a wait, then a reveal, and a button that just spins through all of it is
-    // indistinguishable from being stuck. Not dismissible - leaving mid-transfer would hide a
-    // running on-chain operation.
-    if (inFlight) {
-        DomainTransferProgressSheet(domainName = domainName, status = transferState.status)
-    }
-    val canSend = !inFlight && recipientPreview?.resolvedAddress != null
-
-    fun trimmedKas(sompi: Long): String {
-        var text = "%.8f".format(sompi / 100_000_000.0)
-        while (text.endsWith("0")) text = text.dropLast(1)
-        if (text.endsWith(".")) text = text.dropLast(1)
-        return text
-    }
-
-    Scaffold(
-        containerColor = LocalAppColors.current.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.send_domain), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    SheetBarIconButton(Icons.Filled.ArrowBackIosNew, stringResource(R.string.back), onClick = onBack, enabled = !inFlight, modifier = Modifier.padding(start = 12.dp), tint = LocalAppColors.current.textPrimary)
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LocalAppColors.current.background)
-            )
-        },
-        bottomBar = {
-            if (transferState.status != WalletViewModel.KnsInscribeUiStatus.SUCCESS) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Button(
-                        // A domain never leaves on a tap alone: giving it away still asks for the device lock (iOS 83806b3d).
-                        onClick = {
-                            context.authenticateWithDeviceCredential(
-                                title = context.getString(R.string.confirm_sending_domain),
-                                onSuccess = { viewModel.transferDomain(domainName, assetId, priorityFeeSompi, fromSpendingAddressIndex) },
-                            )
-                        },
-                        enabled = canSend,
-                        colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal, disabledContainerColor = KaspaTeal.copy(alpha = 0.5f)),
-                        modifier = Modifier.fillMaxWidth().height(52.dp)
-                    ) {
-                        if (inFlight) {
-                            com.kachat.app.ui.theme.IosActivityIndicator(color = Color.Black, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        } else {
-                            Text(stringResource(R.string.send), color = Color.Black, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            if (transferState.status == WalletViewModel.KnsInscribeUiStatus.SUCCESS) {
-                val result = transferState.result
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                    Icon(Icons.Default.CheckCircle, null, tint = LocalAppColors.current.success, modifier = Modifier.size(48.dp))
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.sent), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Spacer(Modifier.height(20.dp))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(LocalAppColors.current.surface)
-                            .padding(16.dp)
-                    ) {
-                        Text(stringResource(R.string.to), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                        Text(result?.toAddress ?: "", color = LocalAppColors.current.textPrimary, style = MaterialTheme.typography.bodySmall)
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(LocalAppColors.current.surface)
-                            .clickable { result?.revealTxId?.let { uriHandler.openUri(kaspaExplorer.txUrl(it)) } }
-                            .padding(16.dp)
-                    ) {
-                        Text(stringResource(R.string.transaction_id_tap_to_view_in, kaspaExplorer.displayName), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                        Text(result?.revealTxId ?: "", color = KaspaTeal, style = MaterialTheme.typography.bodySmall)
-                    }
-                    Spacer(Modifier.height(20.dp))
-                    Button(
-                        onClick = onDone,
-                        colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal),
-                        modifier = Modifier.fillMaxWidth().height(48.dp)
-                    ) {
-                        Text(stringResource(R.string.done), color = Color.Black, fontWeight = FontWeight.Bold)
-                    }
-                }
-                return@Column
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(LocalAppColors.current.surface)
-                    .padding(16.dp)
-            ) {
-                Text(domainName, color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
-                Text(assetId, color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodySmall, maxLines = 1)
-            }
-
-            when (transferState.status) {
-                WalletViewModel.KnsInscribeUiStatus.SUBMITTING_COMMIT -> InscribeProgressRow(stringResource(R.string.submitting_commit_transaction))
-                WalletViewModel.KnsInscribeUiStatus.SUBMITTING_REVEAL -> InscribeProgressRow(stringResource(R.string.submitting_reveal_transaction))
-                WalletViewModel.KnsInscribeUiStatus.VERIFYING -> InscribeProgressRow(stringResource(R.string.verifying_new_ownership_on_chain_this))
-                WalletViewModel.KnsInscribeUiStatus.FAILED -> {
-                    Text(transferState.errorMessage ?: stringResource(R.string.something_went_wrong), color = LocalAppColors.current.danger)
-                }
-                else -> {
-                    Text(stringResource(R.string.recipient_address).uppercase(), color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                    com.kachat.app.ui.theme.IosTextField(
-                        value = recipientInput,
-                        onValueChange = {
-                            // "KASPA:QR..." (a compact QR code) is read as the address it is (iOS 83806b3d).
-                            val v = if (KaspaAddress.hasAddressPrefix(it.trim())) KaspaAddress.normalizedCase(it) else it
-                            recipientInput = v
-                            viewModel.checkTransferRecipient(v, sourceAddress)
-                        },
-                        placeholder = { Text(stringResource(R.string.kaspa_qr_or_domain)) },
-                        singleLine = true,
-                        enabled = !inFlight,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = LocalAppColors.current.textPrimary,
-                            unfocusedTextColor = LocalAppColors.current.textPrimary,
-                            focusedBorderColor = KaspaTeal,
-                            unfocusedBorderColor = LocalAppColors.current.textSecondary
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    recipientPreview?.let { preview ->
-                        Spacer(Modifier.height(4.dp))
-                        // the shared card: the domain typed, else the address's own .kachat name
-                        AddressResolutionCard(address = preview.resolvedAddress, domain = preview.resolvedName)
-                        when {
-                            preview.checking -> Text(stringResource(R.string.looking_up_domain), color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodySmall)
-                            preview.errorMessage != null -> Text(preview.errorMessage, color = LocalAppColors.current.danger, style = MaterialTheme.typography.bodySmall)
-                            preview.resolvedAddress != null && preview.resolvedName != null -> Column {
-                                Text(stringResource(R.string.resolved_name, preview.resolvedName), color = LocalAppColors.current.success, style = MaterialTheme.typography.bodySmall)
-                                MiddleEllipsisText(
-                                    preview.resolvedAddress,
-                                    color = LocalAppColors.current.textSecondary,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 11.sp,
-                                )
-                            }
-                            preview.resolvedAddress != null -> Text("Resolves to: ${preview.resolvedAddress}", color = LocalAppColors.current.success, style = MaterialTheme.typography.bodySmall)
-                        }
-                        if (!preview.checking) {
-                            OtherDomainsDropdown(preview.nameResolutions, preview.selectedTld) {
-                                viewModel.selectTransferResolution(it, sourceAddress)
-                            }
-                        }
-                    }
-                    Text(
-                        stringResource(R.string.enter_kaspa_address_or_domain_short_kachat_first),
-                        color = LocalAppColors.current.textSecondary,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.fee_label).uppercase(), color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(LocalAppColors.current.surface)
-                    ) {
-                        FeeTier.entries.forEach { tier ->
-                            val selected = feeTier == tier && customFeeSompi == null
-                            Text(
-                                tier.label,
-                                color = if (selected) Color.Black else LocalAppColors.current.textSecondary,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(if (selected) KaspaTeal else Color.Transparent)
-                                    .clickable(enabled = !inFlight) {
-                                        feeTier = tier
-                                        customFeeSompi = null
-                                        isEditingFee = false
-                                    }
-                                    .padding(vertical = 10.dp)
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.network_fee), color = LocalAppColors.current.textPrimary, modifier = Modifier.weight(1f))
-                        if (isEditingFee) {
-                            com.kachat.app.ui.theme.IosTextField(
-                                value = customFeeText,
-                                onValueChange = { customFeeText = it },
-                                singleLine = true,
-                                modifier = Modifier.width(110.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = LocalAppColors.current.textPrimary,
-                                    unfocusedTextColor = LocalAppColors.current.textPrimary
-                                )
-                            )
-                            IconButton(onClick = {
-                                KaspaUnit.sompiFromUserText(customFeeText)?.let { sompi ->
-                                    // The reveal pays this out of the commit's 2 KAS: held to
-                                    // what it can carry (iOS 4f8e14bb `maxPriorityFeeSompi`).
-                                    customFeeSompi = minOf(sompi, KNS_TRANSFER_MAX_PRIORITY_FEE_SOMPI)
-                                }
-                                isEditingFee = false
-                            }) {
-                                Icon(Icons.Default.Check, null, tint = KaspaTeal)
-                            }
-                        } else {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.clickable(enabled = !inFlight) {
-                                    customFeeText = trimmedKas(priorityFeeSompi)
-                                    isEditingFee = true
-                                }
-                            ) {
-                                Text("${trimmedKas(priorityFeeSompi)} ${KaspaUnit.symbol}", color = KaspaTeal, textDecoration = TextDecoration.Underline)
-                                Spacer(Modifier.width(4.dp))
-                                Icon(Icons.Default.Edit, null, tint = KaspaTeal, modifier = Modifier.size(14.dp))
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
-    }
-}
 
 /**
  * Every address of this account (iOS 6333dd3 ManageAddressesView), reached from Profile > Manage
@@ -4799,8 +4314,8 @@ fun ManageAddressesScreen(
                     viewModel.discoverSpendingAddresses { count ->
                         // The count is addresses that hold a balance or a KNS domain - say so,
                         // rather than "used", which is what the old number implied and was not.
-                        val summary = if (count == 0) context.getString(R.string.no_addresses_with_a_balance_or_domain)
-                        else if (count == 1) context.getString(R.string.found_one_address_balance_domain) else context.getString(R.string.found_n_addresses_balance_domain, count)
+                        val summary = if (count == 0) context.getString(R.string.names54_no_addresses_balance_or_username_found)
+                        else if (count == 1) context.getString(R.string.names54_found_one_address_balance_username) else context.getString(R.string.names54_found_n_addresses_balance_username, count)
                         discoverySummary = summary
                         // Closed the sheet and carried on? Then the summary above has nowhere to
                         // render, so say it here instead of finishing silently.
@@ -6634,17 +6149,13 @@ fun SpendingAddressTxHistoryScreen(
     var utxoLabels by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var labelingUtxoKey by remember { mutableStateOf<String?>(null) }
     var labelInput by remember { mutableStateOf("") }
-    // The name service opened from the Domains tab (iOS 5b7c772c AddressDomainsTab).
-    var openedDomainService by remember { mutableStateOf<com.kachat.app.services.NameServiceTLD?>(null) }
-
-    // A name service opened from this address's Domains tab: its names.
-    openedDomainService?.let { tld ->
+    // A username opened from this address's Domains tab: its page (iOS 518fdc8c AddressDomainsTab,
+    // .kachat only).
+    var openedUsername by remember { mutableStateOf<com.kachat.app.services.kachatnames.NameInfo?>(null) }
+    openedUsername?.let { name ->
         AboveDock {
-            AddressDomainServiceScreen(
-                address = address,
-                tld = tld,
-                onBack = { openedDomainService = null },
-            )
+            BackHandler { openedUsername = null }
+            KachatLiveNameDetailScreen(initial = name, onBack = { openedUsername = null })
         }
         return
     }
@@ -6750,15 +6261,16 @@ fun SpendingAddressTxHistoryScreen(
         Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
             // The card an address's own page opens with (iOS 5b7c772c KaspaAddressBalanceCard).
             KaspaAddressBalanceCard(label = entry?.displayLabel ?: displayName, sompi = entry?.balanceSompi ?: 0L, priceViewModel = priceViewModel)
-            // The app's tab look, not a segmented control; plain names - History, UTXOs, Domains
-            // (iOS b96d727/718b88c, 5b7c772c).
-            UnderlineTabBar(
-                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos), stringResource(R.string.address_tab_domains)),
+            // The app's page switch (`PageCycleBar`, iOS 518fdc8c), not a segmented control; plain
+            // names - History, UTXOs, Domains. Each tap fades to the next page.
+            com.kachat.app.ui.components.PageCycleBar(
+                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos), stringResource(R.string.shell54_usernames)),
                 selectedIndex = selectedTab,
                 onSelect = { selectedTab = it },
             )
-            when (selectedTab) {
-                2 -> AddressDomainsTab(address, onOpenService = { openedDomainService = it }, bottomPadding = barInset)
+            com.kachat.app.ui.components.CycleFade(selectedTab, Modifier.weight(1f)) { shownTab ->
+            when (shownTab) {
+                2 -> AddressDomainsTab(address, onOpenName = { openedUsername = it }, bottomPadding = barInset)
                 0 -> AddressHistoryList(
                     txHistory = txHistory,
                     isLoading = isLoadingTxHistory,
@@ -6782,6 +6294,7 @@ fun SpendingAddressTxHistoryScreen(
                     },
                     bottomPadding = barInset,
                 )
+            }
             }
         }
     }
@@ -6949,17 +6462,13 @@ fun IdentityAddressDetailScreen(
     var utxoLabels by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var labelingUtxoKey by remember { mutableStateOf<String?>(null) }
     var labelInput by remember { mutableStateOf("") }
-    // The name service opened from the Domains tab (iOS 5b7c772c AddressDomainsTab).
-    var openedDomainService by remember { mutableStateOf<com.kachat.app.services.NameServiceTLD?>(null) }
-
-    // A name service opened from this address's Domains tab: its names.
-    openedDomainService?.let { tld ->
+    // A username opened from this address's Domains tab: its page (iOS 518fdc8c AddressDomainsTab,
+    // .kachat only).
+    var openedUsername by remember { mutableStateOf<com.kachat.app.services.kachatnames.NameInfo?>(null) }
+    openedUsername?.let { name ->
         AboveDock {
-            AddressDomainServiceScreen(
-                address = address.orEmpty(),
-                tld = tld,
-                onBack = { openedDomainService = null },
-            )
+            BackHandler { openedUsername = null }
+            KachatLiveNameDetailScreen(initial = name, onBack = { openedUsername = null })
         }
         return
     }
@@ -7055,15 +6564,16 @@ fun IdentityAddressDetailScreen(
             // The card an address's own page opens with (iOS 5b7c772c KaspaAddressBalanceCard):
             // the wallet's own balance for this address, as Manage Addresses shows it.
             KaspaAddressBalanceCard(label = stringResource(R.string.chatting_address), sompi = balanceSompi, priceViewModel = priceViewModel)
-            // Right above what it switches, the way Chats has it: History, UTXOs, Domains
-            // (iOS b96d727/718b88c, 5b7c772c).
-            UnderlineTabBar(
-                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos), stringResource(R.string.address_tab_domains)),
+            // Right above what it switches, the way Chats has it: History, UTXOs, Domains, on the
+            // app's page switch (`PageCycleBar`, iOS 518fdc8c). Each tap fades to the next page.
+            com.kachat.app.ui.components.PageCycleBar(
+                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos), stringResource(R.string.shell54_usernames)),
                 selectedIndex = selectedTab,
                 onSelect = { selectedTab = it },
             )
-            when (selectedTab) {
-                2 -> AddressDomainsTab(address.orEmpty(), onOpenService = { openedDomainService = it }, bottomPadding = barInset)
+            com.kachat.app.ui.components.CycleFade(selectedTab, Modifier.weight(1f)) { shownTab ->
+            when (shownTab) {
+                2 -> AddressDomainsTab(address.orEmpty(), onOpenName = { openedUsername = it }, bottomPadding = barInset)
                 0 -> AddressHistoryList(
                     txHistory = txHistory,
                     isLoading = isLoadingTxHistory,
@@ -7088,6 +6598,7 @@ fun IdentityAddressDetailScreen(
                     },
                     bottomPadding = barInset,
                 )
+            }
             }
         }
     }
@@ -7986,12 +7497,12 @@ private fun FilledCircleArrow(up: Boolean, color: Color, cutout: Color, size: Dp
     }
 }
 
-/** "Contains domain" capsule tag shown on spending/cold address rows that own at least one KNS
- *  domain — shared component ported from iOS's ContainsDomainTag. */
+/** "Contains username" capsule tag shown on spending/cold address rows that hold a .kachat name
+ *  — shared component ported from iOS's ContainsDomainTag (iOS 518fdc8c wording). */
 @Composable
 fun ContainsDomainTag() {
     Text(
-        text = stringResource(R.string.contains_domain),
+        text = stringResource(R.string.names54_contains_username),
         color = KaspaTeal,
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
@@ -8366,8 +7877,19 @@ fun QuickReactionBar(
                 )
             }
         }
+        // A 44 target without moving the bar's layout (iOS audit 2026-11-24 #39): laid out as 30,
+        // drawn and tapped as 44 around it, inside the bar's own padding.
         Box(
-            Modifier.size(30.dp).clip(CircleShape).clickable(onClick = onReply),
+            Modifier
+                .layout { measurable, constraints ->
+                    val extra = 7.dp.roundToPx()
+                    val placeable = measurable.measure(
+                        androidx.compose.ui.unit.Constraints.fixed(30.dp.roundToPx() + 2 * extra, 30.dp.roundToPx() + 2 * extra)
+                    )
+                    layout(30.dp.roundToPx(), 30.dp.roundToPx()) { placeable.place(-extra, -extra) }
+                }
+                .clip(CircleShape)
+                .clickable(onClick = onReply),
             contentAlignment = Alignment.Center,
         ) {
             Icon(Icons.AutoMirrored.Filled.Reply, contentDescription = stringResource(R.string.reply), tint = KaspaTeal, modifier = Modifier.size(18.dp))
@@ -8543,391 +8065,6 @@ fun KachatProfileEditorScreen(
             Spacer(Modifier.height(24.dp))
         }
     }
-}
-
-/**
- * A .kas domain's own profile, from Your Domains > the domain > Customize Profile (iOS 09e0403):
- * the full editor, loaded for that domain on its own and saved to it. The app no longer SHOWS
- * .kas profiles, but a domain's profile is still its owner's to change.
- */
-@Composable
-fun KnsDomainProfileEditorScreen(
-    domain: com.kachat.app.services.KnsAsset,
-    viewModel: WalletViewModel,
-    onBack: () -> Unit,
-) {
-    val loading by viewModel.editingDomainLoading.collectAsState()
-    val current by viewModel.editingDomain.collectAsState()
-    LaunchedEffect(domain.assetId) { viewModel.beginEditingDomain(domain) }
-    DisposableEffect(Unit) { onDispose { viewModel.endEditingDomain() } }
-    BackHandler(onBack = onBack)
-    // The fields seed once per domain, so they wait for its profile rather than seeding empty.
-    if (loading || current?.assetId != domain.assetId) {
-        Box(Modifier.fillMaxSize().background(LocalAppColors.current.background), contentAlignment = Alignment.Center) {
-            com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal)
-        }
-        return
-    }
-    EditKnsProfileScreen(viewModel = viewModel, onBack = onBack, editingDomain = domain)
-}
-
-@Composable
-private fun InscribeProgressRow(text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal, modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-        Spacer(Modifier.width(12.dp))
-        Text(text, color = LocalAppColors.current.textPrimary)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EditKnsProfileScreen(
-    viewModel: WalletViewModel,
-    onBack: () -> Unit,
-    onNavigateToDomains: () -> Unit = {},
-    /** Edit THIS .kas domain's profile (from Your Domains) rather than the primary's - see
-     *  [KnsDomainProfileEditorScreen]. */
-    editingDomain: com.kachat.app.services.KnsAsset? = null,
-) {
-    val primaryProfile by viewModel.knsProfile.collectAsState()
-    val domainProfile by viewModel.editingDomainProfile.collectAsState()
-    val knsProfile = if (editingDomain != null) domainProfile else primaryProfile
-    val primaryDomainName by viewModel.activeProfileDomainName.collectAsState()
-    val activeProfileDomainName = editingDomain?.asset ?: primaryDomainName
-    val ownedDomainAssets by viewModel.ownedDomainAssets.collectAsState()
-    val pendingAvatarUri by viewModel.pendingAvatarUri.collectAsState()
-    val pendingBannerUri by viewModel.pendingBannerUri.collectAsState()
-    val avatarCleared by viewModel.avatarCleared.collectAsState()
-    val bannerCleared by viewModel.bannerCleared.collectAsState()
-    val editState by viewModel.editProfileState.collectAsState()
-    val showSetupGuides by viewModel.showSetupGuides.collectAsState()
-
-    var bio by remember { mutableStateOf("") }
-    var x by remember { mutableStateOf("") }
-    var website by remember { mutableStateOf("") }
-    var telegram by remember { mutableStateOf("") }
-    var discord by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var github by remember { mutableStateOf("") }
-    var redirect by remember { mutableStateOf("") }
-    var seeded by remember { mutableStateOf(false) }
-    // The domain the fields were last read from. A KNS profile belongs to a DOMAIN, so promoting a
-    // different one to primary swaps which avatar, banner and details are in effect - and these
-    // fields used to seed exactly once, so the screen kept showing the old domain's values until
-    // it was closed and reopened. Keyed on the domain rather than on the profile object so an
-    // ordinary refresh of the SAME profile never overwrites what the user is part-way through
-    // typing.
-    var seededDomain by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(knsProfile, activeProfileDomainName) {
-        if (!seeded || seededDomain != activeProfileDomainName) {
-            bio = knsProfile?.bio ?: ""
-            x = knsProfile?.x ?: ""
-            website = knsProfile?.website ?: ""
-            telegram = knsProfile?.telegram ?: ""
-            discord = knsProfile?.discord ?: ""
-            email = knsProfile?.contactEmail ?: ""
-            github = knsProfile?.github ?: ""
-            redirect = knsProfile?.redirectUrl ?: ""
-            // Staged image picks belonged to the previous domain's profile.
-            if (seeded) viewModel.clearPendingProfileImages()
-            seeded = true
-            seededDomain = activeProfileDomainName
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose { viewModel.resetEditProfileState() }
-    }
-
-    val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri -> if (uri != null) viewModel.setPendingAvatar(uri) }
-    val bannerPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri -> if (uri != null) viewModel.setPendingBanner(uri) }
-
-    var showSaveDialog by remember { mutableStateOf(false) }
-
-    // What "Save" is actually about to submit — each entry becomes its own on-chain commit/reveal
-    // transaction, so this doubles as both the confirm dialog's change list and its cost count.
-    val profileFieldContext = LocalContext.current
-    val pendingChanges = remember(bio, x, website, telegram, discord, email, github, redirect, pendingAvatarUri, pendingBannerUri, avatarCleared, bannerCleared, knsProfile) {
-        val res = profileFieldContext
-        buildList {
-            if (pendingAvatarUri != null) add(res.getString(R.string.avatar))
-            else if (avatarCleared && !knsProfile?.avatarUrl.isNullOrEmpty()) add(res.getString(R.string.profile_field_removed, res.getString(R.string.avatar)))
-            if (pendingBannerUri != null) add(res.getString(R.string.banner))
-            else if (bannerCleared && !knsProfile?.bannerUrl.isNullOrEmpty()) add(res.getString(R.string.profile_field_removed, res.getString(R.string.banner)))
-            if (bio.trim() != (knsProfile?.bio ?: "")) add(res.getString(R.string.bio))
-            if (x.trim() != (knsProfile?.x ?: "")) add("X")
-            if (website.trim() != (knsProfile?.website ?: "")) add(res.getString(R.string.website))
-            if (telegram.trim() != (knsProfile?.telegram ?: "")) add("Telegram")
-            if (discord.trim() != (knsProfile?.discord ?: "")) add("Discord")
-            if (email.trim() != (knsProfile?.contactEmail ?: "")) add(res.getString(R.string.email))
-            if (github.trim() != (knsProfile?.github ?: "")) add("GitHub")
-            if (redirect.trim() != (knsProfile?.redirectUrl ?: "")) add(res.getString(R.string.redirect))
-        }
-    }
-
-    val inFlight = editState.step !in listOf(
-        WalletViewModel.EditProfileStep.IDLE,
-        WalletViewModel.EditProfileStep.SUCCESS,
-        WalletViewModel.EditProfileStep.PARTIAL_FAILURE,
-        WalletViewModel.EditProfileStep.FAILED
-    )
-
-    Scaffold(
-        containerColor = LocalAppColors.current.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.edit_kns_profile), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    SheetBarButton(stringResource(R.string.cancel), onClick = onBack, enabled = !inFlight, modifier = Modifier.padding(start = 12.dp))
-                },
-                actions = {
-                    SheetBarButton(
-                        stringResource(R.string.save),
-                        onClick = { if (pendingChanges.isNotEmpty()) showSaveDialog = true },
-                        enabled = !inFlight && pendingChanges.isNotEmpty(),
-                        modifier = Modifier.padding(end = 12.dp),
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LocalAppColors.current.background)
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            Spacer(Modifier.height(8.dp))
-
-            // Re-enters the same guided wizard used to create a profile from scratch - it
-            // already knows (via the domain/profile it fetches) to offer skipping domain
-            // registration and pre-fill the banner/avatar/detail steps with whatever's already
-            // inscribed, so this is a safe re-entry point regardless of how much of a profile
-            // already exists. Lives here (rather than next to "KNS Profile" on the Profile tab)
-            // since that spot sits directly beside the banner image, which made it unclickable
-            // whenever a banner was set.
-            // No setup guide here since 5.2 (iOS b000310): the guide is .kachat's, in Edit .kachat
-            // Profile. A .kas profile is edited field by field below.
-
-            SettingsSection(title = stringResource(R.string.avatar)) {
-                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    ContactAvatar(
-                        imageUrl = if (avatarCleared) null else (pendingAvatarUri?.toString() ?: knsProfile?.avatarUrl),
-                        fallbackText = activeProfileDomainName ?: "?",
-                        size = 64.dp
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        TextButton(onClick = { avatarPicker.launch("image/*") }, enabled = !inFlight) {
-                            Text(stringResource(R.string.choose_avatar), color = KaspaTeal, fontWeight = FontWeight.Bold)
-                        }
-                        if (pendingAvatarUri != null || (!avatarCleared && !knsProfile?.avatarUrl.isNullOrEmpty())) {
-                            TextButton(
-                                onClick = {
-                                    if (pendingAvatarUri != null) viewModel.setPendingAvatar(null) else viewModel.clearExistingAvatar()
-                                },
-                                enabled = !inFlight
-                            ) {
-                                Text(stringResource(R.string.remove), color = LocalAppColors.current.danger)
-                            }
-                        }
-                    }
-                }
-            }
-
-            SettingsSection(title = stringResource(R.string.banner)) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    val previewUrl = if (bannerCleared) null else (pendingBannerUri?.toString() ?: knsProfile?.bannerUrl)
-                    if (previewUrl != null) {
-                        SubcomposeAsyncImage(
-                            model = previewUrl,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(110.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(LocalAppColors.current.surface)
-                        )
-                        Spacer(Modifier.height(12.dp))
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        TextButton(onClick = { bannerPicker.launch("image/*") }, enabled = !inFlight) {
-                            Text(stringResource(R.string.choose_banner), color = KaspaTeal, fontWeight = FontWeight.Bold)
-                        }
-                        if (pendingBannerUri != null || (!bannerCleared && !knsProfile?.bannerUrl.isNullOrEmpty())) {
-                            TextButton(
-                                onClick = {
-                                    if (pendingBannerUri != null) viewModel.setPendingBanner(null) else viewModel.clearExistingBanner()
-                                },
-                                enabled = !inFlight
-                            ) {
-                                Text(stringResource(R.string.remove), color = LocalAppColors.current.danger)
-                            }
-                        }
-                    }
-                }
-            }
-
-            SettingsSection(title = stringResource(R.string.profile)) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    EditProfileTextField(stringResource(R.string.bio), bio, { bio = it }, enabled = !inFlight, singleLine = false)
-                    EditProfileTextField(stringResource(R.string.x), x, { x = it }, enabled = !inFlight)
-                    EditProfileTextField(stringResource(R.string.website), website, { website = it }, enabled = !inFlight)
-                    EditProfileTextField(stringResource(R.string.telegram), telegram, { telegram = it }, enabled = !inFlight)
-                    EditProfileTextField(stringResource(R.string.discord), discord, { discord = it }, enabled = !inFlight)
-                    EditProfileTextField(stringResource(R.string.email), email, { email = it }, enabled = !inFlight)
-                    EditProfileTextField(stringResource(R.string.github), github, { github = it }, enabled = !inFlight)
-                    EditProfileTextField(stringResource(R.string.redirect), redirect, { redirect = it }, enabled = !inFlight)
-                }
-            }
-
-            Spacer(Modifier.height(60.dp))
-        }
-    }
-
-    if (showSaveDialog) {
-        val terminal = editState.step in listOf(
-            WalletViewModel.EditProfileStep.SUCCESS,
-            WalletViewModel.EditProfileStep.PARTIAL_FAILURE,
-            WalletViewModel.EditProfileStep.FAILED
-        )
-        fun closeDialog() {
-            showSaveDialog = false
-            viewModel.resetEditProfileState()
-        }
-        com.kachat.app.ui.theme.IosAlertDialog(
-            onDismissRequest = {
-                when (editState.step) {
-                    WalletViewModel.EditProfileStep.IDLE -> showSaveDialog = false
-                    else -> if (terminal) closeDialog()
-                }
-            },
-            containerColor = LocalAppColors.current.surface,
-            title = {
-                Text(
-                    when (editState.step) {
-                        WalletViewModel.EditProfileStep.IDLE -> stringResource(R.string.confirm_changes)
-                        WalletViewModel.EditProfileStep.SUCCESS -> "Saved"
-                        WalletViewModel.EditProfileStep.PARTIAL_FAILURE -> "Some Changes Failed"
-                        WalletViewModel.EditProfileStep.FAILED -> "Save Failed"
-                        else -> "Saving..."
-                    },
-                    color = LocalAppColors.current.textPrimary
-                )
-            },
-            text = {
-                when (editState.step) {
-                    WalletViewModel.EditProfileStep.IDLE -> Column {
-                        Text(
-                            profileFieldContext.resources.getQuantityString(R.plurals.kns_profile_changes_count, pendingChanges.size, pendingChanges.size),
-                            color = LocalAppColors.current.textPrimary,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        pendingChanges.forEach { Text("• $it", color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodySmall) }
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            KaspaUnit.label(stringResource(R.string.each_transaction_temporarily_uses_2_kas)),
-                            color = LocalAppColors.current.textSecondary,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    WalletViewModel.EditProfileStep.UPLOADING_AVATAR,
-                    WalletViewModel.EditProfileStep.UPLOADING_BANNER,
-                    WalletViewModel.EditProfileStep.SUBMITTING_FIELD -> Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal)
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            when (editState.step) {
-                                WalletViewModel.EditProfileStep.UPLOADING_AVATAR -> stringResource(R.string.uploading_avatar)
-                                WalletViewModel.EditProfileStep.UPLOADING_BANNER -> stringResource(R.string.uploading_banner)
-                                else -> "Submitting ${editState.currentFieldLabel}..."
-                            },
-                            color = LocalAppColors.current.textSecondary,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                    WalletViewModel.EditProfileStep.SUCCESS -> Text(
-                        if (editState.fieldResults.isEmpty()) "Nothing to save." else "All changes saved.",
-                        color = LocalAppColors.current.success,
-                        fontWeight = FontWeight.Bold
-                    )
-                    WalletViewModel.EditProfileStep.PARTIAL_FAILURE -> Column {
-                        Text(stringResource(R.string.some_changes_failed_to_save), color = LocalAppColors.current.danger, fontWeight = FontWeight.Bold)
-                        editState.fieldResults.filter { !it.success }.forEach {
-                            Text("${it.fieldKey}: ${it.errorMessage ?: "failed"}", color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                    WalletViewModel.EditProfileStep.FAILED -> Text(
-                        editState.fieldResults.firstOrNull { !it.success }?.errorMessage ?: "Save failed",
-                        color = LocalAppColors.current.danger
-                    )
-                }
-            },
-            confirmButton = {
-                when (editState.step) {
-                    WalletViewModel.EditProfileStep.IDLE -> TextButton(
-                        onClick = {
-                            viewModel.saveKnsProfile(
-                                mapOf(
-                                    "bio" to bio,
-                                    "x" to x,
-                                    "website" to website,
-                                    "telegram" to telegram,
-                                    "discord" to discord,
-                                    "contactEmail" to email,
-                                    "github" to github,
-                                    "redirectUrl" to redirect
-                                )
-                            )
-                        }
-                    ) {
-                        Text(stringResource(R.string.confirm), color = KaspaTeal, fontWeight = FontWeight.Bold)
-                    }
-                    WalletViewModel.EditProfileStep.SUCCESS,
-                    WalletViewModel.EditProfileStep.PARTIAL_FAILURE,
-                    WalletViewModel.EditProfileStep.FAILED -> TextButton(onClick = { closeDialog() }) {
-                        Text(stringResource(R.string.done), color = KaspaTeal, fontWeight = FontWeight.Bold)
-                    }
-                    else -> {}
-                }
-            },
-            dismissButton = {
-                if (editState.step == WalletViewModel.EditProfileStep.IDLE) {
-                    TextButton(onClick = { showSaveDialog = false }) {
-                        Text(stringResource(R.string.cancel), color = LocalAppColors.current.textSecondary)
-                    }
-                }
-            }
-        )
-    }
-}
-
-@Composable
-private fun EditProfileTextField(label: String, value: String, onValueChange: (String) -> Unit, enabled: Boolean, singleLine: Boolean = true) {
-    com.kachat.app.ui.theme.IosTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        singleLine = singleLine,
-        enabled = enabled,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = LocalAppColors.current.textPrimary,
-            unfocusedTextColor = LocalAppColors.current.textPrimary,
-            disabledTextColor = LocalAppColors.current.textSecondary,
-            focusedBorderColor = KaspaTeal,
-            unfocusedBorderColor = LocalAppColors.current.textSecondary,
-            focusedLabelColor = KaspaTeal,
-            unfocusedLabelColor = LocalAppColors.current.textSecondary
-        ),
-        modifier = Modifier.fillMaxWidth()
-    )
 }
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -9292,8 +8429,8 @@ fun SettingsScreen(
                 // Balances the dot, so the balance stays centred.
                 Spacer(Modifier.size(44.dp))
             }
-            // Over the title, as iOS's PinnedListHeader draws it.
-            AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") }
+            // No backup strip over the title: it's on Profile only (iOS 518fdc8c
+            // PinnedListHeader, owner 2026-11-23).
             Text(
                 stringResource(R.string.settings_title),
                 color = LocalAppColors.current.textPrimary,
@@ -9497,16 +8634,21 @@ fun SettingsScreen(
                         settingsViewModel.setShowFeeEstimate(enabled)
                     }
                     SettingsDivider()
-                    // Off shows .kachat names bare ("alice"); on by default, because the ending is
-                    // how a registered name tells itself apart from a name you gave someone.
+                    // Off (the default since iOS 518fdc8c: .kachat is the only name service) shows
+                    // .kachat names bare ("alice"); on writes the ending out ("alice.kachat").
                     SettingsSwitchItem(stringResource(R.string.show_kachat_endings), showKachatNameEndings) { enabled ->
                         settingsViewModel.setShowKachatNameEndings(enabled)
                     }
                 }
-                // The dock and Kaspa Hub (iOS 148a5331): a sheet over the tabs, since each move
-                // rebuilds the dock this page sits above.
-                SettingsFormSection(title = null, footer = stringResource(R.string.shell_customize_dock_footer)) {
-                    SettingsNavigationItem(stringResource(R.string.shell_customize_dock), Icons.Outlined.Dock, onClick = { com.kachat.app.ui.CustomizeDock.open() })
+                // What Tip sends, the same in KaPost and in a 1:1 chat's + (owner's call, iOS
+                // 518fdc8c: moved here from Settings > KaPost). No Customize Dock: the dock is
+                // fixed (owner's call, iOS 518fdc8c).
+                var showTippingSettings by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+                SettingsFormSection(title = null, footer = stringResource(R.string.shell54_tipping_footer)) {
+                    SettingsNavigationItem(stringResource(R.string.kpui_tipping), Icons.Outlined.CardGiftcard, onClick = { showTippingSettings = true })
+                }
+                if (showTippingSettings) {
+                    KaPostsTippingSettingsScreen(onBack = { showTippingSettings = false })
                 }
             }
 
@@ -9603,6 +8745,8 @@ fun SettingsScreen(
             }
 
             if (sectionKey == "chats") {
+                // Who Can Message You? first, in its own card (iOS 2026-11-23 `WhoCanMessageRow`).
+                WhoCanMessageSettingsSection(onOpen = { navController.navigate(WhoCanMessageRoutes.SETTINGS) })
                 SettingsFormSection(title = stringResource(R.string.chats)) {
                     val quickReactionEmojis by settingsViewModel.quickReactionEmojis.collectAsState()
                     // Higher quality photos is gone: Send asks a quality for each on-chain photo
@@ -10032,8 +9176,9 @@ private fun ResyncChatPickerOverlay(
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // No KNS picture: K reads no .kas profiles (iOS 518fdc8c ResyncChatPickerView).
                     ContactAvatar(
-                        imageUrl = convo.contact.knsAvatarUrl,
+                        imageUrl = null,
                         backupPhotoBase64 = convo.contact.backupPhotoBase64,
                         fallbackText = convo.contact.avatarFallbackText,
                         size = 48.dp,
@@ -10777,14 +9922,17 @@ fun TopStatusBar(
     // Rendered at the trailing end when there is no Add button - a slot rather than a fixed
     // button so a page can decide what belongs there (Profile puts its notification bell here).
     trailingContent: (@Composable () -> Unit)? = null,
+    // The leading toolbar item, on its own glass (Chats puts its Public Chats gear here).
+    leadingContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    // iOS's toolbar: the connection dot leading, the balance as the principal item (placed as
-    // UIKit places one - see IosToolbarRow), and the trailing items (Select All, the page's own
-    // button, Select/Cancel) together on one piece of glass.
+    // iOS's toolbar: the balance as the principal item (placed as UIKit places one - see
+    // IosToolbarRow), and the trailing items (Select All, the page's own button, Select/Cancel)
+    // together on one piece of glass. No connection dot (iOS 518fdc8c: only at the top of
+    // Settings and on the dock's Settings icon); [onStatusClick] and [dotColorHex] are unused.
     IosToolbarRow(
         modifier = modifier.fillMaxWidth().height(52.dp),
-        leading = { ConnectionDotButton(onClick = onStatusClick) },
+        leading = { leadingContent?.invoke() },
         principal = { BalanceLabelRow(balance, copyOnTap = true) },
         trailing = { TopStatusBarTrailing(showAddButton, showEditButton, isEditing, onEditClick, selectAllLabel, onSelectAllClick, onAddClick, trailingContent) },
     )
@@ -10943,7 +10091,27 @@ fun ConnectionStatusScreen(
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
             SettingsSection(title = stringResource(R.string.connection_status)) {
-                ConnectionStatusRow(stringResource(R.string.status), statusText, dot = statusColor)
+                ConnectionStatusRow(stringResource(R.string.node_status), statusText, dot = statusColor)
+                // The message indexer below it (iOS 8cb4c88e, owner 2026-11-24): Connected,
+                // Degraded or Disconnected, "Checking…" until the first read.
+                SettingsDivider()
+                val indexerState by viewModel.indexerState.collectAsState()
+                ConnectionStatusRow(
+                    stringResource(R.string.indexer_status),
+                    when (indexerState) {
+                        com.kachat.app.services.IndexerHealth.ConnectionState.CONNECTED -> stringResource(R.string.connected)
+                        com.kachat.app.services.IndexerHealth.ConnectionState.DEGRADED -> stringResource(R.string.degraded)
+                        com.kachat.app.services.IndexerHealth.ConnectionState.DISCONNECTED -> stringResource(R.string.disconnected)
+                        com.kachat.app.services.IndexerHealth.ConnectionState.NOT_SET -> stringResource(R.string.connection_not_set)
+                        null -> stringResource(R.string.indexer_status_checking)
+                    },
+                    dot = when (indexerState) {
+                        com.kachat.app.services.IndexerHealth.ConnectionState.CONNECTED -> Color(com.kachat.app.viewmodels.dotColorHexFor(ConnStatus.CONNECTED))
+                        com.kachat.app.services.IndexerHealth.ConnectionState.DEGRADED -> Color(com.kachat.app.viewmodels.dotColorHexFor(ConnStatus.DEGRADED))
+                        com.kachat.app.services.IndexerHealth.ConnectionState.DISCONNECTED -> Color(com.kachat.app.viewmodels.dotColorHexFor(ConnStatus.DISCONNECTED))
+                        com.kachat.app.services.IndexerHealth.ConnectionState.NOT_SET, null -> Color(0xFF8E8E93)
+                    },
+                )
                 // iOS leaves the latency row out until there is one.
                 if (latencyMs != null) {
                     SettingsDivider()
@@ -11627,7 +10795,6 @@ fun ConnectionSettingsScreen(
     val network by viewModel.network.collectAsState()
     val indexerUrl by viewModel.indexerUrl.collectAsState()
     val kachatNamesIndexerUrl by viewModel.kachatNamesIndexerUrl.collectAsState()
-    val knsApiUrl by viewModel.knsApiUrl.collectAsState()
     val kaspaRestApiUrl by viewModel.kaspaRestApiUrl.collectAsState()
     val pushIndexerUrl by viewModel.pushIndexerUrl.collectAsState()
     val trustedNodeAddress by viewModel.trustedNodeAddress.collectAsState()
@@ -11766,18 +10933,7 @@ fun ConnectionSettingsScreen(
                 // read-only, in the .kas rows' style (iOS 955220b).
                 ConnectionUrlField(label = stringResource(R.string.kachat_names_indexer_url), value = kachatNamesIndexerUrl.trim().trimEnd('/'))
             }
-            // The other name services this app reads (see NameServicesClient). Shown, not
-            // editable; the .kas URL follows the selected network.
-            SettingsFormSection(title = stringResource(R.string.other_domains_title)) {
-                val isMainnet = network.equals("mainnet", ignoreCase = true)
-                ConnectionUrlField(label = ".kas", value = knsApiUrl)
-                listOf(com.kachat.app.services.NameServiceTLD.K, com.kachat.app.services.NameServiceTLD.KASPA).forEach { tld ->
-                    ConnectionUrlField(
-                        label = tld.suffix,
-                        value = tld.apiBaseUrl(isMainnet) ?: stringResource(R.string.not_available_on_this_network),
-                    )
-                }
-            }
+            // No "Other Domains": K reads no other name service (iOS 518fdc8c, .kachat only).
             }
             ConnectionPage.EXPLORER -> {
             SettingsFormSection(title = stringResource(R.string.kaspa_explorer_api)) {
@@ -12051,7 +11207,7 @@ fun ChattingAddressQrPage(
             privacyNote = ReceiveNotes.chattingAddress(),
             notes = listOf(
                 ReceiveNotes.kaspaAndKusdt(),
-                ReceiveNote(ReceiveNote.Kind.INFO, stringResource(R.string.qr_chatting_address_subtitle)),
+                ReceiveNote(ReceiveNote.Kind.INFO, stringResource(R.string.names54_qr_chatting_address_subtitle)),
             ),
             icon = { KaspaLogoIcon() },
         )
@@ -12369,15 +11525,11 @@ fun CreateChatScreen(
     // another chain, refused with its own reason (iOS ce20e87).
     val isValidRawAddress = remember(address) { KaspaAddress.isValidOnActiveNetwork(KaspaAddress.fromScanned(address)) }
     val otherNetworkMessageRes = remember(address) { KaspaAddress.otherNetworkMessageRes(KaspaAddress.fromScanned(address)) }
-    // A name on any service - .kachat, .kas, .k, .kaspa - typed with or without its ending (iOS a0dbc15).
+    // A .kachat name, typed with or without its ending (iOS 518fdc8c: .kachat only).
     val looksLikeKnsDomain = remember(address) { com.kachat.app.services.NameServicesClient.looksLikeName(address) }
-    val nameResolutions by chatViewModel.nameResolutions.collectAsState()
-    val selectedResolutionTld by chatViewModel.selectedResolutionTld.collectAsState()
 
     val knsResolvedAddress by chatViewModel.knsResolvedAddress.collectAsState()
     val knsResolvedDomain by chatViewModel.knsResolvedDomain.collectAsState()
-    // Backs the preview card below - refreshKnsProfile fills it for whatever address resolves.
-    val knsProfilesForPreview by chatViewModel.knsProfiles.collectAsState()
     val isResolvingKns by chatViewModel.isResolvingKns.collectAsState()
     val knsError by chatViewModel.knsError.collectAsState()
     // Existing contacts (via conversations), for the group roster's names and avatars.
@@ -12385,23 +11537,17 @@ fun CreateChatScreen(
 
     // The name you gave someone always wins, and it is read LIVE from the contacts flow rather
     // so a rename made after this screen loaded shows. Order matches ContactEntity.displayName
-    // and iOS's ContactsManager.displayName: assigned name -> Address Book name -> KNS domain ->
+    // and iOS's ContactsManager.displayName: assigned name -> Address Book name -> .kachat name ->
     // short address.
     val assignedNamesByAddress = remember(conversations) {
         conversations.mapNotNull { convo ->
             (convo.contact.alias?.takeIf { it.isNotBlank() })?.let { convo.contact.id to it }
         }.toMap()
     }
-    val storedDomainsByAddress = remember(conversations) {
-        conversations.mapNotNull { convo ->
-            (convo.contact.knsName?.takeIf { it.isNotBlank() && com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY })?.let { convo.contact.id to it }
-        }.toMap()
-    }
-    val resolvePickerName: (String, String?) -> String = { address, liveDomain ->
+    val resolvePickerName: (String) -> String = { address ->
         assignedNamesByAddress[address]
             ?: com.kachat.app.services.AddressBookManager.nameFor(address)
-            ?: liveDomain?.takeIf { it.isNotBlank() }
-            ?: storedDomainsByAddress[address]
+            ?: com.kachat.app.services.kachatnames.KachatNamesRegistry.kachatName(address)
             ?: KaspaAddress.shortDisplay(address)
     }
 
@@ -12422,14 +11568,12 @@ fun CreateChatScreen(
 
     // Who is in the group so far, sorted by name.
     val addressBookEntries = rememberAddressBookEntries()
-    val selectedGroupMembers = remember(selectedMemberAddresses, conversations, knsProfilesForPreview, addressBookEntries) {
+    val selectedGroupMembers = remember(selectedMemberAddresses, conversations, addressBookEntries) {
         selectedMemberAddresses.map { addr ->
-            val profile = knsProfilesForPreview[addr]
             GroupMemberCandidate(
                 address = addr,
-                name = resolvePickerName(addr, profile?.selectedDomain),
-                avatarUrl = profile?.profile?.avatarUrl
-                    ?: conversations.firstOrNull { it.contact.id == addr }?.contact?.knsAvatarUrl,
+                name = resolvePickerName(addr),
+                avatarUrl = conversations.firstOrNull { it.contact.id == addr }?.contact?.knsAvatarUrl,
             )
         }.sortedBy { it.name.lowercase() }
     }
@@ -12504,35 +11648,40 @@ fun CreateChatScreen(
 
     val canCreateGroup = groupName.trim().isNotEmpty() && selectedMemberAddresses.isNotEmpty()
     var showCreateGroupConfirm by remember { mutableStateOf(false) }
+    // The steps of creating the group, on their own half sheet, and the group just made, opened
+    // when that sheet's Done is tapped (iOS AddContactView, owner 2026-11-24).
+    var groupProgress by remember { mutableStateOf<com.kachat.app.models.GroupActionProgress?>(null) }
+    var createdGroupId by remember { mutableStateOf<String?>(null) }
     if (showCreateGroupConfirm) {
         val k = selectedMemberAddresses.size
         val txCount = k + 1
         val fee = chatViewModel.estimateGroupControlTxFeeSompi(1600) * txCount
-        com.kachat.app.ui.theme.IosAlertDialog(
-            onDismissRequest = { showCreateGroupConfirm = false },
-            containerColor = LocalAppColors.current.surface,
-            title = { Text(stringResource(R.string.create_group), color = LocalAppColors.current.textPrimary) },
-            text = {
-                Text(
-                    LocalContext.current.resources.getQuantityString(R.plurals.create_group_and_invite, k, groupName.trim(), k) +
-                        "\n\n" + stringResource(R.string.create_group_fee_estimate, com.kachat.app.repository.ChatRepository.formatKas(fee), KaspaUnit.symbol, txCount),
-                    color = LocalAppColors.current.textSecondary
-                )
+        // A half sheet in place of the alert; the group is made once it has gone down.
+        GroupActionConfirmSheet(
+            title = stringResource(R.string.create_group),
+            message = LocalContext.current.resources.getQuantityString(R.plurals.create_group_and_invite, k, groupName.trim(), k),
+            feeLine = stringResource(R.string.create_group_fee_estimate, com.kachat.app.repository.ChatRepository.formatKas(fee), KaspaUnit.symbol, txCount),
+            confirmTitle = stringResource(R.string.create),
+            onConfirm = {
+                createdGroupId = null
+                chatViewModel.createGroupChat(
+                    groupName,
+                    selectedMemberAddresses.toList(),
+                    photoHex = groupPhotoHex,
+                    onProgress = { groupProgress = it },
+                ) { groupId -> createdGroupId = groupId }
             },
-            confirmButton = {
-                TextButton(onClick = {
-                    showCreateGroupConfirm = false
-                    chatViewModel.createGroupChat(
-                        groupName,
-                        selectedMemberAddresses.toList(),
-                        photoHex = groupPhotoHex,
-                    ) { groupId -> onGroupCreated(groupId) }
-                }) { Text(stringResource(R.string.create), color = KaspaTeal, fontWeight = FontWeight.Bold) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showCreateGroupConfirm = false }) { Text(stringResource(R.string.cancel), color = LocalAppColors.current.textSecondary) }
-            }
+            onDismiss = { showCreateGroupConfirm = false },
         )
+    }
+    groupProgress?.let { progress ->
+        GroupActionProgressSheet(progress) {
+            groupProgress = null
+            createdGroupId?.let { groupId ->
+                createdGroupId = null
+                onGroupCreated(groupId)
+            }
+        }
     }
 
     Scaffold(
@@ -12580,7 +11729,6 @@ fun CreateChatScreen(
                                 chatViewModel.addContact(
                                     rawAddress = resolvedAddress,
                                     name = null,
-                                    knsName = if (looksLikeKnsDomain) com.kachat.app.services.KnsService.normalizeDomain(address) else null,
                                     deliberate = true,
                                 ) { refusal ->
                                     if (refusal == null) {
@@ -12633,7 +11781,7 @@ fun CreateChatScreen(
                     com.kachat.app.ui.theme.IosPlainTextField(
                         value = address,
                         onValueChange = { address = it },
-                        placeholder = stringResource(R.string.kaspa_qr_or_domain),
+                        placeholder = stringResource(R.string.shell54_kaspa_qr_or_username),
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 17.sp),
                     )
@@ -12642,7 +11790,7 @@ fun CreateChatScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(14.dp), color = KaspaTeal, strokeWidth = 2.dp)
                             Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.looking_up_domain), color = LocalAppColors.current.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.shell54_looking_up_username), color = LocalAppColors.current.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     } else if (looksLikeKnsDomain && knsError != null) {
                         Spacer(Modifier.height(8.dp))
@@ -12651,7 +11799,6 @@ fun CreateChatScreen(
                             Spacer(Modifier.width(8.dp))
                             Text(knsError ?: "", color = LocalAppColors.current.danger, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
-                        OtherDomainsDropdown(nameResolutions, selectedResolutionTld) { chatViewModel.selectNameResolution(it) }
                     } else if (isValidAddress) {
                         Spacer(Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -12674,7 +11821,6 @@ fun CreateChatScreen(
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 11.sp,
                             )
-                            OtherDomainsDropdown(nameResolutions, selectedResolutionTld) { chatViewModel.selectNameResolution(it) }
                         }
                     } else if (!looksLikeKnsDomain && otherNetworkMessageRes != null) {
                         Spacer(Modifier.height(8.dp))
@@ -12687,8 +11833,6 @@ fun CreateChatScreen(
                     // wrong faces while you type would be worse than no card.
                     if (isValidAddress && effectiveAddress != null) {
                         val previewAddress = effectiveAddress
-                        // Still fetched: the roster above names and pictures members from it.
-                        LaunchedEffect(previewAddress) { chatViewModel.refreshKnsProfile(previewAddress) }
                         Spacer(Modifier.height(10.dp))
                         // the shared card: the domain typed, else the address's own .kachat name
                         AddressResolutionCard(address = previewAddress, domain = knsResolvedDomain.takeIf { looksLikeKnsDomain })
@@ -12756,7 +11900,7 @@ fun CreateChatScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = stringResource(R.string.kaspa_address_or_domain),
+                    text = stringResource(R.string.names54_kaspa_address_or_username),
                     color = LocalAppColors.current.textSecondary,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -12765,7 +11909,7 @@ fun CreateChatScreen(
                 com.kachat.app.ui.theme.IosPlainTextField(
                     value = address,
                     onValueChange = { address = it },
-                    placeholder = stringResource(R.string.kaspa_qr_or_domain),
+                    placeholder = stringResource(R.string.shell54_kaspa_qr_or_username),
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 17.sp),
                 )
@@ -12775,7 +11919,7 @@ fun CreateChatScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(14.dp), color = KaspaTeal, strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.looking_up_domain), color = LocalAppColors.current.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.shell54_looking_up_username), color = LocalAppColors.current.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 } else if (looksLikeKnsDomain && knsError != null) {
@@ -12784,7 +11928,6 @@ fun CreateChatScreen(
                         Spacer(Modifier.width(8.dp))
                         Text(knsError ?: "", color = LocalAppColors.current.danger, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
-                    OtherDomainsDropdown(nameResolutions, selectedResolutionTld) { chatViewModel.selectNameResolution(it) }
                     Spacer(modifier = Modifier.height(16.dp))
                 } else if (looksLikeKnsDomain && knsResolvedAddress != null) {
                     // The domain it resolved, then the address it resolved TO - reading the whole
@@ -12793,7 +11936,7 @@ fun CreateChatScreen(
                         Icon(Icons.Default.CheckCircle, contentDescription = null, tint = LocalAppColors.current.success, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = stringResource(R.string.resolved_name, knsResolvedDomain ?: com.kachat.app.services.KnsService.normalizeDomain(address.trim())),
+                            text = stringResource(R.string.resolved_name, knsResolvedDomain ?: address.trim()),
                             color = LocalAppColors.current.success,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -12808,7 +11951,6 @@ fun CreateChatScreen(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    OtherDomainsDropdown(nameResolutions, selectedResolutionTld) { chatViewModel.selectNameResolution(it) }
                     Spacer(modifier = Modifier.height(16.dp))
                 } else if (isValidAddress) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -12875,7 +12017,7 @@ fun CreateChatScreen(
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(
-                text = stringResource(R.string.enter_kaspa_address_or_domain_kachat_first),
+                text = stringResource(R.string.names54_enter_address_or_username_example),
                 color = LocalAppColors.current.textSecondary,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -12926,80 +12068,6 @@ fun CreateChatActionItem(icon: ImageVector, label: String, onClick: () -> Unit) 
 }
 
 private const val MAX_GROUP_MEMBERS = 50
-
-/**
- * "Other domains": what the same typed name points to on the other name services, under the name
- * it resolved to, each one selectable (iOS a0dbc15, 6ac48a7 `OtherDomainsDropdown`). Every field
- * that takes an address shows it; the order is always .kachat first. Unregistered, unreachable or
- * not-yet-live ones are listed but not selectable. Opens by itself when nothing was picked but
- * another service has the name.
- */
-@Composable
-fun OtherDomainsDropdown(
-    resolutions: List<com.kachat.app.services.NameResolution>,
-    selected: com.kachat.app.services.NameServiceTLD?,
-    onPick: (com.kachat.app.services.NameResolution) -> Unit,
-) {
-    val others = resolutions.filter { it.tld != selected }
-    if (others.isEmpty()) return
-    val openByItself = selected == null && resolutions.any { it.address != null }
-    var expanded by remember(resolutions) { mutableStateOf(openByItself) }
-    val colors = LocalAppColors.current
-    Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
-        Row(
-            modifier = Modifier.clip(RoundedCornerShape(6.dp)).clickable { expanded = !expanded }.padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(stringResource(R.string.other_domains), color = KaspaTeal, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Icon(
-                if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = null,
-                tint = KaspaTeal,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-        if (expanded) {
-            others.forEach { resolution ->
-                val address = resolution.address
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable(enabled = address != null) {
-                            onPick(resolution)
-                            expanded = false
-                        }
-                        .padding(vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            resolution.display,
-                            color = if (address == null) colors.textSecondary else colors.textPrimary,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        MiddleEllipsisText(
-                            address ?: stringResource(
-                                when {
-                                    resolution.notLive -> R.string.coming_soon
-                                    resolution.failed -> R.string.couldnt_check
-                                    else -> R.string.not_registered
-                                }
-                            ),
-                            color = colors.textSecondary,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp,
-                        )
-                    }
-                    if (address != null) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(18.dp))
-                    }
-                }
-            }
-        }
-    }
-}
 
 /** One row in the group-member address list - supports both a raw Kaspa address and a KNS domain, resolved the same way the single-contact flow's address field does. */
 data class GroupAddressRow(
@@ -13200,7 +12268,7 @@ fun GroupChatCreationFields(
 
     // How members are added: several at once from the Address Book, or anyone by address,
     // domain, paste or QR.
-    SettingsFormSection(title = stringResource(R.string.ab_add_members), footer = stringResource(R.string.ab_members_footer)) {
+    SettingsFormSection(title = stringResource(R.string.ab_add_members), footer = stringResource(R.string.names54_members_footer)) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) { addByAddress() }
     }
 
@@ -13233,7 +12301,6 @@ fun ChatInfoScreen(
     /** Straight into this person's 1:1 thread - see the "Open Chat" row. */
     onOpenChat: (String) -> Unit = {},
     onNavigateToNotificationSettings: (String) -> Unit = {},
-    onNavigateToDomains: (String) -> Unit = {}
 ) {
     val conversationFlow = remember(contactId) { chatViewModel.conversationFlow(contactId) }
     val conversation by conversationFlow.collectAsState(initial = chatViewModel.getConversation(contactId))
@@ -13272,15 +12339,11 @@ fun ChatInfoScreen(
         }
         if (hasChessHistory) com.kachat.app.util.ChessGameEngine.record(chessSourceMessages, address, contactId) else null
     }
-    val knsProfile = chatViewModel.knsProfiles.collectAsState().value[contactId]
-    val knsFields = knsProfile?.profile
-    val ownedDomains = knsProfile?.ownedDomains.orEmpty()
-    // Identity is .kachat only (iOS e52357d; every network since 7227d69): no KNS profile is
-    // fetched, and its pictures and bio are not shown. The address's .kachat label and profile take their place -
-    // your own straight from the registry (the record you saved), anyone else's through the
-    // names indexer once one is connected; without one, only their name shows.
-    val usesKnsProfile = !com.kachat.app.services.kachatnames.KachatNamesService.isEnabled
-    val kachatRegistry = if (usesKnsProfile) null else com.kachat.app.services.kachatnames.KachatNamesRegistry.shared
+    // Identity is .kachat only (iOS e52357d; KNS left K on 2026-11-23, iOS 518fdc8c). The
+    // address's .kachat label and profile: your own straight from the registry (the record you
+    // saved), anyone else's through the names indexer once one is connected; without one, only
+    // their name shows.
+    val kachatRegistry = com.kachat.app.services.kachatnames.KachatNamesRegistry.shared
     val kachatRevision = kachatRegistry?.revision?.collectAsState()?.value
     var kachatLabel by remember(contactId) { mutableStateOf<String?>(null) }
     var kachatProfile by remember(contactId) { mutableStateOf<com.kachat.app.services.kachatnames.Profile?>(null) }
@@ -13298,7 +12361,7 @@ fun ChatInfoScreen(
         kachatProfile = (if (isSelf) registry.ownProfile(contactId)?.profile else null) ?: identity?.profile
     }
     // The .kachat profile's pieces, each looked up from its social link on this device.
-    val kachatSocial = if (usesKnsProfile) null else com.kachat.app.services.kachatnames.KachatSocialImageResolver.instance
+    val kachatSocial = com.kachat.app.services.kachatnames.KachatSocialImageResolver.instance
     // This screen is a profile the person opened: its links may be looked up (iOS audit
     // 2026-11-21 #17, ChatInfoView `openedProfile`).
     LaunchedEffect(contactId, kachatSocial) { kachatSocial?.noteProfileOpened(contactId) }
@@ -13312,14 +12375,10 @@ fun ChatInfoScreen(
     val kachatBio = kachatSocialEntries?.let { kachatSocial?.cached(kachatProfile?.bio, it) }?.bio
     // The address's active .kachat names, its primary (label) first.
     val kachatNames = run {
-        val names = if (usesKnsProfile) emptyList() else com.kachat.app.services.kachatnames.KachatNamesRegistry.cachedIdentityOf(contactId)?.names.orEmpty()
+        val names = com.kachat.app.services.kachatnames.KachatNamesRegistry.cachedIdentityOf(contactId)?.names.orEmpty()
         val label = kachatLabel
         if (label == null || label !in names) names else listOf(label) + names.filter { it != label }
     }
-    val hasMoreInfo = !isBot && usesKnsProfile && knsFields != null && listOf(
-        knsFields.bio, knsFields.x, knsFields.website, knsFields.telegram,
-        knsFields.discord, knsFields.contactEmail, knsFields.github, knsFields.redirectUrl
-    ).any { !it.isNullOrBlank() }
     // The Address Book entry of this address (iOS 00767a4: "System Contact" became it).
     val addressBookEntries = rememberAddressBookEntries()
     val addressBookEntry = remember(addressBookEntries, contactId) { com.kachat.app.services.AddressBookManager.shared?.entry(contactId) }
@@ -13334,10 +12393,6 @@ fun ChatInfoScreen(
             ?: ""
     }
 
-    LaunchedEffect(contactId) {
-        // On testnet identity is .kachat (above); KNS isn't asked there.
-        if (usesKnsProfile) chatViewModel.refreshKnsProfile(contactId)
-    }
 
     val scrollState = rememberScrollState()
     val clipboardManager = LocalClipboardManager.current
@@ -13507,10 +12562,9 @@ fun ChatInfoScreen(
             // address - which is why User Info looked like it was missing its info card.
             run {
                 // Testnet: no "KNS" header - the card is the .kachat profile (iOS shows none).
-                SettingsSection(title = if (usesKnsProfile) stringResource(R.string.kns_profile) else null) {
+                SettingsSection(title = null) {
                     Column {
                         val bannerUrl = kachatBanner
-                            ?: knsFields?.bannerUrl?.takeIf { it.isNotBlank() && usesKnsProfile }
                         if (bannerUrl != null) {
                             // Whole, at its own proportions (iOS c66bfc7).
                             WholeBanner(
@@ -13526,8 +12580,8 @@ fun ChatInfoScreen(
                         // apart - 16 in from the card's edge, 23 above and below.
                         Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 23.dp), verticalAlignment = Alignment.CenterVertically) {
                             ContactAvatar(
-                                imageUrl = if (usesKnsProfile) knsFields?.avatarUrl else kachatAvatar,
-                                fallbackText = knsProfile?.selectedDomain ?: contactId.takeLast(8),
+                                imageUrl = kachatAvatar,
+                                fallbackText = contactId.takeLast(8),
                                 size = 60.dp,
                                 address = contactId,
                             )
@@ -13590,7 +12644,6 @@ fun ChatInfoScreen(
                                         )
                                     }
                                 }
-                                val bio = knsFields?.bio?.takeIf { it.isNotBlank() }
                                 // iOS: the bio shows five lines and a tap opens the rest; a long
                                 // press copies it ("Bio copied to clipboard.").
                                 var isBioExpanded by remember(contactId) { mutableStateOf(false) }
@@ -13633,91 +12686,15 @@ fun ChatInfoScreen(
                                             }
                                         }
                                     }
-                                    // No domain means no profile to describe, so the address is
-                                    // the useful caption - same fallback order as iOS.
-                                    // The address, unless a profile supplies a bio. Since 5.2 .kas
-                                    // profiles are not loaded, so this is what a .kas owner shows
-                                    // until .kachat profiles exist (iOS d6ded9d).
-                                    !usesKnsProfile || ownedDomains.isEmpty() || bio == null -> Text(
+                                    // No profile to describe, so the address is the useful
+                                    // caption - same fallback order as iOS.
+                                    else -> Text(
                                         // iOS ChatInfoView.formatAddress: the first 12 and last 8.
                                         text = if (contactId.length > 20) "${contactId.take(12)}...${contactId.takeLast(8)}" else contactId,
                                         color = LocalAppColors.current.textSecondary,
                                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                                         maxLines = 1,
                                     )
-                                    else -> Text(
-                                        text = bio,
-                                        color = LocalAppColors.current.textPrimary,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        maxLines = if (isBioExpanded) Int.MAX_VALUE else 5,
-                                        modifier = bioModifier(bio)
-                                    )
-                                }
-                            }
-                        }
-
-                        var moreInfoExpanded by remember(contactId) { mutableStateOf(false) }
-                        if (hasMoreInfo) {
-                            HorizontalDivider(color = LocalAppColors.current.divider)
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { moreInfoExpanded = !moreInfoExpanded }
-                                    .padding(16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(stringResource(R.string.more_info), color = KaspaTeal, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                                Icon(
-                                    if (moreInfoExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    contentDescription = if (moreInfoExpanded) "Collapse" else "Expand",
-                                    tint = KaspaTeal
-                                )
-                            }
-                            if (moreInfoExpanded) {
-                                HorizontalDivider(color = LocalAppColors.current.divider)
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    val socialLinks = listOfNotNull(
-                                        knsFields?.x?.takeIf { it.isNotBlank() }?.let { "X" to it },
-                                        knsFields?.website?.takeIf { it.isNotBlank() }?.let { context.getString(R.string.website) to it },
-                                        knsFields?.telegram?.takeIf { it.isNotBlank() }?.let { "Telegram" to it },
-                                        knsFields?.discord?.takeIf { it.isNotBlank() }?.let { "Discord" to it },
-                                        knsFields?.contactEmail?.takeIf { it.isNotBlank() }?.let { context.getString(R.string.email) to it },
-                                        knsFields?.github?.takeIf { it.isNotBlank() }?.let { "GitHub" to it },
-                                        knsFields?.redirectUrl?.takeIf { it.isNotBlank() }?.let { context.getString(R.string.redirect) to it }
-                                    )
-                                    socialLinks.forEachIndexed { index, (label, value) ->
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .combinedClickable(
-                                                    onClick = {
-                                                        // Someone else's profile: web and email only,
-                                                        // never another app's scheme (iOS 5090ad9).
-                                                        val url = com.kachat.app.util.SafeExternalLink.forProfileField(value)
-                                                        if (url != null) {
-                                                            try {
-                                                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                                                            } catch (e: Exception) { /* no browser available */ }
-                                                        }
-                                                    },
-                                                    // iOS profileLinkView: a long press copies the
-                                                    // field ("Website copied to clipboard.").
-                                                    onLongClick = {
-                                                        clipboardManager.setText(AnnotatedString(value))
-                                                        infoHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                                                        IosToasts.show(context.getString(R.string.field_copied_to_clipboard, label))
-                                                    },
-                                                )
-                                                .padding(vertical = 8.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(label, color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodyMedium)
-                                            Text(value, color = KaspaTeal, style = MaterialTheme.typography.bodyMedium)
-                                        }
-                                        if (index < socialLinks.lastIndex) {
-                                            HorizontalDivider(color = LocalAppColors.current.divider)
-                                        }
-                                    }
                                 }
                             }
                         }
@@ -13752,23 +12729,14 @@ fun ChatInfoScreen(
                     }
 
                     // Your own User Info ends on its address or its names.
-                    val showsKnsDomains = com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY && usesKnsProfile
                     InfoSectionCard(
                         title = stringResource(R.string.address),
                         icon = Icons.Default.QrCode,
-                        showDivider = !isSelf || showsKnsDomains || !usesKnsProfile,
+                        showDivider = true,
                     ) { infoSheet = "address" }
 
-                    // Someone's .kas names aren't shown since 5.2 (KnsService
-                    // .SHOWS_DOMAIN_NAMES_AS_IDENTITY) - the card would only ever be empty.
-                    if (showsKnsDomains) InfoSectionCard(
-                        title = stringResource(R.string.contact_kns_domains),
-                        icon = Icons.Default.AlternateEmail,
-                        showDivider = !isSelf,
-                    ) { infoSheet = "domains" }
-
-                    // On testnet: the address's .kachat names (its identity there, not KNS).
-                    if (!usesKnsProfile) InfoSectionCard(
+                    // The address's .kachat names (its identity).
+                    InfoSectionCard(
                         title = stringResource(R.string.kn_kachat_names),
                         icon = Icons.Default.AlternateEmail,
                         enabled = kachatNames.isNotEmpty(),
@@ -13970,64 +12938,6 @@ fun ChatInfoScreen(
                 }
             }
 
-            // iOS ContactDomainsView under the inline title "KNS Domains": a Form section of the
-            // domains, primary first; a tap copies one. Reads the already-populated knsProfiles
-            // cache, so opening this costs no fetch.
-            if (infoSheet == "domains") {
-                IosInlineListSheet(
-                    title = stringResource(R.string.contact_kns_domains),
-                    onDismiss = { infoSheet = null },
-                ) {
-                    val primary = knsProfile?.explicitPrimaryDomain
-                    val sorted = ownedDomains.sortedWith(
-                        compareBy({ it != primary }, { it.lowercase() })
-                    )
-                    sorted.forEachIndexed { index, domain ->
-                        val isPrimary = domain == primary
-                        if (index > 0) IosListRowDivider(start = 42.dp)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 44.dp)
-                                .clickable {
-                                    clipboardManager.setText(AnnotatedString(domain))
-                                    infoHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                                    IosToasts.show(context.getString(R.string.field_copied_to_clipboard, context.getString(R.string.domain_label)))
-                                }
-                                .padding(horizontal = 16.dp, vertical = 11.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Box(Modifier.width(18.dp), contentAlignment = Alignment.Center) {
-                                Icon(
-                                    if (isPrimary) Icons.Default.Star else Icons.Default.AlternateEmail,
-                                    contentDescription = null,
-                                    tint = if (isPrimary) KaspaTeal else LocalAppColors.current.textSecondary,
-                                    modifier = Modifier.size(13.dp),
-                                )
-                            }
-                            MiddleEllipsisText(
-                                domain,
-                                color = LocalAppColors.current.textPrimary,
-                                fontSize = 17.sp,
-                                modifier = Modifier.weight(1f),
-                            )
-                            if (isPrimary) {
-                                Text(
-                                    stringResource(R.string.primary_badge),
-                                    color = KaspaTeal,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier
-                                        .background(KaspaTeal.copy(alpha = 0.15f), CircleShape)
-                                        .padding(horizontal = 8.dp, vertical = 3.dp),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
             if (infoSheet == "aliases") {
                 ActionSheetContainer(
                     title = stringResource(R.string.aliases),
@@ -14182,134 +13092,6 @@ fun InfoStatItem(label: String, value: String) {
 }
 
 /**
- * The contact's KNS domains, primary first, on their own screen.
- *
- * Pushed from Chat Info rather than listed inline: an address owning a few dozen domains buried
- * everything below it on that screen. Reads the same [ChatViewModel] profile cache Chat Info
- * already filled, so opening it costs no fetch; it refreshes on entry only to pick up anything
- * that landed since. Mirrors iOS's ContactDomainsView.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ContactDomainsScreen(
-    contactId: String,
-    onBack: () -> Unit,
-    chatViewModel: ChatViewModel = hiltViewModel(),
-) {
-    val colors = LocalAppColors.current
-    val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
-    val domainsHaptic = com.kachat.app.util.rememberHaptics()
-    val knsProfile = chatViewModel.knsProfiles.collectAsState().value[contactId]
-    val ownedDomains = knsProfile?.ownedDomains ?: emptyList()
-
-    LaunchedEffect(contactId) { chatViewModel.refreshKnsProfile(contactId) }
-
-    // The contact's OWN primary from the reverse lookup, not selectedDomain, which prefers a
-    // domain pinned locally for this chat. Same rule as iOS.
-    val primaryDomain = knsProfile?.explicitPrimaryDomain
-    // Primary first, the rest alphabetically, so the marked row is always on top whatever order
-    // the KNS assets endpoint happened to return.
-    val sortedDomains = remember(ownedDomains, primaryDomain) {
-        ownedDomains.sortedWith(compareBy({ it != primaryDomain }, { it.lowercase() }))
-    }
-
-    Scaffold(
-        containerColor = colors.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.contact_kns_domains),
-                        color = colors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                    )
-                },
-                navigationIcon = {
-                    SheetBarBackButton(onClick = onBack, modifier = Modifier.padding(start = 12.dp))
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = colors.background),
-            )
-        },
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()),
-        ) {
-        SettingsSection(title = stringResource(R.string.contact_kns_domains)) {
-            when {
-                knsProfile == null -> Text(
-                    "Loading domains...",
-                    color = colors.textSecondary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(16.dp),
-                )
-                sortedDomains.isEmpty() -> Text(
-                    stringResource(R.string.no_domains_yet),
-                    color = colors.textSecondary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(16.dp),
-                )
-                else -> sortedDomains.forEachIndexed { index, domain ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                clipboardManager.setText(AnnotatedString(domain))
-                                domainsHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                                IosToasts.show(context.getString(R.string.field_copied_to_clipboard, context.getString(R.string.domain_label)))
-                            }
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            domain,
-                            color = colors.textPrimary,
-                            fontWeight = if (domain == primaryDomain) FontWeight.Bold else FontWeight.Normal,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
-                        )
-                        if (domain == primaryDomain) {
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                stringResource(R.string.primary),
-                                color = KaspaTeal,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(KaspaTeal.copy(alpha = 0.15f))
-                                    .padding(horizontal = 8.dp, vertical = 3.dp),
-                            )
-                        }
-                    }
-                    if (index < sortedDomains.lastIndex) {
-                        SettingsDivider()
-                    }
-                }
-            }
-        }
-        Text(
-            // Says which rule produced the badge, so a primary that looks wrong is explainable
-            // rather than mysterious.
-            if (primaryDomain != null) {
-                "Primary is the domain this contact set as their KNS primary name. Tap any domain to copy it."
-            } else {
-                "This contact hasn't set a KNS primary name. Tap any domain to copy it."
-            },
-            color = colors.textSecondary,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        )
-        }
-    }
-}
-
-/**
  * iOS's addressSection: the QR code and full address, tap to copy, with View in Explorer on its
  * header. On the page for a bot, in the Address sheet for anyone else.
  */
@@ -14439,18 +13221,22 @@ private fun ChatHeaderCard(
         ContactAvatar(
             imageUrl = imageUrl,
             fallbackText = fallbackText,
-            size = 46.dp,
+            size = CHAT_HEADER_CHIP_AVATAR,
             address = address,
         )
     }
 }
 
+/** The photo over a chat header's name pill: 60, as Messages (iOS, owner 2026-11-24; was 46). */
+internal val CHAT_HEADER_CHIP_AVATAR = 60.dp
+
 /**
- * iOS `chatTitleChip` (1:1) and `groupTitleChip`: a 46pt avatar drawn over the top of a capsule
- * holding the name (subheadline bold) and a caption2 bold chevron - VStack(spacing: -12), the
- * capsule padded 12 either side, 15 above and 5 below, on an ultra-thin material with a 0.5
- * hairline of primary at 12% and a soft shadow. The avatar's top sits level with the bar's back
- * disc, 2 lower ([ChatNavBar] puts that disc 4 below the status bar).
+ * iOS `chatTitleChip` (1:1), `groupTitleChip` and `PublicChatRoomTitleChip`: a 60pt avatar
+ * ([CHAT_HEADER_CHIP_AVATAR]) drawn over the top of a slim capsule holding the name (subheadline
+ * semibold) and a caption2 semibold chevron in secondary at 60% - VStack(spacing: -5), the capsule
+ * padded 14 either side, 10 above and 8 below, on an ultra-thin material with a 0.5 hairline of
+ * primary at 12% and a soft shadow (Messages' header, owner 2026-11-24). The avatar's top sits
+ * level with the bar's back disc, 2 lower ([ChatNavBar] puts that disc 4 below the status bar).
  */
 @Composable
 internal fun ChatHeaderChipLayout(
@@ -14461,45 +13247,67 @@ internal fun ChatHeaderChipLayout(
 ) {
     val colors = LocalAppColors.current
     val pillShape = RoundedCornerShape(percent = 50)
+    // iOS `ChatHeaderChipButtonStyle` (2026-11-24): the chip dims to 0.6 and shrinks to 0.96
+    // under the finger, over 0.12 s, and a tap plays the selection tick, so a press that landed
+    // is felt at once.
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val pressAlpha by androidx.compose.animation.core.animateFloatAsState(
+        if (pressed) 0.6f else 1f, androidx.compose.animation.core.tween(120), label = "chipPressAlpha",
+    )
+    val pressScale by androidx.compose.animation.core.animateFloatAsState(
+        if (pressed) 0.96f else 1f, androidx.compose.animation.core.tween(120), label = "chipPressScale",
+    )
+    val view = androidx.compose.ui.platform.LocalView.current
     // Wraps its content - NOT fillMaxWidth. Filling the width put a full-width tap target over
     // the whole bar row, so the back button and the trailing buttons sat underneath it and
     // tapping either one opened Chat Info instead.
     Column(
         modifier = modifier
+            .graphicsLayer {
+                alpha = pressAlpha
+                scaleX = pressScale
+                scaleY = pressScale
+            }
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
-                onClick = onClick,
+                onClick = {
+                    com.kachat.app.util.Haptics.perform(view, com.kachat.app.util.IosHaptic.SELECTION)
+                    onClick()
+                },
             )
             .padding(top = 6.dp, bottom = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(contentAlignment = Alignment.TopCenter) {
-            // The capsule tucks 12 under the avatar - offset by the avatar less that overlap,
-            // then padded back out at the top so the name still clears it.
+            // The capsule tucks 5 under the avatar (VStack(spacing: -5)) - offset by the avatar
+            // less that overlap, then padded back out at the top so the name still clears it.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
-                    .padding(top = 34.dp)
+                    .padding(top = CHAT_HEADER_CHIP_AVATAR - 5.dp)
                     .iosShadow(100.dp, Color.Black.copy(alpha = 0.10f), 6.dp, 2.dp)
                     .clip(pillShape)
                     // .ultraThinMaterial as it reads over the thread (sampled on the iPhone:
                     // #202020 on black); a solid stand-in, as Android cannot blur what lies under.
                     .background(if (colors.isDark) Color(0xFF202020) else com.kachat.app.ui.theme.IosRegularMaterialLight)
                     .border(0.5.dp, colors.textPrimary.copy(alpha = 0.12f), pillShape)
-                    .padding(start = 12.dp, end = 12.dp, top = 15.dp, bottom = 5.dp),
+                    // Messages' header (iOS, owner 2026-11-24): a slim pill tucked just under a
+                    // big photo
+                    .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 8.dp),
             ) {
                 Text(
                     name,
                     color = colors.textPrimary,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                // SF chevron.right at caption2 bold: about 6 x 10.
-                ChatChevronGlyph(height = 10.dp, stroke = 1.8.dp)
+                // SF chevron.right at caption2 semibold in secondary at 60%: about 6 x 10.
+                ChatChevronGlyph(height = 10.dp, stroke = 1.6.dp, alpha = 0.6f)
             }
             avatar()
         }
@@ -14509,8 +13317,8 @@ internal fun ChatHeaderChipLayout(
 /** SF Symbols' chevron.right drawn as a thin open chevron of the given glyph [height], in
  *  secondary grey - the Material arrow carries padding iOS's glyph does not. */
 @Composable
-internal fun ChatChevronGlyph(height: Dp, stroke: Dp) {
-    val color = LocalAppColors.current.textSecondary
+internal fun ChatChevronGlyph(height: Dp, stroke: Dp, alpha: Float = 1f) {
+    val color = LocalAppColors.current.textSecondary.copy(alpha = LocalAppColors.current.textSecondary.alpha * alpha)
     // chevron.right flips in right-to-left languages, as the SF Symbol does.
     androidx.compose.foundation.Canvas(modifier = Modifier.size(width = height * 0.58f, height = height).mirrorInRtl()) {
         val inset = stroke.toPx() / 2f
@@ -14731,7 +13539,7 @@ private fun ManageAddressesActionsSheet(
                             fontSize = 14.sp,
                         )
                         Text(
-                            if ((progress?.foundCount ?: 0) == 0) stringResource(R.string.no_addresses_with_balance_or_domain_yet)
+                            if ((progress?.foundCount ?: 0) == 0) stringResource(R.string.names54_no_addresses_balance_or_username_yet)
                             else stringResource(R.string.n_found_so_far, progress?.foundCount ?: 0),
                             color = colors.textSecondary,
                             fontSize = 12.sp,
@@ -14773,7 +13581,7 @@ private fun ManageAddressesActionsSheet(
                         ActionSheetRow(
                             icon = Icons.Default.Search,
                             title = stringResource(R.string.discover_addresses),
-                            subtitle = stringResource(R.string.finds_addresses_balance_or_domain),
+                            subtitle = stringResource(R.string.names54_finds_addresses_balance_or_username),
                             onClick = onDiscover,
                         )
                         ActionSheetRow(
@@ -14792,88 +13600,3 @@ private fun ManageAddressesActionsSheet(
     }
 }
 
-/**
- * What a domain transfer is doing right now.
- *
- * The steps come from [WalletViewModel.KnsInscribeUiStatus], which the transfer already reports;
- * this only gives them a place to be seen. The fractions are approximate on purpose: the waits
- * are network-dependent, and a bar that moves in known steps beats a spinner that says nothing.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DomainTransferProgressSheet(
-    domainName: String,
-    status: WalletViewModel.KnsInscribeUiStatus,
-) {
-    val colors = LocalAppColors.current
-    val (labelRes, fraction) = when (status) {
-        WalletViewModel.KnsInscribeUiStatus.CHECKING_AVAILABILITY -> R.string.domain_transfer_stage_preparing to 0.1f
-        WalletViewModel.KnsInscribeUiStatus.FETCHING_FEE -> R.string.domain_transfer_stage_fee to 0.2f
-        WalletViewModel.KnsInscribeUiStatus.SUBMITTING_COMMIT -> R.string.domain_transfer_stage_commit to 0.4f
-        WalletViewModel.KnsInscribeUiStatus.SUBMITTING_REVEAL -> R.string.domain_transfer_stage_reveal to 0.75f
-        WalletViewModel.KnsInscribeUiStatus.VERIFYING -> R.string.domain_transfer_stage_verifying to 0.95f
-        else -> R.string.domain_transfer_stage_working to 0.1f
-    }
-    val label = stringResource(labelRes)
-    // Held open for the duration (iOS `.interactiveDismissDisabled(true)`): no swipe, scrim tap or
-    // Back hides it, so no half-gone sheet is left over the app. It goes when the caller stops
-    // composing it, once the transfer is no longer in flight.
-    val transferSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { it != androidx.compose.material3.SheetValue.Hidden },
-    )
-
-    com.kachat.app.ui.theme.IosSheetColors {
-        val colors = LocalAppColors.current
-        ModalBottomSheet(
-            scrimColor = com.kachat.app.ui.theme.IosSheetScrim,
-            shape = com.kachat.app.ui.theme.IosSheetShape,
-            tonalElevation = com.kachat.app.ui.theme.IosSheetTonalElevation,
-            windowInsets = androidx.compose.foundation.layout.WindowInsets.statusBars,
-            // Held open for the duration: the work keeps running either way, and a dismissed sheet
-            // would leave an on-chain transfer with nothing reporting on it.
-            onDismissRequest = {},
-            sheetState = transferSheetState,
-            properties = androidx.compose.material3.ModalBottomSheetProperties(
-                securePolicy = androidx.compose.ui.window.SecureFlagPolicy.Inherit,
-                isFocusable = true,
-                shouldDismissOnBackPress = false,
-            ),
-            containerColor = colors.background,
-            dragHandle = null,
-        ) {
-            // The sheet runs down behind the navigation bar, as iOS's does behind the home indicator;
-            // its content stays above it.
-            Column(Modifier.navigationBarsPadding()) {
-                // Back in the sheet's own window does nothing while the transfer runs.
-                SheetWindowBack {}
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp, top = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    Text(
-                        stringResource(R.string.domain_transfer_sending, domainName),
-                        color = colors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                    LinearProgressIndicator(
-                        progress = { fraction },
-                        color = KaspaTeal,
-                        trackColor = colors.surfaceVariant,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Text(label, color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                    Text(
-                        stringResource(R.string.domain_transfer_footer),
-                        color = colors.textSecondary,
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-        }
-    }
-}

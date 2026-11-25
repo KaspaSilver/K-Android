@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">Usernames</string>
+    <string name="shell54_tipping_footer">What Tip sends, on a post and in a chat.</string>
+    <string name="shell54_chatting_picker_intro">If these words already hold your identity at a different address - a .kachat name or a funded chatting balance - pick it here. Only addresses with a balance or names are shown.</string>
+    <string name="shell54_what_others_can_see_caption">Anyone can see this address and its balance on the Kaspa network, but they can\'t read your messages. Use it only for chatting and usernames.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... or username</string>
+    <string name="shell54_looking_up_username">Looking up username...</string>
+    <string name="shell54_portfolio_add_address_footer">Enter a Kaspa address or a username like name.kachat. Every received transaction on this address becomes a buy, every sent transaction becomes a sell, priced at that day\'s historical KAS price. Re-adding the same address later only imports transactions found since the last import.</string>
+    <string name="shell54_report_copied">Report Copied</string>
+    <string name="shell54_report_no_mail_app">No mail app could open it. Paste the report into an email to %1$s.</string>
+    <string name="shell54_show_amounts">Show amounts</string>
+    <string name="shell54_hide_amounts">Hide amounts</string>
+    <string name="shell54_amount_unit">Amount (%1$s)</string>
+    <string name="shell54_price_per_kas">Price per KAS</string>
+    <string name="shell54_total_spent">Total Spent</string>
+    <string name="shell54_total_received">Total Received</string>
+    <string name="shell54_chart_settings">Chart settings</string>
+    <string name="shell54_import_failed">Import failed.</string>
+    <string name="shell54_export_csv">Export CSV</string>
+    <string name="shell54_sent_on">Sent %1$s on %2$s</string>
+    <string name="shell54_received_on">Received %1$s on %2$s</string>
+    <string name="shell54_this_portfolio">this portfolio</string>
+    <string name="shell54_new_portfolio">New Portfolio</string>
+    <string name="shell54_time">Time</string>
+    <string name="shell54_total_value">Total %1$s</string>
+    <string name="shell54_move_up">Move %1$s up</string>
+    <string name="shell54_move_down">Move %1$s down</string>
+    <string name="shell54_selected">Selected</string>
+    <string name="shell54_not_selected">Not selected</string>
+    <string name="shell54_not_valid_kpub">Not a valid kpub</string>
+    <string name="shell54_new_address_failed">Couldn\'t make a new address. Please try again.</string>
+</resources>

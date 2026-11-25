@@ -44,128 +44,11 @@ import com.kachat.app.util.KaPlayText
 import com.kachat.app.viewmodels.WalletViewModel
 
 // KaPlay's own tab screens, back in KaChat (iOS 148a5331, phase 4: Views/Games/GamesView.swift,
-// Views/Chess/ChessLeaderboardView.swift and ChessPlayerView.swift): the KaPlay tab (`.games`),
-// starting in Kaspa Hub, KaPlay > Chess > Leaderboard (iOS 428a797b), and a player's card.
+// Views/Chess/ChessHomeView.swift and ChessPlayerView.swift): the KaPlay tab (`.games`), starting
+// in Kaspa Hub, KaPlay > Chess with its leaderboards (iOS 518fdc8c; the separate leaderboard
+// screens are gone, audit 2026-11-24 #41), and a player's card.
 
-/**
- * The KaPlay tab (iOS `.games`, KaPlay's Play tab): a card per game. Chess is the only one so far;
- * a new game is one more card here. Its title is "KaPlay", written as is in every language.
- *
- * A bot challenge from a post (`ChessBotLinks.open`, [ChessBotLinkRouter]) is for chess: this
- * screen opens Chess, and [ChessHomeScreen] takes the challenge from the router (iOS GamesView).
- */
-@Composable
-fun GamesScreen(
-    navController: NavController,
-    walletViewModel: WalletViewModel = hiltViewModel(),
-) {
-    // The chess sentences are looked up by their English (normally set up at launch).
-    KaPlayText.init(androidx.compose.ui.platform.LocalContext.current)
-    val challenge by ChessBotLinkRouter.challenge.collectAsState()
-    // This screen's own entry: a challenge is followed only while it is the one on top, never
-    // from under Chess (or a board) already open over it.
-    val ownEntry = androidx.compose.ui.platform.LocalLifecycleOwner.current as? androidx.navigation.NavBackStackEntry
-    val top by navController.currentBackStackEntryAsState()
-    // Kept alive but hidden in Kaspa Hub (iOS 428a797b): not on screen, so it waits until it shows.
-    val hubHidden = com.kachat.app.ui.screens.LocalHubSectionHidden.current
-    LaunchedEffect(challenge, top, hubHidden) {
-        if (challenge != null && !hubHidden && ownEntry != null && top?.id == ownEntry.id) {
-            navController.navigate(KaPlayRoutes.HOME)
-        }
-    }
-    KaPlayBackupBanner(walletViewModel, navController) {
-        Scaffold(
-            containerColor = LocalAppColors.current.background,
-            contentWindowInsets = WindowInsets(0),
-            topBar = { ChessHomeBar(onBack = null, title = "KaPlay", showsBackupBanner = true) },
-        ) { padding ->
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 16.dp, bottom = LocalDockInset.current + 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                ChessGameCard(
-                    title = KaPlayText.string("Chess"),
-                    detail = KaPlayText.string("1v1, tournaments and five bots. Online moves and bot results go on Kaspa."),
-                    onClick = { navController.navigate(KaPlayRoutes.HOME) },
-                ) {
-                    Icon(
-                        chessTabIconPainter(),
-                        contentDescription = null, tint = Color.White,
-                        modifier = chessTabIconModifier(30.dp),
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * KaPlay > Chess > Leaderboard (iOS 428a797b `ChessLeaderboardView`; owner's call, 2026-11-22:
- * inside Chess, no longer a Kaspa Hub tile of its own): three rows, each opening its own page.
- * 1v1 and Tournaments are a board for this month or all time ([ChessLeaderboardPageScreen]); Bots
- * is a board per bot ([ChessBotLeaderboardsScreen]). Pushed inside KaPlay, so a back button and the
- * balance in the bar, no connection dot or backup strip.
- */
-@Composable
-fun ChessLeaderboardScreen(navController: NavController) {
-    KaPlayText.init(androidx.compose.ui.platform.LocalContext.current)
-    Scaffold(
-        containerColor = LocalAppColors.current.background,
-        contentWindowInsets = WindowInsets(0),
-        topBar = { ChessHomeBar(onBack = { navController.popBackStack() }, showConnectionDot = false, title = KaPlayText.string("Leaderboard")) },
-    ) { padding ->
-        Column(
-            Modifier.padding(padding).fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            ChessLeaderboardLink(KaPlayText.string("1v1"), Icons.Default.People) {
-                navController.navigate(KaPlayRoutes.leaderboard(ChessLobbyMode.DUEL))
-            }
-            ChessLeaderboardLink(KaPlayText.string("Tournaments"), Icons.Default.EmojiEvents) {
-                navController.navigate(KaPlayRoutes.leaderboard(ChessLobbyMode.TOURNAMENT))
-            }
-            ChessLeaderboardLink(KaPlayText.string("Bots"), Icons.Default.Memory) {
-                navController.navigate(KaPlayRoutes.BOT_BOARDS)
-            }
-        }
-    }
-}
-
-/** A tab's first screen shows KaChat's backup strip above its title (iOS `fixedScreenTitle(_:
- *  showsBackupBanner: true)` → `AccountBackupBanner`). */
-@Composable
-private fun KaPlayBackupBanner(
-    walletViewModel: WalletViewModel,
-    navController: NavController,
-    content: @Composable () -> Unit,
-) {
-    val banner: @Composable () -> Unit = {
-        AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") }
-    }
-    CompositionLocalProvider(LocalBackupBanner provides banner) { content() }
-}
-
-/** Leaderboard > 1v1 or Tournaments: that board, on a page of its own. */
-@Composable
-fun ChessLeaderboardPageScreen(mode: ChessLobbyMode, navController: NavController) {
-    val vm: ChessTournamentViewModel = hiltViewModel()
-    // Reads the arena while the board is up, the same as the Play screens do.
-    HoldArena(vm.service)
-    Scaffold(
-        containerColor = LocalAppColors.current.background,
-        contentWindowInsets = WindowInsets(0),
-        topBar = { ChessHomeBar(onBack = { navController.popBackStack() }, showConnectionDot = false, title = KaPlayText.string(mode.label)) },
-    ) { padding ->
-        // Past the 20 s throttle, and the spinner stays until the boards are in (iOS 32e6392).
-        ChessRefreshBox(onRefresh = { vm.service.refreshIndexerLeaderboardsNow() }, modifier = Modifier.padding(padding)) {
-            ChessLeaderboardRows(mode, navController)
-        }
-    }
-}
+// The KaPlay tab itself ([GamesScreen], with the arcade's cards) is in GamesScreen.kt.
 
 /**
  * A player's card, opened by tapping a player on a leaderboard: who they are (avatar, name,
@@ -178,7 +61,6 @@ fun ChessPlayerScreen(address: String, onDone: () -> Unit) {
     val service = vm.service
     val colors = LocalAppColors.current
     val contacts by vm.contacts.collectAsState()
-    val knsNames by service.knsNames.collectAsState()
     val month by service.board(ChessLeaderboardPeriod.MONTH).collectAsState()
     val allTime by service.board(ChessLeaderboardPeriod.ALL_TIME).collectAsState()
     val explorer by vm.kaspaExplorer.collectAsState()
@@ -186,7 +68,7 @@ fun ChessPlayerScreen(address: String, onDone: () -> Unit) {
     val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
     var copied by remember { mutableStateOf(false) }
     val haptic = com.kachat.app.util.rememberHaptics()
-    val name = chessName(address, contacts, knsNames)
+    val name = chessName(address, contacts)
 
     fun row(board: List<com.kachat.app.util.ChessLeaderboardRow>) =
         board.firstOrNull { it.address.equals(address, ignoreCase = true) }

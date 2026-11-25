@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">La propina no se envió: ahora no se puede leer tu dirección de Propinas desde.</string>
     <string name="feed54_tip_minimum_footer">La propina más pequeña que acepta la red es %1$s.</string>
     <string name="feed54_tip_no_price">No se envió la propina: no hay un precio reciente de KAS para convertir %1$s a KAS.</string>
-    <string name="feed54_tip_too_small">La propina no se envió: la propina más pequeña que acepta la red es %1$s. Cambia tu propina predeterminada en Ajustes &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">La propina no se envió: la propina más pequeña que acepta la red es %1$s. Cambia tu propina predeterminada en Ajustes &gt; Personalización &gt; Propinas.</string>
     <string name="feed54_tipped">Propina de %1$s enviada a %2$s</string>
     <string name="feed54_tipped_privately">Propina de %1$s enviada a %2$s en privado</string>
     <string name="feed54_unfollow_posted">Dejar de seguir publicado en la red</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">Propina</string>
     <string name="kaposts_tips">Propinas</string>
     <string name="kaposts_tips_from">Propinas desde</string>
-    <string name="kaposts_tips_from_footnote">Las propinas desde tu Chatting Address cuentan en la publicación y apareces como quien dio propina. Desde otra dirección una propina es privada: el autor la recibe y la ve en vuestro chat, pero no cuenta en la publicación ni te nombra.</string>
+    <string name="kaposts_tips_from_footnote">Las propinas desde tu Chatting Address cuentan en la publicación y apareces como quien dio propina. Desde otra dirección una propina es privada: el autor la recibe y la ve en vuestro chat, pero no cuenta en la publicación ni te nombra. Una propina en un chat también sale de aquí.</string>
     <string name="kaposts_tips_from_not_available">No disponible</string>
     <string name="kaposts_who_tipped">Quién dio propina a esta publicación</string>
     <string name="kn53_kaplay_beat_in_move">Vence a %1$s en %2$d movimiento</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">Propina en</string>
     <string name="kp5_tip_in_ask">Preguntar cada vez</string>
     <string name="kp5_tip_in_ask_footer">Propina pregunta cada vez si enviar Kaspa o kUSDT.</string>
-    <string name="kp5_tip_in_kusdt_footer">Propina envía kUSDT a la dirección de chat del autor. Las propinas en kUSDT no se cuentan en la publicación.</string>
+    <string name="kp5_tip_in_kusdt_footer">Propina envía kUSDT a su dirección de chat. Las propinas en kUSDT no se cuentan en una publicación.</string>
     <string name="kp5_tip_not_counted">No se cuenta en la publicación</string>
-    <string name="kp5_tip_set_in_settings">Elige qué envía Propina en Ajustes > KaPost > Propina en.</string>
+    <string name="kp5_tip_set_in_settings">Elige qué envía Propina en Ajustes &gt; Personalización &gt; Propinas.</string>
     <string name="kp5_tip_title">Propina</string>
     <string name="kp5_tip_what_in">¿En qué das la propina?</string>
     <string name="l53_already_in_your_language">Ya está en tu idioma</string>

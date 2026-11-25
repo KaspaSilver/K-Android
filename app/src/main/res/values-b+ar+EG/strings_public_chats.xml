@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">شات عام جديد</string>
     <string name="pc_new_public_chat_subtitle">ادخل أوضة عامة أو اعمل واحدة.</string>
     <string name="pc_edit_default_public_chats">تعديل الشاتات العامة الافتراضية</string>
-    <string name="pc_edit_default_public_chats_subtitle">شغّل أو اقفل الأوض الافتراضية وأوض اللغات.</string>
     <string name="pc_new_public_chat_explainer">أي حد ينضم لنفس اسم القناة يقدر يشوف الرسايل وينشر فيها - مفيش مالك ولا دعوة.</string>
     <string name="pc_join">انضمام</string>
     <string name="pc_back">رجوع</string>

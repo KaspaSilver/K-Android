@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">Nama Pengguna</string>
+    <string name="shell54_tipping_footer">Apa yang dikirim Tip, di postingan dan di chat.</string>
+    <string name="shell54_chatting_picker_intro">Jika kata-kata ini sudah menyimpan identitasmu di alamat lain - nama .kachat atau saldo obrolan yang terisi - pilih di sini. Hanya alamat dengan saldo atau nama yang ditampilkan.</string>
+    <string name="shell54_what_others_can_see_caption">Siapa pun dapat melihat alamat ini dan saldonya di jaringan Kaspa, tetapi tidak dapat membaca pesan Anda. Gunakan hanya untuk mengobrol dan nama pengguna.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... atau nama pengguna</string>
+    <string name="shell54_looking_up_username">Mencari nama pengguna...</string>
+    <string name="shell54_portfolio_add_address_footer">Masukkan alamat Kaspa atau nama pengguna seperti name.kachat. Setiap transaksi yang diterima di alamat ini menjadi pembelian, setiap transaksi yang dikirim menjadi penjualan, dihargai dengan harga KAS historis hari itu. Menambahkan alamat yang sama lagi nanti hanya mengimpor transaksi yang ditemukan sejak impor terakhir.</string>
+    <string name="shell54_report_copied">Laporan Disalin</string>
+    <string name="shell54_report_no_mail_app">Tidak ada aplikasi email yang bisa membukanya. Tempel laporan ke email ke %1$s.</string>
+    <string name="shell54_show_amounts">Tampilkan jumlah</string>
+    <string name="shell54_hide_amounts">Sembunyikan jumlah</string>
+    <string name="shell54_amount_unit">Jumlah (%1$s)</string>
+    <string name="shell54_price_per_kas">Harga per KAS</string>
+    <string name="shell54_total_spent">Total Dibelanjakan</string>
+    <string name="shell54_total_received">Total Diterima</string>
+    <string name="shell54_chart_settings">Pengaturan grafik</string>
+    <string name="shell54_import_failed">Impor gagal.</string>
+    <string name="shell54_export_csv">Ekspor CSV</string>
+    <string name="shell54_sent_on">Mengirim %1$s pada %2$s</string>
+    <string name="shell54_received_on">Menerima %1$s pada %2$s</string>
+    <string name="shell54_this_portfolio">portofolio ini</string>
+    <string name="shell54_new_portfolio">Portofolio Baru</string>
+    <string name="shell54_time">Waktu</string>
+    <string name="shell54_total_value">Total %1$s</string>
+    <string name="shell54_move_up">Pindahkan %1$s ke atas</string>
+    <string name="shell54_move_down">Pindahkan %1$s ke bawah</string>
+    <string name="shell54_selected">Dipilih</string>
+    <string name="shell54_not_selected">Tidak dipilih</string>
+    <string name="shell54_not_valid_kpub">Bukan kpub yang valid</string>
+    <string name="shell54_new_address_failed">Tidak bisa membuat alamat baru. Coba lagi.</string>
+</resources>

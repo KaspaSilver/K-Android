@@ -34,15 +34,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 /**
- * Every tab KaChat has (iOS 148a5331 `AppTab`). Since 2026-11-21 KaChat is the all-in-one app
- * again: the dock is Kaspa Hub and Profile (both pinned) plus up to three tabs the person picks,
- * and every other tab is a tile in Kaspa Hub's grid, where it opens full screen ([DockLayout]).
- * A tab's screen is the same in either place, and routes open a tab wherever it lives
- * (`MainShell.show`). A new feature is a new case; it lands in Kaspa Hub.
+ * Every tab KaChat has (iOS `AppTab`). Since 2026-11-21 KaChat is the all-in-one app again: the
+ * dock is fixed (iOS 518fdc8c: Kaspa Hub, Wallet, KaChat, Profile, Settings), and every other tab
+ * is a tile in Kaspa Hub's grid, where it opens full screen ([DockLayout]). A tab's screen is the
+ * same in either place, and routes open a tab wherever it lives (`MainShell.show`). A new feature
+ * is a new case; it lands in Kaspa Hub.
  *
- * [key] is iOS's raw value, which is what the saved arrangement holds. [route] is the tab's own
+ * [key] is iOS's raw value, which is what the saved Hub order holds. [route] is the tab's own
  * navigation route when it sits in the dock. [dockIcon] is drawn on the dock (filled, as the
- * iPhone's tab bar fills its symbols), [hubIcon] in Kaspa Hub and Customize Dock (outlined).
+ * iPhone's tab bar fills its symbols), [hubIcon] in Kaspa Hub (outlined).
  */
 enum class AppTab(
     val key: String,
@@ -62,7 +62,8 @@ enum class AppTab(
     HUB("hub", "kaspa_hub", R.string.shell_kaspa_hub, Icons.Default.GridView, Icons.Default.GridView),
     PORTFOLIO("portfolio", "portfolio", R.string.portfolio, Icons.Filled.PieChart, Icons.Outlined.PieChart),
     COLD_STORAGE("coldStorage", "cold_storage", R.string.cold_storage, com.kachat.app.ui.theme.IosSymbols.LockShield, com.kachat.app.ui.theme.IosSymbols.LockShield),
-    KACHAT_NAMES("kachatNames", "kachat_names", R.string.shell_tab_kachat, Icons.Filled.AlternateEmail, Icons.Filled.AlternateEmail),
+    // "Usernames", its icon the ".kachat" wordmark (owner's call, iOS 518fdc8c `AppTab.label`).
+    KACHAT_NAMES("kachatNames", "kachat_names", R.string.shell54_usernames, Icons.Filled.AlternateEmail, Icons.Filled.AlternateEmail),
     // iOS square.text.square (KaPost's Feed tab)
     KAPOSTS("kaposts", "kaposts", R.string.shell_tab_kapost, Icons.AutoMirrored.Filled.Article, Icons.AutoMirrored.Outlined.Article),
     // KaPlay's Play tab. Its leaderboards are inside KaPlay > Chess since iOS 428a797b (owner's
@@ -80,7 +81,8 @@ enum class AppTab(
          *  `AppTab.pinnedToDock`, owner's call 2026-11-21). */
         val PINNED_TO_DOCK: List<AppTab> = listOf(HUB, PROFILE)
 
-        /** Every new install's dock, in this order (iOS `AppTab.defaultDock`). */
+        /** The dock, always, in this order (iOS `AppTab.defaultDock`; no Customize Dock since
+         *  iOS 518fdc8c). */
         val DEFAULT_DOCK: List<AppTab> = listOf(HUB, WALLET, CHATS, PROFILE, SETTINGS)
 
         fun fromKey(key: String): AppTab? = entries.firstOrNull { it.key == key }
@@ -89,8 +91,11 @@ enum class AppTab(
 }
 
 /**
- * What the dock holds and the order of Kaspa Hub's grid, on this device (iOS 148a5331
- * `DockLayout`, kept in `kachat_dock_tabs_v2` / `kachat_hub_tabs_v2`).
+ * What the dock holds and the order of Kaspa Hub's grid, on this device (iOS `DockLayout`). The
+ * dock is fixed (owner's call, iOS 518fdc8c, 2026-11-23: no Customize Dock): Kaspa Hub, Wallet,
+ * KaChat, Profile, Settings ([AppTab.DEFAULT_DOCK]), so the connection dot on Settings is always
+ * there. An arrangement saved before keeps only its Hub order (`kachat_hub_tabs_v2`); the saved
+ * dock (`kachat_dock_tabs_v2`) is dropped as it is read.
  */
 object DockLayout {
     private const val PREFS = "kachat_dock_layout"
@@ -100,25 +105,30 @@ object DockLayout {
     private var prefs: android.content.SharedPreferences? = null
 
     private val _dock = MutableStateFlow(normalized(AppTab.DEFAULT_DOCK, emptyList()).first)
-    /** The dock, in order: always Kaspa Hub and Profile, at most [AppTab.MAX_DOCK_ITEMS]. */
+    /** The dock, in order: always [AppTab.DEFAULT_DOCK]. */
     val dock: StateFlow<List<AppTab>> = _dock.asStateFlow()
 
     private val _hub = MutableStateFlow(normalized(AppTab.DEFAULT_DOCK, emptyList()).second)
     /** Kaspa Hub's grid, in order: every other tab. */
     val hub: StateFlow<List<AppTab>> = _hub.asStateFlow()
 
-    /** Reads the saved arrangement once (the shell calls it as it first shows). */
+    /** Reads the saved Hub order once (the shell calls it as it first shows). */
     @Synchronized
     fun init(context: Context) {
         if (prefs != null) return
         val p = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         prefs = p
-        fun read(key: String) = p.getString(key, null).orEmpty().split(',').mapNotNull { AppTab.fromKey(it.trim()) }
-        val storedDock = read(DOCK_KEY)
-        val (d, h) = normalized(if (storedDock.isEmpty()) AppTab.DEFAULT_DOCK else storedDock, read(HUB_KEY))
+        val storedHub = p.getString(HUB_KEY, null).orEmpty().split(',').mapNotNull { AppTab.fromKey(it.trim()) }
+        val (d, h) = arrangement(storedHub)
         _dock.value = d
         _hub.value = h
+        // The dock Customize Dock saved is gone for good (iOS removes `dockKey` as it loads).
+        if (p.contains(DOCK_KEY)) p.edit().remove(DOCK_KEY).apply()
     }
+
+    /** The fixed dock and the Hub in [storedHub]'s order, every other tab after it. */
+    internal fun arrangement(storedHub: List<AppTab>): Pair<List<AppTab>, List<AppTab>> =
+        normalized(AppTab.DEFAULT_DOCK, storedHub)
 
     /**
      * A stored arrangement made whole: the pinned tabs in the dock, no tab twice, at most five in
@@ -146,17 +156,6 @@ object DockLayout {
         for (tab in AppTab.entries) if (tab !in inDock && tab !in newHub) newHub.add(tab)
         return newDock to newHub
     }
-
-    fun set(dock: List<AppTab>, hub: List<AppTab>) {
-        val (d, h) = normalized(dock, hub)
-        if (d == _dock.value && h == _hub.value) return
-        _dock.value = d
-        _hub.value = h
-        prefs?.edit()
-            ?.putString(DOCK_KEY, d.joinToString(",") { it.key })
-            ?.putString(HUB_KEY, h.joinToString(",") { it.key })
-            ?.apply()
-    }
 }
 
 /**
@@ -175,16 +174,6 @@ object HubRouter {
     fun close() {
         _openSection.value = null
     }
-}
-
-/**
- * Opens Customize Dock as a sheet over the tabs (iOS `.openCustomizeDock`), from the Hub's slider
- * button or Settings > Customization. A sheet rather than a pushed page: every move rebuilds the
- * dock, which would throw the person out of a page pushed inside one of its tabs.
- */
-object CustomizeDock {
-    val isOpen = MutableStateFlow(false)
-    fun open() { isOpen.value = true }
 }
 
 /**

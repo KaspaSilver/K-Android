@@ -7,7 +7,6 @@ import com.kachat.app.repository.AppSettingsRepository
 import com.kachat.app.services.ColdStorageAddressDiscovery
 import com.kachat.app.services.ColdStorageManager
 import com.kachat.app.services.ColdStorageSendEngine
-import com.kachat.app.services.KnsService
 import com.kachat.app.services.UtxoEntry
 import com.kachat.app.util.KaspaExtendedPublicKey
 import com.kachat.app.util.KsptCodec
@@ -34,7 +33,6 @@ class ColdStorageViewModel @Inject constructor(
     private val addressDiscovery: ColdStorageAddressDiscovery,
     private val sendEngine: ColdStorageSendEngine,
     private val settings: AppSettingsRepository,
-    private val knsService: KnsService,
     private val nameServices: com.kachat.app.services.NameServicesClient,
     /** .kachat owners count toward the "Contains domain" tag (iOS 881ada6). Lazy, and only asked
      *  where the registry is launched, so mainnet never builds it (iOS 7227d69). */
@@ -355,10 +353,8 @@ class ColdStorageViewModel @Inject constructor(
     }
 
     // -------------------------------------------------------------------------
-    // KNS domains on cold addresses: the "Contains domain" list tags and the per-address
-    // "KNS Domains (n)" tab (LIST-ONLY here - a KNS transfer's reveal input spends a P2SH
-    // redeem script, and the KSPT QR format only carries plain single-sig Schnorr inputs,
-    // so KasSigner can't sign inscription transactions).
+    // Usernames on cold addresses: the "Contains username" list tags. .kachat names only since
+    // 2026-11-23 (iOS 518fdc8c), where the registry is launched (iOS 881ada6).
     // -------------------------------------------------------------------------
 
     private val _domainOwningAddresses = MutableStateFlow<Set<String>>(emptySet())
@@ -366,19 +362,17 @@ class ColdStorageViewModel @Inject constructor(
 
     private fun refreshDomainOwningAddresses(addresses: List<String>) {
         if (addresses.isEmpty()) return
+        if (!com.kachat.app.services.kachatnames.KachatNamesService.isLaunched) {
+            _domainOwningAddresses.value = emptySet()
+            return
+        }
         viewModelScope.launch {
-            val kns = try { knsService.domainOwningAddresses(addresses) } catch (e: Exception) { emptySet() }
-            _domainOwningAddresses.value = kns
-            // .kachat names count too, where the registry is live (testnet) - iOS 881ada6.
-            if (com.kachat.app.services.kachatnames.KachatNamesService.isLaunched) {
-                val kachat = try {
-                    kachatRegistry.get().ownersOfNames(addresses)
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    emptySet()
-                }
-                if (kachat.isNotEmpty()) _domainOwningAddresses.value = kns + kachat
+            _domainOwningAddresses.value = try {
+                kachatRegistry.get().ownersOfNames(addresses)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                emptySet()
             }
         }
     }

@@ -97,6 +97,29 @@ object IndexerHealth {
         return wentDownAt
     }
 
+    /** Up, but a request failed lately (within the failure window): Connection Status says
+     *  Degraded (iOS 8cb4c88e `IndexerHealth.hasRecentFailures`). */
+    @Synchronized
+    internal fun hasRecentFailures(nowMs: Long = System.currentTimeMillis()): Boolean =
+        failuresInARow > 0 && nowMs - lastFailureAtMs <= FAILURE_WINDOW_MS
+
+    /** How the message indexer is doing, for Settings > Connection Status (iOS 8cb4c88e
+     *  `KasiaAPIClient.ConnectionState`). */
+    enum class ConnectionState { CONNECTED, DEGRADED, DISCONNECTED, NOT_SET }
+
+    /**
+     * Down after three failures in a row ([isDown]), degraded while a recent request failed,
+     * otherwise connected; not set when Settings names no indexer ([indexerConfigured] false)
+     * (iOS 8cb4c88e `KasiaAPIClient.connectionState()`).
+     */
+    @Synchronized
+    fun connectionState(indexerConfigured: Boolean, nowMs: Long = System.currentTimeMillis()): ConnectionState = when {
+        !indexerConfigured -> ConnectionState.NOT_SET
+        downSinceMs != null -> ConnectionState.DISCONNECTED
+        hasRecentFailures(nowMs) -> ConnectionState.DEGRADED
+        else -> ConnectionState.CONNECTED
+    }
+
     /** True at most once a minute, while it's down: the caller sends the one cheap request. */
     @Synchronized
     internal fun claimRecoveryCheck(nowMs: Long = System.currentTimeMillis()): Boolean {

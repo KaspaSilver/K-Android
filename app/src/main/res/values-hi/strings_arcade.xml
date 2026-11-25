@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">स्नेक</string>
+    <string name="arcade_snake_detail">खाएँ, बढ़ें, और दीवारों या खुद से न टकराएँ। स्कोर Kaspa पर दर्ज होते हैं।</string>
+    <string name="arcade_2048_detail">टाइलें मिलाने के लिए स्वाइप करें और 2048 तक पहुँचें। स्कोर Kaspa पर दर्ज होते हैं।</string>
+    <string name="arcade_other_account">यह गेम किसी दूसरे खाते से खेला गया था। स्कोर दर्ज करने के लिए उस खाते में साइन इन करें।</string>
+    <string name="arcade_score_not_sent">स्कोर नहीं भेजा गया।</string>
+    <string name="arcade_challenge_play">चुनौती: %1$s खेलें</string>
+    <string name="arcade_beat_in">%2$s में %1$s को पार करें</string>
+    <string name="arcade_share_boast">मैंने K पर %2$s में %1$s स्कोर किया। क्या आपको लगता है आप इसे पार कर सकते हैं?</string>
+    <string name="arcade_challenge_named">%1$s ने %3$s में %2$s स्कोर किया। क्या आप इसे पार कर सकते हैं?</string>
+    <string name="arcade_challenge_someone">किसी ने %2$s में %1$s स्कोर किया। क्या आप इसे पार कर सकते हैं?</string>
+    <string name="arcade_your_best">आपका सर्वश्रेष्ठ: %1$s</string>
+    <string name="arcade_fee_note">हर पूरे हुए गेम का स्कोर आपके चैट पते से, एक छोटे नेटवर्क शुल्क पर, Kaspa पर दर्ज होता है।</string>
+    <string name="arcade_hint_period">लीडरबोर्ड की अवधि बदलता है</string>
+    <string name="arcade_board_unreachable">लीडरबोर्ड लोड नहीं हो सका। फिर से कोशिश करने के लिए नीचे खींचें।</string>
+    <string name="arcade_board_empty">अभी कोई स्कोर नहीं। सबसे पहले आप बनें।</string>
+    <string name="arcade_posted">KaPost पर पोस्ट हुआ</string>
+    <string name="arcade_game_over">गेम ओवर</string>
+    <string name="arcade_play_again">फिर से खेलें</string>
+    <string name="arcade_posting">KaPost पर पोस्ट हो रहा है…</string>
+    <string name="arcade_shared">KaPost पर शेयर किया</string>
+    <string name="arcade_retry_stamp">फिर से दर्ज करें</string>
+    <string name="arcade_stamping">स्कोर Kaspa पर दर्ज हो रहा है…</string>
+    <string name="arcade_stamped">स्कोर Kaspa पर दर्ज हो गया</string>
+    <string name="arcade_no_score">दर्ज करने के लिए कोई स्कोर नहीं।</string>
+    <string name="arcade_score_n">स्कोर: %1$s</string>
+    <string name="arcade_snake_start_hint">शुरू करने के लिए बोर्ड पर स्वाइप करें या तीरों का इस्तेमाल करें।</string>
+    <string name="arcade_score">स्कोर</string>
+    <string name="arcade_best_tile">सबसे बड़ी टाइल</string>
+    <string name="arcade_2048_hint">टाइलें खिसकाने के लिए स्वाइप करें। बराबर टाइलें मिल जाती हैं।</string>
+    <string name="arcade_challenge_label">आर्केड चुनौती</string>
+</resources>

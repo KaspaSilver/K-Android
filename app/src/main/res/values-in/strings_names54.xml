@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">Nama Pengguna Anda</string>
+    <string name="names54_no_username_found">Nama pengguna tidak ditemukan</string>
+    <string name="names54_use_their_username">Gunakan nama penggunanya</string>
+    <string name="names54_kaspa_address_or_username">Alamat Kaspa atau Nama Pengguna</string>
+    <string name="names54_enter_address_or_username_example">Masukkan alamat Kaspa (kaspa:...) atau nama pengguna (mis. alice.kachat).</string>
+    <string name="names54_members_footer">Pilih orang dari kontak Anda, atau tambahkan siapa saja dengan alamat Kaspa atau nama pengguna.</string>
+    <string name="names54_finds_addresses_balance_or_username">Menemukan alamat yang memiliki saldo atau nama pengguna.</string>
+    <string name="names54_no_addresses_balance_or_username_found">Tidak ditemukan alamat dengan saldo atau nama pengguna.</string>
+    <string name="names54_found_one_address_balance_username">Ditemukan 1 alamat dengan saldo atau nama pengguna.</string>
+    <string name="names54_found_n_addresses_balance_username">Ditemukan %1$d alamat dengan saldo atau nama pengguna.</string>
+    <string name="names54_no_addresses_balance_or_username_yet">Belum ada alamat dengan saldo atau nama pengguna</string>
+    <string name="names54_contains_username">Mengandung nama pengguna</string>
+    <string name="names54_get_a_username">Dapatkan nama pengguna</string>
+    <string name="names54_qr_chatting_address_subtitle">Gunakan untuk mengobrol dan mendapatkan nama pengguna.</string>
+    <string name="names54_no_usernames_yet">Belum ada nama pengguna</string>
+    <string name="names54_claim_a_username">Klaim Nama Pengguna</string>
+    <string name="names54_discord_invite_not_found">Tidak ada undangan Discord bernama %1$s. Gunakan kode undangan server, seperti discord.gg/abc123: akun Discord tidak bisa dicari dengan nama pengguna.</string>
+</resources>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">Ai có thể nhắn tin cho bạn?</string>
+    <string name="c54_who_anyone">Mọi người</string>
+    <string name="c54_who_usernames">Chỉ người dùng có tên người dùng</string>
+    <string name="c54_who_row_footer">Ai có thể bắt đầu trò chuyện với bạn. Không ảnh hưởng đến những người bạn đang trò chuyện.</string>
+    <string name="c54_who_anyone_footer">Mọi người đều có thể gửi cho bạn tin nhắn đầu tiên. Tin nhắn sẽ chờ trong Yêu cầu nhắn tin cho đến khi bạn chấp nhận.</string>
+    <string name="c54_who_usernames_footer">Chỉ những người có tên người dùng (tên .kachat) mới đến được Yêu cầu nhắn tin của bạn. Tin nhắn đầu tiên từ người khác sẽ bị ẩn và không gửi thông báo cho bạn; chọn Mọi người để xem lại. Không ảnh hưởng đến những người bạn đang trò chuyện.</string>
+    <string name="c54_room_clears_unread">Xóa huy hiệu chưa đọc của cuộc trò chuyện công khai này.</string>
+    <string name="c54_room_no_notifications">Không có thông báo từ cuộc trò chuyện công khai này.</string>
+    <string name="c54_room_notifications_resume">Thông báo từ cuộc trò chuyện công khai này sẽ tiếp tục.</string>
+    <string name="c54_room_delete_subtitle">Xóa cuộc trò chuyện công khai này khỏi danh sách trò chuyện của bạn.</string>
+    <string name="c54_tip_subtitle">Tip cho liên hệ này, theo thiết lập trong Cài đặt &gt; Tùy chỉnh &gt; Tip.</string>
+    <string name="c54_send_tip">Gửi tiền tip</string>
+    <string name="c54_send_deferred">Đang chờ xác nhận coin của bạn. Giao dịch sẽ tự gửi trong giây lát, vì vậy đừng gửi lại.</string>
+    <string name="c54_failed_start_recording">Không thể bắt đầu ghi âm: %1$s</string>
+    <string name="c54_failed_encode_audio">Không thể mã hóa âm thanh: %1$s</string>
+    <string name="c54_failed_prepare_audio">Không thể chuẩn bị âm thanh: %1$s</string>
+    <string name="c54_sent_a_link">Đã gửi một liên kết</string>
+    <string name="c54_public_chat_room">Phòng trò chuyện công khai #%1$s</string>
+    <string name="c54_search_contacts_address_username">Tìm danh bạ, hoặc một địa chỉ hay tên người dùng</string>
+    <string name="c54_looking_up_username">Đang tra cứu tên người dùng...</string>
+    <string name="c54_no_contacts_paste_username">Bạn chưa có danh bạ. Dán một địa chỉ hoặc tên người dùng ở trên để mời ai đó.</string>
+    <string name="c54_no_contacts_match_username">Không có liên hệ nào khớp. Dán một địa chỉ hoặc tên người dùng để mời người mới.</string>
+    <string name="c54_invites_resent_all">Đã gửi lại lời mời cho tất cả thành viên.</string>
+    <string name="c54_invite_resent">Đã gửi lại lời mời.</string>
+    <string name="c54_room_follows_app_indexer">Phòng này lại dùng bộ lập chỉ mục của ứng dụng.</string>
+    <string name="c54_room_indexer_updated">Đã cập nhật indexer cho #%1$s.</string>
+    <string name="c54_room_could_not_reach">Không thể kết nối: %1$s</string>
+    <string name="c54_tap_open_your_chat">Nhấn để mở cuộc trò chuyện của bạn.</string>
+    <string name="c54_tap_start_chat_on_k">Nhấn để bắt đầu trò chuyện trên K.</string>
+    <string name="c54_stop_recording">Dừng ghi âm</string>
+    <string name="c54_send_voice_message">Gửi tin nhắn thoại</string>
+</resources>

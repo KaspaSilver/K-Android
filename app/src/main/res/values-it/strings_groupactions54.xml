@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 group create / add members sheets (iOS GroupActionSheets.swift, 2026-11-24): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="ga54_not_sent">Non inviato</string>
+    <string name="ga54_x_of_y">%1$d di %2$d</string>
+    <string name="ga54_some_steps_failed">Alcuni passaggi non sono andati a buon fine. Puoi inviarli di nuovo da Info gruppo &gt; Reinvia inviti a tutti.</string>
+    <string name="ga54_each_step_is_tx">Ogni passaggio è una transazione su Kaspa e può richiedere qualche secondo. Tieni K aperta finché non ha finito.</string>
+    <string name="ga54_setting_up_group">Configurazione del gruppo</string>
+    <string name="ga54_inviting">Invito di %1$s</string>
+    <string name="ga54_saving_recovery_copy">Salvataggio di una copia di ripristino</string>
+    <string name="ga54_adding_group_photo">Aggiunta della foto del gruppo</string>
+    <string name="ga54_creating">Creazione di «%1$s»</string>
+    <string name="ga54_adding">Aggiunta di %1$s</string>
+    <string name="ga54_adding_one_member">Aggiunta di 1 membro</string>
+    <string name="ga54_adding_n_members">Aggiunta di %1$d membri</string>
+    <string name="ga54_sending_group_key">Invio della nuova chiave del gruppo: %1$d di %2$d</string>
+    <string name="ga54_add_one_member">Aggiungere 1 membro al gruppo?</string>
+    <string name="ga54_add_n_members">Aggiungere %1$d membri al gruppo?</string>
+    <string name="ga54_joined_group">%1$s si è unito al gruppo</string>
+    <string name="ga54_declined_invite">%1$s ha rifiutato l\'invito</string>
+    <string name="ga54_invited_to_group">%1$s è stato invitato alla chat di gruppo</string>
+    <string name="ga54_removed_from_group">%1$s è stato rimosso dalla chat di gruppo</string>
+</resources>

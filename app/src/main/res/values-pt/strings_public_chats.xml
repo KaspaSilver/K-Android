@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">Nova conversa pública</string>
     <string name="pc_new_public_chat_subtitle">Entre em uma sala pública ou crie uma.</string>
     <string name="pc_edit_default_public_chats">Editar chats públicos padrão</string>
-    <string name="pc_edit_default_public_chats_subtitle">Ative ou desative as salas padrão e as salas de idiomas.</string>
     <string name="pc_new_public_chat_explainer">Qualquer pessoa que entrar no mesmo nome de canal pode ver e enviar mensagens ali - não há dono nem convite.</string>
     <string name="pc_join">Entrar</string>
     <string name="pc_back">Voltar</string>

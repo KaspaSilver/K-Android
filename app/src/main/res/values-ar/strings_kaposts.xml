@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">لم تُرسل الإكرامية: لا يمكن قراءة عنوان «الإكراميات من» الآن.</string>
     <string name="feed54_tip_minimum_footer">أصغر إكرامية تقبلها الشبكة هي %1$s.</string>
     <string name="feed54_tip_no_price">لم تُرسل الإكرامية: لا يوجد سعر حديث لـ KAS لتحويل %1$s إلى KAS.</string>
-    <string name="feed54_tip_too_small">لم تُرسل الإكرامية: أصغر إكرامية تقبلها الشبكة هي %1$s. غيّر إكراميتك الافتراضية في الإعدادات &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">لم تُرسل الإكرامية: أصغر إكرامية تقبلها الشبكة هي %1$s. غيّر إكراميتك الافتراضية في الإعدادات &gt; التخصيص &gt; الإكراميات.</string>
     <string name="feed54_tipped">تم إرسال إكرامية %1$s إلى %2$s</string>
     <string name="feed54_tipped_privately">تم إرسال إكرامية %1$s إلى %2$s بشكل خاص</string>
     <string name="feed54_unfollow_posted">تم نشر إلغاء المتابعة على الشبكة</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">إكرامية</string>
     <string name="kaposts_tips">الإكراميات</string>
     <string name="kaposts_tips_from">الإكرامية من</string>
-    <string name="kaposts_tips_from_footnote">الإكراميات من Chatting Address تُحسب على المنشور، وتظهر بين من قدّموا إكراميات. الإكرامية من عنوان آخر خاصة: يستلمها الكاتب ويراها في محادثتكما، لكنها لا تُحسب على المنشور ولا تذكر اسمك.</string>
+    <string name="kaposts_tips_from_footnote">الإكراميات من Chatting Address تُحسب على المنشور، وتظهر بين من قدّموا إكراميات. الإكرامية من عنوان آخر خاصة: يستلمها الكاتب ويراها في محادثتكما، لكنها لا تُحسب على المنشور ولا تذكر اسمك. والإكرامية في الدردشة تُرسل من هنا أيضًا.</string>
     <string name="kaposts_tips_from_not_available">غير متاح</string>
     <string name="kaposts_who_tipped">من أرسل إكرامية لهذا المنشور</string>
     <string name="kn53_kaplay_beat_in_move">تغلّب على %1$s في %2$d نقلة</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">الإكرامية بـ</string>
     <string name="kp5_tip_in_ask">السؤال في كل مرة</string>
     <string name="kp5_tip_in_ask_footer">تسأل الإكرامية في كل مرة: Kaspa أم kUSDT.</string>
-    <string name="kp5_tip_in_kusdt_footer">ترسل الإكرامية kUSDT إلى عنوان الدردشة لصاحب المنشور. إكراميات kUSDT لا تُحتسب على المنشور.</string>
+    <string name="kp5_tip_in_kusdt_footer">ترسل الإكرامية kUSDT إلى عنوان الدردشة الخاص بهم. إكراميات kUSDT لا تُحتسب على المنشور.</string>
     <string name="kp5_tip_not_counted">لا تُحتسب على المنشور</string>
-    <string name="kp5_tip_set_in_settings">اختر ما ترسله الإكرامية من الإعدادات > KaPost > الإكرامية بـ.</string>
+    <string name="kp5_tip_set_in_settings">اختر ما ترسله الإكرامية من الإعدادات &gt; التخصيص &gt; الإكراميات.</string>
     <string name="kp5_tip_title">إكرامية</string>
     <string name="kp5_tip_what_in">بماذا تقدّم الإكرامية؟</string>
     <string name="l53_already_in_your_language">بلغتك بالفعل</string>

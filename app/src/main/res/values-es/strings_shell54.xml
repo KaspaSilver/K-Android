@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">Nombres de usuario</string>
+    <string name="shell54_tipping_footer">Lo que envía Propina, en una publicación y en un chat.</string>
+    <string name="shell54_chatting_picker_intro">Si estas palabras ya guardan tu identidad en otra dirección - un nombre .kachat o un saldo de chat con fondos -, elígela aquí. Solo se muestran direcciones con saldo o nombres.</string>
+    <string name="shell54_what_others_can_see_caption">Cualquiera puede ver esta dirección y su saldo en la red Kaspa, pero no puede leer tus mensajes. Úsala solo para chatear y para nombres de usuario.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... o nombre de usuario</string>
+    <string name="shell54_looking_up_username">Buscando nombre de usuario...</string>
+    <string name="shell54_portfolio_add_address_footer">Introduce una dirección de Kaspa o un nombre de usuario como name.kachat. Cada transacción recibida en esta dirección se convierte en una compra y cada enviada en una venta, al precio histórico de KAS de ese día. Si vuelves a añadir la misma dirección más tarde, solo se importan las transacciones nuevas desde la última importación.</string>
+    <string name="shell54_report_copied">Informe copiado</string>
+    <string name="shell54_report_no_mail_app">Ninguna app de correo pudo abrirlo. Pega el informe en un correo a %1$s.</string>
+    <string name="shell54_show_amounts">Mostrar importes</string>
+    <string name="shell54_hide_amounts">Ocultar importes</string>
+    <string name="shell54_amount_unit">Monto (%1$s)</string>
+    <string name="shell54_price_per_kas">Precio por KAS</string>
+    <string name="shell54_total_spent">Total gastado</string>
+    <string name="shell54_total_received">Total recibido</string>
+    <string name="shell54_chart_settings">Ajustes del gráfico</string>
+    <string name="shell54_import_failed">La importación falló.</string>
+    <string name="shell54_export_csv">Exportar CSV</string>
+    <string name="shell54_sent_on">Enviado %1$s el %2$s</string>
+    <string name="shell54_received_on">Recibido %1$s el %2$s</string>
+    <string name="shell54_this_portfolio">este portafolio</string>
+    <string name="shell54_new_portfolio">Nuevo portafolio</string>
+    <string name="shell54_time">Hora</string>
+    <string name="shell54_total_value">Total %1$s</string>
+    <string name="shell54_move_up">Mover %1$s arriba</string>
+    <string name="shell54_move_down">Mover %1$s abajo</string>
+    <string name="shell54_selected">Seleccionado</string>
+    <string name="shell54_not_selected">No seleccionado</string>
+    <string name="shell54_not_valid_kpub">No es un kpub válido</string>
+    <string name="shell54_new_address_failed">No se pudo crear una dirección nueva. Inténtalo de nuevo.</string>
+</resources>

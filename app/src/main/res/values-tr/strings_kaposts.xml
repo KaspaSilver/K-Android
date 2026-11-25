@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">Bahşiş gönderilmedi: Bahşiş Kaynağı adresiniz şu anda okunamıyor.</string>
     <string name="feed54_tip_minimum_footer">Ağın kabul ettiği en küçük bahşiş %1$s.</string>
     <string name="feed54_tip_no_price">Bahşiş gönderilmedi: %1$s tutarını KAS\'a çevirecek güncel bir KAS fiyatı yok.</string>
-    <string name="feed54_tip_too_small">Bahşiş gönderilmedi: ağın kabul ettiği en küçük bahşiş %1$s. Varsayılan bahşişinizi Ayarlar &gt; KaPost\'ta değiştirin.</string>
+    <string name="feed54_tip_too_small">Bahşiş gönderilmedi: ağın kabul ettiği en küçük bahşiş %1$s. Varsayılan bahşişinizi Ayarlar &gt; Özelleştirme &gt; Bahşiş verme\'de değiştirin.</string>
     <string name="feed54_tipped">%1$s tutarında bahşiş %2$s kişisine gönderildi</string>
     <string name="feed54_tipped_privately">%1$s tutarında bahşiş %2$s kişisine özel olarak gönderildi</string>
     <string name="feed54_unfollow_posted">Takibi bırakma ağda paylaşıldı</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">Bahşiş</string>
     <string name="kaposts_tips">Bahşişler</string>
     <string name="kaposts_tips_from">Bahşiş Kaynağı</string>
-    <string name="kaposts_tips_from_footnote">Chatting Address\'inizden bahşişler gönderide sayılır ve bahşiş verenler arasında görünürsünüz. Başka bir adresten bahşiş gizlidir: yazar alır ve sohbetinizde görür, ama gönderide sayılmaz ve adınızı vermez.</string>
+    <string name="kaposts_tips_from_footnote">Chatting Address\'inizden bahşişler gönderide sayılır ve bahşiş verenler arasında görünürsünüz. Başka bir adresten bahşiş gizlidir: yazar alır ve sohbetinizde görür, ama gönderide sayılmaz ve adınızı vermez. Sohbetteki bahşiş de buradan gönderilir.</string>
     <string name="kaposts_tips_from_not_available">Kullanılamıyor</string>
     <string name="kaposts_who_tipped">Bu gönderiye kim bahşiş verdi</string>
     <string name="kn53_kaplay_beat_in_move">%1$s botunu %2$d hamlede yen</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">Bahşiş birimi</string>
     <string name="kp5_tip_in_ask">Her seferinde sor</string>
     <string name="kp5_tip_in_ask_footer">Bahşiş her seferinde Kaspa mı kUSDT mi gönderileceğini sorar.</string>
-    <string name="kp5_tip_in_kusdt_footer">Bahşiş, kUSDT\'yi gönderi sahibinin sohbet adresine gönderir. kUSDT bahşişleri gönderide sayılmaz.</string>
+    <string name="kp5_tip_in_kusdt_footer">Bahşiş, kUSDT\'yi alıcının sohbet adresine gönderir. kUSDT bahşişleri gönderide sayılmaz.</string>
     <string name="kp5_tip_not_counted">Gönderide sayılmaz</string>
-    <string name="kp5_tip_set_in_settings">Bahşişin ne göndereceğini Ayarlar > KaPost > Bahşiş birimi\'nden seçin.</string>
+    <string name="kp5_tip_set_in_settings">Bahşişin ne göndereceğini Ayarlar &gt; Özelleştirme &gt; Bahşiş verme\'den seçin.</string>
     <string name="kp5_tip_title">Bahşiş</string>
     <string name="kp5_tip_what_in">Bahşişi neyle veriyorsunuz?</string>
     <string name="l53_already_in_your_language">Zaten sizin dilinizde</string>

@@ -44,7 +44,10 @@ import javax.inject.Singleton
  *   (payment composer's Available pill, Manage Addresses) deliberately separate
  *   from the notification decision and NOT gated by the Address Activity setting.
  * - The notification itself is gated by Settings > Notifications > Wallet > "Address Activity"
- *   (default ON) plus the global notifications toggle.
+ *   (default ON) plus the global notifications toggle. The gates decide only what is announced:
+ *   baselines, handled marks and the chatting floor follow every own address whatever they say,
+ *   so turning a switch back on never announces what came while it was off (iOS 8cb4c88e, audit
+ *   2026-11-24 notifications).
  *
  * The chatting address notifies too, for plain transfers only (no payload, iOS 56b75c8): a
  * KaChat chat payment or a handshake is the chat's own news and stays quiet. Its catch-up only
@@ -60,7 +63,9 @@ class AddressActivityNotifier @Inject constructor(
     private val settingsRepository: AppSettingsRepository,
     private val notificationHelper: NotificationHelper,
     private val notificationCenter: GlobalNotificationCenterStore,
-    private val coldStorageManager: ColdStorageManager
+    private val coldStorageManager: ColdStorageManager,
+    /** Whether the push service is this device's notice source ([activeSinceMs]). */
+    private val pushState: PushState,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.kachat.app.util.StartupSafety.logOnlyHandler("AddressActivityNotifier"))
     private val runMutex = Mutex()
@@ -76,9 +81,21 @@ class AddressActivityNotifier @Inject constructor(
 
     // --- Lifecycle --------------------------------------------------------------------
 
+    /**
+     * When the app last came to the foreground (or this notifier started, on a cold launch). A
+     * receive in a block before it came while the app was away: for an address the push service
+     * watches, its `address_activity` push was the notice, and the catch-up only lists it in the
+     * bell ("In the background and when closed, pushes alone"). The push ledger
+     * ([NotificationHelper.pushArrived]) keeps only 30 minutes, so after a longer absence the
+     * catch-up announced every receive again (iOS 8cb4c88e `activeSince`, audit 2026-11-24
+     * notifications).
+     */
+    @Volatile private var activeSinceMs = System.currentTimeMillis()
+
     /** Called from the process lifecycle observer on foreground: immediate catch-up pass, then a
      *  foreground-only poll loop approximating iOS's live subscription events. */
     fun onAppForeground() {
+        activeSinceMs = System.currentTimeMillis()
         scope.launch { runDiffPass() }
         if (pollJob?.isActive == true) return
         pollJob = scope.launch {
@@ -352,6 +369,10 @@ class AddressActivityNotifier @Inject constructor(
             if (featureOn && !isChatting) postBalanceIncreased(address, delta)
             return
         }
+        // Receives the push service announced while the app was away (see [activeSinceMs]).
+        val pushWatched = !isChatting && pushState.isActive &&
+            runCatching { address in pushWatchOnlyAddresses() }.getOrDefault(false)
+        val awayBeforeMs = activeSinceMs
         var attributedAny = false
         for (tx in transactions) {
             if (isChatting && (!isPlainTransfer(tx) || (tx.blockTime ?: 0L) <= floor)) continue
@@ -370,7 +391,9 @@ class AddressActivityNotifier @Inject constructor(
                 continue
             }
             if (featureOn) {
-                postReceive(totalSompi = toAddress, address = address, dedupeKey = tx.transactionId)
+                val blockTime = tx.blockTime ?: 0L
+                val pushWasTheNotice = pushWatched && blockTime > 0L && blockTime < awayBeforeMs
+                postReceive(totalSompi = toAddress, address = address, dedupeKey = tx.transactionId, banner = !pushWasTheNotice)
             }
         }
         if (!attributedAny && featureOn && !isChatting) {
@@ -382,7 +405,8 @@ class AddressActivityNotifier @Inject constructor(
 
     // --- Notifications ----------------------------------------------------------------
 
-    private suspend fun postReceive(totalSompi: Long, address: String, dedupeKey: String) {
+    /** [banner] false: the bell only (the push already told them, [activeSinceMs]). */
+    private suspend fun postReceive(totalSompi: Long, address: String, dedupeKey: String, banner: Boolean = true) {
         if (totalSompi <= 0) return
         // The chatting address: the payment sync may have bannered this payment already.
         // One notice per transaction (iOS 428a797b `InAppBanner.claim`): the payment sync, or this
@@ -394,7 +418,7 @@ class AddressActivityNotifier @Inject constructor(
         val opensAddress = !isColdOnly(address, walletAddressOrNull(), walletManager.allSpendingAddresses().toSet())
         // Nor when its Received push already came, even one tapped and gone from the shade (iOS
         // `InAppBanner.pushArrived`, 2026-11-22).
-        if (!notificationHelper.pushArrived(dedupeKey) && notificationHelper.claimForBanner(dedupeKey) && !pushShowing) {
+        if (banner && !notificationHelper.pushArrived(dedupeKey) && notificationHelper.claimForBanner(dedupeKey) && !pushShowing) {
             notificationHelper.showAddressActivity(
                 title = title,
                 text = describe(address),

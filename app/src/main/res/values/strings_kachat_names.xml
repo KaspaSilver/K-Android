@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">Renew them before their grace periods end to keep them.</string>
-    <string name="kachat_expired_many_title">%1$d of your .kachat domains expired</string>
+    <string name="kachat_expired_many_title">%1$d of your usernames expired</string>
     <string name="kachat_expired_one_body">Renew %1$s before its grace period ends on %2$s to keep it.</string>
-    <string name="kachat_expired_one_title">One of your .kachat domains expired</string>
+    <string name="kachat_expired_one_title">One of your usernames expired</string>
     <string name="kachat_names_on_address_hint">Names this address claims or buys show here once .kachat names launch.</string>
-    <string name="kachat_names_this_address_owns">Names this address owns show here.</string>
-    <string name="kachat_no_names_on_address">No .kachat names on this address</string>
+    <string name="kachat_names_this_address_owns">Usernames this address owns show here.</string>
+    <string name="kachat_no_names_on_address">No usernames on this address</string>
     <string name="kg_claim_body">It\'s the name people see you as across K and on your profile link. Without one, people see your address.</string>
-    <string name="kg_claim_hint">Search for the name you want in the .kachat tab, then claim it.</string>
+    <string name="kg_claim_hint">Search for the name you want in the Usernames tab, then claim it.</string>
     <string name="kg_claim_title">Claim your .kachat name</string>
     <string name="kg_close">Close</string>
-    <string name="kg_finished_body">Claim your name in the .kachat tab whenever you\'re ready.</string>
+    <string name="kg_finished_body">Claim your name in the Usernames tab whenever you\'re ready.</string>
     <string name="kg_finished_title">You\'re all set</string>
     <string name="kg_how_body">Your name lives on the Kaspa network, held by your chatting address. Nobody can take it or change it while it\'s yours.</string>
     <string name="kg_how_commit">Claiming takes two quick transactions: the first keeps your pick secret, the second registers it.</string>
     <string name="kg_how_miners">The price goes to the network\'s miners, not to K.</string>
     <string name="kg_how_period">You pay for one period at a time. Shorter names cost more.</string>
     <string name="kg_how_title">How a name works</string>
-    <string name="kg_keep_body">Your names are in Wallet > Your Domains > .kachat.</string>
+    <string name="kg_keep_body">Your names are in Wallet &gt; Your Usernames.</string>
     <string name="kg_keep_grace">After it expires there\'s a grace period to renew it before anyone else can claim it.</string>
     <string name="kg_keep_renew">Renew before it expires. It shows when, on each name.</string>
     <string name="kg_keep_title">Keep it</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">The registration stops and the commit\'s 0.2 KAS comes back to you, less the network fee.</string>
     <string name="kn_cancel_commit_title">Cancel the commit?</string>
     <string name="kn_change_price">Change Price</string>
-    <string name="kn_claim_a_name">Claim a Name</string>
     <string name="kn_claim_name_title">Claim Name</string>
     <string name="kn_claim_your_name_on_kaspa">Claim your name on Kaspa</string>
     <string name="kn_claiming_name">Claiming %1$s</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">Name released</string>
     <string name="kn_done_transferred">Name transferred</string>
     <string name="kn_err_address_key">That address\'s key is not valid.</string>
-    <string name="kn_err_enter_address_or_domain">Enter an address or a domain.</string>
+    <string name="kn_err_enter_address_or_domain">Enter an address or a username.</string>
     <string name="kn_err_lookup">Couldn\'t look that name up.</string>
     <string name="kn_err_name_address_cant_own">That name\'s address can\'t own a .kachat name.</string>
     <string name="kn_err_not_network_address">Not a Schnorr address on this network.</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">Waiting for the commit to confirm...</string>
     <string name="kn_taken">Taken</string>
     <string name="kn_taken_for_sale">Taken · for sale at %1$s</string>
-    <string name="kn_transfer_footer_domain">An address or a domain - .kachat names are looked up first, and it\'s resolved to the address shown.</string>
+    <string name="kn_transfer_footer_domain">An address or a username - it\'s resolved to the address shown.</string>
     <string name="kn_transfer_warning">A transfer can\'t be undone. The new owner gets the name with its current expiry; your profile stays with your address.</string>
     <string name="kn_view_transaction">View Transaction</string>
     <string name="kn_withdraw">Withdraw</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">Buying and selling</string>
     <string name="kcn_kp_claim_pays_first_period">Claim pays for the first %1$s. Renew pays for each one after that.</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">Claiming sends two transactions: the commit now, the registration about a minute later. Both pay this fee rate.</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Couldn\'t load this address\'s names. Pull down to try again.</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Couldn\'t load this address\'s usernames. Pull down to try again.</string>
     <string name="kcn_kp_d_day_e40b4">%1$s day</string>
     <string name="kcn_kp_d_days_0e3de">%1$s days</string>
     <string name="kcn_kp_dismiss_70afe">Dismiss</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">The seller gets the full listed price: there\'s no marketplace fee.</string>
     <string name="kcn_kp_not_confirmed_b9e09">Not confirmed</string>
     <string name="kcn_kp_one_character">1 character</string>
-    <string name="kcn_kp_opens_the_kachat_tab">Opens the .kachat tab</string>
+    <string name="kcn_kp_opens_the_kachat_tab">Opens the Usernames tab</string>
     <string name="kcn_kp_pay_up_to_at_a_time">You can pay for up to %1$s at a time.</string>
     <string name="kcn_kp_paying_ahead">Paying ahead</string>
     <string name="kcn_kp_price_goes_to_miners">The price goes to the miners - K takes nothing.</string>

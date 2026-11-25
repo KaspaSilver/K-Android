@@ -43,15 +43,14 @@ class KaPostsNotificationPoller @Inject constructor(
     private val notificationCenter: GlobalNotificationCenterStore,
     // KaPosts activity is counted here, not listed in the global center - see recordArrivals.
     private val unseenStore: KaPostsUnseenStore,
-    // Actor naming (iOS parity): your saved contact name wins, then their KNS domain,
+    // Actor naming (iOS parity): your saved contact name wins, then their .kachat name,
     // then the shortened address — never a bare address when a better name exists.
     private val chatRepository: com.kachat.app.repository.ChatRepository,
-    private val knsService: KnsService,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.kachat.app.util.StartupSafety.logOnlyHandler("KaPostsNotificationPoller"))
     private var pollJob: Job? = null
 
-    /** Session cache: one alias/KNS resolution per actor per process, not one per poll. */
+    /** Session cache: one alias/.kachat resolution per actor per process, not one per poll. */
     private val actorNameCache = mutableMapOf<String, String>()
 
     private suspend fun actorDisplayName(address: String): String {
@@ -60,15 +59,9 @@ class KaPostsNotificationPoller @Inject constructor(
         val alias = contact?.alias?.trim().orEmpty()
         // The address's last 10 characters, as iOS KaPostsNotificationService.actorName.
         val fallback = address.takeLast(10)
-        // A domain keeps its ".kas" here too: the suffix is part of the name.
-        val name = if (alias.isNotEmpty()) {
-            alias
-        } else {
-            val domain = contact?.knsName?.takeIf { com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY }?.trim().orEmpty().ifEmpty {
-                try { knsService.identityPrimaryDomain(address) ?: knsService.identityName(address) ?: "" }
-                catch (_: Exception) { "" }
-            }
-            if (domain.isNotEmpty()) domain else fallback
+        // Their .kachat name, the only name service K reads (iOS 518fdc8c `actorName`).
+        val name = alias.ifEmpty {
+            com.kachat.app.services.kachatnames.KachatNamesRegistry.kachatName(address)?.trim().orEmpty().ifEmpty { fallback }
         }
         // Only cache real resolutions — a network miss must not pin the short-address
         // fallback for the rest of the session. Bounded: clear wholesale past 500 entries.
@@ -146,8 +139,9 @@ class KaPostsNotificationPoller @Inject constructor(
         val address = try { walletManager.getAddress() } catch (_: Exception) { return }
         // No KaPost indexer on this network (testnet) - none of the feed work runs (iOS 0bda85e).
         if (settingsRepository.kapostIndexerUrl.first().isBlank()) return
-        // Notifications off: nothing here would be shown, so the indexer isn't asked (iOS 33095ac).
-        if (!settingsRepository.notificationsEnabled.first()) return
+        // Asked with notifications off too: the poll is what keeps Profile's bell counting while
+        // the app is open, and only its banners belong to the switch ([KaPostsNotifier.showKaPosts]
+        // checks it; iOS 8cb4c88e, audit 2026-11-24 notifications).
         var page = kaPostsService.fetchNotificationsPage(limit = 50)
         var notifications = page.items
         val key = lastSeenKey(address)

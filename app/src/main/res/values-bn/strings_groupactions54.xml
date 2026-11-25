@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 group create / add members sheets (iOS GroupActionSheets.swift, 2026-11-24): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="ga54_not_sent">পাঠানো হয়নি</string>
+    <string name="ga54_x_of_y">%1$d / %2$d</string>
+    <string name="ga54_some_steps_failed">কিছু ধাপ সম্পন্ন হয়নি। গ্রুপ তথ্য &gt; সবাইকে আবার আমন্ত্রণ পাঠান থেকে আবার পাঠাতে পারেন।</string>
+    <string name="ga54_each_step_is_tx">প্রতিটি ধাপ Kaspa-তে একটি লেনদেন এবং কয়েক সেকেন্ড লাগতে পারে। শেষ না হওয়া পর্যন্ত K খোলা রাখুন।</string>
+    <string name="ga54_setting_up_group">গ্রুপ সেট আপ হচ্ছে</string>
+    <string name="ga54_inviting">%1$s-কে আমন্ত্রণ জানানো হচ্ছে</string>
+    <string name="ga54_saving_recovery_copy">একটি পুনরুদ্ধার কপি সংরক্ষণ হচ্ছে</string>
+    <string name="ga54_adding_group_photo">গ্রুপের ছবি যোগ হচ্ছে</string>
+    <string name="ga54_creating">“%1$s” তৈরি হচ্ছে</string>
+    <string name="ga54_adding">%1$s-কে যোগ করা হচ্ছে</string>
+    <string name="ga54_adding_one_member">১ জন সদস্য যোগ হচ্ছে</string>
+    <string name="ga54_adding_n_members">%1$d জন সদস্য যোগ হচ্ছে</string>
+    <string name="ga54_sending_group_key">নতুন গ্রুপ কী পাঠানো হচ্ছে: %1$d / %2$d</string>
+    <string name="ga54_add_one_member">গ্রুপে ১ জন সদস্য যোগ করবেন?</string>
+    <string name="ga54_add_n_members">গ্রুপে %1$d জন সদস্য যোগ করবেন?</string>
+    <string name="ga54_joined_group">%1$s গ্রুপে যোগ দিয়েছেন</string>
+    <string name="ga54_declined_invite">%1$s আমন্ত্রণ প্রত্যাখ্যান করেছেন</string>
+    <string name="ga54_invited_to_group">%1$s-কে গ্রুপ চ্যাটে আমন্ত্রণ জানানো হয়েছে</string>
+    <string name="ga54_removed_from_group">%1$s-কে গ্রুপ চ্যাট থেকে সরানো হয়েছে</string>
+</resources>

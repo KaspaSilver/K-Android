@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">A gorjeta não foi enviada: o endereço de Gorjetas de não pode ser lido agora.</string>
     <string name="feed54_tip_minimum_footer">A menor gorjeta que a rede aceita é %1$s.</string>
     <string name="feed54_tip_no_price">Gorjeta não enviada: não há um preço recente do KAS para converter %1$s em KAS.</string>
-    <string name="feed54_tip_too_small">A gorjeta não foi enviada: a menor gorjeta que a rede aceita é %1$s. Altere sua gorjeta padrão em Ajustes &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">A gorjeta não foi enviada: a menor gorjeta que a rede aceita é %1$s. Altere sua gorjeta padrão em Configurações &gt; Personalização &gt; Gorjetas.</string>
     <string name="feed54_tipped">Gorjeta de %1$s enviada para %2$s</string>
     <string name="feed54_tipped_privately">Gorjeta de %1$s enviada para %2$s de forma privada</string>
     <string name="feed54_unfollow_posted">Deixar de seguir publicado na rede</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">Gorjeta</string>
     <string name="kaposts_tips">Gorjetas</string>
     <string name="kaposts_tips_from">Gorjetas de</string>
-    <string name="kaposts_tips_from_footnote">Gorjetas do seu Chatting Address contam na publicação e você aparece entre quem deu gorjeta. De outro endereço uma gorjeta é privada: o autor recebe e vê no chat de vocês, mas ela não conta na publicação nem cita você.</string>
+    <string name="kaposts_tips_from_footnote">Gorjetas do seu Chatting Address contam na publicação e você aparece entre quem deu gorjeta. De outro endereço uma gorjeta é privada: o autor recebe e vê no chat de vocês, mas ela não conta na publicação nem cita você. Uma gorjeta em um chat também sai daqui.</string>
     <string name="kaposts_tips_from_not_available">Não disponível</string>
     <string name="kaposts_who_tipped">Quem deu gorjeta a este post</string>
     <string name="kn53_kaplay_beat_in_move">Vença %1$s em %2$d lance</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">Gorjeta em</string>
     <string name="kp5_tip_in_ask">Perguntar sempre</string>
     <string name="kp5_tip_in_ask_footer">Gorjeta pergunta sempre se deve enviar Kaspa ou kUSDT.</string>
-    <string name="kp5_tip_in_kusdt_footer">Gorjeta envia kUSDT para o endereço de chat do autor. Gorjetas em kUSDT não são contadas na publicação.</string>
+    <string name="kp5_tip_in_kusdt_footer">Gorjeta envia kUSDT para o endereço de chat da pessoa. Gorjetas em kUSDT não são contadas em uma publicação.</string>
     <string name="kp5_tip_not_counted">Não é contada na publicação</string>
-    <string name="kp5_tip_set_in_settings">Escolha o que Gorjeta envia em Ajustes > KaPost > Gorjeta em.</string>
+    <string name="kp5_tip_set_in_settings">Escolha o que Gorjeta envia em Configurações &gt; Personalização &gt; Gorjetas.</string>
     <string name="kp5_tip_title">Gorjeta</string>
     <string name="kp5_tip_what_in">Em que você dá a gorjeta?</string>
     <string name="l53_already_in_your_language">Já está no seu idioma</string>

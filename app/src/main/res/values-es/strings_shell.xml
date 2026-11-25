@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">Estadísticas</string>
     <string name="shell_tab_websites">Sitios web</string>
     <string name="shell_kaspa_websites">Sitios web de Kaspa</string>
-    <string name="shell_customize_dock">Personalizar Dock</string>
-    <string name="shell_your_dock">Tu dock</string>
-    <string name="shell_always_stays">%1$s siempre se queda en tu dock.</string>
-    <string name="shell_dock_full">Tu dock está lleno. Quita uno para añadir uno de estos.</string>
-    <string name="shell_hub_order">En el orden en que %1$s los muestra.</string>
-    <string name="shell_move_to">Mover %1$s a %2$s</string>
-    <string name="shell_add_to_dock">Añadir %1$s a tu dock</string>
-    <string name="shell_always_in_dock">Siempre en tu dock</string>
-    <string name="shell_hub_empty_title">Aquí no hay nada por ahora</string>
-    <string name="shell_hub_empty_body">Lo que no está en tu dock aparece aquí. Ordénalo en Personalizar Dock.</string>
-    <string name="shell_customize_dock_footer">Elige qué va en tu dock. Todo lo demás está en Kaspa Hub.</string>
     <string name="shell_terms_of_use">Términos de uso</string>
     <string name="shell_message_indexer_footer">KaPost, los chats públicos y el ajedrez también se leen de este indexador.</string>
     <string name="shell_ks_what_counts">Qué se cuenta</string>

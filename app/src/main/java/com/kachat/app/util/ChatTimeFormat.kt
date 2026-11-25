@@ -7,12 +7,18 @@ import java.util.Locale
 
 /** Shared date/time formatting for message lists (1:1 chats and broadcast rooms) — day dividers plus per-message times revealed by swiping the list left. */
 object ChatTimeFormat {
-    fun isSameDay(t1: Long, t2: Long): Boolean {
-        val cal1 = Calendar.getInstance().apply { timeInMillis = t1 }
-        val cal2 = Calendar.getInstance().apply { timeInMillis = t2 }
-        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
-    }
+    /** Whether two instants fall on the same local day. Asked for every message row a chat draws
+     *  while it scrolls, so it works from the zone's offset at each instant rather than building
+     *  two Calendars per row (iOS 2026-11-24 `ChatTimelineLayout`, CLAUDE.md "Smooth scrolling");
+     *  the offset is per instant, so DST days come out right. */
+    fun isSameDay(t1: Long, t2: Long): Boolean = isSameDay(t1, t2, java.util.TimeZone.getDefault())
+
+    internal fun isSameDay(t1: Long, t2: Long, zone: java.util.TimeZone): Boolean =
+        localDayIndex(t1, zone) == localDayIndex(t2, zone)
+
+    /** Days since the epoch of [t]'s local date in [zone]. */
+    internal fun localDayIndex(t: Long, zone: java.util.TimeZone): Long =
+        Math.floorDiv(t + zone.getOffset(t), 86_400_000L)
 
     /** The divider between days' worth of messages (iOS MessageDaySeparatorFormatter): "Today",
      *  "Yesterday", then "Thursday, Sep 24" this year and "Sep 24, 2025" before it, in the

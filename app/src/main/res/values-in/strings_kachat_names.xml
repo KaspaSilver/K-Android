@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">Perpanjang sebelum masa tenggangnya berakhir agar tetap milik Anda.</string>
-    <string name="kachat_expired_many_title">%1$d domain .kachat Anda kedaluwarsa</string>
+    <string name="kachat_expired_many_title">%1$d nama pengguna Anda kedaluwarsa</string>
     <string name="kachat_expired_one_body">Perpanjang %1$s sebelum masa tenggangnya berakhir pada %2$s agar tetap milik Anda.</string>
-    <string name="kachat_expired_one_title">Salah satu domain .kachat Anda kedaluwarsa</string>
+    <string name="kachat_expired_one_title">Salah satu nama pengguna Anda kedaluwarsa</string>
     <string name="kachat_names_on_address_hint">Nama yang diklaim atau dibeli alamat ini muncul di sini setelah nama .kachat diluncurkan.</string>
-    <string name="kachat_names_this_address_owns">Nama milik alamat ini muncul di sini.</string>
-    <string name="kachat_no_names_on_address">Tidak ada nama .kachat di alamat ini</string>
+    <string name="kachat_names_this_address_owns">Nama pengguna milik alamat ini muncul di sini.</string>
+    <string name="kachat_no_names_on_address">Tidak ada nama pengguna di alamat ini</string>
     <string name="kg_claim_body">Inilah nama yang dilihat orang di seluruh K dan di tautan profil Anda. Tanpanya, orang melihat alamat Anda.</string>
-    <string name="kg_claim_hint">Cari nama yang Anda inginkan di tab .kachat, lalu klaim.</string>
+    <string name="kg_claim_hint">Cari nama yang Anda inginkan di tab Nama Pengguna, lalu klaim.</string>
     <string name="kg_claim_title">Klaim nama .kachat-mu</string>
     <string name="kg_close">Tutup</string>
-    <string name="kg_finished_body">Klaim nama Anda di tab .kachat kapan pun Anda siap.</string>
+    <string name="kg_finished_body">Klaim nama Anda di tab Nama Pengguna kapan pun Anda siap.</string>
     <string name="kg_finished_title">Semua siap</string>
     <string name="kg_how_body">Nama Anda ada di jaringan Kaspa, dipegang oleh alamat obrolan Anda. Selama milik Anda, tak ada yang bisa mengambil atau mengubahnya.</string>
     <string name="kg_how_commit">Klaim butuh dua transaksi cepat: yang pertama merahasiakan pilihan Anda, yang kedua mendaftarkannya.</string>
     <string name="kg_how_miners">Harganya untuk penambang jaringan, bukan untuk K.</string>
     <string name="kg_how_period">Anda membayar satu periode setiap kali. Nama yang lebih pendek lebih mahal.</string>
     <string name="kg_how_title">Cara kerja nama</string>
-    <string name="kg_keep_body">Nama Anda ada di Dompet &gt; Domain Anda &gt; .kachat.</string>
+    <string name="kg_keep_body">Nama Anda ada di Dompet &gt; Nama Pengguna Anda.</string>
     <string name="kg_keep_grace">Setelah kedaluwarsa ada masa tenggang untuk memperpanjang sebelum orang lain bisa mengklaimnya.</string>
     <string name="kg_keep_renew">Perpanjang sebelum kedaluwarsa. Tanggalnya tampil di setiap nama.</string>
     <string name="kg_keep_title">Pertahankan</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">Pendaftaran berhenti dan 0.2 KAS dari komitmen kembali kepada Anda, dikurangi biaya jaringan.</string>
     <string name="kn_cancel_commit_title">Batalkan komitmen?</string>
     <string name="kn_change_price">Ubah Harga</string>
-    <string name="kn_claim_a_name">Klaim Nama</string>
     <string name="kn_claim_name_title">Klaim Nama</string>
     <string name="kn_claim_your_name_on_kaspa">Klaim namamu di Kaspa</string>
     <string name="kn_claiming_name">Mengklaim %1$s</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">Nama dilepas</string>
     <string name="kn_done_transferred">Nama dipindahkan</string>
     <string name="kn_err_address_key">Kunci alamat itu tidak valid.</string>
-    <string name="kn_err_enter_address_or_domain">Masukkan alamat atau domain.</string>
+    <string name="kn_err_enter_address_or_domain">Masukkan alamat atau nama pengguna.</string>
     <string name="kn_err_lookup">Tidak dapat mencari nama itu.</string>
     <string name="kn_err_name_address_cant_own">Alamat nama itu tidak bisa memiliki nama .kachat.</string>
     <string name="kn_err_not_network_address">Bukan alamat Schnorr di jaringan ini.</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">Menunggu komitmen terkonfirmasi...</string>
     <string name="kn_taken">Sudah dipakai</string>
     <string name="kn_taken_for_sale">Sudah dipakai · dijual seharga %1$s</string>
-    <string name="kn_transfer_footer_domain">Alamat atau domain - nama .kachat dicari lebih dulu, lalu diubah menjadi alamat yang ditampilkan.</string>
+    <string name="kn_transfer_footer_domain">Alamat atau nama pengguna - diubah menjadi alamat yang ditampilkan.</string>
     <string name="kn_transfer_warning">Pemindahan tidak bisa dibatalkan. Pemilik baru mendapat nama dengan masa berlakunya saat ini; profil Anda tetap di alamat Anda.</string>
     <string name="kn_view_transaction">Lihat transaksi</string>
     <string name="kn_withdraw">Tarik</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">Membeli dan menjual</string>
     <string name="kcn_kp_claim_pays_first_period">Klaim membayar periode pertama (%1$s). Perpanjangan membayar setiap periode sesudahnya.</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">Klaim mengirim dua transaksi: komitmen sekarang, pendaftaran sekitar satu menit kemudian. Keduanya membayar tarif biaya ini.</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Tidak dapat memuat nama alamat ini. Tarik ke bawah untuk mencoba lagi.</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Tidak dapat memuat nama pengguna alamat ini. Tarik ke bawah untuk mencoba lagi.</string>
     <string name="kcn_kp_d_day_e40b4">%1$s hari</string>
     <string name="kcn_kp_d_days_0e3de">%1$s hari</string>
     <string name="kcn_kp_dismiss_70afe">Tutup</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">Penjual menerima harga penuh yang dicantumkan: tidak ada biaya marketplace.</string>
     <string name="kcn_kp_not_confirmed_b9e09">Belum dikonfirmasi</string>
     <string name="kcn_kp_one_character">1 karakter</string>
-    <string name="kcn_kp_opens_the_kachat_tab">Membuka tab .kachat</string>
+    <string name="kcn_kp_opens_the_kachat_tab">Membuka tab Nama Pengguna</string>
     <string name="kcn_kp_pay_up_to_at_a_time">Kamu bisa membayar hingga %1$s sekaligus.</string>
     <string name="kcn_kp_paying_ahead">Bayar di muka</string>
     <string name="kcn_kp_price_goes_to_miners">Harganya untuk para penambang - K tidak mengambil apa pun.</string>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">סנייק</string>
+    <string name="arcade_snake_detail">אכלו, גדלו ואל תתנגשו בקירות או בעצמכם. הניקוד נרשם ב-Kaspa.</string>
+    <string name="arcade_2048_detail">החליקו כדי לאחד אריחים ולהגיע ל-2048. הניקוד נרשם ב-Kaspa.</string>
+    <string name="arcade_other_account">המשחק הזה שוחק בחשבון אחר. התחברו אליו כדי לרשום את הניקוד.</string>
+    <string name="arcade_score_not_sent">הניקוד לא נשלח.</string>
+    <string name="arcade_challenge_play">אתגר: שחקו ב-%1$s</string>
+    <string name="arcade_beat_in">עקוף %1$s ב-%2$s</string>
+    <string name="arcade_share_boast">השגתי %1$s נקודות ב-%2$s ב-K. חושבים שתצליחו לעקוף?</string>
+    <string name="arcade_challenge_named">%1$s השיג %2$s נקודות ב-%3$s. תצליחו לעקוף?</string>
+    <string name="arcade_challenge_someone">מישהו השיג %1$s נקודות ב-%2$s. תצליחו לעקוף?</string>
+    <string name="arcade_your_best">השיא שלכם: %1$s</string>
+    <string name="arcade_fee_note">הניקוד של כל משחק שהסתיים נרשם ב-Kaspa מכתובת הצ\'אט שלכם, תמורת עמלת רשת קטנה.</string>
+    <string name="arcade_hint_period">מחליף את תקופת טבלת המובילים</string>
+    <string name="arcade_board_unreachable">לא ניתן היה לטעון את טבלת המובילים. משכו למטה כדי לנסות שוב.</string>
+    <string name="arcade_board_empty">עדיין אין ניקוד. היו הראשונים.</string>
+    <string name="arcade_posted">פורסם ב-KaPost</string>
+    <string name="arcade_game_over">המשחק נגמר</string>
+    <string name="arcade_play_again">שחק שוב</string>
+    <string name="arcade_posting">מפרסם ב-KaPost…</string>
+    <string name="arcade_shared">שותף ב-KaPost</string>
+    <string name="arcade_retry_stamp">ניסיון רישום חוזר</string>
+    <string name="arcade_stamping">רושם את הניקוד ב-Kaspa…</string>
+    <string name="arcade_stamped">הניקוד נרשם ב-Kaspa</string>
+    <string name="arcade_no_score">אין ניקוד לרישום.</string>
+    <string name="arcade_score_n">ניקוד: %1$s</string>
+    <string name="arcade_snake_start_hint">החליקו על הלוח או השתמשו בחצים כדי להתחיל.</string>
+    <string name="arcade_score">ניקוד</string>
+    <string name="arcade_best_tile">האריח הגבוה ביותר</string>
+    <string name="arcade_2048_hint">החליקו כדי להזיז את האריחים. אריחים זהים מתאחדים.</string>
+    <string name="arcade_challenge_label">אתגר ארקייד</string>
+</resources>

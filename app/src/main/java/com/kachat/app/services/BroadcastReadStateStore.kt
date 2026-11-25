@@ -87,17 +87,6 @@ class BroadcastReadStateStore @Inject constructor(
         save(current.copy(lastReadByChannel = current.lastReadByChannel - channel, manuallyUnread = current.manuallyUnread - channel))
     }
 
-    /** Whether the one-time "curated rooms notify by default" has been applied for this wallet. */
-    fun featuredNotifyDefaultApplied(): Boolean = synchronized(lock) {
-        val key = wallet ?: return@synchronized true
-        prefs.getBoolean("featured_notify_default_$key", false)
-    }
-
-    fun markFeaturedNotifyDefaultApplied() = synchronized(lock) {
-        val key = wallet ?: return@synchronized
-        prefs.edit().putBoolean("featured_notify_default_$key", true).apply()
-    }
-
     private fun load(key: String): State {
         val markers = runCatching {
             val json = JSONObject(prefs.getString("last_read_$key", null) ?: "{}")

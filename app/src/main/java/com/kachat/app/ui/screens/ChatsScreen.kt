@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.MarkEmailUnread
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.shape.CircleShape
@@ -71,7 +72,6 @@ import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -126,7 +126,6 @@ fun ChatsScreen(
     broadcastViewModel: com.kachat.app.viewmodels.BroadcastViewModel = hiltViewModel(),
 ) {
     val balance by walletViewModel.fullBalance.collectAsState()
-    val dotColorHex by connectionViewModel.dotColorHex.collectAsState()
     // The chat list leaves out Message Requests and blocked chats - requests sit behind their own
     // row, and neither counts toward the unread badge (iOS f7ca401, 84e3402).
     val chatListConversations by chatViewModel.chatListConversations.collectAsState()
@@ -180,6 +179,13 @@ fun ChatsScreen(
     val groupPins by remember(myAddress) {
         myAddress?.let { chatViewModel.groupPins(it) } ?: kotlinx.coroutines.flow.flowOf(emptyList())
     }.collectAsState(initial = emptyList())
+    // Public rooms pinned up into the same row (room names), newest pin first, saved per wallet
+    // (iOS 2026-11-23 `kachat_room_pins_<wallet>`).
+    val roomPins by remember(myAddress) {
+        myAddress?.let { chatViewModel.roomPins(it) } ?: kotlinx.coroutines.flow.flowOf(emptyList())
+    }.collectAsState(initial = emptyList())
+    /** The pinned room whose long-press half sheet is up (list rows swipe instead). */
+    var roomActionTarget by remember { mutableStateOf<String?>(null) }
     /** The pinned group whose long-press half sheet is up (list rows swipe instead). */
     var groupActionTarget by remember { mutableStateOf<String?>(null) }
     /** A group waiting on its delete confirmation. */
@@ -221,6 +227,28 @@ fun ChatsScreen(
         scope.launch {
             val pinned = chatViewModel.toggleGroupPin(address, groupId)
             IosToasts.show(context.getString(if (pinned) R.string.pinned_to_top_row else R.string.chats_unpinned))
+        }
+    }
+    /** Pins a room up into the row (newest pin first), or unpins it (iOS `toggleRoomPin`). */
+    fun toggleRoomPin(channelName: String) {
+        val address = myAddress ?: return
+        scope.launch {
+            val pinned = chatViewModel.toggleRoomPin(address, channelName)
+            IosToasts.show(context.getString(if (pinned) R.string.pinned_to_top_row else R.string.chats_unpinned))
+        }
+    }
+    /** A room switched off or deleted loses its pin, so it comes back in the list, not the row
+     *  (iOS `dropRoomPin`). */
+    fun dropRoomPin(channelName: String) {
+        myAddress?.let { chatViewModel.dropRoomPin(it, channelName) }
+    }
+    /** Delete on a room (iOS `deleteRoom`): a default room is switched off (and unpinned) at
+     *  once, a room you added asks first. */
+    fun deleteRoom(channelName: String) {
+        if (deletePublicRoomNeedsConfirmation(context, channelName, broadcastViewModel)) {
+            roomToLeave = channelName
+        } else {
+            dropRoomPin(channelName)
         }
     }
     fun deleteGroups(ids: Set<String>) {
@@ -297,7 +325,22 @@ fun ChatsScreen(
     // Shared by Select All and the bulk actions so they agree on what's visible.
     // Public rooms join them by their newest message (iOS 148a5331 `roomActivity`); ties keep
     // their order (the sort is stable), so rooms nobody has written in don't swap places.
-    val displayedRooms = remember(listedRooms, searchQuery) { displayedPublicRooms(listedRooms, searchQuery) }
+    // Pinned rooms are circles instead, except while searching (iOS `displayedRooms`).
+    val displayedRooms = remember(listedRooms, searchQuery, roomPins) {
+        val rooms = displayedPublicRooms(listedRooms, searchQuery)
+        if (searchQuery.isNotBlank() || roomPins.isEmpty()) rooms
+        else roomPins.toSet().let { pinned -> rooms.filter { it.channelName !in pinned } }
+    }
+    // The pinned rooms, in pin order (newest pin first). Empty while searching: the results list
+    // them with the rest. A room switched off or left finds nothing and shows nowhere (iOS
+    // `pinnedRoomSummaries`).
+    val pinnedRooms = remember(listedRooms, roomPins, searchQuery) {
+        if (searchQuery.isNotBlank() || roomPins.isEmpty()) emptyList()
+        else {
+            val byName = listedRooms.associateBy { it.channelName }
+            roomPins.mapNotNull { byName[it] }
+        }
+    }
     val allEntries = remember(filteredConversations, displayedGroups, displayedRooms, roomSummaries) {
         buildList<Pair<Long, ChatListEntry>> {
             filteredConversations.forEach { add((it.lastMessage?.blockTimestamp ?: 0L) to ChatListEntry.Chat(it)) }
@@ -359,24 +402,6 @@ fun ChatsScreen(
         walletViewModel.refreshBalance()
     }
 
-    // Warms walletViewModel.knsProfile (my own avatar/domain) so it's already populated by the
-    // time a chat or group chat thread is opened - those screens read it via the SAME shared
-    // walletViewModel instance (passed down from MainShell) but never trigger this refresh
-    // themselves, so without this, "my avatar" in a chat's own-message bubble stayed null on
-    // every single visit until the user happened to open Manage Addresses/KNS Domains/Edit
-    // Profile first.
-    LaunchedEffect(Unit) {
-        walletViewModel.refreshOwnedDomains()
-    }
-
-    // Auto-rename any chat to their KNS domain if they have one, every time the chat
-    // list appears — matches iOS's fetchKNSDomainsForAllContacts.
-    LaunchedEffect(Unit) {
-        chatViewModel.refreshKnsNamesForAllContacts()
-        // And their avatars, which nothing else fills in for a chat you have not opened.
-        chatViewModel.refreshKnsAvatarsForAllContacts()
-    }
-
     // Notifications are asked for when this list first appears, and only ever once (iOS asks from
     // its chat list too).
     LaunchedEffect(Unit) {
@@ -397,13 +422,13 @@ fun ChatsScreen(
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Header order matches iPhone (ChatListView.swift): status/balance toolbar
-                    // row on top, the backup warning, bold large "Chats" title below it, search
-                    // bar DIRECTLY underneath the title.
+                    // Header order matches iPhone (ChatListView.swift): balance toolbar row on
+                    // top, bold large "Chats" title below it, search bar DIRECTLY underneath the
+                    // title. No connection dot and no backup strip here (iOS 518fdc8c: the dot is
+                    // on Settings and its dock icon, the backup strip on Profile only).
                     TopStatusBar(
                         balance = balance,
-                        onStatusClick = { ConnectionStatusOverlayState.open() },
-                        dotColorHex = dotColorHex,
+                        onStatusClick = {},
                         showAddButton = false,
                         showEditButton = true,
                         isEditing = isSelectionMode,
@@ -413,10 +438,23 @@ fun ChatsScreen(
                         selectAllLabel = if (isEverythingSelected) stringResource(R.string.deselect_all) else stringResource(R.string.select_all),
                         onSelectAllClick = {
                             selectedEntryIds = if (isEverythingSelected) emptySet() else allEntries.map { it.id }.toSet()
-                        }
+                        },
+                        // Public Chats' settings (iOS 8cb4c88e, owner 2026-11-24: here, not in the
+                        // + sheet): the default rooms and the language rooms on or off. Not while
+                        // selecting.
+                        leadingContent = if (isSelectionMode) null else {
+                            {
+                                ToolbarGlassGroup {
+                                    ToolbarIconButton(
+                                        Icons.Outlined.Settings,
+                                        stringResource(R.string.pc_edit_default_public_chats),
+                                        onClick = { showPublicChatsSettings = true },
+                                    )
+                                }
+                            }
+                        },
                     )
                 }
-                AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") }
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Text(
                         stringResource(R.string.kachat),
@@ -577,6 +615,15 @@ fun ChatsScreen(
                         isSelectionMode = isSelectionMode,
                         onOpenGroup = { groupId -> navController.navigate("group_chat/$groupId") },
                         onLongPressGroup = { groupId -> groupActionTarget = groupId },
+                        pinnedRooms = pinnedRooms,
+                        roomUnread = { roomSummaries[it]?.unreadCount ?: 0 },
+                        onOpenRoom = { room ->
+                            if (roomActionTarget == null) {
+                                haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                                navController.navigate(PublicChatRoutes.room(room))
+                            }
+                        },
+                        onLongPressRoom = { room -> roomActionTarget = room },
                         onTap = { item ->
                             when (item) {
                                 // Opens the bot's chat, starting it the first time (iOS d54ea87).
@@ -635,11 +682,9 @@ fun ChatsScreen(
                                     navController.navigate(PublicChatRoutes.room(roomName))
                                 },
                                 onToggleSelection = { toggleSelection(entry.id) },
-                                onDelete = {
-                                    if (deletePublicRoomNeedsConfirmation(context, roomName, broadcastViewModel)) {
-                                        roomToLeave = roomName
-                                    }
-                                },
+                                onDelete = { deleteRoom(roomName) },
+                                isPinned = roomName in roomPins,
+                                onTogglePin = { toggleRoomPin(roomName) },
                             )
                         }
                         is ChatListEntry.Group -> {
@@ -911,7 +956,7 @@ fun ChatsScreen(
             // Below the circles row rather than over it, and only when there are no chats at all:
             // a search that matches nothing leaves the list empty, as iOS does (ChatListView
             // emptyStateView, centred in the list and 120 lower).
-            if (allEntries.isEmpty() && searchQuery.isEmpty() && pinnedChats.isEmpty() && pinnedGroups.isEmpty()) {
+            if (allEntries.isEmpty() && searchQuery.isEmpty() && pinnedChats.isEmpty() && pinnedGroups.isEmpty() && pinnedRooms.isEmpty()) {
                 Column(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -1024,6 +1069,68 @@ fun ChatsScreen(
         }
     }
 
+    // A pinned room's hold (iOS 2026-11-23 `roomActionSheet`): read state, pin, notifications
+    // and delete, as square tiles.
+    roomActionTarget?.let { roomName ->
+        val channel = listedRooms.firstOrNull { it.channelName == roomName }
+        if (channel == null) {
+            // switched off or left meanwhile
+            LaunchedEffect(roomName) { roomActionTarget = null }
+            return@let
+        }
+        val isPinned = roomName in roomPins
+        val unread = roomSummaries[roomName]?.unreadCount ?: 0
+        TileActionSheet(
+            title = "#$roomName",
+            onDismiss = { roomActionTarget = null },
+            height = ActionSheetTileMetrics.sheetHeight(tiles = 4),
+        ) {
+            if (unread > 0) {
+                ActionSheetRow(
+                    icon = Icons.Outlined.MarkEmailRead,
+                    title = stringResource(R.string.mark_as_read),
+                    subtitle = stringResource(R.string.c54_room_clears_unread),
+                ) {
+                    roomActionTarget = null
+                    broadcastViewModel.markRoomRead(roomName)
+                }
+            } else {
+                ActionSheetRow(
+                    icon = Icons.Outlined.MarkEmailUnread,
+                    title = stringResource(R.string.mark_as_unread),
+                    subtitle = stringResource(R.string.puts_the_unread_badge_back_so_you),
+                ) {
+                    roomActionTarget = null
+                    broadcastViewModel.markRoomUnread(roomName)
+                }
+            }
+            ActionSheetRow(
+                icon = if (isPinned) Icons.Default.PushPin else Icons.Outlined.PushPin,
+                title = stringResource(if (isPinned) R.string.chats_circle_unpin else R.string.pin_to_top_row),
+                subtitle = stringResource(if (isPinned) R.string.groups_unpin_top_hint else R.string.chats_pin_top_hint),
+            ) {
+                roomActionTarget = null
+                toggleRoomPin(roomName)
+            }
+            ActionSheetRow(
+                icon = if (channel.notifyEnabled) Icons.Outlined.NotificationsOff else Icons.Outlined.Notifications,
+                title = stringResource(if (channel.notifyEnabled) R.string.pc_mute else R.string.pc_unmute),
+                subtitle = stringResource(if (channel.notifyEnabled) R.string.c54_room_no_notifications else R.string.c54_room_notifications_resume),
+            ) {
+                roomActionTarget = null
+                togglePublicRoomNotify(context, broadcastViewModel, roomName, on = !channel.notifyEnabled)
+            }
+            ActionSheetRow(
+                icon = Icons.Outlined.Delete,
+                title = stringResource(R.string.delete),
+                subtitle = stringResource(R.string.c54_room_delete_subtitle),
+                tint = LocalAppColors.current.danger,
+            ) {
+                roomActionTarget = null
+                deleteRoom(roomName)
+            }
+        }
+    }
     // A pinned group's hold (iOS d1844582 `groupActionSheet`).
     groupActionTarget?.let { groupId ->
         GroupChatActionSheet(
@@ -1112,11 +1219,10 @@ fun ChatsScreen(
             onChatCreated = { address -> navController.navigate("chat/$address") },
             onGroupCreated = { groupId -> navController.navigate("group_chat/$groupId") },
             onPublicRoomJoined = { room -> navController.navigate(PublicChatRoutes.room(room)) },
-            onEditDefaultPublicChats = { showPublicChatsSettings = true },
         )
     }
-    // Edit Default Public Chats (iOS `PublicChatsSettingsView`): each default room and the
-    // language rooms on or off.
+    // Edit Default Public Chats (iOS `PublicChatsSettingsView`), from the gear at the top left:
+    // each default room and the language rooms on or off.
     if (showPublicChatsSettings) {
         PublicChatsSettingsSheet(
             onDismiss = { showPublicChatsSettings = false },
@@ -1129,6 +1235,7 @@ fun ChatsScreen(
             channelName = room,
             onDelete = {
                 broadcastViewModel.leaveChannel(room)
+                dropRoomPin(room)
                 selectedEntryIds = selectedEntryIds - "r:$room"
                 roomToLeave = null
             },
@@ -1203,10 +1310,16 @@ private fun ChatCirclesStrip(
     isSelectionMode: Boolean,
     onOpenGroup: (String) -> Unit,
     onLongPressGroup: (String) -> Unit,
+    /** The public rooms pinned into the row (iOS 2026-11-23). Empty while searching, like the chats. */
+    pinnedRooms: List<com.kachat.app.models.BroadcastChannelEntity>,
+    roomUnread: (String) -> Int,
+    onOpenRoom: (String) -> Unit,
+    /** Hold a pinned room: its half sheet. */
+    onLongPressRoom: (String) -> Unit,
     onTap: (ChatCircle) -> Unit,
     onLongPress: (ChatCircle) -> Unit,
 ) {
-    if (items.isEmpty() && pinnedGroups.isEmpty()) {
+    if (items.isEmpty() && pinnedGroups.isEmpty() && pinnedRooms.isEmpty()) {
         Spacer(Modifier.fillMaxWidth().height(1.dp))
         return
     }
@@ -1220,6 +1333,25 @@ private fun ChatCirclesStrip(
                 onTap = { onOpenGroup(convo.group.groupId) },
                 onLongPress = { onLongPressGroup(convo.group.groupId) },
             ) { GroupListAvatar(photoHex = convo.group.photoHex, size = 60.dp) }
+        }
+        pinnedRooms.forEach { room ->
+            val name = room.channelName
+            PinnedCircle(
+                name = "#$name",
+                unreadCount = roomUnread(name),
+                showsPin = true,
+                isSelecting = isSelectionMode,
+                onTap = { onOpenRoom(name) },
+                onLongPress = { onLongPressRoom(name) },
+            ) {
+                // iOS: a "#" in the accent on its tint
+                Box(
+                    modifier = Modifier.fillMaxSize().background(KaspaTeal.copy(alpha = 0.2f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("#", color = KaspaTeal, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
         items.forEach { item ->
             PinnedCircle(
@@ -1475,8 +1607,8 @@ private fun messagePreviewText(message: MessageEntity?, context: android.content
             context.getString(R.string.pr_preview, link.request.amountText)
         )
         is KaChatLinkRef.KaPost -> return context.getString(R.string.shared_a_kapost)
-        // As iOS 148a5331's ConversationRow writes it (not localized there either).
-        is KaChatLinkRef.PublicChatRoom -> return "Public chat room #${link.channel}"
+        // Translated (iOS audit 2026-11-24 #33).
+        is KaChatLinkRef.PublicChatRoom -> return context.getString(R.string.c54_public_chat_room, link.channel)
         null -> {}
     }
     val trimmed = unwrapped.trim()
@@ -2082,8 +2214,6 @@ private fun ChatsNewSheet(
     onGroupCreated: (String) -> Unit,
     /** New Public Chat joined a room: it opens (iOS 148a5331 `joinRoomFromCreateSheet`). */
     onPublicRoomJoined: (String) -> Unit,
-    /** Edit Default Public Chats: the default rooms' switches (iOS `PublicChatsSettingsView`). */
-    onEditDefaultPublicChats: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -2164,18 +2294,13 @@ private fun ChatsNewSheet(
                             title = stringResource(R.string.chats_new_group_chat),
                             subtitle = stringResource(R.string.chats_new_group_subtitle),
                         ) { page = ChatsNewPage.NEW_GROUP }
-                        // Public Chats (iOS 148a5331): join or create a room, and the default
-                        // rooms' switches.
+                        // Public Chats (iOS 148a5331): join or create a room. Edit Default Public
+                        // Chats is the gear at the top left of Chats (iOS 8cb4c88e).
                         ActionSheetRow(
                             icon = Icons.Default.Tag,
                             title = stringResource(R.string.pc_new_public_chat),
                             subtitle = stringResource(R.string.pc_new_public_chat_subtitle),
                         ) { page = ChatsNewPage.NEW_PUBLIC_CHAT }
-                        ActionSheetRow(
-                            icon = Icons.Default.Tune,
-                            title = stringResource(R.string.pc_edit_default_public_chats),
-                            subtitle = stringResource(R.string.pc_edit_default_public_chats_subtitle),
-                        ) { close { onEditDefaultPublicChats() } }
                     }
                 }
                 IosSheetGrabber(Modifier.align(Alignment.TopCenter))
@@ -2185,6 +2310,6 @@ private fun ChatsNewSheet(
     }
 }
 
-/** New Chat and New Group Chat open at full height (iOS d1844582 `createMenuHeight`: 410 pt
- *  since 148a5331, with New Public Chat and Edit Default Public Chats). */
-private val ChatsNewSheetHeight = 410.dp
+/** New Chat and New Group Chat open at full height (iOS d1844582 `createMenuHeight`: 330 pt
+ *  since 8cb4c88e, with New Public Chat; Edit Default Public Chats moved to the gear). */
+private val ChatsNewSheetHeight = 330.dp

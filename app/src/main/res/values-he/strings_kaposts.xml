@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">הטיפ לא נשלח: אי אפשר לקרוא כרגע את כתובת „טיפים מ־”.</string>
     <string name="feed54_tip_minimum_footer">הטיפ הקטן ביותר שהרשת מקבלת הוא %1$s.</string>
     <string name="feed54_tip_no_price">הטיפ לא נשלח: אין מחיר KAS עדכני כדי להמיר %1$s ל-KAS.</string>
-    <string name="feed54_tip_too_small">הטיפ לא נשלח: הטיפ הקטן ביותר שהרשת מקבלת הוא %1$s. שנו את טיפ ברירת המחדל בהגדרות &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">הטיפ לא נשלח: הטיפ הקטן ביותר שהרשת מקבלת הוא %1$s. שנו את טיפ ברירת המחדל בהגדרות &gt; התאמה אישית &gt; מתן טיפים.</string>
     <string name="feed54_tipped">נשלח טיפ של %1$s אל %2$s</string>
     <string name="feed54_tipped_privately">נשלח טיפ פרטי של %1$s אל %2$s</string>
     <string name="feed54_unfollow_posted">ביטול המעקב פורסם ברשת</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">טיפ</string>
     <string name="kaposts_tips">טיפים</string>
     <string name="kaposts_tips_from">טיפים מ</string>
-    <string name="kaposts_tips_from_footnote">טיפים מה-Chatting Address נספרים בפוסט, ואתה מופיע ברשימת נותני הטיפים. טיפ מכתובת אחרת הוא פרטי: הכותב מקבל אותו ורואה אותו בצ\'אט שלכם, אבל הוא לא נספר בפוסט ולא מזכיר את שמך.</string>
+    <string name="kaposts_tips_from_footnote">טיפים מה-Chatting Address נספרים בפוסט, ואתה מופיע ברשימת נותני הטיפים. טיפ מכתובת אחרת הוא פרטי: הכותב מקבל אותו ורואה אותו בצ\'אט שלכם, אבל הוא לא נספר בפוסט ולא מזכיר את שמך. גם טיפ בצ\'אט נשלח מכאן.</string>
     <string name="kaposts_tips_from_not_available">לא זמין</string>
     <string name="kaposts_who_tipped">מי נתן טיפ לפוסט הזה</string>
     <string name="kn53_kaplay_beat_in_move">נצח את %1$s במהלך %2$d</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">טיפ ב־</string>
     <string name="kp5_tip_in_ask">לשאול בכל פעם</string>
     <string name="kp5_tip_in_ask_footer">טיפ שואל בכל פעם אם לשלוח Kaspa או kUSDT.</string>
-    <string name="kp5_tip_in_kusdt_footer">טיפ שולח kUSDT לכתובת הצ\'אט של מפרסם הפוסט. טיפים ב־kUSDT לא נספרים בפוסט.</string>
+    <string name="kp5_tip_in_kusdt_footer">טיפ שולח kUSDT לכתובת הצ\'אט שלהם. טיפים ב־kUSDT לא נספרים בפוסט.</string>
     <string name="kp5_tip_not_counted">לא נספר בפוסט</string>
-    <string name="kp5_tip_set_in_settings">בחרו מה טיפ שולח בהגדרות > KaPost > טיפ ב־.</string>
+    <string name="kp5_tip_set_in_settings">בחרו מה טיפ שולח בהגדרות &gt; התאמה אישית &gt; מתן טיפים.</string>
     <string name="kp5_tip_title">טיפ</string>
     <string name="kp5_tip_what_in">במה אתם נותנים טיפ?</string>
     <string name="l53_already_in_your_language">כבר בשפה שלך</string>

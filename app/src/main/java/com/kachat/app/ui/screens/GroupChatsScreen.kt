@@ -147,7 +147,8 @@ internal fun GroupChatRow(
         }
     }
     val previewContext = androidx.compose.ui.platform.LocalContext.current
-    val preview = remember(convo.lastMessage?.txId, members, memberNamesByAddress) {
+    // Keyed on the text too: an edit keeps the txid (iOS audit 2026-11-24 #10).
+    val preview = remember(convo.lastMessage?.txId, convo.lastMessage?.content, members, memberNamesByAddress) {
         groupMessagePreviewText(previewContext, convo.lastMessage, members, resolveName)
     }
 
@@ -245,6 +246,11 @@ private fun groupMessagePreviewText(
     members: List<com.kachat.app.models.GroupMember>,
     resolve: (String) -> String,
 ): String? {
+    // A membership line ("<address> joined the group") reads as it does in the thread (iOS
+    // GroupSystemLine, 2026-11-24).
+    if (message != null && message.senderAddress == com.kachat.app.repository.GROUP_SYSTEM_SENDER) {
+        return com.kachat.app.util.GroupSystemLine.display(context, message.content, resolve)
+    }
     // A reply previews as its own text (iOS MessageReplyCodec.previewText unwraps it).
     val body = message?.content?.let { MessageReply.parseOrNull(it)?.text ?: it } ?: return null
     com.kachat.app.util.InlineMediaSniff.mimeType(body)?.let { mime ->

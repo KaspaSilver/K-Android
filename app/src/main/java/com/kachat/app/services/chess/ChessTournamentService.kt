@@ -5,7 +5,6 @@ import android.content.Context
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.kachat.app.util.KaPlayText
-import com.kachat.app.services.KnsService
 import com.kachat.app.services.NotificationHelper
 import com.kachat.app.services.SendOutcomeUnknownException
 import com.kachat.app.services.WalletManager
@@ -62,7 +61,6 @@ class ChessTournamentService @Inject constructor(
     /** `GET /chess/leaderboard` on the arena's indexer. */
     private val indexerClient: ChessIndexerClient,
     private val walletManager: WalletManager,
-    private val knsService: KnsService,
     /** Whether the app is on screen: the arena's poll only runs while it is (iOS da59726). */
     private val notificationHelper: NotificationHelper,
     @ApplicationContext context: Context,
@@ -118,10 +116,6 @@ class ChessTournamentService @Inject constructor(
             if (errorToken.get() == token) _lastError.value = null
         }
     }
-
-    /** KNS domains for arena players, so a name can fall back to one - see [resolveNames]. */
-    private val _knsNames = MutableStateFlow<Map<String, String>>(emptyMap())
-    val knsNames: StateFlow<Map<String, String>> = _knsNames.asStateFlow()
 
     /** Moves sent and not yet seen back from the chain ("<tournament>|<game>"), so the player
      *  cannot double-send. */
@@ -421,7 +415,6 @@ class ChessTournamentService @Inject constructor(
             lastGapRepageAt = wallNow
             arena.repageArena(gapSince)
         }
-        resolveNames(reduced.values.flatMap { it.players }.toSet() + listOfNotNull(mineAddress))
         recomputeLocalBoards()
         val me = myAddress
         // Another account by now: its joins are not the ones just read.
@@ -1056,27 +1049,6 @@ class ChessTournamentService @Inject constructor(
         return send(ChessTournamentCodec.resign(tournament.id, game.id))
     }
 
-    // MARK: - Names
-
-    /** Addresses whose KNS domain was asked for this session. */
-    private val resolvedNames = java.util.Collections.synchronizedSet(mutableSetOf<String>())
-
-    /**
-     * Names in the arena follow the app's rule - the contact's name, then their KNS domain, then
-     * the shortened address - and the domain part needs a lookup. Asked once per address per
-     * session; [knsNames] then answers, and the screens re-render when it lands (iOS 30d0cca).
-     */
-    fun resolveNames(addresses: Set<String>) {
-        val fresh = addresses.filter { it.isNotEmpty() && resolvedNames.add(it) }
-        if (fresh.isEmpty()) return
-        scope.launch {
-            for (address in fresh) {
-                val domain = runCatching { knsService.identityName(address) }.getOrNull()
-                if (!domain.isNullOrBlank()) _knsNames.update { it + (address to domain) }
-            }
-        }
-    }
-
     // MARK: - Leaderboards
 
     /** One period's board as the indexer served it: the window it counted, and its rows. */
@@ -1141,7 +1113,6 @@ class ChessTournamentService @Inject constructor(
                         indexerBoards[period] = board
                         publishBoards()
                     }
-                    resolveNames(board.rows.take(100).map { it.address }.toSet())
                 }
             }
         }

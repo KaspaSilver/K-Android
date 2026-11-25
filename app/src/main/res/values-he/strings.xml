@@ -69,8 +69,6 @@
     <string name="delete_account">מחק חשבון</string>
     <string name="delete_group">מחק קבוצה</string>
     <string name="done">סיום</string>
-    <string name="each_transaction_temporarily_uses_2_kas">כל עסקה משתמשת באופן זמני ב-~2 KAS; ~1 KAS חוזר מיד כעודף, כך שרק עמלת הרשת הקטנה היא עלות אמיתית.</string>
-    <string name="edit_kns_profile">ערוך פרופיל KNS</string>
     <string name="edit_account">ערוך חשבון</string>
     <string name="error">שגיאה</string>
     <string name="every_member_will_see_the_new">כל חבר יראה את השם החדש.</string>
@@ -86,8 +84,6 @@
     <string name="import_account">ייבא חשבון</string>
     <string name="import_existing_account">ייבא חשבון קיים</string>
     <string name="incoming_notifications">הודעות נכנסות</string>
-    <string name="kns_domains">הדומיינים שלכם</string>
-    <string name="contact_kns_domains">דומיינים KNS</string>
     <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K צריך להתחבר לצומת. איך תרצה להתחבר?</string>
     <string name="kaspa_explorer">סייר קספה</string>
@@ -97,14 +93,9 @@
     <string name="manage_addresses">נהל כתובות</string>
     <string name="max">מקסימום</string>
     <string name="message">הוֹדָעָה</string>
-    <string name="more_info">מידע נוסף</string>
     <string name="name">שם</string>
     <string name="next">הבא</string>
     <string name="no_conversations_yet">עדיין אין שיחות</string>
-    <string name="no_domains_yet">עדיין אין דומיינים.</string>
-    <string name="send_domain">שליחת דומיין</string>
-    <string name="asset_id">מזהה נכס</string>
-    <string name="primary_domain">דומיין ראשי</string>
     <string name="set_as_primary">הגדרה כראשי</string>
     <string name="no_hidden_addresses">אין כתובות מוסתרות.</string>
     <string name="no_hidden_users_in_this_group">אין משתמשים מוסתרים בקבוצה זו.</string>
@@ -152,7 +143,6 @@
     <string name="show_more">הצג עוד</string>
     <string name="show_qr_code">הצג קוד QR</string>
     <string name="skip">דלג</string>
-    <string name="some_changes_failed_to_save">חלק מהשינויים לא נשמרו:</string>
     <string name="start_a_new_chat_by_adding">התחל צ\'אט חדש על ידי הוספת איש קשר</string>
     <string name="status">מצב</string>
     <string name="tap_an_address_below_to_swap">הקש על כתובת למטה כדי להחליף ממנה</string>
@@ -197,7 +187,6 @@
     <string name="created">נוצר</string>
     <string name="customization">התאמה אישית</string>
     <string name="diagnostics">אבחון</string>
-    <string name="discord">Discord</string>
     <string name="discover_addresses">גלה כתובות</string>
     <string name="email">אימייל</string>
     <string name="explorer">סייר</string>
@@ -206,7 +195,6 @@
     <string name="ip_address_book">פנקס כתובות IP</string>
     <string name="indexer">אינדקסר</string>
     <string name="info">מידע</string>
-    <string name="kns_profile">פרופיל KNS</string>
     <string name="kaspa_explorer_api">Kaspa Explorer API</string>
     <string name="kaspa_node">צומת קספה</string>
     <string name="default_recommended">ברירת מחדל (מומלץ)</string>
@@ -221,7 +209,6 @@
     <string name="protocol">פרוטוקול</string>
     <string name="push_notifications">התראות Push</string>
     <string name="reconnect">התחבר מחדש</string>
-    <string name="redirect">הפניה מחדש</string>
     <string name="refresh_pool">רענן מאגר</string>
     <string name="reply">השב</string>
     <string name="retry_send">שלח שוב</string>
@@ -234,20 +221,16 @@
     <string name="storage">אחסון</string>
     <string name="on_this_device">במכשיר הזה</string>
     <string name="cloud_storage">אחסון בענן</string>
-    <string name="submitting_commit_transaction">שולח עסקת התחייבות...</string>
-    <string name="submitting_reveal_transaction">שולח עסקת חשיפה...</string>
     <string name="support_email">דוא\"ל תמיכה</string>
     <string name="telegram">Telegram</string>
     <string name="total">סה\"כ</string>
     <string name="verified">מאומת</string>
-    <string name="verifying_new_ownership_on_chain_this">מאמת בעלות חדשה על השרשרת (זה עשוי לקחת דקה)...</string>
     <string name="version">גרסה</string>
     <string name="vibration">רטט</string>
     <string name="view_profile">צפה בפרופיל</string>
     <string name="view_seed_phrase">הצגת 12 או 24 המילים</string>
     <string name="view_in_explorer">צפה בסייר</string>
     <string name="website">אתר</string>
-    <string name="x">X</string>
     <string name="language">שפה</string>
     <string name="system_default">מערכת</string>
     <string name="welcome_to_kachat">ברוכים הבאים ל-K</string>
@@ -282,27 +265,16 @@
     <string name="mark_as_read">סמן כנקרא</string>
     <string name="copy_link">העתק קישור</string>
     <string name="open_link">פתח קישור</string>
-    <string name="kaspa_qr_or_domain">kaspa:qr... או דומיין</string>
     <!-- 5.2 name services (iOS df23b6f, 09e0403, 718724b, 9858bd1) -->
     <string name="x_handle">ידית X</string>
     <string name="discord_user_id">זיהוי משתמש של דיסקורד</string>
     <string name="redirect_url">כתובת אתר להפניה מחדש</string>
     <string name="none_yet">עדיין אין</string>
-    <string name="customize_profile">התאמת פרופיל</string>
-    <string name="settling">בתהליך אישור</string>
     <string name="kachat_profile_coming_body">שמות .kachat בדרך. כשתקבלו שם, תגדירו כאן תמונה, באנר, ביוגרפיה וקישורים - וזה מה ש-K יציג עליכם בכל מקום.</string>
     <string name="kachat_name_section">שם .kachat</string>
-    <string name="could_not_reach_service">לא ניתן להגיע אל %1$s. משכו למטה כדי לנסות שוב.</string>
-    <string name="no_names_yet">עדיין אין שמות %1$s.</string>
     <!-- 5.2 name lookups (iOS a0dbc15, 79b6ac8, 9858bd1) -->
-    <string name="no_tld_domain_found">לא נמצא דומיין %1$s</string>
-    <string name="looking_up_domain">מחפש דומיין...</string>
-    <string name="looking_up">מחפש...</string>
     <string name="no_domain">אין דומיין</string>
-    <string name="other_domains">דומיינים אחרים</string>
-    <string name="not_registered">לא רשום</string>
     <string name="couldnt_check">לא ניתן לבדוק</string>
-    <string name="kaspa_address_or_domain">כתובת Kaspa או דומיין</string>
     <!-- Public Chats select (iOS e08c4cc) -->
     <!-- Connection Settings tabs (iOS ee01f81) -->
     <string name="connection_tab_indexer">אינדקסר</string>
@@ -313,7 +285,6 @@
     <string name="coming_soon">בקרוב</string>
     <string name="not_available_on_this_network">לא זמין ברשת זו</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
-    <string name="km_no_names">עדיין אין שמות .kachat</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">הסיור המלא להתחלה: ארנק, צ\'אטים, תשלומים ועוד.</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -336,7 +307,6 @@
     <!-- Realized P&L, fees spent, Add Chatting Address (iOS 61eff0f/5e75c89) -->
     <!-- Receive / chatting address QR text (iOS 8bcae2f) -->
     <!-- Account discovery finds .k and .kaspa names (iOS 7a5b157) -->
-    <string name="chatting_picker_other_names_count">שמות .k ו-.kaspa (%1$d)</string>
     <!-- Message Requests and Private chats (iOS f7ca401/ba1b2e3/76faa97/74bd52c) -->
     <string name="message_requests">בקשות הודעה</string>
     <string name="message_requests_row_sub">אנשים וקבוצות מחכים לתשובה</string>
@@ -471,7 +441,6 @@
     <string name="chats_new_chat">צ\'אט חדש</string>
     <string name="chats_new_group_chat">צ\'אט קבוצתי חדש</string>
     <string name="chats_new_chat_subtitle">שלחו הודעה למישהו לפי כתובת או שם.</string>
-    <string name="qr_chatting_address_subtitle">לשימוש בצ\'אט ולרכישת דומיינים של ‎.kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="utxo_selection">בחירת UTXO</string>
     <string name="utxo_selection_caption">בחרו אילו מטבעות השליחה הזו תוציא.</string>
@@ -664,7 +633,6 @@
     <!-- New Chat / New Group: Address Book (iOS 1be4f6e) -->
     <string name="ab_add_count">הוספה (%1$d)</string>
     <string name="ab_add_members">הוספת חברים</string>
-    <string name="ab_members_footer">בחר אנשים מאנשי הקשר שלך, או הוסף כל אחד לפי כתובת Kaspa או דומיין.</string>
     <string name="ab_members_intro">הוסיפו אנשים לקבוצה. כמנהלי הקבוצה, אתם שולטים בחברות.</string>
     <string name="ab_members_empty">עדיין אין חברים. הוסף אנשים מאנשי הקשר שלך או לפי כתובת למטה.</string>
     <string name="ab_actions_a11y">הוספה, ייבוא או ייצוא</string>
@@ -704,17 +672,8 @@
     <string name="kn_registration_not_open">השמות עוברים למרשם החדש. אפשר יהיה לתבוע שמות חדשים החל מ-%1$s.</string>
     <string name="kn_ev_imported">הועבר למרשם החדש</string>
     <!-- .kachat first: domains in every address field, Other domains, expired-name banner (iOS 6ac48a7) -->
-    <string name="enter_kaspa_address_or_domain_kachat_first">הזן כתובת Kaspa (kaspa:...) או דומיין (למשל alice.kachat). שמות .kachat נבדקים קודם.</string>
-    <string name="search_contacts_or_address_or_domain">חפש אנשי קשר, כתובת או דומיין</string>
-    <string name="no_contacts_yet_paste_address_or_domain">עדיין אין לך אנשי קשר. הדבק למעלה כתובת או דומיין כדי להזמין מישהו.</string>
-    <string name="no_contacts_match_paste_address_or_domain">אין אנשי קשר שתואמים לחיפוש. הדבק כתובת או דומיין כדי להזמין מישהו חדש.</string>
     <string name="their_profile_kachat_name_address">הפרופיל, שם ה-.kachat והכתובת.</string>
-    <string name="finds_addresses_balance_or_domain">מוצא כתובות שיש בהן יתרה או דומיין.</string>
-    <string name="enter_kaspa_address_or_domain_short_kachat_first">הזן כתובת Kaspa (kaspa:...) או דומיין. שמות .kachat נבדקים קודם.</string>
-    <string name="other_domains_title">דומיינים אחרים</string>
-    <string name="chatting_picker_intro_any_name_kachat">אם המילים האלה כבר מחזיקות את הזהות שלכם בכתובת אחרת (דומיין ‎.kachat,‏ ‎.kas,‏ ‎.k או ‎.kaspa, או יתרת צ\'אט), בחרו אותה כאן. מוצגות רק כתובות עם יתרה או דומיינים.</string>
     <string name="chatting_picker_kachat_names_count">שמות .kachat (%1$d)</string>
-    <string name="chatting_picker_kas_names_count">שמות .kas (%1$d)</string>
     <!-- Bare names resolve to .kachat only (iOS 5a5122d) -->
     <string name="kachat_names_not_live_here">שמות .kachat עדיין לא פעילים ברשת הזו</string>
     <!-- Nextcloud sync carries portfolios -->
@@ -839,8 +798,6 @@
     <string name="quantum_safe">עמיד קוונטית</string>
     <string name="key_revealed_by_a_spend">המפתח נחשף בהוצאה</string>
     <!-- KNS domain transfers and quantum-safe (script) addresses (iOS 2a8ca5a) -->
-    <string name="kns_transfer_quantum_source">KNS לא יכול להוציא דומיין מכתובת עמידה לקוונטים: KNS מזהה את בעל הדומיין לפי מפתח ציבורי, וכתובת עמידה לקוונטים שומרת את המפתח שלה מוסתר.</string>
-    <string name="kns_transfer_to_script_address">אי אפשר לשלוח דומיין ‎.kas לכתובת עמידה לקוונטים או לכתובת סקריפט אחרת: KNS לא יוכל להוציא אותו משם לעולם. שלחו אותו לכתובת רגילה במקום.</string>
     <string name="quantum_next_address_failed">לא ניתן היה להכין את הכתובת הבאה. נסו שוב.</string>
     <!-- Address Visibility: a card per chain (iOS d7e6dd1) -->
     <string name="quantum_addresses">כתובות קוונטיות</string>
@@ -891,7 +848,6 @@
     <string name="pr_paid_to">משולם אל</string>
     <string name="ab_empty_title">עדיין אין אנשי קשר</string>
     <string name="settings_title">הגדרות</string>
-    <string name="confirm_sending_domain">אישור שליחת הדומיין הזה</string>
     <string name="confirm_deleting_account">אשרו מחיקת החשבון הזה</string>
     <string name="group_invites">הזמנות לקבוצות</string>
     <string name="group_invite">הזמנה לקבוצה</string>
@@ -936,7 +892,6 @@
     <string name="welcome_paying_for_messages">תשלום על הודעות</string>
     <string name="welcome_paying_for_messages_caption">כל הודעה שנשלחת גובה סכום קטן מאוד של Kaspa מהכתובת הזו. ‏1 Kaspa מספיק לכ-500 הודעות.</string>
     <string name="welcome_what_others_can_see">מה אחרים יכולים לראות</string>
-    <string name="welcome_what_others_can_see_caption">כל אחד יכול לראות את הכתובת הזו ואת היתרה שלה ברשת Kaspa, אבל לא לקרוא את ההודעות שלכם. השתמשו בה רק לצ\'אט ולדומיינים של ‎.kachat.</string>
 
     <!-- Localized literals moved out of Kotlin (parity with the iPhone app) -->
     <string name="backup_your_account_to_prevent_loss_of">גבו את החשבון כדי למנוע אובדן כספים</string>
@@ -1099,7 +1054,6 @@
     <string name="anyone_with_this_addresss_private_key_can">לכל מי שיש את המפתח הפרטי של הכתובת הזו יש גישה להוציא את הכספים שבה. לעולם אל תשתפו אותו עם אף אחד.</string>
     <string name="tap_to_reveal_private_key">הקישו כדי לחשוף את המפתח הפרטי</string>
     <string name="could_not_load_transactions">לא ניתן היה לטעון את העסקאות.</string>
-    <string name="contains_domain">מכיל דומיין</string>
     <string name="private_key_hex_copied_clipboard_will_clear">המפתח הפרטי (hex) הועתק. הלוח יימחק תוך 30 שניות.</string>
     <string name="cache">מטמון</string>
     <string name="failed_to_export_diagnostics">ייצוא האבחון נכשל.</string>
@@ -1260,7 +1214,6 @@
     <string name="hr_min">%1$d שע\', %2$d דק\'</string>
     <string name="min">%1$d דק\'</string>
     <string name="could_not_check_addresses_try_again_when">לא ניתן היה לבדוק כתובות. נסו שוב כשתהיו מחוברים.</string>
-    <string name="no_addresses_with_a_balance_or_domain">לא נמצאו כתובות עם יתרה או דומיין.</string>
     <string name="hidden">מוסתרות (%1$d)</string>
     <string name="address_hidden_re_enable_it_in_address">הכתובת הוסתרה. אפשר להציג אותה שוב בנראות הכתובת.</string>
     <string name="this_address_cant_be_hidden">אי אפשר להסתיר את הכתובת הזו.</string>
@@ -1306,12 +1259,6 @@
     <string name="couldnt_load_the_coins">לא ניתן היה לטעון את המטבעות.</string>
     <string name="these_words_are_invalid_double_check_the">המילים האלה אינן תקינות. בדקו אותן שוב - המילה האחרונה מכילה סכום ביקורת, ולכן מילה שגויה אחת מכשילה את האימות.</string>
     <string name="invalid_words_please_enter_12_or_24">מילים לא תקינות. הזינו 12 או 24 מילים.</string>
-    <string name="failed_to_set_primary_domain">הגדרת הדומיין הראשי נכשלה</string>
-    <string name="invalid_recipient_address">כתובת הנמען אינה תקינה</string>
-    <string name="recipient_must_be_different_from_your_own">הנמען חייב להיות שונה מהארנק שלכם</string>
-    <string name="recipient_address_is_on_the_wrong_network">כתובת הנמען נמצאת ברשת הלא נכונה</string>
-    <string name="invalid_recipient">נמען לא תקין</string>
-    <string name="transfer_failed">ההעברה נכשלה</string>
     <string name="retry_failed">הניסיון החוזר נכשל</string>
     <string name="saving_keep_the_card_still">שומר. החזיקו את הכרטיס ללא תזוזה.</string>
     <string name="reading_keep_the_card_still">קורא. החזיקו את הכרטיס ללא תזוזה.</string>
@@ -1349,8 +1296,6 @@
     <string name="resynced_one_message_n_chats">סונכרנה מחדש הודעה נכנסת אחת ב-%1$d צ\'אטים.</string>
     <string name="resynced_n_messages_one_chat">סונכרנו מחדש %1$d הודעות נכנסות בצ\'אט אחד.</string>
     <string name="resynced_n_messages_n_chats">סונכרנו מחדש %1$d הודעות נכנסות ב-%2$d צ\'אטים.</string>
-    <string name="found_one_address_balance_domain">נמצאה כתובת אחת עם יתרה או דומיין.</string>
-    <string name="found_n_addresses_balance_domain">נמצאו %1$d כתובות עם יתרה או דומיין.</string>
     <string name="resync_one_chat">סנכרון מחדש של צ\'אט אחד</string>
     <string name="resync_n_chats">סנכרון מחדש של %1$d צ\'אטים</string>
     <string name="one_day_ago">לפני יום אחד</string>
@@ -1451,9 +1396,6 @@
     <string name="not_sent_you_switched_accounts">לא נשלח: החלפת חשבון לפני השליחה.</string>
     <string name="play_it_again">שחק שוב</string>
     <string name="couldnt_look_up_name_try_again">לא ניתן לחפש את %1$s כרגע. נסו שוב בעוד רגע.</string>
-    <string name="kns_reveal_will_finish_on_next_open">הראשונה מבין שתי העסקאות הושלמה, אבל השנייה לא. K ישלים אותה בפתיחה הבאה.</string>
-    <string name="kns_transfer_fee_at_most_1_kas">העמלה על העברת דומיין יכולה להיות לכל היותר 1 KAS.</string>
-    <string name="confirm_setting_this_primary_name">אישור הגדרת השם הראשי הזה</string>
     <string name="this_is_the_public_half_of_this_address">זהו החלק הציבורי של הכתובת הזו. לא ניתן להוציא איתו דבר.</string>
     <string name="address_number_is_ready">כתובת מס׳ %1$d מוכנה.</string>
     <string name="chess_menu_title">שחמט</string>
@@ -1515,32 +1457,18 @@
     <string name="chess_invite_sent">ההזמנה למשחק שחמט נשלחה</string>
     <string name="chess_invited_you">הזמנה למשחק שחמט</string>
     <string name="more_reactions">עוד תגובות</string>
-    <string name="confirm_changes">אישור שינויים</string>
-    <string name="uploading_avatar">מעלה דמות...</string>
-    <string name="uploading_banner">מעלה באנר...</string>
-    <string name="profile_field_removed">%1$s (הוסר)</string>
     <string name="create_group">יצירת קבוצה</string>
     <string name="create_group_fee_estimate">עמלת רשת משוערת ≈ %1$s %2$s על פני %3$d עסקאות.</string>
     <string name="create_chat">צור צ\'אט</string>
     <string name="add_to_group">הוספה לקבוצה</string>
     <string name="edit_name">עריכת שם</string>
     <string name="domain_label">תְחוּם</string>
-    <string name="primary_badge">ראשי</string>
     <string name="notification_mode_off">כבוי</string>
     <string name="notification_mode_no_sound">ללא צליל</string>
     <string name="notification_mode_sound">צליל</string>
     <string name="notification_mode_default">ברירת מחדל (%1$s)</string>
-    <string name="domain_transfer_sending">שולח %1$s</string>
-    <string name="domain_transfer_footer">העברת דומיין כוללת שתי עסקאות, ולכן זה לוקח רגע. השאירו את האפליקציה פתוחה עד שזה יסתיים.</string>
-    <string name="domain_transfer_stage_preparing">מכין העברה</string>
-    <string name="domain_transfer_stage_fee">מחשב את העמלה</string>
-    <string name="domain_transfer_stage_commit">שולח עסקת התחייבות</string>
-    <string name="domain_transfer_stage_reveal">שולח עסקת חשיפה</string>
-    <string name="domain_transfer_stage_verifying">מאמת את הבעלים החדש</string>
-    <string name="domain_transfer_stage_working">מעבד</string>
     <string name="checking_address_n">בודק כתובת #%1$d</string>
     <string name="n_found_so_far">%1$d נמצאו עד כה</string>
-    <string name="no_addresses_with_balance_or_domain_yet">עדיין אין כתובות עם יתרה או דומיין</string>
     <string name="checks_the_first_thousand_addresses">בודק את אלף הכתובות הראשונות גם אם יש ביניהן כתובות ריקות, ואז ממשיך כל עוד הוא ממשיך למצוא.</string>
     <string name="first_sync_all_set">הכול מוכן</string>
     <string name="first_sync_up_to_date">הצ\'אטים וההיסטוריה שלכם מעודכנים.</string>
@@ -1570,12 +1498,6 @@
     <string name="chess_notif_lost_on_time">♟️ הפסיד בזמן</string>
     <string name="chess_notif_resigned">♟️ נכנע במשחק השחמט</string>
     <string name="fee_label">תַשְׁלוּם</string>
-    <plurals name="kns_profile_changes_count">
-        <item quantity="one">שינוי אחד. הוא נשלח כעסקה נפרדת בשרשרת מכתובת הצ\'אט שלכם:</item>
-        <item quantity="two">%d שינויים. כל אחד נשלח כעסקה נפרדת בשרשרת מכתובת הצ\'אט שלכם:</item>
-        <item quantity="many">%d שינויים. כל אחד נשלח כעסקה נפרדת בשרשרת מכתובת הצ\'אט שלכם:</item>
-        <item quantity="other">%d שינויים. כל אחד נשלח כעסקה נפרדת בשרשרת מכתובת הצ\'אט שלכם:</item>
-    </plurals>
     <plurals name="create_group_and_invite">
         <item quantity="one">ליצור את \"%1$s\" ולהזמין חבר אחד?</item>
         <item quantity="two">ליצור את \"%1$s\" ולהזמין %2$d חברים?</item>
@@ -1594,12 +1516,10 @@
     <string name="payment_notice_fee_from_chatting_address">כתובת הצ\'אט שלך משלמת גם %1$s KAS כדי לעדכן את %2$s על התשלום הזה.</string>
     <string name="recording_failed_please_try_again">ההקלטה נכשלה. נסו שוב.</string>
     <string name="message_needs_too_many_coins">ההודעה הזו צריכה יותר מדי מטבעות לעסקה אחת. השתמשו ב-Compound UTXOs בכתובת הצ\'אט שלכם ונסו שוב.</string>
-    <string name="use_their_domain_name">השתמשו בשם הדומיין שלו</string>
     <string name="show_request_as_qr">הצגת הבקשה כ-QR</string>
     <string name="pr_qr_scan_to_pay_in_kachat">סרקו במצלמת הטלפון כדי לשלם ב-K, עם הכול כבר ממולא.</string>
     <string name="set_as_name">הגדרה כשם</string>
     <string name="their_name">השם שלו</string>
-    <string name="get_a_kachat_name">השיגו שם ‎.kachat</string>
     <string name="composer_gif_subtitle">שלחו GIF מונפש מהספרייה שלכם.</string>
     <string name="group_composer_gif_subtitle">שלחו GIF מונפש מהספרייה שלכם לקבוצה.</string>
     <string name="gif_quality">איכות GIF</string>
@@ -1629,10 +1549,6 @@
     <string name="token_received_title">התקבלו %1$s</string>
     <string name="token_received_on_one">ב%1$s שלכם</string>
     <string name="token_received_on_many">ב-%1$d מהכתובות שלכם</string>
-    <string name="address_tab_domains">דומיינים</string>
-    <string name="address_domains_none">אין שמות %1$s בכתובת הזו.</string>
-    <string name="address_domains_one">דומיין אחד</string>
-    <string name="address_domains_couldnt_load">לא ניתן לטעון</string>
     <string name="connection_not_set">לא הוגדר</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">העתק קישור לשיתוף</string>
@@ -1748,4 +1664,6 @@
     <string name="history_moved">הועבר</string>
     <string name="history_to_address">אל %1$s</string>
     <string name="history_change_to_address">עודף %1$s אל %2$s</string>
+    <string name="cycle_hint_next_page">עובר לעמוד הבא</string>
+    <string name="cycle_hint_next_feed">עובר לפיד הבא</string>
 </resources>

@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">برای نگه‌داشتن آن‌ها پیش از پایان مهلت‌ها تمدیدشان کنید.</string>
-    <string name="kachat_expired_many_title">%1$d دامنهٔ .kachat شما منقضی شده‌اند</string>
+    <string name="kachat_expired_many_title">%1$d نام کاربری شما منقضی شد</string>
     <string name="kachat_expired_one_body">برای نگه‌داشتن %1$s پیش از پایان مهلت در %2$s آن را تمدید کنید.</string>
-    <string name="kachat_expired_one_title">یکی از دامنه‌های .kachat شما منقضی شد</string>
+    <string name="kachat_expired_one_title">یکی از نام‌های کاربری شما منقضی شد</string>
     <string name="kachat_names_on_address_hint">نام‌هایی که این نشانی می‌گیرد یا می‌خرد، پس از راه‌اندازی نام‌های ‎.kachat اینجا نمایش داده می‌شوند.</string>
-    <string name="kachat_names_this_address_owns">نام‌هایی که این آدرس دارد اینجا نشان داده می‌شوند.</string>
-    <string name="kachat_no_names_on_address">هیچ نام ‎.kachat روی این نشانی نیست</string>
+    <string name="kachat_names_this_address_owns">نام‌های کاربری این آدرس اینجا نشان داده می‌شوند.</string>
+    <string name="kachat_no_names_on_address">این آدرس نام کاربری ندارد</string>
     <string name="kg_claim_body">این نامی است که دیگران شما را با آن در سراسر K و در پیوند نمایه‌تان می‌بینند. بدون آن، آدرس شما را می‌بینند.</string>
-    <string name="kg_claim_hint">نامی را که می‌خواهید در زبانه .kachat جستجو کنید، سپس آن را ثبت کنید.</string>
+    <string name="kg_claim_hint">نامی را که می‌خواهید در زبانه‌ی نام‌های کاربری جست‌وجو کنید، سپس آن را بگیرید.</string>
     <string name="kg_claim_title">نام ‎.kachat خود را بگیرید</string>
     <string name="kg_close">بستن</string>
-    <string name="kg_finished_body">هر وقت آماده بودید، نام خود را در زبانه .kachat ثبت کنید.</string>
+    <string name="kg_finished_body">هر وقت آماده بودید، نامتان را در زبانه‌ی نام‌های کاربری بگیرید.</string>
     <string name="kg_finished_title">آماده‌اید</string>
     <string name="kg_how_body">نام شما روی شبکه Kaspa است و آدرس گفتگوی شما آن را نگه می‌دارد. تا وقتی مال شماست کسی نمی‌تواند آن را بگیرد یا تغییر دهد.</string>
     <string name="kg_how_commit">ثبت با دو تراکنش سریع انجام می‌شود: اولی انتخاب شما را مخفی نگه می‌دارد و دومی آن را ثبت می‌کند.</string>
     <string name="kg_how_miners">مبلغ به استخراج‌کنندگان شبکه می‌رسد، نه به K.</string>
     <string name="kg_how_period">هر بار برای یک دوره پرداخت می‌کنید. نام‌های کوتاه‌تر گران‌ترند.</string>
     <string name="kg_how_title">نام چگونه کار می‌کند</string>
-    <string name="kg_keep_body">نام‌های شما در کیف پول &gt; دامنه‌های شما &gt; .kachat هستند.</string>
+    <string name="kg_keep_body">نام‌های شما در کیف پول &gt; نام‌های کاربری شما هستند.</string>
     <string name="kg_keep_grace">پس از انقضا یک دوره مهلت برای تمدید هست، پیش از آنکه کسی دیگر بتواند آن را ثبت کند.</string>
     <string name="kg_keep_renew">پیش از انقضا تمدیدش کنید. تاریخ روی هر نام نشان داده می‌شود.</string>
     <string name="kg_keep_title">نگهش دارید</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">ثبت متوقف می‌شود و 0.2 KAS کامیت، منهای کارمزد شبکه، به شما برمی‌گردد.</string>
     <string name="kn_cancel_commit_title">کامیت لغو شود؟</string>
     <string name="kn_change_price">تغییر قیمت</string>
-    <string name="kn_claim_a_name">گرفتن نام</string>
     <string name="kn_claim_name_title">گرفتن نام</string>
     <string name="kn_claim_your_name_on_kaspa">نام خود را روی Kaspa بگیرید</string>
     <string name="kn_claiming_name">در حال دریافت %1$s</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">نام آزاد شد</string>
     <string name="kn_done_transferred">نام منتقل شد</string>
     <string name="kn_err_address_key">کلید این نشانی معتبر نیست.</string>
-    <string name="kn_err_enter_address_or_domain">یک نشانی یا دامنه وارد کنید.</string>
+    <string name="kn_err_enter_address_or_domain">یک آدرس یا نام کاربری وارد کنید.</string>
     <string name="kn_err_lookup">جستجوی این نام ممکن نشد.</string>
     <string name="kn_err_name_address_cant_own">نشانی این نام نمی‌تواند مالک یک نام .kachat باشد.</string>
     <string name="kn_err_not_network_address">این نشانی Schnorr در این شبکه نیست.</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">در انتظار تأیید کامیت...</string>
     <string name="kn_taken">گرفته شده</string>
     <string name="kn_taken_for_sale">گرفته شده · برای فروش به %1$s</string>
-    <string name="kn_transfer_footer_domain">یک نشانی یا دامنه - ابتدا نام‌های .kachat جست‌وجو می‌شوند و به نشانی نمایش‌داده‌شده تبدیل می‌شود.</string>
+    <string name="kn_transfer_footer_domain">یک آدرس یا نام کاربری - به آدرس نشان‌داده‌شده تبدیل می‌شود.</string>
     <string name="kn_transfer_warning">انتقال برگشت‌پذیر نیست. مالک جدید نام را با تاریخ انقضای فعلی‌اش می‌گیرد؛ پروفایل شما با نشانی شما می‌ماند.</string>
     <string name="kn_view_transaction">مشاهدهٔ تراکنش</string>
     <string name="kn_withdraw">پس گرفتن</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">خرید و فروش</string>
     <string name="kcn_kp_claim_pays_first_period">ادعا دوره اول (%1$s) را می‌پردازد. تمدید هر دوره بعد از آن را.</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">ثبت نام دو تراکنش می‌فرستد: کامیت همین حالا و ثبت حدود یک دقیقه بعد. هر دو با همین نرخ کارمزد پرداخت می‌کنند.</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">بارگیری نام‌های این آدرس ممکن نشد. برای تلاش دوباره به پایین بکشید.</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">نام‌های کاربری این آدرس بارگیری نشد. برای تلاش دوباره به پایین بکشید.</string>
     <string name="kcn_kp_d_day_e40b4">%1$s روز</string>
     <string name="kcn_kp_d_days_0e3de">%1$s روز</string>
     <string name="kcn_kp_dismiss_70afe">رد کردن</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">فروشنده کل قیمت فهرست‌شده را می‌گیرد: کارمزد بازار وجود ندارد.</string>
     <string name="kcn_kp_not_confirmed_b9e09">تأیید نشد</string>
     <string name="kcn_kp_one_character">۱ نویسه</string>
-    <string name="kcn_kp_opens_the_kachat_tab">زبانه ‎.kachat را باز می‌کند</string>
+    <string name="kcn_kp_opens_the_kachat_tab">زبانه‌ی نام‌های کاربری را باز می‌کند</string>
     <string name="kcn_kp_pay_up_to_at_a_time">می‌توانید هر بار تا %1$s پرداخت کنید.</string>
     <string name="kcn_kp_paying_ahead">پرداخت پیشاپیش</string>
     <string name="kcn_kp_price_goes_to_miners">قیمت به ماینرها می‌رسد - K چیزی برنمی‌دارد.</string>

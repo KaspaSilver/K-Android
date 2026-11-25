@@ -76,7 +76,7 @@ class KachatWordmarkPainter : Painter() {
     }
 }
 
-/** The .kachat tab's icon painter (the dock item, the Kaspa Hub tile, Customize Dock). */
+/** The .kachat tab's icon painter (the Usernames tab's wordmark). */
 @Composable
 fun rememberKachatWordmarkPainter(): Painter = remember { KachatWordmarkPainter() }
 

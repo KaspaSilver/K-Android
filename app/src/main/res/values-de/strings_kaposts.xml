@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">Trinkgeld nicht gesendet: Deine Adresse unter „Trinkgeld von“ kann gerade nicht gelesen werden.</string>
     <string name="feed54_tip_minimum_footer">Das kleinste Trinkgeld, das das Netzwerk annimmt, ist %1$s.</string>
     <string name="feed54_tip_no_price">Trinkgeld nicht gesendet: Es gibt keinen aktuellen KAS-Kurs, um %1$s in KAS umzurechnen.</string>
-    <string name="feed54_tip_too_small">Trinkgeld nicht gesendet: Das kleinste Trinkgeld, das das Netzwerk annimmt, ist %1$s. Ändere dein Standard-Trinkgeld unter Einstellungen &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">Trinkgeld nicht gesendet: Das kleinste Trinkgeld, das das Netzwerk annimmt, ist %1$s. Ändere dein Standard-Trinkgeld unter Einstellungen &gt; Anpassung &gt; Trinkgeld.</string>
     <string name="feed54_tipped">%1$s Trinkgeld an %2$s gesendet</string>
     <string name="feed54_tipped_privately">%1$s Trinkgeld privat an %2$s gesendet</string>
     <string name="feed54_unfollow_posted">Entfolgen im Netzwerk gepostet</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">Trinkgeld</string>
     <string name="kaposts_tips">Trinkgelder</string>
     <string name="kaposts_tips_from">Trinkgeld von</string>
-    <string name="kaposts_tips_from_footnote">Trinkgeld von deiner Chatting Address zählt beim Beitrag, und du stehst in der Liste der Trinkgeldgeber. Von einer anderen Adresse ist ein Trinkgeld privat: Der Autor erhält es und sieht es in eurem Chat, aber es zählt nicht beim Beitrag und nennt dich nicht.</string>
+    <string name="kaposts_tips_from_footnote">Trinkgeld von deiner Chatting Address zählt beim Beitrag, und du stehst in der Liste der Trinkgeldgeber. Von einer anderen Adresse ist ein Trinkgeld privat: Der Autor erhält es und sieht es in eurem Chat, aber es zählt nicht beim Beitrag und nennt dich nicht. Ein Trinkgeld in einem Chat kommt auch von hier.</string>
     <string name="kaposts_tips_from_not_available">Nicht verfügbar</string>
     <string name="kaposts_who_tipped">Wer diesem Beitrag Trinkgeld gab</string>
     <string name="kn53_kaplay_beat_in_move">Besiege %1$s in %2$d Zug</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">Trinkgeld in</string>
     <string name="kp5_tip_in_ask">Jedes Mal fragen</string>
     <string name="kp5_tip_in_ask_footer">Trinkgeld fragt jedes Mal, ob Kaspa oder kUSDT gesendet wird.</string>
-    <string name="kp5_tip_in_kusdt_footer">Trinkgeld sendet kUSDT an die Chat-Adresse des Verfassers. kUSDT-Trinkgelder werden nicht beim Beitrag gezählt.</string>
+    <string name="kp5_tip_in_kusdt_footer">Trinkgeld sendet kUSDT an die Chat-Adresse des Empfängers. kUSDT-Trinkgelder werden nicht bei einem Beitrag gezählt.</string>
     <string name="kp5_tip_not_counted">Wird nicht beim Beitrag gezählt</string>
-    <string name="kp5_tip_set_in_settings">Lege unter Einstellungen > KaPost > Trinkgeld in fest, was Trinkgeld sendet.</string>
+    <string name="kp5_tip_set_in_settings">Lege unter Einstellungen &gt; Anpassung &gt; Trinkgeld fest, was Trinkgeld sendet.</string>
     <string name="kp5_tip_title">Trinkgeld</string>
     <string name="kp5_tip_what_in">Worin gibst du Trinkgeld?</string>
     <string name="l53_already_in_your_language">Bereits in deiner Sprache</string>

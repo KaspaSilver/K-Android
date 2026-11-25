@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">कमाई का अनुमान लगाने के लिए अपना हैशरेट दर्ज करें।</string>
     <string name="kp_export_failed_csv">निर्यात विफल। CSV फ़ाइल नहीं लिखी जा सकी</string>
     <string name="kp_fee_amount">शुल्क %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">बैलेंस या डोमेन वाले %1$d पते मिले।</string>
-    <string name="kp_found_one_address_balance_domain">बैलेंस या डोमेन वाला 1 पता मिला।</string>
     <string name="kp_frame_lld_lld_5cb10">फ़्रेम %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">इस खाते को पहचानने के लिए इसे एक नाम दें।</string>
     <string name="kp_hide_address">पता छिपाएँ</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">नया पोर्टफोलियो</string>
     <string name="kp_next_block_reward">अगला ब्लॉक रिवॉर्ड</string>
     <string name="kp_next_block_reward_reduction">अगली ब्लॉक रिवॉर्ड कटौती</string>
-    <string name="kp_no_addresses_balance_domain_found">बैलेंस या डोमेन वाला कोई पता नहीं मिला।</string>
     <string name="kp_no_addresses_discovered_yet_15738">अभी तक कोई पता नहीं मिला।</string>
     <string name="kp_no_used_addresses_yet">अभी तक कोई इस्तेमाल किया गया पता नहीं</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">अभी पर्याप्त इतिहास नहीं है - कुछ दिनों की गतिविधि के बाद फिर देखें।</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">CSV को आपके Nextcloud के KaChat फ़ोल्डर में सहेजता है।</string>
     <string name="pnc_import_sub">अपने Nextcloud से एक CSV फ़ाइल चुनें।</string>
     <string name="portfolio">पोर्टफोलियो</string>
-    <string name="portfolio_add_address_footer_kachat">एक Kaspa पता या name.kachat जैसा डोमेन दर्ज करें (.kachat नाम पहले खोजे जाते हैं)। इस पते पर मिला हर लेनदेन खरीद और भेजा गया हर लेनदेन बिक्री माना जाता है, उस दिन की ऐतिहासिक KAS कीमत पर। बाद में वही पता दोबारा जोड़ने पर केवल पिछली इम्पोर्ट के बाद के लेनदेन आते हैं।</string>
     <string name="portfolio_add_chatting_address">चैट पता जोड़ें</string>
     <string name="portfolio_add_chatting_address_sub">आपके चैट पते की खरीद-बिक्री और उसका चुकाया हर नेटवर्क शुल्क।</string>
     <string name="portfolio_fees_count_loading">लेन-देन: %1$d. कुछ कीमतें अभी लोड हो रही हैं।</string>

@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">Kazancı tahmin etmek için hash oranını gir.</string>
     <string name="kp_export_failed_csv">Dışa aktarma başarısız. CSV dosyası yazılamadı</string>
     <string name="kp_fee_amount">Ücret %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">Bakiyesi veya alan adı olan %1$d adres bulundu.</string>
-    <string name="kp_found_one_address_balance_domain">Bakiyesi veya alan adı olan 1 adres bulundu.</string>
     <string name="kp_frame_lld_lld_5cb10">Kare %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">Tanimasi icin bu hesaba bir isim verin.</string>
     <string name="kp_hide_address">Adresi Gizle</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">Yeni Portföy</string>
     <string name="kp_next_block_reward">Sonraki Blok Ödülü</string>
     <string name="kp_next_block_reward_reduction">Sonraki Blok Ödülü Düşüşü</string>
-    <string name="kp_no_addresses_balance_domain_found">Bakiyesi veya alan adı olan adres bulunamadı.</string>
     <string name="kp_no_addresses_discovered_yet_15738">Henuz kesfedilen adres yok.</string>
     <string name="kp_no_used_addresses_yet">Henüz kullanılmış adres yok</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Henüz yeterli geçmiş yok - birkaç günlük etkinlikten sonra tekrar bak.</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">CSV\'yi Nextcloud\'undaki KaChat klasörüne kaydeder.</string>
     <string name="pnc_import_sub">Nextcloud\'undan bir CSV dosyası seç.</string>
     <string name="portfolio">Portfoy</string>
-    <string name="portfolio_add_address_footer_kachat">Bir Kaspa adresi veya name.kachat gibi bir alan adı girin (önce .kachat adları aranır). Bu adrese gelen her işlem alış, gönderilen her işlem satış sayılır ve o günün geçmiş KAS fiyatıyla değerlenir. Aynı adresi daha sonra yeniden eklerseniz yalnızca son içe aktarmadan beri bulunan işlemler içe aktarılır.</string>
     <string name="portfolio_add_chatting_address">Sohbet Adresini Ekle</string>
     <string name="portfolio_add_chatting_address_sub">Sohbet adresinin alımları, satımları ve ödediği tüm ağ ücretleri.</string>
     <string name="portfolio_fees_count_loading">İşlemler: %1$d. Bazı fiyatlar hâlâ yükleniyor.</string>

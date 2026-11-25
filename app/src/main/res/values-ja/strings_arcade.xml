@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">スネーク</string>
+    <string name="arcade_snake_detail">食べて伸びて、壁や自分にぶつからないように。スコアはKaspaに記録されます。</string>
+    <string name="arcade_2048_detail">スワイプしてタイルを合体させ、2048を目指しましょう。スコアはKaspaに記録されます。</string>
+    <string name="arcade_other_account">このゲームは別のアカウントでプレイされました。スコアを記録するには、そのアカウントにサインインしてください。</string>
+    <string name="arcade_score_not_sent">スコアは送信されませんでした。</string>
+    <string name="arcade_challenge_play">チャレンジ: %1$sをプレイ</string>
+    <string name="arcade_beat_in">%2$sで%1$s点を超えよう</string>
+    <string name="arcade_share_boast">Kの%2$sで%1$s点を獲得しました。超えられますか？</string>
+    <string name="arcade_challenge_named">%1$sが%3$sで%2$s点を獲得しました。超えられますか？</string>
+    <string name="arcade_challenge_someone">誰かが%2$sで%1$s点を獲得しました。超えられますか？</string>
+    <string name="arcade_your_best">自己ベスト: %1$s</string>
+    <string name="arcade_fee_note">終了した各ゲームのスコアは、少額のネットワーク手数料でチャットアドレスからKaspaに記録されます。</string>
+    <string name="arcade_hint_period">ランキングの期間を切り替えます</string>
+    <string name="arcade_board_unreachable">ランキングを読み込めませんでした。下に引いてもう一度お試しください。</string>
+    <string name="arcade_board_empty">まだスコアがありません。最初の記録を作りましょう。</string>
+    <string name="arcade_posted">KaPostに投稿しました</string>
+    <string name="arcade_game_over">ゲームオーバー</string>
+    <string name="arcade_play_again">もう一度プレイ</string>
+    <string name="arcade_posting">KaPostに投稿しています…</string>
+    <string name="arcade_shared">KaPostで共有済み</string>
+    <string name="arcade_retry_stamp">記録を再試行</string>
+    <string name="arcade_stamping">スコアをKaspaに記録中…</string>
+    <string name="arcade_stamped">スコアをKaspaに記録しました</string>
+    <string name="arcade_no_score">記録するスコアがありません。</string>
+    <string name="arcade_score_n">スコア: %1$s</string>
+    <string name="arcade_snake_start_hint">盤面をスワイプするか矢印を使って開始します。</string>
+    <string name="arcade_score">スコア</string>
+    <string name="arcade_best_tile">最大タイル</string>
+    <string name="arcade_2048_hint">スワイプしてタイルを動かします。同じ数字のタイルは合体します。</string>
+    <string name="arcade_challenge_label">アーケード チャレンジ</string>
+</resources>

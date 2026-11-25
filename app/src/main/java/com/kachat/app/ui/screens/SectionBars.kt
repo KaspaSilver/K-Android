@@ -22,9 +22,9 @@ import com.kachat.app.ui.theme.LocalAppColors
 
 /**
  * The toolbar iOS gives a main page with no large title in its bar (the Address Book): the
- * connection dot on a glass disc leading, the [principal] item (the balance, unless the page has
- * its own) centred, and [actions] on one piece of glass trailing. With [onBack], the back chevron
- * sits before the dot.
+ * [principal] item (the balance, unless the page has its own) centred, and [actions] on one piece
+ * of glass trailing. With [onBack], the back chevron leads. No connection dot: since iOS 518fdc8c
+ * it is only at the top of Settings and on the dock's Settings icon.
  */
 @Composable
 internal fun HubSectionTopBar(
@@ -48,7 +48,6 @@ internal fun HubSectionTopBar(
                         ToolbarIconButton(Icons.Filled.ArrowBackIosNew, androidx.compose.ui.res.stringResource(com.kachat.app.R.string.back), onBack, tint = colors.textPrimary, iconSize = 20.dp)
                     }
                 }
-                ConnectionDotButton(onClick = { ConnectionStatusOverlayState.open() })
             }
         },
         principal = principal,
@@ -56,53 +55,5 @@ internal fun HubSectionTopBar(
     )
 }
 
-/**
- * iOS's UnderlineTabBar: equal-width tabs, each label 15pt bold on one line - the selected one in
- * the accent colour, the rest at half strength - shrinking to fit down to 75% rather than being
- * cut ("Marketplace" stays whole), 12 above it, a 2.5pt accent underline 8 below it under the
- * selected tab, and a hairline under the whole bar.
- */
-@Composable
-internal fun HubUnderlineTabBar(
-    titles: List<String>,
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = LocalAppColors.current
-    Column(modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth()) {
-            titles.forEachIndexed { index, title ->
-                val isSelected = index == selectedIndex
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable(
-                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                            indication = null,
-                            role = androidx.compose.ui.semantics.Role.Tab,
-                        ) { onSelect(index) }
-                        .semantics { selected = isSelected },
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    KachatFitText(
-                        title,
-                        color = if (isSelected) KaspaTeal else KaspaTeal.copy(alpha = 0.5f),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        minScale = 0.75f,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                    )
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(2.5.dp)
-                            .background(if (isSelected) KaspaTeal else Color.Transparent)
-                    )
-                }
-            }
-        }
-        HorizontalDivider(thickness = 0.5.dp, color = colors.divider)
-    }
-}
+// The underline tab bar (iOS UnderlineTabBar) is gone: every page switch inside a screen is the
+// cycle button (`com.kachat.app.ui.components.PageCycleBar`, iOS 518fdc8c).

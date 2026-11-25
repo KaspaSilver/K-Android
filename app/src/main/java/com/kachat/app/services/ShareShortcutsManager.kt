@@ -219,7 +219,6 @@ class ShareShortcutsManager @Inject constructor(
                 // A name you gave the chat, else the Address Book's (iOS 00767a4).
                 val label = convo.contact.alias?.takeIf { it.isNotBlank() }
                     ?: AddressBookManager.nameFor(convo.contact.id)
-                    ?: convo.contact.knsName?.takeIf { it.isNotBlank() && com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY }
                     ?: KaspaAddress.shortDisplay(convo.contact.id)
                 ShortcutEntry(
                     owner = owner,

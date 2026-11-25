@@ -199,9 +199,15 @@ fun AddToPortfolioSheet(
                         }
                         // iOS's section footer: what is about to be recorded, so the choice is
                         // made with the transaction in view.
+                        // Translated (iOS's "Sent %@ on %@" / "Received %@ on %@" keys), the
+                        // date in the phone's own format.
+                        val summaryDate = java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT).format(Date(timestamp))
                         Text(
-                            "${if (tx.sent) "Sent" else "Received"} ${formatKasAmount(amountKas)} on " +
-                                SimpleDateFormat("MMM d, yyyy, h:mm a", Locale.US).format(Date(timestamp)),
+                            stringResource(
+                                if (tx.sent) com.kachat.app.R.string.shell54_sent_on else com.kachat.app.R.string.shell54_received_on,
+                                formatKasAmount(amountKas),
+                                summaryDate,
+                            ),
                             color = colors.textSecondary,
                             fontSize = 13.sp
                         )
@@ -260,7 +266,7 @@ fun AddToPortfolioSheet(
                                 Icon(Icons.Default.Warning, null, tint = Color_Warning, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    tr(R.string.kp_this_transaction_is_already_in_adding_c9362, selectedName),
+                                    tr(R.string.kp_this_transaction_is_already_in_adding_c9362, selectedName.ifEmpty { stringResource(com.kachat.app.R.string.shell54_this_portfolio) }),
                                     color = colors.textSecondary,
                                     fontSize = 12.sp
                                 )
@@ -294,7 +300,7 @@ fun AddToPortfolioSheet(
                             // Thousands commas while shown, stored plain (iOS 40c5258).
                             onValueChange = { amountText = KaspaAmountGrouping.ungrouped(it, previous = amountText) },
                             visualTransformation = KaspaAmountGrouping.visualTransformation,
-                            label = { Text("Amount (${KaspaUnit.symbol})", color = colors.textSecondary) },
+                            label = { Text(stringResource(com.kachat.app.R.string.shell54_amount_unit, KaspaUnit.symbol), color = colors.textSecondary) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
@@ -304,7 +310,7 @@ fun AddToPortfolioSheet(
                             // Thousands commas while shown, stored plain (iOS 40c5258).
                             onValueChange = { priceText = KaspaAmountGrouping.ungrouped(it, previous = priceText) },
                             visualTransformation = KaspaAmountGrouping.visualTransformation,
-                            label = { Text("Price per KAS", color = colors.textSecondary) },
+                            label = { Text(stringResource(com.kachat.app.R.string.shell54_price_per_kas), color = colors.textSecondary) },
                             trailingIcon = {
                                 if (isLookingUpPrice) {
                                     com.kachat.app.ui.theme.IosActivityIndicator(strokeWidth = 1.5.dp, modifier = Modifier.size(16.dp), color = colors.textSecondary)
@@ -315,7 +321,7 @@ fun AddToPortfolioSheet(
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (total != null) {
-                            Text("Total ${formatFiatAmount(total, currencyCode)}", color = colors.textSecondary, fontSize = 13.sp)
+                            Text(stringResource(com.kachat.app.R.string.shell54_total_value, formatFiatAmount(total, currencyCode)), color = colors.textSecondary, fontSize = 13.sp)
                         }
                         com.kachat.app.ui.theme.IosTextField(
                             value = notes,
@@ -391,7 +397,7 @@ fun AddToPortfolioSheet(
                         }.timeInMillis
                     }
                     showDatePicker = false
-                }) { Text("OK", color = KaspaTeal, fontWeight = FontWeight.Bold) }
+                }) { Text(stringResource(com.kachat.app.R.string.ok), color = KaspaTeal, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
@@ -412,7 +418,7 @@ fun AddToPortfolioSheet(
         com.kachat.app.ui.theme.IosAlertDialog(
             onDismissRequest = { showTimePicker = false },
             containerColor = colors.surface,
-            title = { Text("Time", color = colors.textPrimary) },
+            title = { Text(stringResource(com.kachat.app.R.string.shell54_time), color = colors.textPrimary) },
             text = { TimePicker(state = state) },
             confirmButton = {
                 TextButton(onClick = {
@@ -422,7 +428,7 @@ fun AddToPortfolioSheet(
                         set(Calendar.MINUTE, state.minute)
                     }.timeInMillis
                     showTimePicker = false
-                }) { Text("OK", color = KaspaTeal, fontWeight = FontWeight.Bold) }
+                }) { Text(stringResource(com.kachat.app.R.string.ok), color = KaspaTeal, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 group create / add members sheets (iOS GroupActionSheets.swift, 2026-11-24): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="ga54_not_sent">未送信</string>
+    <string name="ga54_x_of_y">%1$d / %2$d</string>
+    <string name="ga54_some_steps_failed">一部の手順が完了しませんでした。グループ情報 &gt; 全員に招待を再送信 から送り直せます。</string>
+    <string name="ga54_each_step_is_tx">各ステップはKaspa上のトランザクションで、数秒かかることがあります。終わるまでKを開いたままにしてください。</string>
+    <string name="ga54_setting_up_group">グループを設定中</string>
+    <string name="ga54_inviting">%1$sを招待中</string>
+    <string name="ga54_saving_recovery_copy">復元用のコピーを保存中</string>
+    <string name="ga54_adding_group_photo">グループの写真を追加中</string>
+    <string name="ga54_creating">「%1$s」を作成中</string>
+    <string name="ga54_adding">%1$sを追加中</string>
+    <string name="ga54_adding_one_member">1人のメンバーを追加中</string>
+    <string name="ga54_adding_n_members">%1$d人のメンバーを追加中</string>
+    <string name="ga54_sending_group_key">新しいグループキーを送信中：%1$d / %2$d</string>
+    <string name="ga54_add_one_member">グループに1人のメンバーを追加しますか？</string>
+    <string name="ga54_add_n_members">グループに%1$d人のメンバーを追加しますか？</string>
+    <string name="ga54_joined_group">%1$sがグループに参加しました</string>
+    <string name="ga54_declined_invite">%1$sが招待を辞退しました</string>
+    <string name="ga54_invited_to_group">%1$sがグループチャットに招待されました</string>
+    <string name="ga54_removed_from_group">%1$sがグループチャットから削除されました</string>
+</resources>

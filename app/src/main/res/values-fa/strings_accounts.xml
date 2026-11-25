@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Account switcher and Connection Status (iOS 8cb4c88e), agent C. -->
+<resources>
+    <string name="accounts_title">حساب‌ها</string>
+    <string name="add_another_account">افزودن حساب دیگر</string>
+    <string name="add_another_account_confirm_title">حساب دیگری اضافه شود؟</string>
+    <string name="add_another_account_confirm_message">به صفحه حساب‌ها می‌روید تا یکی بسازید یا وارد کنید. این حساب روی این گوشی ذخیره می‌ماند.</string>
+    <string name="recovery_phrase_needed">عبارت بازیابی لازم است</string>
+    <string name="recovery_phrase_needed_message">کلیدهای این حساب روی این گوشی نیست. خارج شوید و از صفحه حساب‌ها با عبارت بازیابی وارد آن شوید.</string>
+    <string name="account_signed_in">وارد شده</string>
+    <string name="switch_account">تغییر حساب</string>
+    <string name="node_status">وضعیت نود</string>
+    <string name="indexer_status">وضعیت ایندکسر</string>
+    <string name="indexer_status_checking">در حال بررسی…</string>
+</resources>

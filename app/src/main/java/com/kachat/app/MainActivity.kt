@@ -62,6 +62,8 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var shareShortcutsLazy: dagger.Lazy<com.kachat.app.services.ShareShortcutsManager>
     // A tapped Received KAS push: the address's history, or Wallet for Cold Storage (iOS 428a797b).
     @Inject lateinit var addressActivityNotifierLazy: dagger.Lazy<com.kachat.app.services.AddressActivityNotifier>
+    // The Appearance setting, put on the window too (iOS 518fdc8c `WindowAppearance`).
+    @Inject lateinit var appSettingsLazy: dagger.Lazy<com.kachat.app.repository.AppSettingsRepository>
 
     // The KaChat sheet that explains the battery exemption before Android's own dialog. Re-derived
     // on every resume (see refreshBatteryRationale), so it follows the notification answer.
@@ -174,6 +176,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // The Appearance setting on this window from its first frame (iOS 518fdc8c
+        // `WindowAppearance.install`): before super.onCreate, so AppCompat applies it as the
+        // window is made. Android 12+ keeps the app's own night mode, its splash screen included.
+        guarded("window appearance") { com.kachat.app.ui.WindowAppearance.applySaved(this) }
         super.onCreate(savedInstanceState)
         accountStoresOpen = com.kachat.app.util.SecureStores.accountStoresOpen(this)
         if (!accountStoresOpen) {
@@ -206,6 +212,16 @@ class MainActivity : AppCompatActivity() {
         // still opens (KaChatApplication's startup rule).
         guarded("battery rationale") { refreshBatteryRationale() }
         handleLaunchIntent(intent)
+        // The stored Appearance, as it loads and on every change in Settings > Customization: the
+        // window's night mode follows it, so the window under Compose, the system bars and the
+        // next launch's splash screen are never the other appearance (iOS 518fdc8c).
+        lifecycleScope.launch {
+            runCatching {
+                appSettingsLazy.get().appearance.collect { appearance ->
+                    com.kachat.app.ui.WindowAppearance.set(this@MainActivity, appearance)
+                }
+            }.onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+        }
         setContent {
             val walletViewModel: WalletViewModel = hiltViewModel()
             // Settings > Customization > Appearance: System follows the device, as on iOS.
@@ -275,6 +291,18 @@ class MainActivity : AppCompatActivity() {
         }
         finishAffinity()
         Runtime.getRuntime().exit(0)
+    }
+
+    /**
+     * The night mode changed (Settings > Customization > Appearance, or the phone's own with
+     * Appearance on System): this Activity handles `uiMode` itself, so Compose redraws in place
+     * rather than the screen being rebuilt; the window's own background follows here.
+     */
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        guarded("window background") {
+            window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(ContextCompat.getColor(this, R.color.launch_background)))
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -546,7 +574,7 @@ class MainActivity : AppCompatActivity() {
         val asksForChat = uri.queryParameterNames.any { name ->
             name.equals("chat", ignoreCase = true) && uri.getQueryParameter(name) == "1"
         }
-        com.kachat.app.ui.screens.ProfileDeepLink.request(raw, openChat = asksForChat)
+        com.kachat.app.ui.screens.ProfileDeepLink.request(raw, openChat = asksForChat, external = true)
     }
 
     /** kachat://pay/<address>?... or https://kachat.app/pay/<address>?... - someone's payment
@@ -602,8 +630,8 @@ class MainActivity : AppCompatActivity() {
     /**
      * KaPost's, KaPay's and KaPlay's other links, their schemes registered here since they retired
      * (iOS 148a5331 `handleIncomingURL`): `kaposts://compose?text=` opens KaPost's composer with
-     * the text, `kapay://market` the .kachat tab's Marketplace page, and a `kachatchess://bot/...`
-     * challenge the game in KaPlay.
+     * the text, `kapay://market` the .kachat tab's Marketplace page, a `kachatchess://bot/...`
+     * challenge the game in KaPlay, and a `kachatarcade://` score challenge its arcade game.
      */
     private fun handleRetiredAppLinks(intent: Intent) {
         if (intent.action != Intent.ACTION_VIEW) return
@@ -618,7 +646,12 @@ class MainActivity : AppCompatActivity() {
         }
         if (com.kachat.app.services.chess.ChessBotLinks.challenge(uri) != null) {
             com.kachat.app.services.chess.ChessBotLinks.open(uri)
+            return
         }
+        // An arcade score challenge (`kachatarcade://snake?score=...`, iOS 518fdc8c ARCADE.md):
+        // KaPlay opens the game, the score to beat on it. A tapped link has no post, so the
+        // challenger shows as "Someone" (audit 2026-11-24 #21).
+        com.kachat.app.services.arcade.ArcadeLinkRouter.open(uri.toString())
     }
 
     /** KaChat's own scheme and KaPay's two (kachatwallet:// was KaPay's name before KaPay), whose

@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +18,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -235,6 +239,132 @@ fun KaPostBotChallengeCard(challenge: KaPlayBotChallenge, modifier: Modifier = M
                 haptic(com.kachat.app.util.IosHaptic.SUCCESS)
                 showMenu = false
             }
+        }
+    }
+}
+
+/**
+ * An arcade score challenge in a KaPost (`kachatarcade://`, ARCADE.md §6; iOS 518fdc8c
+ * `KaPostArcadeChallengeCard`), drawn as a card. Play opens that game in KaPlay with the score to
+ * beat. [author] is the post's author: the game names the challenger only when it is the link's
+ * `by` (audit 2026-11-24 #21). [enabled] false is the composer's preview, whose Play does nothing.
+ */
+@Composable
+fun KaPostArcadeChallengeCard(
+    challenge: com.kachat.app.services.arcade.ArcadeChallenge,
+    modifier: Modifier = Modifier,
+    author: String? = null,
+    enabled: Boolean = true,
+) {
+    val colors = LocalAppColors.current
+    val context = LocalContext.current
+    val haptic = com.kachat.app.util.rememberHaptics()
+    val shape = RoundedCornerShape(16.dp)
+    val title = androidx.compose.runtime.remember(challenge.url) {
+        com.kachat.app.ui.screens.arcade.ArcadeText.challengeTitle(context, challenge)
+    }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(KaspaTeal.copy(alpha = 0.08f))
+            .border(1.dp, KaspaTeal.copy(alpha = 0.35f), shape)
+            .then(
+                if (enabled) {
+                    Modifier.clickable(role = Role.Button) {
+                        haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                        com.kachat.app.services.arcade.ArcadeLinkRouter.open(challenge.url, author)
+                    }
+                } else Modifier
+            )
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier.size(40.dp).clip(CircleShape).background(KaspaTeal.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            com.kachat.app.ui.screens.arcade.ArcadeGameIcon(challenge.game, 20.dp, KaspaTeal)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                stringResource(R.string.arcade_challenge_label).uppercase(),
+                color = KaspaTeal, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                title,
+                color = colors.textPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(KaspaTeal)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+            Text(stringResource(R.string.kpui_play), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        }
+    }
+}
+
+/**
+ * A KaPlay challenge link (a bot's or an arcade score's) a post being written carries (iOS
+ * 518fdc8c `KaPostComposerView.attachedChallenge`): taken out of the text and shown as the card
+ * the feed will draw, so the composer previews the post rather than showing the raw link (owner,
+ * 2026-11-24); it goes back on the end when posted. One challenge a post: the feed draws only the
+ * first.
+ */
+object KaPostComposerChallenge {
+    /** The challenge link in [text] (an arcade score's first, then a bot's), and the text without
+     *  it; null when there is none. */
+    fun detach(text: String): Pair<String, String>? {
+        val matched = com.kachat.app.services.arcade.ArcadeChallenge.match(text)?.matchedText
+            ?: KaPlayBotChallenge.match(text)?.matchedText
+            ?: return null
+        return matched to text.replace(matched, "").trim()
+    }
+
+    /** What is posted: the text, with the attached link on the end. */
+    fun postBody(text: String, link: String?): String {
+        val trimmed = text.trim()
+        link ?: return trimmed
+        return if (trimmed.isEmpty()) link else "$trimmed\n\n$link"
+    }
+}
+
+/** The attached challenge's card under the composer's editor, with an x that takes it off the
+ *  post. A preview: its button does nothing here. */
+@Composable
+fun KaPostComposerChallengeCard(link: String, onRemove: () -> Unit, modifier: Modifier = Modifier) {
+    val removeLabel = stringResource(R.string.remove)
+    Box(modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 10.dp)) {
+        val arcade = com.kachat.app.services.arcade.ArcadeChallenge.match(link)
+        if (arcade != null) {
+            KaPostArcadeChallengeCard(arcade.challenge, enabled = false)
+        } else {
+            KaPlayBotChallenge.match(link)?.let { bot ->
+                KaPostBotChallengeCard(bot.challenge)
+                // a preview: a cover over the card takes its taps
+                Box(Modifier.matchParentSize().pointerInput(Unit) { detectTapGestures { } })
+            }
+        }
+        Box(
+            Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(Color.Black.copy(alpha = 0.6f))
+                .clickable(role = Role.Button, onClick = onRemove)
+                .semantics { contentDescription = removeLabel },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.Close, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
         }
     }
 }

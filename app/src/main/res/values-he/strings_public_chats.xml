@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">צ\'אט ציבורי חדש</string>
     <string name="pc_new_public_chat_subtitle">הצטרפו לחדר ציבורי או צרו אחד.</string>
     <string name="pc_edit_default_public_chats">עריכת צ׳אטים ציבוריים ברירת מחדל</string>
-    <string name="pc_edit_default_public_chats_subtitle">הפעילו או כבו את חדרי ברירת המחדל ואת חדרי השפות.</string>
     <string name="pc_new_public_chat_explainer">כל מי שמצטרף לאותו שם ערוץ יכול לראות ולפרסם שם הודעות - אין בעלים ואין הזמנה.</string>
     <string name="pc_join">הצטרף</string>
     <string name="pc_back">חזרה</string>

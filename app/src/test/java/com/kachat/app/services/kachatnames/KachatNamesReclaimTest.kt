@@ -80,7 +80,8 @@ class KachatNamesReclaimTest {
         val free = KachatNamesActions.registerStep(Lookup.Free("alice", null), me, grace, now)
         assertTrue(free is KachatNamesActions.RegisterStep.Claim)
         assertNull((free as KachatNamesActions.RegisterStep.Claim).gap)
-        assertEquals("Freeing alice.kachat for you...", KachatNamesActions.freeingName("alice"))
+        // the name as shown: bare by default (Show .kachat Endings off, iOS 518fdc8c)
+        assertEquals("Freeing alice for you...", KachatNamesActions.freeingName("alice"))
     }
 
     /** iOS 4f0bd33: the reclaim retry measures from when the reclaim was sent. */

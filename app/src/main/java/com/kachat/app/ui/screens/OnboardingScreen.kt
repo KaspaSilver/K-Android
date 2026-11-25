@@ -25,7 +25,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Visibility
@@ -74,6 +73,12 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun OnboardingScreen(viewModel: WalletViewModel) {
+    // A switch from Profile's account chip (iOS 8cb4c88e `switchToSavedAccount`) logged out to
+    // here: the old account's tabs are gone, so its sign-in goes ahead and the new one gets new tabs.
+    val pendingAccountSwitch by viewModel.pendingAccountSwitch.collectAsState()
+    LaunchedEffect(pendingAccountSwitch) {
+        if (pendingAccountSwitch != null) viewModel.finishPendingAccountSwitch()
+    }
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "welcome") {
         composable("welcome") {
@@ -545,24 +550,8 @@ fun SavedAccountCard(
             .padding(start = 12.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // iOS person.crop.circle.badge.checkmark.
-        Box(modifier = Modifier.size(24.dp)) {
-            Icon(
-                imageVector = Icons.Outlined.AccountCircle,
-                contentDescription = null,
-                tint = KaspaTeal,
-                modifier = Modifier.size(22.dp).align(Alignment.TopEnd)
-            )
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = KaspaTeal,
-                modifier = Modifier
-                    .size(11.dp)
-                    .align(Alignment.BottomStart)
-                    .background(KaChatSignInCard, CircleShape)
-            )
-        }
+        // the account's own picture, saved while it was signed in (iOS 8cb4c88e `SavedAccountAvatar`)
+        SavedAccountAvatar(address = account.address, name = displayAlias, size = 40.dp)
 
         Spacer(modifier = Modifier.width(10.dp))
 

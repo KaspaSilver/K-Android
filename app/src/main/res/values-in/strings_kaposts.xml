@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">Tip tidak terkirim: alamat Tip Dari Anda tidak bisa dibaca sekarang.</string>
     <string name="feed54_tip_minimum_footer">Tip terkecil yang diterima jaringan adalah %1$s.</string>
     <string name="feed54_tip_no_price">Tip tidak terkirim: tidak ada harga KAS terbaru untuk mengubah %1$s menjadi KAS.</string>
-    <string name="feed54_tip_too_small">Tip tidak terkirim: tip terkecil yang diterima jaringan adalah %1$s. Ubah tip default Anda di Pengaturan &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">Tip tidak terkirim: tip terkecil yang diterima jaringan adalah %1$s. Ubah tip default Anda di Pengaturan &gt; Kustomisasi &gt; Tip.</string>
     <string name="feed54_tipped">Tip %1$s dikirim ke %2$s</string>
     <string name="feed54_tipped_privately">Tip %1$s dikirim ke %2$s secara pribadi</string>
     <string name="feed54_unfollow_posted">Berhenti mengikuti diposting ke jaringan</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">Tip</string>
     <string name="kaposts_tips">Tip</string>
     <string name="kaposts_tips_from">Tip Dari</string>
-    <string name="kaposts_tips_from_footnote">Tip dari Chatting Address dihitung di postingan dan Anda tercantum sebagai pemberi tip. Dari alamat lain, tip bersifat privat: penulis menerimanya dan melihatnya di chat kalian, tapi tidak dihitung di postingan dan tidak menyebut Anda.</string>
+    <string name="kaposts_tips_from_footnote">Tip dari Chatting Address dihitung di postingan dan Anda tercantum sebagai pemberi tip. Dari alamat lain, tip bersifat privat: penulis menerimanya dan melihatnya di chat kalian, tapi tidak dihitung di postingan dan tidak menyebut Anda. Tip di chat juga dikirim dari sini.</string>
     <string name="kaposts_tips_from_not_available">Tidak tersedia</string>
     <string name="kaposts_who_tipped">Siapa yang memberi tip pada postingan ini</string>
     <string name="kn53_kaplay_beat_in_move">Kalahkan %1$s dalam %2$d langkah</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">Tip dalam</string>
     <string name="kp5_tip_in_ask">Tanya setiap kali</string>
     <string name="kp5_tip_in_ask_footer">Tip menanyakan setiap kali apakah mengirim Kaspa atau kUSDT.</string>
-    <string name="kp5_tip_in_kusdt_footer">Tip mengirim kUSDT ke alamat obrolan pembuat postingan. Tip kUSDT tidak dihitung di postingan.</string>
+    <string name="kp5_tip_in_kusdt_footer">Tip mengirim kUSDT ke alamat obrolan mereka. Tip kUSDT tidak dihitung di postingan.</string>
     <string name="kp5_tip_not_counted">Tidak dihitung di postingan</string>
-    <string name="kp5_tip_set_in_settings">Atur apa yang dikirim Tip di Pengaturan > KaPost > Tip dalam.</string>
+    <string name="kp5_tip_set_in_settings">Atur apa yang dikirim Tip di Pengaturan &gt; Kustomisasi &gt; Tip.</string>
     <string name="kp5_tip_title">Tip</string>
     <string name="kp5_tip_what_in">Anda memberi tip dalam apa?</string>
     <string name="l53_already_in_your_language">Sudah dalam bahasa Anda</string>

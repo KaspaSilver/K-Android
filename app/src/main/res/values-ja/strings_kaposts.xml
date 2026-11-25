@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">チップを送れませんでした: チップの送金元アドレスを今は読み取れません。</string>
     <string name="feed54_tip_minimum_footer">ネットワークが受け付ける最小のチップは %1$s です。</string>
     <string name="feed54_tip_no_price">チップを送れませんでした：%1$s を KAS に換算できる最近の KAS 価格がありません。</string>
-    <string name="feed54_tip_too_small">チップを送れませんでした: ネットワークが受け付ける最小のチップは %1$s です。設定 &gt; KaPost でデフォルトのチップを変更してください。</string>
+    <string name="feed54_tip_too_small">チップを送れませんでした: ネットワークが受け付ける最小のチップは %1$s です。設定 &gt; カスタマイズ &gt; チップ でデフォルトのチップを変更してください。</string>
     <string name="feed54_tipped">%1$s を %2$s にチップしました</string>
     <string name="feed54_tipped_privately">%1$s を %2$s に非公開でチップしました</string>
     <string name="feed54_unfollow_posted">フォロー解除をネットワークに投稿しました</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">チップ</string>
     <string name="kaposts_tips">チップ</string>
     <string name="kaposts_tips_from">チップの送信元</string>
-    <string name="kaposts_tips_from_footnote">Chatting Addressからのチップは投稿にカウントされ、チップを送った人として表示されます。別のアドレスからのチップは非公開です。投稿者は受け取り、チャットで確認できますが、投稿にはカウントされず、あなたの名前も出ません。</string>
+    <string name="kaposts_tips_from_footnote">Chatting Addressからのチップは投稿にカウントされ、チップを送った人として表示されます。別のアドレスからのチップは非公開です。投稿者は受け取り、チャットで確認できますが、投稿にはカウントされず、あなたの名前も出ません。チャットでのチップもここから送られます。</string>
     <string name="kaposts_tips_from_not_available">利用不可</string>
     <string name="kaposts_who_tipped">この投稿にチップを送った人</string>
     <string name="kn53_kaplay_beat_in_move">%1$s に%2$d手で勝つ</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">チップの通貨</string>
     <string name="kp5_tip_in_ask">毎回確認</string>
     <string name="kp5_tip_in_ask_footer">チップを押すたびに Kaspa か kUSDT かを確認します。</string>
-    <string name="kp5_tip_in_kusdt_footer">チップは投稿者のチャットアドレスに kUSDT を送ります。kUSDT のチップは投稿には数えられません。</string>
+    <string name="kp5_tip_in_kusdt_footer">チップは相手のチャットアドレスに kUSDT を送ります。kUSDT のチップは投稿には数えられません。</string>
     <string name="kp5_tip_not_counted">投稿には数えられません</string>
-    <string name="kp5_tip_set_in_settings">チップで送るものは 設定 > KaPost > チップの通貨 で選べます。</string>
+    <string name="kp5_tip_set_in_settings">チップで送るものは 設定 &gt; カスタマイズ &gt; チップ で選べます。</string>
     <string name="kp5_tip_title">チップ</string>
     <string name="kp5_tip_what_in">何でチップを送りますか?</string>
     <string name="l53_already_in_your_language">すでにあなたの言語です</string>

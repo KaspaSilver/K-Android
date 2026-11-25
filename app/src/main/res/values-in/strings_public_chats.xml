@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">Obrolan Publik Baru</string>
     <string name="pc_new_public_chat_subtitle">Bergabung ke ruang publik, atau buat sendiri.</string>
     <string name="pc_edit_default_public_chats">Edit Obrolan Publik Bawaan</string>
-    <string name="pc_edit_default_public_chats_subtitle">Nyalakan atau matikan ruang bawaan dan ruang bahasa.</string>
     <string name="pc_new_public_chat_explainer">Siapa pun yang bergabung dengan nama kanal yang sama bisa melihat dan mengirim pesan di sana - tidak ada pemilik dan tidak perlu undangan.</string>
     <string name="pc_join">Gabung</string>
     <string name="pc_back">Kembali</string>

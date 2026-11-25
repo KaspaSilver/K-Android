@@ -48,10 +48,11 @@ fun ContentReportFallback(onDismiss: () -> Unit) {
     com.kachat.app.ui.theme.IosAlertDialog(
         onDismissRequest = onDismiss,
         containerColor = colors.surface,
-        title = { Text("Report Copied", color = colors.textPrimary) },
+        // Translated (iOS 518fdc8c: the report fallback was among the ~95 texts with no key).
+        title = { Text(stringResource(R.string.shell54_report_copied), color = colors.textPrimary) },
         text = {
             Text(
-                "No mail app could open it. Paste the report into an email to ${ContentReport.SUPPORT_EMAIL}.",
+                stringResource(R.string.shell54_report_no_mail_app, ContentReport.SUPPORT_EMAIL),
                 color = colors.textSecondary,
             )
         },

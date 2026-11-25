@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chat bells (iPhone 8cb4c88e: ChatDetailView / GroupChatDetailView header bell), from the
+     iPhone's Localizable.strings for the same keys. -->
+<resources>
+    <string name="bells_chat_silenced">گفتگو بی‌صدا شد.</string>
+    <string name="bells_group_silenced">گروه بی‌صدا شد.</string>
+    <string name="bells_notifications_on">اعلان‌ها روشن شد.</string>
+</resources>

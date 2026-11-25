@@ -1434,7 +1434,7 @@ class KachatNamesActions @Inject constructor(
                 )
             }
         }
-        if (open) throw KachatNames.Failure(tr(R.string.kn_err_claim_in_progress, "$name.kachat"))
+        if (open) throw KachatNames.Failure(tr(R.string.kn_err_claim_in_progress, com.kachat.app.models.KachatNameLabel.display(name)))
     }
 
     /**
@@ -1448,7 +1448,7 @@ class KachatNamesActions @Inject constructor(
             val lookup = registry.lookup(name)
             if (lookup is Lookup.Registered) {
                 if (isRegisterable(lookup, registry.graceMs)) return lookup.info
-                throw ActionError.NotRegisterable("$name.kachat is already registered.")
+                throw ActionError.NotRegisterable("${com.kachat.app.models.KachatNameLabel.display(name)} is already registered.")
             }
             val gap = (lookup as? Lookup.Free)?.gap
             if (gap != null && liveGapOrNull(gap, m) != null) return null
@@ -2212,7 +2212,7 @@ class KachatNamesActions @Inject constructor(
 
         /** The driver's note while it frees an expired old record of the name; English like the
          *  driver's other messages, localized by the screens (`kachatPendingError`, iOS eea52b2). */
-        fun freeingName(name: String): String = "Freeing $name.kachat for you..."
+        fun freeingName(name: String): String = "Freeing ${com.kachat.app.models.KachatNameLabel.display(name)} for you..."
 
         /** Why a claim waits on registry v5 before its migration deadline (English; the screens
          *  localize it, with the time, from [opensMs]; iOS dd836cb). */

@@ -167,6 +167,9 @@ fun TokenManageScreen(
     var showActions by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
     var showVisibility by remember { mutableStateOf(false) }
+    /** Open Trestly, under the balance card (iOS 518fdc8c, owner's call 2026-11-23): the address it
+     *  should use, then Trestly's site inside K, for its pool and everything else there. */
+    var showTrestly by remember { mutableStateOf(false) }
     /** The ⋮ on an address row: its own actions (as Manage Addresses has for each address). */
     var rowActionsTarget by remember { mutableStateOf<TokenHolding?>(null) }
     var renameTarget by remember { mutableStateOf<TokenHolding?>(null) }
@@ -316,6 +319,17 @@ fun TokenManageScreen(
                             }
                         }
                     }
+                    if (token == WalletToken.KUSDT) {
+                        item {
+                            OpenTrestlyButton(
+                                onClick = {
+                                    haptic(IosHaptic.IMPACT_LIGHT)
+                                    showTrestly = true
+                                },
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp),
+                            )
+                        }
+                    }
                     val list = rows
                     if (list != null) {
                         if (list.isEmpty() && hiddenCount == 0) {
@@ -356,6 +370,9 @@ fun TokenManageScreen(
                     item { Spacer(Modifier.height(72.dp + 16.dp + dockInset)) }
                 }
 
+                if (showTrestly) {
+                    SwapStablecoinsSheet(walletViewModel = walletViewModel, onDismissed = { showTrestly = false }, startToken = token)
+                }
                 TokenActionsFloatingButton(
                     token = token,
                     isBusy = isDiscovering,
@@ -1229,5 +1246,25 @@ fun TokenAboutCard(token: WalletToken, modifier: Modifier = Modifier) {
                 Text(stringResource(R.string.token_view_the_vault), color = KaspaTeal, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
             }
         }
+    }
+}
+
+/** Manage kUSDT's Open Trestly (iOS 518fdc8c `openTrestlyButton`): a glass row, the safari symbol,
+ *  "Open Trestly" and a chevron. */
+@Composable
+private fun OpenTrestlyButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalAppColors.current
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .iosGlass(18.dp)
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+    ) {
+        Icon(Icons.Filled.Explore, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
+        Text(stringResource(R.string.kp_open_trestly), color = colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(18.dp))
     }
 }

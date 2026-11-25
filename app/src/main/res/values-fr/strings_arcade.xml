@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">Snake</string>
+    <string name="arcade_snake_detail">Mangez, grandissez, sans toucher les murs ni vous-même. Les scores sont inscrits sur Kaspa.</string>
+    <string name="arcade_2048_detail">Balayez pour fusionner les tuiles et atteindre 2048. Les scores sont inscrits sur Kaspa.</string>
+    <string name="arcade_other_account">Cette partie a été jouée sur un autre compte. Connectez-vous à celui-ci pour inscrire le score.</string>
+    <string name="arcade_score_not_sent">Le score n\'a pas été envoyé.</string>
+    <string name="arcade_challenge_play">Défi : jouez à %1$s</string>
+    <string name="arcade_beat_in">Battez %1$s à %2$s</string>
+    <string name="arcade_share_boast">J\'ai marqué %1$s points à %2$s sur K. Saurez-vous faire mieux ?</string>
+    <string name="arcade_challenge_named">%1$s a marqué %2$s points à %3$s. Saurez-vous faire mieux ?</string>
+    <string name="arcade_challenge_someone">Quelqu\'un a marqué %1$s points à %2$s. Saurez-vous faire mieux ?</string>
+    <string name="arcade_your_best">Votre record : %1$s</string>
+    <string name="arcade_fee_note">Le score de chaque partie terminée est inscrit sur Kaspa depuis votre adresse de discussion, pour de faibles frais de réseau.</string>
+    <string name="arcade_hint_period">Change la période du classement</string>
+    <string name="arcade_board_unreachable">Impossible de charger le classement. Tirez vers le bas pour réessayer.</string>
+    <string name="arcade_board_empty">Aucun score pour l\'instant. Soyez le premier.</string>
+    <string name="arcade_posted">Publié sur KaPost</string>
+    <string name="arcade_game_over">Partie terminée</string>
+    <string name="arcade_play_again">Rejouer</string>
+    <string name="arcade_posting">Publication sur KaPost…</string>
+    <string name="arcade_shared">Partagé sur KaPost</string>
+    <string name="arcade_retry_stamp">Réessayer l\'inscription</string>
+    <string name="arcade_stamping">Inscription du score sur Kaspa…</string>
+    <string name="arcade_stamped">Score inscrit sur Kaspa</string>
+    <string name="arcade_no_score">Aucun score à inscrire.</string>
+    <string name="arcade_score_n">Score : %1$s</string>
+    <string name="arcade_snake_start_hint">Balayez le plateau ou utilisez les flèches pour commencer.</string>
+    <string name="arcade_score">Score</string>
+    <string name="arcade_best_tile">Meilleure tuile</string>
+    <string name="arcade_2048_hint">Balayez pour déplacer les tuiles. Les tuiles identiques fusionnent.</string>
+    <string name="arcade_challenge_label">Défi arcade</string>
+</resources>

@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">Aucun tournoi terminé pour l\'instant.</string>
     <string name="kaplay_no_finished_tournaments_this_month">Aucun tournoi terminé ce mois-ci.</string>
     <string name="kaplay_tab_leaderboard">Classement</string>
+    <string name="kp_640de0cb0b2c" formatted="false">Ton bilan : %s gagnées, %s perdues</string>
+    <string name="kp_5d12bd53552c" formatted="false">Jouer</string>
+    <string name="kp_3ab5950b358f" formatted="false">Joue contre la prochaine personne qui rejoint, ou un ami avec un code.</string>
+    <string name="kp_85e2145e7cad" formatted="false">Huit joueurs, élimination directe.</string>
+    <string name="kp_636935a0b48d" formatted="false">Cinq bots, du niveau 1 au 5. Bats-en un pour débloquer le suivant.</string>
+    <string name="kp_6fba758f3243" formatted="false">Passe au classement suivant</string>
+    <string name="kp_c0fc86977802" formatted="false">Prises adverses</string>
+    <string name="kp_48cb744b4728" formatted="false">Vos prises</string>
+    <string name="kp_76ccff916d06" formatted="false">Demande de communication</string>
+    <string name="kp_73eb05867f7b" formatted="false">Perdu au temps</string>
+    <string name="kp_6eac413a29b7" formatted="false">A abandonné</string>
+    <string name="kp_8a4d6885363d" formatted="false">A accepté la partie</string>
+    <string name="kp_012794aeafb0" formatted="false">A refusé la partie</string>
+    <string name="kp_0ac72bc536b1" formatted="false">Invitation aux échecs</string>
+    <string name="kp_4bb26afc82d3" formatted="false">Aucune partie 1v1 terminée ce mois-ci.</string>
+    <string name="kp_c56c7d117a52" formatted="false">Aucun tournoi terminé ce mois-ci.</string>
 </resources>

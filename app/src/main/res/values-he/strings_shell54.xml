@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">שמות משתמש</string>
+    <string name="shell54_tipping_footer">מה טיפ שולח, בפוסט ובצ\'אט.</string>
+    <string name="shell54_chatting_picker_intro">אם המילים האלה כבר מחזיקות את הזהות שלך בכתובת אחרת - שם .kachat או יתרת צ\'אט עם כסף - בחר/י אותה כאן. מוצגות רק כתובות עם יתרה או שמות.</string>
+    <string name="shell54_what_others_can_see_caption">כל אחד יכול לראות את הכתובת הזו ואת היתרה שלה ברשת Kaspa, אבל אף אחד לא יכול לקרוא את ההודעות שלכם. השתמשו בה רק לצ\'אט ולשמות משתמש.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... או שם משתמש</string>
+    <string name="shell54_looking_up_username">מחפש שם משתמש...</string>
+    <string name="shell54_portfolio_add_address_footer">הזינו כתובת Kaspa או שם משתמש כמו name.kachat. כל עסקה שהתקבלה בכתובת הזו הופכת לקנייה, וכל עסקה שנשלחה למכירה, לפי מחיר ה-KAS ההיסטורי באותו יום. הוספה חוזרת של אותה כתובת בהמשך מייבאת רק עסקאות שנמצאו מאז הייבוא האחרון.</string>
+    <string name="shell54_report_copied">הדיווח הועתק</string>
+    <string name="shell54_report_no_mail_app">אף אפליקציית דואר לא הצליחה לפתוח אותו. הדביקו את הדיווח בהודעת אימייל אל %1$s.</string>
+    <string name="shell54_show_amounts">הצג סכומים</string>
+    <string name="shell54_hide_amounts">הסתר סכומים</string>
+    <string name="shell54_amount_unit">סכום (%1$s)</string>
+    <string name="shell54_price_per_kas">מחיר ל-KAS</string>
+    <string name="shell54_total_spent">סך הכול הוצאה</string>
+    <string name="shell54_total_received">סך הכול התקבל</string>
+    <string name="shell54_chart_settings">הגדרות תרשים</string>
+    <string name="shell54_import_failed">הייבוא נכשל.</string>
+    <string name="shell54_export_csv">ייצא CSV</string>
+    <string name="shell54_sent_on">נשלחו %1$s ב-%2$s</string>
+    <string name="shell54_received_on">התקבלו %1$s ב-%2$s</string>
+    <string name="shell54_this_portfolio">תיק זה</string>
+    <string name="shell54_new_portfolio">תיק השקעות חדש</string>
+    <string name="shell54_time">שעה</string>
+    <string name="shell54_total_value">סה״כ %1$s</string>
+    <string name="shell54_move_up">העבר את %1$s למעלה</string>
+    <string name="shell54_move_down">העבר את %1$s למטה</string>
+    <string name="shell54_selected">נבחר</string>
+    <string name="shell54_not_selected">לא נבחר</string>
+    <string name="shell54_not_valid_kpub">זה לא kpub תקין</string>
+    <string name="shell54_new_address_failed">לא ניתן ליצור כתובת חדשה. נסו שוב.</string>
+</resources>

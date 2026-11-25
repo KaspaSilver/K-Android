@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">أدخل معدل التجزئة الخاص بك لتقدير الأرباح.</string>
     <string name="kp_export_failed_csv">فشل التصدير. تعذرت كتابة ملف CSV</string>
     <string name="kp_fee_amount">رسوم %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">عدد العناوين التي بها رصيد أو نطاق: %1$d.</string>
-    <string name="kp_found_one_address_balance_domain">تم العثور على عنوان واحد به رصيد أو نطاق.</string>
     <string name="kp_frame_lld_lld_5cb10">الإطار %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">أعطِ هذا الحساب اسمًا لتتمكن من التعرف عليه.</string>
     <string name="kp_hide_address">إخفاء العنوان</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">محفظة استثمارية جديدة</string>
     <string name="kp_next_block_reward">مكافأة الكتلة التالية</string>
     <string name="kp_next_block_reward_reduction">التخفيض التالي لمكافأة الكتلة</string>
-    <string name="kp_no_addresses_balance_domain_found">لم يتم العثور على عناوين بها رصيد أو نطاق.</string>
     <string name="kp_no_addresses_discovered_yet_15738">لم يتم اكتشاف أي عناوين بعد.</string>
     <string name="kp_no_used_addresses_yet">لا توجد عناوين مستخدمة بعد</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">لا يوجد سجل كافٍ بعد - عد بعد بضعة أيام من النشاط.</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">يحفظ ملف CSV في مجلد KaChat على Nextcloud الخاص بك.</string>
     <string name="pnc_import_sub">اختر ملف CSV من Nextcloud الخاص بك.</string>
     <string name="portfolio">المحفظة</string>
-    <string name="portfolio_add_address_footer_kachat">أدخل عنوان Kaspa أو نطاقًا مثل name.kachat (يُبحث عن أسماء .kachat أولًا). كل معاملة مستلمة على هذا العنوان تُسجل شراءً وكل معاملة مرسلة بيعًا، بسعر KAS التاريخي لذلك اليوم. عند إضافة العنوان نفسه لاحقًا تُستورد فقط المعاملات الجديدة منذ آخر استيراد.</string>
     <string name="portfolio_add_chatting_address">إضافة عنوان المحادثة</string>
     <string name="portfolio_add_chatting_address_sub">عمليات شراء وبيع عنوان المحادثة الخاص بك، وكل رسوم شبكة دفعها.</string>
     <string name="portfolio_fees_count_loading">المعاملات: %1$d. لا تزال بعض الأسعار قيد التحميل.</string>

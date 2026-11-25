@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">סטטיסטיקה</string>
     <string name="shell_tab_websites">אתרים</string>
     <string name="shell_kaspa_websites">אתרי Kaspa</string>
-    <string name="shell_customize_dock">התאמת הדוק</string>
-    <string name="shell_your_dock">המעגן שלך</string>
-    <string name="shell_always_stays">%1$s תמיד נשאר בדוק שלך.</string>
-    <string name="shell_dock_full">המעגן מלא. הסירו פריט ממנו כדי להוסיף אחד מאלה.</string>
-    <string name="shell_hub_order">בסדר שבו %1$s מציג אותם.</string>
-    <string name="shell_move_to">העברת %1$s אל %2$s</string>
-    <string name="shell_add_to_dock">הוספת %1$s למעגן</string>
-    <string name="shell_always_in_dock">תמיד במעגן שלך</string>
-    <string name="shell_hub_empty_title">אין כאן כלום כרגע</string>
-    <string name="shell_hub_empty_body">מה שלא בדוק שלך מופיע כאן. סדרו אותו בהתאמת הדוק.</string>
-    <string name="shell_customize_dock_footer">בחרו מה יהיה בדוק. כל השאר ב-Kaspa Hub.</string>
     <string name="shell_terms_of_use">תנאי שימוש</string>
     <string name="shell_message_indexer_footer">גם KaPost, הצ\'אטים הציבוריים והשחמט נקראים מהאינדקסר הזה.</string>
     <string name="shell_ks_what_counts">מה נספר</string>

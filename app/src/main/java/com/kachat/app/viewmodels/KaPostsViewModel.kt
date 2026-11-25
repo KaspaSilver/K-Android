@@ -17,7 +17,6 @@ import com.kachat.app.repository.AppSettingsRepository
 import com.kachat.app.repository.ChatRepository
 import com.kachat.app.services.KPost
 import com.kachat.app.services.KaPostsService
-import com.kachat.app.services.KnsService
 import com.kachat.app.services.PostTranslationService
 import com.kachat.app.services.WalletManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -51,14 +50,11 @@ import javax.inject.Inject
 class KaPostsViewModel @Inject constructor(
     private val kaPostsService: KaPostsService,
     private val walletManager: WalletManager,
-    private val knsService: KnsService,
     private val chainReader: com.kachat.app.services.KaPostChainReader,
     private val chatRepository: ChatRepository,
     private val settings: AppSettingsRepository,
     private val translationService: PostTranslationService,
     private val unseenStore: com.kachat.app.services.KaPostsUnseenStore,
-    /** What KNS said about an address last time the app ran - see [KnsProfileCacheStore]. */
-    private val knsProfileCache: com.kachat.app.services.KnsProfileCacheStore,
     /** The foreground ping poller: the Notifications screen tells it what has been seen. */
     private val notificationPoller: com.kachat.app.services.KaPostsNotificationPoller,
     /** Which posts were already probed for being thread roots, across launches. */
@@ -259,22 +255,8 @@ class KaPostsViewModel @Inject constructor(
     }
 
     companion object {
-        /** When a poster whose lookup failed is asked again: quickly at first, then backing off to
-         *  the 60 s cooldown iOS uses for a failed avatar. */
-        private val SENDER_PROBE_BACKOFF_MS = longArrayOf(5_000L, 20_000L, 60_000L)
         private const val TAG = "KaPostsViewModel"
         const val UNDO_DELAY_MS = 5_000L
-
-        /**
-         * Whether anything shows what a poster's KNS lookup ([ensureSenderProfileFetched]) finds:
-         * its avatar, banner and bio only with the .kachat UI off (a `.kachat` profile is shown
-         * instead), its .kas name only then too ([posterName]), and the composers' @ suggestions
-         * only with mentions on ([com.kachat.app.util.MentionsFeature]). Neither holds now, so no
-         * row starts those lookups, or collects their maps, for nothing (audit H5).
-         */
-        val SHOWS_SENDER_KNS: Boolean
-            get() = !com.kachat.app.services.kachatnames.KachatNamesService.isEnabled ||
-                com.kachat.app.util.MentionsFeature.ENABLED
 
         /** Mentioned people's real keys, by x-only key, for this run: a key never changes parity
          *  (iOS 369794e `mentionKeyCache`). */
@@ -299,20 +281,19 @@ class KaPostsViewModel @Inject constructor(
          * Who a poster is, everywhere in KaPosts (feed, quotes, engagement, follow lists,
          * notifications, search - iOS 3d6fb7c): the alias YOU set for a saved contact, else
          * their `.kachat` name ([kachatName], `KachatLive.identityName`), else the short
-         * address (`KaspaAddress.shortDisplay`, iOS a80d271). A KNS domain isn't identity since 5.2: [knsName] is read
-         * only with the .kachat UI off ([showsKnsNames], unreachable - kept as the switch-back).
+         * address (`KaspaAddress.shortDisplay`, iOS a80d271). .kachat is the only name service K
+         * reads (iOS 518fdc8c): no KNS domain is ever a poster's name. No address gives
+         * [unknown] (the caller passes the translated "Unknown", iOS 518fdc8c #31).
          */
         fun posterName(
             address: String,
             alias: String?,
             kachatName: String?,
-            knsName: String?,
-            showsKnsNames: Boolean = !com.kachat.app.services.kachatnames.KachatNamesService.isEnabled,
+            unknown: String = "Unknown",
         ): String {
-            if (address.isEmpty()) return "Unknown"
+            if (address.isEmpty()) return unknown
             alias?.takeIf { it.isNotBlank() }?.let { return it.trim() }
             kachatName?.takeIf { it.isNotBlank() }?.let { return it }
-            if (showsKnsNames) knsName?.takeIf { it.isNotBlank() }?.let { return it.trim() }
             return com.kachat.app.util.KaspaAddress.shortDisplay(address)
         }
 
@@ -1152,29 +1133,15 @@ class KaPostsViewModel @Inject constructor(
         }
     }
 
-    // MARK: - Identity chain (contact alias > KNS domain > shortened address; KNS owns display)
+    // MARK: - Identity chain (contact alias > .kachat name > shortened address)
 
-    /** Address -> KNS avatar URL (null value = fetched, none found). */
-    private val _senderProfiles = MutableStateFlow<Map<String, String?>>(emptyMap())
-    val senderProfiles: StateFlow<Map<String, String?>> = _senderProfiles.asStateFlow()
-
-    /** Address -> active KNS domain name (null value = fetched, none owned). */
-    private val _senderKnsNames = MutableStateFlow<Map<String, String?>>(emptyMap())
-    val senderKnsNames: StateFlow<Map<String, String?>> = _senderKnsNames.asStateFlow()
-
-    /** Address -> KNS profile banner URL / bio (null value = fetched, none set). */
-    private val _senderBanners = MutableStateFlow<Map<String, String?>>(emptyMap())
-    val senderBanners: StateFlow<Map<String, String?>> = _senderBanners.asStateFlow()
-    private val _senderBios = MutableStateFlow<Map<String, String?>>(emptyMap())
-    val senderBios: StateFlow<Map<String, String?>> = _senderBios.asStateFlow()
-
-    /** Address -> locally-set contact alias; always wins over the KNS name. */
+    /** Address -> locally-set contact alias; always wins over the .kachat name. */
     val contactAliases: StateFlow<Map<String, String>> = chatRepository.getContacts()
         .map { contacts -> contacts.mapNotNull { c -> c.alias?.takeIf { it.isNotBlank() }?.let { c.id to it } }.toMap() }
         .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    /** A saved contact's photo carried in the backup, the avatar fallback after the KNS avatar -
-     *  iOS KNSAvatarView(contactAddress:). */
+    /** A saved contact's photo carried in the backup, the avatar fallback after the .kachat
+     *  avatar - iOS `KNSAvatarView(contactAddress:)`. */
     data class ContactPhoto(val backupPhotoBase64: String?)
 
     val contactPhotos: StateFlow<Map<String, ContactPhoto>> = chatRepository.getContacts()
@@ -1186,169 +1153,6 @@ class KaPostsViewModel @Inject constructor(
         }
         .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    /** Oldest-first cap for the per-address sender maps below — every address ever seen in
-     *  any feed lands in them, and an infinite-scroll session grew them without bound (this
-     *  codebase has been OOM-bitten by exactly this pattern before, see NodePoolManager). */
-    private fun <V> Map<String, V>.cappedForSenders(): Map<String, V> =
-        if (size <= 800) this else entries.drop(size - 600).associate { it.key to it.value }
-
-    /**
-     * Addresses already probed this session (in-flight or done) - a PLAIN set, not compose state.
-     * The dedupe claim used to be written into [_senderProfiles] itself (address -> null), which
-     * meant merely composing a feed row with a not-yet-seen author ticked the whole map StateFlow,
-     * and every visible KaPostCell collects that map - so each new row scrolled in recomposed all
-     * visible rows (feed scroll jank). Now the map only ticks when a real avatar URL arrives.
-     */
-    private val probedSenderProfiles = java.util.Collections.synchronizedSet(mutableSetOf<String>())
-
-    /**
-     * When a poster's lookup last failed to complete. A probe used to claim its address for the
-     * whole session BEFORE running, so one dropped connection or busy KNS answer left that poster
-     * as a shortened address with no avatar until the app restarted - the "some users never
-     * resolve" symptom. A failed probe now gives its claim back and may run again after a short
-     * back-off - the negative-cache-with-cooldown iOS's KNSProfileImageCache uses
-     * for the same reason, so a dead lookup is not re-sent on every scroll.
-     */
-    private val senderProbeFailedAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
-    /** Failures in a row per poster, for the back-off below. Cleared by any completed lookup. */
-    private val senderProbeFailures = java.util.concurrent.ConcurrentHashMap<String, Int>()
-
-    private fun senderProbeRetryDelay(address: String): Long =
-        SENDER_PROBE_BACKOFF_MS[((senderProbeFailures[address] ?: 1) - 1).coerceIn(0, SENDER_PROBE_BACKOFF_MS.lastIndex)]
-
-    private fun senderProbeFailed(address: String) {
-        senderProbeFailedAt[address] = System.currentTimeMillis()
-        val failures = (senderProbeFailures[address] ?: 0) + 1
-        senderProbeFailures[address] = failures
-        probedSenderProfiles.remove(address)
-        // A row that stays on screen never asks again by itself, so the retry is scheduled here:
-        // a dropped request resolves within seconds instead of on the next scroll or restart.
-        // Three tries, then it waits for the row to come back.
-        if (failures <= SENDER_PROBE_BACKOFF_MS.size) {
-            viewModelScope.launch {
-                kotlinx.coroutines.delay(senderProbeRetryDelay(address))
-                ensureSenderProfileFetched(address)
-            }
-        }
-    }
-
-    private fun senderProbeSettled(address: String) {
-        senderProbeFailedAt.remove(address)
-        senderProbeFailures.remove(address)
-    }
-
-    /**
-     * Caps how many identity probes run at once.
-     *
-     * Each probe is a KNS owned-domains call, a reverse resolve, and a profile fetch per owned
-     * asset - so a handful of addresses is already a dozen requests. Every caller launched its
-     * own coroutine with nothing holding them back: opening the composer fired one per contact
-     * simultaneously (prefetchMentionCandidates), and a fast scroll fires one per row on top of
-     * that. Four at a time keeps the KNS host from being hit with a burst, and costs nothing on
-     * the small numbers that are the normal case. iOS bounds the same work at three.
-     */
-    private val senderProbeLimit = kotlinx.coroutines.sync.Semaphore(4)
-
-    /**
-     * Seeds the in-memory maps from disk, so a cold start opens with the names and avatars it
-     * already knew instead of a feed of shortened addresses that fills in as requests land.
-     */
-    private fun seedSenderCachesFromDisk() {
-        // nothing would show it (SHOWS_SENDER_KNS): no disk read on the main thread for it
-        if (!SHOWS_SENDER_KNS) return
-        val cached = knsProfileCache.snapshot()
-        if (cached.isEmpty()) return
-        _senderKnsNames.value = cached.mapValues { it.value.knsName?.takeIf { com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY } }.cappedForSenders()
-        _senderProfiles.value = cached.mapValues { it.value.avatarUrl }.cappedForSenders()
-        _senderBanners.value = cached.mapValues { it.value.bannerUrl }.cappedForSenders()
-        _senderBios.value = cached.mapValues { it.value.bio }.cappedForSenders()
-    }
-
-    fun ensureSenderProfileFetched(address: String) {
-        if (address.isEmpty()) return
-        // 2-4+ KNS requests per new author whose answers nothing shows (audit H5)
-        if (!SHOWS_SENDER_KNS) return
-        // A cached answer recent enough to still be true - the whole point of the disk cache.
-        // Checked BEFORE the in-memory map so a seeded entry that has since gone stale is still
-        // re-probed rather than being treated as settled for the life of the process.
-        if (knsProfileCache.isFresh(address)) return
-        if (_senderProfiles.value.containsKey(address) && knsProfileCache.entry(address) == null) return
-        // Same unbounded-growth guard as cappedForSenders - a reset just re-allows a probe.
-        if (probedSenderProfiles.size > 4000) probedSenderProfiles.clear()
-        senderProbeFailedAt[address]?.let { failedAt ->
-            if (System.currentTimeMillis() - failedAt < senderProbeRetryDelay(address)) return
-        }
-        if (!probedSenderProfiles.add(address)) return
-        viewModelScope.launch {
-            senderProbeLimit.withPermit {
-            try {
-                // A lookup that could not be completed caches nothing: "no KNS" below is a real
-                // answer, and a dropped connection must not be written down as one.
-                val ownedAssets = knsService.getOwnedDomainsOrNull(address)
-                    ?: return@withPermit senderProbeFailed(address)
-                if (ownedAssets.isEmpty()) {
-                    // "This address has no KNS" is a real answer, and re-asking for it on every
-                    // launch was the most common wasted call of the lot. Cached, with a shorter
-                    // life than a positive one since a domain can be inscribed at any time.
-                    knsProfileCache.put(address, null, null, null, null)
-                    senderProbeSettled(address)
-                    return@withPermit
-                }
-                val ownedNames = ownedAssets.mapNotNull { it.asset }
-                val primary = knsService.identityName(address)
-                val activeName = KnsService.pickActiveDomain(ownedNames, null, primary)
-                _senderKnsNames.value = (_senderKnsNames.value + (address to activeName)).cappedForSenders()
-                val activeAsset = ownedAssets.firstOrNull { it.asset == activeName }
-                val checkOrder = listOfNotNull(activeAsset) + ownedAssets.filterNot { it.asset == activeName }
-                for (asset in checkOrder) {
-                    val profile = asset.assetId?.let { knsService.getProfile(it) } ?: continue
-                    if (_senderProfiles.value[address] == null && profile.avatarUrl != null) {
-                        _senderProfiles.value = (_senderProfiles.value + (address to profile.avatarUrl)).cappedForSenders()
-                    }
-                    if (_senderBanners.value[address] == null && profile.bannerUrl != null) {
-                        _senderBanners.value = (_senderBanners.value + (address to profile.bannerUrl)).cappedForSenders()
-                    }
-                    if (_senderBios.value[address] == null && !profile.bio.isNullOrBlank()) {
-                        _senderBios.value = (_senderBios.value + (address to profile.bio)).cappedForSenders()
-                    }
-                    if (_senderProfiles.value[address] != null && _senderBanners.value[address] != null) break
-                }
-                // One write per probe, not per field: four writes for one answer would be four
-                // serialisations of the whole map.
-                knsProfileCache.put(
-                    address = address,
-                    knsName = _senderKnsNames.value[address],
-                    avatarUrl = _senderProfiles.value[address],
-                    bannerUrl = _senderBanners.value[address],
-                    bio = _senderBios.value[address],
-                )
-                senderProbeSettled(address)
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                // The screen went away mid-lookup: nothing failed, but nothing finished either.
-                probedSenderProfiles.remove(address)
-                throw e
-            } catch (e: Exception) {
-                Log.w(TAG, "Could not fetch KNS profile for ${address.redactedForLog()}", e)
-                senderProbeFailed(address)
-            }
-            }
-        }
-    }
-
-    /**
-     * A domain as a LOOKUP KEY: lowercased, ".kas" off. Typing and matching never need the
-     * suffix - it is the only one there is - so mention queries, the candidate map and KNS
-     * resolution all work on this form.
-     */
-    fun bareKasName(domain: String): String {
-        val trimmed = domain.trim().lowercase()
-        return if (trimmed.endsWith(".kas")) trimmed.dropLast(4) else trimmed
-    }
-
-    /** A domain as shown and as typed into a post: always with ".kas". */
-    fun fullKasName(domain: String): String = bareKasName(domain).let { if (it.isEmpty()) it else "$it.kas" }
-
-    /** Contact alias > KNS domain > shortened address. */
     // ------------------------------------------------------------------
     // Search
     //
@@ -1485,11 +1289,6 @@ class KaPostsViewModel @Inject constructor(
                 searchCursor = result.cursor
                 _searchLoadFailed.value = result.error != null && result.items.isEmpty()
                 _searchHasMore.value = if (result.error != null) true else result.hasMore
-                // Warm the names so People rows are not a wall of shortened addresses. Bounded
-                // by the probe semaphore, and skipped for anything already cached on disk.
-                for (address in result.items.map { it.posterAddress }.distinct()) {
-                    ensureSenderProfileFetched(address)
-                }
             } finally {
                 if (generation == searchGeneration) _isSearching.value = false
             }
@@ -1500,7 +1299,7 @@ class KaPostsViewModel @Inject constructor(
         address = address,
         alias = contactAliases.value[address],
         kachatName = if (address.isEmpty()) null else com.kachat.app.services.kachatnames.KachatNamesRegistry.kachatName(address),
-        knsName = _senderKnsNames.value[address],
+        unknown = appContext.getString(R.string.unknown),
     )
 
     fun myAddress(): String? = try { walletManager.getAddress() } catch (_: Exception) { null }
@@ -1813,9 +1612,6 @@ class KaPostsViewModel @Inject constructor(
     private var feedWorkStarted = false
 
     init {
-        // Before anything else: open with what KNS told us last time this app ran, rather than
-        // a feed of shortened addresses that fills in as requests land.
-        seedSenderCachesFromDisk()
         // Bookmarks and reposts are shared by every KaPostsViewModel (Feed and Profile): a change
         // made in one shows on every copy of the post in the others (iOS f954738).
         viewModelScope.launch {
@@ -2150,6 +1946,8 @@ class KaPostsViewModel @Inject constructor(
     fun mapRemotePost(post: KPost): KaPostDraft? {
         val content = post.decodedContent ?: return null
         val address = KaPostsService.kaspaAddressFromPubkey(post.userPublicKey) ?: return null
+        // a poster seen lately is offered by the @ (iOS 157790b0)
+        com.kachat.app.util.KaPostMentionSources.notePoster(address)
         val quoted = post.quote?.let { q ->
             val quotedText = q.decodedMessage
             val quotedAddress = q.referencedSenderPubkey?.let { KaPostsService.kaspaAddressFromPubkey(it) }
@@ -2583,59 +2381,38 @@ class KaPostsViewModel @Inject constructor(
     // MARK: - @mentions (client-resolved: @domain -> contact address -> compressed pubkey; the
     // indexer turns each pubkey in mentioned_pubkeys into a "mention" notification)
 
-    /** Mentionable = your 1:1 contacts with a KNS domain and a derivable pubkey: (bareDomain, pubkey). */
-    // Memoized against the inputs that can change it — the composer calls this per KEYSTROKE
-    // while an @ token is active, and the unmemoized version decoded an address + derived a
-    // pubkey for every contact on the main thread each time.
-    private var mentionCandidatesCache: Triple<Map<String, String>, Map<String, String?>, List<Pair<String, String>>>? = null
-    fun mentionCandidates(): List<Pair<String, String>> {
-        val aliases = contactAliases.value
-        val knsNames = _senderKnsNames.value
-        mentionCandidatesCache?.let { (a, k, cached) ->
-            if (a === aliases && k === knsNames) return cached
-        }
-        val out = mutableListOf<Pair<String, String>>()
-        val seen = mutableSetOf<String>()
-        for ((address, _) in aliases) {
-            val domain = knsNames[address]?.takeIf { it.isNotBlank() } ?: continue
-            val bare = bareKasName(domain)
-            if (bare.isEmpty() || bare in seen) continue
-            val pubkey = KaPostsService.kapostPubkeyFromAddress(address) ?: continue
-            seen.add(bare)
-            out.add(bare to pubkey)
-        }
-        mentionCandidatesCache = Triple(aliases, knsNames, out)
-        return out
-    }
-
-    /** Kick KNS lookups for every 1:1 contact so the @ autocomplete has domains to offer. */
-    fun prefetchMentionCandidates() {
-        // only for @ suggestions, which show only with mentions on (audit H5)
-        if (!com.kachat.app.util.MentionsFeature.ENABLED) return
-        for ((address, _) in contactAliases.value) ensureSenderProfileFetched(address)
-    }
-
     /**
-     * Contacts' `.kachat` names matching [query] ("" matches all), full ("bob.kachat"), sorted -
-     * listed before the .kas ones in the @ suggestions (iOS d0c5b09).
+     * The @ suggestions for [query] ("" matches all), as names show in K - the ending only with
+     * Show .kachat Endings on: people you follow, people whose posts you've seen lately, then your
+     * contacts, only those with a username and never you, plus [extra] (the typed name looked up
+     * live, [resolveMentionQuery]) first (iOS `KaPostMentionSources.handles`, 157790b0; it offered
+     * contacts only before). Reads each person's cached name, so a composable calling it redraws
+     * as names land.
      */
-    fun kachatMentionCandidates(query: String): List<String> {
-        val out = linkedSetOf<String>()
-        for ((address, _) in contactAliases.value) {
-            val label = com.kachat.app.services.kachatnames.KachatNamesRegistry.cachedIdentityOf(address)?.label ?: continue
-            if (query.isNotEmpty() && !label.startsWith(query)) continue
-            out.add("$label.kachat")
-        }
-        return out.sorted()
-    }
+    fun kachatMentionCandidates(query: String, extra: String?): List<String> =
+        com.kachat.app.util.KaPostMentionSources.handles(
+            query = query,
+            extra = extra?.let {
+                com.kachat.app.models.KachatNameLabel.display(com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(it))
+            },
+            me = myAddress(),
+            following = following.value,
+            recentPosters = com.kachat.app.util.KaPostMentionSources.recentPosters(),
+            contacts = mentionContactAddresses.value,
+            handleOf = com.kachat.app.util.UsernameMention::handle,
+        )
+
+    /** Every contact's address, for the @ suggestions (iOS `ContactsManager.activeContacts`). */
+    private val mentionContactAddresses: StateFlow<List<String>> = chatRepository.getContacts()
+        .map { contacts -> contacts.map { it.id } }
+        .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     /**
      * The owner address of an @mention token. Mentions have their own rule (iOS e493c97,
      * IOS-068/069), not the address fields' .kachat-only one:
      * - with the post's signed mentions ([signed]), the answer whose owner the author signed -
      *   who the token meant when it was written, whoever holds the name today;
-     * - otherwise the ending typed ("@bob.kas" is the .kas name), else .kachat, else .kas - the
-     *   meaning every post from before .kachat was written with.
+     * - otherwise its .kachat owner (the only name service K reads since iOS 518fdc8c).
      */
     private suspend fun mentionAddress(token: String, signed: List<String> = emptyList()): String? {
         val results = nameServices.resolveEverywhere(token)
@@ -2650,10 +2427,7 @@ class KaPostsViewModel @Inject constructor(
             }
             if (match != null) return match.address
         }
-        com.kachat.app.services.NameServicesClient.primary(results, token)?.let { return it.address }
-        // a bare token with no .kachat answer: the .kas name it meant before .kachat existed
-        if (com.kachat.app.services.NameServiceTLD.splitTypedName(token).second != null) return null
-        return results.firstOrNull { it.tld == com.kachat.app.services.NameServiceTLD.KAS && it.address != null }?.address
+        return com.kachat.app.services.NameServicesClient.primary(results, token)?.address
     }
 
     /** The @mention tokens in `text`, each with the ending it was typed with, in order, deduped. */
@@ -2667,9 +2441,8 @@ class KaPostsViewModel @Inject constructor(
     }
 
     /**
-     * Resolves every @domain in `text` to a compressed pubkey for mentioned_pubkeys. Chatted
-     * contacts resolve locally; ANYONE else with a KNS domain resolves live (owner address ->
-     * pubkey). Unresolvable tokens stay plain text.
+     * Resolves every @name in `text` to a compressed pubkey for mentioned_pubkeys: the token's
+     * .kachat owner, resolved live (owner address -> pubkey). Unresolvable tokens stay plain text.
      */
     private suspend fun mentionedPubkeys(text: String): List<String> {
         // Off until mentions are rebuilt on .kachat (MentionsFeature): posts carry none.
@@ -2680,18 +2453,10 @@ class KaPostsViewModel @Inject constructor(
         // signed mentions array went out empty and @alice was never notified.
         val tokens = mentionTokens(com.kachat.app.util.KaPostsMarkdown.render(text).text)
         if (tokens.isEmpty()) return emptyList()
-        // contacts' .kas names resolve from the local cache - only for a token typed as .kas
-        val byKasName = mentionCandidates().toMap()
         // x-only key -> the key signed, one per person (iOS 369794e)
         val found = linkedMapOf<String, String>()
         for (token in tokens) {
-            val cached = if (token.endsWith(".kas")) byKasName[token.dropLast(4)] else null
-            if (cached != null) {
-                val real = mentionPubkey(cached)
-                found.putIfAbsent(com.kachat.app.services.KaPostsChainPosts.xOnly(real), real)
-                continue
-            }
-            // everyone else: the mention rule - the ending typed, else .kachat, else .kas (iOS e493c97)
+            // the token's .kachat owner (iOS 518fdc8c)
             val owner = mentionAddress(token) ?: continue
             KaPostsService.kapostPubkeyFromAddress(owner)?.let { guessed ->
                 val real = mentionPubkey(guessed)
@@ -2716,22 +2481,25 @@ class KaPostsViewModel @Inject constructor(
         return real
     }
 
-    /** Composer autocomplete: live-resolve the typed @query - anyone with a name: .kachat first,
-     *  else the .kas name (the mention rule, iOS e493c97, IOS-069); the full name ("bob.kachat",
-     *  "bob.kas") when it resolves. */
+    /** Composer autocomplete: live-resolve the typed @query - anyone with a .kachat name (iOS
+     *  518fdc8c); its name when it resolves, as names show in K - the ending only with Show
+     *  .kachat Endings on (iOS 2026-11-24: "@bob" and "@bob.kachat" are the same mention). */
     suspend fun resolveMentionQuery(query: String): String? {
         if (query.length < 2) return null
         val results = nameServices.resolveEverywhere(query)
         val resolution = com.kachat.app.services.NameServicesClient.primary(results, query)
-            ?: results.firstOrNull { it.tld == com.kachat.app.services.NameServiceTLD.KAS && it.address != null }
-        // Always with its ending, whatever Show .kachat Endings shows: the name goes into the
-        // post (iOS 1b15521 `fullName`).
-        return resolution?.fullName
+        return resolution?.fullName?.let {
+            com.kachat.app.models.KachatNameLabel.display(com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(it))
+        }
     }
 
+    /** The keys a post's @mentions sign, for a post made outside the feed (the quick composer;
+     *  iOS `KaPostsView.mentionedPubkeys(in:)`). */
+    suspend fun mentionedPubkeysFor(text: String): List<String> = mentionedPubkeys(text)
+
     /** Tapped @mention: resolve the token by the mention rule - the owner the post's author
-     *  signed ([signed], the post's mentioned pubkeys) when one answers, else the ending typed,
-     *  .kachat, then .kas (iOS e493c97, IOS-068) - and open that user's profile. No key is handed
+     *  signed ([signed], the post's mentioned pubkeys) when one answers, else its .kachat owner
+     *  (iOS 518fdc8c) - and open that user's profile. No key is handed
      *  over: the address gives only the x-only key, and a K key starts with 02 or 03 - the
      *  profile resolves which (XP-034), so Follow never posts for a guessed key (iOS 474388a). */
     fun openMentionProfile(domain: String, signed: List<String> = emptyList()) {
@@ -3889,7 +3657,6 @@ class KaPostsViewModel @Inject constructor(
         _posterProfile.value = PosterProfile(address = address, pubkey = handedPubkey)
         _posterProfilePosts.value = emptyList()
         _posterProfileReplies.value = emptyList()
-        ensureSenderProfileFetched(address)
         posterProfileJob = viewModelScope.launch {
             // No pubkey handed over: the address gives the x-only key, but a K key starts with 02
             // or 03 (about half of all users post with 03) - the key is the one the indexer's
@@ -4554,7 +4321,6 @@ class KaPostsViewModel @Inject constructor(
                 } ?: chainPost(id)
                 if (post != null) fetched += post
             }
-            fetched.map { it.posterAddress }.distinct().forEach { ensureSenderProfileFetched(it) }
         } finally {
             _isLoadingBookmarks.value = false
         }

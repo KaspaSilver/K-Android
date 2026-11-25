@@ -25,7 +25,7 @@ import com.kachat.app.viewmodels.WalletViewModel
 fun KaPostsFixedTitle(
     title: String,
     onOpenBackup: (() -> Unit)? = null,
-    /** Something beside the title (Profile's Share Profile, iOS 804cbcb7). */
+    /** Something beside the title (Profile's account chip, iOS 8cb4c88e). */
     accessory: (@Composable () -> Unit)? = null,
 ) {
     val colors = LocalAppColors.current

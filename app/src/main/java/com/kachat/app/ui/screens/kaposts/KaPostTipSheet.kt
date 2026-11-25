@@ -143,8 +143,9 @@ fun KaPostTipSheet(
         sourceBalanceSompi = fromBalanceSompi,
         sourceAddress = from.address(myAddress),
         walletViewModel = walletViewModel,
-        // what the From means for the tip: counted on the post, or private (iOS 071e901)
-        fromNote = stringResource(
+        // what the From means for the tip: counted on the post, or private (iOS 071e901); only a
+        // tip on a post is counted anywhere, so a chat's tip says nothing (iOS 518fdc8c)
+        fromNote = if (tip == null) null else stringResource(
             if (from is SendSource.Chatting) R.string.kaposts_tip_from_chatting_note else R.string.kaposts_tip_from_private_note
         ),
         maxSompi = {

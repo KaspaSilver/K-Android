@@ -95,12 +95,15 @@ fun SwapStablecoinsSheet(
     walletViewModel: WalletViewModel,
     onDismissed: () -> Unit,
     tokenViewModel: TokenViewModel = hiltViewModel(),
+    /** Straight to the address Trestly should use for this token (Manage kUSDT's Open Trestly,
+     *  iOS 518fdc8c `TrestlyConnectSheet(token:)`), skipping "Which stablecoin?". */
+    startToken: WalletToken? = null,
 ) {
     val context = LocalContext.current
     remember { AppText.init(context) }
     val tokenWallet = tokenViewModel.wallet
     IosFullSheet(onDismissed = onDismissed, swipeToDismiss = false) { close ->
-        var pickedToken by remember { mutableStateOf<WalletToken?>(null) }
+        var pickedToken by remember { mutableStateOf(startToken) }
         var openTarget by remember { mutableStateOf<TrestlyTarget?>(null) }
         val step = when {
             openTarget != null -> 2

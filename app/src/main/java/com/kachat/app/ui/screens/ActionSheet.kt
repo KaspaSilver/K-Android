@@ -1197,7 +1197,8 @@ fun DeleteAccountSheet(
 }
 
 /**
- * A completed Kaspa send, for [SentConfirmationSheet].
+ * A completed Kaspa send (the swipe-up send screens' result). Its old confirmation half sheet,
+ * `SentConfirmationSheet`, is gone: nothing opened it (iOS 518fdc8c, audit 2026-11-24 #42).
  *
  * [amountSompi] and [recipient] are optional: a consolidation self-send has no meaningful "to
  * whom", and naming the address it just came from reads as a mistake.
@@ -1207,116 +1208,6 @@ data class SentTransaction(
     val amountSompi: Long? = null,
     val recipient: String? = null,
 )
-
-/**
- * The half sheet every successful Kaspa send ends on: a checkmark, what was sent, and the
- * transaction id as a live link to whichever block explorer Settings names.
- *
- * A tip on KaPosts used to close its dialog and tell you nothing - no confirmation, and no
- * transaction to go and check - and the send flow confirmed inside its own full screen instead.
- * A send is the one moment where the txid is worth handing over, so it is a link: tapping it
- * opens the explorer. Mirrors iOS's `SentConfirmationSheet`.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SentConfirmationSheet(
-    transaction: SentTransaction,
-    explorerName: String,
-    explorerUrl: String?,
-    onDone: () -> Unit,
-) {
-    val colors = LocalAppColors.current
-    val uriHandler = LocalUriHandler.current
-
-    com.kachat.app.ui.theme.IosSheetColors {
-        val colors = LocalAppColors.current
-        ModalBottomSheet(
-            scrimColor = com.kachat.app.ui.theme.IosSheetScrim,
-            // iOS shows it on a height detent, so it floats.
-            modifier = Modifier.iosFloatingSheet(),
-            shape = IosFloatingSheetShape,
-            tonalElevation = com.kachat.app.ui.theme.IosSheetTonalElevation,
-            windowInsets = androidx.compose.foundation.layout.WindowInsets.statusBars,
-            onDismissRequest = onDone,
-            // Expanded, not half-height: partial expansion cuts the Done button off.
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            containerColor = colors.background,
-        ) {
-            // The sheet runs down behind the navigation bar, as iOS's does behind the home indicator;
-            // its content stays above it.
-            Column(Modifier.navigationBarsPadding()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .padding(bottom = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint = LocalAppColors.current.success,
-                        modifier = Modifier.size(52.dp),
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.sent), color = colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-
-                    transaction.amountSompi?.let { sompi ->
-                        Spacer(Modifier.height(2.dp))
-                        Text(trimmedKasAmount(sompi), color = colors.textSecondary, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                    }
-
-                    transaction.recipient?.takeIf { it.isNotBlank() }?.let { recipient ->
-                        Spacer(Modifier.height(2.dp))
-                        MiddleEllipsisText(
-                            stringResource(R.string.payment_to_name, recipient),
-                            color = colors.textSecondary,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-
-                    Spacer(Modifier.height(20.dp))
-
-                    // The txid, as the link. Middle-truncated because both ends identify it and the
-                    // middle does not.
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .iosGlass(14.dp)
-                            .let { base ->
-                                if (explorerUrl != null) base.clickable { uriHandler.openUri(explorerUrl) } else base
-                            }
-                            .padding(16.dp),
-                    ) {
-                        Text(
-                            if (explorerUrl != null) stringResource(R.string.transaction_id_tap_to_view_in, explorerName) else stringResource(R.string.transaction_id),
-                            color = colors.textSecondary,
-                            fontSize = 12.sp,
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        MiddleEllipsisText(
-                            transaction.txId,
-                            color = if (explorerUrl != null) KaspaTeal else colors.textPrimary,
-                            fontSize = 13.sp,
-                        )
-                    }
-
-                    Spacer(Modifier.height(20.dp))
-
-                    Button(
-                        onClick = onDone,
-                        colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal, contentColor = Color.Black),
-                        shape = RoundedCornerShape(28.dp),
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                    ) {
-                        Text(stringResource(R.string.done), fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-    }
-}
 
 /**
  * A sheet that iOS draws as a `NavigationStack` holding a `List` or `Form` with an inline title
@@ -1382,14 +1273,6 @@ fun IosListRowDivider(start: Dp = 16.dp) {
         thickness = 0.5.dp,
         modifier = Modifier.padding(start = start),
     )
-}
-
-/** Trailing zeros trimmed - "1.5 KAS", not "1.50000000 KAS". */
-private fun trimmedKasAmount(sompi: Long): String {
-    var text = "%.8f".format(java.util.Locale.US, sompi / 100_000_000.0)
-    while (text.endsWith("0")) text = text.dropLast(1)
-    if (text.endsWith(".")) text = text.dropLast(1)
-    return "$text ${KaspaUnit.symbol}"
 }
 
 /**
@@ -1538,35 +1421,24 @@ fun Modifier.chatHeaderTapBand(
     val latestOnChip by rememberUpdatedState(onChip)
     val latestOnBand by rememberUpdatedState(onBand)
     val haptics = LocalHapticFeedback.current
+    val view = androidx.compose.ui.platform.LocalView.current
     this
         .onGloballyPositioned { state.bandLeft = it.positionInRoot().x }
         .pointerInput(state) {
             val margin = 40.dp.toPx()
             detectTapGestures { offset ->
-                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 val x = state.bandLeft + offset.x
                 if (state.hasChip && x >= state.chipLeft - margin && x <= state.chipRight + margin) {
+                    // the chip's selection tick, as a tap on the chip itself (iOS bdf29425)
+                    com.kachat.app.util.Haptics.perform(view, com.kachat.app.util.IosHaptic.SELECTION)
                     latestOnChip()
                 } else {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     latestOnBand()
                 }
             }
         }
 }
 
-/**
- * The app's underline tab bar - bold teal labels, dimmed when unselected, a teal bar under the
- * selected one and a divider below: the Chats / Group Chats / Public Chats bar, shared by Your
- * Domains and Connection Settings (iOS UnderlineTabBar, ee01f81).
- */
-@Composable
-fun UnderlineTabBar(
-    titles: List<String>,
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    // iOS's UnderlineTabBar exactly: equal-width 15pt bold labels that shrink to fit (down to
-    // 75%) rather than being cut - "Translation" stays whole - and its underline and hairline.
-    HubUnderlineTabBar(titles = titles, selectedIndex = selectedIndex, onSelect = onSelect, modifier = modifier)
-}
+// The underline tab bar is gone: every page switch inside a screen is the cycle button
+// (`com.kachat.app.ui.components.PageCycleBar`, iOS 518fdc8c).

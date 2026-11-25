@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">누가 메시지를 보낼 수 있나요?</string>
+    <string name="c54_who_anyone">모든 사람</string>
+    <string name="c54_who_usernames">사용자 이름이 있는 사용자만</string>
+    <string name="c54_who_row_footer">나와 채팅을 시작할 수 있는 사람입니다. 이미 채팅 중인 사람에게는 영향이 없습니다.</string>
+    <string name="c54_who_anyone_footer">누구나 첫 메시지를 보낼 수 있습니다. 수락할 때까지 메시지 요청에서 대기합니다.</string>
+    <string name="c54_who_usernames_footer">사용자 이름(.kachat 이름)이 있는 사람만 메시지 요청에 도달할 수 있습니다. 그 외 사람의 첫 메시지는 숨겨지며 알림도 오지 않습니다. 다시 보려면 ‘모든 사람’을 선택하세요. 이미 채팅 중인 사람에게는 영향이 없습니다.</string>
+    <string name="c54_room_clears_unread">이 공개 채팅의 읽지 않음 배지를 지웁니다.</string>
+    <string name="c54_room_no_notifications">이 공개 채팅의 알림을 받지 않습니다.</string>
+    <string name="c54_room_notifications_resume">이 공개 채팅의 알림이 다시 옵니다.</string>
+    <string name="c54_room_delete_subtitle">이 공개 채팅을 내 채팅에서 제거합니다.</string>
+    <string name="c54_tip_subtitle">설정 &gt; 맞춤 설정 &gt; 팁에서 정한 대로 이 연락처에 팁을 보냅니다.</string>
+    <string name="c54_send_tip">팁 보내기</string>
+    <string name="c54_send_deferred">코인이 확인되기를 기다리는 중입니다. 잠시 후 자동으로 전송되니 다시 보내지 마세요.</string>
+    <string name="c54_failed_start_recording">녹음을 시작하지 못했습니다: %1$s</string>
+    <string name="c54_failed_encode_audio">오디오를 인코딩하지 못했습니다: %1$s</string>
+    <string name="c54_failed_prepare_audio">오디오를 준비하지 못했습니다: %1$s</string>
+    <string name="c54_sent_a_link">링크를 보냄</string>
+    <string name="c54_public_chat_room">공개 채팅방 #%1$s</string>
+    <string name="c54_search_contacts_address_username">연락처, 주소 또는 사용자 이름 검색</string>
+    <string name="c54_looking_up_username">사용자 이름 찾는 중...</string>
+    <string name="c54_no_contacts_paste_username">아직 연락처가 없습니다. 누군가를 초대하려면 위에 주소나 사용자 이름을 붙여넣으세요.</string>
+    <string name="c54_no_contacts_match_username">검색과 일치하는 연락처가 없습니다. 새로운 사람을 초대하려면 주소나 사용자 이름을 붙여넣으세요.</string>
+    <string name="c54_invites_resent_all">모든 멤버에게 초대를 다시 보냈습니다.</string>
+    <string name="c54_invite_resent">초대를 다시 보냈습니다.</string>
+    <string name="c54_room_follows_app_indexer">이 방은 다시 앱의 인덱서를 따릅니다.</string>
+    <string name="c54_room_indexer_updated">#%1$s의 인덱서를 업데이트했습니다.</string>
+    <string name="c54_room_could_not_reach">연결할 수 없습니다: %1$s</string>
+    <string name="c54_tap_open_your_chat">탭하여 채팅을 엽니다.</string>
+    <string name="c54_tap_start_chat_on_k">탭하여 K에서 채팅을 시작합니다.</string>
+    <string name="c54_stop_recording">녹음 중지</string>
+    <string name="c54_send_voice_message">음성 메시지 보내기</string>
+</resources>

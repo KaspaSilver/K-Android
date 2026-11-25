@@ -328,4 +328,21 @@
     <string name="kaplay_no_finished_tournaments_this_month">No finished tournaments this month yet.</string>
     <string name="kaplay_tab_games" translatable="false">KaPlay</string>
     <string name="kaplay_tab_leaderboard">Leaderboard</string>
+    <!-- K 5.4 (iOS 518fdc8c): Chess's own screen, its Play sheet, and audit 2026-11-24 #40. -->
+    <string name="kp_640de0cb0b2c" formatted="false">Your record: %s won, %s lost</string>
+    <string name="kp_5d12bd53552c" formatted="false">Play</string>
+    <string name="kp_3ab5950b358f" formatted="false">Play the next person who joins, or a friend by code.</string>
+    <string name="kp_85e2145e7cad" formatted="false">Eight players, single elimination.</string>
+    <string name="kp_636935a0b48d" formatted="false">Five bots, level 1 to 5. Beat one to unlock the next.</string>
+    <string name="kp_6fba758f3243" formatted="false">Switches to the next leaderboard</string>
+    <string name="kp_c0fc86977802" formatted="false">They captured</string>
+    <string name="kp_48cb744b4728" formatted="false">You captured</string>
+    <string name="kp_76ccff916d06" formatted="false">Handshake</string>
+    <string name="kp_73eb05867f7b" formatted="false">Lost on time</string>
+    <string name="kp_6eac413a29b7" formatted="false">Resigned</string>
+    <string name="kp_8a4d6885363d" formatted="false">Accepted the game</string>
+    <string name="kp_012794aeafb0" formatted="false">Declined the game</string>
+    <string name="kp_0ac72bc536b1" formatted="false">Chess invite</string>
+    <string name="kp_4bb26afc82d3" formatted="false">No finished 1v1 games this month yet.</string>
+    <string name="kp_c56c7d117a52" formatted="false">No finished tournaments this month yet.</string>
 </resources>

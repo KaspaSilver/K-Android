@@ -664,7 +664,10 @@ data class SocialSource(
 data class SocialProfile(
     val avatar: String? = null,
     val banner: String? = null,
-    val bio: String? = null
+    val bio: String? = null,
+    /** The platform said there is no such account (Discord: "Unknown Invite"), rather than an
+     *  account with nothing set. null for every other answer (iOS 518fdc8c). */
+    val notFound: Boolean? = null,
 ) {
     val isEmpty: Boolean get() = avatar == null && banner == null && bio == null
 }

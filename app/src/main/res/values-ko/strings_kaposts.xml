@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">팁을 보내지 못했습니다: 지금은 팁 보내는 주소를 읽을 수 없습니다.</string>
     <string name="feed54_tip_minimum_footer">네트워크가 받는 가장 작은 팁은 %1$s입니다.</string>
     <string name="feed54_tip_no_price">팁을 보내지 못했습니다. %1$s 금액을 KAS로 환산할 최근 KAS 시세가 없습니다.</string>
-    <string name="feed54_tip_too_small">팁을 보내지 못했습니다: 네트워크가 받는 가장 작은 팁은 %1$s입니다. 설정 &gt; KaPost에서 기본 팁을 바꾸세요.</string>
+    <string name="feed54_tip_too_small">팁을 보내지 못했습니다: 네트워크가 받는 가장 작은 팁은 %1$s입니다. 설정 &gt; 맞춤 설정 &gt; 팁에서 기본 팁을 바꾸세요.</string>
     <string name="feed54_tipped">%1$s 팁을 %2$s님에게 보냈습니다</string>
     <string name="feed54_tipped_privately">%1$s 팁을 %2$s님에게 비공개로 보냈습니다</string>
     <string name="feed54_unfollow_posted">언팔로우를 네트워크에 게시했습니다</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">팁</string>
     <string name="kaposts_tips">팁</string>
     <string name="kaposts_tips_from">팁 보낼 주소</string>
-    <string name="kaposts_tips_from_footnote">Chatting Address에서 보낸 팁은 게시물에 집계되고 팁을 보낸 사람으로 표시됩니다. 다른 주소에서 보낸 팁은 비공개입니다. 작성자는 받고 채팅에서 볼 수 있지만, 게시물에 집계되지 않고 이름도 나오지 않습니다.</string>
+    <string name="kaposts_tips_from_footnote">Chatting Address에서 보낸 팁은 게시물에 집계되고 팁을 보낸 사람으로 표시됩니다. 다른 주소에서 보낸 팁은 비공개입니다. 작성자는 받고 채팅에서 볼 수 있지만, 게시물에 집계되지 않고 이름도 나오지 않습니다. 채팅에서 보내는 팁도 여기서 나갑니다.</string>
     <string name="kaposts_tips_from_not_available">사용할 수 없음</string>
     <string name="kaposts_who_tipped">이 게시물에 팁을 보낸 사람</string>
     <string name="kn53_kaplay_beat_in_move">%2$d수 안에 %1$s 이기기</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">팁 통화</string>
     <string name="kp5_tip_in_ask">매번 묻기</string>
     <string name="kp5_tip_in_ask_footer">팁을 누를 때마다 Kaspa와 kUSDT 중 무엇을 보낼지 묻습니다.</string>
-    <string name="kp5_tip_in_kusdt_footer">팁은 작성자의 채팅 주소로 kUSDT를 보냅니다. kUSDT 팁은 게시물에 집계되지 않습니다.</string>
+    <string name="kp5_tip_in_kusdt_footer">팁은 상대의 채팅 주소로 kUSDT를 보냅니다. kUSDT 팁은 게시물에 집계되지 않습니다.</string>
     <string name="kp5_tip_not_counted">게시물에 집계되지 않음</string>
-    <string name="kp5_tip_set_in_settings">팁으로 보낼 것을 설정 > KaPost > 팁 통화에서 정하세요.</string>
+    <string name="kp5_tip_set_in_settings">팁으로 보낼 것을 설정 &gt; 맞춤 설정 &gt; 팁에서 정하세요.</string>
     <string name="kp5_tip_title">팁</string>
     <string name="kp5_tip_what_in">무엇으로 팁을 보낼까요?</string>
     <string name="l53_already_in_your_language">이미 사용자의 언어입니다</string>

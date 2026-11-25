@@ -10,18 +10,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.kachat.app.services.chess.ChessBotChallenge
 import com.kachat.app.ui.screens.LocalDockInset
+import com.kachat.app.ui.screens.arcade.arcadeGraph
 
 /**
  * The pages the KaPlay tab pushes (iOS 148a5331 phase 4: GamesView's NavigationStack). The tab
  * itself is [GamesScreen], placed by the dock / Kaspa Hub like any other tab. The leaderboards
- * are inside KaPlay > Chess > Leaderboard ([ChessLeaderboardScreen], [LEADERBOARDS]; iOS
- * 428a797b, owner's call 2026-11-22: no longer a Kaspa Hub tile of their own).
+ * are on Chess's own screen ([ChessHomeScreen]'s cycle button; iOS 518fdc8c - the separate
+ * leaderboard pages were deleted, audit 2026-11-24 #41).
  */
 object KaPlayRoutes {
-    /** KaPlay > Chess: choose your game ([ChessHomeScreen]). */
+    /** KaPlay > Chess: Play and the leaderboards ([ChessHomeScreen]). */
     const val HOME = "chess_home"
-    /** KaPlay > Chess > Leaderboard: 1v1, Tournaments and Bots ([ChessLeaderboardScreen]). */
-    const val LEADERBOARDS = "chess_leaderboards"
     const val MODE = "chess_mode/{mode}"
     const val TOURNAMENT = "chess_tournament/{tournamentId}"
     const val TOURNAMENT_GAME = "chess_tournament_game/{tournamentId}/{gameId}"
@@ -29,12 +28,7 @@ object KaPlayRoutes {
     const val BOTS = "chess_bots?challenge={challenge}"
     const val BOT = "chess_bot/{level}?challenge={challenge}"
     const val BOT_GAME = "chess_bot_game/{level}/{side}"
-    const val LEADERBOARD = "chess_leaderboard/{mode}"
-    const val BOT_BOARDS = "chess_bot_boards"
-    const val BOT_BOARD = "chess_bot_board/{level}"
     const val PLAYER = "chess_player/{address}"
-
-    fun leaderboard(mode: ChessLobbyMode) = "chess_leaderboard/${mode.name}"
 
     /** The game boards. While the player is locked into one ([ChessGameDock.lockedIn]) the dock
      *  hides, as iOS hides the tab bar then; someone watching, or a game that is over, keeps it. */
@@ -45,7 +39,9 @@ object KaPlayRoutes {
 
     /** Pushed pages that keep the dock (everything but the boards and the player's card). */
     val DOCKED_ROUTES: Set<String> = setOf(
-        HOME, MODE, TOURNAMENT, BOTS, BOT, LEADERBOARDS, LEADERBOARD, BOT_BOARDS, BOT_BOARD,
+        HOME, MODE, TOURNAMENT, BOTS, BOT,
+        // the arcade games' homes (Snake, 2048)
+        com.kachat.app.ui.screens.arcade.ArcadeRoutes.HOME,
     )
 
     /**
@@ -67,7 +63,7 @@ fun kaPlayShowsDock(route: String?): Boolean = when (route) {
 }
 
 /**
- * Registers every page KaPlay and the Leaderboard tab push. [dockInset] is the dock's height: the
+ * Registers every page KaPlay pushes. [dockInset] is the dock's height: the
  * pages run on under it, as iOS's content runs on under its tab bar.
  */
 fun NavGraphBuilder.kaPlayGraph(navController: NavController, dockInset: Dp) {
@@ -117,23 +113,6 @@ fun NavGraphBuilder.kaPlayGraph(navController: NavController, dockInset: Dp) {
             )
         }
     }
-    composable(KaPlayRoutes.LEADERBOARDS) {
-        CompositionLocalProvider(LocalDockInset provides dockInset) { ChessLeaderboardScreen(navController) }
-    }
-    composable(KaPlayRoutes.LEADERBOARD) { entry ->
-        val mode = runCatching {
-            ChessLobbyMode.valueOf(entry.arguments?.getString("mode").orEmpty())
-        }.getOrDefault(ChessLobbyMode.DUEL)
-        CompositionLocalProvider(LocalDockInset provides dockInset) { ChessLeaderboardPageScreen(mode, navController) }
-    }
-    composable(KaPlayRoutes.BOT_BOARDS) {
-        CompositionLocalProvider(LocalDockInset provides dockInset) { ChessBotLeaderboardsScreen(navController) }
-    }
-    composable(KaPlayRoutes.BOT_BOARD) { entry ->
-        CompositionLocalProvider(LocalDockInset provides dockInset) {
-            ChessBotLeaderboardScreen(entry.arguments?.getString("level")?.toIntOrNull() ?: 1, navController)
-        }
-    }
     composable(KaPlayRoutes.BOT_GAME) { entry ->
         CompositionLocalProvider(LocalDockInset provides if (ChessGameDock.lockedIn) 0.dp else dockInset) {
             ChessBotGameScreen(
@@ -150,4 +129,6 @@ fun NavGraphBuilder.kaPlayGraph(navController: NavController, dockInset: Dp) {
             onDone = { navController.popBackStack() },
         )
     }
+    // KaPlay > Snake / 2048 (iOS 518fdc8c ArcadeGameHomeView).
+    arcadeGraph(navController, dockInset)
 }

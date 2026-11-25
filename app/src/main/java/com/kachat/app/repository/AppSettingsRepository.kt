@@ -38,9 +38,9 @@ class AppSettingsRepository @Inject constructor(
         // Network
         val KEY_NETWORK          = stringPreferencesKey("network")           // "mainnet" | "testnet"
         val KEY_INDEXER_URL      = stringPreferencesKey("indexer_url")
-        // No longer read or written - `knsApiUrl` is pinned to DEFAULT_KNS_API_URL. Any value an
-        // older build left in the DataStore is inert; the key stays declared so it is obvious the
-        // name is taken rather than free to reuse.
+        // No longer read or written: K reads no .kas names (2026-11-23, iOS 518fdc8c). Any value
+        // an older build left in the DataStore is inert; the key stays declared so it is obvious
+        // the name is taken rather than free to reuse.
         @Suppress("unused")
         val KEY_KNS_API_URL      = stringPreferencesKey("kns_api_url")
         val KEY_KASPA_REST_URL   = stringPreferencesKey("kaspa_rest_url")
@@ -117,13 +117,11 @@ class AppSettingsRepository @Inject constructor(
                 else -> url
             }
         }
-        const val DEFAULT_KNS_API_URL    = "https://api.knsdomains.org/mainnet/api/v1"
         const val DEFAULT_KASPA_REST_URL = "https://api.kaspa.org"
         /** Testnet-10 (Toccata covenants; the node pool's testnet seeds are on 16210). */
         const val DEFAULT_KASPA_TESTNET_REST_URL = "https://api-tn10.kaspa.org"
         /** Retired TN11 (503) - migrated forward on read (iOS a67a1c2). */
         const val LEGACY_DEFAULT_KASPA_TESTNET_REST_URL = "https://api-tn11.kaspa.org"
-        const val DEFAULT_KNS_TESTNET_API_URL = "https://api.knsdomains.org/tn10/api/v1"
         /** The retired testnet-10 default. Testnet has no default indexer: its chat, push and
          *  `.kachat` names fields start blank (every indexer and push call is skipped then) until
          *  someone enters a server; a saved copy of this is cleared ([replacingRetiredDefaultIndexer]). */
@@ -349,18 +347,6 @@ class AppSettingsRepository @Inject constructor(
         return migratedIndexerUrl(stored)
     }
 
-    /**
-     * Always the shipped endpoint. Deliberately NOT overridable: it is display-only in Connection
-     * Settings, has no setter, and any value already in the DataStore is ignored.
-     *
-     * On iOS this was an editable field with no empty-string fallback, so clearing it wrote "" and
-     * every KNS call then failed with an unsupported-URL error - there was nothing to point at the
-     * setting that caused it. There is no reason for this endpoint to vary per install, so on both
-     * platforms it is now pinned rather than merely defaulted.
-     */
-    private fun knsApiUrlFor(network: KaspaNetwork.Type): String =
-        if (network == KaspaNetwork.Type.MAINNET) DEFAULT_KNS_API_URL else DEFAULT_KNS_TESTNET_API_URL
-
     // The rest stay overridable, but a BLANK stored value is treated as unset rather than passed
     // through - an empty base URL builds a request no HTTP client will send.
     private fun resolveKaspaRestUrl(profile: ConnectionProfile, network: KaspaNetwork.Type): String {
@@ -393,7 +379,6 @@ class AppSettingsRepository @Inject constructor(
     // The running network's endpoints - every live client.
     val indexerUrl: Flow<String> = runningConnection.resolve(::resolveIndexerUrl)
     val kachatNamesIndexerUrl: Flow<String> = runningConnection.resolve(::resolveKachatNamesIndexerUrl)
-    val knsApiUrl: Flow<String> = flow { emit(knsApiUrlFor(KaspaNetwork.launch)) }
     val kaspaRestUrl: Flow<String> = runningConnection.resolve(::resolveKaspaRestUrl)
     val pushIndexerUrl: Flow<String> = runningConnection.resolve { p, n -> indexerOrDefault(p.pushIndexerUrl, DEFAULT_PUSH_INDEXER_URL, n) }
     /** Trestly's API, where kUSDT balances are looked up (Connection Settings' Trestly API URL). */
@@ -406,7 +391,6 @@ class AppSettingsRepository @Inject constructor(
     // chosen network's, which the app connects with from the next launch.
     val selectedIndexerUrl: Flow<String> = selectedConnection.resolve(::resolveIndexerUrl)
     val selectedKachatNamesIndexerUrl: Flow<String> = selectedConnection.resolve(::resolveKachatNamesIndexerUrl)
-    val selectedKnsApiUrl: Flow<String> = KaspaNetwork.selected.map { knsApiUrlFor(it) }
     val selectedKaspaRestUrl: Flow<String> = selectedConnection.resolve(::resolveKaspaRestUrl)
     val selectedPushIndexerUrl: Flow<String> = selectedConnection.resolve { p, n -> indexerOrDefault(p.pushIndexerUrl, DEFAULT_PUSH_INDEXER_URL, n) }
     val selectedTrestlyApiUrl: Flow<String> = selectedConnection.resolve(::resolveTrestlyApiUrl)
@@ -447,6 +431,22 @@ class AppSettingsRepository @Inject constructor(
 
     suspend fun setGroupPins(walletAddress: String, pins: List<String>) =
         dataStore.edit { it[groupPinsKey(walletAddress)] = pins.joinToString("\n") }
+
+    /**
+     * The public rooms pinned up into the Chats circles row (room names), newest pin first, saved
+     * per wallet like iOS's `kachat_room_pins_<address>` (2026-11-23). A room name holds no
+     * whitespace (the protocol forbids it), so newlines join them.
+     */
+    private fun roomPinsKey(walletAddress: String) =
+        stringPreferencesKey("kachat_room_pins_${walletAddress.lowercase()}")
+
+    fun roomPins(walletAddress: String): Flow<List<String>> =
+        dataStore.data.map { prefs ->
+            prefs[roomPinsKey(walletAddress)]?.split('\n')?.filter { it.isNotEmpty() } ?: emptyList()
+        }
+
+    suspend fun setRoomPins(walletAddress: String, pins: List<String>) =
+        dataStore.edit { it[roomPinsKey(walletAddress)] = pins.joinToString("\n") }
 
     // Last-known-good automatic-discovery nodes — see KEY_KNOWN_GOOD_NODES.
     val knownGoodNodeAddresses: Flow<List<String>> = dataStore.data.map { prefs ->
@@ -514,7 +514,8 @@ class AppSettingsRepository @Inject constructor(
 
     /** See [KEY_SHOW_KACHAT_NAME_ENDINGS]. */
     val showKachatNameEndings: Flow<Boolean> = dataStore.data.map {
-        it[KEY_SHOW_KACHAT_NAME_ENDINGS] ?: true
+        // off by default since 2026-11-23 (iOS 518fdc8c `KachatNameLabel.showsEnding`)
+        it[KEY_SHOW_KACHAT_NAME_ENDINGS] ?: false
     }
 
     /** Falls back to [DEFAULT_QUICK_REACTION_EMOJIS] (matches the default in `Screens.kt`'s
@@ -775,7 +776,6 @@ class AppSettingsRepository @Inject constructor(
     suspend fun setSpendingReceiveNotifications(value: Boolean) = dataStore.edit { it[KEY_SPENDING_RECEIVE_NOTIFICATIONS] = value }
 
     suspend fun setBackupRetention(value: com.kachat.app.models.BackupRetention) = dataStore.edit { it[KEY_BACKUP_RETENTION] = value.name }
-    suspend fun setPendingKnsCommit(commit: PendingKnsCommit) = dataStore.edit { it[KEY_PENDING_KNS_COMMIT] = Gson().toJson(commit) }
     suspend fun clearPendingKnsCommit() = dataStore.edit { it.remove(KEY_PENDING_KNS_COMMIT) }
     suspend fun setPaymentHistoryScanned(address: String, value: Boolean) = dataStore.edit { it[paymentHistoryScannedKey(address)] = value }
 
@@ -812,6 +812,7 @@ class AppSettingsRepository @Inject constructor(
     suspend fun removeWalletData(address: String) = dataStore.edit {
         it.remove(chatCirclePinsKey(address))
         it.remove(groupPinsKey(address))
+        it.remove(roomPinsKey(address))
         it.remove(heldPaymentsKey(address))
         it.remove(showSetupGuidesKey(address))
     }

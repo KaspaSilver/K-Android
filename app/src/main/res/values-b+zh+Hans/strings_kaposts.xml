@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">打赏未发送：现在无法读取你的“打赏来源”地址。</string>
     <string name="feed54_tip_minimum_footer">网络接受的最小打赏是 %1$s。</string>
     <string name="feed54_tip_no_price">打赏未发送：没有近期的 KAS 价格，无法将 %1$s 换算成 KAS。</string>
-    <string name="feed54_tip_too_small">打赏未发送：网络接受的最小打赏是 %1$s。请在 设置 &gt; KaPost 中更改默认打赏。</string>
+    <string name="feed54_tip_too_small">打赏未发送：网络接受的最小打赏是 %1$s。请在 设置 &gt; 个性化 &gt; 打赏 中更改默认打赏。</string>
     <string name="feed54_tipped">已打赏 %1$s 给 %2$s</string>
     <string name="feed54_tipped_privately">已私下打赏 %1$s 给 %2$s</string>
     <string name="feed54_unfollow_posted">取消关注已发布到网络</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">打赏</string>
     <string name="kaposts_tips">打赏</string>
     <string name="kaposts_tips_from">打赏来源</string>
-    <string name="kaposts_tips_from_footnote">从你的 Chatting Address 打赏会计入帖子，你也会出现在打赏者名单中。从其他地址打赏是私密的：作者会收到，并在你们的聊天中看到，但不会计入帖子，也不会显示你的名字。</string>
+    <string name="kaposts_tips_from_footnote">从你的 Chatting Address 打赏会计入帖子，你也会出现在打赏者名单中。从其他地址打赏是私密的：作者会收到，并在你们的聊天中看到，但不会计入帖子，也不会显示你的名字。聊天中的打赏也从这里发送。</string>
     <string name="kaposts_tips_from_not_available">不可用</string>
     <string name="kaposts_who_tipped">谁打赏了这条帖子</string>
     <string name="kn53_kaplay_beat_in_move">%2$d 步内击败 %1$s</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">打赏币种</string>
     <string name="kp5_tip_in_ask">每次询问</string>
     <string name="kp5_tip_in_ask_footer">每次打赏都会询问发送 Kaspa 还是 kUSDT。</string>
-    <string name="kp5_tip_in_kusdt_footer">打赏会把 kUSDT 发送到发帖人的聊天地址。kUSDT 打赏不计入帖子。</string>
+    <string name="kp5_tip_in_kusdt_footer">打赏会把 kUSDT 发送到对方的聊天地址。kUSDT 打赏不计入帖子。</string>
     <string name="kp5_tip_not_counted">不计入帖子</string>
-    <string name="kp5_tip_set_in_settings">在 设置 > KaPost > 打赏币种 中选择打赏发送什么。</string>
+    <string name="kp5_tip_set_in_settings">在 设置 &gt; 个性化 &gt; 打赏 中选择打赏发送什么。</string>
     <string name="kp5_tip_title">打赏</string>
     <string name="kp5_tip_what_in">你用什么打赏?</string>
     <string name="l53_already_in_your_language">已是你的语言</string>

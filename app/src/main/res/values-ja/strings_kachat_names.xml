@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">保持するには、猶予期間が終わる前に更新してください。</string>
-    <string name="kachat_expired_many_title">.kachatドメインのうち%1$d件が期限切れになりました</string>
+    <string name="kachat_expired_many_title">%1$d件のユーザー名が期限切れになりました</string>
     <string name="kachat_expired_one_body">%1$sを保持するには、猶予期間が終わる%2$sまでに更新してください。</string>
-    <string name="kachat_expired_one_title">.kachatドメインの1つが期限切れになりました</string>
+    <string name="kachat_expired_one_title">ユーザー名の1つが期限切れになりました</string>
     <string name="kachat_names_on_address_hint">このアドレスで取得・購入した名前は、.kachat 名の開始後にここに表示されます。</string>
-    <string name="kachat_names_this_address_owns">このアドレスが所有する名前がここに表示されます。</string>
-    <string name="kachat_no_names_on_address">このアドレスには .kachat 名がありません</string>
+    <string name="kachat_names_this_address_owns">このアドレスが持つユーザー名はここに表示されます。</string>
+    <string name="kachat_no_names_on_address">このアドレスにユーザー名はありません</string>
     <string name="kg_claim_body">K全体とプロフィールリンクで、みんながあなたを見るときの名前です。なければアドレスが表示されます。</string>
-    <string name="kg_claim_hint">.kachatタブで希望の名前を検索して、取得してください。</string>
+    <string name="kg_claim_hint">「ユーザー名」タブで欲しい名前を検索して、取得しましょう。</string>
     <string name="kg_claim_title">.kachat 名を取得</string>
     <string name="kg_close">閉じる</string>
-    <string name="kg_finished_body">準備ができたら、.kachatタブで名前を取得してください。</string>
+    <string name="kg_finished_body">準備ができたら、「ユーザー名」タブで名前を取得しましょう。</string>
     <string name="kg_finished_title">準備完了</string>
     <string name="kg_how_body">名前は Kaspa ネットワーク上にあり、あなたのチャットアドレスが保有します。あなたのものである間、誰も奪ったり変えたりできません。</string>
     <string name="kg_how_commit">取得には 2 つの短いトランザクションが必要です。1 つ目で選んだ名前を秘密にし、2 つ目で登録します。</string>
     <string name="kg_how_miners">料金はネットワークのマイナーに支払われ、K には入りません。</string>
     <string name="kg_how_period">1 期間ずつ支払います。短い名前ほど高くなります。</string>
     <string name="kg_how_title">名前のしくみ</string>
-    <string name="kg_keep_body">名前は ウォレット &gt; あなたのドメイン &gt; .kachat にあります。</string>
+    <string name="kg_keep_body">名前は「ウォレット」&gt;「あなたのユーザー名」にあります。</string>
     <string name="kg_keep_grace">期限切れ後も、ほかの人が取得できるようになる前に更新できる猶予期間があります。</string>
     <string name="kg_keep_renew">期限が切れる前に更新しましょう。各名前に期限が表示されます。</string>
     <string name="kg_keep_title">維持する</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">登録は中止され、コミットの 0.2 KAS がネットワーク手数料を引いて戻ってきます。</string>
     <string name="kn_cancel_commit_title">コミットを取り消しますか？</string>
     <string name="kn_change_price">価格を変更</string>
-    <string name="kn_claim_a_name">名前を取得</string>
     <string name="kn_claim_name_title">名前を取得</string>
     <string name="kn_claim_your_name_on_kaspa">Kaspa であなたの名前を取得</string>
     <string name="kn_claiming_name">%1$s を取得中</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">名前を手放しました</string>
     <string name="kn_done_transferred">名前を譲渡しました</string>
     <string name="kn_err_address_key">そのアドレスの鍵は無効です。</string>
-    <string name="kn_err_enter_address_or_domain">アドレスまたはドメインを入力してください。</string>
+    <string name="kn_err_enter_address_or_domain">アドレスまたはユーザー名を入力してください。</string>
     <string name="kn_err_lookup">その名前を検索できませんでした。</string>
     <string name="kn_err_name_address_cant_own">その名前のアドレスは.kachatの名前を所有できません。</string>
     <string name="kn_err_not_network_address">このネットワークのSchnorrアドレスではありません。</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">コミットの承認を待っています...</string>
     <string name="kn_taken">取得済み</string>
     <string name="kn_taken_for_sale">取得済み · %1$s で販売中</string>
-    <string name="kn_transfer_footer_domain">アドレスまたはドメイン。.kachatの名前が最初に検索され、表示されたアドレスに解決されます。</string>
+    <string name="kn_transfer_footer_domain">アドレスまたはユーザー名。表示されたアドレスに変換されます。</string>
     <string name="kn_transfer_warning">譲渡は取り消せません。新しい所有者は現在の期限のまま名前を受け取り、あなたのプロフィールはあなたのアドレスに残ります。</string>
     <string name="kn_view_transaction">トランザクションを表示</string>
     <string name="kn_withdraw">取り下げ</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">購入と販売</string>
     <string name="kcn_kp_claim_pays_first_period">取得では最初の期間（%1$s）分を支払います。更新ではその後の期間ごとに支払います。</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">取得すると2件のトランザクションが送信されます。今すぐコミット、約1分後に登録です。どちらもこの手数料率で支払います。</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">このアドレスの名前を読み込めませんでした。下に引いてもう一度お試しください。</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">このアドレスのユーザー名を読み込めませんでした。下に引いてもう一度お試しください。</string>
     <string name="kcn_kp_d_day_e40b4">%1$s日</string>
     <string name="kcn_kp_d_days_0e3de">%1$s日</string>
     <string name="kcn_kp_dismiss_70afe">閉じる</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">売り手は出品価格を全額受け取ります。マーケットの手数料はありません。</string>
     <string name="kcn_kp_not_confirmed_b9e09">未確認</string>
     <string name="kcn_kp_one_character">1 文字</string>
-    <string name="kcn_kp_opens_the_kachat_tab">.kachat タブを開きます</string>
+    <string name="kcn_kp_opens_the_kachat_tab">「ユーザー名」タブを開きます</string>
     <string name="kcn_kp_pay_up_to_at_a_time">一度に最大 %1$s 分まで支払えます。</string>
     <string name="kcn_kp_paying_ahead">前払い</string>
     <string name="kcn_kp_price_goes_to_miners">価格はマイナーに支払われます - Kは何も受け取りません。</string>

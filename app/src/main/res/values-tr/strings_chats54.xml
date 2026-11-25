@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">Sana Kim Mesaj Gönderebilir?</string>
+    <string name="c54_who_anyone">Herkes</string>
+    <string name="c54_who_usernames">Yalnızca Kullanıcı Adı Olanlar</string>
+    <string name="c54_who_row_footer">Seninle kimin sohbet başlatabileceği. Zaten sohbet ettiğin kişiler bundan etkilenmez.</string>
+    <string name="c54_who_anyone_footer">Herkes sana ilk mesaj gönderebilir. Mesaj, sen kabul edene kadar Mesaj İstekleri\'nde bekler.</string>
+    <string name="c54_who_usernames_footer">Yalnızca kullanıcı adı (bir .kachat adı) olan kişiler Mesaj İstekleri\'ne ulaşabilir. Diğer herkesten gelen ilk mesajlar gizlenir ve bildirim göndermez; bunları yeniden görmek için Herkes\'i seç. Zaten sohbet ettiğin kişiler bundan etkilenmez.</string>
+    <string name="c54_room_clears_unread">Bu herkese açık sohbetteki okunmadı rozetini kaldırır.</string>
+    <string name="c54_room_no_notifications">Bu herkese açık sohbetten bildirim gelmez.</string>
+    <string name="c54_room_notifications_resume">Bu herkese açık sohbetten bildirimler yeniden gelir.</string>
+    <string name="c54_room_delete_subtitle">Bu herkese açık sohbeti sohbetlerinden kaldırır.</string>
+    <string name="c54_tip_subtitle">Bu kişiye Ayarlar &gt; Özelleştirme &gt; Bahşiş verme\'deki ayara göre bahşiş verin.</string>
+    <string name="c54_send_tip">Bahşiş Gönder</string>
+    <string name="c54_send_deferred">Coinlerinizin onaylanması bekleniyor. Birazdan kendiliğinden gönderilecek, bu yüzden tekrar göndermeyin.</string>
+    <string name="c54_failed_start_recording">Kayıt başlatılamadı: %1$s</string>
+    <string name="c54_failed_encode_audio">Ses kodlanamadı: %1$s</string>
+    <string name="c54_failed_prepare_audio">Ses hazırlanamadı: %1$s</string>
+    <string name="c54_sent_a_link">Bir bağlantı gönderdi</string>
+    <string name="c54_public_chat_room">Herkese açık sohbet odası #%1$s</string>
+    <string name="c54_search_contacts_address_username">Kişileri, bir adresi veya kullanıcı adını ara</string>
+    <string name="c54_looking_up_username">Kullanıcı adı aranıyor...</string>
+    <string name="c54_no_contacts_paste_username">Henüz kişin yok. Birini davet etmek için yukarıya bir adres veya kullanıcı adı yapıştır.</string>
+    <string name="c54_no_contacts_match_username">Aramanla eşleşen kişi yok. Yeni birini davet etmek için bir adres veya kullanıcı adı yapıştır.</string>
+    <string name="c54_invites_resent_all">Davetler tüm üyelere yeniden gönderildi.</string>
+    <string name="c54_invite_resent">Davet yeniden gönderildi.</string>
+    <string name="c54_room_follows_app_indexer">Bu oda yine uygulamanın dizinleyicisini kullanıyor.</string>
+    <string name="c54_room_indexer_updated">#%1$s için dizinleyici güncellendi.</string>
+    <string name="c54_room_could_not_reach">Ulaşılamadı: %1$s</string>
+    <string name="c54_tap_open_your_chat">Sohbetini açmak için dokun.</string>
+    <string name="c54_tap_start_chat_on_k">K\'de sohbet başlatmak için dokun.</string>
+    <string name="c54_stop_recording">Kaydı Durdur</string>
+    <string name="c54_send_voice_message">Sesli Mesaj Gönder</string>
+</resources>

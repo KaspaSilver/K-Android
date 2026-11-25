@@ -176,13 +176,12 @@ fun IosToolbarRow(
 }
 
 /**
- * The header every main page carries: the connection dot leading, the chatting-address balance
- * centered, an optional trailing action - and the page's bold, left-aligned title underneath.
+ * The header every main page carries: the chatting-address balance centered, an optional trailing
+ * action - and the page's bold, left-aligned title underneath.
  *
- * On iOS `ConnectionStatusIndicator` (leading) and `BalanceToolbarLabel` (principal) are toolbar
- * items on essentially every screen, so how you are connected and what you hold are never more
- * than a glance away, whatever you are looking at. Android had them on some pages and not
- * others; this is the one place that decides, so they cannot drift apart again.
+ * On iOS `BalanceToolbarLabel` (principal) is a toolbar item on essentially every screen, so what
+ * you hold is never more than a glance away. The connection dot is not here: since iOS 518fdc8c
+ * (owner's call, 2026-11-23) it is only at the top of Settings and on the dock's Settings icon.
  *
  * Goes in a Scaffold's `topBar` slot, which is why it clears the status bar itself - unlike a
  * CenterAlignedTopAppBar, hand-built top bar content gets no inset for free.
@@ -191,10 +190,9 @@ fun IosToolbarRow(
 fun MainPageHeader(
     title: String,
     modifier: Modifier = Modifier,
-    /** A back arrow beside the dot. Null on the dock destinations, which are not pushed into. */
+    /** A back arrow, leading. Null on the dock destinations, which are not pushed into. */
     onBack: (() -> Unit)? = null,
-    /** The connection dot and the balance. A pushed page iOS gives only a back button and its
-     *  title (Help) passes false. */
+    /** The balance. A pushed page iOS gives only a back button and its title (Help) passes false. */
     showStatus: Boolean = true,
     /** In place of the exact balance: the Wallet tab's own label (iOS `balanceToolbarView`). */
     balanceLabel: (@Composable () -> Unit)? = null,
@@ -226,7 +224,6 @@ fun MainPageHeader(
                             ToolbarIconButton(Icons.Filled.ArrowBackIosNew, androidx.compose.ui.res.stringResource(com.kachat.app.R.string.back), onBack, tint = LocalAppColors.current.textPrimary, iconSize = 20.dp)
                         }
                     }
-                    if (showStatus) ConnectionDotButton(onClick = { ConnectionStatusOverlayState.open() })
                 }
             },
             principal = { if (showStatus) (balanceLabel ?: { BalanceTopBarLabel() })() },

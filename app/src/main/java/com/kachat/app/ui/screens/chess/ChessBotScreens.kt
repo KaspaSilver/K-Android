@@ -102,6 +102,27 @@ class ChessBotsViewModel @Inject constructor(
         return newGame(bot, side.resolve()).also { current = round to it }
     }
 
+    /** This board's mark in [com.kachat.app.services.arcade.ArcadeLinkRouter] while a bot game is
+     *  up (iOS `ChessBotBusyToken`, audit 2026-11-24 #11). */
+    private val busyToken = java.util.UUID.randomUUID().toString()
+    private var holdsChallenges = false
+
+    /**
+     * While the bot's board is up, an arcade challenge link waits instead of popping it: through
+     * the game, and past its end too, so a win isn't swept away while its stamp goes out or its
+     * result is read. Done or Back lets it through: cleared when the screen goes ([onCleared]),
+     * not when it is merely hidden (a Kaspa Hub section kept alive), as iOS clears it in the
+     * token's deinit.
+     */
+    fun holdArcadeChallenges() {
+        holdsChallenges = true
+        com.kachat.app.services.arcade.ArcadeLinkRouter.botGame(busyToken, running = true)
+    }
+
+    override fun onCleared() {
+        if (holdsChallenges) com.kachat.app.services.arcade.ArcadeLinkRouter.botGame(busyToken, running = false)
+    }
+
     private companion object {
         val gameScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     }
@@ -337,6 +358,13 @@ private fun ChessBotMatch(game: ChessBotGame, navController: NavController, onPl
     /** Done, Play again or Back with a win whose stamp failed: leaving loses the stamp, so it asks. */
     var pendingLeave by remember { mutableStateOf<ChessBotLeaveAction?>(null) }
     val winStampFailed = result is ChessBotResult.Won && stamp is ChessBotGame.Stamp.Failed
+    /** Share to KaPost: KaPost's composer over the board, with the post written (iOS 518fdc8c,
+     *  owner 2026-11-24: you stay in KaPlay). */
+    var shareText by remember { mutableStateOf<String?>(null) }
+    /** Where Share to KaPost stands: posting, shared or not confirmed keep it off, so the win is
+     *  never posted twice (audit 2026-11-24 #8). */
+    var share by remember { mutableStateOf<ChessBotShareState>(ChessBotShareState.None) }
+    val shareContext = androidx.compose.ui.platform.LocalContext.current
     fun perform(action: ChessBotLeaveAction) {
         when (action) {
             ChessBotLeaveAction.PLAY_AGAIN -> onPlayAgain()
@@ -351,7 +379,10 @@ private fun ChessBotMatch(game: ChessBotGame, navController: NavController, onPl
     val lockedIn = result == null
     val canPlayerMove = result == null && board.sideToMove == playerColor && !isThinking
 
-    LaunchedEffect(Unit) { game.start() }
+    LaunchedEffect(Unit) {
+        game.start()
+        vm.holdArcadeChallenges()
+    }
     ChessGameDock.Hold(lockedIn)
     LaunchedEffect(result) {
         val r = result ?: return@LaunchedEffect
@@ -516,11 +547,12 @@ private fun ChessBotMatch(game: ChessBotGame, navController: NavController, onPl
                             result = r,
                             statusText = statusText,
                             stamp = stamp,
+                            share = share,
                             onShare = {
                                 haptic(IosHaptic.IMPACT_LIGHT)
-                                // No wallet, no challenge to share (iOS shareToKaPost).
+                                // No wallet, no challenge to share (iOS shareText returns nil).
                                 val byAddress = vm.progress.address
-                                if (byAddress.isNotEmpty()) ChessBotLinks.shareToKaPost(bot, game.playerMoveCount, byAddress, game.id)
+                                if (byAddress.isNotEmpty()) shareText = ChessBotLinks.shareText(bot, game.playerMoveCount, byAddress, game.id)
                             },
                             onRetryStamp = { game.retry() },
                             unlocked = if (r is ChessBotResult.Won && vm.progress.record(bot).wins == 1) ChessBot.forLevel(bot.level + 1) else null,
@@ -617,6 +649,35 @@ private fun ChessBotMatch(game: ChessBotGame, navController: NavController, onPl
         }
     }
 
+    shareText?.let { text ->
+        com.kachat.app.ui.screens.KaPostQuickComposer(
+            text = text,
+            onPosting = {
+                share = ChessBotShareState.Posting
+                com.kachat.app.ui.screens.IosToasts.show(shareContext.getString(com.kachat.app.R.string.arcade_posting))
+            },
+            onResult = { outcome ->
+                outcome.fold(
+                    onSuccess = {
+                        share = ChessBotShareState.Shared
+                        com.kachat.app.ui.screens.IosToasts.show(shareContext.getString(com.kachat.app.R.string.arcade_posted))
+                    },
+                    onFailure = { error ->
+                        if (error is com.kachat.app.services.SendOutcomeUnknownException) {
+                            share = ChessBotShareState.Unconfirmed
+                            com.kachat.app.ui.screens.IosToasts.error(error.message.orEmpty())
+                        } else {
+                            val message = com.kachat.app.services.chess.ChessTournamentService.friendlySendErrorMessage(error)
+                            share = ChessBotShareState.Failed(message)
+                            com.kachat.app.ui.screens.IosToasts.error(ChessText.string(message))
+                        }
+                    },
+                )
+            },
+            onClose = { shareText = null },
+        )
+    }
+
     // iOS's alert, its three buttons stacked as iOS stacks them.
     pendingLeave?.let { action ->
         val hairline = colors.textSecondary.copy(alpha = 0.3f)
@@ -698,12 +759,26 @@ private fun ChessBotMatch(game: ChessBotGame, navController: NavController, onPl
     }
 }
 
+/** Where Share to KaPost stands for a bot win (iOS 518fdc8c `ShareState`, audit 2026-11-24 #8). */
+internal sealed class ChessBotShareState {
+    data object None : ChessBotShareState()
+    data object Posting : ChessBotShareState()
+    data object Shared : ChessBotShareState()
+    /** The post may have gone out: no second Share. */
+    data object Unconfirmed : ChessBotShareState()
+    /** It definitely didn't go: Share is on again. */
+    data class Failed(val message: String) : ChessBotShareState()
+
+    val allowsShare: Boolean get() = this is None || this is Failed
+}
+
 @Composable
 private fun ChessBotEndOverlay(
     bot: ChessBot,
     result: ChessBotResult,
     statusText: String,
     stamp: ChessBotGame.Stamp,
+    share: ChessBotShareState,
     onShare: () -> Unit,
     onRetryStamp: () -> Unit,
     unlocked: ChessBot?,
@@ -734,7 +809,7 @@ private fun ChessBotEndOverlay(
                 // Nothing to do while it goes out, or once it may have gone through: no second
                 // stamp of the same game (iOS 4922804).
                 val waiting = stamp == ChessBotGame.Stamp.None || stamp == ChessBotGame.Stamp.Sending ||
-                    stamp is ChessBotGame.Stamp.Unconfirmed
+                    stamp is ChessBotGame.Stamp.Unconfirmed || !share.allowsShare
                 Row(
                     Modifier.padding(top = 6.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFFFF9500))
                         .clickable(enabled = !waiting) { if (stamp is ChessBotGame.Stamp.Failed) onRetryStamp() else onShare() }
@@ -745,12 +820,17 @@ private fun ChessBotEndOverlay(
                     Icon(Icons.Default.Share, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        ChessText.string(when (stamp) {
-                            ChessBotGame.Stamp.Stamped -> "Share to KaPost"
-                            is ChessBotGame.Stamp.Failed -> "Retry the stamp"
-                            is ChessBotGame.Stamp.Unconfirmed -> "Not confirmed"
-                            else -> "Stamping the result…"
-                        }),
+                        when (stamp) {
+                            ChessBotGame.Stamp.Stamped -> when (share) {
+                                ChessBotShareState.Posting -> androidx.compose.ui.res.stringResource(com.kachat.app.R.string.arcade_posting)
+                                ChessBotShareState.Shared -> androidx.compose.ui.res.stringResource(com.kachat.app.R.string.arcade_shared)
+                                ChessBotShareState.Unconfirmed -> ChessText.string("Not confirmed")
+                                else -> ChessText.string("Share to KaPost")
+                            }
+                            is ChessBotGame.Stamp.Failed -> ChessText.string("Retry the stamp")
+                            is ChessBotGame.Stamp.Unconfirmed -> ChessText.string("Not confirmed")
+                            else -> ChessText.string("Stamping the result…")
+                        },
                         color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 15.sp,
                     )
                 }
@@ -783,11 +863,10 @@ private fun ChessBotChallengeBanner(challenge: ChessBotChallenge, modifier: Modi
     val names: ChessTournamentViewModel = hiltViewModel()
     val records by vm.progress.records.collectAsState()
     val contacts by names.contacts.collectAsState()
-    val knsNames by names.service.knsNames.collectAsState()
     val colors = LocalAppColors.current
     val orange = Color(0xFFFF9500)
     // One whole text per case: who is known or not, moves or not, locked or not (iOS 077d777).
-    val who = challenge.by?.let { chessName(it, contacts, knsNames) }
+    val who = challenge.by?.let { chessName(it, contacts) }
     val bot = challenge.bot
     val moves = challenge.moves
     val claim = when {

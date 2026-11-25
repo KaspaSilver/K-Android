@@ -214,7 +214,7 @@ fun SendRecipientCard(
             }
             Text(stringResource(R.string.consolidating_this_address), color = colors.textSecondary, fontSize = 12.sp)
         } else {
-            val placeholder = stringResource(R.string.kaspa_qr_or_domain)
+            val placeholder = stringResource(R.string.shell54_kaspa_qr_or_username)
             BasicTextField(
                 value = input,
                 onValueChange = onInputChange,
@@ -268,9 +268,6 @@ fun SendRecipientCard(
                     lookupError = lookupError,
                     isValidAddress = isValidAddress,
                 )
-                if (!isResolving) {
-                    OtherDomainsDropdown(nameResolutions, selectedTld, onSelectResolution)
-                }
             }
         }
     }
@@ -316,7 +313,7 @@ private fun SendRecipientStatusLine(
     when {
         isResolving -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(14.dp), color = colors.textSecondary, strokeWidth = 2.dp)
-            Text(stringResource(R.string.looking_up_domain), color = colors.textSecondary, fontSize = 12.sp)
+            Text(stringResource(R.string.shell54_looking_up_username), color = colors.textSecondary, fontSize = 12.sp)
         }
         lookupError != null -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Icon(Icons.Default.Cancel, contentDescription = null, tint = colors.danger, modifier = Modifier.size(14.dp))
@@ -712,16 +709,23 @@ fun SendFeeControls(
                             }
                         },
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = stringResource(R.string.done),
-                        tint = KaspaTeal,
+                    // The checkmark draws at 22 but takes taps over 44 (iOS audit 2026-11-24 #39:
+                    // the fee's checkmark was too small a target); the 11 around it stands in for
+                    // the gap that sat before it.
+                    Box(
                         modifier = Modifier
-                            .size(22.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
-                            .clickable(role = Role.Button) { onCommit() },
-                    )
+                            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.done)) { onCommit() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = stringResource(R.string.done),
+                            tint = KaspaTeal,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
                 }
                 isEstimatingFee -> com.kachat.app.ui.theme.IosActivityIndicator(
                     modifier = Modifier.size(16.dp),

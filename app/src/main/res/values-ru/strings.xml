@@ -69,8 +69,6 @@
     <string name="delete_account">Удалить аккаунт</string>
     <string name="delete_group">Удалить группу</string>
     <string name="done">Готово</string>
-    <string name="each_transaction_temporarily_uses_2_kas">Каждая транзакция временно использует ~2 KAS; ~1 KAS возвращается сразу как сдача, поэтому реальными затратами является только небольшая комиссия сети.</string>
-    <string name="edit_kns_profile">Редактировать профиль KNS</string>
     <string name="edit_account">Изменить аккаунт</string>
     <string name="error">Ошибка</string>
     <string name="every_member_will_see_the_new">Все участники увидят новое имя.</string>
@@ -86,8 +84,6 @@
     <string name="import_account">Импортировать аккаунт</string>
     <string name="import_existing_account">Импортировать существующий аккаунт</string>
     <string name="incoming_notifications">Входящие уведомления</string>
-    <string name="kns_domains">Ваши домены</string>
-    <string name="contact_kns_domains">KNS домены</string>
     <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K нужно подключиться к узлу. Как вы хотите подключиться?</string>
     <string name="kaspa_explorer">Kaspa Explorer</string>
@@ -97,14 +93,9 @@
     <string name="manage_addresses">Управление адресами</string>
     <string name="max">Макс</string>
     <string name="message">Сообщение</string>
-    <string name="more_info">Подробнее</string>
     <string name="name">Имя</string>
     <string name="next">Далее</string>
     <string name="no_conversations_yet">Пока нет чатов</string>
-    <string name="no_domains_yet">Доменов пока нет.</string>
-    <string name="send_domain">Отправить домен</string>
-    <string name="asset_id">Идентификатор актива</string>
-    <string name="primary_domain">Основной домен</string>
     <string name="set_as_primary">Сделать основным</string>
     <string name="no_hidden_addresses">Нет скрытых адресов.</string>
     <string name="no_hidden_users_in_this_group">В этой группе нет скрытых пользователей.</string>
@@ -152,7 +143,6 @@
     <string name="show_more">Показать больше</string>
     <string name="show_qr_code">Показать QR-код</string>
     <string name="skip">Пропустить</string>
-    <string name="some_changes_failed_to_save">Некоторые изменения не удалось сохранить:</string>
     <string name="start_a_new_chat_by_adding">Начните новый чат, добавив контакт</string>
     <string name="status">Статус</string>
     <string name="tap_an_address_below_to_swap">Нажмите на адрес ниже, чтобы обменять с него</string>
@@ -197,7 +187,6 @@
     <string name="created">Создан</string>
     <string name="customization">Настройка</string>
     <string name="diagnostics">Диагностика</string>
-    <string name="discord">Discord</string>
     <string name="discover_addresses">Найти адреса</string>
     <string name="email">Email</string>
     <string name="explorer">Обозреватель</string>
@@ -206,7 +195,6 @@
     <string name="ip_address_book">Адресная книга IP</string>
     <string name="indexer">Индексатор</string>
     <string name="info">Инфо</string>
-    <string name="kns_profile">KNS Профиль</string>
     <string name="kaspa_explorer_api">Kaspa Explorer API</string>
     <string name="kaspa_node">Узел Kaspa</string>
     <string name="default_recommended">По умолчанию (рекомендуется)</string>
@@ -221,7 +209,6 @@
     <string name="protocol">Протокол</string>
     <string name="push_notifications">Push-уведомления</string>
     <string name="reconnect">Переподключиться</string>
-    <string name="redirect">Перенаправление</string>
     <string name="refresh_pool">Обновить пул</string>
     <string name="reply">Ответить</string>
     <string name="retry_send">Повторить отправку</string>
@@ -234,20 +221,16 @@
     <string name="storage">Хранилище</string>
     <string name="on_this_device">На этом устройстве</string>
     <string name="cloud_storage">Облачное хранилище</string>
-    <string name="submitting_commit_transaction">Отправка транзакции подтверждения...</string>
-    <string name="submitting_reveal_transaction">Отправка транзакции раскрытия...</string>
     <string name="support_email">Email поддержки</string>
     <string name="telegram">Telegram</string>
     <string name="total">Всего</string>
     <string name="verified">Проверенные</string>
-    <string name="verifying_new_ownership_on_chain_this">Проверка нового владения в блокчейне (это может занять минуту)...</string>
     <string name="version">Версия</string>
     <string name="vibration">Вибрация</string>
     <string name="view_profile">Посмотреть профиль</string>
     <string name="view_seed_phrase">Показать 12 или 24 слова</string>
     <string name="view_in_explorer">Открыть в обозревателе</string>
     <string name="website">Веб-сайт</string>
-    <string name="x">X</string>
     <string name="language">Язык</string>
     <string name="system_default">Как в системе</string>
     <string name="welcome_to_kachat">Добро пожаловать в K</string>
@@ -282,27 +265,16 @@
     <string name="mark_as_read">Отметить как прочитанное</string>
     <string name="copy_link">Скопировать ссылку</string>
     <string name="open_link">Открыть ссылку</string>
-    <string name="kaspa_qr_or_domain">kaspa:qr... или домен</string>
     <!-- 5.2 name services (iOS df23b6f, 09e0403, 718724b, 9858bd1) -->
     <string name="x_handle">Х-образная ручка</string>
     <string name="discord_user_id">Идентификатор пользователя Discord</string>
     <string name="redirect_url">URL-адрес перенаправления</string>
     <string name="none_yet">Пока нет</string>
-    <string name="customize_profile">Настроить профиль</string>
-    <string name="settling">Подтверждается</string>
     <string name="kachat_profile_coming_body">Имена .kachat скоро появятся. Когда вы получите своё, здесь можно будет задать аватар, баннер, описание и ссылки — именно это K будет показывать о вас везде.</string>
     <string name="kachat_name_section">Имя .kachat</string>
-    <string name="could_not_reach_service">Не удалось связаться с %1$s. Потяните вниз, чтобы повторить.</string>
-    <string name="no_names_yet">Пока нет имён %1$s.</string>
     <!-- 5.2 name lookups (iOS a0dbc15, 79b6ac8, 9858bd1) -->
-    <string name="no_tld_domain_found">Домен %1$s не найден</string>
-    <string name="looking_up_domain">Поиск домена...</string>
-    <string name="looking_up">Поиск...</string>
     <string name="no_domain">Нет домена</string>
-    <string name="other_domains">Другие домены</string>
-    <string name="not_registered">Не зарегистрирован</string>
     <string name="couldnt_check">Не удалось проверить</string>
-    <string name="kaspa_address_or_domain">Адрес Kaspa или домен</string>
     <!-- Public Chats select (iOS e08c4cc) -->
     <!-- Connection Settings tabs (iOS ee01f81) -->
     <string name="connection_tab_indexer">Индексатор</string>
@@ -313,7 +285,6 @@
     <string name="coming_soon">Скоро</string>
     <string name="not_available_on_this_network">Недоступно в этой сети</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
-    <string name="km_no_names">Пока нет имён .kachat</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">Полный вводный тур: кошелёк, чаты, платежи и другое.</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -336,7 +307,6 @@
     <!-- Realized P&L, fees spent, Add Chatting Address (iOS 61eff0f/5e75c89) -->
     <!-- Receive / chatting address QR text (iOS 8bcae2f) -->
     <!-- Account discovery finds .k and .kaspa names (iOS 7a5b157) -->
-    <string name="chatting_picker_other_names_count">Имена .k и .kaspa (%1$d)</string>
     <!-- Message Requests and Private chats (iOS f7ca401/ba1b2e3/76faa97/74bd52c) -->
     <string name="message_requests">Запросы на переписку</string>
     <string name="message_requests_row_sub">Вас ждут люди и группы</string>
@@ -471,7 +441,6 @@
     <string name="chats_new_chat">Новый чат</string>
     <string name="chats_new_group_chat">Новый групповой чат</string>
     <string name="chats_new_chat_subtitle">Напишите кому-нибудь по адресу или имени.</string>
-    <string name="qr_chatting_address_subtitle">Для чатов и получения доменов .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="utxo_selection">Выбор UTXO</string>
     <string name="utxo_selection_caption">Выберите, какие монеты потратит эта отправка.</string>
@@ -664,7 +633,6 @@
     <!-- New Chat / New Group: Address Book (iOS 1be4f6e) -->
     <string name="ab_add_count">Добавить (%1$d)</string>
     <string name="ab_add_members">Добавить участников</string>
-    <string name="ab_members_footer">Выберите людей из контактов или добавьте кого угодно по адресу Kaspa или домену.</string>
     <string name="ab_members_intro">Добавьте людей в группу. Как администратор группы, вы управляете составом.</string>
     <string name="ab_members_empty">Участников пока нет. Добавьте людей из контактов или по адресу ниже.</string>
     <string name="ab_actions_a11y">Добавить, импортировать или экспортировать</string>
@@ -704,17 +672,8 @@
     <string name="kn_registration_not_open">Имена переносятся в новый реестр. Новые имена можно будет занять с %1$s.</string>
     <string name="kn_ev_imported">Перенесено в новый реестр</string>
     <!-- .kachat first: domains in every address field, Other domains, expired-name banner (iOS 6ac48a7) -->
-    <string name="enter_kaspa_address_or_domain_kachat_first">Введите адрес Kaspa (kaspa:...) или домен (например, alice.kachat). Сначала ищутся имена .kachat.</string>
-    <string name="search_contacts_or_address_or_domain">Поиск контактов, адреса или домена</string>
-    <string name="no_contacts_yet_paste_address_or_domain">У вас пока нет контактов. Вставьте адрес или домен выше, чтобы пригласить кого-то.</string>
-    <string name="no_contacts_match_paste_address_or_domain">Контакты не найдены. Вставьте адрес или домен, чтобы пригласить нового человека.</string>
     <string name="their_profile_kachat_name_address">Профиль, имя .kachat и адрес.</string>
-    <string name="finds_addresses_balance_or_domain">Находит адреса с балансом или доменом.</string>
-    <string name="enter_kaspa_address_or_domain_short_kachat_first">Введите адрес Kaspa (kaspa:...) или домен. Сначала ищутся имена .kachat.</string>
-    <string name="other_domains_title">Другие домены</string>
-    <string name="chatting_picker_intro_any_name_kachat">Если эти слова уже хранят вашу личность на другом адресе (домен .kachat, .kas, .k или .kaspa либо баланс чата), выберите его здесь. Показаны только адреса с балансом или доменами.</string>
     <string name="chatting_picker_kachat_names_count">Имена .kachat (%1$d)</string>
-    <string name="chatting_picker_kas_names_count">Имена .kas (%1$d)</string>
     <!-- Bare names resolve to .kachat only (iOS 5a5122d) -->
     <string name="kachat_names_not_live_here">Имена .kachat в этой сети пока не работают</string>
     <!-- Nextcloud sync carries portfolios -->
@@ -839,8 +798,6 @@
     <string name="quantum_safe">Квантово-устойчивый</string>
     <string name="key_revealed_by_a_spend">Ключ раскрыт тратой</string>
     <!-- KNS domain transfers and quantum-safe (script) addresses (iOS 2a8ca5a) -->
-    <string name="kns_transfer_quantum_source">KNS не может вывести домен с квантово-устойчивого адреса: KNS определяет владельца домена по открытому ключу, а квантово-устойчивый адрес скрывает свой ключ.</string>
-    <string name="kns_transfer_to_script_address">Домен .kas нельзя отправить на квантово-устойчивый или другой скриптовый адрес: KNS больше никогда не сможет его переместить. Отправьте его на обычный адрес.</string>
     <string name="quantum_next_address_failed">Не удалось подготовить следующий адрес. Попробуйте ещё раз.</string>
     <!-- Address Visibility: a card per chain (iOS d7e6dd1) -->
     <string name="quantum_addresses">Квантово-устойчивые адреса</string>
@@ -891,7 +848,6 @@
     <string name="pr_paid_to">Оплата на</string>
     <string name="ab_empty_title">Контактов пока нет</string>
     <string name="settings_title">Настройки</string>
-    <string name="confirm_sending_domain">Подтвердите отправку этого домена</string>
     <string name="confirm_deleting_account">Подтвердите удаление этого аккаунта</string>
     <string name="group_invites">Приглашения в группы</string>
     <string name="group_invite">Приглашение в группу</string>
@@ -936,7 +892,6 @@
     <string name="welcome_paying_for_messages">Оплата сообщений</string>
     <string name="welcome_paying_for_messages_caption">Каждое сообщение списывает с этого адреса крошечную сумму Kaspa. 1 Kaspa хватает примерно на 500 сообщений.</string>
     <string name="welcome_what_others_can_see">Что видят другие</string>
-    <string name="welcome_what_others_can_see_caption">Любой может увидеть этот адрес и его баланс в сети Kaspa, но не сможет прочитать ваши сообщения. Используйте его только для чатов и доменов .kachat.</string>
 
     <!-- Localized literals moved out of Kotlin (parity with the iPhone app) -->
     <string name="backup_your_account_to_prevent_loss_of">Сделайте резервную копию аккаунта, чтобы не потерять средства</string>
@@ -1099,7 +1054,6 @@
     <string name="anyone_with_this_addresss_private_key_can">Любой, у кого есть приватный ключ этого адреса, может потратить его средства. Никому его не сообщайте.</string>
     <string name="tap_to_reveal_private_key">Нажмите, чтобы показать приватный ключ</string>
     <string name="could_not_load_transactions">Не удалось загрузить транзакции.</string>
-    <string name="contains_domain">Содержит домен</string>
     <string name="private_key_hex_copied_clipboard_will_clear">Приватный ключ (hex) скопирован. Буфер обмена очистится через 30 сек.</string>
     <string name="cache">Кэш</string>
     <string name="failed_to_export_diagnostics">Не удалось экспортировать диагностику.</string>
@@ -1259,7 +1213,6 @@
     <string name="hr_min">%1$d ч, %2$d мин</string>
     <string name="min">%1$d мин</string>
     <string name="could_not_check_addresses_try_again_when">Не удалось проверить адреса. Попробуйте снова, когда будет подключение.</string>
-    <string name="no_addresses_with_a_balance_or_domain">Адреса с балансом или доменом не найдены.</string>
     <string name="hidden">Скрытые (%1$d)</string>
     <string name="address_hidden_re_enable_it_in_address">Адрес скрыт. Снова включить его можно в разделе «Видимость адреса».</string>
     <string name="this_address_cant_be_hidden">Этот адрес нельзя скрыть.</string>
@@ -1306,12 +1259,6 @@
     <string name="couldnt_load_the_coins">Не удалось загрузить монеты.</string>
     <string name="these_words_are_invalid_double_check_the">Эти слова недействительны. Проверьте их ещё раз - последнее слово содержит контрольную сумму, поэтому одно неверное слово не проходит проверку.</string>
     <string name="invalid_words_please_enter_12_or_24">Недействительные слова. Введите 12 или 24 слова.</string>
-    <string name="failed_to_set_primary_domain">Не удалось установить основной домен</string>
-    <string name="invalid_recipient_address">Недействительный адрес получателя</string>
-    <string name="recipient_must_be_different_from_your_own">Получатель должен отличаться от вашего кошелька</string>
-    <string name="recipient_address_is_on_the_wrong_network">Адрес получателя находится в другой сети</string>
-    <string name="invalid_recipient">Недействительный получатель</string>
-    <string name="transfer_failed">Перевод не удался</string>
     <string name="retry_failed">Повторная попытка не удалась</string>
     <string name="saving_keep_the_card_still">Сохранение. Не двигайте карту.</string>
     <string name="reading_keep_the_card_still">Чтение. Не двигайте карту.</string>
@@ -1349,8 +1296,6 @@
     <string name="resynced_one_message_n_chats">Повторно синхронизировано 1 входящее сообщение, чатов: %1$d.</string>
     <string name="resynced_n_messages_one_chat">Повторно синхронизировано входящих сообщений: %1$d, в 1 чате.</string>
     <string name="resynced_n_messages_n_chats">Повторно синхронизировано входящих сообщений: %1$d, чатов: %2$d.</string>
-    <string name="found_one_address_balance_domain">Найден 1 адрес с балансом или доменом.</string>
-    <string name="found_n_addresses_balance_domain">Найдено адресов с балансом или доменом: %1$d.</string>
     <string name="resync_one_chat">Синхронизировать заново 1 чат</string>
     <string name="resync_n_chats">Синхронизировать заново, чатов: %1$d</string>
     <string name="one_day_ago">1 день назад</string>
@@ -1451,9 +1396,6 @@
     <string name="not_sent_you_switched_accounts">Не отправлено: вы сменили аккаунт до отправки.</string>
     <string name="play_it_again">Сыграть снова</string>
     <string name="couldnt_look_up_name_try_again">Сейчас не удаётся найти %1$s. Попробуйте ещё раз чуть позже.</string>
-    <string name="kns_reveal_will_finish_on_next_open">Первая из двух транзакций прошла, а вторая нет. K завершит её при следующем открытии.</string>
-    <string name="kns_transfer_fee_at_most_1_kas">Комиссия за передачу домена не может превышать 1 KAS.</string>
-    <string name="confirm_setting_this_primary_name">Подтвердите выбор основного имени</string>
     <string name="this_is_the_public_half_of_this_address">Это открытая часть этого адреса. С её помощью ничего нельзя потратить.</string>
     <string name="address_number_is_ready">Адрес №%1$d готов.</string>
     <string name="chess_menu_title">Шахматы</string>
@@ -1515,32 +1457,18 @@
     <string name="chess_invite_sent">Приглашение в шахматы отправлено</string>
     <string name="chess_invited_you">Приглашает вас сыграть в шахматы</string>
     <string name="more_reactions">Другие реакции</string>
-    <string name="confirm_changes">Подтвердить изменения</string>
-    <string name="uploading_avatar">Загрузка аватара...</string>
-    <string name="uploading_banner">Загрузка баннера...</string>
-    <string name="profile_field_removed">%1$s (удалено)</string>
     <string name="create_group">Создать группу</string>
     <string name="create_group_fee_estimate">Примерная комиссия сети ≈ %1$s %2$s (транзакций: %3$d).</string>
     <string name="create_chat">Создать чат</string>
     <string name="add_to_group">Добавить в группу</string>
     <string name="edit_name">Изменить имя</string>
     <string name="domain_label">Домен</string>
-    <string name="primary_badge">ОСНОВНОЙ</string>
     <string name="notification_mode_off">Выкл</string>
     <string name="notification_mode_no_sound">Без звука</string>
     <string name="notification_mode_sound">Звук</string>
     <string name="notification_mode_default">По умолчанию (%1$s)</string>
-    <string name="domain_transfer_sending">Отправка: %1$s</string>
-    <string name="domain_transfer_footer">Передача домена — это две транзакции, поэтому нужно немного подождать. Не закрывайте приложение, пока она не завершится.</string>
-    <string name="domain_transfer_stage_preparing">Подготовка передачи</string>
-    <string name="domain_transfer_stage_fee">Расчёт комиссии</string>
-    <string name="domain_transfer_stage_commit">Отправка транзакции подтверждения</string>
-    <string name="domain_transfer_stage_reveal">Отправка транзакции раскрытия</string>
-    <string name="domain_transfer_stage_verifying">Проверка нового владельца</string>
-    <string name="domain_transfer_stage_working">Обработка</string>
     <string name="checking_address_n">Проверка адреса #%1$d</string>
     <string name="n_found_so_far">Найдено пока: %1$d</string>
-    <string name="no_addresses_with_balance_or_domain_yet">Пока нет адресов с балансом или доменом</string>
     <string name="checks_the_first_thousand_addresses">Проверяет первую тысячу адресов, даже если среди них есть пустые, и продолжает, пока находит новые.</string>
     <string name="first_sync_all_set">Всё готово</string>
     <string name="first_sync_up_to_date">Ваши чаты и история обновлены.</string>
@@ -1570,12 +1498,6 @@
     <string name="chess_notif_lost_on_time">♟️ Время соперника истекло</string>
     <string name="chess_notif_resigned">♟️ Соперник сдался</string>
     <string name="fee_label">Платеж</string>
-    <plurals name="kns_profile_changes_count">
-        <item quantity="one">%d изменение. Каждое отправляется отдельной транзакцией в блокчейн с вашего адреса для чата:</item>
-        <item quantity="few">%d изменения. Каждое отправляется отдельной транзакцией в блокчейн с вашего адреса для чата:</item>
-        <item quantity="many">%d изменений. Каждое отправляется отдельной транзакцией в блокчейн с вашего адреса для чата:</item>
-        <item quantity="other">%d изменения. Каждое отправляется отдельной транзакцией в блокчейн с вашего адреса для чата:</item>
-    </plurals>
     <plurals name="create_group_and_invite">
         <item quantity="one">Создать «%1$s» и пригласить %2$d участника?</item>
         <item quantity="few">Создать «%1$s» и пригласить %2$d участников?</item>
@@ -1594,12 +1516,10 @@
     <string name="payment_notice_fee_from_chatting_address">Ваш адрес для чатов также платит %1$s KAS, чтобы сообщить %2$s об этом платеже.</string>
     <string name="recording_failed_please_try_again">Не удалось записать. Попробуйте ещё раз.</string>
     <string name="message_needs_too_many_coins">Этому сообщению нужно слишком много монет для одной транзакции. Используйте Compound UTXOs для адреса чатов и попробуйте снова.</string>
-    <string name="use_their_domain_name">Использовать доменное имя</string>
     <string name="show_request_as_qr">Показать запрос как QR</string>
     <string name="pr_qr_scan_to_pay_in_kachat">Отсканируйте камерой телефона, чтобы оплатить в K — всё уже заполнено.</string>
     <string name="set_as_name">Сделать именем</string>
     <string name="their_name">Его имя</string>
-    <string name="get_a_kachat_name">Получить имя .kachat</string>
     <string name="composer_gif_subtitle">Отправьте анимированный GIF из вашей медиатеки.</string>
     <string name="group_composer_gif_subtitle">Отправьте анимированный GIF из вашей медиатеки в группу.</string>
     <string name="gif_quality">Качество GIF</string>
@@ -1629,10 +1549,6 @@
     <string name="token_received_title">Получено: %1$s</string>
     <string name="token_received_on_one">На ваш %1$s</string>
     <string name="token_received_on_many">На %1$d ваших адресов</string>
-    <string name="address_tab_domains">Домены</string>
-    <string name="address_domains_none">На этом адресе нет имён %1$s.</string>
-    <string name="address_domains_one">1 домен</string>
-    <string name="address_domains_couldnt_load">Не удалось загрузить</string>
     <string name="connection_not_set">Не задано</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">Скопировать ссылку</string>
@@ -1748,4 +1664,6 @@
     <string name="history_moved">Перемещено</string>
     <string name="history_to_address">На %1$s</string>
     <string name="history_change_to_address">Сдача %1$s на %2$s</string>
+    <string name="cycle_hint_next_page">Переключает на следующую страницу</string>
+    <string name="cycle_hint_next_feed">Переключает на следующую ленту</string>
 </resources>

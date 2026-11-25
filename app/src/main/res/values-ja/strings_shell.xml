@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">統計</string>
     <string name="shell_tab_websites">ウェブサイト</string>
     <string name="shell_kaspa_websites">Kaspa のウェブサイト</string>
-    <string name="shell_customize_dock">ドックをカスタマイズ</string>
-    <string name="shell_your_dock">あなたのドック</string>
-    <string name="shell_always_stays">%1$s は常にドックに表示されます。</string>
-    <string name="shell_dock_full">ドックがいっぱいです。これらを追加するには、ドックから1つ外してください。</string>
-    <string name="shell_hub_order">%1$s に表示される順番です。</string>
-    <string name="shell_move_to">%1$s を %2$s に移動</string>
-    <string name="shell_add_to_dock">%1$s をドックに追加</string>
-    <string name="shell_always_in_dock">常にドックに表示</string>
-    <string name="shell_hub_empty_title">今は何もありません</string>
-    <string name="shell_hub_empty_body">ドックにないものはここに表示されます。「ドックをカスタマイズ」で並べ替えられます。</string>
-    <string name="shell_customize_dock_footer">ドックに置くものを選びます。それ以外は Kaspa Hub にあります。</string>
     <string name="shell_terms_of_use">利用規約</string>
     <string name="shell_message_indexer_footer">KaPost、パブリックチャット、チェスもこのインデクサーから読み込みます。</string>
     <string name="shell_ks_what_counts">集計の対象</string>

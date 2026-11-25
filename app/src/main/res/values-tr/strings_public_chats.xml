@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">Yeni Herkese Açık Sohbet</string>
     <string name="pc_new_public_chat_subtitle">Herkese açık bir odaya katıl veya bir tane oluştur.</string>
     <string name="pc_edit_default_public_chats">Varsayılan Herkese Açık Sohbetleri Düzenle</string>
-    <string name="pc_edit_default_public_chats_subtitle">Varsayılan odaları ve dil odalarını açın veya kapatın.</string>
     <string name="pc_new_public_chat_explainer">Aynı kanal adına katılan herkes orada mesajları görebilir ve gönderebilir - sahibi ya da daveti yoktur.</string>
     <string name="pc_join">Katil</string>
     <string name="pc_back">Geri</string>

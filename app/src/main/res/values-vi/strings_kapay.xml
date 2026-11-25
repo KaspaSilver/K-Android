@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">Nhập tỷ lệ băm của bạn để ước tính thu nhập.</string>
     <string name="kp_export_failed_csv">Xuất thất bại. Không thể ghi tệp CSV</string>
     <string name="kp_fee_amount">Phí %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">Đã tìm thấy %1$d địa chỉ có số dư hoặc tên miền.</string>
-    <string name="kp_found_one_address_balance_domain">Đã tìm thấy 1 địa chỉ có số dư hoặc tên miền.</string>
     <string name="kp_frame_lld_lld_5cb10">Khung %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">Đặt tên cho tài khoản này để bạn có thể nhận ra nó.</string>
     <string name="kp_hide_address">Ẩn địa chỉ</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">Danh mục mới</string>
     <string name="kp_next_block_reward">Phần thưởng khối tiếp theo</string>
     <string name="kp_next_block_reward_reduction">Lần giảm phần thưởng khối tiếp theo</string>
-    <string name="kp_no_addresses_balance_domain_found">Không tìm thấy địa chỉ nào có số dư hoặc tên miền.</string>
     <string name="kp_no_addresses_discovered_yet_15738">Chưa khám phá được địa chỉ nào.</string>
     <string name="kp_no_used_addresses_yet">Chưa có địa chỉ nào đã dùng</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Chưa đủ lịch sử - hãy quay lại sau vài ngày hoạt động.</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">Lưu tệp CSV vào thư mục KaChat trên Nextcloud của bạn.</string>
     <string name="pnc_import_sub">Chọn một tệp CSV từ Nextcloud của bạn.</string>
     <string name="portfolio">Danh mục đầu tư</string>
-    <string name="portfolio_add_address_footer_kachat">Nhập địa chỉ Kaspa hoặc tên miền như name.kachat (tên .kachat được tra trước). Mỗi giao dịch nhận vào địa chỉ này là một lần mua, mỗi giao dịch gửi đi là một lần bán, theo giá KAS lịch sử của ngày đó. Thêm lại cùng địa chỉ sau này chỉ nhập các giao dịch kể từ lần nhập trước.</string>
     <string name="portfolio_add_chatting_address">Thêm địa chỉ trò chuyện</string>
     <string name="portfolio_add_chatting_address_sub">Các lần mua, bán của địa chỉ trò chuyện và mọi phí mạng nó đã trả.</string>
     <string name="portfolio_fees_count_loading">Giao dịch: %1$d. Một số giá vẫn đang tải.</string>

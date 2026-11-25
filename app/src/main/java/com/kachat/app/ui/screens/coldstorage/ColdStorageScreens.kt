@@ -103,7 +103,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.kachat.app.services.ColdStorageAddressDiscovery
 import com.kachat.app.services.ColdStorageManager
 import com.kachat.app.services.ColdStorageSendEngine
-import com.kachat.app.services.KnsService
 import com.kachat.app.services.UtxoEntry
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
@@ -176,7 +175,7 @@ fun ColdStorageListScreen(
         topBar = {
             MainPageHeader(
                 title = stringResource(R.string.cold_storage),
-                banner = { AccountBackupBanner(walletViewModel, onOpenAccountBackup) },
+                // No backup strip: it's on Profile only (iOS 518fdc8c, owner 2026-11-23).
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -437,7 +436,7 @@ fun ColdStorageListScreen(
                         )
                         if (isInvalid) {
                             Text(
-                                importState.errorMessage ?: "Not a valid kpub",
+                                importState.errorMessage ?: stringResource(R.string.shell54_not_valid_kpub),
                                 color = LocalAppColors.current.danger,
                                 style = MaterialTheme.typography.bodySmall,
                             )
@@ -501,14 +500,18 @@ fun ColdStorageDetailScreen(
     var discoverySummary by remember { mutableStateOf<String?>(null) }
     val pullRefreshState = rememberPullToRefreshState()
 
-    LaunchedEffect(accountId) {
-        viewModel.refreshAddresses(accountId)
-    }
+    // Only while the section shows: kept hidden in Kaspa Hub, a LaunchedEffect derived addresses
+    // and rescanned on every Hub tab selection. Showing again reloads, which also covers any
+    // activity skipped below while hidden (iOS 518fdc8c `onScreenPresence`, audit 2026-11-24 #23).
+    val coldHubHidden = com.kachat.app.ui.screens.LocalHubSectionHidden.current
+    val latestColdHubHidden by rememberUpdatedState(coldHubHidden)
+    com.kachat.app.ui.screens.OnScreenPresence(appear = { viewModel.refreshAddresses(accountId) }, disappear = {})
 
     // A receipt or spend on one of this account's addresses: reload, so the funds show without a
-    // manual pull (iOS ColdStorageView's `.ownAddressUtxoActivity`).
+    // manual pull (iOS ColdStorageView's `.ownAddressUtxoActivity`); not while hidden in the Hub.
     LaunchedEffect(accountId) {
         viewModel.ownAddressActivity.collect { changed ->
+            if (latestColdHubHidden) return@collect
             if (!viewModel.isDiscovering.value && viewModel.addresses.value.any { it.address in changed }) {
                 viewModel.refreshAddresses(accountId)
             }
@@ -577,7 +580,7 @@ fun ColdStorageDetailScreen(
                     // Address Actions sheet, where it has room to say what it does.
                     SheetBarIconButton(
                         Icons.Default.Delete,
-                        "Remove account",
+                        stringResource(R.string.remove),
                         onClick = { showDeleteConfirm = true },
                         modifier = Modifier.padding(end = 12.dp),
                         tint = Color.Red,
@@ -806,16 +809,16 @@ fun ColdStorageDetailScreen(
             onGenerate = {
                 showActionsSheet = false
                 viewModel.generateMoreAddresses(accountId) { index ->
-                    if (index != null) IosToasts.show(tr(R.string.kp_address_number_ready, index)) else IosToasts.error("Could not derive a new address.")
+                    if (index != null) IosToasts.show(tr(R.string.kp_address_number_ready, index)) else IosToasts.error(tr(R.string.shell54_new_address_failed))
                 }
             },
             onDiscover = {
                 discoverySummary = null
                 viewModel.refreshAddresses(accountId, userInitiated = true) { count ->
                     val summary = if (count > 0) {
-                        if (count == 1) tr(R.string.kp_found_one_address_balance_domain) else tr(R.string.kp_found_n_addresses_balance_domain, count)
+                        if (count == 1) tr(R.string.names54_found_one_address_balance_username) else tr(R.string.names54_found_n_addresses_balance_username, count)
                     } else {
-                        tr(R.string.kp_no_addresses_balance_domain_found)
+                        tr(R.string.names54_no_addresses_balance_or_username_found)
                     }
                     discoverySummary = summary
                     // Closed the sheet and carried on? Then the summary above has nowhere to
@@ -925,7 +928,7 @@ fun ColdStorageAddressVisibilityScreen(
                 IconButton(onClick = { if (page > 0) page -= 1 }, enabled = page > 0) {
                     Icon(
                         Icons.Default.ChevronLeft,
-                        "Previous page",
+                        stringResource(R.string.previous),
                         tint = if (page > 0) KaspaTeal else LocalAppColors.current.textSecondary.copy(alpha = 0.4f)
                     )
                 }
@@ -936,7 +939,7 @@ fun ColdStorageAddressVisibilityScreen(
                     style = MaterialTheme.typography.bodySmall
                 )
                 IconButton(onClick = { page += 1 }) {
-                    Icon(Icons.Default.ChevronRight, "Next page", tint = KaspaTeal)
+                    Icon(Icons.Default.ChevronRight, stringResource(R.string.next), tint = KaspaTeal)
                 }
             }
         }
@@ -1122,7 +1125,7 @@ private fun ColdAddressRow(
                 onClick = { showMenu = true },
                 modifier = Modifier.size(44.dp)
             ) {
-                Icon(Icons.Default.MoreVert, "Address actions", tint = LocalAppColors.current.textSecondary, modifier = Modifier.size(28.dp))
+                Icon(Icons.Default.MoreVert, stringResource(R.string.actions), tint = LocalAppColors.current.textSecondary, modifier = Modifier.size(28.dp))
             }
         }
 
@@ -2122,23 +2125,27 @@ fun ColdStorageTxHistoryScreen(
     var utxoLabels by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var labelingUtxoKey by remember { mutableStateOf<String?>(null) }
     var labelInput by remember { mutableStateOf("") }
-    // The name service opened from the Domains tab (iOS fe52376).
-    var openedDomainService by remember { mutableStateOf<com.kachat.app.services.NameServiceTLD?>(null) }
+    // A username opened from the Domains tab: its page (iOS 518fdc8c, .kachat only).
+    var openedUsername by remember { mutableStateOf<com.kachat.app.services.kachatnames.NameInfo?>(null) }
 
-    LaunchedEffect(address) {
-        viewModel.loadTxHistory(address)
-        viewModel.loadUtxos(address)
-        utxoLabels = viewModel.getUtxoLabels(address)
+    // Not on every Hub tab selection while Cold Storage is kept hidden (iOS 518fdc8c
+    // `onScreenPresence`, audit 2026-11-24 #23).
+    val historyScope = rememberCoroutineScope()
+    key(address) {
+        com.kachat.app.ui.screens.OnScreenPresence(appear = {
+            historyScope.launch {
+                viewModel.loadTxHistory(address)
+                viewModel.loadUtxos(address)
+                utxoLabels = viewModel.getUtxoLabels(address)
+            }
+        }, disappear = {})
     }
 
-    // A name service opened from this address's Domains tab: its names (iOS fe52376).
-    openedDomainService?.let { tld ->
+    // A username opened from this address's Domains tab: its page (iOS 518fdc8c).
+    openedUsername?.let { name ->
         AboveDock {
-            AddressDomainServiceScreen(
-                address = address,
-                tld = tld,
-                onBack = { openedDomainService = null },
-            )
+            androidx.activity.compose.BackHandler { openedUsername = null }
+            com.kachat.app.ui.screens.KachatLiveNameDetailScreen(initial = name, onBack = { openedUsername = null })
         }
         return
     }
@@ -2262,16 +2269,17 @@ fun ColdStorageTxHistoryScreen(
             // reading only addressRow.balanceSompi showed 0.00000000 KAS above a UTXOs (1) tab
             // holding real coins whenever the account's list wasn't loaded in this ViewModel.
             com.kachat.app.ui.screens.KaspaAddressBalanceCard(label = displayName, sompi = addressBalanceSompi)
-            // The app's tab look (Chats / Group Chats / Public Chats), not a segmented control;
-            // plain names - History, UTXOs, Domains (iOS b96d727/718b88c, fe52376).
-            UnderlineTabBar(
-                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos), stringResource(R.string.address_tab_domains)),
+            // The app's page switch (`PageCycleBar`, iOS 518fdc8c), not a segmented control;
+            // plain names - History, UTXOs, Domains. Each tap fades to the next page.
+            com.kachat.app.ui.components.PageCycleBar(
+                titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.utxos), stringResource(R.string.shell54_usernames)),
                 selectedIndex = selectedTab,
                 onSelect = { selectedTab = it },
                 modifier = Modifier.padding(top = 4.dp),
             )
-            when (selectedTab) {
-                2 -> AddressDomainsTab(address, onOpenService = { openedDomainService = it }, bottomPadding = barInset)
+            com.kachat.app.ui.components.CycleFade(selectedTab, Modifier.weight(1f)) { shownTab ->
+            when (shownTab) {
+                2 -> AddressDomainsTab(address, onOpenName = { openedUsername = it }, bottomPadding = barInset)
                 0 -> when {
                     isLoading && txHistory.isEmpty() -> {
                         Box(modifier = Modifier.fillMaxSize().padding(bottom = barInset), contentAlignment = Alignment.Center) {
@@ -2399,6 +2407,7 @@ fun ColdStorageTxHistoryScreen(
                         }
                     }
                 }
+            }
             }
         }
     }
@@ -2699,7 +2708,7 @@ private fun ColdStorageAddressActionsSheet(
                         ActionSheetRow(
                             icon = Icons.Default.Search,
                             title = stringResource(R.string.discover_addresses),
-                            subtitle = stringResource(R.string.finds_addresses_balance_or_domain),
+                            subtitle = stringResource(R.string.names54_finds_addresses_balance_or_username),
                             onClick = onDiscover,
                         )
                         ActionSheetRow(

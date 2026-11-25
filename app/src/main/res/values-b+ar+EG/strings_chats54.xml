@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">مين يقدر يبعتلك رسايل؟</string>
+    <string name="c54_who_anyone">أي حد</string>
+    <string name="c54_who_usernames">اللي عندهم اسم مستخدم بس</string>
+    <string name="c54_who_row_footer">مين يقدر يبدأ معاك شات. الناس اللي بتكلمهم أصلاً مش هيتأثروا.</string>
+    <string name="c54_who_anyone_footer">أي حد يقدر يبعتلك أول رسالة. هتستنى في طلبات الرسائل لحد ما تقبلها.</string>
+    <string name="c54_who_usernames_footer">بس اللي عندهم اسم مستخدم (اسم .kachat) يقدروا يوصلوا لطلبات الرسائل بتاعتك. أول رسايل من أي حد تاني بتستخبى ومش بيجيلك إشعارات بيها؛ اختار \"أي حد\" عشان تشوفها تاني. الناس اللي بتكلمهم أصلاً مش هيتأثروا.</string>
+    <string name="c54_room_clears_unread">بيشيل علامة الرسايل اللي ماتقرتش من المحادثة العامة دي.</string>
+    <string name="c54_room_no_notifications">مفيش إشعارات من المحادثة العامة دي.</string>
+    <string name="c54_room_notifications_resume">الإشعارات من المحادثة العامة دي هترجع.</string>
+    <string name="c54_room_delete_subtitle">بيشيل المحادثة العامة دي من محادثاتك.</string>
+    <string name="c54_tip_subtitle">ادّي إكرامية لجهة الاتصال دي، زي ما هو متظبط في الإعدادات &gt; التخصيص &gt; الإكراميات.</string>
+    <string name="c54_send_tip">ابعت إكرامية</string>
+    <string name="c54_send_deferred">مستنيين عملاتك تتأكد. هتتبعت لوحدها كمان شوية، فما تبعتهاش تاني.</string>
+    <string name="c54_failed_start_recording">مقدرناش نبدأ التسجيل: %1$s</string>
+    <string name="c54_failed_encode_audio">مقدرناش نرمّز الصوت: %1$s</string>
+    <string name="c54_failed_prepare_audio">مقدرناش نجهّز الصوت: %1$s</string>
+    <string name="c54_sent_a_link">بعت لينك</string>
+    <string name="c54_public_chat_room">أوضة دردشة عامة #%1$s</string>
+    <string name="c54_search_contacts_address_username">دوّر في جهات الاتصال، أو على عنوان أو اسم مستخدم</string>
+    <string name="c54_looking_up_username">بندوّر على اسم المستخدم...</string>
+    <string name="c54_no_contacts_paste_username">لسه معندكش جهات اتصال. الصق عنوان أو اسم مستخدم فوق عشان تعزم حد.</string>
+    <string name="c54_no_contacts_match_username">مفيش جهات اتصال تطابق بحثك. الصق عنوان أو اسم مستخدم عشان تعزم حد جديد.</string>
+    <string name="c54_invites_resent_all">الدعوات اتبعتت تاني لكل الأعضاء.</string>
+    <string name="c54_invite_resent">الدعوة اتبعتت تاني.</string>
+    <string name="c54_room_follows_app_indexer">الأوضة دي رجعت تتبع مفهرس التطبيق.</string>
+    <string name="c54_room_indexer_updated">المفهرس اتحدّث لـ #%1$s.</string>
+    <string name="c54_room_could_not_reach">مقدرناش نوصله: %1$s</string>
+    <string name="c54_tap_open_your_chat">اضغط علشان تفتح دردشتك.</string>
+    <string name="c54_tap_start_chat_on_k">اضغط علشان تبدأ دردشة على K.</string>
+    <string name="c54_stop_recording">وقّف التسجيل</string>
+    <string name="c54_send_voice_message">ابعت رسالة صوتية</string>
+</resources>

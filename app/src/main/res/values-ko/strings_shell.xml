@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">통계</string>
     <string name="shell_tab_websites">웹사이트</string>
     <string name="shell_kaspa_websites">Kaspa 웹사이트</string>
-    <string name="shell_customize_dock">Dock 사용자화</string>
-    <string name="shell_your_dock">내 독</string>
-    <string name="shell_always_stays">%1$s은(는) 항상 Dock에 있습니다.</string>
-    <string name="shell_dock_full">독이 가득 찼습니다. 이 중 하나를 추가하려면 독에서 하나를 빼세요.</string>
-    <string name="shell_hub_order">%1$s에 표시되는 순서입니다.</string>
-    <string name="shell_move_to">%1$s을(를) %2$s(으)로 이동</string>
-    <string name="shell_add_to_dock">%1$s을(를) 독에 추가</string>
-    <string name="shell_always_in_dock">항상 독에 있음</string>
-    <string name="shell_hub_empty_title">지금은 아무것도 없습니다</string>
-    <string name="shell_hub_empty_body">Dock에 없는 항목이 여기에 표시됩니다. Dock 사용자화에서 정리하세요.</string>
-    <string name="shell_customize_dock_footer">Dock에 둘 항목을 고르세요. 나머지는 모두 Kaspa Hub에 있습니다.</string>
     <string name="shell_terms_of_use">이용 약관</string>
     <string name="shell_message_indexer_footer">KaPost, 공개 채팅, 체스도 이 인덱서에서 읽어 옵니다.</string>
     <string name="shell_ks_what_counts">집계 기준</string>

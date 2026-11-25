@@ -66,8 +66,8 @@ fun AppSettingsHubScreen(
 
 /**
  * App-wide Customization page (iOS AppSettingsView's appCustomizationPage): the Appearance /
- * Language / Currency pickers alone - the in-account page's account-tier rows (Customize Dock,
- * Show Fee Estimate) are not here. Language and Currency are menus in the row now, as on iOS, so
+ * Language / Currency pickers alone - the in-account page's account-tier rows (Show Fee
+ * Estimate, Show .kachat Endings, Tipping) are not here. Language and Currency are menus in the row now, as on iOS, so
  * the two navigation callbacks are no longer used; they stay for the callers' sake.
  */
 @Composable

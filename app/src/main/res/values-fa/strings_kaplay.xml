@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">هنوز تورنمنت تمام‌شده‌ای نیست.</string>
     <string name="kaplay_no_finished_tournaments_this_month">هنوز تورنمنت تمام‌شده‌ای در این ماه نیست.</string>
     <string name="kaplay_tab_leaderboard">جدول امتیازات</string>
+    <string name="kp_640de0cb0b2c" formatted="false">کارنامه‌ی شما: %s برد، %s باخت</string>
+    <string name="kp_5d12bd53552c" formatted="false">بازی کنید</string>
+    <string name="kp_3ab5950b358f" formatted="false">با نفر بعدی که می‌پیوندد، یا با یک دوست با کد بازی کنید.</string>
+    <string name="kp_85e2145e7cad" formatted="false">هشت بازیکن، حذفی.</string>
+    <string name="kp_636935a0b48d" formatted="false">پنج ربات، سطح ۱ تا ۵. یکی را ببرید تا بعدی باز شود.</string>
+    <string name="kp_6fba758f3243" formatted="false">به جدول امتیازات بعدی می‌رود</string>
+    <string name="kp_c0fc86977802" formatted="false">حریف گرفت</string>
+    <string name="kp_48cb744b4728" formatted="false">شما گرفتید</string>
+    <string name="kp_76ccff916d06" formatted="false">درخواست ارتباط</string>
+    <string name="kp_73eb05867f7b" formatted="false">باخت به دلیل اتمام زمان</string>
+    <string name="kp_6eac413a29b7" formatted="false">انصراف داد</string>
+    <string name="kp_8a4d6885363d" formatted="false">بازی را پذیرفت</string>
+    <string name="kp_012794aeafb0" formatted="false">بازی را رد کرد</string>
+    <string name="kp_0ac72bc536b1" formatted="false">دعوت به شطرنج</string>
+    <string name="kp_4bb26afc82d3" formatted="false">هنوز بازی 1v1 تمام‌شده‌ای در این ماه نیست.</string>
+    <string name="kp_c56c7d117a52" formatted="false">هنوز تورنمنت تمام‌شده‌ای در این ماه نیست.</string>
 </resources>

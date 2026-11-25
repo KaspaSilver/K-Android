@@ -1,6 +1,10 @@
 package com.kachat.app.ui.screens
 
 import com.kachat.app.ui.theme.IosSymbols
+import com.kachat.app.ui.components.CycleCapsuleButton
+import androidx.compose.ui.layout.layoutId
+import com.kachat.app.ui.components.CycleFade
+import com.kachat.app.ui.components.PageCycleBar
 import com.kachat.app.ui.theme.IosRoundedFontFamily
 import com.kachat.app.ui.theme.iosShadow
 import androidx.compose.foundation.layout.statusBars
@@ -69,8 +73,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -367,8 +369,8 @@ private fun ForceFullScreenDialogWindow() {
 }
 
 /**
- * Feed tab order, matching iOS's `FeedTab.allCases`: Following | Feed | Popular. The tab row and
- * the swipe pager both index into this one list, so they can never disagree about what page 0 is.
+ * Feed order, matching iOS's `FeedTab.allCases`: Following | Feed | Popular - the order the feed
+ * button beside the title steps through, and the index of each feed's hoisted list state.
  */
 private val KaPostsFeedTabs = listOf(
     KaPostsViewModel.FeedTab.FOLLOWING,
@@ -498,6 +500,9 @@ private fun PagingFooterContent(
 private data class KaPostTextParts(
     val paymentRequestLink: KaChatLinkMatch?,
     val botChallengeLink: KaPlayBotChallenge.Match?,
+    /** An arcade score challenge (`kachatarcade://`, iOS 518fdc8c): drawn as a card
+     *  (KaPostArcadeChallengeCard) under the text, and left out of the text itself. */
+    val arcadeChallengeLink: com.kachat.app.services.arcade.ArcadeChallenge.Match?,
     val siteLink: KaChatSiteLink.Match?,
     val webLink: com.kachat.app.services.KaPostLinkPreviewPolicy.Match?,
     val bodyText: String,
@@ -520,6 +525,7 @@ private fun kaPostTextParts(displayedText: String, posterHasKachatName: Boolean)
         // A KaPlay bot challenge link in the post: drawn as a card (KaPostBotChallengeCard) under the
         // text, and left out of the text itself (iOS 9e22075).
         val botChallengeLink = KaPlayBotChallenge.match(displayedText)
+        val arcadeChallengeLink = com.kachat.app.services.arcade.ArcadeChallenge.match(displayedText)
         // A link to KaChat's own site in the post: drawn as a preview card under the text, and left
         // out of the text itself (iOS f81c467). Only for a poster with a .kachat name: anyone else's
         // links never preview.
@@ -537,12 +543,13 @@ private fun kaPostTextParts(displayedText: String, posterHasKachatName: Boolean)
         var text = displayedText
         paymentRequestLink?.let { text = text.replace(it.raw, "") }
         botChallengeLink?.let { text = text.replace(it.matchedText, "") }
+        arcadeChallengeLink?.let { text = text.replace(it.matchedText, "") }
         // Only this one: the same text can also be the start of a longer link to another page.
         siteLink?.let { text = text.replaceFirst(it.matchedText, "") }
         // the previewed link: its card stands in for it
         webLink?.let { text = text.replaceFirst(it.matchedText, "") }
-        val bodyText = if (paymentRequestLink != null || botChallengeLink != null || siteLink != null || webLink != null) text.trim() else displayedText
-        KaPostTextParts(paymentRequestLink, botChallengeLink, siteLink, webLink, bodyText).also { kaPostTextPartsCache.put(key, it) }
+        val bodyText = if (paymentRequestLink != null || botChallengeLink != null || arcadeChallengeLink != null || siteLink != null || webLink != null) text.trim() else displayedText
+        KaPostTextParts(paymentRequestLink, botChallengeLink, arcadeChallengeLink, siteLink, webLink, bodyText).also { kaPostTextPartsCache.put(key, it) }
     }
     // Its card's fetch, redirects and image are then held to the allow-lists (iOS); marked on
     // every use, as the marked set keeps only the newest links.
@@ -577,37 +584,19 @@ private fun <T, R> StateFlow<T>.collectSelectedAsState(vararg keys: Any?, select
 /**
  * The poster display chain (contact alias > .kachat name > shortened address, iOS 3d6fb7c) as
  * LIVE per-address state: recomposes its reader when THIS address's alias or .kachat name lands
- * (the registry's identity cache is snapshot state). A KNS domain isn't identity since 5.2: its
- * branch is kept, unreachable, behind [KachatNamesService.isEnabled]. Mirrors
- * [KaPostsViewModel.posterDisplayName], which stays the one-shot non-reactive variant.
+ * (the registry's identity cache is snapshot state). .kachat is the only name service K reads
+ * (iOS 518fdc8c). Mirrors [KaPostsViewModel.posterDisplayName], which stays the one-shot
+ * non-reactive variant.
  */
 @Composable
 private fun posterDisplayNameState(viewModel: KaPostsViewModel, address: String): String {
     val alias by viewModel.contactAliases.collectSelectedAsState(address) { it[address] }
-    // a KNS name isn't shown (SHOWS_SENDER_KNS): no collector per row for it (audit H5/M12)
-    val kns by senderKnsState(viewModel.senderKnsNames, address)
     val kachat = if (address.isEmpty()) null else com.kachat.app.services.kachatnames.KachatNamesRegistry.kachatName(address)
-    return remember(alias, kachat, kns, address) {
-        KaPostsViewModel.posterName(address, alias, kachat, kns)
+    val unknown = stringResource(R.string.unknown)
+    return remember(alias, kachat, address, unknown) {
+        KaPostsViewModel.posterName(address, alias, kachat, unknown)
     }
 }
-
-/** Nothing: what a row reads in place of a KNS map nothing shows ([KaPostsViewModel.SHOWS_SENDER_KNS]). */
-private val NoSenderKns: State<String?> = object : State<String?> { override val value: String? = null }
-
-/**
- * [address]'s KNS avatar from the poster lookups, as live state - or, while nothing shows it
- * ([KaPostsViewModel.SHOWS_SENDER_KNS]: every avatar is the `.kachat` one), a constant null with
- * no collector, so a row doesn't start one for nothing (audit H5/M12).
- */
-@Composable
-private fun senderAvatarState(viewModel: KaPostsViewModel, address: String): State<String?> =
-    senderKnsState(viewModel.senderProfiles, address)
-
-/** One address's entry of a KNS-lookup map ([senderAvatarState]). */
-@Composable
-private fun senderKnsState(map: kotlinx.coroutines.flow.StateFlow<Map<String, String?>>, address: String): State<String?> =
-    if (KaPostsViewModel.SHOWS_SENDER_KNS) map.collectSelectedAsState(address) { it[address] } else NoSenderKns
 
 /** The live paging state for one surface, as Compose state - sliced per key, so a page load on
  *  one surface no longer recomposes every other open surface (feed tabs, thread, profile tabs). */
@@ -671,8 +660,8 @@ fun KaPostsScreen(
 
 /**
  * The dock's Profile tab (iOS 148a5331 `KaPostsView(rootMode: .myProfile)`): your KaPost profile -
- * banner, avatar, name, follows and bio, then your posts and replies (Posts / Replies swiped
- * sideways). Under the header Edit Profile, Share Profile and Log Out; beside the avatar See All
+ * banner, avatar, name, follows and bio, then your posts and replies (Posts / Replies on the
+ * cycle button). Under the header Edit Profile, Share Profile and Log Out; beside the avatar See All
  * Posts ([onSeeAllPosts]: show the KaPost tab); the compose button; and every notification behind
  * the bell top right ([AllNotificationsSheet]).
  */
@@ -1005,13 +994,8 @@ private fun KaPostsFeedScreen(
     val posterProfile by viewModel.posterProfile.collectAsState()
     val deepLinkTxId by KaPostsDeepLink.pendingPostTxId.collectAsState()
 
-    // The feed pager (swiped, or driven by the tab row - see the HorizontalPager below). One LazyListState per
-    // tab, hoisted here rather than remembered inside the pager page, so each feed keeps its
-    // scroll offset across switches.
-    val feedPagerState = rememberPagerState(
-        initialPage = KaPostsFeedTabs.indexOf(selectedFeed).coerceAtLeast(0),
-        pageCount = { KaPostsFeedTabs.size },
-    )
+    // One LazyListState per feed, hoisted here rather than remembered inside the faded page, so
+    // each feed keeps its scroll offset across switches.
     val followingListState = rememberLazyListState()
     val feedListState = rememberLazyListState()
     val popularListState = rememberLazyListState()
@@ -1026,24 +1010,7 @@ private fun KaPostsFeedScreen(
         KaPostsDock.scrollFeedToTop.collect { pending ->
             if (!pending) return@collect
             KaPostsDock.scrollFeedToTop.value = false
-            feedListStates[feedPagerState.currentPage].animateScrollToItem(0)
-        }
-    }
-    // Two-way sync. Each direction no-ops once the other has caught up, so they can't ping-pong:
-    // a swipe selects the tab (which then finds the pager already there), a tab tap animates the
-    // pager across (which then re-selects the tab it is already on). settledPage rather than
-    // currentPage, and the equality guard, keep selectFeed's network refresh from firing
-    // mid-drag or redundantly on first composition.
-    LaunchedEffect(feedPagerState) {
-        snapshotFlow { feedPagerState.settledPage }.collect { page ->
-            val tab = KaPostsFeedTabs[page]
-            if (tab != viewModel.selectedFeed.value) viewModel.selectFeed(tab)
-        }
-    }
-    LaunchedEffect(selectedFeed) {
-        val target = KaPostsFeedTabs.indexOf(selectedFeed)
-        if (target >= 0 && target != feedPagerState.currentPage) {
-            feedPagerState.animateScrollToPage(target)
+            feedListStates[KaPostsFeedTabs.indexOf(viewModel.selectedFeed.value).coerceAtLeast(0)].animateScrollToItem(0)
         }
     }
 
@@ -1185,14 +1152,6 @@ private fun KaPostsFeedScreen(
     // A pre-written post from another app opens the new-post composer. A composer already open
     // keeps what is being written, and the link's post opens when it closes. A confirmed 0 KAS
     // gets the funding card, as the compose button does (iOS 9e22075 presentPendingComposeLink).
-    // Share to KaPost from a chess win (iOS 148a5331 `shareToKaPosts`): the same pre-written post.
-    val chessShareText by com.kachat.app.services.chess.ChessBotLinks.pendingKaPostCompose.collectAsState()
-    LaunchedEffect(chessShareText, handlesDeepLinks) {
-        if (!handlesDeepLinks) return@LaunchedEffect
-        val text = chessShareText ?: return@LaunchedEffect
-        com.kachat.app.services.chess.ChessBotLinks.pendingKaPostCompose.value = null
-        KaPostsDeepLink.pendingComposeText.value = text
-    }
     val pendingComposeText by KaPostsDeepLink.pendingComposeText.collectAsState()
     LaunchedEffect(pendingComposeText, handlesDeepLinks, showComposer, quoteTarget, replyComposerTarget) {
         if (!handlesDeepLinks) return@LaunchedEffect
@@ -1286,22 +1245,23 @@ private fun KaPostsFeedScreen(
                 Column(modifier = Modifier.fillMaxSize()) {
                     // Every notification, KaPost's and the wallet's, behind the bell top right
                     // (iOS 148a5331 `AllNotificationsBell`); Help moved to Settings.
-                    KaPostsOverlayStatusBar(
-                        trailing = { AllNotificationsBell(onClick = { showAllNotifications = true }) },
-                    )
-                    // Share Profile beside the title (owner's call, iOS 804cbcb7); Edit Profile and
-                    // Log Out stay under your name
+                    // Share Profile top left (iOS 8cb4c88e, owner 2026-11-24: swapped with the
+                    // account chip); Edit Profile and Log Out stay under your name
                     var showTitleShare by remember { mutableStateOf(false) }
                     val myAddress = viewModel.myAddress() ?: ""
+                    KaPostsOverlayStatusBar(
+                        leading = if (myAddress.isEmpty()) null else ({
+                            ProfileShareToolbarButton(onClick = { showTitleShare = true })
+                        }),
+                        trailing = { AllNotificationsBell(onClick = { showAllNotifications = true }) },
+                    )
+                    // you, in glass, beside the title: a tap switches to another saved account
+                    // (iOS 8cb4c88e `ProfileAccountChip`)
                     KaPostsFixedTitle(
                         stringResource(R.string.profile),
                         onOpenBackup = { navController.navigate("account_backup") },
                         accessory = if (myAddress.isEmpty()) null else ({
-                            val titleHaptic = androidx.compose.ui.platform.LocalView.current
-                            KaPostsProfileHeaderButton(stringResource(R.string.profile_share_profile), Icons.Outlined.IosShare) {
-                                titleHaptic.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-                                showTitleShare = true
-                            }
+                            ProfileAccountChip(address = myAddress)
                         }),
                     )
                     if (showTitleShare && myAddress.isNotEmpty()) {
@@ -1339,23 +1299,17 @@ private fun KaPostsFeedScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                 ) {
-                    // Same clickable dot as the chat-thread and broadcast-room headers, top right
-                    // as on every KaPosts screen (iOS KaPosts 865c9ab); opens the connection
-                    // status page.
-                    // the connection dot top left, as on every other KaChat screen (owner's call,
-                    // iOS 148a5331)
-                    KaPostsConnectionDotButton(
-                        onClick = { ConnectionStatusOverlayState.open() },
-                        modifier = Modifier.align(Alignment.CenterStart),
-                    )
+                    // No connection dot (iOS 518fdc8c, owner 2026-11-23: only at the top of
+                    // Settings and on the dock's Settings icon); the bar keeps its 44 height.
+                    Spacer(Modifier.size(44.dp).align(Alignment.CenterStart))
                     BalanceTopBarLabel(modifier = Modifier.align(Alignment.Center))
                 }
-                // The backup strip, above the Feed's own title (iOS e5a9b11).
-                AccountBackupBanner(viewModel = walletViewModel, onOpenBackup = { navController.navigate("account_backup") })
+                // No backup strip here: it's on Profile only (iOS 518fdc8c, owner 2026-11-23).
                 // The hamburger before the title, which is fixed chrome above the feed so a
-                // pull-to-refresh moves nothing but the feed (iOS KaPosts feedMenuButton).
+                // pull-to-refresh moves nothing but the feed (iOS KaPosts feedMenuButton), and the
+                // feed button after it (iOS `feedCycleButton`).
                 Row(
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 6.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -1381,12 +1335,17 @@ private fun KaPostsFeedScreen(
                         fontSize = LargeTitleSize,
                         fontWeight = FontWeight.Bold,
                     )
+                    Spacer(Modifier.weight(1f).widthIn(min = 8.dp))
+                    // One button for the three feeds (owner's call, iOS 518fdc8c: it replaced the
+                    // Following / Feed / Popular tabs): each tap fades to the next.
+                    CycleCapsuleButton(
+                        options = KaPostsFeedTabs,
+                        selection = selectedFeed,
+                        onSelect = { viewModel.selectFeed(it) },
+                        title = { it.label() },
+                        hint = stringResource(R.string.cycle_hint_next_feed),
+                    )
                 }
-                FeedTabsRow(
-                    selected = selectedFeed,
-                    onSelect = { viewModel.selectFeed(it) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
                 HorizontalDivider(color = colors.surfaceVariant)
                 // The indexer is what lists posts: while it's away the feed says why it isn't
                 // complete (iOS ee5ec98 `indexerDownNotice`).
@@ -1404,23 +1363,17 @@ private fun KaPostsFeedScreen(
                     )
                 }
 
-                // Following, Feed and Popular side by side: swipe left and right between them, or
-                // tap the tab row (iOS KaPosts KaPostsFeedPager, 865c9ab). Each touch locks to one
-                // direction until the finger lifts, and only a clearly sideways one (more than 1.3x
-                // as wide as tall) changes pages, holding the lists still while it does
-                // (`feedPagerSwipe`, iOS 63c9861); it always settles on a whole page, and the
-                // underline in the tab row shows which feed you landed on.
-                val feedPagerScope = rememberCoroutineScope()
-                HorizontalPager(
-                    state = feedPagerState,
-                    userScrollEnabled = false,
+                // Following, Feed and Popular: the one picked by the feed button beside the title,
+                // fading in (owner's call, iOS 518fdc8c: no sideways slide or swipe). Each keeps
+                // its place (the list states are hoisted above) and its loaded posts (the view
+                // model's), so a feed comes back where it was left.
+                CycleFade(
+                    target = selectedFeed,
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxWidth()
-                        .feedPagerSwipe(feedPagerState, feedPagerScope),
-                    key = { KaPostsFeedTabs[it] },
-                ) { page ->
-                    val tab = KaPostsFeedTabs[page]
+                        .fillMaxWidth(),
+                ) { tab ->
+                    val page = KaPostsFeedTabs.indexOf(tab).coerceAtLeast(0)
                     // Each tab reads only its own stream; Popular arrives already ranked
                     // ([KaPostsViewModel.popularPosts], sorted on Dispatchers.Default). Collected
                     // only while its page is composed, so the 300-post rank doesn't run on every
@@ -1462,8 +1415,8 @@ private fun KaPostsFeedScreen(
                     ) {
                     val pendingNew by viewModel.pendingNewPosts.collectAsState()
                     val newPostsScope = rememberCoroutineScope()
-                    // Only while this feed is the one on screen: the effect is torn down on a tab
-                    // swipe, so nothing polls for a feed nobody is looking at.
+                    // Only while this feed is the one on screen: the effect is torn down when the
+                    // feed button moves on, so nothing polls for a feed nobody is looking at.
                     if (tab == selectedFeed) {
                         LaunchedEffect(tab) {
                             while (true) {
@@ -1543,9 +1496,9 @@ private fun KaPostsFeedScreen(
                         }
                     } else {
                         // Endless scroll, per tab. Each tab keeps its own cursor in the view
-                        // model, so a swipe away and back resumes exactly where it was. The page
-                        // beside the one on screen is drawn mid-swipe too; only the feed being
-                        // read pulls in more.
+                        // model, so switching away and back resumes exactly where it was. The feed
+                        // fading out is drawn for a moment too; only the feed being read pulls in
+                        // more.
                         EndlessScroll(listState = feedListStates[page], key = tab) {
                             if (tab == viewModel.selectedFeed.value) viewModel.loadMoreFeed(tab)
                         }
@@ -1558,16 +1511,13 @@ private fun KaPostsFeedScreen(
                         )
                         LazyColumn(
                             // Hoisted per tab so each feed keeps its own scroll position when you
-                            // swipe away and back (the pager disposes off-screen pages).
+                            // switch away and back (the fade disposes the feed it leaves).
                             state = feedListStates[page],
                             modifier = Modifier.fillMaxSize(),
                             // The last post scrolls clear of the dock the feed runs under.
                             contentPadding = PaddingValues(bottom = dockInset),
                         ) {
                             items(pageFeed, key = { it.id }) { post ->
-                                if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(post.posterAddress) {
-                                    viewModel.ensureSenderProfileFetched(post.posterAddress)
-                                }
                                 // Thread-root probe: once per commented post, so "View thread"
                                 // can appear on other people's threads too. Only in the feed being
                                 // read: the pages beside it are drawn too (iOS e5a9b11). The tab is
@@ -1759,7 +1709,6 @@ private fun KaPostsFeedScreen(
             },
             quoted = source,
             quotedDisplayName = source?.let { viewModel.posterDisplayName(it.posterAddress) } ?: "",
-            quotedAvatarUrl = source?.let { viewModel.senderProfiles.value[it.posterAddress] },
             isReply = isReplyDraft,
             submitLabel = if (isReplyDraft) stringResource(R.string.reply) else null,
             onDismiss = { editingDraft = null; draftSourcePost = null },
@@ -1874,7 +1823,6 @@ private fun KaPostsFeedScreen(
             // The post being answered renders under the editor - the same card a quote shows.
             quoted = target,
             quotedDisplayName = viewModel.posterDisplayName(target.posterAddress),
-            quotedAvatarUrl = viewModel.senderProfiles.value[target.posterAddress],
             isReply = true,
             submitLabel = stringResource(R.string.reply),
             initialText = restoredComposerText,
@@ -1901,7 +1849,6 @@ private fun KaPostsFeedScreen(
             title = stringResource(R.string.kpui_quote_post),
             quoted = target,
             quotedDisplayName = viewModel.posterDisplayName(target.posterAddress),
-            quotedAvatarUrl = viewModel.senderProfiles.value[target.posterAddress],
             initialText = restoredComposerText,
             onDismiss = { quoteTarget = null; restoredComposerText = "" },
             onSubmit = { text ->
@@ -2156,47 +2103,6 @@ internal fun KaPostsConnectionDotButton(
         contentAlignment = Alignment.Center,
     ) {
         Box(modifier = Modifier.size(12.dp).background(Color(dotColorHex), CircleShape))
-    }
-}
-
-@Composable
-private fun FeedTabsRow(
-    selected: KaPostsViewModel.FeedTab,
-    onSelect: (KaPostsViewModel.FeedTab) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val haptics = LocalView.current
-    // iOS feedTabButton: accent bold when selected, accent at half opacity otherwise, a
-    // full-width 2pt accent underline under the selected tab.
-    Row(modifier = modifier.fillMaxWidth()) {
-        KaPostsFeedTabs.forEach { tab ->
-            val label = tab.label()
-            val isSelected = tab == selected
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable {
-                        haptics.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-                        onSelect(tab)
-                    }
-                    .padding(top = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = label,
-                    color = if (isSelected) KaspaTeal else KaspaTeal.copy(alpha = 0.5f),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(if (isSelected) KaspaTeal else Color.Transparent),
-                )
-            }
-        }
     }
 }
 
@@ -2698,7 +2604,6 @@ fun KaPostCell(
     // collectSelectedAsState): this cell recomposes only when ITS avatar, name, follow state
     // or countdowns change. Collecting the whole maps here subscribed every visible cell to
     // every entry, so each author profile arriving mid-scroll re-ran the entire viewport.
-    val avatarUrl by senderAvatarState(viewModel, post.posterAddress)
     val contactPhoto by viewModel.contactPhotos.collectSelectedAsState(post.posterAddress) { it[post.posterAddress] }
     val name = posterDisplayNameState(viewModel, post.posterAddress)
     val isFollowingPoster by viewModel.following.collectSelectedAsState(post.posterAddress) { post.posterAddress in it }
@@ -2814,10 +2719,10 @@ fun KaPostCell(
         Row(verticalAlignment = Alignment.Top) {
             Box(modifier = Modifier.clickable { onOpenProfile() }) {
                 ContactAvatar(
-                    imageUrl = avatarUrl,
+                    imageUrl = null,
                     fallbackText = name,
                     size = 40.dp,
-                    // A saved contact's own photo overrides the KNS avatar, as everywhere else.
+                    // A saved contact's own photo overrides the .kachat avatar, as everywhere else.
                     backupPhotoBase64 = contactPhoto?.backupPhotoBase64,
                     address = post.posterAddress,
                 )
@@ -2910,6 +2815,8 @@ fun KaPostCell(
                             },
                             viewModel = viewModel,
                             initialText = post.text,
+                            // the text stays as posted (iOS `!editingPost`)
+                            attachesChallenge = false,
                         )
                     }
                     // The three-dots menu is a half sheet, like every other menu in the app,
@@ -3006,7 +2913,7 @@ fun KaPostCell(
                 }
                 // iOS stacks the cell's rows 6pt apart.
                 Spacer(modifier = Modifier.height(6.dp))
-                // ClickableText (not Text): tapping an @mention resolves the KNS domain and
+                // ClickableText (not Text): tapping an @mention resolves the .kachat name and
                 // opens that user's profile, tapping a link opens the Copy/Open dialog (iOS
                 // parity - links never auto-open). ClickableText consumes EVERY tap on the
                 // body though, so plain-text taps must fall through to the row's open-thread
@@ -3097,6 +3004,12 @@ fun KaPostCell(
                     Spacer(modifier = Modifier.height(10.dp))
                     KaPostBotChallengeCard(challenge = link.challenge)
                 }
+                // An arcade score to beat: a card with a Play button, not the link's text. The
+                // post's signer, so the card names `by` only when it's them (audit 2026-11-24 #21).
+                textParts.arcadeChallengeLink?.let { link ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    KaPostArcadeChallengeCard(challenge = link.challenge, author = post.posterAddress)
+                }
                 // A link to KaChat's site: its preview, or the link itself if that can't load.
                 siteLink?.let { link ->
                     Spacer(modifier = Modifier.height(10.dp))
@@ -3150,7 +3063,6 @@ fun KaPostCell(
                         )
                     } else {
                         // Same per-address slices for the quoted author as for the cell's own.
-                        val quotedAvatarUrl by senderAvatarState(viewModel, quoted.posterAddress)
                         val quotedName = posterDisplayNameState(viewModel, quoted.posterAddress)
                         Box(
                             modifier = Modifier.clickable(enabled = quoted.remoteId != null) {
@@ -3160,7 +3072,6 @@ fun KaPostCell(
                             QuotedEmbedCard(
                                 quoted = quoted,
                                 displayName = quotedName,
-                                avatarUrl = quotedAvatarUrl,
                             )
                         }
                     }
@@ -3274,7 +3185,6 @@ private fun markdownPreview(source: String): androidx.compose.ui.text.AnnotatedS
 private fun QuotedEmbedCard(
     quoted: KaPostDraft.QuotedRef,
     displayName: String,
-    avatarUrl: String? = null,
     /** 20 inside a cell's embed, 22 under the composer's editor (iOS). */
     avatarSize: androidx.compose.ui.unit.Dp = 20.dp,
 ) {
@@ -3289,7 +3199,7 @@ private fun QuotedEmbedCard(
         // iOS parity: small avatar + bold name + relative time header row.
         Row(verticalAlignment = Alignment.CenterVertically) {
             ContactAvatar(
-                imageUrl = avatarUrl,
+                imageUrl = null,
                 fallbackText = displayName,
                 size = avatarSize,
                 address = quoted.posterAddress,
@@ -3378,20 +3288,19 @@ private fun EngagementRow(
     // them 18pt apart; each action here carries 4dp of touch padding either side of its icon,
     // which is already 8 of those 18, and the symbols' own frames run a little wider than these
     // glyphs, so a 10dp gap puts the icons as far apart as on the iPhone (measured side by side).
-    // The gaps give way when the row's own contents don't fit - big counts beside Tip - rather
-    // than by screen width: 10, then 4, then 0dp, iOS's 18, 12 and 8pt (a714c97 ViewThatFits)
-    // once the 4dp touch padding is counted. Only if even that is not enough does the row wrap to
-    // a second line, so nothing is ever clipped off the end or pushes the post sideways. Tip keeps
-    // its intrinsic width throughout - iOS gives its label layoutPriority for the same reason.
+    // The gaps give way when the row's own contents don't fit - big counts beside Tip, a large
+    // font, Retry - rather than by screen width: 10, then 4, then 0dp, iOS's 18, 12 and 8pt once
+    // the 4dp touch padding is counted. One pass over items built once ([KaPostActionRowLayout],
+    // iOS 518fdc8c `KaPostActionRowLayout`, audit 2026-11-24 #24): if even the tightest gap
+    // doesn't fit, the last items give up width (their counts truncate), so the row never grows
+    // wider than the post and pushes it sideways.
     Box(Modifier.fillMaxWidth().padding(top = 2.dp)) {
-        val gap = 10.dp
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            FittingActionRow(
+            KaPostActionRowLayout(
                 gaps = listOf(10.dp, 4.dp, 0.dp),
                 // iOS's buttons have no padding, so the comment bubble starts flush with the post
                 // text above it; pulled back by this row's 4dp touch padding to do the same.
-                modifier = Modifier.weight(1f).offset(x = (-4).dp),
-                lineSpacing = 2.dp,
+                leadingInset = 4.dp,
+                modifier = Modifier.fillMaxWidth(),
             ) {
         if (onComment != null) {
             EngagementAction(
@@ -3564,68 +3473,100 @@ private fun EngagementRow(
             // Your own post (no Tip button): the Kaspa mark and the count.
             tipCount(true)
         }
-            }
-            Spacer(modifier = Modifier.width(gap))
             // The trailing edge: on-chain delivery state, mirroring chat bubbles - green check
             // once the K transaction is on the network (for a minute), spinner while submitting,
-            // red Retry when it didn't go through (iOS).
-            DeliveryState(post = post, onRetry = onRetry)
+            // red Retry when it didn't go through (iOS). The layout puts it at the right edge.
+            Box(Modifier.layoutId(KaPostActionRowTrailing)) {
+                DeliveryState(post = post, onRetry = onRetry)
+            }
+            }
+    }
+}
+
+/** Marks the action row's item that sits at its right edge (the delivery state). */
+private object KaPostActionRowTrailing
+
+/**
+ * A post's action row (iOS 518fdc8c `KaPostActionRowLayout`, audit 2026-11-24 #24): one pass over
+ * items built once. Each item's natural width is read (its intrinsic width, so nothing is built
+ * twice) and the row takes the widest of [gaps] that fits the width it's offered; font size, long
+ * counts and Retry are all in the reading. If even the last gap doesn't fit, it keeps that one and
+ * the last items (the leading ones from the end, the delivery state only after them) give up
+ * width - their counts truncate - so the row never grows wider than the post. Items marked
+ * [KaPostActionRowTrailing] sit at the right edge, the rest from the left, starting [leadingInset]
+ * before it (the touch padding that would otherwise push the first icon in).
+ */
+@Composable
+private fun KaPostActionRowLayout(
+    gaps: List<androidx.compose.ui.unit.Dp>,
+    modifier: Modifier = Modifier,
+    leadingInset: androidx.compose.ui.unit.Dp = 0.dp,
+    content: @Composable () -> Unit,
+) {
+    androidx.compose.ui.layout.Layout(content = content, modifier = modifier) { measurables, constraints ->
+        val inset = leadingInset.roundToPx()
+        val isTrailing = measurables.map { it.layoutId == KaPostActionRowTrailing }
+        val widths = measurables.map { it.maxIntrinsicWidth(constraints.maxHeight) }.toMutableList()
+        val available = if (constraints.hasBoundedWidth) constraints.maxWidth + inset else Int.MAX_VALUE
+        val gapPx = gaps.map { it.roundToPx() }
+        val plan = KaPostActionRowPlan.plan(
+            widths = widths,
+            trailing = isTrailing,
+            gaps = gapPx,
+            available = available,
+            smallest = { i -> measurables[i].minIntrinsicWidth(constraints.maxHeight).coerceAtMost(widths[i]) },
+        )
+        val placeables = measurables.mapIndexed { i, m ->
+            m.measure(androidx.compose.ui.unit.Constraints(maxWidth = plan.widths[i].coerceAtLeast(0), maxHeight = constraints.maxHeight))
+        }
+        val height = (placeables.maxOfOrNull { it.height } ?: 0).coerceIn(constraints.minHeight, constraints.maxHeight)
+        val width = if (constraints.hasBoundedWidth) constraints.maxWidth else
+            (plan.widths.sum() + plan.gap * (plan.widths.count { it > 0 } - 1).coerceAtLeast(0) - inset).coerceAtLeast(0)
+        layout(width, height) {
+            var x = -inset
+            placeables.forEachIndexed { i, p ->
+                if (isTrailing[i]) return@forEachIndexed
+                p.placeRelative(x, (height - p.height) / 2)
+                if (p.width > 0) x += p.width + plan.gap
+            }
+            var trailingX = width
+            for (i in placeables.indices.reversed()) {
+                if (!isTrailing[i]) continue
+                val p = placeables[i]
+                p.placeRelative(trailingX - p.width, (height - p.height) / 2)
+                if (p.width > 0) trailingX -= p.width + plan.gap
+            }
         }
     }
 }
 
-/**
- * A post's action row: its items on one line with the widest of [gaps] that lets them all fit (iOS
- * a714c97 `ViewThatFits` over 18, 12 and 8pt gaps), centred vertically. When even the last gap is
- * too wide, it wraps onto further lines [lineSpacing] apart rather than run off the end.
- */
-@Composable
-private fun FittingActionRow(
-    gaps: List<androidx.compose.ui.unit.Dp>,
-    modifier: Modifier = Modifier,
-    lineSpacing: androidx.compose.ui.unit.Dp = 0.dp,
-    content: @Composable () -> Unit,
-) {
-    androidx.compose.ui.layout.Layout(content = content, modifier = modifier) { measurables, constraints ->
-        val placeables = measurables.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
-        val maxWidth = constraints.maxWidth
-        val widths = placeables.sumOf { it.width }
-        val between = (placeables.size - 1).coerceAtLeast(0)
-        val gapPx = gaps.map { it.roundToPx() }
-        val fitting = gapPx.firstOrNull { widths + it * between <= maxWidth }
-        val gap = fitting ?: gapPx.lastOrNull() ?: 0
-        // lines: all on one when a gap fits, else broken where the next item would overflow
-        val lines = mutableListOf<MutableList<androidx.compose.ui.layout.Placeable>>(mutableListOf())
-        var lineWidth = 0
-        for (p in placeables) {
-            val current = lines.last()
-            val needed = if (current.isEmpty()) p.width else lineWidth + gap + p.width
-            if (fitting == null && current.isNotEmpty() && needed > maxWidth) {
-                lines += mutableListOf(p)
-                lineWidth = p.width
-            } else {
-                current += p
-                lineWidth = needed
-            }
+/** The pure arithmetic of [KaPostActionRowLayout], kept apart for unit tests. */
+internal object KaPostActionRowPlan {
+    data class Plan(val gap: Int, val widths: List<Int>)
+
+    /**
+     * The gap and each item's width: the first of [gaps] at which every item fits [available] at
+     * its natural width ([widths]); else the last gap, with the leading items from the end, then
+     * the trailing ones from the end, shrinking toward [smallest] until the row fits. Items of no
+     * width take no gap.
+     */
+    fun plan(widths: List<Int>, trailing: List<Boolean>, gaps: List<Int>, available: Int, smallest: (Int) -> Int): Plan {
+        val sized = widths.toMutableList()
+        val gapCount = (sized.count { it > 0 } - 1).coerceAtLeast(0)
+        val natural = sized.sum()
+        gaps.firstOrNull { natural.toLong() + it.toLong() * gapCount <= available }?.let { return Plan(it, sized) }
+        val gap = gaps.lastOrNull() ?: 0
+        var overflow = natural + gap * gapCount - available
+        val order = sized.indices.filter { !trailing[it] }.reversed() + sized.indices.filter { trailing[it] }.reversed()
+        for (i in order) {
+            if (overflow <= 0) break
+            if (sized[i] <= 0) continue
+            val give = minOf((sized[i] - smallest(i)).coerceAtLeast(0), overflow)
+            if (give <= 0) continue
+            sized[i] -= give
+            overflow -= give
         }
-        val spacing = lineSpacing.roundToPx()
-        val lineHeights = lines.map { line -> line.maxOfOrNull { it.height } ?: 0 }
-        val height = lineHeights.sum() + spacing * (lines.size - 1).coerceAtLeast(0)
-        val width = if (constraints.hasBoundedWidth) maxWidth else lines.maxOf { line ->
-            line.sumOf { it.width } + gap * (line.size - 1).coerceAtLeast(0)
-        }
-        layout(width, height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
-            var y = 0
-            lines.forEachIndexed { i, line ->
-                var x = 0
-                val lineHeight = lineHeights[i]
-                for (p in line) {
-                    p.placeRelative(x, y + (lineHeight - p.height) / 2)
-                    x += p.width + gap
-                }
-                y += lineHeight + spacing
-            }
-        }
+        return Plan(gap, sized)
     }
 }
 
@@ -3762,13 +3703,16 @@ private fun EngagementAction(
         }
         if (count != null && count > 0) {
             Spacer(modifier = Modifier.width(countGap))
-            // Raw integers, as on iOS - no "1.2K".
+            // Raw integers, as on iOS - no "1.2K". Never wraps; truncates only when even the
+            // row's tightest gap can't fit it (KaPostActionRowLayout, audit 2026-11-24 #24).
             Text(
                 text = "$count",
                 color = countTint ?: colors.textSecondary,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -3869,14 +3813,13 @@ fun KaPostComposerDialog(
     title: String,
     quoted: KaPostDraft?,
     quotedDisplayName: String = "",
-    quotedAvatarUrl: String? = null,
     /** Overrides the submit button's wording. A reply says "Reply", not "Post". */
     submitLabel: String? = null,
     /** The card under the editor is the post being ANSWERED, not quoted: "Post your reply". */
     isReply: Boolean = false,
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit,
-    /** Enables @mention autocomplete (chips of 1:1 KNS-domain contacts) when provided. */
+    /** Enables @mention autocomplete (contacts' .kachat names) when provided. */
     viewModel: KaPostsViewModel? = null,
     /** Enables X-style thread posting (+ stacks segments; Post All submits the chain). */
     onSubmitThread: ((List<String>) -> Unit)? = null,
@@ -3898,11 +3841,28 @@ fun KaPostComposerDialog(
     onSchedulePost: ((String, Long) -> Unit)? = null,
     /** A draft's source post hasn't loaded: why, and Post is off until it has (iOS ee5ec98). */
     sourceNotice: String? = null,
+    /** Off when editing a post: its text stays as it is (iOS `!editingPost`). */
+    attachesChallenge: Boolean = true,
 ) {
     val colors = LocalAppColors.current
+    // A KaPlay challenge link (a bot's or an arcade score's) the post carries: taken out of the
+    // text and shown as the card the feed will draw; it goes back on the end when posted (iOS
+    // 518fdc8c `attachedChallenge`, KaPostComposerChallenge).
+    val initialChallenge = remember { if (attachesChallenge) KaPostComposerChallenge.detach(initialText) else null }
+    var attachedChallenge by remember { mutableStateOf(initialChallenge?.first) }
     // TextFieldValue rather than String: the caret offset is what [KeepCaretVisible] below needs
     // to scroll the editor to, and the String overload never exposes it.
-    var text by remember { mutableStateOf(TextFieldValue(initialText)) }
+    var text by remember { mutableStateOf(TextFieldValue(initialChallenge?.second ?: initialText)) }
+    // A challenge link pasted into the text becomes the post's card too, a moment after typing
+    // stops (one challenge a post: the feed draws only the first).
+    LaunchedEffect(text.text) {
+        if (!attachesChallenge || attachedChallenge != null) return@LaunchedEffect
+        kotlinx.coroutines.delay(500)
+        KaPostComposerChallenge.detach(text.text)?.let { (link, rest) ->
+            attachedChallenge = link
+            text = TextFieldValue(rest)
+        }
+    }
     var threadSegments by remember { mutableStateOf(initialThreadSegments) }
     // Poll: two to four options and how long voting stays open (iOS's composer state).
     var pollEnabled by remember { mutableStateOf(initialPollOptions.isNotEmpty()) }
@@ -3925,7 +3885,7 @@ fun KaPostComposerDialog(
     val limit = KaPostDraft.POST_CHARACTER_LIMIT
     // Counted in UTF-8 bytes: a post is paid for and capped by its bytes (iOS 369794e postLength).
     val charCount = remember(text.text) { KaPostDraft.postLength(text.text) }
-    val totalSegments = threadSegments.size + (if (text.text.isNotBlank()) 1 else 0)
+    val totalSegments = threadSegments.size + (if (text.text.isNotBlank() || attachedChallenge != null) 1 else 0)
     // A poll is offered on a fresh post only - never a reply, a quote, an edit or a thread.
     val pollAvailable = onSubmitPoll != null && quoted == null && !isReply && threadSegments.isEmpty()
     val scheduleAvailable = onSchedulePost != null && quoted == null && !isReply && threadSegments.isEmpty()
@@ -3948,12 +3908,10 @@ fun KaPostComposerDialog(
 
     /** Anything written is worth asking about (iOS hasUnsavedContent). */
     fun requestClose() {
-        val hasContent = (listOf(text.text) + threadSegments).any { it.isNotBlank() }
+        val hasContent = (listOf(KaPostComposerChallenge.postBody(text.text, attachedChallenge)) + threadSegments).any { it.isNotBlank() }
         if (hasContent && onSaveDraft != null) showCloseOptions = true else onDismiss()
     }
 
-    // Warm the KNS caches so typing @ has domains to offer.
-    if (com.kachat.app.util.MentionsFeature.ENABLED) LaunchedEffect(Unit) { viewModel?.prefetchMentionCandidates() }
     // The editor is what this screen is for: it takes focus as it appears (iOS isFocused = true).
     LaunchedEffect(Unit) { runCatching { editorFocus.requestFocus() } }
     // The @token being typed at the END of the text ("" right after "@"), or null.
@@ -3963,7 +3921,7 @@ fun KaPostComposerDialog(
         MENTION_QUERY_REGEX
             .find(text.text)?.groupValues?.get(2)?.lowercase()
     }
-    // Anyone-with-a-KNS-domain mentions: debounce-resolve the typed query live.
+    // Anyone with a .kachat name: debounce-resolve the typed query live (iOS 518fdc8c).
     var resolvedAnyDomain by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(mentionQuery) {
         resolvedAnyDomain = null
@@ -3972,31 +3930,16 @@ fun KaPostComposerDialog(
         kotlinx.coroutines.delay(400)
         resolvedAnyDomain = viewModel.resolveMentionQuery(query)
     }
-    // Keyed on the KNS name map too, so a contact whose domain resolves after the @ was typed
-    // appears without another keystroke (iOS observes KNSService).
-    // Collected only while mentions are on: each KNS answer redrew the composer, text field and
-    // all, while typing (audit M15).
-    val knsNames by (viewModel?.takeIf { com.kachat.app.util.MentionsFeature.ENABLED }?.senderKnsNames?.collectAsState()
-        ?: remember { mutableStateOf(emptyMap<String, String?>()) })
-    val mentionSuggestions = remember(text.text, resolvedAnyDomain, knsNames) {
+    // Follows, recent posters and contacts with a username, plus the looked-up name (iOS
+    // KaPostMentionSources, 157790b0). Worked out on every draw, not remembered: names landing
+    // (the registry's revision) redraw the list, so people show as their usernames arrive.
+    // (read here so this draw follows both: the follow set and the names registry)
+    viewModel?.following?.collectAsState()?.value
+    com.kachat.app.services.kachatnames.KachatNamesRegistry.identityRevision.collectAsState().value
+    val mentionSuggestions = run {
         val query = mentionQuery
         if (query == null || viewModel == null) emptyList()
-        else {
-            // Matched on the bare name, because that is what gets typed, but offered and
-            // inserted in full: a domain keeps its .kas.
-            val contacts = viewModel.mentionCandidates()
-                .map { it.first }
-                .filter { query.isEmpty() || it.startsWith(query) }
-                .sorted()
-                .map { viewModel.fullKasName(it) }
-            // contacts' .kachat names come first
-            val all = viewModel.kachatMentionCandidates(query) + contacts
-            // a live-resolved name matching the query (any service, .kachat first) rides along
-            val extra = resolvedAnyDomain
-            if (extra != null && extra !in all && (query.isEmpty() || extra.startsWith(query))) {
-                all + extra
-            } else all
-        }
+        else viewModel.kachatMentionCandidates(query, resolvedAnyDomain)
     }
 
     Dialog(
@@ -4024,7 +3967,10 @@ fun KaPostComposerDialog(
                         subtitle = stringResource(R.string.kpui_save_draft_subtitle),
                     ) {
                         showCloseOptions = false
-                        onSaveDraft?.invoke(text.text, threadSegments)
+                        onSaveDraft?.invoke(
+                            if (attachedChallenge == null) text.text else KaPostComposerChallenge.postBody(text.text, attachedChallenge),
+                            threadSegments,
+                        )
                         onDismiss()
                     }
                     ActionSheetRow(
@@ -4086,7 +4032,8 @@ fun KaPostComposerDialog(
                         .clip(RoundedCornerShape(50))
                         .background(if (canPost) KaspaTeal else colors.surface)
                         .clickable(enabled = canPost) {
-                            val trimmed = text.text.trim()
+                            // with the attached challenge link on the end
+                            val trimmed = KaPostComposerChallenge.postBody(text.text, attachedChallenge)
                             if (pollEnabled && onSubmitPoll != null) {
                                 if (trimmed.isEmpty() || !pollIsValid) return@clickable
                                 onSubmitPoll(
@@ -4163,8 +4110,8 @@ fun KaPostComposerDialog(
                 }
                 HorizontalDivider(color = colors.surfaceVariant)
             }
-            // @mention autocomplete: a SCROLLABLE vertical list of the KNS domains of everyone
-            // you've chatted with (plus a live-resolved any-KNS match), iOS/group-chat style.
+            // @mention autocomplete: a SCROLLABLE vertical list of the usernames of people you
+            // follow, recent posters and contacts (plus a live-resolved match), iOS/group-chat style.
             // Above the editor so the keyboard can never hide it.
             if (com.kachat.app.util.MentionsFeature.ENABLED && mentionSuggestions.isNotEmpty()) {
                 KaPostMentionSuggestionList(
@@ -4263,6 +4210,10 @@ fun KaPostComposerDialog(
                         },
                     )
                 }
+            }
+            // The attached challenge as the card the feed will draw, with an x that takes it off.
+            attachedChallenge?.let { link ->
+                KaPostComposerChallengeCard(link, onRemove = { attachedChallenge = null })
             }
             // Poll and Schedule, as chips under the editor - only on a fresh post (iOS's extrasRow).
             if (pollAvailable || scheduleAvailable) {
@@ -4496,7 +4447,7 @@ fun KaPostComposerDialog(
             }
             // Live network-fee estimate while typing (Settings > Show Fee Estimate), matching
             // the chat composer's behaviour (iOS feeEstimateRow).
-            val trimmedForFee = text.text.trim()
+            val trimmedForFee = KaPostComposerChallenge.postBody(text.text, attachedChallenge)
             val fee = if (showFeeEstimate && trimmedForFee.isNotEmpty() && viewModel != null) {
                 remember(trimmedForFee) { viewModel.estimatePostFeeSompi(trimmedForFee) }
             } else null
@@ -4520,7 +4471,6 @@ fun KaPostComposerDialog(
                             timestamp = it.timestamp,
                         ),
                         displayName = quotedDisplayName,
-                        avatarUrl = quotedAvatarUrl,
                         avatarSize = 22.dp,
                     )
                 }
@@ -4577,8 +4527,8 @@ private fun clampToCharacterLimit(value: TextFieldValue, limit: Int): TextFieldV
 }
 
 /**
- * The @mention list above an editor: the KNS domains of everyone you've chatted with plus a
- * live-resolved any-KNS match. Short lists hug their content; longer ones scroll at a fixed
+ * The @mention list above an editor: the usernames of people you follow, recent posters and
+ * contacts plus a live-resolved match ([com.kachat.app.util.KaPostMentionSources]). Short lists hug their content; longer ones scroll at a fixed
  * height (~4.5 rows, so it visibly reads as scrollable). iOS KaPostMentionSuggestionBar.
  */
 @Composable
@@ -5028,9 +4978,6 @@ fun KaPostThreadOverlay(
                         }
                     }
                     items(threadChain, key = { "chain-${it.id}" }) { segment ->
-                        if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(segment.posterAddress) {
-                            viewModel.ensureSenderProfileFetched(segment.posterAddress)
-                        }
                         // The chain rule is drawn behind the segment, not sized with
                         // IntrinsicSize.Min: the cell's SubcomposeLayouts throw on intrinsic
                         // measurement (same crash as the nested replies below).
@@ -5084,9 +5031,6 @@ fun KaPostThreadOverlay(
                     }
                 }
                 items(visibleComments, key = { it.id }) { comment ->
-                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(comment.posterAddress) {
-                        viewModel.ensureSenderProfileFetched(comment.posterAddress)
-                    }
                     ThreadCommentNode(
                         comment = comment,
                         expanded = comment.id in expandedIds,
@@ -5241,13 +5185,16 @@ private fun KaPostTipFlow(
 }
 
 /** "What are you tipping in?": Kaspa with the chatting address's balance, kUSDT with its own
- *  (iOS f954738 `KaPostTipFlow.chooser`). */
+ *  (iOS f954738 `KaPostTipFlow.chooser`). Also a chat's Tip (ChatTip.kt). */
 @Composable
-private fun KaPostTipAssetChooser(
+internal fun KaPostTipAssetChooser(
     viewModel: KaPostsViewModel,
     onPick: (com.kachat.app.repository.KaPostsTipAsset) -> Unit,
     onDismiss: () -> Unit,
     walletViewModel: WalletViewModel = hiltViewModel(),
+    /** A tip on a post (KaPost's Tip); false for a chat's Tip, where nothing is counted, so kUSDT
+     *  is just "kUSDT" (iOS 518fdc8c `KaPostTipFlow`: `tip == nil`). */
+    forPost: Boolean = true,
 ) {
     val colors = LocalAppColors.current
     val haptic = com.kachat.app.util.rememberHaptics()
@@ -5290,7 +5237,7 @@ private fun KaPostTipAssetChooser(
                         com.kachat.app.ui.screens.tokens.TokenIcon(com.kachat.app.services.tokens.WalletToken.KUSDT, size = 44.dp)
                     },
                     title = stringResource(R.string.kp5_tip_in_kusdt),
-                    subtitle = stringResource(R.string.kp5_tip_not_counted),
+                    subtitle = if (forPost) stringResource(R.string.kp5_tip_not_counted) else com.kachat.app.services.tokens.WalletToken.KUSDT.symbol,
                     amount = kusdtText,
                 ) {
                     haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
@@ -5448,9 +5395,8 @@ private fun ThreadReplyComposer(
                 .alpha(if (fundingGateActive) 0.45f else 1f),
         ) {
             // @mention autocomplete for COMMENTS - identical machinery to the post composer:
-            // KNS domains of everyone you've chatted with, plus a live any-KNS resolve of the
-            // typed query. Shown above the input so the keyboard can never hide it.
-            if (com.kachat.app.util.MentionsFeature.ENABLED) LaunchedEffect(Unit) { viewModel.prefetchMentionCandidates() }
+            // contacts' .kachat names, plus a live resolve of the typed query. Shown above the
+            // input so the keyboard can never hide it.
             // only with mentions on (audit M15), as in the post composer
             val replyMentionQuery = remember(replyText) {
                 if (!com.kachat.app.util.MentionsFeature.ENABLED) return@remember null
@@ -5465,27 +5411,13 @@ private fun ThreadReplyComposer(
                 kotlinx.coroutines.delay(400)
                 replyResolvedAnyDomain = viewModel.resolveMentionQuery(query)
             }
-            val knsNames by (if (com.kachat.app.util.MentionsFeature.ENABLED) viewModel.senderKnsNames.collectAsState()
-                else remember { mutableStateOf(emptyMap<String, String?>()) })
-            val replyMentionSuggestions = remember(replyText, replyResolvedAnyDomain, knsNames) {
-                val query = replyMentionQuery
-                if (query == null) emptyList()
-                else {
-                    // Matched bare, offered and inserted in full - see the composer above.
-                    val contacts = viewModel.mentionCandidates()
-                        .map { it.first }
-                        .filter { query.isEmpty() || it.startsWith(query) }
-                        .sorted()
-                        .map { viewModel.fullKasName(it) }
-                    // contacts' .kachat names come first
-                    val all = viewModel.kachatMentionCandidates(query) + contacts
-                    // a live-resolved name matching the query (any service, .kachat first)
-                    val extra = replyResolvedAnyDomain
-                    if (extra != null && extra !in all && (query.isEmpty() || extra.startsWith(query))) {
-                        all + extra
-                    } else all
-                }
-            }
+            // follows, recent posters and contacts with a username, as in the composer above:
+            // worked out on every draw, so names landing redraw the list (iOS 157790b0)
+            viewModel.following.collectAsState().value
+            com.kachat.app.services.kachatnames.KachatNamesRegistry.identityRevision.collectAsState().value
+            val replyMentionSuggestions = replyMentionQuery?.let { query ->
+                viewModel.kachatMentionCandidates(query, replyResolvedAnyDomain)
+            } ?: emptyList()
             if (com.kachat.app.util.MentionsFeature.ENABLED && replyMentionSuggestions.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 KaPostMentionSuggestionList(
@@ -5536,21 +5468,30 @@ private fun ThreadReplyComposer(
                     },
                 )
                 KaPostCharacterMeter(count = charCount)
-                Icon(
-                    Icons.Default.ArrowCircleUp,
-                    contentDescription = stringResource(R.string.reply),
-                    tint = if (canSend) KaspaTeal else colors.textSecondary,
+                // A 44dp target around the 28dp arrow, named Send (iOS 518fdc8c, audit 2026-11-24 #39).
+                Box(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(44.dp)
                         .clip(CircleShape)
-                        .clickable(enabled = canSend) {
+                        .clickable(
+                            enabled = canSend,
+                            role = androidx.compose.ui.semantics.Role.Button,
+                        ) {
                             hapticView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
                             val trimmed = replyText.trim()
                             onTextChange(TextFieldValue(""))
                             focusManager.clearFocus()
                             onSubmit(trimmed)
                         },
-                )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.ArrowCircleUp,
+                        contentDescription = stringResource(R.string.send),
+                        tint = if (canSend) KaspaTeal else colors.textSecondary,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
             }
         }
         if (fundingGateActive) {
@@ -5648,9 +5589,6 @@ private fun ThreadCommentNode(
                             }
                         } else {
                             replies.forEach { reply ->
-                                if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(reply.posterAddress) {
-                                    viewModel.ensureSenderProfileFetched(reply.posterAddress)
-                                }
                                 KaPostCell(
                                     post = reply,
                                     viewModel = viewModel,
@@ -5831,26 +5769,18 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
     /** Your profile (the dock's Profile tab): See All Posts beside the avatar opens the KaPost
      *  tab, wherever it lives (iOS 148a5331). */
     onSeeAllPosts: (() -> Unit)? = null,
-    /** Share Profile in the row under your name; the Profile tab has it beside its title
-     *  instead (iOS 804cbcb7), the profile overlay, which has no title, keeps it here. */
+    /** Share Profile in the row under your name; the Profile tab has it top left instead (iOS
+     *  8cb4c88e), the profile overlay, which has no title, keeps it here. */
     shareInHeaderRow: Boolean = true,
 ) {
     val colors = LocalAppColors.current
     var showLogoutConfirmation by remember { mutableStateOf(false) }
     var showShareProfile by remember { mutableStateOf(false) }
-    // Per-address slices for THIS profile's chrome (see collectSelectedAsState): the rows
-    // below trigger a KNS fetch per author as they scroll in, and collecting the whole maps
-    // here meant every one of those results recomposed the entire overlay - banner, header
-    // and both pager pages - mid-scroll.
-    val profileAvatarUrl by senderAvatarState(viewModel, address)
-    val knsBannerUrl by senderKnsState(viewModel.senderBanners, address)
-    val knsBio by senderKnsState(viewModel.senderBios, address)
     // Banner and bio are the .kachat profile's, yours and a tapped poster's alike, on every
-    // network (iOS 3d6fb7c KachatLive.profileBanner / profileBio); the KNS ones only with the
-    // .kachat UI off (unreachable, kept as the switch-back).
+    // network (iOS 3d6fb7c KachatLive.profileBanner / profileBio; .kachat only since 518fdc8c).
     val kachatProfile = kachatProfileBannerAndBio(address)
-    val profileBannerUrl = kachatProfile.first ?: knsBannerUrl.takeUnless { KachatNamesService.isEnabled }
-    val profileBio = kachatProfile.second ?: knsBio.takeUnless { KachatNamesService.isEnabled }
+    val profileBannerUrl = kachatProfile.first
+    val profileBio = kachatProfile.second
     val profilePhoto by viewModel.contactPhotos.collectSelectedAsState(address) { it[address] }
     val following by viewModel.following.collectAsState()
     val posterProfile by viewModel.posterProfile.collectAsState()
@@ -5874,20 +5804,18 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
     val hapticView = LocalView.current
 
     var selectedTab by remember { mutableStateOf(0) } // 0 = Posts, 1 = Replies
-    // the posts under the header slide with a Posts/Replies swipe or tap (iOS 804cbcb7)
-    val tabSlide = rememberProfileTabSlide(selectedTab)
+    // the posts under the header fade when the cycle button switches Posts and Replies (iOS
+    // 518fdc8c: no sideways swipe)
+    val tabFade = rememberProfileTabFade(selectedTab)
     val name = posterDisplayNameState(viewModel, address)
     // One list for the whole page, header included, rather than a pager holding two. The banner,
     // bio and tab row are the list's first item, so they scroll up out of the way while reading
-    // instead of holding most of a phone screen for a name already read. The cost is the
-    // horizontal Posts/Replies swipe: a pager needs its pages to own their scrolling, which is
-    // exactly what puts the header outside them.
+    // instead of holding most of a phone screen for a name already read.
     val profileListState = rememberLazyListState()
     // Posts and Replies are separate paging surfaces (separate endpoints, separate cursors), so
     // each pager page carries its own load-more trigger and footer.
     val profilePubkey = remember(isMine, pubkey, posterProfile?.pubkey) { viewModel.profilePubkey(isMine) }
 
-    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(address) { viewModel.ensureSenderProfileFetched(address) }
 
     val repliesPage = selectedTab == 1
     val pageItems = if (repliesPage) repliesList else myPostsList
@@ -5912,15 +5840,10 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
             .clipToBounds()
             .nestedScroll(pullRefreshState.nestedScrollConnection),
     ) {
-    val swipeHapticView = androidx.compose.ui.platform.LocalView.current
     LazyColumn(
         state = profileListState,
-        // slide left or right to change between Posts and Replies (owner's call, iOS 148a5331
-        // `ProfileTabSwipe`)
-        modifier = Modifier.fillMaxSize().profileTabSwipe(selectedTab, tabCount = 2, slide = tabSlide) {
-            swipeHapticView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-            selectedTab = it
-        },
+        // Posts and Replies change only with the cycle button (owner, iOS 518fdc8c)
+        modifier = Modifier.fillMaxSize(),
         // The last row scrolls clear of the dock when the page is the Profile tab.
         contentPadding = PaddingValues(bottom = bottomInset),
     ) {
@@ -5944,8 +5867,8 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                 // Avatar overlapping the banner, X-style, with a 3dp ring in the page
                 // background so it reads as sitting on top of the banner. The slot is
                 // only as tall as the part below the banner (82 - 38), so nothing under
-                // it has to be offset back up. Someone else's Follow and Chat sit beside it,
-                // above the name, so a long name never squeezes them (iOS KaPosts 472cb72).
+                // it has to be offset back up. Someone else's Follow and Chat sit under the
+                // follow counts (iOS 518fdc8c).
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(44.dp),
                     verticalAlignment = Alignment.Bottom,
@@ -5964,7 +5887,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                             contentAlignment = Alignment.Center,
                         ) {
                             ContactAvatar(
-                                imageUrl = profileAvatarUrl,
+                                imageUrl = null,
                                 fallbackText = name,
                                 size = 76.dp,
                                 backupPhotoBase64 = profilePhoto?.backupPhotoBase64,
@@ -5979,41 +5902,6 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                         Spacer(Modifier.weight(1f))
                         KaPostsProfileHeaderButton(stringResource(R.string.kaposts_see_all_posts), Icons.Outlined.Newspaper) {
                             onSeeAllPosts()
-                        }
-                    }
-                    if (!isMine) {
-                        Spacer(Modifier.weight(1f))
-                        if (!isOwnAddress) {
-                            val isFollowing = address in following
-                            Button(
-                                onClick = {
-                                    hapticView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-                                    viewModel.toggleFollow(address, pubkey)
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isFollowing) colors.textSecondary.copy(alpha = 0.35f) else KaspaTeal,
-                                    contentColor = if (isFollowing) colors.textPrimary else Color.Black,
-                                ),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                modifier = Modifier.height(30.dp),
-                            ) {
-                                Text(if (isFollowing) stringResource(R.string.l53_feed_tab_following) else stringResource(R.string.kpui_follow), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }
-                        }
-                        val chatContext = LocalContext.current
-                        OutlinedButton(
-                            onClick = {
-                                hapticView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-                                openChatInKaChat(chatContext, address)
-                            },
-                            border = androidx.compose.foundation.BorderStroke(1.dp, KaspaTeal.copy(alpha = 0.5f)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = KaspaTeal),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                            modifier = Modifier.height(30.dp),
-                        ) {
-                            Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text(stringResource(R.string.kpui_chat), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                     }
                 }
@@ -6047,6 +5935,48 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                             Text(stringResource(R.string.kpui_followers), color = colors.textSecondary, fontSize = 15.sp)
                         }
                     }
+                    if (!isMine) {
+                        // Follow and Chat under the follow counts (owner's call, iOS 518fdc8c), so a
+                        // long name never squeezes them; a size up from small (owner, 2026-11-24).
+                        Row(
+                            modifier = Modifier.padding(top = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (!isOwnAddress) {
+                                val isFollowing = address in following
+                                Button(
+                                    onClick = {
+                                        hapticView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                                        viewModel.toggleFollow(address, pubkey)
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (isFollowing) colors.textSecondary.copy(alpha = 0.35f) else KaspaTeal,
+                                        contentColor = if (isFollowing) colors.textPrimary else Color.Black,
+                                    ),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 6.dp),
+                                    modifier = Modifier.height(36.dp),
+                                ) {
+                                    Text(if (isFollowing) stringResource(R.string.l53_feed_tab_following) else stringResource(R.string.kpui_follow), fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1)
+                                }
+                            }
+                            val chatContext = LocalContext.current
+                            OutlinedButton(
+                                onClick = {
+                                    hapticView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
+                                    openChatInKaChat(chatContext, address)
+                                },
+                                border = androidx.compose.foundation.BorderStroke(1.dp, KaspaTeal.copy(alpha = 0.5f)),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = KaspaTeal),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 6.dp),
+                                modifier = Modifier.height(36.dp),
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.kpui_chat), fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1)
+                            }
+                        }
+                    }
                     profileBio?.takeIf { it.isNotBlank() }?.let { bio ->
                         Box(Modifier.padding(top = 2.dp)) { ExpandableBioText(bio) }
                     }
@@ -6068,8 +5998,8 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                             }
                             if (address.isNotEmpty()) {
                                 // Profile is the dock's Profile tab in KaChat: Edit Profile and Log
-                                // Out, which lived on it; Share Profile sits beside the Profile
-                                // title there (iOS 804cbcb7).
+                                // Out, which lived on it; Share Profile sits top left there
+                                // (iOS 8cb4c88e).
                                 if (shareInHeaderRow) {
                                     KaPostsProfileHeaderButton(stringResource(R.string.profile_share_profile), Icons.Outlined.IosShare) {
                                         showShareProfile = true
@@ -6109,37 +6039,18 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                     }
                 }
                 HorizontalDivider(color = colors.surfaceVariant)
-                // iOS profileFeedTabBar: accent bold / accent at half, full-width 2.5dp underline.
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    listOf(stringResource(R.string.kpui_posts), stringResource(R.string.kpui_replies)).forEachIndexed { index, label ->
-                        val isSelected = index == selectedTab
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-                                    hapticView.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
-                                    selectedTab = index
-                                }
-                                .padding(top = 10.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Text(
-                                label,
-                                color = if (isSelected) KaspaTeal else KaspaTeal.copy(alpha = 0.5f),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(2.5.dp)
-                                    .background(if (isSelected) KaspaTeal else Color.Transparent),
-                            )
-                        }
-                    }
+                // iOS profileFeedTabBar: Posts / Replies on the app's cycle button, fading to the
+                // other page as KaPost's feed button does (owner, iOS 518fdc8c). No sideways swipe.
+                val profileTabTitles = listOf(stringResource(R.string.kpui_posts), stringResource(R.string.kpui_replies))
+                Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+                    CycleCapsuleButton(
+                        options = listOf(0, 1),
+                        selection = selectedTab,
+                        onSelect = { selectedTab = it },
+                        title = { profileTabTitles[it] },
+                        hint = stringResource(R.string.cycle_hint_next_page),
+                    )
                 }
-                HorizontalDivider(color = colors.surfaceVariant)
             }
         }
         val items = pageItems
@@ -6147,7 +6058,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
             item(key = "empty") {
                 val loading = if (isMine) isLoadingMyProfile else posterProfile?.isLoading == true
                 Column(
-                    modifier = Modifier.then(tabSlide.itemModifier).fillMaxWidth().padding(vertical = 40.dp, horizontal = 40.dp),
+                    modifier = Modifier.then(tabFade.itemModifier).fillMaxWidth().padding(vertical = 40.dp, horizontal = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     if (loading) {
@@ -6184,10 +6095,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
             }
         } else {
             items(items, key = { "profile-${it.id}" }) { post ->
-                if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(post.posterAddress) {
-                    viewModel.ensureSenderProfileFetched(post.posterAddress)
-                }
-                Column(tabSlide.itemModifier) {
+                Column(tabFade.itemModifier) {
                 KaPostCell(
                     post = post,
                     viewModel = viewModel,
@@ -6208,7 +6116,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                 )
                 }
             }
-            pagingFooter(pagePaging, keySuffix = "profile-$selectedTab", modifier = tabSlide.itemModifier) {
+            pagingFooter(pagePaging, keySuffix = "profile-$selectedTab", modifier = tabFade.itemModifier) {
                 viewModel.loadMoreProfile(isMine, replies = repliesPage, manual = true)
             }
         }
@@ -6274,12 +6182,13 @@ fun KaPostsSearchOverlay(
                 placeholder = stringResource(R.string.kpui_posts_and_people),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
-            // iOS: Picker(.segmented), 16 in, 8 above the results.
-            KaPostsSegmentedPicker(
+            // The cycle button every other page switch uses (iOS 518fdc8c, audit 2026-11-24 #37:
+            // it replaced the segmented picker).
+            PageCycleBar(
                 titles = listOf(stringResource(R.string.kpui_posts), stringResource(R.string.kpui_people)),
-                selected = if (showPeople) 1 else 0,
+                selectedIndex = if (showPeople) 1 else 0,
                 onSelect = { showPeople = it == 1 },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp),
+                modifier = Modifier.padding(bottom = 4.dp),
             )
 
             if (query.isBlank()) {
@@ -6337,8 +6246,6 @@ fun KaPostsSearchOverlay(
             LazyColumn(Modifier.fillMaxSize()) {
                 if (showPeople) {
                     items(peopleResults, key = { it.address }) { person ->
-                        if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(person.address) { viewModel.ensureSenderProfileFetched(person.address) }
-                        val personAvatar by senderAvatarState(viewModel, person.address)
                         val personName = posterDisplayNameState(viewModel, person.address)
                         Row(
                             modifier = Modifier
@@ -6348,7 +6255,7 @@ fun KaPostsSearchOverlay(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            ContactAvatar(imageUrl = personAvatar, fallbackText = personName, size = 36.dp, address = person.address)
+                            ContactAvatar(imageUrl = null, fallbackText = personName, size = 36.dp, address = person.address)
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     personName,
@@ -6562,11 +6469,7 @@ internal fun KaPostsNotificationsList(
                         return@items
                     }
                     val item = (row as KaPostsNotificationRow.Post).item
-                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(item.actorAddress) {
-                        viewModel.ensureSenderProfileFetched(item.actorAddress)
-                    }
                     // Per-actor slices: one avatar/name landing repaints its own row only.
-                    val actorAvatar by senderAvatarState(viewModel, item.actorAddress)
                     val actorPhoto by viewModel.contactPhotos
                         .collectSelectedAsState(item.actorAddress) { it[item.actorAddress] }
                     val actorName = posterDisplayNameState(viewModel, item.actorAddress)
@@ -6585,7 +6488,7 @@ internal fun KaPostsNotificationsList(
                         // bottom-trailing on a page-background disc (iOS itemRow).
                         Box {
                             ContactAvatar(
-                                imageUrl = actorAvatar,
+                                imageUrl = null,
                                 fallbackText = actorName,
                                 size = 38.dp,
                                 backupPhotoBase64 = actorPhoto?.backupPhotoBase64,
@@ -7052,16 +6955,14 @@ fun KaPostsFollowListOverlay(
         } else {
             LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                 items(list, key = { it.address }) { entry ->
-                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(entry.address) { viewModel.ensureSenderProfileFetched(entry.address) }
                     // Per-address slices: one avatar/name landing repaints its own row only.
-                    val entryAvatar by senderAvatarState(viewModel, entry.address)
                     val entryName = posterDisplayNameState(viewModel, entry.address)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
                     ) {
                         ContactAvatar(
-                            imageUrl = entryAvatar,
+                            imageUrl = null,
                             fallbackText = entryName,
                             size = 38.dp,
                             address = entry.address,
@@ -7297,16 +7198,14 @@ fun KaPostEngagementOverlay(
                 } else {
                     LazyColumn(state = listState) {
                         items(rows, key = { it.actionTxId }) { entry ->
-                            if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(entry.actorAddress) { viewModel.ensureSenderProfileFetched(entry.actorAddress) }
                             // Per-actor slices: one avatar/name landing repaints its own row only.
-                            val actorAvatar by senderAvatarState(viewModel, entry.actorAddress)
                             val actorName = posterDisplayNameState(viewModel, entry.actorAddress)
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
                             ) {
                                 ContactAvatar(
-                                    imageUrl = actorAvatar,
+                                    imageUrl = null,
                                     fallbackText = actorName,
                                     size = 38.dp,
                                     address = entry.actorAddress,
@@ -7474,15 +7373,13 @@ private fun KaPostTipRow(
 ) {
     val colors = LocalAppColors.current
     val address = remember(tip.userPublicKey) { com.kachat.app.services.KaPostsService.kaspaAddressFromPubkey(tip.userPublicKey).orEmpty() }
-    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(address) { if (address.isNotEmpty()) viewModel.ensureSenderProfileFetched(address) }
-    val avatar by senderAvatarState(viewModel, address)
     val name = if (address.isEmpty()) tip.userPublicKey else posterDisplayNameState(viewModel, address)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
     ) {
         ContactAvatar(
-            imageUrl = avatar,
+            imageUrl = null,
             fallbackText = name,
             size = 38.dp,
             address = address.ifEmpty { null },
@@ -7536,13 +7433,30 @@ internal fun kaPostTipSompi(fiat: Double, price: Double): Long? {
 /** "0.2 KAS" (iOS `instantTipMinimumText`). */
 internal fun kaPostInstantTipMinimumText(): String = "${KaspaUnit.plain(KAPOST_INSTANT_TIP_MINIMUM_SOMPI)} ${KaspaUnit.symbol}"
 
+/** Which page of KaPost's settings (iOS 518fdc8c `KaPostsSettingsView.Part`). */
+enum class KaPostsSettingsPart {
+    /** Settings > KaPost: the cool down. */
+    KAPOST,
+    /** Settings > Customization > Tipping: what Tip sends, on a post and in a 1:1 chat's +. */
+    TIPPING,
+}
+
 /**
  * Settings > KaPost (iOS 148a5331 `KaPostsSettingsView(embedded: true)`): KaPost's own settings -
- * Tip In, the instant tip, Tips From, cool down - titled "KaPost" with a back chevron. The feed's
- * menu no longer lists it (owner's call, 2026-11-21).
+ * the cool down (Tipping moved to Settings > Customization > Tipping, iOS 518fdc8c) - titled
+ * "KaPost" with a back chevron. The feed's menu no longer lists it (owner's call, 2026-11-21).
  */
 @Composable
 fun KaPostsSettingsScreen(onBack: () -> Unit) = KaPostsSettingsOverlay(onClose = onBack, embedded = true)
+
+/**
+ * Settings > Customization > Tipping (iOS 518fdc8c `KaPostsSettingsView(part: .tipping)`): Tip In,
+ * the instant tip and Tips From, shared by KaPost's Tip and a 1:1 chat's Tip. Titled "Tipping"
+ * with a back chevron.
+ */
+@Composable
+fun KaPostsTippingSettingsScreen(onBack: () -> Unit) =
+    KaPostsSettingsOverlay(onClose = onBack, embedded = true, part = KaPostsSettingsPart.TIPPING)
 
 /**
  * KaPosts' own settings, behind the gear in the feed's icon row: the cool down before post (the
@@ -7556,6 +7470,8 @@ fun KaPostsSettingsOverlay(
     onClose: () -> Unit,
     /** Settings > KaPost: "KaPost" with a back chevron rather than "KaPost Settings". */
     embedded: Boolean = false,
+    /** The cool down (Settings > KaPost) or Tipping (Settings > Customization > Tipping). */
+    part: KaPostsSettingsPart = KaPostsSettingsPart.KAPOST,
     settingsViewModel: com.kachat.app.viewmodels.KaPostsSettingsViewModel = hiltViewModel(),
     portfolioViewModel: com.kachat.app.viewmodels.KasPriceViewModel = hiltViewModel(),
     walletViewModel: WalletViewModel = hiltViewModel(),
@@ -7720,7 +7636,12 @@ fun KaPostsSettingsOverlay(
         if (!editingTip) commitTip()
     }
 
-    KaPostsOverlayScaffold(title = if (embedded) "KaPost" else stringResource(R.string.kpui_kapost_settings), onClose = onClose, backBar = embedded) {
+    val pageTitle = when {
+        part == KaPostsSettingsPart.TIPPING -> stringResource(R.string.kpui_tipping)
+        embedded -> "KaPost"
+        else -> stringResource(R.string.kpui_kapost_settings)
+    }
+    KaPostsOverlayScaffold(title = pageTitle, onClose = onClose, backBar = embedded) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -7729,7 +7650,7 @@ fun KaPostsSettingsOverlay(
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             Spacer(Modifier.height(4.dp))
-            Column {
+            if (part == KaPostsSettingsPart.KAPOST) Column {
                 SettingsSection(title = null) {
                     SettingsSwitchItem(stringResource(R.string.kpui_cool_down), cooldownEnabled) { enabled ->
                         settingsViewModel.setKaPostsCooldownEnabled(enabled)
@@ -7740,7 +7661,7 @@ fun KaPostsSettingsOverlay(
                     else stringResource(R.string.kpui_cooldown_off)
                 )
             }
-            Column {
+            if (part == KaPostsSettingsPart.TIPPING) Column {
                 SettingsSection(title = stringResource(R.string.kpui_tipping)) {
                     val tipAssetLabels = mapOf(
                         com.kachat.app.repository.KaPostsTipAsset.ASK to stringResource(R.string.kp5_tip_in_ask),
@@ -7898,7 +7819,7 @@ fun KaPostsSettingsOverlay(
                         }
                     }
                     }
-                    // KaPost Settings > Tips From (iOS 071e901): the default tip's address and
+                    // Tipping > Tips From (iOS 071e901): the default tip's address and
                     // the tip sheet's first choice. Not for kUSDT tips (iOS f954738).
                     if (tipAsset != com.kachat.app.repository.KaPostsTipAsset.KUSDT) {
                     SettingsDivider()
@@ -8059,16 +7980,14 @@ fun KaPostsModerationOverlay(
         } else {
             LazyColumn {
                 items(addresses, key = { it }) { address ->
-                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(address) { viewModel.ensureSenderProfileFetched(address) }
                     // Per-address slices: one avatar/name landing repaints its own row only.
-                    val rowAvatar by senderAvatarState(viewModel, address)
                     val rowName = posterDisplayNameState(viewModel, address)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
                     ) {
                         ContactAvatar(
-                            imageUrl = rowAvatar,
+                            imageUrl = null,
                             fallbackText = rowName,
                             size = 40.dp,
                             address = address,
@@ -8149,7 +8068,6 @@ fun KaPostsBookmarksOverlay(
         } else {
             LazyColumn {
                 items(bookmarks, key = { "bookmark-${it.id}" }) { post ->
-                    if (KaPostsViewModel.SHOWS_SENDER_KNS) LaunchedEffect(post.posterAddress) { viewModel.ensureSenderProfileFetched(post.posterAddress) }
                     KaPostCell(
                         post = post,
                         viewModel = viewModel,
@@ -8331,51 +8249,12 @@ internal fun KaPostsOverlayStatusBar(
             } else {
                 leading?.invoke()
             }
-            KaPostsConnectionDotButton(onClick = { ConnectionStatusOverlayState.open() })
+            // No connection dot (iOS 518fdc8c: only at the top of Settings and on the dock's
+            // Settings icon).
         }
         BalanceTopBarLabel(modifier = Modifier.align(Alignment.Center))
         if (trailing != null) {
             Box(modifier = Modifier.align(Alignment.CenterEnd)) { trailing() }
-        }
-    }
-}
-
-/**
- * iOS 26's segmented Picker: a 32-high capsule track (systemFill grey) with the chosen segment on
- * a raised capsule thumb, the labels 14pt - measured on the iPhone's KaPosts Search.
- * Also Chess Online's leaderboard period (iOS 77d6038).
- */
-@Composable
-internal fun KaPostsSegmentedPicker(titles: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
-    val colors = LocalAppColors.current
-    val track = Color(0xFF767680).copy(alpha = if (colors.isDark) 0.24f else 0.12f)
-    val thumb = if (colors.isDark) Color(0xFF5A5A5E) else Color.White
-    Row(
-        modifier = modifier
-            .height(32.dp)
-            .clip(RoundedCornerShape(50))
-            .background(track)
-            .padding(2.dp),
-    ) {
-        titles.forEachIndexed { index, title ->
-            val active = index == selected
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(50))
-                    .background(if (active) thumb else Color.Transparent)
-                    .clickable { onSelect(index) },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    title,
-                    color = colors.textPrimary,
-                    fontSize = 14.sp,
-                    fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
-                    maxLines = 1,
-                )
-            }
         }
     }
 }
@@ -8946,96 +8825,3 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawThreadConnector
     )
 }
 
-/**
- * The feed pager's own swipe (iOS 63c9861 `KaPostsFeedPager`). A touch commits to one direction
- * once it has moved the touch slop and keeps it until the finger lifts: a clearly sideways first
- * movement (more than [FEED_SWIPE_SIDEWAYS_BIAS] times as wide as tall) moves the pages and, from
- * then on, takes every move before the lists see it, so the feed underneath doesn't drift up or
- * down; anything else is the list's scroll and never moves the pages. A move a page already used
- * (a list scrolling) is left to it. Let go past a third of the width, or flick, and it moves one
- * page; otherwise it settles back. The end of a sideways touch counts by the direction it locked
- * to, not where the finger drifted.
- */
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-private fun Modifier.feedPagerSwipe(
-    state: androidx.compose.foundation.pager.PagerState,
-    scope: kotlinx.coroutines.CoroutineScope,
-): Modifier = pointerInput(state) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        val slop = viewConfiguration.touchSlop
-        var totalX = 0f
-        var totalY = 0f
-        // The direction test runs in the Main pass, after the pages: a move a list already took
-        // is the list's.
-        while (true) {
-            val event = awaitPointerEvent(PointerEventPass.Main)
-            val change = event.changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture
-            if (!change.pressed) return@awaitEachGesture
-            if (change.isConsumed) return@awaitEachGesture
-            totalX += change.position.x - change.previousPosition.x
-            totalY += change.position.y - change.previousPosition.y
-            if (kotlin.math.max(kotlin.math.abs(totalX), kotlin.math.abs(totalY)) < slop) continue
-            if (kotlin.math.abs(totalX) <= kotlin.math.abs(totalY) * FEED_SWIPE_SIDEWAYS_BIAS) {
-                return@awaitEachGesture
-            }
-            change.consume()
-            break
-        }
-        // Locked sideways: drive the pager by hand, ahead of the lists (Initial pass).
-        val width = size.width.toFloat().coerceAtLeast(1f)
-        val startPage = state.currentPage
-        val pageCount = state.pageCount
-        val deltas = kotlinx.coroutines.channels.Channel<Float>(kotlinx.coroutines.channels.Channel.UNLIMITED)
-        val dragJob = scope.launch {
-            state.scroll(androidx.compose.foundation.MutatePriority.UserInput) {
-                for (delta in deltas) scrollBy(delta)
-            }
-        }
-        val tracker = VelocityTracker()
-        tracker.addPosition(down.uptimeMillis, down.position)
-        var translation = totalX
-        deltas.trySend(-totalX)
-        while (true) {
-            val event = awaitPointerEvent(PointerEventPass.Initial)
-            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-            tracker.addPosition(change.uptimeMillis, change.position)
-            if (!change.pressed) {
-                change.consume()
-                break
-            }
-            val dx = change.position.x - change.previousPosition.x
-            change.consume()
-            if (dx != 0f) {
-                translation += dx
-                deltas.trySend(-dx)
-            }
-        }
-        deltas.close()
-        // iOS: past a third of the width, or a flick whose predicted end passes half of it.
-        val flick = translation + tracker.calculateVelocity().x * FEED_SWIPE_FLICK_SECONDS
-        var target = startPage
-        if ((translation < -width / 3 || flick < -width / 2) && startPage < pageCount - 1) {
-            target = startPage + 1
-        } else if ((translation > width / 3 || flick > width / 2) && startPage > 0) {
-            target = startPage - 1
-        }
-        scope.launch {
-            dragJob.join()
-            state.animateScrollToPage(
-                target,
-                animationSpec = androidx.compose.animation.core.spring(
-                    dampingRatio = 0.9f,
-                    stiffness = FEED_SWIPE_SPRING_STIFFNESS,
-                ),
-            )
-        }
-    }
-}
-
-/** How much wider than tall a first movement must be to change pages (iOS `sidewaysBias`). */
-private const val FEED_SWIPE_SIDEWAYS_BIAS = 1.3f
-/** How far ahead a flick's speed is projected (SwiftUI `predictedEndTranslation`, roughly). */
-private const val FEED_SWIPE_FLICK_SECONDS = 0.25f
-/** iOS's settle spring: response 0.3 s, damping 0.9 ((2π / 0.3)² ≈ 439). */
-private const val FEED_SWIPE_SPRING_STIFFNESS = 439f

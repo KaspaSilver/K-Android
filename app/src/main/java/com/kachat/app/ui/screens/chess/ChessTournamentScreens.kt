@@ -180,24 +180,25 @@ class ChessTournamentViewModel @Inject constructor(
 }
 
 /**
- * The app's naming rule, in the arena too: the contact's name, then their KNS domain, then the
- * shortened address - and the same for the player themselves, never "You" (iOS 30d0cca).
+ * The app's naming rule, in the arena too: the contact's name, then their .kachat name, then the
+ * shortened address - and the same for the player themselves, never "You" (iOS 30d0cca). K reads
+ * no other name service (iOS 518fdc8c: KNS is gone, so the arena no longer looks names up).
  */
 internal fun chessName(
     address: String,
     contacts: Map<String, ContactEntity>,
-    knsNames: Map<String, String> = emptyMap(),
 ): String {
     contacts[address]?.let { return it.displayName }
-    // the app's one rule: on testnet the .kachat name, KNS elsewhere (iOS e52357d)
-    return com.kachat.app.models.addressDisplayName(address, knsName = knsNames[address])
+    return com.kachat.app.models.addressDisplayName(address)
 }
 
 @Composable
 internal fun ChessAvatar(address: String, contacts: Map<String, ContactEntity>, size: Int = 36) {
     val contact = contacts[address]
     ContactAvatar(
-        imageUrl = contact?.knsAvatarUrl,
+        // No KNS avatar (iOS 518fdc8c `avatarURLString: nil`): your Contacts photo for the
+        // address, else its .kachat one, else the initial.
+        imageUrl = null,
         // The one name rule (your name for them, else their .kachat name on testnet, else the
         // short address) - stripping only "kaspa:" left every testnet initial as "ka".
         fallbackText = contact?.displayName ?: com.kachat.app.models.addressDisplayName(address),
@@ -252,7 +253,7 @@ internal fun ChessLiveClockText(
  * up for as long as the service holds the error - the next action that goes through clears it.
  */
 @Composable
-private fun ChessErrorToast(service: ChessTournamentService) {
+internal fun ChessErrorToast(service: ChessTournamentService) {
     val error by service.lastError.collectAsState()
     // KaPlay's toast looked its text up itself; KaChat's shows it as given, so the English the
     // service holds is looked up here.
@@ -332,7 +333,6 @@ fun ChessTournamentsScreen(mode: ChessLobbyMode, navController: NavController, o
     // Not on every tick: the seats and rooms as the time last changed them (iOS 32e6392).
     val now = arenaNow(service)
     val contacts by vm.contacts.collectAsState()
-    val knsNames by service.knsNames.collectAsState()
     val me = service.myAddress
     val mine = service.myActiveTournament.collectAsState().value
     val privateDuels by service.myPrivateDuels.collectAsState()
@@ -408,40 +408,23 @@ fun ChessTournamentsScreen(mode: ChessLobbyMode, navController: NavController, o
         // the balance takes the bar's centre, and the connection dot is on the dock's root screens.
         topBar = { ChessHomeBar(onBack = onBack, showConnectionDot = false, title = ChessText.string(mode.label)) },
     ) { padding ->
-        // The same tab bar and swipe the Chats screen uses, so a tab is a tab wherever it
-        // appears in the app (iOS 353f040).
-        // Both screens: play, Active (watch-only), Finished. The leaderboards have a page of their
-        // own inside Chess (ChessLeaderboardScreen, iOS 428a797b).
+        // One cycle button for the three pages (iOS 518fdc8c, owner 2026-11-24), as KaPost's feeds
+        // and the leaderboards have it: each tap fades to the next. No tabs, no sideways swipe.
+        // Both screens: play, Active (watch-only), Finished. The leaderboards are on Chess's own
+        // screen ([ChessHomeScreen]).
         val tabs = listOf(ChessText.string(mode.label), ChessText.string("Active"), ChessText.string("Finished"))
-        val pagerState = androidx.compose.foundation.pager.rememberPagerState { tabs.size }
-        val tabScope = rememberCoroutineScope()
+        var page by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
         Column(Modifier.fillMaxSize().padding(padding)) {
-            // iOS's tab buttons: subheadline bold 12 under the bar, 8 above a 2.5 underline in
-            // the accent, then a divider across the screen.
-            Row(Modifier.fillMaxWidth()) {
-                tabs.forEachIndexed { index, label ->
-                    val selected = pagerState.currentPage == index
-                    Column(
-                        Modifier
-                            .weight(1f)
-                            .clickable(
-                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                                indication = null,
-                            ) { tabScope.launch { pagerState.animateScrollToPage(index) } },
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Spacer(Modifier.height(12.dp))
-                        ChessTabLabel(label = label, selected = selected)
-                        Spacer(Modifier.height(8.dp))
-                        Box(Modifier.fillMaxWidth().height(2.5.dp).background(if (selected) KaspaTeal else Color.Transparent))
-                    }
-                }
-            }
-            HorizontalDivider(color = colors.divider, thickness = 0.5.dp)
-            androidx.compose.foundation.pager.HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
-            when (page) {
-                1 -> { ChessActiveGames(mode, navController); return@HorizontalPager }
-                2 -> { ChessFinishedGames(mode, navController); return@HorizontalPager }
+            com.kachat.app.ui.components.PageCycleBar(
+                titles = tabs,
+                selectedIndex = page,
+                onSelect = { page = it },
+                modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
+            )
+            com.kachat.app.ui.components.CycleFade(page, Modifier.fillMaxSize()) { shown ->
+            when (shown) {
+                1 -> { ChessActiveGames(mode, navController); return@CycleFade }
+                2 -> { ChessFinishedGames(mode, navController); return@CycleFade }
             }
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = LocalDockInset.current + 32.dp)) {
                 val duel = mode == ChessLobbyMode.DUEL
@@ -643,7 +626,6 @@ private fun ChessActiveGames(mode: ChessLobbyMode, navController: NavController)
     val colors = LocalAppColors.current
     val now = arenaNow(service)
     val contacts by vm.contacts.collectAsState()
-    val knsNames by service.knsNames.collectAsState()
     val duel = mode == ChessLobbyMode.DUEL
     val liveAll by service.liveTournaments.collectAsState()
     val live = liveAll.filter { it.isDuel == duel && it.isPublic }
@@ -661,10 +643,10 @@ private fun ChessActiveGames(mode: ChessLobbyMode, navController: NavController)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row {
-                    Text(chessName(game.white, contacts, knsNames), color = colors.textPrimary, fontSize = 14.sp,
+                    Text(chessName(game.white, contacts), color = colors.textPrimary, fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold, maxLines = 1)
                     Text("  " + ChessText.string("vs") + "  ", color = colors.textSecondary, fontSize = 14.sp)
-                    Text(chessName(game.black, contacts, knsNames), color = colors.textPrimary, fontSize = 14.sp,
+                    Text(chessName(game.black, contacts), color = colors.textPrimary, fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold, maxLines = 1)
                 }
                 val where = if (tournament.isDuel) tournament.displayName else ChessText.roundTitle(game.round, isDuel = false)
@@ -734,7 +716,6 @@ private fun ChessFinishedGames(mode: ChessLobbyMode, navController: NavControlle
     val service = vm.service
     val colors = LocalAppColors.current
     val contacts by vm.contacts.collectAsState()
-    val knsNames by service.knsNames.collectAsState()
     val duel = mode == ChessLobbyMode.DUEL
     val now = arenaNow(service)
     val finished by service.finishedTournaments.collectAsState()
@@ -754,15 +735,15 @@ private fun ChessFinishedGames(mode: ChessLobbyMode, navController: NavControlle
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row {
-                    Text(chessName(game.white, contacts, knsNames), color = colors.textPrimary, fontSize = 14.sp,
+                    Text(chessName(game.white, contacts), color = colors.textPrimary, fontSize = 14.sp,
                         fontWeight = if (game.decidedWinner(now) == game.white) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
                     Text("  " + ChessText.string("vs") + "  ", color = colors.textSecondary, fontSize = 14.sp)
-                    Text(chessName(game.black, contacts, knsNames), color = colors.textPrimary, fontSize = 14.sp,
+                    Text(chessName(game.black, contacts), color = colors.textPrimary, fontSize = 14.sp,
                         fontWeight = if (game.decidedWinner(now) == game.black) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
                 }
                 val where = if (tournament.isDuel) tournament.displayName else ChessText.roundTitle(game.round, isDuel = false)
                 Text(
-                    where + " · " + ChessText.resultSummary(game, now) { chessName(it, contacts, knsNames) },
+                    where + " · " + ChessText.resultSummary(game, now) { chessName(it, contacts) },
                     color = colors.textSecondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -808,7 +789,7 @@ private fun ChessFinishedGames(mode: ChessLobbyMode, navController: NavControlle
                         Column(Modifier.weight(1f)) {
                             Text(tournament.displayName, color = colors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                             Text(
-                                tournament.champion?.let { ChessText.format("Won by %s", chessName(it, contacts, knsNames)) } ?: ChessText.string("Finished"),
+                                tournament.champion?.let { ChessText.format("Won by %s", chessName(it, contacts)) } ?: ChessText.string("Finished"),
                                 color = colors.textSecondary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                             )
                         }
@@ -983,38 +964,6 @@ private fun TournamentRow(tournament: ChessTournament, action: String, onClick: 
 }
 
 /**
- * One chess tab's label: bold, on one line, teal for the tab you are on and half-strength for
- * the ones you are not (iOS's tabButton). A label too long for its quarter of the screen shrinks
- * to fit rather than being cut off, down to 80% of its size - iOS's `minimumScaleFactor(0.8)`,
- * which is what keeps "Leaderboard" whole.
- */
-@Composable
-private fun ChessTabLabel(label: String, selected: Boolean) {
-    // subheadline, shrinking to 0.8 of it before it would cut a word (minimumScaleFactor).
-    val maxSize = 15.sp
-    val minSize = maxSize * 0.8f
-    var fontSize by remember(label) { mutableStateOf(maxSize) }
-    Text(
-        label,
-        fontWeight = FontWeight.Bold,
-        fontSize = fontSize,
-        maxLines = 1,
-        softWrap = false,
-        color = if (selected) KaspaTeal else KaspaTeal.copy(alpha = 0.5f),
-        modifier = Modifier.padding(horizontal = 2.dp),
-        onTextLayout = { result ->
-            if (result.hasVisualOverflow && fontSize.value > minSize.value) {
-                val next = fontSize * 0.94f
-                fontSize = if (next.value < minSize.value) minSize else next
-            }
-        },
-    )
-}
-
-// MARK: - Leaderboard
-
-
-/**
  * The tournament as a bracket - quarterfinals, semifinals, final, champion - with the pairs
  * joined by lines and every game a card you can tap to watch. A live game carries a LIVE pill
  * with the running clock; a finished one marks its winner and dims the loser; a pair not decided
@@ -1027,7 +976,6 @@ private fun ChessBracket(
     me: String?,
     now: Long,
     contacts: Map<String, ContactEntity>,
-    knsNames: Map<String, String>,
     onOpenGame: (String) -> Unit,
 ) {
     val colors = LocalAppColors.current
@@ -1094,7 +1042,7 @@ private fun ChessBracket(
                 ChessBracketCard(
                     game = tournament.games["1-$index"],
                     placeholder = ChessText.format("Seed %d", index + 1) to ChessText.format("Seed %d", 8 - index),
-                    me = me, now = now, contacts = contacts, knsNames = knsNames,
+                    me = me, now = now, contacts = contacts,
                     width = cardWidth, height = cardHeight, onOpenGame = onOpenGame,
                     modifier = Modifier.offset(x = columnX[0], y = round1Y[index]),
                 )
@@ -1103,7 +1051,7 @@ private fun ChessBracket(
                 ChessBracketCard(
                     game = tournament.games["2-$index"],
                     placeholder = ChessText.format("Winner of QF%d", index * 2 + 1) to ChessText.format("Winner of QF%d", index * 2 + 2),
-                    me = me, now = now, contacts = contacts, knsNames = knsNames,
+                    me = me, now = now, contacts = contacts,
                     width = cardWidth, height = cardHeight, onOpenGame = onOpenGame,
                     modifier = Modifier.offset(x = columnX[1], y = semiY[index]),
                 )
@@ -1111,7 +1059,7 @@ private fun ChessBracket(
             ChessBracketCard(
                 game = tournament.games["3-0"],
                 placeholder = ChessText.format("Winner of SF%d", 1) to ChessText.format("Winner of SF%d", 2),
-                me = me, now = now, contacts = contacts, knsNames = knsNames,
+                me = me, now = now, contacts = contacts,
                 width = cardWidth, height = cardHeight, onOpenGame = onOpenGame,
                 modifier = Modifier.offset(x = columnX[2], y = finalY),
             )
@@ -1138,7 +1086,7 @@ private fun ChessBracket(
                             Text(ChessText.string("Champion"), color = colors.warning, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                         }
                         Text(
-                            chessName(champion, contacts, knsNames),
+                            chessName(champion, contacts),
                             color = colors.textPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold,
                             maxLines = 1, overflow = TextOverflow.Ellipsis,
                         )
@@ -1161,7 +1109,6 @@ private fun ChessBracketCard(
     me: String?,
     now: Long,
     contacts: Map<String, ContactEntity>,
-    knsNames: Map<String, String>,
     width: Dp,
     height: Dp,
     onOpenGame: (String) -> Unit,
@@ -1187,9 +1134,9 @@ private fun ChessBracketCard(
                 HorizontalDivider(color = colors.textSecondary.copy(alpha = 0.15f), modifier = Modifier.padding(horizontal = 8.dp))
                 ChessBracketPlaceholderRow(placeholder.second, height / 2f)
             } else {
-                ChessBracketPlayerRow(game.white, game, now, contacts, knsNames, height / 2f)
+                ChessBracketPlayerRow(game.white, game, now, contacts, height / 2f)
                 HorizontalDivider(color = colors.textSecondary.copy(alpha = 0.15f), modifier = Modifier.padding(horizontal = 8.dp))
-                ChessBracketPlayerRow(game.black, game, now, contacts, knsNames, height / 2f)
+                ChessBracketPlayerRow(game.black, game, now, contacts, height / 2f)
             }
         }
         // LIVE, with the clock of whoever is to move. Not once the clock has decided it: that
@@ -1222,7 +1169,6 @@ private fun ChessBracketPlayerRow(
     game: ChessTournamentGame,
     now: Long,
     contacts: Map<String, ContactEntity>,
-    knsNames: Map<String, String>,
     height: Dp,
 ) {
     val colors = LocalAppColors.current
@@ -1239,7 +1185,7 @@ private fun ChessBracketPlayerRow(
         ChessAvatar(address, contacts, size = 20)
         Spacer(Modifier.width(6.dp))
         Text(
-            chessName(address, contacts, knsNames),
+            chessName(address, contacts),
             color = if (isLoser) colors.textSecondary else colors.textPrimary,
             fontSize = 12.sp,
             fontWeight = if (isWinner) FontWeight.Bold else FontWeight.SemiBold,
@@ -1267,303 +1213,12 @@ private fun ChessBracketPlaceholderRow(text: String, height: Dp) {
     }
 }
 
-/**
- * One kind's leaderboard, under the Leaderboard tab's 1v1 | Tournaments bar: 1v1 is wins and losses in 1v1 games;
- * Tournaments is whole tournaments only - won (champion) and lost (knocked out); a game won
- * inside a tournament is not a score there (iOS e86868e, 7049e70). For this UTC month or all
- * time: the indexer's boards (ONLINE_CHESS.md §6) merged with what the phone has read; both count
- * from [com.kachat.app.util.ChessTournamentEngine.LEADERBOARD_FRESH_FROM_MS] (iOS 77d6038).
- */
-@Composable
-internal fun ChessLeaderboardRows(mode: ChessLobbyMode, navController: NavController? = null) {
-    val vm: ChessTournamentViewModel = hiltViewModel()
-    val service = vm.service
-    val colors = LocalAppColors.current
-    var period by androidx.compose.runtime.saveable.rememberSaveable {
-        mutableStateOf(com.kachat.app.util.ChessLeaderboardPeriod.MONTH)
-    }
-    val board by service.board(period).collectAsState()
-    val contacts by vm.contacts.collectAsState()
-    val knsNames by service.knsNames.collectAsState()
-    val me = service.myAddress
-    val duel = mode == ChessLobbyMode.DUEL
-    val serverDown by service.arenaServerDown.collectAsState()
-    // Sorted when the board, the period or the kind changes - not on every tick of the service's
-    // clock (iOS 077d777 `sortRows`).
-    val rows = remember(board, duel) {
-        if (duel) {
-            com.kachat.app.util.ChessTournamentEngine.duelLeaderboard(board)
-        } else {
-            com.kachat.app.util.ChessTournamentEngine.tournamentLeaderboard(board)
-        }
-    }
-    // On appear and on every period switch, like iOS's onAppear / onChange(of: period).
-    LaunchedEffect(period) { service.refreshIndexerLeaderboards() }
-    val emptyText = when (period) {
-        com.kachat.app.util.ChessLeaderboardPeriod.MONTH -> stringResource(
-            if (duel) R.string.kaplay_no_finished_duels_this_month else R.string.kaplay_no_finished_tournaments_this_month
-        )
-        com.kachat.app.util.ChessLeaderboardPeriod.ALL_TIME -> stringResource(
-            if (duel) R.string.kaplay_no_finished_duels else R.string.kaplay_no_finished_tournaments
-        )
-    }
-    val periodNote = when (period) {
-        com.kachat.app.util.ChessLeaderboardPeriod.MONTH -> stringResource(R.string.kaplay_leaderboard_resets_monthly)
-        com.kachat.app.util.ChessLeaderboardPeriod.ALL_TIME -> {
-            // iOS `.dateTime.year().month(.wide).day()`: the cutoff's day, in the user's language.
-            // The in-app language's locale (iOS `.locale(AppLocalization.locale)`).
-            val locale = com.kachat.app.util.AppText.locale
-            val pattern = android.text.format.DateFormat.getBestDateTimePattern(locale, "yMMMMd")
-            val day = java.text.SimpleDateFormat(pattern, locale)
-                .format(java.util.Date(com.kachat.app.util.ChessTournamentEngine.LEADERBOARD_FRESH_FROM_MS))
-            stringResource(R.string.kaplay_leaderboard_counted_from, day)
-        }
-    }
-    val periodLabel = stringResource(R.string.kaplay_leaderboard_period)
-    // The list's first section starts well clear of the tabs (48 between them on the iPhone).
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 44.dp, bottom = 8.dp + LocalDockInset.current)) {
-        if (serverDown) {
-            item {
-                ChessServerDownCard("Chess server unreachable. Showing what this phone has, which can be less than the full board.")
-                Spacer(Modifier.height(16.dp))
-            }
-        }
-        item {
-            // iOS: a segmented Picker on its own row at the top, its note as the section footer.
-            ChessSegmentedPicker(
-                titles = listOf(
-                    stringResource(R.string.kaplay_leaderboard_this_month),
-                    stringResource(R.string.kaplay_leaderboard_all_time),
-                ),
-                selected = if (period == com.kachat.app.util.ChessLeaderboardPeriod.MONTH) 0 else 1,
-                onSelect = {
-                    period = if (it == 0) com.kachat.app.util.ChessLeaderboardPeriod.MONTH
-                    else com.kachat.app.util.ChessLeaderboardPeriod.ALL_TIME
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .semantics { contentDescription = periodLabel },
-            )
-            Text(
-                periodNote,
-                color = colors.textSecondary, fontSize = 13.sp,
-                modifier = Modifier.padding(horizontal = 32.dp).padding(top = 6.dp, bottom = 10.dp),
-            )
-        }
-        item {
-            // What this board counts, in its own words (iOS 1d32335) - the rows' section header.
-            ChessSectionHeader(ChessText.string(if (duel) "Games won and lost - 1v1s and tournament games alike" else "Tournaments won and lost"))
-        }
-        if (rows.isEmpty()) {
-            item {
-                ChessCard {
-                    Text(
-                        emptyText,
-                        color = colors.textSecondary, fontSize = 15.sp, modifier = Modifier.padding(16.dp),
-                    )
-                }
-            }
-        }
-        // iOS's insetGrouped section: one card, 26 round, its rows split by hairlines, your own
-        // row tinted with the accent.
-        itemsIndexed(rows, key = { _, row -> row.address }) { index, row ->
-            val corner = 26.dp
-            val shape = RoundedCornerShape(
-                topStart = if (index == 0) corner else 0.dp, topEnd = if (index == 0) corner else 0.dp,
-                bottomStart = if (index == rows.lastIndex) corner else 0.dp, bottomEnd = if (index == rows.lastIndex) corner else 0.dp,
-            )
-            val isMe = row.address == me
-            Column(
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .clip(shape)
-                    .background(if (isMe) KaspaTeal.copy(alpha = 0.12f).compositeOver(colors.surface) else colors.surface),
-            ) {
-                if (index > 0) ChessRowDivider(start = 34.dp)
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        // Tap anyone for their card (ChessPlayerScreen).
-                        .then(
-                            if (navController == null) Modifier else Modifier.clickable {
-                                navController.navigate("chess_player/${row.address}")
-                            }
-                        )
-                        // A 36 avatar in a row 66 tall (measured on the iPhone).
-                        .padding(horizontal = 16.dp, vertical = 15.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // subheadline (15pt) throughout, the figures in tabular digits.
-                    val digits = androidx.compose.ui.text.TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum")
-                    Text(
-                        "${index + 1}", color = colors.textSecondary, style = digits,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.End, modifier = Modifier.width(28.dp),
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    ChessAvatar(row.address, contacts)
-                    Spacer(Modifier.width(12.dp))
-                    // The numbers keep their full width; a long name gives way, not the score -
-                    // cut in the middle, as iOS's .truncationMode(.middle).
-                    Text(
-                        middleEllipsis(chessName(row.address, contacts, knsNames), 20),
-                        color = colors.textPrimary, fontSize = 15.sp,
-                        fontWeight = if (isMe) FontWeight.Bold else FontWeight.SemiBold,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    if (duel) {
-                        Text(ChessText.format("%d W", row.wins), color = colors.success, style = digits, maxLines = 1)
-                        Spacer(Modifier.width(10.dp))
-                        Text(ChessText.format("%d L", row.losses), color = colors.danger, style = digits, maxLines = 1)
-                    } else {
-                        // Whole tournaments only: won (champion) and lost (knocked out). A game won
-                        // inside one is not a score (iOS 7049e70).
-                        // Orange, not yellow: yellow can't be read on a light row (iOS 32e6392).
-                        Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = colors.warning, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("${row.tournamentsWon}", color = colors.warning, style = digits, maxLines = 1)
-                        Spacer(Modifier.width(10.dp))
-                        Text(ChessText.format("%d L", row.tournamentsLost), color = colors.danger, style = digits, maxLines = 1)
-                    }
-                }
-            }
-        }
-    }
-}
-
 /** [text] cut in the middle when longer than [max] characters ("castlek…achat"), the way iOS's
  *  .truncationMode(.middle) keeps both ends of a name in view. */
 internal fun middleEllipsis(text: String, max: Int): String {
     if (text.length <= max) return text
     val head = (max - 1) / 2
     return text.take(head) + "…" + text.takeLast(max - 1 - head)
-}
-
-/**
- * Play > Chess: choose your game. 1v1 or a tournament, each its own screen, or the bots
- * ([ChessBotsScreen]), and the leaderboards under them ([ChessLeaderboardScreen], iOS 428a797b).
- * A room the player is already waiting or playing in is offered first.
- * Mirrors iOS's ChessHomeView.
- */
-@Composable
-fun ChessHomeScreen(navController: NavController) {
-    val vm: ChessTournamentViewModel = hiltViewModel()
-    val service = vm.service
-    HoldArena(service)
-    ChessErrorToast(service)
-    val colors = LocalAppColors.current
-    // Worked out by the service when the rooms or the time change it - a seat that runs out
-    // changes only the time - never on every tick (iOS 32e6392 `myActiveTournament`).
-    val mine = service.myActiveTournament.collectAsState().value
-
-    fun open(mode: ChessLobbyMode) = navController.navigate("chess_mode/${mode.name}")
-
-    // A challenge from a post (`ChessBotLinks.open`): taken here, and only while this screen is on
-    // top - never from under a pushed screen (a bot game, a board). It never pops a board or a
-    // waiting room: while the player is busy online it waits in the router until that is over
-    // and this screen is back (iOS ChessHomeView takeChallenge).
-    val challenge by ChessBotLinkRouter.challenge.collectAsState()
-    val busyOnline by service.isBusyOnline.collectAsState()
-    val ownEntry = androidx.compose.ui.platform.LocalLifecycleOwner.current as? androidx.navigation.NavBackStackEntry
-    val top by navController.currentBackStackEntryAsState()
-    val isVisible = ownEntry != null && top?.id == ownEntry.id
-    LaunchedEffect(challenge, busyOnline, isVisible) {
-        val taken = challenge ?: return@LaunchedEffect
-        if (!isVisible || busyOnline) return@LaunchedEffect
-        ChessBotLinkRouter.challenge.value = null
-        // A bot still locked: the ladder, which says who to beat first.
-        navController.navigate(
-            if (vm.botProgress.isUnlocked(taken.bot)) "chess_bot/${taken.bot.level}?challenge=${taken.routeArg()}"
-            else "chess_bots?challenge=${taken.routeArg()}"
-        )
-    }
-
-    Scaffold(
-        // iOS: Color(.systemGroupedBackground) behind it all.
-        containerColor = colors.background,
-        // Runs on under the dock, as iOS's content runs on under its tab bar.
-        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-        topBar = { ChessHomeBar(onBack = { navController.popBackStack() }, showConnectionDot = false, title = ChessText.string("Chess")) },
-    ) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(bottom = LocalDockInset.current + 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            // iOS: the rook and knight 64 tall, "Choose your game" in title2 bold and the
-            // subheadline note, 6 apart; 24 above, 8 below.
-            Column(
-                Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Icon(
-                    chessTabIconPainter(),
-                    contentDescription = null, tint = KaspaTeal,
-                    modifier = chessTabIconModifier(64.dp),
-                )
-                Text(ChessText.string("Choose your game"), color = colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 28.sp)
-                Text(
-                    ChessText.string("Online, five minutes a side and every move is a Kaspa transaction. Bot games stamp their result on Kaspa when they end."),
-                    color = colors.textSecondary, fontSize = 15.sp, lineHeight = 20.sp,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                )
-            }
-            if (mine != null) {
-                Row(
-                    Modifier.padding(horizontal = 16.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                        .background(KaspaTeal.copy(alpha = 0.12f))
-                        .clickable { open(if (mine.isDuel) ChessLobbyMode.DUEL else ChessLobbyMode.TOURNAMENT) }
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // iOS: hourglass / play.fill in title3, in a 32-wide slot, 12 from the text.
-                    Box(Modifier.width(32.dp), contentAlignment = Alignment.Center) {
-                        Icon(
-                            if (mine.status == ChessTournament.Status.OPEN) Icons.Default.HourglassEmpty else Icons.Default.PlayArrow,
-                            contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(24.dp),
-                        )
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            ChessText.whereYouAre(mine),
-                            color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, lineHeight = 20.sp,
-                        )
-                        Text(ChessText.string("Tap to go back to it"), color = colors.textSecondary, fontSize = 12.sp, lineHeight = 16.sp)
-                    }
-                    Spacer(Modifier.width(12.dp))
-                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(18.dp))
-                }
-            }
-            ChessGameCard(
-                icon = Icons.Default.People,
-                title = ChessText.string("1v1"),
-                detail = ChessText.string("Play the next person who joins, or a friend by code. One game, winner takes the leaderboard point."),
-            ) { open(ChessLobbyMode.DUEL) }
-            ChessGameCard(
-                icon = Icons.Default.EmojiEvents,
-                title = ChessText.string("Tournament"),
-                detail = ChessText.string("Eight players, single elimination: quarterfinals, semifinals, final. Public rooms fill as players arrive; private ones by code."),
-            ) { open(ChessLobbyMode.TOURNAMENT) }
-            ChessGameCard(
-                icon = Icons.Default.Memory,
-                title = ChessText.string("Bots"),
-                detail = ChessText.string("Five bots, level 1 to 5, from Kaspa Silver to Yonatan Sompolinsky. Beat one to unlock the next. The result goes on Kaspa."),
-            ) { navController.navigate("chess_bots") }
-            // The leaderboards, under the games (iOS 428a797b; owner's call 2026-11-22: no longer
-            // a Kaspa Hub tile of their own). iOS list.number.
-            ChessGameCard(
-                icon = Icons.Default.FormatListNumbered,
-                title = ChessText.string("Leaderboard"),
-                detail = ChessText.string("Who's on top in 1v1 and tournaments, this month or all time, and against each bot."),
-            ) { navController.navigate(KaPlayRoutes.LEADERBOARDS) }
-        }
-    }
 }
 
 /**
@@ -1575,12 +1230,16 @@ fun ChessHomeScreen(navController: NavController) {
 @Composable
 internal fun ChessHomeBar(
     onBack: (() -> Unit)?,
-    /** iOS puts the connection dot on the dock's root screens only; pushed pages have none. */
-    showConnectionDot: Boolean = true,
+    /** Off: since iOS 518fdc8c the connection dot is only at the top of Settings and on the
+     *  dock's Settings icon. */
+    showConnectionDot: Boolean = false,
     title: String? = null,
     centerTitle: String? = null,
     /** A tab's first screen: [AccountBackupBanner] above its title, as in KaChat (iOS 8d5f925). */
     showsBackupBanner: Boolean = false,
+    /** The balance in the bar's centre. Chess's own screen has none: its bar is the inline title
+     *  alone, as the arcade games' homes (iOS 518fdc8c ChessHomeView). */
+    showsBalance: Boolean = true,
     modifier: Modifier = Modifier,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
@@ -1613,7 +1272,7 @@ internal fun ChessHomeBar(
                 if (centerTitle != null) {
                     Text(centerTitle, color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                BalanceTopBarLabel()
+                if (showsBalance) BalanceTopBarLabel()
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically, content = trailing)
@@ -1647,21 +1306,6 @@ private fun ChessFixedTitle(title: String) {
         },
     )
     HorizontalDivider(thickness = 0.5.dp, color = colors.divider)
-}
-
-/** iOS's gameCard: a 60 accent tile (radius 16) with the 28pt symbol in white, the title in
- *  title3 bold over the subheadline detail, a subheadline chevron; padding 16, radius 20. */
-@Composable
-private fun ChessGameCard(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    detail: String,
-    onClick: () -> Unit,
-) {
-    ChessGameCard(title, detail, onClick) {
-        // A Material glyph is inset in its box; 38 draws it the size of a 28pt symbol.
-        Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(38.dp))
-    }
 }
 
 /** The same card with anything in the tile: Play's Chess card has the rook and knight. */
@@ -1736,7 +1380,6 @@ private fun ChessWaitingRoom(
     // (iOS 32e6392 observes `ChessClock` here).
     val now by ChessClock.now.collectAsState()
     val contacts by vm.contacts.collectAsState()
-    val knsNames by service.knsNames.collectAsState()
     val tournament = all[tournamentId]
     val me = service.myAddress
     val context = LocalContext.current
@@ -1888,7 +1531,7 @@ private fun ChessWaitingRoom(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         ChessAvatar(address, contacts, size = 64)
                         Spacer(Modifier.height(8.dp))
-                        Text(chessName(address, contacts, knsNames), color = colors.textPrimary, fontSize = 12.sp,
+                        Text(chessName(address, contacts), color = colors.textPrimary, fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
@@ -2100,7 +1743,6 @@ fun ChessTournamentScreen(tournamentId: String, navController: NavController) {
     // Not on every tick (iOS 32e6392): the countdowns and clocks below collect the clock themselves.
     val now = arenaNow(service)
     val contacts by vm.contacts.collectAsState()
-    val knsNames by service.knsNames.collectAsState()
     val tournament = all[tournamentId]
     val me = service.myAddress
     // Saveable: backing out of the game recomposes this screen, and a plain remember would
@@ -2218,7 +1860,7 @@ fun ChessTournamentScreen(tournamentId: String, navController: NavController) {
                                     val opponentColor = me?.let { game.color(it) }?.opposite ?: ChessColor.BLACK
                                     ChessNextGameRow(
                                         opensAt = game.startedAt + com.kachat.app.util.ChessTournamentCodec.MATCH_FOUND_DELAY_MS,
-                                        title = nextText(tournament, game.round, chessName(game.address(opponentColor), contacts, knsNames)),
+                                        title = nextText(tournament, game.round, chessName(game.address(opponentColor), contacts)),
                                     ) { openGame(game.id) }
                                 }
                             }
@@ -2229,8 +1871,8 @@ fun ChessTournamentScreen(tournamentId: String, navController: NavController) {
                                 Icon(Icons.Default.EmojiEvents, contentDescription = null, tint = colors.warning)
                                 Spacer(Modifier.width(6.dp))
                                 Text(
-                                    if (tournament.isDuel) ChessText.format("%s won", chessName(champion, contacts, knsNames))
-                                    else ChessText.format("%s won the tournament", chessName(champion, contacts, knsNames)),
+                                    if (tournament.isDuel) ChessText.format("%s won", chessName(champion, contacts))
+                                    else ChessText.format("%s won the tournament", chessName(champion, contacts)),
                                     color = colors.warning, fontWeight = FontWeight.SemiBold,
                                 )
                             }
@@ -2251,7 +1893,7 @@ fun ChessTournamentScreen(tournamentId: String, navController: NavController) {
                             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                                 ChessAvatar(address, contacts)
                                 Spacer(Modifier.width(12.dp))
-                                Text(chessName(address, contacts, knsNames), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                                Text(chessName(address, contacts), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                                 Text(ChessText.format("Seed %d", index + 1), color = colors.textSecondary, fontSize = 12.sp)
                             }
                         }
@@ -2274,7 +1916,6 @@ fun ChessTournamentScreen(tournamentId: String, navController: NavController) {
                     me = me,
                     now = now,
                     contacts = contacts,
-                    knsNames = knsNames,
                     onOpenGame = ::openGame,
                 )
             } else {
@@ -2290,14 +1931,14 @@ fun ChessTournamentScreen(tournamentId: String, navController: NavController) {
                             ) {
                                 Column(Modifier.weight(1f)) {
                                     Row {
-                                        Text(chessName(game.white, contacts, knsNames), color = colors.textPrimary, fontSize = 14.sp,
+                                        Text(chessName(game.white, contacts), color = colors.textPrimary, fontSize = 14.sp,
                                             fontWeight = if (game.decidedWinner(now) == game.white) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
                                         Text("  " + ChessText.string("vs") + "  ", color = colors.textSecondary, fontSize = 14.sp)
-                                        Text(chessName(game.black, contacts, knsNames), color = colors.textPrimary, fontSize = 14.sp,
+                                        Text(chessName(game.black, contacts), color = colors.textPrimary, fontSize = 14.sp,
                                             fontWeight = if (game.decidedWinner(now) == game.black) FontWeight.Bold else FontWeight.Normal, maxLines = 1)
                                     }
                                     Text(
-                                        if (game.isOver) ChessText.resultSummary(game, now) { chessName(it, contacts, knsNames) }
+                                        if (game.isOver) ChessText.resultSummary(game, now) { chessName(it, contacts) }
                                         else ChessText.moveLine(game),
                                         color = colors.textSecondary, fontSize = 12.sp,
                                     )
@@ -2472,7 +2113,6 @@ private fun ChessGameResultScreen(
     val all by service.tournaments.collectAsState()
     val leaderboard by service.leaderboard.collectAsState()
     val contacts by vm.contacts.collectAsState()
-    val knsNames by service.knsNames.collectAsState()
     val me = service.myAddress
     val tournament = all[tournamentId]
     val game = tournament?.games?.get(gameId)
@@ -2538,7 +2178,7 @@ private fun ChessGameResultScreen(
                 val winner = game?.winner
                 val outcome = game?.outcome
                 if (winner != null && outcome != null) {
-                    Text(ChessText.resultSentence(chessName(winner, contacts, knsNames), outcome), color = colors.textSecondary, fontSize = 14.sp)
+                    Text(ChessText.resultSentence(chessName(winner, contacts), outcome), color = colors.textSecondary, fontSize = 14.sp)
                 }
                 Spacer(Modifier.height(20.dp))
                 // The record: before -> after, on the board this game counts on.
@@ -2608,7 +2248,7 @@ private fun ChessGameResultScreen(
                         ChessAvatar(row.address, contacts, size = 32)
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            chessName(row.address, contacts, knsNames), color = colors.textPrimary,
+                            chessName(row.address, contacts), color = colors.textPrimary,
                             fontWeight = if (row.address == me) FontWeight.Bold else FontWeight.SemiBold,
                             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                         )
@@ -2666,7 +2306,6 @@ fun ChessTournamentGameScreen(tournamentId: String, gameId: String, navControlle
     val now = arenaNow(service)
     val pending by service.pendingMoveGames.collectAsState()
     val contacts by vm.contacts.collectAsState()
-    val knsNames by service.knsNames.collectAsState()
     val tournament = all[tournamentId]
     val game = tournament?.games?.get(gameId)
     val me = service.myAddress
@@ -2823,10 +2462,10 @@ fun ChessTournamentGameScreen(tournamentId: String, gameId: String, navControlle
                 val winner = game.winner
                 val outcome = game.outcome
                 if (winner != null && outcome != null) {
-                    ChessText.resultSentence(chessName(winner, contacts, knsNames), outcome)
+                    ChessText.resultSentence(chessName(winner, contacts), outcome)
                 } else if (game.decidedWinner(now) != null) {
                     // Out of clock, claim not posted yet: the result is already fixed.
-                    ChessText.format("Time ran out. %s won on time.", chessName(game.decidedWinner(now)!!, contacts, knsNames))
+                    ChessText.format("Time ran out. %s won on time.", chessName(game.decidedWinner(now)!!, contacts))
                 } else if (isPending) {
                     ChessText.string("Sending your move…")
                 } else {
@@ -2845,8 +2484,8 @@ fun ChessTournamentGameScreen(tournamentId: String, gameId: String, navControlle
             // spectator sees both.
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    if (myColor != null) chessName(game.address(myColor.opposite), contacts, knsNames)
-                    else ChessText.format("%s vs %s", chessName(game.white, contacts, knsNames), chessName(game.black, contacts, knsNames)),
+                    if (myColor != null) chessName(game.address(myColor.opposite), contacts)
+                    else ChessText.format("%s vs %s", chessName(game.white, contacts), chessName(game.black, contacts)),
                     color = colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -2859,7 +2498,7 @@ fun ChessTournamentGameScreen(tournamentId: String, gameId: String, navControlle
                 }
             }
             Spacer(Modifier.height(8.dp))
-            ChessClockChip(game, if (flipped) ChessColor.WHITE else ChessColor.BLACK, myColor, contacts, knsNames)
+            ChessClockChip(game, if (flipped) ChessColor.WHITE else ChessColor.BLACK, myColor, contacts)
             Spacer(Modifier.height(8.dp))
             // The board as plain values: recomposed when the position, the selection or an overlay
             // changes, never for a clock (iOS 32e6392 `ChessTournamentBoard`, Equatable).
@@ -2877,7 +2516,7 @@ fun ChessTournamentGameScreen(tournamentId: String, gameId: String, navControlle
                 showsWaiting = myColor != null && !game.isDecided(now) && game.sideToMove != myColor,
                 endOverlay = if (showEndOverlay && endWinner != null && endOutcome != null) {
                     ChessTournamentBoardState.EndOverlay(
-                        winnerName = chessName(endWinner, contacts, knsNames),
+                        winnerName = chessName(endWinner, contacts),
                         outcome = endOutcome,
                         iWon = if (myColor == null) null else endWinner == me,
                     )
@@ -2894,7 +2533,7 @@ fun ChessTournamentGameScreen(tournamentId: String, gameId: String, navControlle
                 modifier = Modifier.padding(horizontal = 12.dp),
             )
             Spacer(Modifier.height(8.dp))
-            ChessClockChip(game, if (flipped) ChessColor.BLACK else ChessColor.WHITE, myColor, contacts, knsNames)
+            ChessClockChip(game, if (flipped) ChessColor.BLACK else ChessColor.WHITE, myColor, contacts)
             Spacer(Modifier.height(LocalDockInset.current))
         }
 
@@ -2926,7 +2565,7 @@ fun ChessTournamentGameScreen(tournamentId: String, gameId: String, navControlle
     // means resigning.
     if ((showResignConfirm || showLeaveWarning) && tournament != null && game != null) {
         val leaving = showLeaveWarning
-        val opponent = chessName(game.address(if (myColor == ChessColor.WHITE) ChessColor.BLACK else ChessColor.WHITE), contacts, knsNames)
+        val opponent = chessName(game.address(if (myColor == ChessColor.WHITE) ChessColor.BLACK else ChessColor.WHITE), contacts)
         // One whole text per case, so a translation can order it as its language needs (iOS 077d777).
         val consequence = when {
             tournament.isDuel && !leaving ->
@@ -3080,7 +2719,6 @@ private fun ChessClockChip(
     color: ChessColor,
     myColor: ChessColor?,
     contacts: Map<String, ContactEntity>,
-    knsNames: Map<String, String>,
 ) {
     val colors = LocalAppColors.current
     val clockNow by ChessClock.now.collectAsState()
@@ -3116,7 +2754,7 @@ private fun ChessClockChip(
         ChessAvatar(address, contacts, size = 26)
         Spacer(Modifier.width(8.dp))
         Text(
-            chessName(address, contacts, knsNames), color = colors.textSecondary, fontSize = 12.sp,
+            chessName(address, contacts), color = colors.textSecondary, fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
         )

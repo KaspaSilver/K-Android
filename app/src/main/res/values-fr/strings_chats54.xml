@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">Qui peut vous écrire ?</string>
+    <string name="c54_who_anyone">Tout le monde</string>
+    <string name="c54_who_usernames">Uniquement les utilisateurs avec un nom d\'utilisateur</string>
+    <string name="c54_who_row_footer">Qui peut démarrer une discussion avec vous. Les personnes avec qui vous discutez déjà ne sont pas concernées.</string>
+    <string name="c54_who_anyone_footer">Tout le monde peut vous envoyer un premier message. Il attend dans Demandes de message jusqu\'à ce que vous l\'acceptiez.</string>
+    <string name="c54_who_usernames_footer">Seules les personnes ayant un nom d\'utilisateur (un nom .kachat) peuvent atteindre vos Demandes de message. Les premiers messages des autres sont masqués et ne vous envoient pas de notification ; choisissez Tout le monde pour les revoir. Les personnes avec qui vous discutez déjà ne sont pas concernées.</string>
+    <string name="c54_room_clears_unread">Efface le badge non lu de cette discussion publique.</string>
+    <string name="c54_room_no_notifications">Aucune notification de cette discussion publique.</string>
+    <string name="c54_room_notifications_resume">Les notifications de cette discussion publique reprennent.</string>
+    <string name="c54_room_delete_subtitle">Retire cette discussion publique de vos discussions.</string>
+    <string name="c54_tip_subtitle">Donner un pourboire à ce contact, comme défini dans Réglages &gt; Personnalisation &gt; Pourboires.</string>
+    <string name="c54_send_tip">Envoyer un pourboire</string>
+    <string name="c54_send_deferred">En attente de la confirmation de vos pièces. L\'envoi se fera tout seul dans un instant, ne le renvoyez donc pas.</string>
+    <string name="c54_failed_start_recording">Impossible de démarrer l\'enregistrement : %1$s</string>
+    <string name="c54_failed_encode_audio">Impossible d\'encoder l\'audio : %1$s</string>
+    <string name="c54_failed_prepare_audio">Impossible de préparer l\'audio : %1$s</string>
+    <string name="c54_sent_a_link">A envoyé un lien</string>
+    <string name="c54_public_chat_room">Salon de discussion public #%1$s</string>
+    <string name="c54_search_contacts_address_username">Rechercher des contacts, une adresse ou un nom d\'utilisateur</string>
+    <string name="c54_looking_up_username">Recherche du nom d\'utilisateur…</string>
+    <string name="c54_no_contacts_paste_username">Tu n\'as pas encore de contacts. Colle une adresse ou un nom d\'utilisateur ci-dessus pour inviter quelqu\'un.</string>
+    <string name="c54_no_contacts_match_username">Aucun contact ne correspond à ta recherche. Colle une adresse ou un nom d\'utilisateur pour inviter quelqu\'un de nouveau.</string>
+    <string name="c54_invites_resent_all">Invitations renvoyées à tous les membres.</string>
+    <string name="c54_invite_resent">Invitation renvoyée.</string>
+    <string name="c54_room_follows_app_indexer">Ce salon utilise de nouveau l\'indexeur de l\'app.</string>
+    <string name="c54_room_indexer_updated">Indexeur mis à jour pour #%1$s.</string>
+    <string name="c54_room_could_not_reach">Impossible de le joindre : %1$s</string>
+    <string name="c54_tap_open_your_chat">Touchez pour ouvrir votre discussion.</string>
+    <string name="c54_tap_start_chat_on_k">Touchez pour démarrer une discussion sur K.</string>
+    <string name="c54_stop_recording">Arrêter l\'enregistrement</string>
+    <string name="c54_send_voice_message">Envoyer le message vocal</string>
+</resources>

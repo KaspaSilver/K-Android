@@ -60,6 +60,14 @@ data class PushRegistrationRequest(
     @SerializedName("kaposts_notify_comments") val kaPostsNotifyComments: Boolean = false,
     @SerializedName("kaposts_notify_reposts") val kaPostsNotifyReposts: Boolean = false,
     @SerializedName("kaposts_notify_follows") val kaPostsNotifyFollows: Boolean = false,
+    /** "mentioned you" (Settings > KaPost > Mentions; iOS 8cb4c88e, audit 2026-11-24 notifications). */
+    @SerializedName("kaposts_notify_mentions") val kaPostsNotifyMentions: Boolean = true,
+    /**
+     * Settings > Notifications > Play sound: false makes every push from the service silent
+     * (kasia-indexer `notify_sound`, `silent_tokens`), Received KAS and .kachat included (iOS
+     * 8cb4c88e, audit 2026-11-24 notifications).
+     */
+    @SerializedName("notify_sound") val notifySound: Boolean = true,
     @SerializedName("kaposts_watch_authors") val kaPostsWatchAuthors: List<String> = emptyList(),
     /**
      * Everyone this account blocked or muted on KaPost (66-hex): the push service sends no KaPost

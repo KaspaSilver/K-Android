@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">Neuer öffentlicher Chat</string>
     <string name="pc_new_public_chat_subtitle">Tritt einem öffentlichen Raum bei oder erstelle einen.</string>
     <string name="pc_edit_default_public_chats">Standard-Chats bearbeiten</string>
-    <string name="pc_edit_default_public_chats_subtitle">Schalte die Standardräume und die Sprachräume ein oder aus.</string>
     <string name="pc_new_public_chat_explainer">Jeder, der demselben Kanalnamen beitritt, kann dort Nachrichten sehen und posten - es gibt keinen Besitzer und keine Einladung.</string>
     <string name="pc_join">Beitreten</string>
     <string name="pc_back">Zurück</string>

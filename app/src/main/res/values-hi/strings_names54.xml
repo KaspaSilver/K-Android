@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">आपके उपयोगकर्ता नाम</string>
+    <string name="names54_no_username_found">कोई उपयोगकर्ता नाम नहीं मिला</string>
+    <string name="names54_use_their_username">उनका उपयोगकर्ता नाम इस्तेमाल करें</string>
+    <string name="names54_kaspa_address_or_username">Kaspa पता या उपयोगकर्ता नाम</string>
+    <string name="names54_enter_address_or_username_example">कोई Kaspa पता (kaspa:...) या उपयोगकर्ता नाम दर्ज करें (जैसे alice.kachat)।</string>
+    <string name="names54_members_footer">अपने संपर्कों से लोग चुनें, या Kaspa पते या उपयोगकर्ता नाम से किसी को भी जोड़ें।</string>
+    <string name="names54_finds_addresses_balance_or_username">बैलेंस या उपयोगकर्ता नाम वाले पते ढूँढता है।</string>
+    <string name="names54_no_addresses_balance_or_username_found">बैलेंस या उपयोगकर्ता नाम वाला कोई पता नहीं मिला।</string>
+    <string name="names54_found_one_address_balance_username">बैलेंस या उपयोगकर्ता नाम वाला 1 पता मिला।</string>
+    <string name="names54_found_n_addresses_balance_username">बैलेंस या उपयोगकर्ता नाम वाले %1$d पते मिले।</string>
+    <string name="names54_no_addresses_balance_or_username_yet">अभी तक बैलेंस या उपयोगकर्ता नाम वाला कोई पता नहीं</string>
+    <string name="names54_contains_username">उपयोगकर्ता नाम शामिल है</string>
+    <string name="names54_get_a_username">उपयोगकर्ता नाम पाएँ</string>
+    <string name="names54_qr_chatting_address_subtitle">चैट करने और उपयोगकर्ता नाम पाने के लिए इस्तेमाल करें।</string>
+    <string name="names54_no_usernames_yet">अभी कोई उपयोगकर्ता नाम नहीं</string>
+    <string name="names54_claim_a_username">उपयोगकर्ता नाम लें</string>
+    <string name="names54_discord_invite_not_found">%1$s नाम का कोई Discord आमंत्रण नहीं है। किसी सर्वर का आमंत्रण कोड इस्तेमाल करें, जैसे discord.gg/abc123: Discord खाते यूज़रनेम से नहीं खोजे जा सकते।</string>
+</resources>

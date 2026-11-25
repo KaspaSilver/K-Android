@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: the system splash screen is the K globe on white, or black in dark mode
+         (iOS 518fdc8c `UILaunchScreen`: `KLogo` on `LaunchBackground`); the loading view then
+         draws the same globe in the same place until the account is loaded. Otherwise the same
+         as values/themes.xml. -->
+    <style name="Theme.KaChat" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/launch_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">@bool/launch_light_bars</item>
+        <item name="android:windowSplashScreenBackground">@color/launch_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_globe</item>
+    </style>
+</resources>

@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">Ещё нет завершённых турниров.</string>
     <string name="kaplay_no_finished_tournaments_this_month">В этом месяце ещё нет завершённых турниров.</string>
     <string name="kaplay_tab_leaderboard">Рейтинг</string>
+    <string name="kp_640de0cb0b2c" formatted="false">Ваш счёт: %s побед, %s поражений</string>
+    <string name="kp_5d12bd53552c" formatted="false">Играть</string>
+    <string name="kp_3ab5950b358f" formatted="false">Сыграйте с первым, кто присоединится, или с другом по коду.</string>
+    <string name="kp_85e2145e7cad" formatted="false">Восемь игроков, на выбывание.</string>
+    <string name="kp_636935a0b48d" formatted="false">Пять ботов, уровни с 1 по 5. Победите одного, чтобы открыть следующего.</string>
+    <string name="kp_6fba758f3243" formatted="false">Переключает на следующую таблицу лидеров</string>
+    <string name="kp_c0fc86977802" formatted="false">Взято соперником</string>
+    <string name="kp_48cb744b4728" formatted="false">Взято вами</string>
+    <string name="kp_76ccff916d06" formatted="false">Запрос на общение</string>
+    <string name="kp_73eb05867f7b" formatted="false">Проигрыш по времени</string>
+    <string name="kp_6eac413a29b7" formatted="false">Сдался(-ась)</string>
+    <string name="kp_8a4d6885363d" formatted="false">Принял(а) партию</string>
+    <string name="kp_012794aeafb0" formatted="false">Отклонил(а) партию</string>
+    <string name="kp_0ac72bc536b1" formatted="false">Приглашение в шахматы</string>
+    <string name="kp_4bb26afc82d3" formatted="false">В этом месяце ещё нет завершённых партий 1v1.</string>
+    <string name="kp_c56c7d117a52" formatted="false">В этом месяце ещё нет завершённых турниров.</string>
 </resources>

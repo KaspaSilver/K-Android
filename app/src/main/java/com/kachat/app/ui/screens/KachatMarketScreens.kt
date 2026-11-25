@@ -117,7 +117,11 @@ fun KachatMarketScreen(
     var searchText by remember { mutableStateOf("") }
     var liveSheet by remember { mutableStateOf<KachatHubSheet?>(null) }
     if (live != null) {
-        LaunchedEffect(Unit) { live.start() }
+        // Only while the section shows: kept hidden in Kaspa Hub, a LaunchedEffect made a status
+        // request and a node call on every Hub tab selection (iOS 518fdc8c `onScreenPresence`,
+        // audit 2026-11-24 #23).
+        val liveStartScope = rememberCoroutineScope()
+        OnScreenPresence(appear = { liveStartScope.launch { live.start() } }, disappear = {})
     }
     // The Marketplace page, opened by `kapay://market` (iOS 953b255 `takePendingMarketplace`):
     // taken once the screen is up, like the pending name below.
@@ -416,7 +420,10 @@ private fun KachatNameSearchCard(
                     modifier = Modifier.size(20.dp).clip(CircleShape).clickable { onSearchText("") },
                 )
             }
-            Text(".kachat", color = KaspaTeal, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+            // the ending only when Show .kachat Endings is on (off by default, iOS 518fdc8c)
+            if (com.kachat.app.models.KachatNameLabel.showsEnding) {
+                Text(".kachat", color = KaspaTeal, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
+            }
         }
         val typed = searchText.trim().lowercase()
         if (typed.isNotEmpty() && isLive) {
@@ -427,7 +434,7 @@ private fun KachatNameSearchCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("$typed.kachat", color = colors.textPrimary, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(com.kachat.app.models.KachatNameLabel.display(typed), color = colors.textPrimary, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(stringResource(R.string.km_registration_not_open), color = colors.textSecondary, fontSize = 12.sp)
                 }
                 Button(onClick = {}, enabled = false) { Text(stringResource(R.string.km_claim)) }
@@ -1140,16 +1147,21 @@ private fun KachatOfferScreen(onClose: () -> Unit) {
 // MARK: - An address's .kachat names
 
 /**
- * The ".kachat" tab of every screen that shows an address's history - Manage Addresses, Cold
- * Storage and the chatting address: the .kachat names that address holds. It replaced the KNS
- * Domains tab (iOS b96d727, 5.2). With an [address] it is that address's own live list
- * ([KachatAddressLiveNamesList], iOS 881ada6) - on every network since iOS 7227d69, empty where
- * the registry isn't launched; without one, the "coming" note (kept, unreachable).
+ * The Domains tab of every screen that shows an address's history - Manage Addresses, Cold
+ * Storage and the chatting address: the usernames (.kachat names) that address holds, the only
+ * name service since 2026-11-23 (iOS 518fdc8c `AddressDomainsTab`). With an [address] it is that
+ * address's own live list ([KachatAddressLiveNamesList], iOS 881ada6) - empty where the registry
+ * isn't launched; without one, the "coming" note (kept, unreachable).
  */
 @Composable
-fun KachatAddressDomainsList(address: String? = null, onOpen: (com.kachat.app.services.kachatnames.NameInfo) -> Unit = {}) {
+fun KachatAddressDomainsList(
+    address: String? = null,
+    onOpen: (com.kachat.app.services.kachatnames.NameInfo) -> Unit = {},
+    /** Extra room at the scroll's end for what floats over the page's foot (its bar, the dock). */
+    bottomPadding: androidx.compose.ui.unit.Dp = 0.dp,
+) {
     if (address != null && com.kachat.app.services.kachatnames.KachatNamesService.isEnabled) {
-        KachatAddressLiveNamesList(address, onOpen)
+        KachatAddressLiveNamesList(address, onOpen, bottomPadding = bottomPadding)
     } else {
         KachatAddressComingNote()
     }
@@ -1168,6 +1180,7 @@ fun KachatAddressLiveNamesList(
     address: String,
     onOpen: (com.kachat.app.services.kachatnames.NameInfo) -> Unit,
     vm: KachatLiveViewModel? = if (com.kachat.app.services.kachatnames.KachatNamesService.isLaunched) hiltViewModel() else null,
+    bottomPadding: androidx.compose.ui.unit.Dp = 0.dp,
 ) {
     val colors = LocalAppColors.current
     // `vm` is null for the screen's whole life on mainnet, so these calls are never conditional in practice.
@@ -1201,7 +1214,7 @@ fun KachatAddressLiveNamesList(
     }
     Box(Modifier.fillMaxSize().nestedScroll(pullState.nestedScrollConnection)) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = bottomPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             when {

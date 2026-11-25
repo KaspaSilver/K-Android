@@ -312,7 +312,7 @@ fun PortfolioScreen(
         topBar = {
             MainPageHeader(
                 title = stringResource(R.string.portfolio),
-                banner = { AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") } },
+                // No backup strip (iOS 518fdc8c: on Profile only) and no connection dot.
                 actions = {
                     // One tap turns every amount on this screen into dots - for reading the
                     // Portfolio somewhere with people around. The KAS price and the percentages
@@ -321,7 +321,7 @@ fun PortfolioScreen(
                     // iOS: "eye" / "eye.slash" (outlined) in the accent, as a bar button is tinted.
                     ToolbarIconButton(
                         if (valuesHidden) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                        contentDescription = if (valuesHidden) "Show amounts" else "Hide amounts",
+                        contentDescription = if (valuesHidden) stringResource(R.string.shell54_show_amounts) else stringResource(R.string.shell54_hide_amounts),
                         onClick = { viewModel.toggleValuesHidden() },
                     )
                 },
@@ -733,7 +733,7 @@ private fun PortfolioTransactionsContent(
                         // No share target installed at all throws rather than showing an empty
                         // chooser; say so instead of crashing the tab.
                         try {
-                            context.startActivity(Intent.createChooser(intent, "Export Portfolio CSV"))
+                            context.startActivity(Intent.createChooser(intent, context.getString(R.string.shell54_export_csv)))
                         } catch (e: ActivityNotFoundException) {
                             IosToasts.error("No app available to share the CSV")
                         }
@@ -897,7 +897,7 @@ private fun PortfolioTransactionsContent(
                 // The sheet stays up and shows progress in place, rather than closing and
                 // handing off to a second dialog.
                 isImportingAddress = true
-                importProgressText = "Starting…"
+                importProgressText = context.getString(R.string.initial_sync_starting) + "…"
                 coroutineScope.launch {
                     val result = viewModel.importAddress(address) { text -> importProgressText = text }
                     isImportingAddress = false
@@ -910,7 +910,7 @@ private fun PortfolioTransactionsContent(
                                 }
                             )
                         },
-                        onFailure = { IosToasts.error(it.message ?: "Import failed.") }
+                        onFailure = { IosToasts.error(it.message ?: context.getString(R.string.shell54_import_failed)) }
                     )
                 }
             },
@@ -976,7 +976,7 @@ private fun AddressEntryDialog(
     // The shared not-found message for the typed name (iOS 5a5122d `notFoundText`).
     var notFoundText by remember { mutableStateOf("") }
     val notFoundContext = androidx.compose.ui.platform.LocalContext.current
-    // The name it resolved as, and every service's answer (`OtherDomainsDropdown`).
+    // The name it resolved as, and the lookup's answers.
     var knsResolvedDomain by remember { mutableStateOf<String?>(null) }
     var nameResolutions by remember { mutableStateOf<List<com.kachat.app.services.NameResolution>>(emptyList()) }
     var selectedTld by remember { mutableStateOf<com.kachat.app.services.NameServiceTLD?>(null) }
@@ -1063,7 +1063,7 @@ private fun AddressEntryDialog(
                 com.kachat.app.ui.theme.IosTextField(
                     value = addressText,
                     onValueChange = { addressText = it },
-                    placeholder = { Text(stringResource(R.string.kaspa_qr_or_domain)) },
+                    placeholder = { Text(stringResource(R.string.shell54_kaspa_qr_or_username)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1079,7 +1079,7 @@ private fun AddressEntryDialog(
                         isResolvingKns -> Row(verticalAlignment = Alignment.CenterVertically) {
                             com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(14.dp), color = KaspaTeal, strokeWidth = 2.dp)
                             Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.looking_up_domain), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
+                            Text(stringResource(R.string.shell54_looking_up_username), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
                         }
                         knsResolvedAddress != null -> Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.CheckCircle, null, tint = LocalAppColors.current.success, modifier = Modifier.size(16.dp))
@@ -1101,16 +1101,7 @@ private fun AddressEntryDialog(
                             Text(stringResource(R.string.invalid_address_format), color = LocalAppColors.current.danger, fontSize = 12.sp)
                         }
                     }
-                    if (!isResolvingKns) {
-                        OtherDomainsDropdown(nameResolutions, selectedTld) { resolution ->
-                            resolution.address?.let {
-                                knsResolvedAddress = it
-                                knsResolvedDomain = resolution.display
-                                selectedTld = resolution.tld
-                                knsNotFound = false
-                            }
-                        }
-                    }
+                    // No "Other domains": .kachat is the only name service (iOS 518fdc8c).
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = { clipboardManager.getText()?.text?.let { addressText = com.kachat.app.util.KaspaAddress.fromScanned(it) } }) {
@@ -1127,7 +1118,7 @@ private fun AddressEntryDialog(
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    stringResource(R.string.portfolio_add_address_footer_kachat),
+                    stringResource(R.string.shell54_portfolio_add_address_footer),
                     color = LocalAppColors.current.textSecondary,
                     fontSize = 12.sp
                 )
@@ -2030,7 +2021,7 @@ fun PortfolioPriceChartScreen(
                     // iOS ChartPairSettingsButton: SF "gearshape" - the outlined gear - in the accent.
                     SheetBarIconButton(
                         Icons.Outlined.Settings,
-                        "Chart settings",
+                        stringResource(R.string.shell54_chart_settings),
                         onClick = { showPairSheet = true },
                         modifier = Modifier.padding(end = 12.dp),
                         iconSize = 22.dp,
@@ -2237,7 +2228,7 @@ fun PortfolioValueChartScreen(
                     // iOS ChartPairSettingsButton: SF "gearshape" - the outlined gear - in the accent.
                     SheetBarIconButton(
                         Icons.Outlined.Settings,
-                        "Chart settings",
+                        stringResource(R.string.shell54_chart_settings),
                         onClick = { showPairSheet = true },
                         modifier = Modifier.padding(end = 12.dp),
                         iconSize = 22.dp,
@@ -2506,7 +2497,7 @@ private fun TransactionRow(
         if (selecting) {
             Icon(
                 if (picked) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                contentDescription = if (picked) "Selected" else "Not selected",
+                contentDescription = if (picked) stringResource(R.string.shell54_selected) else stringResource(R.string.shell54_not_selected),
                 tint = if (picked) KaspaTeal else colors.textSecondary,
                 modifier = Modifier.size(22.dp)
             )
@@ -2769,8 +2760,8 @@ private fun TransactionDialog(
                 ) {
                     Text(
                         when (type) {
-                            "buy" -> "Total Spent"
-                            "sell" -> "Total Received"
+                            "buy" -> stringResource(R.string.shell54_total_spent)
+                            "sell" -> stringResource(R.string.shell54_total_received)
                             else -> stringResource(R.string.portfolio_value_at_the_time)
                         },
                         color = LocalAppColors.current.textSecondary,

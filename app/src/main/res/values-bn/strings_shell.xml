@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">পরিসংখ্যান</string>
     <string name="shell_tab_websites">ওয়েবসাইট</string>
     <string name="shell_kaspa_websites">Kaspa ওয়েবসাইট</string>
-    <string name="shell_customize_dock">ডক সাজান</string>
-    <string name="shell_your_dock">আপনার ডক</string>
-    <string name="shell_always_stays">%1$s সবসময় আপনার ডকে থাকে।</string>
-    <string name="shell_dock_full">আপনার ডক পূর্ণ। এগুলোর একটি যোগ করতে ডক থেকে একটি সরান।</string>
-    <string name="shell_hub_order">%1$s যে ক্রমে দেখায়।</string>
-    <string name="shell_move_to">%1$s কে %2$s-এ সরান</string>
-    <string name="shell_add_to_dock">%1$s ডকে যোগ করুন</string>
-    <string name="shell_always_in_dock">সবসময় আপনার ডকে</string>
-    <string name="shell_hub_empty_title">এখন এখানে কিছু নেই</string>
-    <string name="shell_hub_empty_body">যা আপনার ডকে নেই তা এখানে দেখা যায়। ডক সাজান থেকে সাজিয়ে নিন।</string>
-    <string name="shell_customize_dock_footer">আপনার ডকে কী থাকবে বেছে নিন। বাকি সব Kaspa Hub-এ।</string>
     <string name="shell_terms_of_use">ব্যবহারের শর্তাবলী</string>
     <string name="shell_message_indexer_footer">KaPost, পাবলিক চ্যাট আর দাবাও এই ইনডেক্সার থেকে পড়া হয়।</string>
     <string name="shell_ks_what_counts">কী গোনা হয়</string>

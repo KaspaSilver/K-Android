@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">چه کسی می‌تواند به شما پیام دهد؟</string>
+    <string name="c54_who_anyone">همه</string>
+    <string name="c54_who_usernames">فقط کاربران دارای نام کاربری</string>
+    <string name="c54_who_row_footer">چه کسی می‌تواند با شما گفتگو را شروع کند. روی کسانی که از قبل با آن‌ها گفتگو دارید اثری ندارد.</string>
+    <string name="c54_who_anyone_footer">هر کسی می‌تواند اولین پیام را برایتان بفرستد. این پیام تا وقتی آن را بپذیرید در درخواست‌های پیام منتظر می‌ماند.</string>
+    <string name="c54_who_usernames_footer">فقط افراد دارای نام کاربری (یک نام ‎.kachat) می‌توانند به درخواست‌های پیام شما برسند. اولین پیام‌های بقیه پنهان می‌شوند و برایتان اعلان نمی‌فرستند؛ برای دیدن دوباره‌شان «همه» را انتخاب کنید. روی کسانی که از قبل با آن‌ها گفتگو دارید اثری ندارد.</string>
+    <string name="c54_room_clears_unread">نشان خوانده‌نشده این گفتگوی عمومی را پاک می‌کند.</string>
+    <string name="c54_room_no_notifications">هیچ اعلانی از این گفتگوی عمومی نمی‌آید.</string>
+    <string name="c54_room_notifications_resume">اعلان‌های این گفتگوی عمومی دوباره می‌آیند.</string>
+    <string name="c54_room_delete_subtitle">این گفتگوی عمومی را از گفتگوهای شما حذف می‌کند.</string>
+    <string name="c54_tip_subtitle">به این مخاطب انعام بدهید، طبق آنچه در تنظیمات &gt; شخصی‌سازی &gt; انعام‌دهی تنظیم شده است.</string>
+    <string name="c54_send_tip">ارسال انعام</string>
+    <string name="c54_send_deferred">در انتظار تأیید سکه‌های شما. تا لحظاتی دیگر خودش ارسال می‌شود، پس دوباره ارسالش نکنید.</string>
+    <string name="c54_failed_start_recording">شروع ضبط ناموفق بود: %1$s</string>
+    <string name="c54_failed_encode_audio">رمزگذاری صدا ناموفق بود: %1$s</string>
+    <string name="c54_failed_prepare_audio">آماده‌سازی صدا ناموفق بود: %1$s</string>
+    <string name="c54_sent_a_link">یک پیوند فرستاد</string>
+    <string name="c54_public_chat_room">اتاق گفتگوی عمومی #%1$s</string>
+    <string name="c54_search_contacts_address_username">مخاطبان، یا یک آدرس یا نام کاربری را جست‌وجو کنید</string>
+    <string name="c54_looking_up_username">در حال جست‌وجوی نام کاربری...</string>
+    <string name="c54_no_contacts_paste_username">هنوز مخاطبی ندارید. برای دعوت کسی، یک آدرس یا نام کاربری را بالا بچسبانید.</string>
+    <string name="c54_no_contacts_match_username">هیچ مخاطبی با جست‌وجوی شما جور نیست. برای دعوت فردی تازه، یک آدرس یا نام کاربری بچسبانید.</string>
+    <string name="c54_invites_resent_all">دعوت‌ها دوباره برای همه اعضا ارسال شد.</string>
+    <string name="c54_invite_resent">دعوت دوباره ارسال شد.</string>
+    <string name="c54_room_follows_app_indexer">این اتاق دوباره از ایندکسر برنامه پیروی می‌کند.</string>
+    <string name="c54_room_indexer_updated">ایندکسر برای #%1$s به‌روزرسانی شد.</string>
+    <string name="c54_room_could_not_reach">دسترسی به آن ممکن نشد: %1$s</string>
+    <string name="c54_tap_open_your_chat">برای باز کردن گفتگویتان ضربه بزنید.</string>
+    <string name="c54_tap_start_chat_on_k">برای شروع گفتگو در K ضربه بزنید.</string>
+    <string name="c54_stop_recording">توقف ضبط</string>
+    <string name="c54_send_voice_message">ارسال پیام صوتی</string>
+</resources>

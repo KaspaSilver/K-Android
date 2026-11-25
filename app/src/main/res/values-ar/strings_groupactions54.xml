@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 group create / add members sheets (iOS GroupActionSheets.swift, 2026-11-24): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="ga54_not_sent">لم يُرسل</string>
+    <string name="ga54_x_of_y">%1$d من %2$d</string>
+    <string name="ga54_some_steps_failed">لم تكتمل بعض الخطوات. يمكنك إرسالها مجددًا من معلومات المجموعة &gt; إعادة إرسال الدعوات للجميع.</string>
+    <string name="ga54_each_step_is_tx">كل خطوة معاملة على Kaspa وقد تستغرق بضع ثوانٍ. أبقِ K مفتوحًا حتى تنتهي.</string>
+    <string name="ga54_setting_up_group">جارٍ إعداد المجموعة</string>
+    <string name="ga54_inviting">جارٍ دعوة %1$s</string>
+    <string name="ga54_saving_recovery_copy">جارٍ حفظ نسخة استرداد</string>
+    <string name="ga54_adding_group_photo">جارٍ إضافة صورة المجموعة</string>
+    <string name="ga54_creating">جارٍ إنشاء «%1$s»</string>
+    <string name="ga54_adding">جارٍ إضافة %1$s</string>
+    <string name="ga54_adding_one_member">جارٍ إضافة عضو واحد</string>
+    <string name="ga54_adding_n_members">جارٍ إضافة %1$d أعضاء</string>
+    <string name="ga54_sending_group_key">جارٍ إرسال مفتاح المجموعة الجديد: %1$d من %2$d</string>
+    <string name="ga54_add_one_member">هل تريد إضافة عضو واحد إلى المجموعة؟</string>
+    <string name="ga54_add_n_members">هل تريد إضافة %1$d أعضاء إلى المجموعة؟</string>
+    <string name="ga54_joined_group">انضم %1$s إلى المجموعة</string>
+    <string name="ga54_declined_invite">رفض %1$s الدعوة</string>
+    <string name="ga54_invited_to_group">تمت دعوة %1$s إلى الدردشة الجماعية</string>
+    <string name="ga54_removed_from_group">تمت إزالة %1$s من الدردشة الجماعية</string>
+</resources>

@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">دردشة عامة جديدة</string>
     <string name="pc_new_public_chat_subtitle">انضم إلى غرفة عامة أو أنشئ واحدة.</string>
     <string name="pc_edit_default_public_chats">تعديل المحادثات العامة الافتراضية</string>
-    <string name="pc_edit_default_public_chats_subtitle">شغّل الغرف الافتراضية وغرف اللغات أو أوقفها.</string>
     <string name="pc_new_public_chat_explainer">يمكن لأي شخص ينضم إلى اسم القناة نفسه رؤية الرسائل ونشرها هناك - لا يوجد مالك ولا دعوة.</string>
     <string name="pc_join">انضمام</string>
     <string name="pc_back">رجوع</string>

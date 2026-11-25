@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Account switcher and Connection Status (iOS 8cb4c88e), agent C. -->
+<resources>
+    <string name="accounts_title">账户</string>
+    <string name="add_another_account">添加其他账户</string>
+    <string name="add_another_account_confirm_title">添加其他账户？</string>
+    <string name="add_another_account_confirm_message">你将前往账户页面创建或导入账户。此账户仍保存在这部手机上。</string>
+    <string name="recovery_phrase_needed">需要恢复短语</string>
+    <string name="recovery_phrase_needed_message">此账户的密钥不在这部手机上。请退出登录，然后在账户页面用它的恢复短语登录。</string>
+    <string name="account_signed_in">已登录</string>
+    <string name="switch_account">切换账户</string>
+    <string name="node_status">节点状态</string>
+    <string name="indexer_status">索引器状态</string>
+    <string name="indexer_status_checking">正在检查…</string>
+</resources>

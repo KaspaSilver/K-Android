@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">你的用户名</string>
+    <string name="names54_no_username_found">未找到该用户名</string>
+    <string name="names54_use_their_username">使用对方的用户名</string>
+    <string name="names54_kaspa_address_or_username">Kaspa 地址或用户名</string>
+    <string name="names54_enter_address_or_username_example">输入 Kaspa 地址（kaspa:...）或用户名（例如 alice.kachat）。</string>
+    <string name="names54_members_footer">从联系人中选择，或通过 Kaspa 地址或用户名添加任何人。</string>
+    <string name="names54_finds_addresses_balance_or_username">查找有余额或用户名的地址。</string>
+    <string name="names54_no_addresses_balance_or_username_found">未找到有余额或用户名的地址。</string>
+    <string name="names54_found_one_address_balance_username">找到 1 个有余额或用户名的地址。</string>
+    <string name="names54_found_n_addresses_balance_username">找到 %1$d 个有余额或用户名的地址。</string>
+    <string name="names54_no_addresses_balance_or_username_yet">尚无有余额或用户名的地址</string>
+    <string name="names54_contains_username">包含用户名</string>
+    <string name="names54_get_a_username">获取用户名</string>
+    <string name="names54_qr_chatting_address_subtitle">用于聊天和获取用户名。</string>
+    <string name="names54_no_usernames_yet">还没有用户名</string>
+    <string name="names54_claim_a_username">领取用户名</string>
+    <string name="names54_discord_invite_not_found">没有名为 %1$s 的 Discord 邀请。请使用服务器的邀请码，例如 discord.gg/abc123：Discord 账户无法按用户名查找。</string>
+</resources>

@@ -30,6 +30,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -661,6 +662,52 @@ fun BroadcastChannelScreen(
     // rise over wherever you happened to be reading. You opened the composer to reply to the
     // room as it stands now.
     var composerFocused by remember { mutableStateOf(false) }
+    // The composer's text with its caret, as the field last reported it: the @token being typed
+    // is the run before the caret (iOS ComposerTextView `mentionTokenRange`). Text set from
+    // elsewhere (a draft, a cleared field) puts the caret at its end.
+    var composerField by remember { mutableStateOf(androidx.compose.ui.text.input.TextFieldValue()) }
+    /** The @token being typed (null: none), for the mention suggestions (iOS 2026-11-24). */
+    var mentionQuery by remember { mutableStateOf<String?>(null) }
+    // Text set from elsewhere (sent, cleared, an edit started) ends the @token being typed.
+    LaunchedEffect(messageTextState) {
+        snapshotFlow { messageTextState.value }.collect { if (it != composerField.text) mentionQuery = null }
+    }
+    /** Someone found by looking the typed username up, who may be in no message or contact here. */
+    var lookedUpMention by remember { mutableStateOf<com.kachat.app.ui.components.MentionCandidate?>(null) }
+    val mentionContext = LocalContext.current
+    val roomContactAddresses by broadcastViewModel.contactAddresses.collectAsState()
+    /** People to @ in this room: anyone whose username was looked up, everyone who has written
+     *  here (newest first), then your contacts - only people with a username (owner, 2026-11-24),
+     *  never you, each considered once, 50 at most (iOS `roomMentionCandidates`, 157790b0). */
+    fun roomMentionCandidates(query: String): List<com.kachat.app.ui.components.MentionCandidate> {
+        val me = myAddress?.lowercase()
+        val typed = com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(query)
+        val seen = HashSet<String>()
+        val out = ArrayList<com.kachat.app.ui.components.MentionCandidate>()
+        fun consider(address: String, knownHandle: String? = null) {
+            val key = address.lowercase()
+            // each person once, named or not (their name is looked up as they're considered)
+            if (key == me || !seen.add(key)) return
+            val handle = knownHandle ?: com.kachat.app.util.UsernameMention.handle(address) ?: return
+            if (typed.isEmpty() || com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(handle).startsWith(typed)) {
+                out += com.kachat.app.ui.components.MentionCandidate(address, handle)
+            }
+        }
+        lookedUpMention?.let { consider(it.address, it.handle) }
+        // everyone who has written in this room (newest first), then your contacts
+        for (message in messages.asReversed()) consider(message.senderAddress)
+        for (address in roomContactAddresses) consider(address)
+        return out.take(50)
+    }
+    // Anyone with a username, not only people seen here: look the typed name up (2+ letters).
+    LaunchedEffect(mentionQuery) {
+        lookedUpMention = null
+        val query = mentionQuery ?: return@LaunchedEffect
+        val typed = com.kachat.app.services.kachatnames.KachatNames.Codec.normalize(query)
+        if (typed.length < 2 || !com.kachat.app.services.kachatnames.KachatNames.Codec.isValid(typed)) return@LaunchedEffect
+        kotlinx.coroutines.delay(350)
+        lookedUpMention = com.kachat.app.ui.components.UsernameMentionLookup.lookUp(mentionContext, typed)
+    }
     LaunchedEffect(composerFocused) {
         if (composerFocused && messages.isNotEmpty()) {
             // The keyboard is still animating up and the list has not been resized yet, so
@@ -798,12 +845,12 @@ fun BroadcastChannelScreen(
                             if (roomNotifyEnabled) stringResource(R.string.kpui_notifications_on) else stringResource(R.string.kpui_notifications_off),
                             onClick = { showNotifySheet = true },
                         )
-                        ConnectionDotButton(onClick = { ConnectionStatusOverlayState.open() })
+                        // No connection dot (iOS 518fdc8c: only on Settings and its dock icon).
                     }
                 }
                 // iOS PublicChatRoomTitleChip: the 1:1/group header chip measure for measure, the
-                // circle carrying the room glyph (accent at 20%, "number" 18 semibold) where they
-                // carry a photo. The title itself is the way in to everything about the room.
+                // 60 circle carrying the room glyph (accent at 20%, "number" 24 semibold) where
+                // they carry a photo. The title itself is the way in to everything about the room.
                 ChatHeaderChipLayout(
                     // bidi controls stripped, as in the Chats list (iOS audit 2026-11-21 #22)
                     name = "#${strippingRoomBidiControls(channelName)}",
@@ -816,12 +863,12 @@ fun BroadcastChannelScreen(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(46.dp)
+                            .size(CHAT_HEADER_CHIP_AVATAR)
                             .clip(CircleShape)
                             .background(LocalAppColors.current.background)
                             .background(KaspaTeal.copy(alpha = 0.2f)),
                     ) {
-                        Text("#", color = KaspaTeal, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                        Text("#", color = KaspaTeal, fontSize = 26.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -869,6 +916,26 @@ fun BroadcastChannelScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                // Typing "@" suggests usernames (iOS MentionSuggestionList, 2026-11-24); a pick
+                // replaces the token being typed with "@name ".
+                if (com.kachat.app.util.MentionsFeature.ENABLED) mentionQuery?.let { query ->
+                    com.kachat.app.ui.components.MentionSuggestionList(
+                        source = { roomMentionCandidates(query) },
+                        onPick = { candidate ->
+                            val field = composerField
+                            val text = messageTextState.value
+                            val cursor = if (field.text == text) field.selection.end.coerceIn(0, text.length) else text.length
+                            val start = com.kachat.app.util.UsernameMention.composerTokenStart(text, cursor)
+                            val insert = "@${candidate.handle} "
+                            val updated = if (start != null) text.replaceRange(start, cursor, insert)
+                            else text.substring(0, cursor) + insert + text.substring(cursor)
+                            val caret = (start ?: cursor) + insert.length
+                            composerField = androidx.compose.ui.text.input.TextFieldValue(updated, androidx.compose.ui.text.TextRange(caret))
+                            broadcastViewModel.setMessageText(updated)
+                            mentionQuery = null
+                        },
+                    )
+                }
                 // A failed send, edit or voice note says so in a toast (iOS showToast), not a
                 // line above the composer.
                 // Editing and replying are mutually exclusive - the banner says which one is in
@@ -999,14 +1066,26 @@ fun BroadcastChannelScreen(
                         // messageTextState.
                         ComposerTextScope {
                             val composerText = messageTextState.value
+                            // The field's own value while it matches the text (caret and IME
+                            // composition kept); text set from elsewhere gets the caret at its end.
+                            val fieldValue = composerField.takeIf { it.text == composerText }
+                                ?: androidx.compose.ui.text.input.TextFieldValue(composerText, androidx.compose.ui.text.TextRange(composerText.length))
                             androidx.compose.foundation.text.BasicTextField(
-                                value = composerText,
-                                onValueChange = {
+                                value = fieldValue,
+                                onValueChange = { value ->
                                     // Someone's payment request pasted in opens Send Kaspa instead of
                                     // landing in the message (iOS c6851d6).
-                                    if (!PaymentRequestPaste.interceptInsert(messageTextState.value, it)) {
-                                        broadcastViewModel.setMessageText(it, fromTyping = true)
+                                    if (value.text != messageTextState.value && PaymentRequestPaste.interceptInsert(messageTextState.value, value.text)) {
+                                        return@BasicTextField
                                     }
+                                    composerField = value
+                                    if (value.text != messageTextState.value) {
+                                        broadcastViewModel.setMessageText(value.text, fromTyping = true)
+                                    }
+                                    // The "@query" run before a collapsed caret, for the suggestions.
+                                    mentionQuery = if (!com.kachat.app.util.MentionsFeature.ENABLED || !value.selection.collapsed) null
+                                    else com.kachat.app.util.UsernameMention.composerTokenStart(value.text, value.selection.end)
+                                        ?.let { start -> value.text.substring(start + 1, value.selection.end) }
                                 },
                                 modifier = Modifier
                                     .weight(1f)
@@ -1491,6 +1570,8 @@ fun BroadcastChannelScreen(
                                             .widthIn(max = 280.dp)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(roomBubbleColor(isMine))
+                                            .roomMentionOutline(!isMine && com.kachat.app.util.MentionsFeature.ENABLED &&
+                                                com.kachat.app.util.UsernameMention.mentionsMe(shownText, myAddress))
                                             .combinedClickable(
                                                 onClick = { showFullText = true },
                                                 onLongClick = { showMenu = true },
@@ -1570,6 +1651,15 @@ fun BroadcastChannelScreen(
                                                 addStyle(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline), internal.range.first, internal.range.last + 1)
                                                 addStringAnnotation("URL", internal.raw, internal.range.first, internal.range.last + 1)
                                             }
+                                            // @usernames styled and tappable: a tap opens that
+                                            // person's profile (iOS UsernameMention.attributed,
+                                            // 2026-11-24).
+                                            if (com.kachat.app.util.MentionsFeature.ENABLED) {
+                                                for (token in com.kachat.app.util.UsernameMention.tokens(shownText)) {
+                                                    addStyle(SpanStyle(color = linkColor, fontWeight = FontWeight.SemiBold), token.range.first, token.range.last + 1)
+                                                    addStringAnnotation(ROOM_MENTION_TAG, token.name, token.range.first, token.range.last + 1)
+                                                }
+                                            }
                                         }
                                     }
                                     // iOS: body text padded 14 by 10 on secondarySystemBackground (the
@@ -1581,6 +1671,8 @@ fun BroadcastChannelScreen(
                                             .widthIn(max = 280.dp)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(roomBubbleColor(isMine))
+                                            .roomMentionOutline(!isMine && com.kachat.app.util.MentionsFeature.ENABLED &&
+                                                com.kachat.app.util.UsernameMention.mentionsMe(shownText, myAddress))
                                     ) {
                                         Text(
                                             annotatedBody,
@@ -1599,6 +1691,13 @@ fun BroadcastChannelScreen(
                                                             if (url != null) linkMenuUrl = url else showMenu = true
                                                         },
                                                         onDoubleTap = { QuickReactionBarState.activeId = message.id },
+                                                        // On an @username: that person's profile.
+                                                        onTap = { position ->
+                                                            val layout = bodyLayout ?: return@detectTapGestures
+                                                            val name = annotationAt(layout, annotatedBody, position, ROOM_MENTION_TAG)
+                                                                ?: return@detectTapGestures
+                                                            com.kachat.app.ui.components.UsernameMentionLookup.openProfile(menuContext, name, onOpenKaPostProfile)
+                                                        },
                                                     )
                                                 },
                                         )
@@ -1841,8 +1940,16 @@ fun BroadcastChannelScreen(
                             // "Translating...", "Translated from Spanish - Show original", or why it
                             // could not be - the same line and words KaPosts uses, under the bubble
                             // rather than inside its Box, so the reaction pill stays on the bubble.
-                            // Nothing at all until Translate is picked from the long-press menu.
-                            if (translationState != null) {
+                            // Before any of that, "Translate" under someone else's message in
+                            // another language (iOS 8cb4c88e, owner 2026-11-24: as KaPost's
+                            // "Translate post", not only in the long-press menu).
+                            if (translationState == null) {
+                                if (considersTranslation && translationKey in translatableKeys) {
+                                    TranslateLink(stringResource(R.string.pc_translate)) {
+                                        broadcastViewModel.translateMessage(translationKey, displayContent)
+                                    }
+                                }
+                            } else {
                                 TranslateAffordance(
                                     state = translationState,
                                     canTranslate = false,
@@ -2116,9 +2223,10 @@ private fun RoomComposerSquareButton(
 ) {
     Box(
         contentAlignment = Alignment.Center,
+        // 44 x 44 on glass at radius 14: the same send button as a 1:1 chat's (iOS 2026-11-24).
         modifier = Modifier
-            .size(36.dp)
-            .iosGlass(cornerRadius = 12.dp)
+            .size(44.dp)
+            .iosGlass(cornerRadius = 14.dp)
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { this.contentDescription = contentDescription },
     ) {
@@ -2126,21 +2234,21 @@ private fun RoomComposerSquareButton(
     }
 }
 
-/** SF Symbols' arrow.up.circle.fill at title3: an accent disc (secondary while a send is in
- *  flight) with the arrow cut out of it in the glass behind. */
+/** SF Symbols' arrow.up.circle.fill at title (as a 1:1 chat's, iOS 2026-11-24): an accent disc
+ *  (secondary while a send is in flight) with the arrow cut out of it in the glass behind. */
 @Composable
 private fun RoomSendGlyph(enabled: Boolean) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
-            .size(22.dp)
+            .size(28.dp)
             .background(if (enabled) KaspaTeal else LocalAppColors.current.textSecondary, CircleShape),
     ) {
         Icon(
             Icons.Default.ArrowUpward,
             contentDescription = null,
             tint = LocalAppColors.current.surface,
-            modifier = Modifier.size(15.dp),
+            modifier = Modifier.size(19.dp),
         )
     }
 }
@@ -2174,13 +2282,25 @@ private fun RoomChevronDown() {
  * The "URL" annotation under [position] in a message's text, or null when the press landed off
  * every link - past the end of a line counts as off, not as the line's last character.
  */
-private fun linkAt(layout: TextLayoutResult, text: AnnotatedString, position: Offset): String? {
+private fun linkAt(layout: TextLayoutResult, text: AnnotatedString, position: Offset): String? =
+    annotationAt(layout, text, position, "URL")
+
+/** The [tag] annotation under [position], or null off every one (see [linkAt]). */
+private fun annotationAt(layout: TextLayoutResult, text: AnnotatedString, position: Offset, tag: String): String? {
     val line = layout.getLineForVerticalPosition(position.y)
     if (position.y < layout.getLineTop(line) || position.y > layout.getLineBottom(line)) return null
     if (position.x < layout.getLineLeft(line) || position.x > layout.getLineRight(line)) return null
     val offset = layout.getOffsetForPosition(position)
-    return text.getStringAnnotations("URL", offset, offset).firstOrNull()?.item
+    return text.getStringAnnotations(tag, offset, offset).firstOrNull()?.item
 }
+
+/** A room bubble's @username run: its annotation holds the bare username. */
+private const val ROOM_MENTION_TAG = "MENTION"
+
+/** Someone else's message that @'s you by your username stands out: a 1.5 accent outline on the
+ *  bubble (iOS PublicChatMessageRow `mentionsMe`, 2026-11-24). */
+private fun Modifier.roomMentionOutline(mentionsMe: Boolean): Modifier =
+    if (mentionsMe) border(1.5.dp, KaspaTeal, RoundedCornerShape(16.dp)) else this
 
 /** "02:50", as KaChat's recording bar shows it (iOS 1b15521 `formatRecordingTime`). */
 private fun formatRecordingTime(durationMs: Long): String {

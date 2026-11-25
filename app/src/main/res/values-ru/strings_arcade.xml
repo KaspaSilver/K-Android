@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">Змейка</string>
+    <string name="arcade_snake_detail">Ешьте, растите и не врезайтесь в стены и в себя. Счёт записывается в Kaspa.</string>
+    <string name="arcade_2048_detail">Смахивайте, чтобы объединять плитки и дойти до 2048. Счёт записывается в Kaspa.</string>
+    <string name="arcade_other_account">Эта игра сыграна в другом аккаунте. Войдите в него, чтобы записать счёт.</string>
+    <string name="arcade_score_not_sent">Счёт не отправлен.</string>
+    <string name="arcade_challenge_play">Вызов: сыграйте в «%1$s»</string>
+    <string name="arcade_beat_in">Побейте %1$s в игре «%2$s»</string>
+    <string name="arcade_share_boast">Мой счёт — %1$s в игре «%2$s» в K. Сможете побить?</string>
+    <string name="arcade_challenge_named">%1$s набирает %2$s в игре «%3$s». Сможете побить?</string>
+    <string name="arcade_challenge_someone">Кто-то набрал %1$s в игре «%2$s». Сможете побить?</string>
+    <string name="arcade_your_best">Ваш рекорд: %1$s</string>
+    <string name="arcade_fee_note">Счёт каждой завершённой игры записывается в Kaspa с вашего адреса для чата за небольшую комиссию сети.</string>
+    <string name="arcade_hint_period">Переключает период таблицы лидеров</string>
+    <string name="arcade_board_unreachable">Не удалось загрузить рейтинг. Потяните вниз, чтобы повторить.</string>
+    <string name="arcade_board_empty">Пока нет результатов. Будьте первым.</string>
+    <string name="arcade_posted">Опубликовано в KaPost</string>
+    <string name="arcade_game_over">Игра окончена</string>
+    <string name="arcade_play_again">Играть снова</string>
+    <string name="arcade_posting">Публикация в KaPost…</string>
+    <string name="arcade_shared">Опубликовано в KaPost</string>
+    <string name="arcade_retry_stamp">Повторить запись</string>
+    <string name="arcade_stamping">Записываем счёт в Kaspa…</string>
+    <string name="arcade_stamped">Счёт записан в Kaspa</string>
+    <string name="arcade_no_score">Нет счёта для записи.</string>
+    <string name="arcade_score_n">Счёт: %1$s</string>
+    <string name="arcade_snake_start_hint">Смахните по полю или нажмите стрелку, чтобы начать.</string>
+    <string name="arcade_score">Счёт</string>
+    <string name="arcade_best_tile">Лучшая плитка</string>
+    <string name="arcade_2048_hint">Смахивайте, чтобы двигать плитки. Одинаковые плитки сливаются.</string>
+    <string name="arcade_challenge_label">Аркадный вызов</string>
+</resources>

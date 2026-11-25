@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">उपयोगकर्ता नाम</string>
+    <string name="shell54_tipping_footer">टिप क्या भेजती है, पोस्ट पर और चैट में।</string>
+    <string name="shell54_chatting_picker_intro">अगर ये शब्द पहले से किसी दूसरे पते पर आपकी पहचान रखते हैं - एक .kachat नाम या बैलेंस वाला चैटिंग पता - तो उसे यहां चुनें। केवल बैलेंस या नाम वाले पते दिखाए जाते हैं।</string>
+    <string name="shell54_what_others_can_see_caption">Kaspa नेटवर्क पर कोई भी यह पता और इसका बैलेंस देख सकता है, लेकिन आपके संदेश नहीं पढ़ सकता। इसे सिर्फ़ चैट और उपयोगकर्ता नामों के लिए इस्तेमाल करें।</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... या उपयोगकर्ता नाम</string>
+    <string name="shell54_looking_up_username">उपयोगकर्ता नाम खोजा जा रहा है...</string>
+    <string name="shell54_portfolio_add_address_footer">कोई Kaspa पता या name.kachat जैसा उपयोगकर्ता नाम दर्ज करें। इस पते पर हर प्राप्त लेन-देन एक खरीद और हर भेजा गया लेन-देन एक बिक्री बनता है, उस दिन के ऐतिहासिक KAS मूल्य पर। बाद में वही पता फिर से जोड़ने पर सिर्फ़ पिछले इम्पोर्ट के बाद मिले लेन-देन इम्पोर्ट होते हैं।</string>
+    <string name="shell54_report_copied">रिपोर्ट कॉपी हो गई</string>
+    <string name="shell54_report_no_mail_app">कोई मेल ऐप इसे नहीं खोल सका। रिपोर्ट को %1$s पर एक ईमेल में पेस्ट करें।</string>
+    <string name="shell54_show_amounts">राशियां दिखाएं</string>
+    <string name="shell54_hide_amounts">राशियां छिपाएं</string>
+    <string name="shell54_amount_unit">राशि (%1$s)</string>
+    <string name="shell54_price_per_kas">प्रति KAS कीमत</string>
+    <string name="shell54_total_spent">कुल खर्च</string>
+    <string name="shell54_total_received">कुल प्राप्त</string>
+    <string name="shell54_chart_settings">चार्ट सेटिंग्स</string>
+    <string name="shell54_import_failed">आयात विफल रहा।</string>
+    <string name="shell54_export_csv">CSV निर्यात करें</string>
+    <string name="shell54_sent_on">%1$s भेजा गया (%2$s)</string>
+    <string name="shell54_received_on">%1$s प्राप्त हुआ (%2$s)</string>
+    <string name="shell54_this_portfolio">इस पोर्टफोलियो</string>
+    <string name="shell54_new_portfolio">नया पोर्टफोलियो</string>
+    <string name="shell54_time">समय</string>
+    <string name="shell54_total_value">कुल %1$s</string>
+    <string name="shell54_move_up">%1$s को ऊपर ले जाएँ</string>
+    <string name="shell54_move_down">%1$s को नीचे ले जाएँ</string>
+    <string name="shell54_selected">चयनित</string>
+    <string name="shell54_not_selected">चयनित नहीं</string>
+    <string name="shell54_not_valid_kpub">मान्य kpub नहीं है</string>
+    <string name="shell54_new_address_failed">नया पता नहीं बन सका। फिर से कोशिश करें।</string>
+</resources>

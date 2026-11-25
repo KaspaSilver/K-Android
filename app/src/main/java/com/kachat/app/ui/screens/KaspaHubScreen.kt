@@ -25,8 +25,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -61,14 +59,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kachat.app.R
 import com.kachat.app.ui.AppTab
-import com.kachat.app.ui.CustomizeDock
 import com.kachat.app.ui.DockLayout
 import com.kachat.app.ui.HubRouter
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
 
 /**
- * The Kaspa Hub tab (iOS 148a5331 `KaspaHubView`): a grid of everything that isn't in the dock,
+ * The Kaspa Hub tab (iOS `KaspaHubView`): a grid of everything that isn't in the (fixed) dock,
  * and the section picked from it. The section owns the whole screen, exactly as it looks from its
  * own dock slot ([content] draws the same screen the dock would). Tapping the Kaspa Hub tab again
  * goes back to the grid ([HubRouter.close]); so does the system Back, after the section's own.
@@ -260,19 +257,11 @@ private fun KaspaHubGrid(
         // The grid runs on under the dock; it pads its own end.
         contentWindowInsets = WindowInsets(0),
         topBar = {
-            MainPageHeader(
-                title = stringResource(AppTab.HUB.labelRes),
-                actions = {
-                    // iOS slider.horizontal.3: Customize Dock, as a sheet over the tabs
-                    ToolbarIconButton(Icons.Outlined.Tune, stringResource(R.string.shell_customize_dock), onClick = { CustomizeDock.open() })
-                },
-            )
+            // The balance centred, no connection dot and no Customize Dock (iOS 518fdc8c: the dock
+            // is fixed, and the dot is only on Settings).
+            MainPageHeader(title = stringResource(AppTab.HUB.labelRes))
         },
     ) { padding ->
-        if (hub.isEmpty()) {
-            HubEmptyState(Modifier.padding(padding))
-            return@Scaffold
-        }
         // Three across, so the tiles line up the same way whatever the count.
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -293,31 +282,6 @@ private fun KaspaHubGrid(
                 )
             }
         }
-    }
-}
-
-/** Every tab is in the dock: nothing left for the grid (iOS `emptyState`). */
-@Composable
-private fun HubEmptyState(modifier: Modifier) {
-    val colors = LocalAppColors.current
-    Column(
-        modifier = modifier.fillMaxWidth().padding(top = 60.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Image(
-            painter = painterResource(R.drawable.ic_kaspa_logo),
-            contentDescription = null,
-            modifier = Modifier.size(44.dp).alpha(0.5f),
-        )
-        Text(stringResource(R.string.shell_hub_empty_title), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
-        Text(
-            stringResource(R.string.shell_hub_empty_body),
-            color = colors.textSecondary,
-            fontSize = 15.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp),
-        )
     }
 }
 
@@ -382,9 +346,10 @@ private fun HubTile(tab: AppTab, badgeCount: Int, onClick: () -> Unit) {
 }
 
 /**
- * A tab's icon at a size, as the Hub and Customize Dock draw it (iOS `AppTabIcon`): Kaspa Hub is
- * the Kaspa logo, every other tab its symbol in the accent colour. A Material glyph is inset in
- * its box, so it is drawn a little larger than the iOS point size to match.
+ * A tab's icon at a size, as the Hub draws it (iOS `AppTabIcon`): Kaspa Hub is the Kaspa logo,
+ * Usernames the ".kachat" wordmark (iOS 518fdc8c `KachatTabIcon.view(side: size * 1.25)`), every
+ * other tab its symbol in the accent colour. A Material glyph is inset in its box, so it is drawn
+ * a little larger than the iOS point size to match.
  */
 @Composable
 fun AppTabIcon(tab: AppTab, size: Dp) {
@@ -394,6 +359,8 @@ fun AppTabIcon(tab: AppTab, size: Dp) {
             contentDescription = null,
             modifier = Modifier.size(size),
         )
+    } else if (tab == AppTab.KACHAT_NAMES) {
+        KachatWordmark(height = size * 1.25f)
     } else {
         Icon(tab.hubIcon, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(size * 1.2f))
     }

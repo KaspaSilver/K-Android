@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">Aún no hay torneos terminados.</string>
     <string name="kaplay_no_finished_tournaments_this_month">Aún no hay torneos terminados este mes.</string>
     <string name="kaplay_tab_leaderboard">Clasificación</string>
+    <string name="kp_640de0cb0b2c" formatted="false">Tu récord: %s ganadas, %s perdidas</string>
+    <string name="kp_5d12bd53552c" formatted="false">Jugar</string>
+    <string name="kp_3ab5950b358f" formatted="false">Juega contra la próxima persona que se una o con un amigo por código.</string>
+    <string name="kp_85e2145e7cad" formatted="false">Ocho jugadores, eliminación directa.</string>
+    <string name="kp_636935a0b48d" formatted="false">Cinco bots, del nivel 1 al 5. Vence a uno para desbloquear el siguiente.</string>
+    <string name="kp_6fba758f3243" formatted="false">Pasa a la siguiente clasificación</string>
+    <string name="kp_c0fc86977802" formatted="false">Capturadas por el rival</string>
+    <string name="kp_48cb744b4728" formatted="false">Capturadas por ti</string>
+    <string name="kp_76ccff916d06" formatted="false">Solicitud de comunicación</string>
+    <string name="kp_73eb05867f7b" formatted="false">Perdió por tiempo</string>
+    <string name="kp_6eac413a29b7" formatted="false">Abandonó</string>
+    <string name="kp_8a4d6885363d" formatted="false">Aceptó la partida</string>
+    <string name="kp_012794aeafb0" formatted="false">Rechazó la partida</string>
+    <string name="kp_0ac72bc536b1" formatted="false">Invitación de ajedrez</string>
+    <string name="kp_4bb26afc82d3" formatted="false">Aún no hay partidas 1v1 terminadas este mes.</string>
+    <string name="kp_c56c7d117a52" formatted="false">Aún no hay torneos terminados este mes.</string>
 </resources>

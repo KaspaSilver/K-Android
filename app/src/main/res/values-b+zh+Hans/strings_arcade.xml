@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">贪吃蛇</string>
+    <string name="arcade_snake_detail">吃东西、变长，别撞墙也别撞到自己。分数会记录到 Kaspa。</string>
+    <string name="arcade_2048_detail">滑动合并方块，达到 2048。分数会记录到 Kaspa。</string>
+    <string name="arcade_other_account">这局游戏是用另一个账户玩的。请登录该账户来记录分数。</string>
+    <string name="arcade_score_not_sent">分数未发送。</string>
+    <string name="arcade_challenge_play">挑战：玩 %1$s</string>
+    <string name="arcade_beat_in">在 %2$s 中超越 %1$s 分</string>
+    <string name="arcade_share_boast">我在 K 上玩 %2$s 得了 %1$s 分。你觉得你能超越吗？</string>
+    <string name="arcade_challenge_named">%1$s 在 %3$s 中得了 %2$s 分。你能超越吗？</string>
+    <string name="arcade_challenge_someone">有人在 %2$s 中得了 %1$s 分。你能超越吗？</string>
+    <string name="arcade_your_best">你的最高分：%1$s</string>
+    <string name="arcade_fee_note">每局结束后，分数都会从你的聊天地址记录到 Kaspa，只需很少的网络费用。</string>
+    <string name="arcade_hint_period">切换排行榜的时间范围</string>
+    <string name="arcade_board_unreachable">无法加载排行榜。下拉即可重试。</string>
+    <string name="arcade_board_empty">还没有分数。来做第一个吧。</string>
+    <string name="arcade_posted">已发布到 KaPost</string>
+    <string name="arcade_game_over">游戏结束</string>
+    <string name="arcade_play_again">再玩一次</string>
+    <string name="arcade_posting">正在发布到 KaPost…</string>
+    <string name="arcade_shared">已分享到 KaPost</string>
+    <string name="arcade_retry_stamp">重试记录</string>
+    <string name="arcade_stamping">正在将分数记录到 Kaspa…</string>
+    <string name="arcade_stamped">分数已记录到 Kaspa</string>
+    <string name="arcade_no_score">没有可记录的分数。</string>
+    <string name="arcade_score_n">分数：%1$s</string>
+    <string name="arcade_snake_start_hint">在游戏区域滑动或使用方向键开始。</string>
+    <string name="arcade_score">分数</string>
+    <string name="arcade_best_tile">最大方块</string>
+    <string name="arcade_2048_hint">滑动以移动方块。相同的方块会合并。</string>
+    <string name="arcade_challenge_label">街机挑战</string>
+</resources>

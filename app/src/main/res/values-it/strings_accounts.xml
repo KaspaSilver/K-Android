@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Account switcher and Connection Status (iOS 8cb4c88e), agent C. -->
+<resources>
+    <string name="accounts_title">Account</string>
+    <string name="add_another_account">Aggiungi un altro account</string>
+    <string name="add_another_account_confirm_title">Aggiungere un altro account?</string>
+    <string name="add_another_account_confirm_message">Andrai alla schermata degli account per crearne o importarne uno. Questo account resta salvato su questo telefono.</string>
+    <string name="recovery_phrase_needed">Serve la frase di recupero</string>
+    <string name="recovery_phrase_needed_message">Le chiavi di questo account non sono su questo telefono. Esci, poi accedi dalla schermata degli account con la sua frase di recupero.</string>
+    <string name="account_signed_in">Accesso effettuato</string>
+    <string name="switch_account">Cambia account</string>
+    <string name="node_status">Stato del nodo</string>
+    <string name="indexer_status">Stato dell\'indexer</string>
+    <string name="indexer_status_checking">Verifica…</string>
+</resources>

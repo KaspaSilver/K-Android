@@ -50,7 +50,8 @@ import kotlinx.coroutines.delay
 private val WarningOrange = Color(0xFFFF9500)
 
 /**
- * KaChat's approval for a trade on Trestly's site (iOS 148a5331 `TrestlyApprovalSheet`, from KaPay): what goes in
+ * KaChat's approval for a trade on Trestly's site, or from K's own Swap ([TrestlyApproval.native], iOS 518fdc8c)
+ * (iOS 148a5331 `TrestlyApprovalSheet`, from KaPay): what goes in
  * and comes out, the minimum the site set, the network fee, and Trestly's warnings. Nothing is
  * signed until Approve; Decline, Back or closing the sheet declines (4001). Approve wakes 0.8 s after
  * the sheet appears, so a tap meant for the page behind can't land on it, and stays off while
@@ -84,7 +85,7 @@ fun TrestlyApprovalSheet(request: TrestlyApproval, onAnswer: (Boolean) -> Unit) 
                 TokenIcon(WalletToken.KUSDT, size = 36.dp)
                 Spacer(Modifier.width(10.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(tr(R.string.kp_trestly_asks_kachat_to_kc), color = colors.textSecondary, fontSize = 12.sp)
+                    Text(if (request.native) stringResource(R.string.swap_through_trestly_pool) else tr(R.string.kp_trestly_asks_kachat_to_kc), color = colors.textSecondary, fontSize = 12.sp)
                     Text(approvalTitle(request.method, isBuy), color = colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
@@ -109,7 +110,11 @@ fun TrestlyApprovalSheet(request: TrestlyApproval, onAnswer: (Boolean) -> Unit) 
             approvalWarnings(request).forEach { WarningLine(it) }
 
             Text(
-                if (request.method == "kusdt_swap") tr(R.string.kp_trestly_swap_note_kc) else tr(R.string.kp_trestly_pool_note_kc),
+                when {
+                    request.method == "kusdt_swap" && request.native -> stringResource(R.string.swap_native_note)
+                    request.method == "kusdt_swap" -> tr(R.string.kp_trestly_swap_note_kc)
+                    else -> tr(R.string.kp_trestly_pool_note_kc)
+                },
                 color = colors.textSecondary,
                 fontSize = 13.sp,
             )
@@ -166,7 +171,7 @@ private fun ApprovalRows(request: TrestlyApproval, isBuy: Boolean) {
             TrestlyApproval.number(request.seen?.get("quote"))?.let { before ->
                 ApprovalLine(tr(R.string.kp_you_saw), received(before))
             }
-            ApprovalLine(tr(R.string.kp_minimum_the_site_set), received(request.number("minOut")))
+            ApprovalLine(if (request.native) tr(R.string.swap_minimum_you_get) else tr(R.string.kp_minimum_the_site_set), received(request.number("minOut")))
             if (isBuy) ApprovalLine(tr(R.string.kp_kept_in_your_token), kasText(request.number("tokenValue")))
         }
     }
@@ -184,7 +189,7 @@ private fun approvalWarnings(request: TrestlyApproval): List<String> {
             list += if (fit > 0) tr(R.string.kp_trestly_most_that_fits, kusdtText(fit)) else tr(R.string.kp_trestly_no_sell_fits)
         }
     }
-    if (request.flag("belowMinimum")) list += tr(R.string.kp_trestly_below_minimum)
+    if (request.flag("belowMinimum")) list += tr(if (request.native) R.string.swap_below_your_minimum else R.string.kp_trestly_below_minimum)
     if (request.flag("offRatio")) list += tr(R.string.kp_trestly_off_ratio)
     if (request.flag("unread")) list += tr(R.string.kp_trestly_position_unread)
     if (request.flag("feeShare")) list += tr(R.string.kp_trestly_fee_share)

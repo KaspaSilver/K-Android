@@ -136,7 +136,6 @@ class DiagnosticsExportService @Inject constructor(
         val settings = mapOf(
             "network" to settingsRepository.network.first(),
             "indexerUrl" to settingsRepository.indexerUrl.first(),
-            "knsApiUrl" to settingsRepository.knsApiUrl.first(),
             "kaspaRestUrl" to settingsRepository.kaspaRestUrl.first(),
             // Same no-active-account tolerance as above - "none" rather than a thrown export.
             "activeAddress" to (settingsRepository.activeAddress.first()

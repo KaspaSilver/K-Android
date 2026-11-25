@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">Siapa yang Bisa Mengirim Pesan ke Anda?</string>
+    <string name="c54_who_anyone">Siapa Saja</string>
+    <string name="c54_who_usernames">Hanya Pengguna dengan Nama Pengguna</string>
+    <string name="c54_who_row_footer">Siapa yang bisa memulai obrolan dengan Anda. Orang yang sudah mengobrol dengan Anda tidak terpengaruh.</string>
+    <string name="c54_who_anyone_footer">Siapa saja bisa mengirimi Anda pesan pertama. Pesan itu menunggu di Permintaan Pesan sampai Anda menerimanya.</string>
+    <string name="c54_who_usernames_footer">Hanya orang dengan nama pengguna (nama .kachat) yang bisa masuk ke Permintaan Pesan Anda. Pesan pertama dari orang lain disembunyikan dan tidak memberi pemberitahuan; pilih Siapa Saja untuk melihatnya lagi. Orang yang sudah mengobrol dengan Anda tidak terpengaruh.</string>
+    <string name="c54_room_clears_unread">Menghapus lencana belum dibaca pada obrolan publik ini.</string>
+    <string name="c54_room_no_notifications">Tidak ada notifikasi dari obrolan publik ini.</string>
+    <string name="c54_room_notifications_resume">Notifikasi dari obrolan publik ini berlanjut.</string>
+    <string name="c54_room_delete_subtitle">Menghapus obrolan publik ini dari obrolanmu.</string>
+    <string name="c54_tip_subtitle">Beri tip ke kontak ini, sesuai yang diatur di Pengaturan &gt; Kustomisasi &gt; Tip.</string>
+    <string name="c54_send_tip">Kirim Tip</string>
+    <string name="c54_send_deferred">Menunggu koin Anda dikonfirmasi. Ini akan terkirim sendiri sebentar lagi, jadi jangan kirim lagi.</string>
+    <string name="c54_failed_start_recording">Gagal memulai rekaman: %1$s</string>
+    <string name="c54_failed_encode_audio">Gagal mengodekan audio: %1$s</string>
+    <string name="c54_failed_prepare_audio">Gagal menyiapkan audio: %1$s</string>
+    <string name="c54_sent_a_link">Mengirim tautan</string>
+    <string name="c54_public_chat_room">Ruang obrolan publik #%1$s</string>
+    <string name="c54_search_contacts_address_username">Cari kontak, atau alamat atau nama pengguna</string>
+    <string name="c54_looking_up_username">Mencari nama pengguna...</string>
+    <string name="c54_no_contacts_paste_username">Kamu belum punya kontak. Tempel alamat atau nama pengguna di atas untuk mengundang seseorang.</string>
+    <string name="c54_no_contacts_match_username">Tidak ada kontak yang cocok. Tempel alamat atau nama pengguna untuk mengundang orang baru.</string>
+    <string name="c54_invites_resent_all">Undangan dikirim ulang ke semua anggota.</string>
+    <string name="c54_invite_resent">Undangan dikirim ulang.</string>
+    <string name="c54_room_follows_app_indexer">Ruang ini kembali mengikuti pengindeks aplikasi.</string>
+    <string name="c54_room_indexer_updated">Indexer diperbarui untuk #%1$s.</string>
+    <string name="c54_room_could_not_reach">Tidak dapat dihubungi: %1$s</string>
+    <string name="c54_tap_open_your_chat">Ketuk untuk membuka obrolan Anda.</string>
+    <string name="c54_tap_start_chat_on_k">Ketuk untuk memulai obrolan di K.</string>
+    <string name="c54_stop_recording">Hentikan Rekaman</string>
+    <string name="c54_send_voice_message">Kirim Pesan Suara</string>
+</resources>

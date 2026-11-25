@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 group create / add members sheets (iOS GroupActionSheets.swift, 2026-11-24): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="ga54_not_sent">Chưa gửi</string>
+    <string name="ga54_x_of_y">%1$d / %2$d</string>
+    <string name="ga54_some_steps_failed">Một số bước chưa thành công. Bạn có thể gửi lại trong Thông tin nhóm &gt; Gửi lại lời mời cho tất cả.</string>
+    <string name="ga54_each_step_is_tx">Mỗi bước là một giao dịch trên Kaspa và có thể mất vài giây. Hãy giữ K mở cho đến khi xong.</string>
+    <string name="ga54_setting_up_group">Đang thiết lập nhóm</string>
+    <string name="ga54_inviting">Đang mời %1$s</string>
+    <string name="ga54_saving_recovery_copy">Đang lưu bản sao khôi phục</string>
+    <string name="ga54_adding_group_photo">Đang thêm ảnh nhóm</string>
+    <string name="ga54_creating">Đang tạo “%1$s”</string>
+    <string name="ga54_adding">Đang thêm %1$s</string>
+    <string name="ga54_adding_one_member">Đang thêm 1 thành viên</string>
+    <string name="ga54_adding_n_members">Đang thêm %1$d thành viên</string>
+    <string name="ga54_sending_group_key">Đang gửi khóa nhóm mới: %1$d / %2$d</string>
+    <string name="ga54_add_one_member">Thêm 1 thành viên vào nhóm?</string>
+    <string name="ga54_add_n_members">Thêm %1$d thành viên vào nhóm?</string>
+    <string name="ga54_joined_group">%1$s đã tham gia nhóm</string>
+    <string name="ga54_declined_invite">%1$s đã từ chối lời mời</string>
+    <string name="ga54_invited_to_group">%1$s đã được mời vào nhóm chat</string>
+    <string name="ga54_removed_from_group">%1$s đã bị xóa khỏi nhóm chat</string>
+</resources>

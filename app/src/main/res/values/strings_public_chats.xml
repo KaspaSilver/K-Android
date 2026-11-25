@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">New Public Chat</string>
     <string name="pc_new_public_chat_subtitle">Join a public room, or create one.</string>
     <string name="pc_edit_default_public_chats">Edit Default Public Chats</string>
-    <string name="pc_edit_default_public_chats_subtitle">Turn the default rooms and the language rooms on or off.</string>
     <string name="pc_new_public_chat_explainer">Anyone who joins the same channel name can see and post messages there - there is no owner and no invite.</string>
     <string name="pc_join">Join</string>
     <string name="pc_back">Back</string>

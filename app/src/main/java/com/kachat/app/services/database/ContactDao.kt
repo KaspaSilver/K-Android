@@ -26,8 +26,8 @@ interface ContactDao {
     @Query("DELETE FROM contacts WHERE id = :id AND walletAddress = :walletAddress")
     suspend fun deleteContact(id: String, walletAddress: String)
 
-    /** Drops every stored .kas avatar - since 5.2 .kas profiles are not shown (KnsService
-     *  .LOADS_DOMAIN_PROFILES), and avatars saved before that would otherwise keep showing. */
+    /** Drops every stored .kas avatar - since 5.2 .kas profiles are not shown (and since
+     *  2026-11-23 not read), and avatars saved before that would otherwise keep showing. */
     @Query("UPDATE contacts SET knsAvatarUrl = NULL WHERE knsAvatarUrl IS NOT NULL")
     suspend fun clearKnsAvatars(): Int
 

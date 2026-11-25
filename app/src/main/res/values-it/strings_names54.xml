@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">I tuoi nomi utente</string>
+    <string name="names54_no_username_found">Nessun nome utente trovato</string>
+    <string name="names54_use_their_username">Usa il suo nome utente</string>
+    <string name="names54_kaspa_address_or_username">Indirizzo Kaspa o nome utente</string>
+    <string name="names54_enter_address_or_username_example">Inserisci un indirizzo Kaspa (kaspa:...) o un nome utente (ad es. alice.kachat).</string>
+    <string name="names54_members_footer">Scegli persone dai tuoi contatti o aggiungi chiunque tramite indirizzo Kaspa o nome utente.</string>
+    <string name="names54_finds_addresses_balance_or_username">Trova gli indirizzi con un saldo o un nome utente.</string>
+    <string name="names54_no_addresses_balance_or_username_found">Nessun indirizzo con saldo o nome utente trovato.</string>
+    <string name="names54_found_one_address_balance_username">Trovato 1 indirizzo con saldo o nome utente.</string>
+    <string name="names54_found_n_addresses_balance_username">Trovati %1$d indirizzi con saldo o nome utente.</string>
+    <string name="names54_no_addresses_balance_or_username_yet">Ancora nessun indirizzo con saldo o nome utente</string>
+    <string name="names54_contains_username">Contiene un nome utente</string>
+    <string name="names54_get_a_username">Ottieni un nome utente</string>
+    <string name="names54_qr_chatting_address_subtitle">Usalo per chattare e ottenere nomi utente.</string>
+    <string name="names54_no_usernames_yet">Ancora nessun nome utente</string>
+    <string name="names54_claim_a_username">Rivendica un nome utente</string>
+    <string name="names54_discord_invite_not_found">Non esiste un invito Discord chiamato %1$s. Usa il codice invito di un server, come discord.gg/abc123: gli account Discord non si possono cercare per nome utente.</string>
+</resources>

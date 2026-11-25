@@ -17,8 +17,8 @@ import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.MonetizationOn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -98,9 +98,10 @@ fun WalletScreen(
     var showNotifications by remember { mutableStateOf(false) }
     /** A token's page of the balance card, tapped: Manage kUSDT (`TokenManageView`), pushed. */
     var openToken by remember { mutableStateOf<WalletToken?>(null) }
-    /** Swap Stablecoins: "Which stablecoin?", then Trestly's site for it (iOS 148a5331
-     *  `BuyStablecoinsSheet`). */
-    var showSwapStablecoins by remember { mutableStateOf(false) }
+    /** Swap (iOS 518fdc8c, owner's call 2026-11-23: it replaced Swap Stablecoins): the agreements
+     *  the first time, then the swap screen, full screen. Saved, so it is there again after Go to
+     *  Spending Addresses and back. */
+    var showSwap by rememberSaveable { mutableStateOf(false) }
     /** The balance card's page: 0 is Kaspa, then one per token (`TokenWallet.tokens`). */
     var balancePage by rememberSaveable { mutableIntStateOf(0) }
     /** The pull's address sweep is still going (it runs on after the spinner ends). */
@@ -172,15 +173,6 @@ fun WalletScreen(
         }
     }
 
-    // Done in Trestly: back to the top of the Wallet tab, whatever it was opened from (iOS 148a5331
-    // `.trestlyDone`).
-    LaunchedEffect(Unit) {
-        com.kachat.app.ui.screens.tokens.TrestlyRoute.done.collect {
-            openToken = null
-            showSwapStablecoins = false
-        }
-    }
-
     // Re-tapping the Wallet tab backs out of a pushed page (see WalletViewModel.notifyTabReselected).
     val tabReselectSignal by viewModel.tabReselectSignal.collectAsState()
     LaunchedEffect(tabReselectSignal) {
@@ -191,24 +183,16 @@ fun WalletScreen(
         }
     }
 
-    // The Your Domains card's count: every name the account owns, .kachat, KNS, .k and .kaspa
-    // (iOS 5b7c772c `YourDomainsCard`, moved here from Profile).
-    val ownedKnsDomains by viewModel.ownedDomains.collectAsState()
-    val ownedServiceNames by viewModel.nameServices.owned.collectAsState()
+    // The Your Usernames card's count: the account's .kachat names (in grace included, lapsed
+    // not; 0 where the registry isn't launched) - iOS 518fdc8c `YourDomainsCard`.
     val kachatRevision by viewModel.kachatRegistryRevision.collectAsState()
     var kachatOwnedCount by remember(address) { mutableIntStateOf(0) }
-    LaunchedEffect(address) {
-        // cache first, the network only when stale
-        viewModel.refreshOwnedDomains()
-        // The .k and .kaspa lookups, so the count includes them before the list opens.
-        address?.let { viewModel.nameServices.refreshIfStale(it) }
-    }
     // Reloads whenever the registry moves (a registration, sale or transfer lands).
     LaunchedEffect(address, kachatRevision) {
         val owner = address ?: return@LaunchedEffect
         viewModel.watchKachatOwnedCount(owner) { kachatOwnedCount = it }
     }
-    val domainsCount = kachatOwnedCount + ownedKnsDomains.size + ownedServiceNames.values.sumOf { it.size }
+    val domainsCount = kachatOwnedCount
 
     // Notifications (Kaspa and kUSDT received), for the Notifications page.
     val notifCenterVm: com.kachat.app.viewmodels.NotificationCenterViewModel = hiltViewModel()
@@ -223,7 +207,7 @@ fun WalletScreen(
             MainPageHeader(
                 title = stringResource(R.string.wallet_title),
                 balanceLabel = { BalanceLabelRow(knownChattingSompi?.let { KaspaUnit.amount(it) } ?: "-- ${KaspaUnit.symbol}") },
-                banner = { AccountBackupBanner(viewModel) { navController.navigate("account_backup") } },
+                // No backup strip: it's on Profile only (iOS 518fdc8c, owner 2026-11-23).
             )
         },
     ) { padding ->
@@ -306,6 +290,8 @@ fun WalletScreen(
                         WalletActionButton(stringResource(R.string.wallet_send), Icons.Filled.ArrowUpward, Modifier.weight(1f)) { action = WalletAction.SEND }
                         WalletActionButton(stringResource(R.string.wallet_receive), Icons.Filled.ArrowDownward, Modifier.weight(1f)) { action = WalletAction.RECEIVE }
                         WalletActionButton(stringResource(R.string.wallet_request), Icons.Outlined.Description, Modifier.weight(1f)) { action = WalletAction.REQUEST }
+                        // Swap (iOS 518fdc8c, SF Symbols "arrow.left.arrow.right")
+                        WalletActionButton(stringResource(R.string.swap_title), Icons.Filled.SwapHoriz, Modifier.weight(1f)) { showSwap = true }
                     }
                     if (remember(current, backupConfirmedAt, backupPendingAddresses) { viewModel.accountBackupStatus.isHygieneDue(current) }) {
                         BackupHygieneCard { navController.navigate("backup_hygiene") }
@@ -324,20 +310,9 @@ fun WalletScreen(
                         icon = Icons.Filled.QrCode,
                         onClick = { showChattingQr = true },
                     )
-                    // Swap Stablecoins (from KaPay, iOS 148a5331): "Which stablecoin?" first (kUSDT
-                    // today), then Trestly's site inside KaChat, connected to the address you pick.
+                    // Your Usernames (iOS 518fdc8c YourDomainsCard), as KaPay's Wallet tab has it.
                     WalletLinkCard(
-                        label = stringResource(R.string.kp_swap_stablecoins),
-                        // SF Symbols "dollarsign.circle"
-                        icon = Icons.Outlined.MonetizationOn,
-                        onClick = {
-                            haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
-                            showSwapStablecoins = true
-                        },
-                    )
-                    // Moved here from Profile (iOS 5b7c772c YourDomainsCard), as KaPay's Wallet tab has it.
-                    WalletLinkCard(
-                        label = stringResource(R.string.kns_domains),
+                        label = stringResource(R.string.names54_your_usernames),
                         icon = Icons.Filled.AlternateEmail,
                         onClick = { navController.navigate("kns_domains") },
                         trailing = { WalletCardCount("$domainsCount") },
@@ -376,9 +351,7 @@ fun WalletScreen(
             }
         }
     }
-    if (showSwapStablecoins) {
-        com.kachat.app.ui.screens.tokens.SwapStablecoinsSheet(walletViewModel = viewModel, onDismissed = { showSwapStablecoins = false })
-    }
+    com.kachat.app.ui.screens.tokens.SwapCover(visible = showSwap, onDismiss = { showSwap = false }, navController = navController)
     when (action) {
         // "What are you sending?" first: Kaspa or a token (iOS 5b7c772c SendAssetChooser).
         WalletAction.SEND -> SendAssetChooser(

@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">Belum ada turnamen yang selesai.</string>
     <string name="kaplay_no_finished_tournaments_this_month">Belum ada turnamen yang selesai bulan ini.</string>
     <string name="kaplay_tab_leaderboard">Papan Peringkat</string>
+    <string name="kp_640de0cb0b2c" formatted="false">Rekormu: %s menang, %s kalah</string>
+    <string name="kp_5d12bd53552c" formatted="false">Main</string>
+    <string name="kp_3ab5950b358f" formatted="false">Main melawan orang berikutnya yang bergabung, atau teman lewat kode.</string>
+    <string name="kp_85e2145e7cad" formatted="false">Delapan pemain, sistem gugur.</string>
+    <string name="kp_636935a0b48d" formatted="false">Lima bot, level 1 sampai 5. Kalahkan satu untuk membuka berikutnya.</string>
+    <string name="kp_6fba758f3243" formatted="false">Beralih ke papan peringkat berikutnya</string>
+    <string name="kp_c0fc86977802" formatted="false">Dimakan lawan</string>
+    <string name="kp_48cb744b4728" formatted="false">Dimakan Anda</string>
+    <string name="kp_76ccff916d06" formatted="false">Handshake</string>
+    <string name="kp_73eb05867f7b" formatted="false">Kalah waktu</string>
+    <string name="kp_6eac413a29b7" formatted="false">Menyerah</string>
+    <string name="kp_8a4d6885363d" formatted="false">Menerima permainan</string>
+    <string name="kp_012794aeafb0" formatted="false">Menolak permainan</string>
+    <string name="kp_0ac72bc536b1" formatted="false">Undangan catur</string>
+    <string name="kp_4bb26afc82d3" formatted="false">Belum ada game 1v1 yang selesai bulan ini.</string>
+    <string name="kp_c56c7d117a52" formatted="false">Belum ada turnamen yang selesai bulan ini.</string>
 </resources>

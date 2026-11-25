@@ -1039,13 +1039,15 @@ fun openKaChatLink(context: android.content.Context, ref: KaChatLinkRef, fromCha
  * address is always one [KaChatLink.profileAddress] already validated.
  */
 object ProfileDeepLink {
-    data class Pending(val address: String, val openChat: Boolean)
+    /** [external]: a link from outside the app, whose `chat=1` opens only a known chat partner's
+     *  chat (iOS audit 2026-11-24 #20); KaPost's own Chat button isn't. */
+    data class Pending(val address: String, val openChat: Boolean, val external: Boolean = false)
 
     private val _pending = MutableStateFlow<Pending?>(null)
     val pending: StateFlow<Pending?> = _pending.asStateFlow()
 
-    fun request(address: String, openChat: Boolean = false) {
-        _pending.value = Pending(KaChatLink.profileAddress(address) ?: return, openChat)
+    fun request(address: String, openChat: Boolean = false, external: Boolean = false) {
+        _pending.value = Pending(KaChatLink.profileAddress(address) ?: return, openChat, external)
     }
 
     fun consumePending() {
@@ -1082,8 +1084,8 @@ fun KaChatInternalLinkCard(
     val colors = LocalAppColors.current
     var showMenu by remember { mutableStateOf(false) }
 
-    // A profile card names the person the way iOS does - their KNS name, else what you saved
-    // them as - and says whether a tap opens your chat or starts one.
+    // A profile card names the person the way iOS does - what you saved them as (no KNS name
+    // since 2026-11-23) - and says whether a tap opens your chat or starts one.
     val profileAddress = (ref as? KaChatLinkRef.Profile)?.address
     var profileName by remember(profileAddress) { mutableStateOf<String?>(null) }
     var profileIsContact by remember(profileAddress) { mutableStateOf(false) }
@@ -1092,8 +1094,7 @@ fun KaChatInternalLinkCard(
         LaunchedEffect(profileAddress) {
             val contact = resolver.contactFor(profileAddress)
             profileIsContact = contact != null
-            profileName = resolver.profileFor(profileAddress)?.first
-                ?: contact?.alias?.takeIf { it.isNotBlank() }
+            profileName = contact?.alias?.takeIf { it.isNotBlank() }
         }
     }
 
@@ -1115,7 +1116,7 @@ fun KaChatInternalLinkCard(
         }
     }
     // A KaPost link's post, once the indexer has it, and its poster named the way a profile card
-    // names them: their KNS name, else what you saved them as (iOS a8a5807a).
+    // names them: the app's display name for them (iOS a8a5807a; no KNS since 518fdc8c).
     val kaPostTxId = (ref as? KaChatLinkRef.KaPost)?.txId
     var kaPostPreview by remember(kaPostTxId) { mutableStateOf<com.kachat.app.services.KaPostPreview?>(null) }
     var kaPostAuthorName by remember(kaPostTxId) { mutableStateOf<String?>(null) }
@@ -1125,8 +1126,7 @@ fun KaChatInternalLinkCard(
             val preview = resolver.cachedKaPostPreview(kaPostTxId) ?: resolver.kaPostPreview(kaPostTxId)
             kaPostPreview = preview
             val author = preview?.authorAddress ?: return@LaunchedEffect
-            kaPostAuthorName = resolver.profileFor(author)?.first
-                ?: com.kachat.app.models.addressDisplayName(author, resolver.contactFor(author)?.alias)
+            kaPostAuthorName = com.kachat.app.models.addressDisplayName(author, resolver.contactFor(author)?.alias)
         }
     }
     val kaPostFallbackTitle = stringResource(R.string.a_post_on_kapost)
@@ -1166,7 +1166,8 @@ fun KaChatInternalLinkCard(
     }
     val subtitle = when (ref) {
         is KaChatLinkRef.Profile ->
-            if (profileIsContact) "Tap to open your chat." else "Tap to start a chat on K."
+            // translated (iOS audit 2026-11-24 #33)
+            if (profileIsContact) stringResource(R.string.c54_tap_open_your_chat) else stringResource(R.string.c54_tap_start_chat_on_k)
         // The memo, the maker as the signature in the link proves - their name, not the payment
         // address - and what a tap does (iOS c6851d6, 7c71a98, 1fe8388).
         is KaChatLinkRef.PaymentRequest -> listOfNotNull(

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">Kullanıcı Adların</string>
+    <string name="names54_no_username_found">Kullanıcı adı bulunamadı</string>
+    <string name="names54_use_their_username">Kullanıcı adını kullan</string>
+    <string name="names54_kaspa_address_or_username">Kaspa Adresi veya Kullanıcı Adı</string>
+    <string name="names54_enter_address_or_username_example">Bir Kaspa adresi (kaspa:...) veya kullanıcı adı gir (ör. alice.kachat).</string>
+    <string name="names54_members_footer">Kişilerinden birilerini seç ya da herkesi Kaspa adresi veya kullanıcı adıyla ekle.</string>
+    <string name="names54_finds_addresses_balance_or_username">Bakiyesi veya kullanıcı adı olan adresleri bulur.</string>
+    <string name="names54_no_addresses_balance_or_username_found">Bakiyesi veya kullanıcı adı olan adres bulunamadı.</string>
+    <string name="names54_found_one_address_balance_username">Bakiyesi veya kullanıcı adı olan 1 adres bulundu.</string>
+    <string name="names54_found_n_addresses_balance_username">Bakiyesi veya kullanıcı adı olan %1$d adres bulundu.</string>
+    <string name="names54_no_addresses_balance_or_username_yet">Henüz bakiyesi veya kullanıcı adı olan adres yok</string>
+    <string name="names54_contains_username">Kullanıcı adı içerir</string>
+    <string name="names54_get_a_username">Kullanıcı adı al</string>
+    <string name="names54_qr_chatting_address_subtitle">Sohbet etmek ve kullanıcı adı almak için kullan.</string>
+    <string name="names54_no_usernames_yet">Henüz kullanıcı adı yok</string>
+    <string name="names54_claim_a_username">Kullanıcı Adı Al</string>
+    <string name="names54_discord_invite_not_found">%1$s adında bir Discord daveti yok. Bir sunucunun davet kodunu kullan, örneğin discord.gg/abc123: Discord hesapları kullanıcı adıyla aranamaz.</string>
+</resources>

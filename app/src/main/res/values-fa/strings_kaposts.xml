@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">انعام ارسال نشد: آدرس «انعام از» شما اکنون خوانده نمی‌شود.</string>
     <string name="feed54_tip_minimum_footer">کوچک‌ترین انعامی که شبکه می‌پذیرد %1$s است.</string>
     <string name="feed54_tip_no_price">انعام ارسال نشد: قیمت اخیری از KAS برای تبدیل %1$s به KAS وجود ندارد.</string>
-    <string name="feed54_tip_too_small">انعام ارسال نشد: کوچک‌ترین انعامی که شبکه می‌پذیرد %1$s است. انعام پیش‌فرض خود را در تنظیمات &gt; KaPost تغییر دهید.</string>
+    <string name="feed54_tip_too_small">انعام ارسال نشد: کوچک‌ترین انعامی که شبکه می‌پذیرد %1$s است. انعام پیش‌فرض خود را در تنظیمات &gt; شخصی‌سازی &gt; انعام‌دهی تغییر دهید.</string>
     <string name="feed54_tipped">%1$s انعام به %2$s داده شد</string>
     <string name="feed54_tipped_privately">%1$s انعام به‌صورت خصوصی به %2$s داده شد</string>
     <string name="feed54_unfollow_posted">لغو دنبال کردن در شبکه ثبت شد</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">انعام</string>
     <string name="kaposts_tips">انعام‌ها</string>
     <string name="kaposts_tips_from">انعام از</string>
-    <string name="kaposts_tips_from_footnote">انعام‌ها از Chatting Address روی پست شمرده می‌شوند و نام شما در فهرست انعام‌دهندگان می‌آید. انعام از آدرس دیگر خصوصی است: نویسنده آن را دریافت می‌کند و در گفتگوی شما می‌بیند، اما روی پست شمرده نمی‌شود و نامی از شما نمی‌برد.</string>
+    <string name="kaposts_tips_from_footnote">انعام‌ها از Chatting Address روی پست شمرده می‌شوند و نام شما در فهرست انعام‌دهندگان می‌آید. انعام از آدرس دیگر خصوصی است: نویسنده آن را دریافت می‌کند و در گفتگوی شما می‌بیند، اما روی پست شمرده نمی‌شود و نامی از شما نمی‌برد. انعام در گفتگو هم از همین‌جا فرستاده می‌شود.</string>
     <string name="kaposts_tips_from_not_available">در دسترس نیست</string>
     <string name="kaposts_who_tipped">چه کسانی به این پست انعام دادند</string>
     <string name="kn53_kaplay_beat_in_move">%1$s را در %2$d حرکت شکست دهید</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">انعام با</string>
     <string name="kp5_tip_in_ask">هر بار بپرس</string>
     <string name="kp5_tip_in_ask_footer">انعام هر بار می‌پرسد Kaspa بفرستد یا kUSDT.</string>
-    <string name="kp5_tip_in_kusdt_footer">انعام، kUSDT را به آدرس گفتگوی نویسنده پست می‌فرستد. انعام‌های kUSDT روی پست شمرده نمی‌شوند.</string>
+    <string name="kp5_tip_in_kusdt_footer">انعام، kUSDT را به آدرس گفتگوی او می‌فرستد. انعام‌های kUSDT روی پست شمرده نمی‌شوند.</string>
     <string name="kp5_tip_not_counted">روی پست شمرده نمی‌شود</string>
-    <string name="kp5_tip_set_in_settings">آنچه انعام می‌فرستد را در تنظیمات > KaPost > انعام با انتخاب کنید.</string>
+    <string name="kp5_tip_set_in_settings">آنچه انعام می‌فرستد را در تنظیمات &gt; شخصی‌سازی &gt; انعام‌دهی انتخاب کنید.</string>
     <string name="kp5_tip_title">انعام</string>
     <string name="kp5_tip_what_in">با چه چیزی انعام می‌دهید؟</string>
     <string name="l53_already_in_your_language">از قبل به زبان شماست</string>

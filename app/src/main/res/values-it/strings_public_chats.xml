@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">Nuova chat pubblica</string>
     <string name="pc_new_public_chat_subtitle">Entra in una stanza pubblica o creane una.</string>
     <string name="pc_edit_default_public_chats">Modifica chat pubbliche predefinite</string>
-    <string name="pc_edit_default_public_chats_subtitle">Attiva o disattiva le stanze predefinite e quelle delle lingue.</string>
     <string name="pc_new_public_chat_explainer">Chiunque si unisca allo stesso nome di canale può vedere e pubblicare messaggi lì - non ci sono proprietari né inviti.</string>
     <string name="pc_join">Unisciti</string>
     <string name="pc_back">Indietro</string>

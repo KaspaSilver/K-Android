@@ -76,7 +76,7 @@
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.KaChat"
             android:resizeableActivity="true"
-            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden">
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden|uiMode">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -117,7 +117,8 @@
             <!-- The retired apps' own schemes, registered here since KaChat is the all-in-one app
                  again (iOS 148a5331 Info.plist): kaposts:// (KaPost: posts, rooms, compose),
                  kapay:// and kachatwallet:// (KaPay: profiles, payment requests, the market) and
-                 kachatchess:// (KaPlay: bot challenges). Each link is validated in MainActivity. -->
+                 kachatchess:// (KaPlay: bot challenges) and kachatarcade:// (KaPlay's arcade score
+                 challenges, iOS 518fdc8c). Each link is validated in MainActivity. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -126,6 +127,7 @@
                 <data android:scheme="kapay" />
                 <data android:scheme="kachatwallet" />
                 <data android:scheme="kachatchess" />
+                <data android:scheme="kachatarcade" />
             </intent-filter>
             <!-- Universal-link form. autoVerify needs /.well-known/assetlinks.json served at
                  the domain (mirrors iOS's AASA file - see KACHAT_APP_LINKS.md). KaPosts posts

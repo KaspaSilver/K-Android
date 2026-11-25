@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">Введите свой хешрейт, чтобы оценить доход.</string>
     <string name="kp_export_failed_csv">Не удалось экспортировать. Не получилось записать CSV-файл</string>
     <string name="kp_fee_amount">Комиссия %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">Найдено адресов с балансом или доменом: %1$d.</string>
-    <string name="kp_found_one_address_balance_domain">Найден 1 адрес с балансом или доменом.</string>
     <string name="kp_frame_lld_lld_5cb10">Кадр %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">Дайте этому аккаунту имя, чтобы его можно было узнать.</string>
     <string name="kp_hide_address">Скрыть адрес</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">Новый портфель</string>
     <string name="kp_next_block_reward">Следующая награда за блок</string>
     <string name="kp_next_block_reward_reduction">Следующее снижение награды за блок</string>
-    <string name="kp_no_addresses_balance_domain_found">Адреса с балансом или доменом не найдены.</string>
     <string name="kp_no_addresses_discovered_yet_15738">Пока не найдено адресов.</string>
     <string name="kp_no_used_addresses_yet">Использованных адресов пока нет</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Пока недостаточно истории - загляните снова через несколько дней активности.</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">Сохраняет CSV в папку KaChat вашего Nextcloud.</string>
     <string name="pnc_import_sub">Выберите CSV-файл в вашем Nextcloud.</string>
     <string name="portfolio">Портфель</string>
-    <string name="portfolio_add_address_footer_kachat">Введите адрес Kaspa или домен, например name.kachat (сначала ищутся имена .kachat). Каждая полученная на этот адрес транзакция станет покупкой, каждая отправленная — продажей по исторической цене KAS в тот день. При повторном добавлении того же адреса импортируются только транзакции, найденные после прошлого импорта.</string>
     <string name="portfolio_add_chatting_address">Добавить адрес чата</string>
     <string name="portfolio_add_chatting_address_sub">Покупки и продажи вашего адреса чата и все сетевые комиссии, которые он заплатил.</string>
     <string name="portfolio_fees_count_loading">Транзакций: %1$d. Некоторые цены ещё загружаются.</string>

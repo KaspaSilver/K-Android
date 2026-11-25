@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">নতুন পাবলিক চ্যাট</string>
     <string name="pc_new_public_chat_subtitle">একটি পাবলিক রুমে যোগ দিন, বা নতুন তৈরি করুন।</string>
     <string name="pc_edit_default_public_chats">ডিফল্ট পাবলিক চ্যাট সম্পাদনা</string>
-    <string name="pc_edit_default_public_chats_subtitle">ডিফল্ট রুম ও ভাষার রুম চালু বা বন্ধ করুন।</string>
     <string name="pc_new_public_chat_explainer">একই চ্যানেল নামে যোগ দেওয়া যে কেউ সেখানে বার্তা দেখতে ও পোস্ট করতে পারে - কোনো মালিক নেই, কোনো আমন্ত্রণও নেই।</string>
     <string name="pc_join">যোগ দিন</string>
     <string name="pc_back">ফিরে যান</string>

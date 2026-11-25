@@ -69,8 +69,6 @@
     <string name="delete_account">खाता हटाएं</string>
     <string name="delete_group">समूह हटाएं</string>
     <string name="done">हो गया</string>
-    <string name="each_transaction_temporarily_uses_2_kas">प्रत्येक लेन-देन अस्थायी रूप से ~2 KAS का उपयोग करता है; ~1 KAS तुरंत शेष राशि के रूप में वापस आता है, इसलिए केवल छोटा नेटवर्क शुल्क ही वास्तविक लागत है।</string>
-    <string name="edit_kns_profile">KNS प्रोफ़ाइल संपादित करें</string>
     <string name="edit_account">खाता संपादित करें</string>
     <string name="error">त्रुटि</string>
     <string name="every_member_will_see_the_new">हर सदस्य नया नाम देखेगा।</string>
@@ -86,8 +84,6 @@
     <string name="import_account">खाता आयात करें</string>
     <string name="import_existing_account">मौजूदा खाता आयात करें</string>
     <string name="incoming_notifications">आने वाली सूचनाएं</string>
-    <string name="kns_domains">आपके डोमेन</string>
-    <string name="contact_kns_domains">KNS डोमेन</string>
     <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K को एक नोड से जुड़ने की आवश्यकता है। आप कैसे कनेक्ट करना चाहेंगे?</string>
     <string name="kaspa_explorer">कास्पा एक्सप्लोरर</string>
@@ -97,14 +93,9 @@
     <string name="manage_addresses">पते प्रबंधित करें</string>
     <string name="max">अधिकतम</string>
     <string name="message">संदेश</string>
-    <string name="more_info">अधिक जानकारी</string>
     <string name="name">नाम</string>
     <string name="next">अगला</string>
     <string name="no_conversations_yet">अभी कोई बातचीत नहीं</string>
-    <string name="no_domains_yet">अभी तक कोई डोमेन नहीं.</string>
-    <string name="send_domain">डोमेन भेजें</string>
-    <string name="asset_id">संपत्ति आईडी</string>
-    <string name="primary_domain">प्राथमिक डोमेन</string>
     <string name="set_as_primary">मुख्य के रूप में सेट करें</string>
     <string name="no_hidden_addresses">कोई छिपा हुआ पता नहीं।</string>
     <string name="no_hidden_users_in_this_group">इस समूह में कोई छिपा हुआ उपयोगकर्ता नहीं है।</string>
@@ -152,7 +143,6 @@
     <string name="show_more">अधिक दिखाएं</string>
     <string name="show_qr_code">QR कोड दिखाएं</string>
     <string name="skip">छोड़ें</string>
-    <string name="some_changes_failed_to_save">कुछ बदलाव सहेजे नहीं जा सके:</string>
     <string name="start_a_new_chat_by_adding">नया चैट शुरू करने के लिए एक संपर्क जोड़ें</string>
     <string name="status">स्थिति</string>
     <string name="tap_an_address_below_to_swap">नीचे किसी पते से स्वैप करने के लिए उस पर टैप करें</string>
@@ -197,7 +187,6 @@
     <string name="created">बनाया गया</string>
     <string name="customization">अनुकूलन</string>
     <string name="diagnostics">डायग्नोस्टिक्स</string>
-    <string name="discord">Discord</string>
     <string name="discover_addresses">पते खोजें</string>
     <string name="email">ईमेल</string>
     <string name="explorer">एक्सप्लोरर</string>
@@ -206,7 +195,6 @@
     <string name="ip_address_book">IP पता पुस्तिका</string>
     <string name="indexer">इंडेक्सर</string>
     <string name="info">जानकारी</string>
-    <string name="kns_profile">KNS प्रोफ़ाइल</string>
     <string name="kaspa_explorer_api">Kaspa Explorer API</string>
     <string name="kaspa_node">कास्पा नोड</string>
     <string name="default_recommended">डिफ़ॉल्ट (अनुशंसित)</string>
@@ -221,7 +209,6 @@
     <string name="protocol">प्रोटोकॉल</string>
     <string name="push_notifications">पुश सूचनाएं</string>
     <string name="reconnect">पुनः कनेक्ट करें</string>
-    <string name="redirect">रीडायरेक्ट</string>
     <string name="refresh_pool">पूल रीफ्रेश करें</string>
     <string name="reply">जवाब दें</string>
     <string name="retry_send">पुनः भेजें</string>
@@ -234,20 +221,16 @@
     <string name="storage">स्टोरेज</string>
     <string name="on_this_device">इस डिवाइस पर</string>
     <string name="cloud_storage">क्लाउड स्टोरेज</string>
-    <string name="submitting_commit_transaction">कमिट लेन-देन भेजा जा रहा है...</string>
-    <string name="submitting_reveal_transaction">रिवील लेन-देन भेजा जा रहा है...</string>
     <string name="support_email">सहायता ईमेल</string>
     <string name="telegram">Telegram</string>
     <string name="total">कुल</string>
     <string name="verified">सत्यापित</string>
-    <string name="verifying_new_ownership_on_chain_this">चेन पर नया स्वामित्व सत्यापित हो रहा है (इसमें एक मिनट लग सकता है)...</string>
     <string name="version">संस्करण</string>
     <string name="vibration">कंपन</string>
     <string name="view_profile">प्रोफ़ाइल देखें</string>
     <string name="view_seed_phrase">12 या 24 शब्द देखें</string>
     <string name="view_in_explorer">एक्सप्लोरर में देखें</string>
     <string name="website">वेबसाइट</string>
-    <string name="x">X</string>
     <string name="language">भाषा</string>
     <string name="system_default">सिस्टम</string>
     <string name="welcome_to_kachat">K में आपका स्वागत है</string>
@@ -282,27 +265,16 @@
     <string name="mark_as_read">पढ़ा हुआ चिह्नित करें</string>
     <string name="copy_link">लिंक कॉपी करें</string>
     <string name="open_link">लिंक खोलें</string>
-    <string name="kaspa_qr_or_domain">kaspa:qr... या डोमेन</string>
     <!-- 5.2 name services (iOS df23b6f, 09e0403, 718724b, 9858bd1) -->
     <string name="x_handle">एक्स हैंडल</string>
     <string name="discord_user_id">कलह उपयोगकर्ता आईडी</string>
     <string name="redirect_url">यूआरएल पुनर्निर्देशित करें</string>
     <string name="none_yet">अभी कोई नहीं</string>
-    <string name="customize_profile">प्रोफ़ाइल कस्टमाइज़ करें</string>
-    <string name="settling">पुष्टि हो रही है</string>
     <string name="kachat_profile_coming_body">.kachat नाम जल्द आ रहे हैं। एक लेने के बाद आप यहाँ अपना अवतार, बैनर, परिचय और लिंक सेट करेंगे - और K हर जगह आपको इसी से दिखाएगा।</string>
     <string name="kachat_name_section">.kachat नाम</string>
-    <string name="could_not_reach_service">%1$s तक नहीं पहुँच सके। फिर से कोशिश करने के लिए नीचे खींचें।</string>
-    <string name="no_names_yet">अभी कोई %1$s नाम नहीं।</string>
     <!-- 5.2 name lookups (iOS a0dbc15, 79b6ac8, 9858bd1) -->
-    <string name="no_tld_domain_found">%1$s डोमेन नहीं मिला</string>
-    <string name="looking_up_domain">डोमेन खोजा जा रहा है...</string>
-    <string name="looking_up">खोजा जा रहा है...</string>
     <string name="no_domain">कोई डोमेन नहीं</string>
-    <string name="other_domains">अन्य डोमेन</string>
-    <string name="not_registered">पंजीकृत नहीं</string>
     <string name="couldnt_check">जाँच नहीं हो सकी</string>
-    <string name="kaspa_address_or_domain">Kaspa पता या डोमेन</string>
     <!-- Public Chats select (iOS e08c4cc) -->
     <!-- Connection Settings tabs (iOS ee01f81) -->
     <string name="connection_tab_indexer">इंडेक्सर</string>
@@ -313,7 +285,6 @@
     <string name="coming_soon">जल्द आ रहा है</string>
     <string name="not_available_on_this_network">इस नेटवर्क पर उपलब्ध नहीं</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
-    <string name="km_no_names">अभी कोई .kachat नाम नहीं</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">शुरुआत का पूरा परिचय: वॉलेट, चैट, भुगतान और बहुत कुछ।</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -336,7 +307,6 @@
     <!-- Realized P&L, fees spent, Add Chatting Address (iOS 61eff0f/5e75c89) -->
     <!-- Receive / chatting address QR text (iOS 8bcae2f) -->
     <!-- Account discovery finds .k and .kaspa names (iOS 7a5b157) -->
-    <string name="chatting_picker_other_names_count">.k और .kaspa नाम (%1$d)</string>
     <!-- Message Requests and Private chats (iOS f7ca401/ba1b2e3/76faa97/74bd52c) -->
     <string name="message_requests">मैसेज अनुरोध</string>
     <string name="message_requests_row_sub">लोग और समूह आपका इंतज़ार कर रहे हैं</string>
@@ -471,7 +441,6 @@
     <string name="chats_new_chat">नई चैट</string>
     <string name="chats_new_group_chat">नई ग्रुप चैट</string>
     <string name="chats_new_chat_subtitle">किसी को उसके पते या नाम से मैसेज करें।</string>
-    <string name="qr_chatting_address_subtitle">चैट करने और .kachat डोमेन पाने के लिए उपयोग करें।</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="utxo_selection">UTXO चयन</string>
     <string name="utxo_selection_caption">चुनें कि यह भेजना कौन-से कॉइन खर्च करे।</string>
@@ -664,7 +633,6 @@
     <!-- New Chat / New Group: Address Book (iOS 1be4f6e) -->
     <string name="ab_add_count">जोड़ें (%1$d)</string>
     <string name="ab_add_members">सदस्य जोड़ें</string>
-    <string name="ab_members_footer">अपने संपर्कों से लोग चुनें, या किसी को भी Kaspa पते या डोमेन से जोड़ें।</string>
     <string name="ab_members_intro">समूह में लोग जोड़ें। समूह एडमिन के रूप में सदस्यता आपके नियंत्रण में है।</string>
     <string name="ab_members_empty">अभी कोई सदस्य नहीं। अपने संपर्कों से या नीचे पते से लोग जोड़ें।</string>
     <string name="ab_actions_a11y">जोड़ें, आयात करें या निर्यात करें</string>
@@ -704,17 +672,8 @@
     <string name="kn_registration_not_open">नाम नए रजिस्ट्री में ले जाए जा रहे हैं। नए नाम %1$s से क्लेम किए जा सकेंगे।</string>
     <string name="kn_ev_imported">नई रजिस्ट्री में ले जाया गया</string>
     <!-- .kachat first: domains in every address field, Other domains, expired-name banner (iOS 6ac48a7) -->
-    <string name="enter_kaspa_address_or_domain_kachat_first">एक Kaspa पता (kaspa:...) या डोमेन दर्ज करें (जैसे alice.kachat)। .kachat नाम पहले खोजे जाते हैं।</string>
-    <string name="search_contacts_or_address_or_domain">संपर्क, पता या डोमेन खोजें</string>
-    <string name="no_contacts_yet_paste_address_or_domain">अभी आपके कोई संपर्क नहीं हैं। किसी को आमंत्रित करने के लिए ऊपर पता या डोमेन पेस्ट करें।</string>
-    <string name="no_contacts_match_paste_address_or_domain">आपकी खोज से कोई संपर्क मेल नहीं खाता। किसी नए व्यक्ति को आमंत्रित करने के लिए पता या डोमेन पेस्ट करें।</string>
     <string name="their_profile_kachat_name_address">उनकी प्रोफ़ाइल, .kachat नाम और पता।</string>
-    <string name="finds_addresses_balance_or_domain">बैलेंस या डोमेन वाले पते ढूँढता है।</string>
-    <string name="enter_kaspa_address_or_domain_short_kachat_first">एक Kaspa पता (kaspa:...) या डोमेन दर्ज करें। .kachat नाम पहले खोजे जाते हैं।</string>
-    <string name="other_domains_title">अन्य डोमेन</string>
-    <string name="chatting_picker_intro_any_name_kachat">यदि इन शब्दों में किसी अन्य पते पर आपकी पहचान पहले से है (.kachat, .kas, .k या .kaspa डोमेन, या चैट बैलेंस), तो उसे यहाँ चुनें। केवल बैलेंस या डोमेन वाले पते दिखाए जाते हैं।</string>
     <string name="chatting_picker_kachat_names_count">.kachat नाम (%1$d)</string>
-    <string name="chatting_picker_kas_names_count">.kas नाम (%1$d)</string>
     <!-- Bare names resolve to .kachat only (iOS 5a5122d) -->
     <string name="kachat_names_not_live_here">.kachat नाम अभी इस नेटवर्क पर चालू नहीं हैं</string>
     <!-- Nextcloud sync carries portfolios -->
@@ -839,8 +798,6 @@
     <string name="quantum_safe">क्वांटम-सुरक्षित</string>
     <string name="key_revealed_by_a_spend">खर्च से चाबी उजागर</string>
     <!-- KNS domain transfers and quantum-safe (script) addresses (iOS 2a8ca5a) -->
-    <string name="kns_transfer_quantum_source">KNS किसी क्वांटम-सुरक्षित पते से डोमेन बाहर नहीं ले जा सकता: KNS डोमेन के मालिक को पब्लिक की से पहचानता है, और क्वांटम-सुरक्षित पता अपनी की छिपाकर रखता है।</string>
-    <string name="kns_transfer_to_script_address">.kas डोमेन को क्वांटम-सुरक्षित या किसी अन्य स्क्रिप्ट पते पर नहीं भेजा जा सकता: KNS उसे फिर कभी बाहर नहीं ले जा पाएगा। इसके बजाय किसी सामान्य पते पर भेजें।</string>
     <string name="quantum_next_address_failed">अगला पता तैयार नहीं हो सका। फिर से कोशिश करें।</string>
     <!-- Address Visibility: a card per chain (iOS d7e6dd1) -->
     <string name="quantum_addresses">क्वांटम पते</string>
@@ -891,7 +848,6 @@
     <string name="pr_paid_to">भुगतान किसे</string>
     <string name="ab_empty_title">अभी कोई संपर्क नहीं</string>
     <string name="settings_title">सेटिंग्स</string>
-    <string name="confirm_sending_domain">इस डोमेन को भेजने की पुष्टि करें</string>
     <string name="confirm_deleting_account">इस खाते को हटाने की पुष्टि करें</string>
     <string name="group_invites">समूह आमंत्रण</string>
     <string name="group_invite">समूह आमंत्रण</string>
@@ -936,7 +892,6 @@
     <string name="welcome_paying_for_messages">संदेशों का भुगतान</string>
     <string name="welcome_paying_for_messages_caption">आपके हर संदेश पर इस पते से बहुत थोड़ा Kaspa लगता है। 1 Kaspa से लगभग 500 संदेश भेजे जा सकते हैं।</string>
     <string name="welcome_what_others_can_see">दूसरे क्या देख सकते हैं</string>
-    <string name="welcome_what_others_can_see_caption">Kaspa नेटवर्क पर कोई भी यह पता और इसका बैलेंस देख सकता है, लेकिन आपके संदेश नहीं पढ़ सकता। इसका उपयोग केवल चैट और .kachat डोमेन के लिए करें।</string>
 
     <!-- Localized literals moved out of Kotlin (parity with the iPhone app) -->
     <string name="backup_your_account_to_prevent_loss_of">फंड खोने से बचने के लिए अपने खाते का बैकअप लें</string>
@@ -1099,7 +1054,6 @@
     <string name="anyone_with_this_addresss_private_key_can">इस पते की प्राइवेट की जिसके पास है, वह इसके फंड खर्च कर सकता है। इसे कभी किसी के साथ साझा न करें।</string>
     <string name="tap_to_reveal_private_key">प्राइवेट की दिखाने के लिए टैप करें</string>
     <string name="could_not_load_transactions">लेन-देन लोड नहीं हो सके।</string>
-    <string name="contains_domain">डोमेन शामिल है</string>
     <string name="private_key_hex_copied_clipboard_will_clear">प्राइवेट की hex कॉपी की गई। क्लिपबोर्ड 30 सेकंड में साफ़ हो जाएगा।</string>
     <string name="cache">कैश</string>
     <string name="failed_to_export_diagnostics">डायग्नोस्टिक्स निर्यात करने में विफल।</string>
@@ -1257,7 +1211,6 @@
     <string name="hr_min">%1$d घंटे, %2$d मिनट</string>
     <string name="min">%1$d मिनट</string>
     <string name="could_not_check_addresses_try_again_when">पतों की जांच नहीं हो सकी। कनेक्ट होने पर फिर कोशिश करें।</string>
-    <string name="no_addresses_with_a_balance_or_domain">बैलेंस या डोमेन वाला कोई पता नहीं मिला।</string>
     <string name="hidden">छिपे हुए (%1$d)</string>
     <string name="address_hidden_re_enable_it_in_address">पता छिपा दिया गया। इसे पता दृश्यता में फिर से चालू करें।</string>
     <string name="this_address_cant_be_hidden">यह पता छिपाया नहीं जा सकता।</string>
@@ -1306,12 +1259,6 @@
     <string name="couldnt_load_the_coins">कॉइन लोड नहीं हो सके।</string>
     <string name="these_words_are_invalid_double_check_the">ये शब्द अमान्य हैं। शब्दों को दोबारा जांचें - अंतिम शब्द में एक चेकसम होता है, इसलिए एक भी गलत शब्द होने पर सत्यापन विफल हो जाता है।</string>
     <string name="invalid_words_please_enter_12_or_24">अमान्य शब्द। कृपया 12 या 24 शब्द दर्ज करें।</string>
-    <string name="failed_to_set_primary_domain">प्राथमिक डोमेन सेट नहीं हो सका</string>
-    <string name="invalid_recipient_address">प्राप्तकर्ता का पता अमान्य है</string>
-    <string name="recipient_must_be_different_from_your_own">प्राप्तकर्ता आपके अपने वॉलेट से अलग होना चाहिए</string>
-    <string name="recipient_address_is_on_the_wrong_network">प्राप्तकर्ता का पता गलत नेटवर्क पर है</string>
-    <string name="invalid_recipient">अमान्य प्राप्तकर्ता</string>
-    <string name="transfer_failed">ट्रांसफ़र विफल</string>
     <string name="retry_failed">पुनः प्रयास विफल</string>
     <string name="saving_keep_the_card_still">सहेजा जा रहा है। कार्ड को स्थिर रखें।</string>
     <string name="reading_keep_the_card_still">पढ़ा जा रहा है। कार्ड को स्थिर रखें।</string>
@@ -1349,8 +1296,6 @@
     <string name="resynced_one_message_n_chats">%1$d चैट में 1 आने वाला संदेश पुनः सिंक किया गया।</string>
     <string name="resynced_n_messages_one_chat">1 चैट में %1$d आने वाले संदेश पुनः सिंक किए गए।</string>
     <string name="resynced_n_messages_n_chats">%2$d चैट में %1$d आने वाले संदेश पुनः सिंक किए गए।</string>
-    <string name="found_one_address_balance_domain">बैलेंस या डोमेन वाला 1 पता मिला।</string>
-    <string name="found_n_addresses_balance_domain">बैलेंस या डोमेन वाले %1$d पते मिले।</string>
     <string name="resync_one_chat">1 चैट पुनः सिंक करें</string>
     <string name="resync_n_chats">%1$d चैट पुनः सिंक करें</string>
     <string name="one_day_ago">1 दिन पहले</string>
@@ -1449,9 +1394,6 @@
     <string name="not_sent_you_switched_accounts">नहीं भेजा गया: भेजे जाने से पहले आपने खाता बदल लिया।</string>
     <string name="play_it_again">फिर से खेलें</string>
     <string name="couldnt_look_up_name_try_again">अभी %1$s नहीं खोजा जा सका। थोड़ी देर में फिर से कोशिश करें।</string>
-    <string name="kns_reveal_will_finish_on_next_open">दो लेनदेन में से पहला पूरा हो गया, लेकिन दूसरा नहीं। K अगली बार खुलने पर इसे पूरा करेगा।</string>
-    <string name="kns_transfer_fee_at_most_1_kas">डोमेन ट्रांसफ़र का शुल्क अधिकतम 1 KAS हो सकता है।</string>
-    <string name="confirm_setting_this_primary_name">इस प्राथमिक नाम को सेट करने की पुष्टि करें</string>
     <string name="this_is_the_public_half_of_this_address">यह इस पते का सार्वजनिक हिस्सा है। इससे कुछ भी खर्च नहीं किया जा सकता।</string>
     <string name="address_number_is_ready">पता #%1$d तैयार है।</string>
     <string name="chess_menu_title">शतरंज</string>
@@ -1513,32 +1455,18 @@
     <string name="chess_invite_sent">शतरंज गेम का आमंत्रण भेजा गया</string>
     <string name="chess_invited_you">शतरंज खेलने का आमंत्रण</string>
     <string name="more_reactions">और प्रतिक्रियाएं</string>
-    <string name="confirm_changes">बदलावों की पुष्टि करें</string>
-    <string name="uploading_avatar">अवतार अपलोड हो रहा है...</string>
-    <string name="uploading_banner">बैनर अपलोड हो रहा है...</string>
-    <string name="profile_field_removed">%1$s (हटाया गया)</string>
     <string name="create_group">समूह बनाएं</string>
     <string name="create_group_fee_estimate">अनुमानित नेटवर्क शुल्क ≈ %1$s %2$s, कुल %3$d लेन-देन में।</string>
     <string name="create_chat">चैट बनाएं</string>
     <string name="add_to_group">समूह में जोड़ें</string>
     <string name="edit_name">नाम संपादित करें</string>
     <string name="domain_label">कार्यक्षेत्र</string>
-    <string name="primary_badge">प्राथमिक</string>
     <string name="notification_mode_off">बंद</string>
     <string name="notification_mode_no_sound">बिना ध्वनि</string>
     <string name="notification_mode_sound">ध्वनि</string>
     <string name="notification_mode_default">डिफ़ॉल्ट (%1$s)</string>
-    <string name="domain_transfer_sending">%1$s भेजा जा रहा है</string>
-    <string name="domain_transfer_footer">डोमेन ट्रांसफ़र में दो लेन-देन होते हैं, इसलिए थोड़ा समय लगता है। पूरा होने तक ऐप खुला रखें।</string>
-    <string name="domain_transfer_stage_preparing">ट्रांसफ़र तैयार किया जा रहा है</string>
-    <string name="domain_transfer_stage_fee">शुल्क की गणना हो रही है</string>
-    <string name="domain_transfer_stage_commit">कमिट लेन-देन भेजा जा रहा है</string>
-    <string name="domain_transfer_stage_reveal">रिवील लेन-देन भेजा जा रहा है</string>
-    <string name="domain_transfer_stage_verifying">नए मालिक की पुष्टि हो रही है</string>
-    <string name="domain_transfer_stage_working">प्रक्रिया जारी है</string>
     <string name="checking_address_n">पता #%1$d जांचा जा रहा है</string>
     <string name="n_found_so_far">अब तक %1$d मिले</string>
-    <string name="no_addresses_with_balance_or_domain_yet">अभी तक कोई बैलेंस या डोमेन वाला पता नहीं</string>
     <string name="checks_the_first_thousand_addresses">पहले एक हज़ार पते जांचता है, चाहे बीच में खाली पते हों, फिर जब तक कुछ मिलता रहता है तब तक आगे बढ़ता रहता है।</string>
     <string name="first_sync_all_set">सब तैयार है</string>
     <string name="first_sync_up_to_date">आपकी चैट और हिस्ट्री अप-टू-डेट हैं।</string>
@@ -1568,10 +1496,6 @@
     <string name="chess_notif_lost_on_time">♟️ समय खत्म होने से हार गए</string>
     <string name="chess_notif_resigned">♟️ शतरंज के खेल में हार मान ली</string>
     <string name="fee_label">शुल्क</string>
-    <plurals name="kns_profile_changes_count">
-        <item quantity="one">%d बदलाव। हर एक आपके चैट पते से अलग ऑन-चेन लेन-देन के रूप में भेजा जाता है:</item>
-        <item quantity="other">%d बदलाव। हर एक आपके चैट पते से अलग ऑन-चेन लेन-देन के रूप में भेजा जाता है:</item>
-    </plurals>
     <plurals name="create_group_and_invite">
         <item quantity="one">\"%1$s\" बनाएं और %2$d सदस्य को आमंत्रित करें?</item>
         <item quantity="other">\"%1$s\" बनाएं और %2$d सदस्यों को आमंत्रित करें?</item>
@@ -1588,12 +1512,10 @@
     <string name="payment_notice_fee_from_chatting_address">आपका चैटिंग पता इस पेमेंट के बारे में %2$s को बताने के लिए %1$s KAS और देता है।</string>
     <string name="recording_failed_please_try_again">रिकॉर्डिंग विफल रही। कृपया फिर से कोशिश करें।</string>
     <string name="message_needs_too_many_coins">इस मैसेज को एक ट्रांज़ैक्शन के लिए बहुत ज़्यादा कॉइन चाहिए। अपने चैटिंग पते पर Compound UTXOs इस्तेमाल करें, फिर कोशिश करें।</string>
-    <string name="use_their_domain_name">उनका डोमेन नाम इस्तेमाल करें</string>
     <string name="show_request_as_qr">अनुरोध को QR के रूप में दिखाएँ</string>
     <string name="pr_qr_scan_to_pay_in_kachat">सब कुछ भरा हुआ पाने के लिए फ़ोन के कैमरे से स्कैन करें और K में भुगतान करें।</string>
     <string name="set_as_name">नाम के रूप में सेट करें</string>
     <string name="their_name">उनका नाम</string>
-    <string name="get_a_kachat_name">.kachat नाम पाएँ</string>
     <string name="composer_gif_subtitle">अपनी लाइब्रेरी से एक एनिमेटेड GIF भेजें।</string>
     <string name="group_composer_gif_subtitle">अपनी लाइब्रेरी से ग्रुप में एक एनिमेटेड GIF भेजें।</string>
     <string name="gif_quality">GIF क्वालिटी</string>
@@ -1623,10 +1545,6 @@
     <string name="token_received_title">%1$s प्राप्त हुए</string>
     <string name="token_received_on_one">आपके %1$s पर</string>
     <string name="token_received_on_many">आपके %1$d पतों पर</string>
-    <string name="address_tab_domains">डोमेन</string>
-    <string name="address_domains_none">इस पते पर कोई %1$s नाम नहीं है।</string>
-    <string name="address_domains_one">1 डोमेन</string>
-    <string name="address_domains_couldnt_load">लोड नहीं हो सका</string>
     <string name="connection_not_set">सेट नहीं</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">शेयर लिंक कॉपी करें</string>
@@ -1742,4 +1660,6 @@
     <string name="history_moved">स्थानांतरित</string>
     <string name="history_to_address">%1$s को</string>
     <string name="history_change_to_address">बाक़ी %1$s गया %2$s को</string>
+    <string name="cycle_hint_next_page">अगले पेज पर जाता है</string>
+    <string name="cycle_hint_next_feed">अगली फ़ीड पर जाता है</string>
 </resources>

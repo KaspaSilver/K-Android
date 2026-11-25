@@ -69,8 +69,6 @@
     <string name="delete_account">Supprimer le compte</string>
     <string name="delete_group">Supprimer le groupe</string>
     <string name="done">Terminé</string>
-    <string name="each_transaction_temporarily_uses_2_kas">Chaque transaction utilise temporairement ~2 KAS; ~1 KAS revient immediatement en monnaie, donc seuls les petits frais de reseau sont un cout reel.</string>
-    <string name="edit_kns_profile">Modifier le profil KNS</string>
     <string name="edit_account">Modifier le compte</string>
     <string name="error">Erreur</string>
     <string name="every_member_will_see_the_new">Chaque membre verra le nouveau nom.</string>
@@ -86,8 +84,6 @@
     <string name="import_account">Importer un compte</string>
     <string name="import_existing_account">Importer un compte existant</string>
     <string name="incoming_notifications">Notifications</string>
-    <string name="kns_domains">Vos domaines</string>
-    <string name="contact_kns_domains">Domaines KNS</string>
     <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K doit se connecter a un nœud. Comment souhaitez-vous vous connecter ?</string>
     <string name="kaspa_explorer">Explorateur Kaspa</string>
@@ -97,14 +93,9 @@
     <string name="manage_addresses">Gerer les adresses</string>
     <string name="max">Max</string>
     <string name="message">Message</string>
-    <string name="more_info">Plus d\'infos</string>
     <string name="name">Nom</string>
     <string name="next">Suivant</string>
     <string name="no_conversations_yet">Aucune conversation pour le moment</string>
-    <string name="no_domains_yet">Aucun domaine pour l\'instant.</string>
-    <string name="send_domain">Envoyer un domaine</string>
-    <string name="asset_id">ID d\'actif</string>
-    <string name="primary_domain">Domaine principal</string>
     <string name="set_as_primary">Définir comme principal</string>
     <string name="no_hidden_addresses">Aucune adresse masquee.</string>
     <string name="no_hidden_users_in_this_group">Aucun utilisateur masque dans ce groupe.</string>
@@ -152,7 +143,6 @@
     <string name="show_more">Voir plus</string>
     <string name="show_qr_code">Afficher le code QR</string>
     <string name="skip">Ignorer</string>
-    <string name="some_changes_failed_to_save">Certaines modifications n\'ont pas pu etre enregistrees :</string>
     <string name="start_a_new_chat_by_adding">Démarrez une nouvelle discussion en ajoutant un contact</string>
     <string name="status">Statut</string>
     <string name="tap_an_address_below_to_swap">Touchez une adresse ci-dessous pour echanger depuis celle-ci</string>
@@ -197,7 +187,6 @@
     <string name="created">Date de création</string>
     <string name="customization">Personnalisation</string>
     <string name="diagnostics">Diagnostics</string>
-    <string name="discord">Discord</string>
     <string name="discover_addresses">Decouvrir des adresses</string>
     <string name="email">E-mail</string>
     <string name="explorer">Explorateur</string>
@@ -206,7 +195,6 @@
     <string name="ip_address_book">Carnet d\'adresses IP</string>
     <string name="indexer">Indexeur</string>
     <string name="info">Info</string>
-    <string name="kns_profile">Profil KNS</string>
     <string name="kaspa_explorer_api">Kaspa Explorer API</string>
     <string name="kaspa_node">Nœud Kaspa</string>
     <string name="default_recommended">Par défaut (recommandé)</string>
@@ -221,7 +209,6 @@
     <string name="protocol">Protocole</string>
     <string name="push_notifications">Notifications push</string>
     <string name="reconnect">Reconnecter</string>
-    <string name="redirect">Rediriger</string>
     <string name="refresh_pool">Rafraîchir le pool</string>
     <string name="reply">Repondre</string>
     <string name="retry_send">Renvoyer</string>
@@ -234,20 +221,16 @@
     <string name="storage">Stockage</string>
     <string name="on_this_device">Sur cet appareil</string>
     <string name="cloud_storage">Stockage cloud</string>
-    <string name="submitting_commit_transaction">Envoi de la transaction de confirmation...</string>
-    <string name="submitting_reveal_transaction">Envoi de la transaction de revelation...</string>
     <string name="support_email">E-mail de support</string>
     <string name="telegram">Telegram</string>
     <string name="total">Total</string>
     <string name="verified">Vérifié</string>
-    <string name="verifying_new_ownership_on_chain_this">Verification de la nouvelle propriete sur la chaine (cela peut prendre une minute)...</string>
     <string name="version">Version</string>
     <string name="vibration">Vibration</string>
     <string name="view_profile">Voir le profil</string>
     <string name="view_seed_phrase">Voir les 12 ou 24 mots</string>
     <string name="view_in_explorer">Voir dans l\'explorateur</string>
     <string name="website">Site web</string>
-    <string name="x">X</string>
     <string name="language">Langue</string>
     <string name="system_default">Système</string>
     <string name="welcome_to_kachat">Bienvenue sur K</string>
@@ -282,27 +265,16 @@
     <string name="mark_as_read">Marquer comme lu</string>
     <string name="copy_link">Copier le lien</string>
     <string name="open_link">Ouvrir le lien</string>
-    <string name="kaspa_qr_or_domain">kaspa:qr... ou domaine</string>
     <!-- 5.2 name services (iOS df23b6f, 09e0403, 718724b, 9858bd1) -->
     <string name="x_handle">Poignée en X</string>
     <string name="discord_user_id">Identifiant utilisateur Discord</string>
     <string name="redirect_url">URL de redirection</string>
     <string name="none_yet">Aucun pour l\'instant</string>
-    <string name="customize_profile">Personnaliser le profil</string>
-    <string name="settling">En confirmation</string>
     <string name="kachat_profile_coming_body">Les noms .kachat arrivent bientôt. Une fois le vôtre réclamé, vous définissez ici votre avatar, bannière, bio et liens, et c\'est ce que K affiche pour vous partout.</string>
     <string name="kachat_name_section">Nom .kachat</string>
-    <string name="could_not_reach_service">Impossible de joindre %1$s. Tirez vers le bas pour réessayer.</string>
-    <string name="no_names_yet">Aucun nom %1$s pour l\'instant.</string>
     <!-- 5.2 name lookups (iOS a0dbc15, 79b6ac8, 9858bd1) -->
-    <string name="no_tld_domain_found">Aucun domaine %1$s trouvé</string>
-    <string name="looking_up_domain">Recherche du domaine...</string>
-    <string name="looking_up">Recherche...</string>
     <string name="no_domain">Aucun domaine</string>
-    <string name="other_domains">Autres domaines</string>
-    <string name="not_registered">Non enregistré</string>
     <string name="couldnt_check">Vérification impossible</string>
-    <string name="kaspa_address_or_domain">Adresse Kaspa ou domaine</string>
     <!-- Public Chats select (iOS e08c4cc) -->
     <!-- Connection Settings tabs (iOS ee01f81) -->
     <string name="connection_tab_indexer">Indexeur</string>
@@ -313,7 +285,6 @@
     <string name="coming_soon">Bientôt</string>
     <string name="not_available_on_this_network">Indisponible sur ce réseau</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
-    <string name="km_no_names">Pas encore de nom .kachat</string>
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">La visite complète de démarrage : portefeuille, discussions, paiements et plus.</string>
     <!-- .kachat listing, buy and offer (iOS cd9e10c, 0e50fdf) -->
@@ -336,7 +307,6 @@
     <!-- Realized P&L, fees spent, Add Chatting Address (iOS 61eff0f/5e75c89) -->
     <!-- Receive / chatting address QR text (iOS 8bcae2f) -->
     <!-- Account discovery finds .k and .kaspa names (iOS 7a5b157) -->
-    <string name="chatting_picker_other_names_count">Noms .k et .kaspa (%1$d)</string>
     <!-- Message Requests and Private chats (iOS f7ca401/ba1b2e3/76faa97/74bd52c) -->
     <string name="message_requests">Demandes de message</string>
     <string name="message_requests_row_sub">Des personnes et des groupes vous attendent</string>
@@ -471,7 +441,6 @@
     <string name="chats_new_chat">Nouvelle discussion</string>
     <string name="chats_new_group_chat">Nouveau groupe</string>
     <string name="chats_new_chat_subtitle">Écrivez à quelqu\'un par son adresse ou son nom.</string>
-    <string name="qr_chatting_address_subtitle">À utiliser pour discuter et acquérir des domaines .kachat.</string>
     <!-- Send Kaspa screens: shared pieces (iOS 4d0324f) -->
     <string name="utxo_selection">Sélection des UTXO</string>
     <string name="utxo_selection_caption">Choisissez les pièces que cet envoi dépense.</string>
@@ -664,7 +633,6 @@
     <!-- New Chat / New Group: Address Book (iOS 1be4f6e) -->
     <string name="ab_add_count">Ajouter (%1$d)</string>
     <string name="ab_add_members">Ajouter des membres</string>
-    <string name="ab_members_footer">Choisissez des personnes dans vos contacts, ou ajoutez n\'importe qui par adresse Kaspa ou domaine.</string>
     <string name="ab_members_intro">Ajoutez des personnes au groupe. En tant qu\'administrateur, vous gérez les membres.</string>
     <string name="ab_members_empty">Aucun membre pour l\'instant. Ajoutez des personnes depuis vos contacts ou par adresse ci-dessous.</string>
     <string name="ab_actions_a11y">Ajouter, importer ou exporter</string>
@@ -704,17 +672,8 @@
     <string name="kn_registration_not_open">Les noms passent au nouveau registre. Vous pourrez réserver de nouveaux noms à partir du %1$s.</string>
     <string name="kn_ev_imported">Transféré vers le nouveau registre</string>
     <!-- .kachat first: domains in every address field, Other domains, expired-name banner (iOS 6ac48a7) -->
-    <string name="enter_kaspa_address_or_domain_kachat_first">Saisissez une adresse Kaspa (kaspa:...) ou un domaine (p. ex. alice.kachat). Les noms .kachat sont recherchés en premier.</string>
-    <string name="search_contacts_or_address_or_domain">Rechercher des contacts, une adresse ou un domaine</string>
-    <string name="no_contacts_yet_paste_address_or_domain">Vous n’avez pas encore de contacts. Collez une adresse ou un domaine ci-dessus pour inviter quelqu’un.</string>
-    <string name="no_contacts_match_paste_address_or_domain">Aucun contact ne correspond à votre recherche. Collez une adresse ou un domaine pour inviter quelqu’un de nouveau.</string>
     <string name="their_profile_kachat_name_address">Son profil, son nom .kachat et son adresse.</string>
-    <string name="finds_addresses_balance_or_domain">Trouve les adresses qui détiennent un solde ou un domaine.</string>
-    <string name="enter_kaspa_address_or_domain_short_kachat_first">Saisissez une adresse Kaspa (kaspa:...) ou un domaine. Les noms .kachat sont recherchés en premier.</string>
-    <string name="other_domains_title">Autres domaines</string>
-    <string name="chatting_picker_intro_any_name_kachat">Si ces mots détiennent déjà votre identité à une autre adresse (un domaine .kachat, .kas, .k ou .kaspa, ou un solde de discussion), choisissez-la ici. Seules les adresses avec un solde ou des domaines sont affichées.</string>
     <string name="chatting_picker_kachat_names_count">Noms .kachat (%1$d)</string>
-    <string name="chatting_picker_kas_names_count">Noms .kas (%1$d)</string>
     <!-- Bare names resolve to .kachat only (iOS 5a5122d) -->
     <string name="kachat_names_not_live_here">Les noms .kachat ne sont pas encore actifs sur ce réseau</string>
     <!-- Nextcloud sync carries portfolios -->
@@ -839,8 +798,6 @@
     <string name="quantum_safe">Résistant au quantique</string>
     <string name="key_revealed_by_a_spend">Clé révélée par une dépense</string>
     <!-- KNS domain transfers and quantum-safe (script) addresses (iOS 2a8ca5a) -->
-    <string name="kns_transfer_quantum_source">KNS ne peut pas sortir un domaine d\'une adresse résistante au quantique : KNS identifie le propriétaire d\'un domaine par une clé publique, et une adresse résistante au quantique garde sa clé cachée.</string>
-    <string name="kns_transfer_to_script_address">Un domaine .kas ne peut pas être envoyé à une adresse résistante au quantique ou à une autre adresse de script : KNS ne pourrait plus jamais le déplacer. Envoyez-le plutôt à une adresse ordinaire.</string>
     <string name="quantum_next_address_failed">Impossible de préparer l\'adresse suivante. Réessayez.</string>
     <!-- Address Visibility: a card per chain (iOS d7e6dd1) -->
     <string name="quantum_addresses">Adresses quantiques</string>
@@ -891,7 +848,6 @@
     <string name="pr_paid_to">Payé à</string>
     <string name="ab_empty_title">Aucun contact pour l\'instant</string>
     <string name="settings_title">Réglages</string>
-    <string name="confirm_sending_domain">Confirmer l\'envoi de ce domaine</string>
     <string name="confirm_deleting_account">Confirmer la suppression de ce compte</string>
     <string name="group_invites">Invitations de groupe</string>
     <string name="group_invite">Invitation de groupe</string>
@@ -936,7 +892,6 @@
     <string name="welcome_paying_for_messages">Payer les messages</string>
     <string name="welcome_paying_for_messages_caption">Chaque message envoyé prélève une infime quantité de Kaspa sur cette adresse. 1 Kaspa couvre environ 500 messages.</string>
     <string name="welcome_what_others_can_see">Ce que les autres voient</string>
-    <string name="welcome_what_others_can_see_caption">Tout le monde peut voir cette adresse et son solde sur le réseau Kaspa, mais personne ne peut lire vos messages. Utilisez-la uniquement pour discuter et pour les domaines .kachat.</string>
 
     <!-- Localized literals moved out of Kotlin (parity with the iPhone app) -->
     <string name="backup_your_account_to_prevent_loss_of">Sauvegardez votre compte pour éviter de perdre vos fonds</string>
@@ -1099,7 +1054,6 @@
     <string name="anyone_with_this_addresss_private_key_can">Toute personne qui possède la clé privée de cette adresse peut dépenser ses fonds. Ne la partagez avec personne.</string>
     <string name="tap_to_reveal_private_key">Touchez pour révéler la clé privée</string>
     <string name="could_not_load_transactions">Impossible de charger les transactions.</string>
-    <string name="contains_domain">Contient un domaine</string>
     <string name="private_key_hex_copied_clipboard_will_clear">Clé privée (hex) copiée. Le presse-papiers sera effacé dans 30s.</string>
     <string name="cache">Cache</string>
     <string name="failed_to_export_diagnostics">Échec de l\'export des diagnostics.</string>
@@ -1259,7 +1213,6 @@
     <string name="hr_min">%1$d h, %2$d min</string>
     <string name="min">%1$d min</string>
     <string name="could_not_check_addresses_try_again_when">Impossible de vérifier les adresses. Réessayez une fois connecté.</string>
-    <string name="no_addresses_with_a_balance_or_domain">Aucune adresse avec un solde ou un domaine trouvée.</string>
     <string name="hidden">Masquées (%1$d)</string>
     <string name="address_hidden_re_enable_it_in_address">Adresse masquée. Réactivez-la dans Visibilité de l\'adresse.</string>
     <string name="this_address_cant_be_hidden">Cette adresse ne peut pas être masquée.</string>
@@ -1306,12 +1259,6 @@
     <string name="couldnt_load_the_coins">Impossible de charger les pièces.</string>
     <string name="these_words_are_invalid_double_check_the">Ces mots ne sont pas valides. Vérifiez-les bien - le dernier mot contient une somme de contrôle, donc un seul mot erroné fait échouer la validation.</string>
     <string name="invalid_words_please_enter_12_or_24">Mots non valides. Veuillez saisir 12 ou 24 mots.</string>
-    <string name="failed_to_set_primary_domain">Impossible de définir le domaine principal</string>
-    <string name="invalid_recipient_address">Adresse du destinataire non valide</string>
-    <string name="recipient_must_be_different_from_your_own">Le destinataire doit être différent de votre propre portefeuille</string>
-    <string name="recipient_address_is_on_the_wrong_network">L\'adresse du destinataire est sur le mauvais réseau</string>
-    <string name="invalid_recipient">Destinataire non valide</string>
-    <string name="transfer_failed">Échec du transfert</string>
     <string name="retry_failed">Échec de la nouvelle tentative</string>
     <string name="saving_keep_the_card_still">Enregistrement. Ne bougez pas la carte.</string>
     <string name="reading_keep_the_card_still">Lecture. Ne bougez pas la carte.</string>
@@ -1349,8 +1296,6 @@
     <string name="resynced_one_message_n_chats">1 message entrant resynchronisé dans %1$d discussions.</string>
     <string name="resynced_n_messages_one_chat">%1$d messages entrants resynchronisés dans 1 discussion.</string>
     <string name="resynced_n_messages_n_chats">%1$d messages entrants resynchronisés dans %2$d discussions.</string>
-    <string name="found_one_address_balance_domain">1 adresse avec un solde ou un domaine trouvée.</string>
-    <string name="found_n_addresses_balance_domain">%1$d adresses avec un solde ou un domaine trouvées.</string>
     <string name="resync_one_chat">Resynchroniser 1 discussion</string>
     <string name="resync_n_chats">Resynchroniser %1$d discussions</string>
     <string name="one_day_ago">Il y a 1 jour</string>
@@ -1450,9 +1395,6 @@
     <string name="not_sent_you_switched_accounts">Non envoyé : vous avez changé de compte avant l\'envoi.</string>
     <string name="play_it_again">Rejouer ce coup</string>
     <string name="couldnt_look_up_name_try_again">Impossible de rechercher %1$s pour le moment. Réessayez dans un instant.</string>
-    <string name="kns_reveal_will_finish_on_next_open">La première des deux transactions est passée, mais pas la seconde. K la terminera à sa prochaine ouverture.</string>
-    <string name="kns_transfer_fee_at_most_1_kas">Les frais d\'un transfert de domaine ne peuvent pas dépasser 1 KAS.</string>
-    <string name="confirm_setting_this_primary_name">Confirmer ce nom principal</string>
     <string name="this_is_the_public_half_of_this_address">Ceci est la moitié publique de cette adresse. Elle ne peut rien dépenser.</string>
     <string name="address_number_is_ready">L\'adresse n° %1$d est prête.</string>
     <string name="chess_menu_title">Echecs</string>
@@ -1514,32 +1456,18 @@
     <string name="chess_invite_sent">Invitation à une partie d\'échecs envoyée</string>
     <string name="chess_invited_you">Vous a invité à une partie d\'échecs</string>
     <string name="more_reactions">Plus de réactions</string>
-    <string name="confirm_changes">Confirmer les modifications</string>
-    <string name="uploading_avatar">Téléchargement de l\'avatar...</string>
-    <string name="uploading_banner">Téléchargement de la bannière...</string>
-    <string name="profile_field_removed">%1$s (supprimé)</string>
     <string name="create_group">Créer un groupe</string>
     <string name="create_group_fee_estimate">Frais de réseau estimés ≈ %1$s %2$s sur %3$d transactions.</string>
     <string name="create_chat">Créer une discussion</string>
     <string name="add_to_group">Ajouter au groupe</string>
     <string name="edit_name">Modifier le nom</string>
     <string name="domain_label">Domaine</string>
-    <string name="primary_badge">PRINCIPALE</string>
     <string name="notification_mode_off">Désactivées</string>
     <string name="notification_mode_no_sound">Mode Silence</string>
     <string name="notification_mode_sound">Sonore</string>
     <string name="notification_mode_default">Par défaut (%1$s)</string>
-    <string name="domain_transfer_sending">Envoi de %1$s</string>
-    <string name="domain_transfer_footer">Un transfert de domaine comporte deux transactions, cela prend donc un moment. Gardez l\'app ouverte jusqu\'à la fin.</string>
-    <string name="domain_transfer_stage_preparing">Préparation du transfert</string>
-    <string name="domain_transfer_stage_fee">Calcul des frais</string>
-    <string name="domain_transfer_stage_commit">Envoi de la transaction de commit</string>
-    <string name="domain_transfer_stage_reveal">Envoi de la transaction de révélation</string>
-    <string name="domain_transfer_stage_verifying">Confirmation du nouveau propriétaire</string>
-    <string name="domain_transfer_stage_working">En cours</string>
     <string name="checking_address_n">Vérification de l\'adresse n° %1$d</string>
     <string name="n_found_so_far">%1$d trouvé(s) jusqu\'ici</string>
-    <string name="no_addresses_with_balance_or_domain_yet">Aucune adresse avec un solde ou un domaine pour l\'instant</string>
     <string name="checks_the_first_thousand_addresses">Vérifie les mille premières adresses, même s\'il y a des trous, puis continue tant qu\'il trouve quelque chose.</string>
     <string name="first_sync_all_set">Tout est prêt</string>
     <string name="first_sync_up_to_date">Vos discussions et votre historique sont à jour.</string>
@@ -1569,11 +1497,6 @@
     <string name="chess_notif_lost_on_time">♟️ A perdu au temps</string>
     <string name="chess_notif_resigned">♟️ A abandonné la partie d\'échecs</string>
     <string name="fee_label">Frais</string>
-    <plurals name="kns_profile_changes_count">
-        <item quantity="one">%d modification. Chacune est envoyée comme transaction on-chain distincte depuis votre adresse de discussion :</item>
-        <item quantity="many">%d modifications. Chacune est envoyée comme transaction on-chain distincte depuis votre adresse de discussion :</item>
-        <item quantity="other">%d modifications. Chacune est envoyée comme transaction on-chain distincte depuis votre adresse de discussion :</item>
-    </plurals>
     <plurals name="create_group_and_invite">
         <item quantity="one">Créer « %1$s » et inviter %2$d membre ?</item>
         <item quantity="many">Créer « %1$s » et inviter %2$d membres ?</item>
@@ -1591,12 +1514,10 @@
     <string name="payment_notice_fee_from_chatting_address">Votre adresse de chat paie aussi %1$s KAS pour informer %2$s de ce paiement.</string>
     <string name="recording_failed_please_try_again">L’enregistrement a échoué. Veuillez réessayer.</string>
     <string name="message_needs_too_many_coins">Ce message nécessite trop de pièces pour une seule transaction. Utilisez Compound UTXOs sur votre adresse de chat, puis réessayez.</string>
-    <string name="use_their_domain_name">Utiliser son nom de domaine</string>
     <string name="show_request_as_qr">Afficher la demande en QR</string>
     <string name="pr_qr_scan_to_pay_in_kachat">Scannez-le avec l\'appareil photo d\'un téléphone pour payer dans K, tout est déjà rempli.</string>
     <string name="set_as_name">Définir comme nom</string>
     <string name="their_name">Son nom</string>
-    <string name="get_a_kachat_name">Obtenir un nom .kachat</string>
     <string name="composer_gif_subtitle">Envoyez un GIF animé de votre photothèque.</string>
     <string name="group_composer_gif_subtitle">Envoyez un GIF animé de votre photothèque au groupe.</string>
     <string name="gif_quality">Qualité du GIF</string>
@@ -1626,10 +1547,6 @@
     <string name="token_received_title">%1$s reçus</string>
     <string name="token_received_on_one">Sur votre %1$s</string>
     <string name="token_received_on_many">Sur %1$d de vos adresses</string>
-    <string name="address_tab_domains">Domaines</string>
-    <string name="address_domains_none">Aucun nom %1$s sur cette adresse.</string>
-    <string name="address_domains_one">1 domaine</string>
-    <string name="address_domains_couldnt_load">Chargement impossible</string>
     <string name="connection_not_set">Non défini</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">Copier le lien de partage</string>
@@ -1745,4 +1662,6 @@
     <string name="history_moved">Déplacé</string>
     <string name="history_to_address">Vers %1$s</string>
     <string name="history_change_to_address">Monnaie %1$s vers %2$s</string>
+    <string name="cycle_hint_next_page">Passe à la page suivante</string>
+    <string name="cycle_hint_next_feed">Passe au fil suivant</string>
 </resources>

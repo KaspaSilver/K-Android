@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">Saisissez votre taux de hachage pour estimer les gains.</string>
     <string name="kp_export_failed_csv">Échec de l\'export. Impossible d\'écrire le fichier CSV</string>
     <string name="kp_fee_amount">Frais %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">%1$d adresses avec un solde ou un domaine trouvées.</string>
-    <string name="kp_found_one_address_balance_domain">1 adresse avec un solde ou un domaine trouvée.</string>
     <string name="kp_frame_lld_lld_5cb10">Image %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">Donnez un nom à ce compte pour pouvoir le reconnaître.</string>
     <string name="kp_hide_address">Masquer l’adresse</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">Nouveau portefeuille</string>
     <string name="kp_next_block_reward">Prochaine récompense de bloc</string>
     <string name="kp_next_block_reward_reduction">Prochaine baisse de la récompense de bloc</string>
-    <string name="kp_no_addresses_balance_domain_found">Aucune adresse avec un solde ou un domaine trouvée.</string>
     <string name="kp_no_addresses_discovered_yet_15738">Aucune adresse découverte pour l\'instant.</string>
     <string name="kp_no_used_addresses_yet">Aucune adresse utilisée pour l\'instant</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Pas encore assez d\'historique - revenez après quelques jours d\'activité.</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">Enregistre le CSV dans le dossier KaChat de votre Nextcloud.</string>
     <string name="pnc_import_sub">Choisissez un fichier CSV dans votre Nextcloud.</string>
     <string name="portfolio">Portefeuille</string>
-    <string name="portfolio_add_address_footer_kachat">Saisissez une adresse Kaspa ou un domaine comme name.kachat (les noms .kachat sont recherchés en premier). Chaque transaction reçue sur cette adresse devient un achat, chaque transaction envoyée une vente, au prix historique du KAS ce jour-là. Si vous ajoutez à nouveau la même adresse plus tard, seules les transactions trouvées depuis le dernier import sont importées.</string>
     <string name="portfolio_add_chatting_address">Ajouter l\'adresse de discussion</string>
     <string name="portfolio_add_chatting_address_sub">Les achats et ventes de votre adresse de discussion, et chaque frais de réseau qu\'elle a payé.</string>
     <string name="portfolio_fees_count_loading">Transactions : %1$d. Certains prix sont encore en chargement.</string>

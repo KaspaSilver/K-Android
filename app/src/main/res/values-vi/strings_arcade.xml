@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">Rắn săn mồi</string>
+    <string name="arcade_snake_detail">Ăn, lớn lên, đừng đâm vào tường hay chính mình. Điểm được ghi lên Kaspa.</string>
+    <string name="arcade_2048_detail">Vuốt để gộp các ô và đạt 2048. Điểm được ghi lên Kaspa.</string>
+    <string name="arcade_other_account">Ván này được chơi trên một tài khoản khác. Hãy đăng nhập vào tài khoản đó để ghi điểm.</string>
+    <string name="arcade_score_not_sent">Điểm chưa được gửi.</string>
+    <string name="arcade_challenge_play">Thử thách: chơi %1$s</string>
+    <string name="arcade_beat_in">Vượt %1$s điểm trong %2$s</string>
+    <string name="arcade_share_boast">Tôi đạt %1$s điểm trong %2$s trên K. Bạn nghĩ mình vượt qua được không?</string>
+    <string name="arcade_challenge_named">%1$s đạt %2$s điểm trong %3$s. Bạn có vượt qua được không?</string>
+    <string name="arcade_challenge_someone">Có người đạt %1$s điểm trong %2$s. Bạn có vượt qua được không?</string>
+    <string name="arcade_your_best">Kỷ lục của bạn: %1$s</string>
+    <string name="arcade_fee_note">Điểm của mỗi ván đã chơi xong được ghi lên Kaspa từ địa chỉ trò chuyện của bạn, với một khoản phí mạng nhỏ.</string>
+    <string name="arcade_hint_period">Chuyển khoảng thời gian của bảng xếp hạng</string>
+    <string name="arcade_board_unreachable">Không thể tải bảng xếp hạng. Kéo xuống để thử lại.</string>
+    <string name="arcade_board_empty">Chưa có điểm nào. Hãy là người đầu tiên.</string>
+    <string name="arcade_posted">Đã đăng lên KaPost</string>
+    <string name="arcade_game_over">Trò chơi kết thúc</string>
+    <string name="arcade_play_again">Chơi lại</string>
+    <string name="arcade_posting">Đang đăng lên KaPost…</string>
+    <string name="arcade_shared">Đã chia sẻ lên KaPost</string>
+    <string name="arcade_retry_stamp">Ghi lại điểm</string>
+    <string name="arcade_stamping">Đang ghi điểm lên Kaspa…</string>
+    <string name="arcade_stamped">Đã ghi điểm lên Kaspa</string>
+    <string name="arcade_no_score">Không có điểm để ghi.</string>
+    <string name="arcade_score_n">Điểm: %1$s</string>
+    <string name="arcade_snake_start_hint">Vuốt trên bàn chơi hoặc dùng các mũi tên để bắt đầu.</string>
+    <string name="arcade_score">Điểm</string>
+    <string name="arcade_best_tile">Ô cao nhất</string>
+    <string name="arcade_2048_hint">Vuốt để di chuyển các ô. Các ô bằng nhau sẽ gộp lại.</string>
+    <string name="arcade_challenge_label">Thử thách arcade</string>
+</resources>

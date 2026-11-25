@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -143,7 +144,6 @@ class GroupRepository @Inject constructor(
     private val notificationHelper: NotificationHelper,
     private val settings: AppSettingsRepository,
     private val notificationCenter: com.kachat.app.services.GlobalNotificationCenterStore,
-    private val knsService: com.kachat.app.services.KnsService,
     private val chatRequestStore: ChatRequestStore,
     private val pushState: PushState,
 ) {
@@ -240,6 +240,19 @@ class GroupRepository @Inject constructor(
     suspend fun isGroupMentionsOnly(groupId: String): Boolean =
         groupId in settings.groupMentionsOnlyApplied.first()
 
+    /** A member whose messages never notify in this group: muted ("never notify you") or hidden
+     *  ("stop seeing their messages") (iOS 8cb4c88e `quietMemberAddresses`). */
+    suspend fun isQuietGroupMember(groupId: String, senderAddress: String): Boolean {
+        val entry = "$groupId|$senderAddress"
+        return entry in settings.groupMutedMembers.first() || entry in settings.groupHiddenMembers.first()
+    }
+
+    /** The members hidden in [groupId] (their addresses), as the thread leaves them out. */
+    private fun hiddenMembersIn(groupId: String): Flow<Set<String>> = settings.groupHiddenMembers.map { entries ->
+        val prefix = "$groupId|"
+        entries.filter { it.startsWith(prefix) }.map { it.removePrefix(prefix) }.toSet()
+    }.distinctUntilChanged()
+
     /** Marks a group's thread as read as of now - backs the Group Chats tab's unread badge. Call when its thread screen opens. */
     suspend fun markGroupRead(groupId: String) {
         val walletAddress = walletManager.getAddress()
@@ -275,44 +288,25 @@ class GroupRepository @Inject constructor(
         return KaspaAddress.shortDisplay(address)
     }
 
+    /** A member as a membership line stores them: the full address, which the thread swaps for
+     *  their current name as it draws the line ([com.kachat.app.util.GroupSystemLine.display]), so
+     *  a .kachat name or a contact name that lands later shows too. The short address saved
+     *  before never updated (iOS 2026-11-24: "joined the group is showing my address not the
+     *  domain"). */
+    private fun systemLineMember(address: String): String = address
+
     /** Best display name for a group member in a notification banner: live contact alias (most
      *  likely to be current/deliberate - may have been set/changed after this person was added to
-     *  the group) > their primary KNS domain > the group roster's `displayName` snapshot (set
-     *  once, from whoever added them, at add-time) > a shortened address as a last resort - the
-     *  same chain the chat cards and the group thread's sender labels resolve with, so a banner
-     *  never regresses to a raw address for someone the UI names. The KNS step only runs when
-     *  there's no alias (rare - members get a contact row when added), is cached per address for
-     *  10 minutes so a chatty no-alias member can't hammer the KNS API, and any failure just
-     *  falls through to the roster snapshot. */
+     *  the group) > the group roster's `displayName` snapshot (set once, from whoever added them,
+     *  at add-time) > a shortened address as a last resort - the same chain the chat cards and
+     *  the group thread's sender labels resolve with, so a banner never regresses to a raw
+     *  address for someone the UI names. */
     private suspend fun groupSenderLabel(senderAddress: String, walletAddress: String, group: GroupEntity): String {
         val alias = try { database.contactDao().getContact(senderAddress, walletAddress)?.alias?.trim() } catch (e: Exception) { null }
         if (!alias.isNullOrEmpty()) return alias
-        val kns = cachedPrimaryKnsDomain(senderAddress)
-        if (!kns.isNullOrEmpty()) return kns
         val snap = membersOf(group).firstOrNull { it.address == senderAddress }?.displayName?.trim()
         if (!snap.isNullOrEmpty()) return snap
         return KaspaAddress.shortDisplay(senderAddress)
-    }
-
-    /** address -> (fetchedAtMs, primary KNS domain or null) for [groupSenderLabel] - a negative
-     *  ("owns no domain") answer is cached too, so it's one lookup per no-alias member per TTL
-     *  window, not per message. */
-    private val senderKnsCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, String?>>()
-
-    private suspend fun cachedPrimaryKnsDomain(address: String): String? {
-        val now = System.currentTimeMillis()
-        senderKnsCache[address]?.let { (fetchedAt, domain) ->
-            if (now - fetchedAt < 10 * 60_000L) return domain
-        }
-        val domain = try {
-            // A banner waits on this, and a roster name will do (see NAME_LOOKUP_BUDGET_MS).
-            kotlinx.coroutines.withTimeoutOrNull(NAME_LOOKUP_BUDGET_MS) { knsService.identityName(address) }
-                ?.trim()?.takeIf { it.isNotEmpty() }
-        } catch (e: Exception) {
-            null
-        }
-        senderKnsCache[address] = now to domain
-        return domain
     }
 
     /** Insert an iMessage-style membership line into the group thread, stored as a negative-epoch
@@ -346,11 +340,11 @@ class GroupRepository @Inject constructor(
         var t = System.currentTimeMillis()
         for (m in newMembers) if (m.address !in oldAddrs) {
             setMemberStatus(GroupMemberStatus.INVITED, m.address, groupId, walletAddress)
-            insertGroupSystemMessage(groupId, walletAddress, "${groupMemberLabel(m.address, walletAddress, m.displayName)} was invited to the group chat", at = t++)
+            insertGroupSystemMessage(groupId, walletAddress, "${systemLineMember(m.address)} was invited to the group chat", at = t++)
         }
         for (m in oldMembers) if (m.address !in newAddrs) {
             setMemberStatus(null, m.address, groupId, walletAddress)
-            insertGroupSystemMessage(groupId, walletAddress, "${groupMemberLabel(m.address, walletAddress, m.displayName)} was removed from the group chat", at = t++)
+            insertGroupSystemMessage(groupId, walletAddress, "${systemLineMember(m.address)} was removed from the group chat", at = t++)
         }
     }
 
@@ -425,14 +419,22 @@ class GroupRepository @Inject constructor(
                 combine(
                     database.groupDao().getLatestMessage(groupId, address),
                     database.groupDao().countUnread(groupId, address, lastReadAt),
-                ) { latest, unread ->
+                    // A hidden member's messages aren't in the thread, so they aren't unread
+                    // either: the badge counted mail you could never see to clear (iOS 8cb4c88e,
+                    // audit 2026-11-24 notifications). Hiding or unhiding redoes the count.
+                    hiddenMembersIn(groupId),
+                ) { latest, unread, hidden ->
                     val decrypted = latest?.let {
                         val bag = groupSecretStore.loadBag(address, groupId)
                         if (bag == null) null else decryptCached(it, bag, groupId.hexToByteArray())
                     }?.takeUnless { GroupMemberStatus.isHiddenEnvelope(it.content) }
                     // A long voice note's or multi-part photo's parts count once (iOS 7c5c22e3
                     // `unreadUnits`): read the unread rows only when there are several.
-                    val units = if (unread > 1) groupUnreadUnits(groupId, address, lastReadAt) ?: unread else unread
+                    val units = when {
+                        hidden.isNotEmpty() && unread > 0 -> groupUnreadUnits(groupId, address, lastReadAt, hidden) ?: unread
+                        unread > 1 -> groupUnreadUnits(groupId, address, lastReadAt) ?: unread
+                        else -> unread
+                    }
                     // A group never opened and not created by us counts as at least 1, covering
                     // "added to a new group, no messages yet".
                     val count = if (lastReadAt == null && !isAdmin) maxOf(units, 1) else units
@@ -442,12 +444,15 @@ class GroupRepository @Inject constructor(
         }
     }
 
-    /** The group's unread messages as units, a note's parts counted once; null when they can't
-     *  be read (no secrets on this device), and the plain count stands. */
-    private suspend fun groupUnreadUnits(groupId: String, walletAddress: String, lastReadAt: Long?): Int? {
-        val bag = groupSecretStore.loadBag(walletAddress, groupId) ?: return null
-        val groupIdBytes = runCatching { groupId.hexToByteArray() }.getOrNull() ?: return null
+    /** The group's unread messages as units, a note's parts counted once, [hidden] members'
+     *  left out; null when they can't be read (no secrets on this device), and the plain count
+     *  stands - with hidden members, the rows not theirs. */
+    private suspend fun groupUnreadUnits(groupId: String, walletAddress: String, lastReadAt: Long?, hidden: Set<String> = emptySet()): Int? {
         val rows = database.groupDao().getUnreadOnce(groupId, walletAddress, lastReadAt)
+            .filter { it.senderAddress == null || it.senderAddress !in hidden }
+        val plain = rows.size.takeIf { hidden.isNotEmpty() }
+        val bag = groupSecretStore.loadBag(walletAddress, groupId) ?: return plain
+        val groupIdBytes = runCatching { groupId.hexToByteArray() }.getOrNull() ?: return plain
         return com.kachat.app.util.VoicePartGrouping.unreadUnits(rows, groupPartAccessors { decryptCached(it, bag, groupIdBytes)?.content })
     }
 
@@ -528,7 +533,15 @@ class GroupRepository @Inject constructor(
     // Group creation & membership
     // -------------------------------------------------------------------------
 
-    suspend fun createGroup(name: String, members: List<ContactEntity>): GroupEntity {
+    /** [report] hears each step as it happens, so the screen can show the progress (iOS
+     *  `GroupActionReport`, owner 2026-11-24): [com.kachat.app.models.GroupActionStep.SET_UP], each
+     *  member's address, then [com.kachat.app.models.GroupActionStep.RECOVERY_COPY]. */
+    suspend fun createGroup(
+        name: String,
+        members: List<ContactEntity>,
+        report: com.kachat.app.models.GroupActionReport? = null,
+    ): GroupEntity {
+        report?.invoke(com.kachat.app.models.GroupActionStep.SET_UP, com.kachat.app.models.GroupActionPhase.Started)
         val walletAddress = walletManager.getAddress()
         val privateKey = walletManager.getPrivateKeyBytes()
         val adminXOnlyPub = Schnorr.publicKeyXOnly(privateKey)
@@ -564,6 +577,7 @@ class GroupRepository @Inject constructor(
         for (member in roster) {
             if (!member.isAdmin) setMemberStatus(GroupMemberStatus.INVITED, member.address, groupId.toHexString(), walletAddress)
         }
+        report?.invoke(com.kachat.app.models.GroupActionStep.SET_UP, com.kachat.app.models.GroupActionPhase.Finished)
 
         // Distribute gctl_root to each initial member directly - they must already be a 1:1
         // contact, i.e. their pubkey is resolvable from their address (every member is added
@@ -571,24 +585,35 @@ class GroupRepository @Inject constructor(
         // member's send failing doesn't roll back group creation.
         for (member in roster) {
             if (member.isAdmin) continue
+            report?.invoke(member.address, com.kachat.app.models.GroupActionPhase.Started)
             try {
                 sendRootControlMessage(entity, roster, bag, member.address, privateKey)
+                report?.invoke(member.address, com.kachat.app.models.GroupActionPhase.Finished)
             } catch (e: Exception) {
                 // Logged by the caller's own try/catch around sendKaspa; swallow here so one
                 // failed member doesn't abort the rest.
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                report?.invoke(member.address, com.kachat.app.models.GroupActionPhase.Failed(e))
             }
         }
         // Self-addressed recovery copy so a seedless re-import finds this group. Best-effort;
         // the sync backfill retries if it fails here.
-        try { sendSelfRootControlMessage(entity, roster, bag, privateKey) } catch (e: Exception) {}
+        report?.invoke(com.kachat.app.models.GroupActionStep.RECOVERY_COPY, com.kachat.app.models.GroupActionPhase.Started)
+        try {
+            sendSelfRootControlMessage(entity, roster, bag, privateKey)
+            report?.invoke(com.kachat.app.models.GroupActionStep.RECOVERY_COPY, com.kachat.app.models.GroupActionPhase.Finished)
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            report?.invoke(com.kachat.app.models.GroupActionStep.RECOVERY_COPY, com.kachat.app.models.GroupActionPhase.Failed(e))
+        }
 
         return entity
     }
 
     /** Adds a member directly (requires an existing 1:1-resolvable address) - bumps the epoch and redistributes the new root to every member (old + new). */
-    suspend fun addMember(contact: ContactEntity, groupId: String) {
+    suspend fun addMember(contact: ContactEntity, groupId: String, report: com.kachat.app.models.GroupActionReport? = null) {
         val memberXOnlyPub = xOnlyPubKeyOrNull(contact.id) ?: throw IllegalArgumentException("Invalid address")
-        rotateEpoch(groupId, "add") { roster ->
+        rotateEpoch(groupId, "add", report) { roster ->
             if (roster.none { it.address == contact.id }) {
                 roster.add(GroupMember(address = contact.id, xOnlyPubKeyHex = memberXOnlyPub.toHexString(), isAdmin = false, displayName = contact.alias))
             }
@@ -702,7 +727,12 @@ class GroupRepository @Inject constructor(
         sendRootControlMessage(entity, roster, bag, address, privateKey)
     }
 
-    private suspend fun rotateEpoch(groupId: String, reason: String, mutateRoster: (MutableList<GroupMember>) -> Unit) {
+    private suspend fun rotateEpoch(
+        groupId: String,
+        reason: String,
+        report: com.kachat.app.models.GroupActionReport? = null,
+        mutateRoster: (MutableList<GroupMember>) -> Unit,
+    ) {
         val walletAddress = walletManager.getAddress()
         // Catch up on our OWN control stream before reading the roster.
         //
@@ -758,17 +788,28 @@ class GroupRepository @Inject constructor(
         // for it to make its own change and overwrite this one.
         try { sendSelfRootControlMessage(updatedEntity, roster, newBag, privateKey) } catch (e: Exception) {}
 
+        var sendFailures = 0
         for (member in roster) {
             if (member.address == walletAddress) continue
+            report?.invoke(member.address, com.kachat.app.models.GroupActionPhase.Started)
             try {
                 sendEpochControlMessage(groupIdBytes, newEpoch, reason, member.address, privateKey)
                 sendRootControlMessage(updatedEntity, roster, newBag, member.address, privateKey)
+                report?.invoke(member.address, com.kachat.app.models.GroupActionPhase.Finished)
             } catch (e: Exception) {
                 // Best effort, same as createGroup - one member's failed delivery doesn't block the rest.
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                sendFailures++
+                report?.invoke(member.address, com.kachat.app.models.GroupActionPhase.Failed(e))
             }
         }
         // A newly-added member should also receive the current group photo (root doesn't carry it).
         updatedEntity.photoHex?.let { try { distributeGroupPhoto(updatedEntity, roster, it, privateKey) } catch (e: Exception) {} }
+        // Every member was tried; the ones missed are said, so the add shows as not gone through
+        // and "Resend invites to all" can finish it (iOS rotateEpoch).
+        if (sendFailures > 0) {
+            throw IllegalStateException("Epoch rotated, but $sendFailures member(s) may not have received the update yet.")
+        }
     }
 
     /**
@@ -1588,19 +1629,16 @@ class GroupRepository @Inject constructor(
         // Muting still lets the message show up in the thread (getMessages isn't filtered on mute,
         // only on hide) - it only skips the notification, same as iOS's mute (enforced there via
         // push-registration exclusion, which a push already on its way can outrun).
-        val isMuted = "${group.groupId}|$senderAddress" in settings.groupMutedMembers.first()
+        // A hidden member ("stop seeing their messages") never notifies either: they're off the
+        // push watch list, so the open app mustn't banner them (iOS 8cb4c88e
+        // `quietMemberAddresses`, audit 2026-11-24 notifications).
+        val isMuted = isQuietGroupMember(group.groupId, senderAddress)
         val mentionsOnly = group.groupId in settings.groupMentionsOnlyApplied.first()
         val silent = group.groupId in settings.groupSilent.first()
-        // "Mentions me" uses the SAME definition as the composer's @mention feature: members are
-        // mentioned by their primary KNS domain (insertMention writes "@domain"), so match the
-        // shared @token grammar against our own reverse-resolved domain via
-        // GlobalNotificationCenterStore.mentionsMyDomain — never a naive substring scan. A raw
-        // "@<full address>" paste still counts as a mention. Only evaluated when the group is
+        // "Mentions me": an "@<full address>" mention. A .kas name no longer counts - K reads no
+        // .kas names since 2026-11-23 (iOS 518fdc8c). Only evaluated when the group is
         // mentions-only (short-circuit).
-        val mentionsMe = mentionsOnly && (
-            plaintext.contains("@$walletAddress") ||
-                kotlinx.coroutines.withTimeoutOrNull(NAME_LOOKUP_BUDGET_MS) { notificationCenter.mentionsMyDomain(plaintext) } == true
-            )
+        val mentionsMe = mentionsOnly && plaintext.contains("@$walletAddress")
         val isReplyToMe = MessageReply.parseOrNull(plaintext)?.replyToSender == walletAddress
         // Silent wins over everything else.
         if (silent || isMuted || (mentionsOnly && !mentionsMe && !isReplyToMe)) return null
@@ -1613,9 +1651,22 @@ class GroupRepository @Inject constructor(
             // A reply says its own words, a payment request link is a card in the chat, and any
             // other envelope gets its placeholder: the same rule as a 1:1 banner (iOS
             // NotificationService.unwrapReplyText).
-            else -> "$senderLabel: ${com.kachat.app.util.dmNotificationText(plaintext, notificationHelper.dmNotificationLabels())}"
+            // "@kaspa:qq…" mentions (the group wire format) read as names (iOS NotificationService
+            // `mentionsAsNames`, 2026-11-24).
+            else -> "$senderLabel: ${mentionsAsNames(com.kachat.app.util.dmNotificationText(plaintext, notificationHelper.dmNotificationLabels()), walletAddress)}"
         }
     }
+
+    /** Group text's `@<address>` mentions as the name this phone knows each one by: a contact's
+     *  name, else their .kachat name (the names cache a push can read), else the short address
+     *  (iOS NotificationService `mentionsAsNames`). */
+    private suspend fun mentionsAsNames(text: String, walletAddress: String): String =
+        com.kachat.app.util.UsernameMention.mentionsAsNames(text) { address ->
+            val alias = try { database.contactDao().getContact(address, walletAddress)?.alias?.trim() } catch (e: Exception) { null }
+            alias?.takeIf { it.isNotEmpty() }
+                ?: com.kachat.app.services.KnownKachatNames.name(context, address)
+                ?: KaspaAddress.shortDisplay(address)
+        }
 
     /**
      * What a group reaction's banner says, or null when the rules keep it quiet: "Alice reacted 👍
@@ -1629,7 +1680,7 @@ class GroupRepository @Inject constructor(
     ): String? {
         val target = database.groupDao().getMessage(reaction.targetTxId, walletAddress)
         val targetIsMine = target?.isOutgoing == true
-        val isMuted = "${group.groupId}|$senderAddress" in settings.groupMutedMembers.first()
+        val isMuted = isQuietGroupMember(group.groupId, senderAddress)
         val silent = group.groupId in settings.groupSilent.first()
         val mentionsOnly = group.groupId in settings.groupMentionsOnlyApplied.first()
         if (silent || isMuted || (mentionsOnly && !targetIsMine)) return null
@@ -2192,7 +2243,7 @@ class GroupRepository @Inject constructor(
         if (changed) inviteStateChanged()
         val isRecent = blockTime > 0 && System.currentTimeMillis() - blockTime < GROUP_SYSTEM_MESSAGE_LIFETIME_MS
         if (!changed || !isRecent || address == walletAddress) return
-        val label = groupMemberLabel(address, walletAddress, null)
+        val label = systemLineMember(address)
         insertGroupSystemMessage(
             groupId, walletAddress,
             if (status == GroupMemberStatus.JOINED) "$label joined the group" else "$label declined the invite",
@@ -2454,25 +2505,36 @@ class GroupRepository @Inject constructor(
             }
         }
         if (blindedIds.isEmpty()) return LiveGroupPoll.Answered(cursor)
-        var newest = cursor
         return try {
-            var page = since
-            for (pass in 0 until 10) {
-                val response = api.getGroupMessagesSince(
-                    GroupMessagesSinceBody(blindedIds.take(256), page, LIVE_POLL_PAGE)
-                )
-                val rows = response.messages.orEmpty()
-                for (msg in rows) {
-                    val payloadString = reconstructPayloadString("kchat:1:gcomm:", msg.messagePayload) ?: continue
-                    val parsed = GroupCipher.parseGroupMessagePayload(payloadString) ?: continue
-                    ingestRow("gcomm", msg.txId) { handleIncomingGroupMessage(parsed, msg.txId, msg.blockTime) }
-                    newest = maxOf(newest, msg.blockTime)
+            // Messages, in chunks of LIVE_IDS_PER_READ member lanes (the indexer's cap per read)
+            // and paged within each chunk: a full page means more may be waiting past it. Every
+            // chunk is read each pass and the cursor moves only as far as the chunk that got least
+            // far, so lanes past the first 256 aren't skipped while the cursor advances (iOS audit
+            // 2026-11-24 #14).
+            val chunkReached = ArrayList<Long>()
+            for (chunk in blindedIds.chunked(LIVE_IDS_PER_READ)) {
+                var chunkNewest = cursor
+                var page = since
+                for (pass in 0 until 10) {
+                    val response = api.getGroupMessagesSince(
+                        GroupMessagesSinceBody(chunk, page, LIVE_POLL_PAGE)
+                    )
+                    val rows = response.messages.orEmpty()
+                    for (msg in rows) {
+                        val payloadString = reconstructPayloadString("kchat:1:gcomm:", msg.messagePayload) ?: continue
+                        val parsed = GroupCipher.parseGroupMessagePayload(payloadString) ?: continue
+                        ingestRow("gcomm", msg.txId) { handleIncomingGroupMessage(parsed, msg.txId, msg.blockTime) }
+                        chunkNewest = maxOf(chunkNewest, msg.blockTime)
+                    }
+                    val latest = response.latestBlockTime ?: rows.maxOfOrNull { it.blockTime } ?: page
+                    chunkNewest = maxOf(chunkNewest, latest)
+                    if (rows.size < LIVE_POLL_PAGE || latest <= page) break
+                    page = latest
                 }
-                val latest = response.latestBlockTime ?: rows.maxOfOrNull { it.blockTime } ?: page
-                newest = maxOf(newest, latest)
-                if (rows.size < LIVE_POLL_PAGE || latest <= page) break
-                page = latest
+                chunkReached += chunkNewest
             }
+            // Control rows are read from the same `since` every pass and dedupe on ingest, so
+            // they don't move the cursor past a message chunk that is behind.
             if (includeControl) {
                 val senders = groups.map { it.adminAddress }.filter { it.isNotEmpty() }.distinct()
                 val response = api.getGroupControlSince(
@@ -2481,9 +2543,9 @@ class GroupRepository @Inject constructor(
                 for (msg in response.controls.orEmpty()) {
                     val payloadString = reconstructPayloadString("kchat:1:gctl:", msg.messagePayload) ?: continue
                     ingestRow("gctl", msg.txId) { handleIncomingControlMessage(payloadString, msg.sender, msg.blockTime, msg.txId) }
-                    newest = maxOf(newest, msg.blockTime)
                 }
             }
+            val newest = liveCursorAfterChunks(cursor, chunkReached)
             if (onlyGroupId == null) allGroupsCursors[walletAddress] = newest
             LiveGroupPoll.Answered(newest)
         } catch (e: kotlinx.coroutines.CancellationException) {
@@ -3379,12 +3441,19 @@ class GroupSendAccountChangedException(message: String) : IllegalStateException(
 /** A live group pass starts this far before its cursor, for indexer clock skew and reorgs (iOS). */
 private const val LIVE_POLL_REWIND_MS = 10_000L
 
-/** How long a group banner may wait on a name lookup. The push handler has seconds, and a roster
- *  name (or "not mentioned") is a fine answer. */
-private const val NAME_LOOKUP_BUDGET_MS = 3_000L
-
 /** Rows per `since` page; a full page is followed straight away. */
 private const val LIVE_POLL_PAGE = 200
+
+/** Member lanes per `since` read: the indexer takes at most this many ids in one request (iOS
+ *  `liveIdsPerRead`). */
+internal const val LIVE_IDS_PER_READ = 256
+
+/**
+ * Where a live pass leaves its cursor (iOS audit 2026-11-24 #14): as far as the chunk of member
+ * lanes that got least far, never behind where it started.
+ */
+internal fun liveCursorAfterChunks(startCursor: Long, chunkReached: List<Long>): Long =
+    maxOf(startCursor, chunkReached.minOrNull() ?: startCursor)
 
 /** How far back the chain is read for groups while the indexer is down (iOS chainCatchUpLookbackMs). */
 private const val CHAIN_CATCH_UP_LOOKBACK_MS = 3L * 24 * 60 * 60 * 1000

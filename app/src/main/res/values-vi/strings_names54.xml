@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">Tên người dùng của bạn</string>
+    <string name="names54_no_username_found">Không tìm thấy tên người dùng</string>
+    <string name="names54_use_their_username">Dùng tên người dùng của họ</string>
+    <string name="names54_kaspa_address_or_username">Địa chỉ Kaspa hoặc tên người dùng</string>
+    <string name="names54_enter_address_or_username_example">Nhập địa chỉ Kaspa (kaspa:...) hoặc tên người dùng (ví dụ alice.kachat).</string>
+    <string name="names54_members_footer">Chọn người từ danh bạ, hoặc thêm bất kỳ ai bằng địa chỉ Kaspa hoặc tên người dùng.</string>
+    <string name="names54_finds_addresses_balance_or_username">Tìm các địa chỉ có số dư hoặc tên người dùng.</string>
+    <string name="names54_no_addresses_balance_or_username_found">Không tìm thấy địa chỉ nào có số dư hoặc tên người dùng.</string>
+    <string name="names54_found_one_address_balance_username">Đã tìm thấy 1 địa chỉ có số dư hoặc tên người dùng.</string>
+    <string name="names54_found_n_addresses_balance_username">Đã tìm thấy %1$d địa chỉ có số dư hoặc tên người dùng.</string>
+    <string name="names54_no_addresses_balance_or_username_yet">Chưa có địa chỉ nào có số dư hoặc tên người dùng</string>
+    <string name="names54_contains_username">Chứa tên người dùng</string>
+    <string name="names54_get_a_username">Nhận tên người dùng</string>
+    <string name="names54_qr_chatting_address_subtitle">Dùng để trò chuyện và nhận tên người dùng.</string>
+    <string name="names54_no_usernames_yet">Chưa có tên người dùng</string>
+    <string name="names54_claim_a_username">Nhận tên người dùng</string>
+    <string name="names54_discord_invite_not_found">Không có lời mời Discord nào tên %1$s. Hãy dùng mã mời của một máy chủ, như discord.gg/abc123: không thể tra tài khoản Discord theo tên người dùng.</string>
+</resources>

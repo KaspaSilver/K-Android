@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">Tus nombres de usuario</string>
+    <string name="names54_no_username_found">No se encontró ningún nombre de usuario</string>
+    <string name="names54_use_their_username">Usar su nombre de usuario</string>
+    <string name="names54_kaspa_address_or_username">Dirección de Kaspa o nombre de usuario</string>
+    <string name="names54_enter_address_or_username_example">Introduce una dirección de Kaspa (kaspa:...) o un nombre de usuario (p. ej., alice.kachat).</string>
+    <string name="names54_members_footer">Elige personas de tus contactos o añade a cualquiera por dirección de Kaspa o nombre de usuario.</string>
+    <string name="names54_finds_addresses_balance_or_username">Encuentra direcciones con saldo o un nombre de usuario.</string>
+    <string name="names54_no_addresses_balance_or_username_found">No se encontraron direcciones con saldo o nombre de usuario.</string>
+    <string name="names54_found_one_address_balance_username">Se encontró 1 dirección con saldo o nombre de usuario.</string>
+    <string name="names54_found_n_addresses_balance_username">Se encontraron %1$d direcciones con saldo o nombre de usuario.</string>
+    <string name="names54_no_addresses_balance_or_username_yet">Aún no hay direcciones con saldo o nombre de usuario</string>
+    <string name="names54_contains_username">Contiene nombre de usuario</string>
+    <string name="names54_get_a_username">Consigue un nombre de usuario</string>
+    <string name="names54_qr_chatting_address_subtitle">Úsala para chatear y obtener nombres de usuario.</string>
+    <string name="names54_no_usernames_yet">Aún no hay nombres de usuario</string>
+    <string name="names54_claim_a_username">Reclamar un nombre de usuario</string>
+    <string name="names54_discord_invite_not_found">No hay ninguna invitación de Discord llamada %1$s. Usa el código de invitación de un servidor, como discord.gg/abc123: las cuentas de Discord no se pueden buscar por nombre de usuario.</string>
+</resources>

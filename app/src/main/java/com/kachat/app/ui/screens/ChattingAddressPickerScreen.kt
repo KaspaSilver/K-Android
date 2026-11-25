@@ -75,10 +75,10 @@ import com.kachat.app.util.showAddressCopiedToast
  * Scans the identity derivation chain of the wallet's chosen source family (standard
  * m/44'/111111'/0'/0/{index}, or legacy 972 / Chainge / OneKey, as import found it) in batches of
  * [CHATTING_ADDRESS_SCAN_BATCH], checking the whole batch for KAS balance (one batched balances
- * call) and KNS domains (the existing cached batch lookups) — never 50 raw requests. Only
- * interesting slots are listed: nonzero balance or at least one domain, plus always index 0 and
- * the current index. Tapping a row opens a detail screen with the full address, balance, its KNS
- * domain cards, and the prominent "Set as Chatting Address" action.
+ * call) and .kachat names (the only name service since iOS 518fdc8c) — never 50 raw requests.
+ * Only interesting slots are listed: nonzero balance or at least one name, plus always index 0
+ * and the current index. Tapping a row opens a detail screen with the full address, balance, its
+ * .kachat name cards, and the prominent "Set as Chatting Address" action.
  */
 @Composable
 fun ChattingAddressPickerScreen(
@@ -151,7 +151,7 @@ fun ChattingAddressPickerScreen(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                stringResource(R.string.chatting_picker_intro_any_name_kachat),
+                stringResource(R.string.shell54_chatting_picker_intro),
                 color = LocalAppColors.current.textSecondary,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
@@ -441,41 +441,6 @@ private fun ChattingAddressDetailScreen(
                     Spacer(Modifier.height(10.dp))
                     candidate.kachatNames.forEach { name ->
                         DomainNameCard(title = name.display, badge = null)
-                        Spacer(Modifier.height(10.dp))
-                    }
-                }
-
-                if (candidate.otherNames.isNotEmpty()) {
-                    Spacer(Modifier.height(20.dp))
-                    Text(
-                        stringResource(R.string.chatting_picker_other_names_count, candidate.otherNames.size),
-                        color = LocalAppColors.current.textPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    candidate.otherNames.forEach { name ->
-                        DomainNameCard(
-                            title = name.display,
-                            badge = if (name.isProvisional) stringResource(R.string.settling) else null
-                        )
-                        Spacer(Modifier.height(10.dp))
-                    }
-                }
-
-                if (candidate.domains.isNotEmpty()) {
-                    Spacer(Modifier.height(20.dp))
-                    Text(
-                        stringResource(R.string.chatting_picker_kas_names_count, candidate.domains.size),
-                        color = LocalAppColors.current.textPrimary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    candidate.domains.forEach { domain ->
-                        KnsDomainCard(
-                            domain = domain,
-                            isPrimary = candidate.primaryDomain != null &&
-                                domain.asset?.equals(candidate.primaryDomain, ignoreCase = true) == true
-                        )
                         Spacer(Modifier.height(10.dp))
                     }
                 }

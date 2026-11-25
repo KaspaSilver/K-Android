@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Android 12+ splash screen's icon (iOS 518fdc8c `UILaunchScreen`: `KLogo` at 120 pt,
+     centred on `LaunchBackground`). The system draws this 288 dp box centred on the screen with
+     no icon background, so the globe inside it sits at 120 dp in the middle - exactly where and
+     how big the loading view (`LaunchGlobeView`) draws it next, so the hand-over doesn't jump. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="288dp" android:height="288dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+    <item android:width="120dp" android:height="120dp" android:gravity="center"
+        android:drawable="@drawable/k_logo" />
+</layer-list>

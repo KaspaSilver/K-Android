@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 name services: .kachat only, and the Usernames naming (iOS 518fdc8c, audit 2026-11-24 #36). From iOS Localizable.strings. -->
+<resources>
+    <string name="names54_your_usernames">Vos noms d\'utilisateur</string>
+    <string name="names54_no_username_found">Aucun nom d\'utilisateur trouvé</string>
+    <string name="names54_use_their_username">Utiliser son nom d\'utilisateur</string>
+    <string name="names54_kaspa_address_or_username">Adresse Kaspa ou nom d\'utilisateur</string>
+    <string name="names54_enter_address_or_username_example">Saisissez une adresse Kaspa (kaspa:...) ou un nom d\'utilisateur (par ex. alice.kachat).</string>
+    <string name="names54_members_footer">Choisissez des personnes dans vos contacts, ou ajoutez n\'importe qui par adresse Kaspa ou nom d\'utilisateur.</string>
+    <string name="names54_finds_addresses_balance_or_username">Trouve les adresses ayant un solde ou un nom d\'utilisateur.</string>
+    <string name="names54_no_addresses_balance_or_username_found">Aucune adresse avec un solde ou un nom d\'utilisateur trouvée.</string>
+    <string name="names54_found_one_address_balance_username">1 adresse avec un solde ou un nom d\'utilisateur trouvée.</string>
+    <string name="names54_found_n_addresses_balance_username">%1$d adresses avec un solde ou un nom d\'utilisateur trouvées.</string>
+    <string name="names54_no_addresses_balance_or_username_yet">Aucune adresse avec un solde ou un nom d\'utilisateur pour l\'instant</string>
+    <string name="names54_contains_username">Contient un nom d\'utilisateur</string>
+    <string name="names54_get_a_username">Obtenir un nom d\'utilisateur</string>
+    <string name="names54_qr_chatting_address_subtitle">À utiliser pour discuter et obtenir des noms d\'utilisateur.</string>
+    <string name="names54_no_usernames_yet">Pas encore de nom d\'utilisateur</string>
+    <string name="names54_claim_a_username">Réclamer un nom d\'utilisateur</string>
+    <string name="names54_discord_invite_not_found">Aucune invitation Discord ne s\'appelle %1$s. Utilisez le code d\'invitation d\'un serveur, comme discord.gg/abc123 : les comptes Discord ne peuvent pas être trouvés par nom d\'utilisateur.</string>
+</resources>

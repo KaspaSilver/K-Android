@@ -96,7 +96,7 @@ fun VoiceNoteComposerRow(
                 IconButton(onClick = onTogglePreview, modifier = Modifier.size(32.dp)) {
                     Icon(
                         if (state.previewPlaying) Icons.Default.PauseCircle else Icons.Default.PlayCircle,
-                        contentDescription = if (state.previewPlaying) "Pause" else "Play",
+                        contentDescription = stringResource(if (state.previewPlaying) R.string.kpui_pause else R.string.kpui_play),
                         tint = KaspaTeal,
                         modifier = Modifier.size(28.dp)
                     )
@@ -126,7 +126,8 @@ fun VoiceNoteComposerRow(
         ) {
             Icon(
                 imageVector = if (recording) Icons.Default.Stop else Icons.AutoMirrored.Filled.Send,
-                contentDescription = if (recording) "Stop" else stringResource(R.string.send),
+                // what the button does now, for TalkBack (iOS audit 2026-11-24 #32)
+                contentDescription = stringResource(if (recording) R.string.c54_stop_recording else R.string.c54_send_voice_message),
                 tint = Color.Black,
                 modifier = Modifier.size(20.dp)
             )

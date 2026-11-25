@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 chats (iOS 518fdc8c): translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="c54_who_title">¿Quién puede escribirte?</string>
+    <string name="c54_who_anyone">Cualquiera</string>
+    <string name="c54_who_usernames">Solo usuarios con nombre de usuario</string>
+    <string name="c54_who_row_footer">Quién puede iniciar un chat contigo. No afecta a las personas con las que ya chateas.</string>
+    <string name="c54_who_anyone_footer">Cualquiera puede enviarte un primer mensaje. Espera en Solicitudes de mensajes hasta que lo aceptes.</string>
+    <string name="c54_who_usernames_footer">Solo las personas con nombre de usuario (un nombre .kachat) pueden llegar a tus Solicitudes de mensajes. Los primeros mensajes de cualquier otra persona se ocultan y no te envían notificaciones; elige Cualquiera para volver a verlos. No afecta a las personas con las que ya chateas.</string>
+    <string name="c54_room_clears_unread">Quita la insignia de no leídos de este chat público.</string>
+    <string name="c54_room_no_notifications">Sin notificaciones de este chat público.</string>
+    <string name="c54_room_notifications_resume">Las notificaciones de este chat público vuelven.</string>
+    <string name="c54_room_delete_subtitle">Quita este chat público de tus chats.</string>
+    <string name="c54_tip_subtitle">Dar propina a este contacto, según Ajustes &gt; Personalización &gt; Propinas.</string>
+    <string name="c54_send_tip">Enviar propina</string>
+    <string name="c54_send_deferred">Esperando a que tus monedas se confirmen. Se enviará solo en un momento, así que no lo envíes de nuevo.</string>
+    <string name="c54_failed_start_recording">No se pudo iniciar la grabación: %1$s</string>
+    <string name="c54_failed_encode_audio">No se pudo codificar el audio: %1$s</string>
+    <string name="c54_failed_prepare_audio">No se pudo preparar el audio: %1$s</string>
+    <string name="c54_sent_a_link">Envió un enlace</string>
+    <string name="c54_public_chat_room">Sala de chat pública #%1$s</string>
+    <string name="c54_search_contacts_address_username">Busca contactos, o una dirección o nombre de usuario</string>
+    <string name="c54_looking_up_username">Buscando nombre de usuario...</string>
+    <string name="c54_no_contacts_paste_username">Aún no tienes contactos. Pega arriba una dirección o un nombre de usuario para invitar a alguien.</string>
+    <string name="c54_no_contacts_match_username">Ningún contacto coincide con tu búsqueda. Pega una dirección o un nombre de usuario para invitar a alguien nuevo.</string>
+    <string name="c54_invites_resent_all">Invitaciones reenviadas a todos los miembros.</string>
+    <string name="c54_invite_resent">Invitación reenviada.</string>
+    <string name="c54_room_follows_app_indexer">Esta sala vuelve a usar el indexador de la app.</string>
+    <string name="c54_room_indexer_updated">Indexador actualizado para #%1$s.</string>
+    <string name="c54_room_could_not_reach">No se pudo conectar: %1$s</string>
+    <string name="c54_tap_open_your_chat">Toca para abrir tu chat.</string>
+    <string name="c54_tap_start_chat_on_k">Toca para iniciar un chat en K.</string>
+    <string name="c54_stop_recording">Detener grabación</string>
+    <string name="c54_send_voice_message">Enviar mensaje de voz</string>
+</resources>

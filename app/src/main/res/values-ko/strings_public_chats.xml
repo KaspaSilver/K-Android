@@ -42,7 +42,6 @@
     <string name="pc_new_public_chat">새 공개 채팅</string>
     <string name="pc_new_public_chat_subtitle">공개 방에 참여하거나 새로 만듭니다.</string>
     <string name="pc_edit_default_public_chats">기본 공개 채팅 편집</string>
-    <string name="pc_edit_default_public_chats_subtitle">기본 방과 언어 방을 켜거나 끕니다.</string>
     <string name="pc_new_public_chat_explainer">같은 채널 이름으로 들어온 사람은 누구나 거기서 메시지를 보고 올릴 수 있습니다. 소유자도 초대도 없습니다.</string>
     <string name="pc_join">참여</string>
     <string name="pc_back">뒤로</string>

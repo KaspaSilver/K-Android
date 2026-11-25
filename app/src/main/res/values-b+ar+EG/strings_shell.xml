@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">الإحصاءات</string>
     <string name="shell_tab_websites">المواقع</string>
     <string name="shell_kaspa_websites">مواقع Kaspa</string>
-    <string name="shell_customize_dock">تخصيص الشريط</string>
-    <string name="shell_your_dock">الشريط الخاص بك</string>
-    <string name="shell_always_stays">%1$s دايمًا بيفضل في الشريط بتاعك.</string>
-    <string name="shell_dock_full">الشريط ممتلئ. أزل عنصرًا منه لإضافة أحد هذه.</string>
-    <string name="shell_hub_order">بالترتيب الذي يعرضها به %1$s.</string>
-    <string name="shell_move_to">نقل %1$s إلى %2$s</string>
-    <string name="shell_add_to_dock">إضافة %1$s إلى الشريط</string>
-    <string name="shell_always_in_dock">دائمًا في الشريط</string>
-    <string name="shell_hub_empty_title">مفيش حاجة هنا دلوقتي</string>
-    <string name="shell_hub_empty_body">اللي مش في الشريط بتاعك بيظهر هنا. رتّبه من تخصيص الشريط.</string>
-    <string name="shell_customize_dock_footer">اختار اللي في الشريط بتاعك. الباقي كله في Kaspa Hub.</string>
     <string name="shell_terms_of_use">شروط الاستخدام</string>
     <string name="shell_message_indexer_footer">KaPost والمحادثات العامة والشطرنج بيتقروا من الفهرس ده كمان.</string>
     <string name="shell_ks_what_counts">ما الذي يُحتسب</string>

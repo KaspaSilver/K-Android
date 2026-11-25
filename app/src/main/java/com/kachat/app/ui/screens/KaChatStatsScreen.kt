@@ -236,19 +236,30 @@ class KaChatStatsViewModel @Inject constructor(
     private val _kachatLoaded = MutableStateFlow(false)
     val kachatLoaded: StateFlow<Boolean> = _kachatLoaded.asStateFlow()
 
+    /** When the .kachat totals were last read (ms), for [loadKachat]'s one-minute skip. */
+    private var kachatLoadedAtMs: Long? = null
+
     fun refresh(force: Boolean) {
         viewModelScope.launch {
             store.refresh(force)
-            loadKachat()
+            loadKachat(force)
         }
     }
 
     suspend fun refreshAndAwait() {
         store.refresh(force = true)
-        loadKachat()
+        loadKachat(force = true)
     }
 
-    private suspend fun loadKachat() {
+    /**
+     * [force] false (the section showing again) skips totals read in the last minute, as the
+     * indexer counts do: they can walk every registry event (iOS 518fdc8c, audit 2026-11-24 #23).
+     */
+    private suspend fun loadKachat(force: Boolean) {
+        val loadedAt = kachatLoadedAtMs
+        if (!force && _kachatLoaded.value && loadedAt != null &&
+            System.currentTimeMillis() - loadedAt < KACHAT_FRESH_FOR_MS
+        ) return
         if (!KachatLive.isEnabled) {
             _kachatTransactions.value = null
             _kachatFees.value = null
@@ -265,12 +276,17 @@ class KaChatStatsViewModel @Inject constructor(
             val totals = kachatRegistry.activityTotals()
             _kachatTransactions.value = totals.first
             _kachatFees.value = totals.second
+            kachatLoadedAtMs = System.currentTimeMillis()
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (_: Exception) {
             // keeps what it showed
         }
         _kachatLoaded.value = true
+    }
+
+    private companion object {
+        const val KACHAT_FRESH_FOR_MS = 60_000L
     }
 }
 
@@ -286,7 +302,7 @@ private val KachatDomainsMint = Color(0xFF00C7BE)
  * reports is left out rather than shown as zero; while loading, or when the indexer has no stats
  * yet, the cards keep their real names with the numbers blanked, so nothing invented is on screen.
  * Each kind is a card with its 24 Hours, 7 Days and All Time figures; .kachat's five kinds are the
- * one .kachat Domains card, and the Fees tab shows what .kachat transactions paid (iOS 4924787).
+ * one Usernames card (iOS 518fdc8c), and the Fees page shows what .kachat transactions paid.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -301,7 +317,10 @@ fun KaChatStatsScreen(onBack: (() -> Unit)?, viewModel: KaChatStatsViewModel = h
     val kachatLoaded by viewModel.kachatLoaded.collectAsState()
     var page by remember { mutableStateOf(KaChatStatsPage.TRANSACTIONS) }
     var showInfo by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { viewModel.refresh(force = false) }
+    // Each time the section shows, reopened from the Hub grid too; never while it is kept hidden
+    // in Kaspa Hub, where a LaunchedEffect re-read every total each time the Hub tab was selected
+    // (iOS 518fdc8c `onScreenPresence`, audit 2026-11-24 #23).
+    OnScreenPresence(appear = { viewModel.refresh(force = false) }, disappear = {})
 
     val pullState = rememberPullToRefreshState()
     LaunchedEffect(pullState.isRefreshing) {
@@ -351,8 +370,8 @@ fun KaChatStatsScreen(onBack: (() -> Unit)?, viewModel: KaChatStatsViewModel = h
         // Runs on under the dock, as iOS's content runs on under its tab bar.
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
         topBar = {
-            // iOS's bar: the connection dot on glass, the balance centred (the "KaChat Stats" title
-            // gives way to it) and "?" on a glass disc.
+            // iOS's bar: the balance centred (the "KaChat Stats" title gives way to it) and "?" on
+            // a glass disc; no connection dot since iOS 518fdc8c.
             HubSectionTopBar(onBack = onBack) {
                 ToolbarIconButton(
                     Icons.Outlined.HelpOutline,
@@ -391,12 +410,15 @@ fun KaChatStatsScreen(onBack: (() -> Unit)?, viewModel: KaChatStatsViewModel = h
                     Spacer(Modifier.height(2.dp))
                     Text(stringResource(R.string.shell_ks_caption_all), color = colors.textSecondary, fontSize = 15.sp, textAlign = TextAlign.Center)
                 }
-                HubUnderlineTabBar(
+                // The app's page switch (`PageCycleBar`, iOS 518fdc8c): each tap fades to the next.
+                com.kachat.app.ui.components.PageCycleBar(
                     titles = listOf(stringResource(R.string.transactions), stringResource(R.string.shell_ks_fees)),
                     selectedIndex = page.ordinal,
                     onSelect = { page = KaChatStatsPage.entries[it] },
                 )
-                when (page) {
+                com.kachat.app.ui.components.CycleFade(page, Modifier.fillMaxWidth()) { shownPage ->
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                when (shownPage) {
                     KaChatStatsPage.TRANSACTIONS -> {
                         val snap = snapshot
                         if (snap != null) {
@@ -428,7 +450,7 @@ fun KaChatStatsScreen(onBack: (() -> Unit)?, viewModel: KaChatStatsViewModel = h
                             KaChatStatCard(
                                 icon = Icons.Default.AlternateEmail,
                                 color = KachatDomainsMint,
-                                title = stringResource(R.string.shell_ks_kachat_domains),
+                                title = stringResource(R.string.shell54_usernames),
                                 detail = stringResource(R.string.shell_ks_kachat_transactions),
                                 values = listOf(kachat.last24h, kachat.last7d, kachat.total).map { kaChatStatsGrouped(it) },
                             )
@@ -440,7 +462,7 @@ fun KaChatStatsScreen(onBack: (() -> Unit)?, viewModel: KaChatStatsViewModel = h
                             fees != null -> KaChatStatCard(
                                 icon = Icons.Default.AlternateEmail,
                                 color = KachatDomainsMint,
-                                title = stringResource(R.string.shell_ks_kachat_domains),
+                                title = stringResource(R.string.shell54_usernames),
                                 detail = stringResource(R.string.shell_ks_kachat_fees_detail),
                                 values = listOf(fees.last24h, fees.last7d, fees.total).map { kaChatStatsKas(it) },
                             )
@@ -455,13 +477,15 @@ fun KaChatStatsScreen(onBack: (() -> Unit)?, viewModel: KaChatStatsViewModel = h
                             else -> KaChatStatCard(
                                 icon = Icons.Default.AlternateEmail,
                                 color = KachatDomainsMint,
-                                title = stringResource(R.string.shell_ks_kachat_domains),
+                                title = stringResource(R.string.shell54_usernames),
                                 detail = stringResource(R.string.shell_ks_kachat_fees_detail),
                                 values = emptyList(),
                                 redacted = true,
                             )
                         }
                     }
+                }
+                }
                 }
                 snapshot?.let { snap ->
                     Column(

@@ -327,4 +327,20 @@
     <string name="kaplay_no_finished_tournaments">এখনো কোনো টুর্নামেন্ট শেষ হয়নি।</string>
     <string name="kaplay_no_finished_tournaments_this_month">এই মাসে এখনো কোনো টুর্নামেন্ট শেষ হয়নি।</string>
     <string name="kaplay_tab_leaderboard">লিডারবোর্ড</string>
+    <string name="kp_640de0cb0b2c" formatted="false">আপনার রেকর্ড: %s জয়, %s হার</string>
+    <string name="kp_5d12bd53552c" formatted="false">খেলুন</string>
+    <string name="kp_3ab5950b358f" formatted="false">পরের যে যোগ দেবে তার সঙ্গে, বা কোড দিয়ে বন্ধুর সঙ্গে খেলুন।</string>
+    <string name="kp_85e2145e7cad" formatted="false">আটজন খেলোয়াড়, নকআউট।</string>
+    <string name="kp_636935a0b48d" formatted="false">পাঁচটি বট, লেভেল ১ থেকে ৫। পরেরটি খুলতে একটিকে হারান।</string>
+    <string name="kp_6fba758f3243" formatted="false">পরের লিডারবোর্ডে যায়</string>
+    <string name="kp_c0fc86977802" formatted="false">প্রতিপক্ষ যা নিয়েছে</string>
+    <string name="kp_48cb744b4728" formatted="false">আপনি যা নিয়েছেন</string>
+    <string name="kp_76ccff916d06" formatted="false">যোগাযোগের অনুরোধ</string>
+    <string name="kp_73eb05867f7b" formatted="false">সময়ে হেরেছে</string>
+    <string name="kp_6eac413a29b7" formatted="false">হার মেনেছে</string>
+    <string name="kp_8a4d6885363d" formatted="false">খেলা গ্রহণ করেছে</string>
+    <string name="kp_012794aeafb0" formatted="false">খেলা প্রত্যাখ্যান করেছে</string>
+    <string name="kp_0ac72bc536b1" formatted="false">দাবার আমন্ত্রণ</string>
+    <string name="kp_4bb26afc82d3" formatted="false">এই মাসে এখনো কোনো 1v1 খেলা শেষ হয়নি।</string>
+    <string name="kp_c56c7d117a52" formatted="false">এই মাসে এখনো কোনো টুর্নামেন্ট শেষ হয়নি।</string>
 </resources>

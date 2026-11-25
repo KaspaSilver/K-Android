@@ -29,9 +29,6 @@ class NetworkService @Inject constructor(
     private val _indexerApi = MutableStateFlow<KasiaIndexerApi?>(null)
     val indexerApi: StateFlow<KasiaIndexerApi?> = _indexerApi
 
-    private val _knsApi = MutableStateFlow<KnsApi?>(null)
-    val knsApi: StateFlow<KnsApi?> = _knsApi
-
     // Push registration lives on the same host as the indexer (indexer.kachat.app).
     private val _pushApi = MutableStateFlow<PushApi?>(null)
     val pushApi: StateFlow<PushApi?> = _pushApi
@@ -83,11 +80,6 @@ class NetworkService @Inject constructor(
                         _indexerApi.value = ResilientIndexerApi(it, chainHistory, scope)
                     }
                 }
-            }
-        }
-        scope.launch {
-            settings.knsApiUrl.collectLatest { url ->
-                createApi<KnsApi>(url)?.let { _knsApi.value = it }
             }
         }
         scope.launch {

@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">उन्हें बनाए रखने के लिए ग्रेस अवधि खत्म होने से पहले नवीनीकृत करें।</string>
-    <string name="kachat_expired_many_title">आपके %1$d .kachat डोमेन की अवधि समाप्त हो गई</string>
+    <string name="kachat_expired_many_title">आपके %1$d उपयोगकर्ता नामों की अवधि समाप्त हो गई</string>
     <string name="kachat_expired_one_body">%1$s को बनाए रखने के लिए %2$s को ग्रेस अवधि खत्म होने से पहले नवीनीकृत करें।</string>
-    <string name="kachat_expired_one_title">आपके .kachat डोमेन में से एक की अवधि समाप्त हो गई</string>
+    <string name="kachat_expired_one_title">आपके एक उपयोगकर्ता नाम की अवधि समाप्त हो गई</string>
     <string name="kachat_names_on_address_hint">यह पता जो नाम लेता या खरीदता है, वे .kachat नाम शुरू होने पर यहाँ दिखेंगे।</string>
-    <string name="kachat_names_this_address_owns">इस पते के नाम यहाँ दिखते हैं।</string>
-    <string name="kachat_no_names_on_address">इस पते पर कोई .kachat नाम नहीं</string>
+    <string name="kachat_names_this_address_owns">इस पते के यूज़रनेम यहाँ दिखते हैं।</string>
+    <string name="kachat_no_names_on_address">इस पते पर कोई यूज़रनेम नहीं</string>
     <string name="kg_claim_body">यही वह नाम है जिससे लोग आपको पूरे K में और आपकी प्रोफ़ाइल लिंक पर देखते हैं। इसके बिना उन्हें आपका पता दिखता है।</string>
-    <string name="kg_claim_hint">.kachat टैब में अपना मनचाहा नाम खोजें, फिर उसे क्लेम करें।</string>
+    <string name="kg_claim_hint">उपयोगकर्ता नाम टैब में अपना मनचाहा नाम खोजें, फिर उसे क्लेम करें।</string>
     <string name="kg_claim_title">अपना .kachat नाम लें</string>
     <string name="kg_close">बंद करें</string>
-    <string name="kg_finished_body">जब भी आप तैयार हों, .kachat टैब में अपना नाम क्लेम करें।</string>
+    <string name="kg_finished_body">जब भी तैयार हों, उपयोगकर्ता नाम टैब में अपना नाम क्लेम करें।</string>
     <string name="kg_finished_title">सब तैयार है</string>
     <string name="kg_how_body">आपका नाम Kaspa नेटवर्क पर रहता है, आपके चैटिंग पते के पास। जब तक यह आपका है, कोई इसे ले या बदल नहीं सकता।</string>
     <string name="kg_how_commit">क्लेम करने में दो तेज़ लेनदेन लगते हैं: पहला आपकी पसंद को गुप्त रखता है, दूसरा उसे पंजीकृत करता है।</string>
     <string name="kg_how_miners">कीमत नेटवर्क के माइनरों को जाती है, K को नहीं।</string>
     <string name="kg_how_period">आप एक बार में एक अवधि का भुगतान करते हैं। छोटे नाम महँगे होते हैं।</string>
     <string name="kg_how_title">नाम कैसे काम करता है</string>
-    <string name="kg_keep_body">आपके नाम वॉलेट &gt; आपके डोमेन &gt; .kachat में हैं।</string>
+    <string name="kg_keep_body">आपके नाम वॉलेट &gt; आपके उपयोगकर्ता नाम में हैं।</string>
     <string name="kg_keep_grace">समाप्ति के बाद एक ग्रेस अवधि होती है जिसमें कोई और क्लेम करने से पहले आप नवीनीकरण कर सकते हैं।</string>
     <string name="kg_keep_renew">समाप्त होने से पहले नवीनीकरण करें। हर नाम पर तारीख दिखती है।</string>
     <string name="kg_keep_title">इसे बनाए रखें</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">रजिस्ट्रेशन रुक जाता है और कमिट के 0.2 KAS नेटवर्क शुल्क घटाकर आपको लौट आते हैं।</string>
     <string name="kn_cancel_commit_title">कमिट रद्द करें?</string>
     <string name="kn_change_price">कीमत बदलें</string>
-    <string name="kn_claim_a_name">नाम लें</string>
     <string name="kn_claim_name_title">नाम लें</string>
     <string name="kn_claim_your_name_on_kaspa">Kaspa पर अपना नाम लें</string>
     <string name="kn_claiming_name">%1$s का दावा किया जा रहा है</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">नाम छोड़ा गया</string>
     <string name="kn_done_transferred">नाम ट्रांसफ़र किया गया</string>
     <string name="kn_err_address_key">इस पते की कुंजी मान्य नहीं है।</string>
-    <string name="kn_err_enter_address_or_domain">एक पता या डोमेन दर्ज करें।</string>
+    <string name="kn_err_enter_address_or_domain">कोई पता या उपयोगकर्ता नाम दर्ज करें।</string>
     <string name="kn_err_lookup">यह नाम खोजा नहीं जा सका।</string>
     <string name="kn_err_name_address_cant_own">उस नाम का पता किसी .kachat नाम का मालिक नहीं हो सकता।</string>
     <string name="kn_err_not_network_address">इस नेटवर्क पर यह Schnorr पता नहीं है।</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">कमिट की पुष्टि का इंतज़ार...</string>
     <string name="kn_taken">लिया जा चुका</string>
     <string name="kn_taken_for_sale">लिया जा चुका · %1$s में बिक्री पर</string>
-    <string name="kn_transfer_footer_domain">एक पता या डोमेन - .kachat नाम पहले खोजे जाते हैं, और दिखाए गए पते में बदले जाते हैं।</string>
+    <string name="kn_transfer_footer_domain">एक पता या उपयोगकर्ता नाम - इसे दिखाए गए पते में बदला जाता है।</string>
     <string name="kn_transfer_warning">ट्रांसफ़र पलटा नहीं जा सकता। नए मालिक को नाम उसकी मौजूदा समाप्ति के साथ मिलता है; आपकी प्रोफ़ाइल आपके पते के साथ रहती है।</string>
     <string name="kn_view_transaction">लेन-देन देखें</string>
     <string name="kn_withdraw">वापस लें</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">खरीदना और बेचना</string>
     <string name="kcn_kp_claim_pays_first_period">क्लेम पहली अवधि (%1$s) का भुगतान करता है। रिन्यू उसके बाद की हर अवधि का।</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">क्लेम करने पर दो लेन-देन भेजे जाते हैं: अभी कमिट, और लगभग एक मिनट बाद रजिस्ट्रेशन। दोनों इसी शुल्क दर से चुकाते हैं।</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">इस पते के नाम लोड नहीं हो सके। फिर से कोशिश करने के लिए नीचे खींचें।</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">इस पते के यूज़रनेम लोड नहीं हो सके। फिर से कोशिश करने के लिए नीचे खींचें।</string>
     <string name="kcn_kp_d_day_e40b4">%1$s दिन</string>
     <string name="kcn_kp_d_days_0e3de">%1$s दिन</string>
     <string name="kcn_kp_dismiss_70afe">खारिज करें</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">बेचने वाले को पूरी लिस्ट की गई कीमत मिलती है: कोई मार्केटप्लेस शुल्क नहीं।</string>
     <string name="kcn_kp_not_confirmed_b9e09">पुष्टि नहीं हुई</string>
     <string name="kcn_kp_one_character">1 अक्षर</string>
-    <string name="kcn_kp_opens_the_kachat_tab">.kachat टैब खोलता है</string>
+    <string name="kcn_kp_opens_the_kachat_tab">उपयोगकर्ता नाम टैब खोलता है</string>
     <string name="kcn_kp_pay_up_to_at_a_time">आप एक बार में %1$s तक भुगतान कर सकते हैं।</string>
     <string name="kcn_kp_paying_ahead">पहले से भुगतान</string>
     <string name="kcn_kp_price_goes_to_miners">कीमत माइनरों को जाती है - K कुछ नहीं लेता।</string>

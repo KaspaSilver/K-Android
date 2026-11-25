@@ -4,6 +4,7 @@ import com.kachat.app.ui.screens.*
 
 import com.kachat.app.util.tr
 import com.kachat.app.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.statusBars
 
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -312,7 +313,7 @@ private fun AddPortfolioCard(onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically)
     ) {
-        Icon(Icons.Default.AddCircle, contentDescription = "Add Portfolio", tint = KaspaTeal, modifier = Modifier.size(26.dp))
+        Icon(Icons.Default.AddCircle, contentDescription = stringResource(com.kachat.app.R.string.shell54_new_portfolio), tint = KaspaTeal, modifier = Modifier.size(26.dp))
         Text(tr(R.string.kp_add_61cc5), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
     }
 }
@@ -612,14 +613,14 @@ private fun ReorderRow(
         IconButton(onClick = onMoveUp, enabled = canMoveUp) {
             Icon(
                 Icons.Default.ArrowUpward,
-                contentDescription = "Move $name up",
+                contentDescription = stringResource(com.kachat.app.R.string.shell54_move_up, name),
                 tint = if (canMoveUp) KaspaTeal else colors.textSecondary.copy(alpha = 0.4f)
             )
         }
         IconButton(onClick = onMoveDown, enabled = canMoveDown) {
             Icon(
                 Icons.Default.ArrowDownward,
-                contentDescription = "Move $name down",
+                contentDescription = stringResource(com.kachat.app.R.string.shell54_move_down, name),
                 tint = if (canMoveDown) KaspaTeal else colors.textSecondary.copy(alpha = 0.4f)
             )
         }

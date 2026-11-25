@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">مار</string>
+    <string name="arcade_snake_detail">بخورید، بزرگ شوید و به دیوارها یا خودتان نخورید. امتیازها روی Kaspa ثبت می‌شوند.</string>
+    <string name="arcade_2048_detail">برای ادغام کاشی‌ها و رسیدن به 2048 بکشید. امتیازها روی Kaspa ثبت می‌شوند.</string>
+    <string name="arcade_other_account">این بازی با حساب دیگری انجام شده است. برای ثبت امتیاز وارد آن حساب شوید.</string>
+    <string name="arcade_score_not_sent">امتیاز ارسال نشد.</string>
+    <string name="arcade_challenge_play">چالش: %1$s بازی کنید</string>
+    <string name="arcade_beat_in">در %2$s از %1$s بالاتر بروید</string>
+    <string name="arcade_share_boast">در K در %2$s امتیاز %1$s گرفتم. فکر می‌کنید می‌توانید از آن بالاتر بروید؟</string>
+    <string name="arcade_challenge_named">%1$s در %3$s امتیاز %2$s گرفت. می‌توانید از آن بالاتر بروید؟</string>
+    <string name="arcade_challenge_someone">کسی در %2$s امتیاز %1$s گرفت. می‌توانید از آن بالاتر بروید؟</string>
+    <string name="arcade_your_best">بهترین امتیاز شما: %1$s</string>
+    <string name="arcade_fee_note">امتیاز هر بازیِ تمام‌شده با کارمزد شبکهٔ کمی از آدرس گفتگوی شما روی Kaspa ثبت می‌شود.</string>
+    <string name="arcade_hint_period">دوره‌ی جدول امتیازات را عوض می‌کند</string>
+    <string name="arcade_board_unreachable">بارگیری جدول امتیازات ممکن نشد. برای تلاش دوباره به پایین بکشید.</string>
+    <string name="arcade_board_empty">هنوز امتیازی ثبت نشده. اولین نفر باشید.</string>
+    <string name="arcade_posted">در KaPost منتشر شد</string>
+    <string name="arcade_game_over">بازی تمام شد</string>
+    <string name="arcade_play_again">بازی دوباره</string>
+    <string name="arcade_posting">در حال انتشار در KaPost…</string>
+    <string name="arcade_shared">در KaPost هم‌رسانی شد</string>
+    <string name="arcade_retry_stamp">تلاش دوباره برای ثبت</string>
+    <string name="arcade_stamping">در حال ثبت امتیاز روی Kaspa…</string>
+    <string name="arcade_stamped">امتیاز روی Kaspa ثبت شد</string>
+    <string name="arcade_no_score">امتیازی برای ثبت نیست.</string>
+    <string name="arcade_score_n">امتیاز: %1$s</string>
+    <string name="arcade_snake_start_hint">برای شروع روی صفحه بکشید یا از پیکان‌ها استفاده کنید.</string>
+    <string name="arcade_score">امتیاز</string>
+    <string name="arcade_best_tile">بهترین کاشی</string>
+    <string name="arcade_2048_hint">برای جابه‌جا کردن کاشی‌ها بکشید. کاشی‌های برابر ادغام می‌شوند.</string>
+    <string name="arcade_challenge_label">چالش آرکید</string>
+</resources>

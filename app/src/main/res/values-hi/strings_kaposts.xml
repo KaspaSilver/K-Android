@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">टिप नहीं भेजी गई: आपका टिप्स फ़्रॉम पता अभी पढ़ा नहीं जा सकता।</string>
     <string name="feed54_tip_minimum_footer">नेटवर्क जो सबसे छोटी टिप लेता है वह %1$s है।</string>
     <string name="feed54_tip_no_price">टिप नहीं भेजी गई: %1$s को KAS में बदलने के लिए KAS की हाल की कीमत उपलब्ध नहीं है।</string>
-    <string name="feed54_tip_too_small">टिप नहीं भेजी गई: नेटवर्क जो सबसे छोटी टिप लेता है वह %1$s है। सेटिंग्स &gt; KaPost में अपनी डिफ़ॉल्ट टिप बदलें।</string>
+    <string name="feed54_tip_too_small">टिप नहीं भेजी गई: नेटवर्क जो सबसे छोटी टिप लेता है वह %1$s है। सेटिंग्स &gt; कस्टमाइज़ेशन &gt; टिपिंग में अपनी डिफ़ॉल्ट टिप बदलें।</string>
     <string name="feed54_tipped">%1$s की टिप %2$s को दी गई</string>
     <string name="feed54_tipped_privately">%1$s की टिप निजी तौर पर %2$s को दी गई</string>
     <string name="feed54_unfollow_posted">अनफ़ॉलो नेटवर्क पर पोस्ट हो गया</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">टिप</string>
     <string name="kaposts_tips">टिप</string>
     <string name="kaposts_tips_from">टिप किससे</string>
-    <string name="kaposts_tips_from_footnote">Chatting Address से दी गई टिप पोस्ट पर गिनी जाती है, और आप टिप देने वालों में दिखते हैं। दूसरे पते से टिप निजी है: लेखक को मिलती है और आपकी चैट में दिखती है, पर पोस्ट पर नहीं गिनी जाती और आपका नाम नहीं आता।</string>
+    <string name="kaposts_tips_from_footnote">Chatting Address से दी गई टिप पोस्ट पर गिनी जाती है, और आप टिप देने वालों में दिखते हैं। दूसरे पते से टिप निजी है: लेखक को मिलती है और आपकी चैट में दिखती है, पर पोस्ट पर नहीं गिनी जाती और आपका नाम नहीं आता। चैट में दी गई टिप भी यहीं से जाती है।</string>
     <string name="kaposts_tips_from_not_available">उपलब्ध नहीं</string>
     <string name="kaposts_who_tipped">इस पोस्ट पर किसने टिप दी</string>
     <string name="kn53_kaplay_beat_in_move">%1$s को %2$d चाल में हराएँ</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">टिप किसमें</string>
     <string name="kp5_tip_in_ask">हर बार पूछें</string>
     <string name="kp5_tip_in_ask_footer">टिप हर बार पूछती है कि Kaspa भेजें या kUSDT।</string>
-    <string name="kp5_tip_in_kusdt_footer">टिप पोस्ट करने वाले के चैट पते पर kUSDT भेजती है। kUSDT टिप पोस्ट पर गिनी नहीं जातीं।</string>
+    <string name="kp5_tip_in_kusdt_footer">टिप उनके चैट पते पर kUSDT भेजती है। kUSDT टिप पोस्ट पर गिनी नहीं जातीं।</string>
     <string name="kp5_tip_not_counted">पोस्ट पर गिनी नहीं जाती</string>
-    <string name="kp5_tip_set_in_settings">टिप क्या भेजे, यह सेटिंग्स > KaPost > टिप किसमें में चुनें।</string>
+    <string name="kp5_tip_set_in_settings">टिप क्या भेजे, यह सेटिंग्स &gt; कस्टमाइज़ेशन &gt; टिपिंग में चुनें।</string>
     <string name="kp5_tip_title">टिप</string>
     <string name="kp5_tip_what_in">आप किसमें टिप दे रहे हैं?</string>
     <string name="l53_already_in_your_language">पहले से आपकी भाषा में है</string>

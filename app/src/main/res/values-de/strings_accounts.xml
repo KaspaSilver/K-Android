@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Account switcher and Connection Status (iOS 8cb4c88e), agent C. -->
+<resources>
+    <string name="accounts_title">Konten</string>
+    <string name="add_another_account">Weiteres Konto hinzufügen</string>
+    <string name="add_another_account_confirm_title">Weiteres Konto hinzufügen?</string>
+    <string name="add_another_account_confirm_message">Du gelangst zum Kontenbildschirm, um eines zu erstellen oder zu importieren. Dieses Konto bleibt auf diesem Telefon gespeichert.</string>
+    <string name="recovery_phrase_needed">Wiederherstellungsphrase nötig</string>
+    <string name="recovery_phrase_needed_message">Die Schlüssel dieses Kontos sind nicht auf diesem Telefon. Melde dich ab und dann auf dem Kontenbildschirm mit seiner Wiederherstellungsphrase an.</string>
+    <string name="account_signed_in">Angemeldet</string>
+    <string name="switch_account">Konto wechseln</string>
+    <string name="node_status">Node-Status</string>
+    <string name="indexer_status">Indexer-Status</string>
+    <string name="indexer_status_checking">Wird geprüft…</string>
+</resources>

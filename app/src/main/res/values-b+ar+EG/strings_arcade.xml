@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">التعبان</string>
+    <string name="arcade_snake_detail">كُل وكبر، وما تخبطش في الحيطان ولا في نفسك. النتايج بتتسجل على Kaspa.</string>
+    <string name="arcade_2048_detail">اسحب عشان تدمج المربعات وتوصل لـ 2048. النتايج بتتسجل على Kaspa.</string>
+    <string name="arcade_other_account">اللعبة دي اتلعبت على حساب تاني. ادخل عليه عشان تسجّل النتيجة.</string>
+    <string name="arcade_score_not_sent">النتيجة ما اتبعتتش.</string>
+    <string name="arcade_challenge_play">تحدي: العب %1$s</string>
+    <string name="arcade_beat_in">اغلب %1$s في %2$s</string>
+    <string name="arcade_share_boast">جبت %1$s في %2$s على K. تفتكر تقدر تغلبها؟</string>
+    <string name="arcade_challenge_named">%1$s جاب %2$s في %3$s. تقدر تغلبه؟</string>
+    <string name="arcade_challenge_someone">حد جاب %1$s في %2$s. تقدر تغلبه؟</string>
+    <string name="arcade_your_best">أحسن نتيجة ليك: %1$s</string>
+    <string name="arcade_fee_note">نتيجة كل لعبة بتخلص بتتسجل على Kaspa من عنوان الشات بتاعك، برسوم شبكة صغيرة.</string>
+    <string name="arcade_hint_period">بيغيّر فترة لوحة المتصدرين</string>
+    <string name="arcade_board_unreachable">معرفناش نحمّل لوحة المتصدرين. اسحب لتحت وجرب تاني.</string>
+    <string name="arcade_board_empty">لسه مفيش نتايج. خليك أول واحد.</string>
+    <string name="arcade_posted">اتنشر على KaPost</string>
+    <string name="arcade_game_over">اللعبة خلصت</string>
+    <string name="arcade_play_again">العب تاني</string>
+    <string name="arcade_posting">بننشر على KaPost…</string>
+    <string name="arcade_shared">اتشارك على KaPost</string>
+    <string name="arcade_retry_stamp">جرّب التسجيل تاني</string>
+    <string name="arcade_stamping">بنسجل النتيجة على Kaspa…</string>
+    <string name="arcade_stamped">النتيجة اتسجلت على Kaspa</string>
+    <string name="arcade_no_score">مفيش نتيجة نسجلها.</string>
+    <string name="arcade_score_n">النتيجة: %1$s</string>
+    <string name="arcade_snake_start_hint">اسحب على اللوحة أو استخدم الأسهم عشان تبدأ.</string>
+    <string name="arcade_score">النتيجة</string>
+    <string name="arcade_best_tile">أعلى مربع</string>
+    <string name="arcade_2048_hint">اسحب عشان تحرك المربعات. المربعات المتساوية بتندمج.</string>
+    <string name="arcade_challenge_label">تحدي أركيد</string>
+</resources>

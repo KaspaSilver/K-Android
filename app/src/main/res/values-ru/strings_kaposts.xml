@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">Чаевые не отправлены: адрес «Чаевые с» сейчас не читается.</string>
     <string name="feed54_tip_minimum_footer">Сеть принимает чаевые не меньше %1$s.</string>
     <string name="feed54_tip_no_price">Чаевые не отправлены: нет свежего курса KAS, чтобы перевести %1$s в KAS.</string>
-    <string name="feed54_tip_too_small">Чаевые не отправлены: сеть принимает чаевые не меньше %1$s. Измените чаевые по умолчанию в Настройки &gt; KaPost.</string>
+    <string name="feed54_tip_too_small">Чаевые не отправлены: сеть принимает чаевые не меньше %1$s. Измените чаевые по умолчанию в Настройки &gt; Персонализация &gt; Чаевые.</string>
     <string name="feed54_tipped">Отправлены чаевые %1$s для %2$s</string>
     <string name="feed54_tipped_privately">Отправлены приватные чаевые %1$s для %2$s</string>
     <string name="feed54_unfollow_posted">Отписка опубликована в сети</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">Чаевые</string>
     <string name="kaposts_tips">Чаевые</string>
     <string name="kaposts_tips_from">Чаевые с</string>
-    <string name="kaposts_tips_from_footnote">Чаевые с вашего Chatting Address засчитываются посту, и вы в списке давших чаевые. С другого адреса чаевые приватны: автор их получит и увидит в вашем чате, но они не засчитываются посту и не называют вас.</string>
+    <string name="kaposts_tips_from_footnote">Чаевые с вашего Chatting Address засчитываются посту, и вы в списке давших чаевые. С другого адреса чаевые приватны: автор их получит и увидит в вашем чате, но они не засчитываются посту и не называют вас. Чаевые в чате тоже отправляются отсюда.</string>
     <string name="kaposts_tips_from_not_available">Недоступно</string>
     <string name="kaposts_who_tipped">Кто отправил чаевые за этот пост</string>
     <string name="kn53_kaplay_beat_in_move">Победите %1$s за %2$d ход</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">Чаевые в</string>
     <string name="kp5_tip_in_ask">Спрашивать каждый раз</string>
     <string name="kp5_tip_in_ask_footer">«Чаевые» каждый раз спрашивает, отправить Kaspa или kUSDT.</string>
-    <string name="kp5_tip_in_kusdt_footer">«Чаевые» отправляет kUSDT на адрес для чата автора. Чаевые в kUSDT не учитываются в посте.</string>
+    <string name="kp5_tip_in_kusdt_footer">«Чаевые» отправляет kUSDT на адрес для чата получателя. Чаевые в kUSDT не учитываются в посте.</string>
     <string name="kp5_tip_not_counted">Не учитываются в посте</string>
-    <string name="kp5_tip_set_in_settings">Выберите, что отправляет «Чаевые», в Настройки > KaPost > Чаевые в.</string>
+    <string name="kp5_tip_set_in_settings">Выберите, что отправляет «Чаевые», в Настройки &gt; Персонализация &gt; Чаевые.</string>
     <string name="kp5_tip_title">Чаевые</string>
     <string name="kp5_tip_what_in">В чём вы даёте чаевые?</string>
     <string name="l53_already_in_your_language">Уже на вашем языке</string>

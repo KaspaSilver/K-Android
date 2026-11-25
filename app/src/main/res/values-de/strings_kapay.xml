@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">Gib deine Hashrate ein, um die Erträge zu schätzen.</string>
     <string name="kp_export_failed_csv">Export fehlgeschlagen. Die CSV-Datei konnte nicht geschrieben werden</string>
     <string name="kp_fee_amount">Gebühr %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">%1$d Adressen mit Guthaben oder Domain gefunden.</string>
-    <string name="kp_found_one_address_balance_domain">1 Adresse mit Guthaben oder Domain gefunden.</string>
     <string name="kp_frame_lld_lld_5cb10">Frame %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">Gib diesem Konto einen Namen, damit du es wiedererkennst.</string>
     <string name="kp_hide_address">Adresse ausblenden</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">Neues Portfolio</string>
     <string name="kp_next_block_reward">Nächste Blockbelohnung</string>
     <string name="kp_next_block_reward_reduction">Nächste Senkung der Blockbelohnung</string>
-    <string name="kp_no_addresses_balance_domain_found">Keine Adressen mit Guthaben oder Domain gefunden.</string>
     <string name="kp_no_addresses_discovered_yet_15738">Noch keine Adressen entdeckt.</string>
     <string name="kp_no_used_addresses_yet">Noch keine genutzten Adressen</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Noch nicht genug Verlauf - schau nach ein paar Tagen Aktivität wieder vorbei.</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">Speichert die CSV im KaChat-Ordner deiner Nextcloud.</string>
     <string name="pnc_import_sub">Wähle eine CSV-Datei aus deiner Nextcloud.</string>
     <string name="portfolio">Portfolio</string>
-    <string name="portfolio_add_address_footer_kachat">Gib eine Kaspa-Adresse oder eine Domain wie name.kachat ein (.kachat-Namen werden zuerst gesucht). Jede empfangene Transaktion an diese Adresse wird ein Kauf, jede gesendete ein Verkauf, zum historischen KAS-Preis des Tages. Fügst du dieselbe Adresse später erneut hinzu, werden nur seit dem letzten Import gefundene Transaktionen importiert.</string>
     <string name="portfolio_add_chatting_address">Chat-Adresse hinzufügen</string>
     <string name="portfolio_add_chatting_address_sub">Käufe und Verkäufe deiner Chat-Adresse und jede Netzwerkgebühr, die sie bezahlt hat.</string>
     <string name="portfolio_fees_count_loading">Transaktionen: %1$d. Einige Preise werden noch geladen.</string>

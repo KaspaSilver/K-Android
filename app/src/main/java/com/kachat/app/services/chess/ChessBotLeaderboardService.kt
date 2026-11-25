@@ -34,7 +34,6 @@ data class ChessBotBoardRow(
 class ChessBotLeaderboardService @Inject constructor(
     private val arena: ChessArenaChannel,
     private val indexerClient: ChessIndexerClient,
-    private val tournamentService: ChessTournamentService,
     private val progress: ChessBotProgress,
 ) {
     data class Board(val games: Int = 0, val rows: List<ChessBotBoardRow> = emptyList())
@@ -83,7 +82,6 @@ class ChessBotLeaderboardService @Inject constructor(
                     if (!isActive) return@launch
                     answered = true
                     _boards.value = _boards.value + (period to levels)
-                    tournamentService.resolveNames(levels.values.flatMap { board -> board.rows.map { it.address } }.toSet())
                 }
             } finally {
                 if (isActive) _serverUnreachable.value = !answered

@@ -86,8 +86,6 @@
     <string name="kp_enter_your_hashrate_to_estimate_earnings_90f5d">برای برآورد درآمد، نرخ هش خود را وارد کنید.</string>
     <string name="kp_export_failed_csv">خروجی گرفتن ناموفق بود. فایل CSV نوشته نشد</string>
     <string name="kp_fee_amount">کارمزد %1$s</string>
-    <string name="kp_found_n_addresses_balance_domain">%1$d آدرس با موجودی یا دامنه پیدا شد.</string>
-    <string name="kp_found_one_address_balance_domain">۱ آدرس با موجودی یا دامنه پیدا شد.</string>
     <string name="kp_frame_lld_lld_5cb10">فریم %1$s / %2$s</string>
     <string name="kp_give_this_account_a_name_so_18d55">به این حساب نامی بدهید تا بتوانید آن را تشخیص دهید.</string>
     <string name="kp_hide_address">پنهان کردن آدرس</string>
@@ -134,7 +132,6 @@
     <string name="kp_new_portfolio_5c1c7">سبد دارایی جدید</string>
     <string name="kp_next_block_reward">پاداش بلاک بعدی</string>
     <string name="kp_next_block_reward_reduction">کاهش بعدی پاداش بلاک</string>
-    <string name="kp_no_addresses_balance_domain_found">هیچ آدرسی با موجودی یا دامنه پیدا نشد.</string>
     <string name="kp_no_addresses_discovered_yet_15738">هنوز هیچ آدرسی کشف نشده است.</string>
     <string name="kp_no_used_addresses_yet">هنوز آدرس استفاده‌شده‌ای نیست</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">هنوز سابقه کافی نیست - پس از چند روز فعالیت دوباره سر بزنید.</string>
@@ -241,7 +238,6 @@
     <string name="pnc_export_sub">فایل CSV را در پوشه KaChat در Nextcloud شما ذخیره می‌کند.</string>
     <string name="pnc_import_sub">یک فایل CSV از Nextcloud خود انتخاب کنید.</string>
     <string name="portfolio">سبد دارایی</string>
-    <string name="portfolio_add_address_footer_kachat">یک نشانی Kaspa یا دامنه‌ای مثل name.kachat وارد کنید (ابتدا نام‌های .kachat جست‌وجو می‌شوند). هر تراکنش دریافتی در این نشانی خرید و هر تراکنش ارسالی فروش، با قیمت تاریخی KAS همان روز، ثبت می‌شود. با افزودن دوبارهٔ همین نشانی بعداً، فقط تراکنش‌های پس از آخرین واردکردن وارد می‌شوند.</string>
     <string name="portfolio_add_chatting_address">افزودن نشانی گفتگو</string>
     <string name="portfolio_add_chatting_address_sub">خریدها و فروش‌های نشانی گفتگوی شما و همه کارمزدهای شبکه‌ای که پرداخته است.</string>
     <string name="portfolio_fees_count_loading">تراکنش‌ها: %1$d. برخی قیمت‌ها هنوز در حال بارگذاری‌اند.</string>

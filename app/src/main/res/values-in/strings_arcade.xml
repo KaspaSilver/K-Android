@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">Ular</string>
+    <string name="arcade_snake_detail">Makan, tumbuh, jangan menabrak dinding atau diri sendiri. Skor dicatat di Kaspa.</string>
+    <string name="arcade_2048_detail">Geser untuk menggabungkan ubin dan capai 2048. Skor dicatat di Kaspa.</string>
+    <string name="arcade_other_account">Permainan ini dimainkan di akun lain. Masuk ke akun itu untuk mencatat skornya.</string>
+    <string name="arcade_score_not_sent">Skor tidak terkirim.</string>
+    <string name="arcade_challenge_play">Tantangan: mainkan %1$s</string>
+    <string name="arcade_beat_in">Kalahkan %1$s di %2$s</string>
+    <string name="arcade_share_boast">Saya mencetak %1$s di %2$s di K. Bisakah Anda mengalahkannya?</string>
+    <string name="arcade_challenge_named">%1$s mencetak %2$s di %3$s. Bisakah Anda mengalahkannya?</string>
+    <string name="arcade_challenge_someone">Seseorang mencetak %1$s di %2$s. Bisakah Anda mengalahkannya?</string>
+    <string name="arcade_your_best">Skor terbaik Anda: %1$s</string>
+    <string name="arcade_fee_note">Skor setiap permainan yang selesai dicatat di Kaspa dari alamat obrolan Anda, dengan biaya jaringan yang kecil.</string>
+    <string name="arcade_hint_period">Mengganti periode papan peringkat</string>
+    <string name="arcade_board_unreachable">Papan peringkat tidak dapat dimuat. Tarik ke bawah untuk mencoba lagi.</string>
+    <string name="arcade_board_empty">Belum ada skor. Jadilah yang pertama.</string>
+    <string name="arcade_posted">Diposting ke KaPost</string>
+    <string name="arcade_game_over">Permainan Selesai</string>
+    <string name="arcade_play_again">Main Lagi</string>
+    <string name="arcade_posting">Memposting ke KaPost…</string>
+    <string name="arcade_shared">Dibagikan ke KaPost</string>
+    <string name="arcade_retry_stamp">Coba catat lagi</string>
+    <string name="arcade_stamping">Mencatat skor di Kaspa…</string>
+    <string name="arcade_stamped">Skor tercatat di Kaspa</string>
+    <string name="arcade_no_score">Tidak ada skor untuk dicatat.</string>
+    <string name="arcade_score_n">Skor: %1$s</string>
+    <string name="arcade_snake_start_hint">Geser di papan atau gunakan panah untuk mulai.</string>
+    <string name="arcade_score">Skor</string>
+    <string name="arcade_best_tile">Ubin Terbaik</string>
+    <string name="arcade_2048_hint">Geser untuk memindahkan ubin. Ubin yang sama akan bergabung.</string>
+    <string name="arcade_challenge_label">Tantangan Arcade</string>
+</resources>

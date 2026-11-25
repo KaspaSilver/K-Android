@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="arcade_snake">Snake</string>
+    <string name="arcade_snake_detail">Come, crece y no choques con las paredes ni contigo mismo. Las puntuaciones se registran en Kaspa.</string>
+    <string name="arcade_2048_detail">Desliza para unir fichas y llegar a 2048. Las puntuaciones se registran en Kaspa.</string>
+    <string name="arcade_other_account">Esta partida se jugó con otra cuenta. Inicia sesión en ella para registrar la puntuación.</string>
+    <string name="arcade_score_not_sent">La puntuación no se envió.</string>
+    <string name="arcade_challenge_play">Reto: juega a %1$s</string>
+    <string name="arcade_beat_in">Supera %1$s en %2$s</string>
+    <string name="arcade_share_boast">Hice %1$s puntos en %2$s en K. ¿Crees que puedes superarlo?</string>
+    <string name="arcade_challenge_named">%1$s hizo %2$s puntos en %3$s. ¿Puedes superarlo?</string>
+    <string name="arcade_challenge_someone">Alguien hizo %1$s puntos en %2$s. ¿Puedes superarlo?</string>
+    <string name="arcade_your_best">Tu récord: %1$s</string>
+    <string name="arcade_fee_note">La puntuación de cada partida terminada se registra en Kaspa desde tu dirección de chat, por una pequeña comisión de red.</string>
+    <string name="arcade_hint_period">Cambia el periodo de la clasificación</string>
+    <string name="arcade_board_unreachable">No se pudo cargar la clasificación. Desliza hacia abajo para intentarlo de nuevo.</string>
+    <string name="arcade_board_empty">Aún no hay puntuaciones. Sé el primero.</string>
+    <string name="arcade_posted">Publicado en KaPost</string>
+    <string name="arcade_game_over">Fin de la partida</string>
+    <string name="arcade_play_again">Jugar de nuevo</string>
+    <string name="arcade_posting">Publicando en KaPost…</string>
+    <string name="arcade_shared">Compartido en KaPost</string>
+    <string name="arcade_retry_stamp">Reintentar el registro</string>
+    <string name="arcade_stamping">Registrando la puntuación en Kaspa…</string>
+    <string name="arcade_stamped">Puntuación registrada en Kaspa</string>
+    <string name="arcade_no_score">No hay puntuación que registrar.</string>
+    <string name="arcade_score_n">Puntuación: %1$s</string>
+    <string name="arcade_snake_start_hint">Desliza en el tablero o usa las flechas para empezar.</string>
+    <string name="arcade_score">Puntuación</string>
+    <string name="arcade_best_tile">Mejor ficha</string>
+    <string name="arcade_2048_hint">Desliza para mover las fichas. Las fichas iguales se unen.</string>
+    <string name="arcade_challenge_label">Reto arcade</string>
+</resources>

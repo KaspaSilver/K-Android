@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">请在宽限期结束前续订以保留它们。</string>
-    <string name="kachat_expired_many_title">你有 %1$d 个 .kachat 域名已过期</string>
+    <string name="kachat_expired_many_title">你有 %1$d 个用户名已过期</string>
     <string name="kachat_expired_one_body">请在 %2$s 宽限期结束前续订 %1$s 以保留它。</string>
-    <string name="kachat_expired_one_title">你的一个 .kachat 域名已过期</string>
+    <string name="kachat_expired_one_title">你的一个用户名已过期</string>
     <string name="kachat_names_on_address_hint">.kachat 名称上线后，此地址领取或购买的名称会显示在这里。</string>
-    <string name="kachat_names_this_address_owns">此地址拥有的名称会显示在这里。</string>
-    <string name="kachat_no_names_on_address">此地址没有 .kachat 名称</string>
+    <string name="kachat_names_this_address_owns">此地址拥有的用户名会显示在这里。</string>
+    <string name="kachat_no_names_on_address">此地址没有用户名</string>
     <string name="kg_claim_body">这是大家在 K 各处和你的资料链接中看到的你的名称。没有它，大家只会看到你的地址。</string>
-    <string name="kg_claim_hint">在 .kachat 标签页中搜索你想要的名称，然后认领。</string>
+    <string name="kg_claim_hint">在“用户名”标签中搜索你想要的名字，然后认领它。</string>
     <string name="kg_claim_title">领取你的 .kachat 名称</string>
     <string name="kg_close">关闭</string>
-    <string name="kg_finished_body">准备好后，随时在 .kachat 标签页中认领你的名称。</string>
+    <string name="kg_finished_body">准备好后，随时在“用户名”标签中认领你的名字。</string>
     <string name="kg_finished_title">一切就绪</string>
     <string name="kg_how_body">你的名称存在于 Kaspa 网络上，由你的聊天地址持有。只要归你所有，谁也不能拿走或更改。</string>
     <string name="kg_how_commit">认领需要两笔很快的交易：第一笔为你的选择保密，第二笔完成注册。</string>
     <string name="kg_how_miners">费用付给网络矿工，而不是 K。</string>
     <string name="kg_how_period">每次支付一个周期。越短的名称越贵。</string>
     <string name="kg_how_title">名称如何运作</string>
-    <string name="kg_keep_body">你的名称位于 钱包 &gt; 你的域名 &gt; .kachat。</string>
+    <string name="kg_keep_body">你的名字在“钱包”&gt;“你的用户名”中。</string>
     <string name="kg_keep_grace">到期后还有宽限期，在他人能认领前你仍可续期。</string>
     <string name="kg_keep_renew">请在到期前续期。每个名称都会显示到期时间。</string>
     <string name="kg_keep_title">保留它</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">注册停止，承诺中的 0.2 KAS 扣除网络费后退还给你。</string>
     <string name="kn_cancel_commit_title">取消承诺？</string>
     <string name="kn_change_price">修改价格</string>
-    <string name="kn_claim_a_name">领取名称</string>
     <string name="kn_claim_name_title">注册名称</string>
     <string name="kn_claim_your_name_on_kaspa">在 Kaspa 上领取你的名字</string>
     <string name="kn_claiming_name">正在认领 %1$s</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">名称已释放</string>
     <string name="kn_done_transferred">名称已转让</string>
     <string name="kn_err_address_key">该地址的密钥无效。</string>
-    <string name="kn_err_enter_address_or_domain">请输入地址或域名。</string>
+    <string name="kn_err_enter_address_or_domain">请输入地址或用户名。</string>
     <string name="kn_err_lookup">无法查询该名称。</string>
     <string name="kn_err_name_address_cant_own">该名称的地址无法拥有 .kachat 名称。</string>
     <string name="kn_err_not_network_address">不是此网络上的 Schnorr 地址。</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">正在等待承诺确认...</string>
     <string name="kn_taken">已被注册</string>
     <string name="kn_taken_for_sale">已被注册 · 售价 %1$s</string>
-    <string name="kn_transfer_footer_domain">地址或域名——会先查找 .kachat 名称,并解析为显示的地址。</string>
+    <string name="kn_transfer_footer_domain">地址或用户名——会解析为显示的地址。</string>
     <string name="kn_transfer_warning">转让无法撤销。新所有者获得名称时保留当前到期时间；你的个人资料仍归你的地址所有。</string>
     <string name="kn_view_transaction">查看交易</string>
     <string name="kn_withdraw">撤回</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">购买和出售</string>
     <string name="kcn_kp_claim_pays_first_period">认领支付第一个周期（%1$s）。续费支付之后的每个周期。</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">认领会发送两笔交易：现在发送承诺，大约一分钟后发送注册。两笔都按此费率支付。</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">无法加载此地址的名称。下拉即可重试。</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">无法加载此地址的用户名。下拉以重试。</string>
     <string name="kcn_kp_d_day_e40b4">%1$s 天</string>
     <string name="kcn_kp_d_days_0e3de">%1$s 天</string>
     <string name="kcn_kp_dismiss_70afe">关闭</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">卖家获得完整的挂售价格：没有市场手续费。</string>
     <string name="kcn_kp_not_confirmed_b9e09">未确认</string>
     <string name="kcn_kp_one_character">1 个字符</string>
-    <string name="kcn_kp_opens_the_kachat_tab">打开 .kachat 标签页</string>
+    <string name="kcn_kp_opens_the_kachat_tab">打开“用户名”标签</string>
     <string name="kcn_kp_pay_up_to_at_a_time">一次最多可支付 %1$s。</string>
     <string name="kcn_kp_paying_ahead">提前付费</string>
     <string name="kcn_kp_price_goes_to_miners">价格归矿工所有 - K 不收取任何费用。</string>

@@ -104,6 +104,8 @@ private val settingsPushedRoutes = setOf(
     "notification_settings",
     "wallet_notification_settings",
     "quick_reaction_settings",
+    // Settings > Chats > Who Can Message You? (iOS 2026-11-23)
+    com.kachat.app.ui.screens.WhoCanMessageRoutes.SETTINGS,
     // Settings > Help (moved from the old Profile, iOS 148a5331) and its kUSDT Guide;
     // Settings > Notifications > KaPost.
     "help",
@@ -204,12 +206,11 @@ fun KaChatApp(
 
     if (!startupResolved) {
         // Cold start, routing decision still loading (the async biometrics-for-login read that
-        // gates auto-login into the last-used account). Compose NOTHING yet — composing the
-        // Onboarding/accounts screen as a transient default flashed the account list for a few
-        // frames before jumping into the account. The themed Surface behind this composable
-        // keeps the window seamlessly on the background color, iOS-style; the wait is a few
-        // milliseconds of DataStore read.
-        Box(modifier = Modifier.fillMaxSize())
+        // gates auto-login into the last-used account). Never the Onboarding/accounts screen as a
+        // transient default, which flashed the account list for a few frames before jumping into
+        // the account: the launch's K globe instead, where the splash screen drew it (iOS
+        // 518fdc8c `LoadingView`).
+        LaunchGlobeView()
     } else if (!isLoggedIn) {
         OnboardingScreen(walletViewModel)
     } else {
@@ -265,7 +266,7 @@ fun MainShell(
     val dockBackStack by navController.currentBackStack.collectAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    // The dock and Kaspa Hub's grid, as Customize Dock arranged them (iOS `DockLayout`).
+    // The fixed dock and Kaspa Hub's grid (iOS `DockLayout`).
     val shellContext = androidx.compose.ui.platform.LocalContext.current
     remember { DockLayout.init(shellContext) }
     val dockTabs by DockLayout.dock.collectAsState()
@@ -460,14 +461,6 @@ fun MainShell(
             show(AppTab.KAPOSTS)
         }
     }
-    // Share to KaPost from KaPlay (iOS `KaPostsDeepLink.pendingComposeText` + `.openKaPost`): the
-    // KaPost composer with that text.
-    val pendingChessShare by com.kachat.app.services.chess.ChessBotLinks.pendingKaPostCompose.collectAsState()
-    LaunchedEffect(pendingChessShare) {
-        val text = pendingChessShare ?: return@LaunchedEffect
-        com.kachat.app.services.chess.ChessBotLinks.pendingKaPostCompose.value = null
-        com.kachat.app.ui.screens.KaPostsDeepLink.pendingComposeText.value = text
-    }
     // A push naming no post, or a wallet row asking for the bell: Profile, whose bell opens.
     val pendingBell by com.kachat.app.ui.screens.NotificationsRoute.pending.collectAsState()
     val pendingKaPostBell by com.kachat.app.ui.screens.KaPostsDeepLink.pendingOpenNotifications.collectAsState()
@@ -496,6 +489,20 @@ fun MainShell(
             show(AppTab.GAMES)
         }
     }
+    // An arcade score challenge (a KaPost card's Play, a kachatarcade:// link; iOS 518fdc8c
+    // `ArcadeLinkRouter.open`): KaPlay, which opens the game. One waiting from a cold start too.
+    LaunchedEffect(Unit) {
+        if (com.kachat.app.services.arcade.ArcadeLinkRouter.challenge.value != null) show(AppTab.GAMES)
+        com.kachat.app.services.arcade.ArcadeLinkRouter.openGames.collect {
+            com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+            // Already on one of KaPlay's pages: going to the tab would pop them, a game included;
+            // ArcadeChallengeRouting below takes it from there (audit 2026-11-24 #11).
+            if (navController.currentDestination?.route !in com.kachat.app.ui.screens.arcade.ArcadeRoutes.kaPlayPages) show(AppTab.GAMES)
+        }
+    }
+    // A challenge past a page over KaPlay's tab: closes an arcade game's home or Chess's pages
+    // for it, or holds it while a game is on (iOS 518fdc8c GamesView, audit 2026-11-24 #11).
+    com.kachat.app.ui.screens.arcade.ArcadeChallengeRouting(navController)
     // The .kachat tab: Claim a Name / Get a .kachat name (the tab itself), kapay://market (its
     // Marketplace) and a name from a notification (its page). The screen takes the last two.
     val pendingKachatTab by KachatDeepLink.pendingTab.collectAsState()
@@ -638,7 +645,7 @@ fun MainShell(
     // tapped KaChat Profile card). It opens User Info for anyone - contact or not - with Open Chat
     // one tap away and their name and avatar to check who the link is for before writing to them
     // (iOS 81df734). Your own shows your own card, and you are never added as your own contact
-    // (iOS 95f50ca); someone new gets an auto-added contact. A link from outside the app with
+    // (iOS 95f50ca); a stranger's card or link saves nothing. A link from outside the app with
     // `chat=1` (KaPost's Chat button) opens the 1:1 chat itself, started if need be, the way the
     // Addresses screen's Chat does (iOS 724d477) - but not for your own address, which has no
     // chat with itself.
@@ -650,23 +657,23 @@ fun MainShell(
         com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
         val address = link.address
         val mine = walletViewModel.address.value
+        // A link from outside may open (and so save) only someone already known: a saved
+        // contact's first message rings as an ordinary chat, skipping Message Requests and Who
+        // Can Message You?. A stranger's link opens User Info and saves nothing (iOS audit
+        // 2026-11-24 #20); KaPost's own Chat button opens the chat as before.
+        val known = chatViewModel.isKnownChatPartner(address)
         when {
             mine != null && mine.equals(address, ignoreCase = true) ->
                 navController.navigate("chat_info/$mine")
-            link.openChat -> chatViewModel.openProfile(address) { navController.navigate("chat/$it") }
-            else -> chatViewModel.openProfile(address) { navController.navigate("chat_info/$it") }
+            link.openChat && (known || !link.external) -> chatViewModel.openProfile(address) { navController.navigate("chat/$it") }
+            known -> chatViewModel.openProfile(address) { navController.navigate("chat_info/$it") }
+            else -> navController.navigate("chat_info/$address")
         }
     }
 
     // A payment request tapped, pasted or opened from outside the app (iOS c6851d6
     // PaymentRequestSheetPresenter): Send Kaspa with it filled in, or your own to copy or share.
     com.kachat.app.ui.screens.PaymentRequestSheetHost(walletViewModel = walletViewModel, chatViewModel = chatViewModel)
-
-    // Customize Dock, over the whole shell (iOS `.sheet(isPresented: $showCustomizeDock)`).
-    val customizeDockOpen by CustomizeDock.isOpen.collectAsState()
-    if (customizeDockOpen) {
-        CustomizeDockSheet(onDismiss = { CustomizeDock.isOpen.value = false })
-    }
 
     // Shows the Welcome Guide automatically the first time this shell renders after an account is
     // added — whether created or imported — see `WalletViewModel.pendingWelcomeGuide`. Always shown
@@ -970,12 +977,14 @@ fun MainShell(
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Box {
-                                        Icon(
-                                            painter = if (tab == AppTab.HUB) hubPainter else rememberVectorPainter(tab.dockIcon),
-                                            contentDescription = label,
-                                            tint = if (selected) KaspaTeal else LocalAppColors.current.textPrimary,
-                                            // the Kaspa mark at iOS's 24-point dock size
-                                            modifier = Modifier.size(if (tab == AppTab.HUB) 25.dp else 28.dp)
+                                        // Settings carries the connection dot, Profile your
+                                        // picture and the backup dot (iOS 518fdc8c, DockIcons.kt).
+                                        DockTabIcon(
+                                            tab = tab,
+                                            selected = selected,
+                                            hubPainter = hubPainter,
+                                            label = label,
+                                            walletViewModel = walletViewModel,
                                         )
                                         // How many are waiting, not just that some are (iOS
                                         // AppTabBadge.dockLabel): "99+" past 99.
@@ -1051,7 +1060,6 @@ fun MainShell(
                 onBack = null,
                 onOpenChat = { address -> navController.navigate("chat/$address") },
                 walletViewModel = walletViewModel,
-                headerBanner = { AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") } },
             )
             // Your KaPost profile (iOS `KaPostsView(rootMode: .myProfile)`); See All Posts shows the
             // KaPost tab wherever it lives.
@@ -1068,10 +1076,9 @@ fun MainShell(
                 walletViewModel = walletViewModel,
                 onOpenAccountBackup = { navController.navigate("account_backup") },
             )
-            AppTab.KACHAT_NAMES -> KachatMarketScreen(
-                onBack = null,
-                banner = { AccountBackupBanner(walletViewModel) { navController.navigate("account_backup") } },
-            )
+            // No backup strip on any of these: it's on Profile only, the dock's Profile icon
+            // carrying a yellow dot meanwhile (iOS 518fdc8c, owner 2026-11-23).
+            AppTab.KACHAT_NAMES -> KachatMarketScreen(onBack = null)
             // The one KaPost instance that opens links and pushes (it is in one place at a time).
             AppTab.KAPOSTS -> KaPostsScreen(navController = navController, walletViewModel = walletViewModel)
             AppTab.GAMES -> GamesScreen(navController = navController, walletViewModel = walletViewModel)
@@ -1287,14 +1294,6 @@ fun MainShell(
                 )
             }
 
-            composable("edit_kns_profile") {
-                EditKnsProfileScreen(
-                    viewModel = walletViewModel,
-                    onBack = { navController.popBackStack() },
-                    onNavigateToDomains = { navController.navigate("kns_domains") },
-                )
-            }
-
             composable("edit_kachat_profile") {
                 com.kachat.app.ui.screens.KachatProfileEditorScreen(
                     onBack = { navController.popBackStack() },
@@ -1327,11 +1326,10 @@ fun MainShell(
 
             composable("kns_domains") {
                 CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
-                    KnsDomainsScreen(
+                    // Your Usernames (Wallet's card; iOS 518fdc8c)
+                    com.kachat.app.ui.screens.YourUsernamesScreen(
                         viewModel = walletViewModel,
                         onBack = { navController.popBackStack() },
-                        // Message on a .kachat name's owner (testnet).
-                        onOpenChat = { address -> navController.navigate("chat/$address") }
                     )
                 }
             }
@@ -1436,6 +1434,14 @@ fun MainShell(
                 }
             }
 
+            composable(com.kachat.app.ui.screens.WhoCanMessageRoutes.SETTINGS) {
+                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
+                    com.kachat.app.ui.screens.WhoCanMessageSettingsScreen(
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+            }
+
             // `group` is an optional query-style arg (defaults false) so the create button can
             // open this screen straight into group-builder mode.
             composable(
@@ -1532,18 +1538,6 @@ fun MainShell(
                         navController.navigate("chat/$id")
                     },
                     onNavigateToNotificationSettings = { id -> navController.navigate("contact_notification_settings/$id") },
-                    onNavigateToDomains = { id -> navController.navigate("contact_domains/$id") }
-                )
-            }
-
-            composable(
-                "contact_domains/{contactId}",
-                arguments = listOf(navArgument("contactId") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val contactId = backStackEntry.arguments?.getString("contactId") ?: return@composable
-                ContactDomainsScreen(
-                    contactId = contactId,
-                    onBack = { navController.popBackStack() }
                 )
             }
 

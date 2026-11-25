@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">Kullanıcı Adları</string>
+    <string name="shell54_tipping_footer">Bahşişin gönderide ve sohbette ne gönderdiği.</string>
+    <string name="shell54_chatting_picker_intro">Bu kelimeler kimliğini zaten başka bir adreste tutuyorsa - bir .kachat adı ya da bakiyesi olan bir sohbet adresi - onu burada seç. Yalnızca bakiyesi veya adı olan adresler gösterilir.</string>
+    <string name="shell54_what_others_can_see_caption">Bu adresi ve bakiyesini Kaspa ağında herkes görebilir ama mesajlarını kimse okuyamaz. Yalnızca sohbet ve kullanıcı adları için kullan.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... veya kullanıcı adı</string>
+    <string name="shell54_looking_up_username">Kullanıcı adı aranıyor...</string>
+    <string name="shell54_portfolio_add_address_footer">Bir Kaspa adresi veya name.kachat gibi bir kullanıcı adı gir. Bu adrese gelen her işlem alım, gönderilen her işlem satım olur ve o günün geçmiş KAS fiyatıyla fiyatlanır. Aynı adresi daha sonra tekrar eklemek yalnızca son içe aktarmadan bu yana bulunan işlemleri içe aktarır.</string>
+    <string name="shell54_report_copied">Bildirim Kopyalandı</string>
+    <string name="shell54_report_no_mail_app">Hiçbir e-posta uygulaması açamadı. Bildirimi %1$s adresine bir e-postaya yapıştır.</string>
+    <string name="shell54_show_amounts">Tutarları göster</string>
+    <string name="shell54_hide_amounts">Tutarları gizle</string>
+    <string name="shell54_amount_unit">Tutar (%1$s)</string>
+    <string name="shell54_price_per_kas">KAS Başına Fiyat</string>
+    <string name="shell54_total_spent">Toplam Harcanan</string>
+    <string name="shell54_total_received">Toplam Alınan</string>
+    <string name="shell54_chart_settings">Grafik ayarları</string>
+    <string name="shell54_import_failed">İçe aktarma başarısız oldu.</string>
+    <string name="shell54_export_csv">CSV Disa Aktar</string>
+    <string name="shell54_sent_on">%1$s gönderildi (%2$s)</string>
+    <string name="shell54_received_on">%1$s alındı (%2$s)</string>
+    <string name="shell54_this_portfolio">bu portföy</string>
+    <string name="shell54_new_portfolio">Yeni Portföy</string>
+    <string name="shell54_time">Saat</string>
+    <string name="shell54_total_value">Toplam %1$s</string>
+    <string name="shell54_move_up">%1$s öğesini yukarı taşı</string>
+    <string name="shell54_move_down">%1$s öğesini aşağı taşı</string>
+    <string name="shell54_selected">Seçili</string>
+    <string name="shell54_not_selected">Seçili değil</string>
+    <string name="shell54_not_valid_kpub">Geçerli bir kpub değil</string>
+    <string name="shell54_new_address_failed">Yeni adres oluşturulamadı. Tekrar deneyin.</string>
+</resources>

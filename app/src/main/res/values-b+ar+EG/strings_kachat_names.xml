@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">جدّدها قبل انتهاء فترات السماح للاحتفاظ بها.</string>
-    <string name="kachat_expired_many_title">انتهت صلاحية %1$d من نطاقات .kachat الخاصة بك</string>
+    <string name="kachat_expired_many_title">%1$d من أسماء المستخدم بتاعتك خلصوا</string>
     <string name="kachat_expired_one_body">جدّد %1$s قبل انتهاء فترة السماح في %2$s للاحتفاظ به.</string>
-    <string name="kachat_expired_one_title">انتهت صلاحية أحد نطاقات .kachat الخاصة بك</string>
+    <string name="kachat_expired_one_title">واحد من أسماء المستخدم بتاعتك خلص</string>
     <string name="kachat_names_on_address_hint">تظهر هنا الأسماء التي يحصل عليها هذا العنوان أو يشتريها عند إطلاق أسماء ‎.kachat.</string>
-    <string name="kachat_names_this_address_owns">الأسماء اللي العنوان ده بيملكها بتظهر هنا.</string>
-    <string name="kachat_no_names_on_address">لا توجد أسماء ‎.kachat على هذا العنوان</string>
+    <string name="kachat_names_this_address_owns">أسماء المستخدمين اللي العنوان ده بيملكها بتظهر هنا.</string>
+    <string name="kachat_no_names_on_address">مفيش أسماء مستخدمين على العنوان ده</string>
     <string name="kg_claim_body">ده الاسم اللي الناس بتشوفك بيه في K وفي لينك بروفايلك. من غيره بيشوفوا عنوانك.</string>
-    <string name="kg_claim_hint">دوّر على الاسم اللي عايزه في تبويب .kachat، وبعدين احجزه.</string>
+    <string name="kg_claim_hint">دوّر على الاسم اللي عايزه في تبويب أسماء المستخدم، وبعدين احجزه.</string>
     <string name="kg_claim_title">احصل على اسم ‎.kachat الخاص بك</string>
     <string name="kg_close">إغلاق</string>
-    <string name="kg_finished_body">احجز اسمك في تبويب .kachat وقت ما تكون جاهز.</string>
+    <string name="kg_finished_body">احجز اسمك في تبويب أسماء المستخدم وقت ما تكون جاهز.</string>
     <string name="kg_finished_title">أنت جاهز</string>
     <string name="kg_how_body">اسمك موجود على شبكة Kaspa، ويحتفظ به عنوان الدردشة الخاص بك. لا يمكن لأحد أخذه أو تغييره ما دام لك.</string>
     <string name="kg_how_commit">الحجز يتم بمعاملتين سريعتين: الأولى تُبقي اختيارك سرًا، والثانية تسجّله.</string>
     <string name="kg_how_miners">السعر يذهب إلى معدّني الشبكة، لا إلى K.</string>
     <string name="kg_how_period">تدفع فترة واحدة في كل مرة. الأسماء الأقصر أغلى.</string>
     <string name="kg_how_title">كيف يعمل الاسم</string>
-    <string name="kg_keep_body">أساميك موجودة في المحفظة &gt; نطاقاتك &gt; .kachat.</string>
+    <string name="kg_keep_body">أساميك موجودة في المحفظة &gt; أسماء المستخدم بتاعتك.</string>
     <string name="kg_keep_grace">بعد انتهائه توجد فترة سماح لتجديده قبل أن يحجزه أي شخص آخر.</string>
     <string name="kg_keep_renew">جدّده قبل أن ينتهي. يظهر الموعد على كل اسم.</string>
     <string name="kg_keep_title">احتفظ به</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">يتوقف التسجيل ويعود إليك مبلغ 0.2 KAS الخاص بالالتزام، مطروحًا منه رسوم الشبكة.</string>
     <string name="kn_cancel_commit_title">إلغاء الالتزام؟</string>
     <string name="kn_change_price">تغيير السعر</string>
-    <string name="kn_claim_a_name">احصل على اسم</string>
     <string name="kn_claim_name_title">الحصول على اسم</string>
     <string name="kn_claim_your_name_on_kaspa">خد اسمك على Kaspa</string>
     <string name="kn_claiming_name">جارٍ المطالبة بـ %1$s</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">الاسم اتساب</string>
     <string name="kn_done_transferred">الاسم اتنقل</string>
     <string name="kn_err_address_key">مفتاح هذا العنوان غير صالح.</string>
-    <string name="kn_err_enter_address_or_domain">أدخل عنوانًا أو نطاقًا.</string>
+    <string name="kn_err_enter_address_or_domain">اكتب عنوان أو اسم مستخدم.</string>
     <string name="kn_err_lookup">تعذر البحث عن هذا الاسم.</string>
     <string name="kn_err_name_address_cant_own">عنوان هذا الاسم لا يمكنه امتلاك اسم .kachat.</string>
     <string name="kn_err_not_network_address">ليس عنوان Schnorr على هذه الشبكة.</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">في انتظار تأكيد الالتزام...</string>
     <string name="kn_taken">محجوز</string>
     <string name="kn_taken_for_sale">محجوز · للبيع بسعر %1$s</string>
-    <string name="kn_transfer_footer_domain">عنوان أو نطاق - يُبحث عن أسماء .kachat أولًا، ويُحوّل إلى العنوان المعروض.</string>
+    <string name="kn_transfer_footer_domain">عنوان أو اسم مستخدم - بيتحوّل للعنوان اللي ظاهر.</string>
     <string name="kn_transfer_warning">لا يمكن التراجع عن النقل. يحصل المالك الجديد على الاسم بتاريخ انتهائه الحالي؛ ويبقى ملفك الشخصي مع عنوانك.</string>
     <string name="kn_view_transaction">اعرض المعاملة</string>
     <string name="kn_withdraw">سحب</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">الشرا والبيع</string>
     <string name="kcn_kp_claim_pays_first_period">المطالبة بتدفع أول فترة (%1$s). والتجديد بيدفع كل فترة بعدها.</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">الحجز بيبعت معاملتين: الالتزام دلوقتي، والتسجيل بعد حوالي دقيقة. الاتنين بيدفعوا بمعدل الرسوم ده.</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">معرفناش نحمّل أسماء العنوان ده. اسحب لتحت وجرب تاني.</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">معرفناش نحمّل أسماء المستخدمين للعنوان ده. اسحب لتحت وجرّب تاني.</string>
     <string name="kcn_kp_d_day_e40b4">%1$s يوم</string>
     <string name="kcn_kp_d_days_0e3de">%1$s أيام</string>
     <string name="kcn_kp_dismiss_70afe">تجاهل</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">البايع بياخد السعر المعروض كامل: مفيش رسوم للسوق.</string>
     <string name="kcn_kp_not_confirmed_b9e09">ما اتأكدش</string>
     <string name="kcn_kp_one_character">حرف واحد</string>
-    <string name="kcn_kp_opens_the_kachat_tab">بيفتح تبويب ‎.kachat</string>
+    <string name="kcn_kp_opens_the_kachat_tab">بيفتح تبويب أسماء المستخدم</string>
     <string name="kcn_kp_pay_up_to_at_a_time">تقدر تدفع لحد %1$s مرة واحدة.</string>
     <string name="kcn_kp_paying_ahead">الدفع مقدّمًا</string>
     <string name="kcn_kp_price_goes_to_miners">السعر بيروح للمعدّنين - K مش بياخد حاجة.</string>

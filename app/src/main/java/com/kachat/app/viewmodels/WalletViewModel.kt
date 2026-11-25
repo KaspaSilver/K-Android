@@ -11,9 +11,6 @@ import com.kachat.app.repository.AppSettingsRepository
 import com.kachat.app.services.AddressHistoryService
 import com.kachat.app.services.wireName
 import com.kachat.app.services.KaspaWalletEngine
-import com.kachat.app.services.KnsInscriptionEngine
-import com.kachat.app.services.KnsProfileFields
-import com.kachat.app.services.KnsService
 import com.kachat.app.services.SpendingAddressDiscovery
 import com.kachat.app.services.UtxoEntry
 import com.kachat.app.services.WalletManager
@@ -48,7 +45,6 @@ class WalletViewModel @Inject constructor(
     private val walletManager: WalletManager,
     private val walletService: WalletService,
     private val walletEngine: KaspaWalletEngine,
-    private val knsService: KnsService,
     private val settings: AppSettingsRepository,
     private val spendingAddressDiscovery: SpendingAddressDiscovery,
     /** Reused purely for its address-string-keyed REST fetchers (`getTransactionHistory`/
@@ -59,9 +55,9 @@ class WalletViewModel @Inject constructor(
     private val onboardingGate: com.kachat.app.services.OnboardingGate,
     private val chatRepository: com.kachat.app.repository.ChatRepository,
     private val nextcloudService: com.kachat.app.services.NextcloudService,
-    /** The .k and .kaspa name services (Your Domains tabs, name resolution) - iOS NameServicesClient. */
-    val nameServices: com.kachat.app.services.NameServicesClient,
-    /** .kachat owners count toward the "Contains domain" tag (iOS 881ada6). Lazy, and only asked
+    /** Typed-name resolution (.kachat only) - iOS NameServicesClient. */
+    private val nameServices: com.kachat.app.services.NameServicesClient,
+    /** .kachat owners count toward the "Contains username" tag (iOS 881ada6). Lazy, and only asked
      *  where the registry is launched, so mainnet never builds it (iOS 7227d69). */
     private val kachatRegistry: dagger.Lazy<com.kachat.app.services.kachatnames.KachatNamesRegistry>,
     /** Which accounts still owe the backup steps, and when Backup Hygiene is due (iOS d063b897). */
@@ -82,12 +78,6 @@ class WalletViewModel @Inject constructor(
      *  and Trestly's data too (iOS 148a5331 `removeLocalData`). */
     private val accountFeatureCleanup: dagger.Lazy<com.kachat.app.services.AccountFeatureCleanup>,
 ) : ViewModel() {
-
-    /** Refreshes what the active account owns on .k and .kaspa. */
-    suspend fun refreshServiceNamesAndAwait() {
-        val address = walletManager.activeAddressFlow.value ?: return
-        nameServices.refresh(address)
-    }
 
     /**
      * The send screens' sends ([onSendClicked], [withdrawFromSpendingAddress]), each kept to the
@@ -1314,14 +1304,9 @@ class WalletViewModel @Inject constructor(
     /**
      * Clears every per-account StateFlow this activity-scoped ViewModel holds, called the moment
      * the active account changes. Without this, a freshly created account inherits the previous
-     * account's KNS identity on screen (domain name, banner, avatar, bio) until a network fetch
-     * happens to overwrite it — and [_knsProfile] was never overwritten at all for a domainless
-     * account, so the old profile card stuck permanently.
+     * account's state on screen until a network fetch happens to overwrite it.
      */
     private fun resetPerAccountUiState() {
-        _ownedDomainAssets.value = emptyList()
-        _primaryDomainName.value = null
-        _knsProfile.value = null
         _domainOwningAddresses.value = emptySet()
         _quantumSpentAddresses.value = emptySet()
         walletService.resetBalancesForAccountSwitch()
@@ -1344,11 +1329,6 @@ class WalletViewModel @Inject constructor(
                     // fetch happens to overwrite it. Same disease ColdStorageViewModel had with
                     // its shared _addresses (fixed by resetAddressesIfAccountChanged).
                     resetPerAccountUiState()
-                    if (address != null) {
-                        // Repopulate for the new account right away (an account with no domains
-                        // simply stays blank — exactly what a brand-new account should show).
-                        refreshOwnedDomains()
-                    }
                 }
                 lastSeenAddress = address
                 if (address != null) {
@@ -1452,6 +1432,36 @@ class WalletViewModel @Inject constructor(
             com.kachat.app.util.KaspaNetwork.accountAddressVariants(active).forEach { chatRepository.discardDrafts(it) }
         }
         _isLoggedIn.value = false
+    }
+
+    /** The saved account a switch signs in to, once the sign-in screen has replaced the old
+     *  account's tabs ([finishPendingAccountSwitch]). */
+    private val _pendingAccountSwitch = MutableStateFlow<String?>(null)
+    val pendingAccountSwitch: StateFlow<String?> = _pendingAccountSwitch.asStateFlow()
+
+    /** Whether this phone holds [address]'s keys (iOS 8cb4c88e `hasKeysOnThisPhone`). */
+    fun hasKeysOnThisPhone(address: String): Boolean = walletManager.hasKeysOnThisPhone(address)
+
+    /**
+     * The account switcher (Profile's account chip, iOS 8cb4c88e `switchToSavedAccount`): Log Out,
+     * then sign in to [address], the same two steps as going through the sign-in screen, so
+     * everything Log Out puts away (push registration, drafts, banners, reminders) is put away.
+     * The sign-in waits for the sign-in screen to be on screen ([finishPendingAccountSwitch]), so
+     * the new account gets new tabs, as every sign-in does. Call on the activity's view model.
+     */
+    fun switchToSavedAccount(address: String) {
+        if (accountActionRunning() || _pendingAccountSwitch.value != null) return
+        val current = walletManager.getActiveAccount()?.address
+        if (!walletManager.isLoggedOut && current != null && com.kachat.app.util.KaspaNetwork.isSameAccount(current, address)) return
+        _pendingAccountSwitch.value = address
+        logout()
+    }
+
+    /** The sign-in screen is showing: the switch [switchToSavedAccount] started signs in now. */
+    fun finishPendingAccountSwitch() {
+        val address = _pendingAccountSwitch.value ?: return
+        _pendingAccountSwitch.value = null
+        login(address)
     }
 
     /**
@@ -2118,220 +2128,7 @@ class WalletViewModel @Inject constructor(
     fun accountAddedAt(address: String): Long? = walletManager.accountAddedAt(address)
 
     // -------------------------------------------------------------------------
-    // KNS domain inscription — real on-chain commit/reveal, see WalletService.inscribeDomain
-    // -------------------------------------------------------------------------
-
-    private val _ownedDomainAssets = MutableStateFlow<List<com.kachat.app.services.KnsAsset>>(emptyList())
-    val ownedDomainAssets: StateFlow<List<com.kachat.app.services.KnsAsset>> = _ownedDomainAssets.asStateFlow()
-    val ownedDomains: StateFlow<List<String>> = _ownedDomainAssets
-        .map { assets -> assets.mapNotNull { it.asset } }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
-    private val _primaryDomainName = MutableStateFlow<String?>(null)
-    /** The wallet's explicitly-set primary domain name, or null if none has ever been set. */
-    val primaryDomainName: StateFlow<String?> = _primaryDomainName.asStateFlow()
-
-    /** The domain KNS Profile fields attach to — the explicit primary domain if still owned, else the first owned domain. */
-    val activeProfileDomainName: StateFlow<String?> = combine(_ownedDomainAssets, _primaryDomainName) { assets, primary ->
-        KnsService.pickActiveDomain(assets.mapNotNull { it.asset }, null, primary)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
-
-    /** [activeProfileDomainName]'s assetId — the target of every profile read/write call. */
-    val profileDomainAssetId: StateFlow<String?> = combine(_ownedDomainAssets, activeProfileDomainName) { assets, activeName ->
-        assets.firstOrNull { it.asset == activeName }?.assetId ?: assets.firstOrNull()?.assetId
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), null)
-
-    /** Full refresh: domains + primary + the active domain's profile (the "active" domain can
-     * change as a result of setting a new primary, transferring one away, or inscribing a new
-     * one, so all three of those call this - not [refreshOwnedDomainsAndAwait]). */
-    fun refreshOwnedDomains() {
-        viewModelScope.launch {
-            refreshOwnedDomainsAndAwait()
-            refreshKnsProfile()
-        }
-    }
-
-    /** Domains + primary only, no profile fetch - used by the Domains screen's pull-to-refresh,
-     * which never displays `knsProfile`, so fetching it on every pull was a wasted network call. */
-    suspend fun refreshOwnedDomainsAndAwait() {
-        // The WalletManager flow, not this ViewModel's _address mirror: it's the authority and is
-        // updated first on every account create/import/switch, so a refresh fired during the
-        // switch window can never fetch (and then publish) the OLD account's domains.
-        val currentAddress = walletManager.activeAddressFlow.value ?: return
-        val domains = knsService.getOwnedDomains(currentAddress)
-        val primary = knsService.getExplicitPrimaryDomain(currentAddress)
-        // Account switched while the fetch was in flight — these results belong to the previous
-        // account and must not be published under the new one.
-        if (walletManager.activeAddressFlow.value != currentAddress) return
-        _ownedDomainAssets.value = domains
-        _primaryDomainName.value = primary
-    }
-
-    data class SetPrimaryDomainUiState(val assetId: String? = null, val inFlight: Boolean = false, val errorMessage: String? = null)
-
-    private val _setPrimaryState = MutableStateFlow(SetPrimaryDomainUiState())
-    val setPrimaryState: StateFlow<SetPrimaryDomainUiState> = _setPrimaryState.asStateFlow()
-
-    /** Marks a domain as primary — off-chain and free, blocked while another set-primary call is already in flight. */
-    fun setPrimaryDomain(assetId: String) {
-        if (_setPrimaryState.value.inFlight) return
-        viewModelScope.launch {
-            _setPrimaryState.value = SetPrimaryDomainUiState(assetId = assetId, inFlight = true)
-            try {
-                walletService.setPrimaryDomain(assetId)
-                refreshUntilPrimarySettles(assetId)
-                _setPrimaryState.value = SetPrimaryDomainUiState()
-            } catch (e: Exception) {
-                _setPrimaryState.value = SetPrimaryDomainUiState(assetId = assetId, inFlight = false, errorMessage = UserFacingError.message(e, appContext.getString(R.string.failed_to_set_primary_domain)))
-            }
-        }
-    }
-
-    /**
-     * Refreshes until KNS actually reports the new primary, or the attempts run out.
-     *
-     * A KNS profile belongs to a DOMAIN, so the avatar, banner and details all change with the
-     * primary - but the write has only just been submitted, and one immediate refresh often races
-     * the indexer and reads back the OLD primary, leaving the editor showing the previous domain's
-     * profile. Bounded, and it keeps whatever the last refresh produced either way, so a slow
-     * indexer costs a stale screen rather than a hang. Matches iOS.
-     */
-    private suspend fun refreshUntilPrimarySettles(assetId: String) {
-        val expected = _ownedDomainAssets.value.firstOrNull { it.assetId == assetId }?.asset
-        repeat(3) { attempt ->
-            if (attempt > 0) kotlinx.coroutines.delay(2_000)
-            refreshOwnedDomainsAndAwait()
-            refreshKnsProfile()
-            if (expected == null || _primaryDomainName.value.equals(expected, ignoreCase = true)) return
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Transfer domain — irreversible, so the recipient is resolved and validated live as the
-    // user types (matching a ".kas" name to an address, checking it's a real/different/
-    // same-network address) BEFORE the Transfer screen ever lets them confirm — iOS shows no
-    // resolved-address preview at all before submitting, this is deliberately stricter.
-    // -------------------------------------------------------------------------
-
-    data class TransferRecipientPreview(
-        val input: String,
-        val checking: Boolean = false,
-        val resolvedAddress: String? = null,
-        val errorMessage: String? = null,
-        /** The name it resolved as, and every service's answer for "Other domains" (iOS 6ac48a7). */
-        val resolvedName: String? = null,
-        val nameResolutions: List<com.kachat.app.services.NameResolution> = emptyList(),
-        val selectedTld: com.kachat.app.services.NameServiceTLD? = null,
-    )
-
-    private val _transferRecipientPreview = MutableStateFlow<TransferRecipientPreview?>(null)
-    val transferRecipientPreview: StateFlow<TransferRecipientPreview?> = _transferRecipientPreview.asStateFlow()
-
-    private var transferPreviewJob: Job? = null
-
-    /** Debounced: resolves a ".kas" name to an address (or validates a raw address directly), then
-     *  checks it's a real, different, same-network address. [sourceAddress] overrides which own
-     *  address the recipient must differ from — the spending-address domain-transfer flow passes
-     *  that address (recipient must differ from the SOURCE, matching iOS); null = the identity. */
-    fun checkTransferRecipient(rawInput: String, sourceAddress: String? = null) {
-        transferPreviewJob?.cancel()
-        val trimmed = rawInput.trim()
-        if (trimmed.isEmpty()) {
-            _transferRecipientPreview.value = null
-            return
-        }
-        transferPreviewJob = viewModelScope.launch {
-            delay(350)
-            _transferRecipientPreview.value = TransferRecipientPreview(input = trimmed, checking = true)
-            // Every name service, in priority: the ending typed, else .kachat only (iOS 5a5122d) - the same lookup as every other address field; the others are
-            // offered under "Other domains" (iOS 6ac48a7).
-            val isName = !KaspaAddress.isValid(trimmed) && com.kachat.app.services.NameServicesClient.looksLikeName(trimmed)
-            val results = if (isName) runCatching { nameServices.resolveEverywhere(trimmed) }.getOrDefault(emptyList()) else emptyList()
-            val primary = if (isName) com.kachat.app.services.NameServicesClient.primary(results, trimmed)?.takeIf { it.address != null } else null
-            if (isName && primary == null) {
-                val message = com.kachat.app.services.NameServicesClient.notFoundMessage(appContext, trimmed, results)
-                _transferRecipientPreview.value = TransferRecipientPreview(input = trimmed, checking = false, errorMessage = message, nameResolutions = results)
-                return@launch
-            }
-            _transferRecipientPreview.value = validatedTransferRecipient(trimmed, primary?.address ?: trimmed, primary, results, sourceAddress)
-        }
-    }
-
-    /** Picks another service's answer for the typed name (under "Other domains"): it goes through
-     *  the same checks as the priority one. */
-    fun selectTransferResolution(resolution: com.kachat.app.services.NameResolution, sourceAddress: String? = null) {
-        val current = _transferRecipientPreview.value ?: return
-        val address = resolution.address ?: return
-        transferPreviewJob?.cancel()
-        _transferRecipientPreview.value = validatedTransferRecipient(current.input, address, resolution, current.nameResolutions, sourceAddress)
-    }
-
-    /** A real, different, same-network address - else the reason, with the name lookup kept. */
-    private fun validatedTransferRecipient(
-        input: String,
-        resolved: String,
-        resolution: com.kachat.app.services.NameResolution?,
-        results: List<com.kachat.app.services.NameResolution>,
-        sourceAddress: String?,
-    ): TransferRecipientPreview {
-        val myAddress = sourceAddress ?: address.value
-        return try {
-            if (!KaspaAddress.isValid(resolved)) throw IllegalStateException(appContext.getString(R.string.invalid_recipient_address))
-            if (resolved == myAddress) throw IllegalStateException(appContext.getString(R.string.recipient_must_be_different_from_your_own))
-            // The other network's address is the same key on another chain (iOS ce20e87).
-            KaspaAddress.otherNetworkMessageRes(resolved)?.let { throw IllegalStateException(appContext.getString(it)) }
-            if (myAddress != null && resolved.substringBefore(":") != myAddress.substringBefore(":")) {
-                throw IllegalStateException(appContext.getString(R.string.recipient_address_is_on_the_wrong_network))
-            }
-            TransferRecipientPreview(
-                input = input, checking = false, resolvedAddress = resolved,
-                resolvedName = resolution?.display, nameResolutions = results, selectedTld = resolution?.tld,
-            )
-        } catch (e: Exception) {
-            TransferRecipientPreview(
-                input = input, checking = false, errorMessage = UserFacingError.message(e, appContext.getString(R.string.invalid_recipient)),
-                nameResolutions = results, selectedTld = resolution?.tld,
-            )
-        }
-    }
-
-    fun clearTransferRecipientPreview() {
-        transferPreviewJob?.cancel()
-        _transferRecipientPreview.value = null
-    }
-
-    data class TransferDomainUiState(
-        val status: KnsInscribeUiStatus = KnsInscribeUiStatus.IDLE,
-        val errorMessage: String? = null,
-        val result: WalletService.TransferDomainResult? = null
-    )
-
-    private val _transferDomainState = MutableStateFlow(TransferDomainUiState())
-    val transferDomainState: StateFlow<TransferDomainUiState> = _transferDomainState.asStateFlow()
-
-    /** Submits the real, irreversible on-chain transfer — only proceeds using the already-resolved+validated recipient address, never the raw typed input.
-     *  [fromSpendingAddressIndex] non-null signs/funds from that spending-chain address instead of the identity (see WalletService.transferDomain). */
-    fun transferDomain(fullDomain: String, assetId: String, priorityFeeSompi: Long = KnsInscriptionEngine.REVEAL_PRIORITY_FEE_SOMPI, fromSpendingAddressIndex: Int? = null) {
-        val resolvedAddress = _transferRecipientPreview.value?.resolvedAddress ?: return
-        val current = _transferDomainState.value.status
-        if (current != KnsInscribeUiStatus.IDLE && current != KnsInscribeUiStatus.SUCCESS && current != KnsInscribeUiStatus.FAILED) return
-
-        viewModelScope.launch {
-            _transferDomainState.value = TransferDomainUiState(status = KnsInscribeUiStatus.SUBMITTING_COMMIT)
-            try {
-                val result = walletService.transferDomain(fullDomain, assetId, resolvedAddress, priorityFeeSompi, fromSpendingAddressIndex) { step ->
-                    _transferDomainState.value = _transferDomainState.value.copy(status = step.toUiStatus())
-                }
-                _transferDomainState.value = TransferDomainUiState(status = KnsInscribeUiStatus.SUCCESS, result = result)
-                refreshOwnedDomains()
-            } catch (e: Exception) {
-                _transferDomainState.value = TransferDomainUiState(status = KnsInscribeUiStatus.FAILED, errorMessage = UserFacingError.message(e, appContext.getString(R.string.transfer_failed)))
-            }
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // The "Contains domain" tags on the Manage Addresses list.
+    // The "Contains username" tags on the Manage Addresses list.
     // -------------------------------------------------------------------------
 
     /** The registry's revision where it's live, so Profile's Your Domains count reloads when a
@@ -2367,258 +2164,25 @@ class WalletViewModel @Inject constructor(
     private val _domainOwningAddresses = MutableStateFlow<Set<String>>(emptySet())
     val domainOwningAddresses: StateFlow<Set<String>> = _domainOwningAddresses.asStateFlow()
 
-    /** Addresses in the Manage Addresses list that own at least one KNS domain (or, where it is
-     *  live, a .kachat name - iOS 881ada6) — batched cached
-     *  lookups fired AFTER the rows are already visible, so tags fill in without blocking. */
+    /** Addresses in the Manage Addresses list that hold a .kachat name (where the registry is
+     *  launched - iOS 881ada6; .kachat only since 2026-11-23) — batched lookups fired AFTER the
+     *  rows are already visible, so tags fill in without blocking. */
     private fun refreshDomainOwningAddresses(addresses: List<String>) {
         if (addresses.isEmpty()) return
+        if (!com.kachat.app.services.kachatnames.KachatNamesService.isLaunched) {
+            _domainOwningAddresses.value = emptySet()
+            return
+        }
         viewModelScope.launch {
-            val kns = try { knsService.domainOwningAddresses(addresses) } catch (e: Exception) { emptySet() }
-            _domainOwningAddresses.value = kns
-            // .kachat names count too, where the registry is live (testnet) - iOS 881ada6.
-            if (com.kachat.app.services.kachatnames.KachatNamesService.isLaunched) {
-                val kachat = try {
-                    kachatRegistry.get().ownersOfNames(addresses)
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    emptySet()
-                }
-                if (kachat.isNotEmpty()) _domainOwningAddresses.value = kns + kachat
+            _domainOwningAddresses.value = try {
+                kachatRegistry.get().ownersOfNames(addresses)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                emptySet()
             }
         }
     }
-
-    fun resetTransferDomainState() {
-        _transferDomainState.value = TransferDomainUiState()
-        clearTransferRecipientPreview()
-    }
-
-    private val _knsProfile = MutableStateFlow<KnsProfileFields?>(null)
-    val knsProfile: StateFlow<KnsProfileFields?> = _knsProfile.asStateFlow()
-
-    fun refreshKnsProfile() {
-        viewModelScope.launch {
-            val fetchedForAddress = walletManager.activeAddressFlow.value
-            val assets = _ownedDomainAssets.value
-            val activeName = KnsService.pickActiveDomain(assets.mapNotNull { it.asset }, null, _primaryDomainName.value)
-            val assetId = assets.firstOrNull { it.asset == activeName }?.assetId ?: assets.firstOrNull()?.assetId
-            if (assetId == null) {
-                // No domain, no profile. Clearing (instead of the old early-return that left the
-                // previous value standing) is what blanks the profile card when the active account
-                // has no KNS identity — the early return let a prior account's banner/avatar/bio
-                // survive an account switch forever.
-                _knsProfile.value = null
-                return@launch
-            }
-            val profile = knsService.getProfile(assetId)
-            // Don't publish a fetch that raced an account switch (same guard as refreshOwnedDomainsAndAwait).
-            if (walletManager.activeAddressFlow.value != fetchedForAddress) return@launch
-            _knsProfile.value = profile
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Edit KNS Profile screen — avatar/banner staging + a single save-all that uploads
-    // changed images and submits only changed text fields, each its own real transaction.
-    // -------------------------------------------------------------------------
-
-    enum class EditProfileStep { IDLE, UPLOADING_AVATAR, UPLOADING_BANNER, SUBMITTING_FIELD, SUCCESS, PARTIAL_FAILURE, FAILED }
-
-    data class EditProfileFieldResult(val fieldKey: String, val success: Boolean, val errorMessage: String? = null)
-
-    data class EditProfileUiState(
-        val step: EditProfileStep = EditProfileStep.IDLE,
-        val currentFieldLabel: String? = null,
-        val fieldResults: List<EditProfileFieldResult> = emptyList(),
-        val errorMessage: String? = null
-    )
-
-    private val _editProfileState = MutableStateFlow(EditProfileUiState())
-    val editProfileState: StateFlow<EditProfileUiState> = _editProfileState.asStateFlow()
-
-    private val _pendingAvatarUri = MutableStateFlow<Uri?>(null)
-    val pendingAvatarUri: StateFlow<Uri?> = _pendingAvatarUri.asStateFlow()
-
-    private val _pendingBannerUri = MutableStateFlow<Uri?>(null)
-    val pendingBannerUri: StateFlow<Uri?> = _pendingBannerUri.asStateFlow()
-
-    /** True once the user taps "Remove" on an existing (already on-chain) avatar/banner - distinct
-     * from simply having no pending pick, since it means Save should explicitly clear the field
-     * rather than leave it untouched. Reset by picking a new image or leaving the screen. */
-    private val _avatarCleared = MutableStateFlow(false)
-    val avatarCleared: StateFlow<Boolean> = _avatarCleared.asStateFlow()
-
-    private val _bannerCleared = MutableStateFlow(false)
-    val bannerCleared: StateFlow<Boolean> = _bannerCleared.asStateFlow()
-
-    fun setPendingAvatar(uri: Uri?) {
-        _pendingAvatarUri.value = uri
-        if (uri != null) _avatarCleared.value = false
-    }
-
-    fun setPendingBanner(uri: Uri?) {
-        _pendingBannerUri.value = uri
-        if (uri != null) _bannerCleared.value = false
-    }
-
-    /**
-     * Drops any staged avatar/banner pick and the "remove existing" flags.
-     *
-     * Called when the profile being edited changes domain: those images were chosen for the
-     * PREVIOUS domain's profile, and carrying them across silently would save the wrong ones.
-     */
-    fun clearPendingProfileImages() {
-        _pendingAvatarUri.value = null
-        _pendingBannerUri.value = null
-        _avatarCleared.value = false
-        _bannerCleared.value = false
-    }
-
-    fun clearExistingAvatar() {
-        _pendingAvatarUri.value = null
-        _avatarCleared.value = true
-    }
-
-    fun clearExistingBanner() {
-        _pendingBannerUri.value = null
-        _bannerCleared.value = true
-    }
-
-    fun resetEditProfileState() {
-        _editProfileState.value = EditProfileUiState()
-        _pendingAvatarUri.value = null
-        _pendingBannerUri.value = null
-        _avatarCleared.value = false
-        _bannerCleared.value = false
-    }
-
-    /**
-     * Uploads any newly-picked avatar/banner, then submits only the text fields that actually
-     * changed from [knsProfile]'s current values — each image/field is still its own real
-     * commit/reveal transaction (~2/1 KAS), matching iOS's `saveKNSProfile` order exactly:
-     * avatar first, then banner, then changed text fields. Reports a partial-failure state
-     * rather than silently swallowing individual failures if some succeed and others don't.
-     */
-    // A .kas domain's own profile, edited from Your Domains (iOS 09e0403). .kas profiles are no
-    // longer shown in the app (KnsService.LOADS_DOMAIN_PROFILES), so the domain's profile is
-    // fetched on its own here - not cached, not shown anywhere else.
-    private val _editingDomain = MutableStateFlow<com.kachat.app.services.KnsAsset?>(null)
-    val editingDomain: StateFlow<com.kachat.app.services.KnsAsset?> = _editingDomain.asStateFlow()
-    private val _editingDomainProfile = MutableStateFlow<com.kachat.app.services.KnsProfileFields?>(null)
-    val editingDomainProfile: StateFlow<com.kachat.app.services.KnsProfileFields?> = _editingDomainProfile.asStateFlow()
-    private val _editingDomainLoading = MutableStateFlow(false)
-    val editingDomainLoading: StateFlow<Boolean> = _editingDomainLoading.asStateFlow()
-
-    fun beginEditingDomain(domain: com.kachat.app.services.KnsAsset) {
-        _editingDomain.value = domain
-        _editingDomainProfile.value = null
-        clearPendingProfileImages()
-        val assetId = domain.assetId ?: return
-        _editingDomainLoading.value = true
-        viewModelScope.launch {
-            val profile = knsService.getProfileForEditing(assetId)
-            if (_editingDomain.value?.assetId == assetId) _editingDomainProfile.value = profile
-            _editingDomainLoading.value = false
-        }
-    }
-
-    fun endEditingDomain() {
-        _editingDomain.value = null
-        _editingDomainProfile.value = null
-        _editingDomainLoading.value = false
-    }
-
-    fun saveKnsProfile(textFields: Map<String, String>) {
-        val editing = _editingDomain.value
-        val assetId = editing?.assetId ?: profileDomainAssetId.value ?: return
-        val step = _editProfileState.value.step
-        if (step != EditProfileStep.IDLE && step != EditProfileStep.SUCCESS && step != EditProfileStep.PARTIAL_FAILURE && step != EditProfileStep.FAILED) return
-
-        viewModelScope.launch {
-            val results = mutableListOf<EditProfileFieldResult>()
-            val currentProfile = if (editing != null) _editingDomainProfile.value else _knsProfile.value
-
-            _pendingAvatarUri.value?.let { uri ->
-                _editProfileState.value = _editProfileState.value.copy(step = EditProfileStep.UPLOADING_AVATAR)
-                try {
-                    val bytes = withContext(Dispatchers.Default) { ImagePrep.prepareForUpload(appContext, uri) }
-                    walletService.uploadKnsProfileImage(assetId, "avatar", bytes)
-                    results.add(EditProfileFieldResult("avatarUrl", true))
-                } catch (e: Exception) {
-                    results.add(EditProfileFieldResult("avatarUrl", false, e.message))
-                }
-                // Published incrementally (not just once at the end) so the details screen can
-                // show a live per-field checkmark as each one actually finishes.
-                _editProfileState.value = _editProfileState.value.copy(fieldResults = results.toList())
-            } ?: if (_avatarCleared.value && !currentProfile?.avatarUrl.isNullOrEmpty()) {
-                _editProfileState.value = _editProfileState.value.copy(step = EditProfileStep.SUBMITTING_FIELD, currentFieldLabel = "avatarUrl")
-                try {
-                    walletService.updateKnsProfileField(assetId, "avatarUrl", "")
-                    results.add(EditProfileFieldResult("avatarUrl", true))
-                } catch (e: Exception) {
-                    results.add(EditProfileFieldResult("avatarUrl", false, e.message))
-                }
-                _editProfileState.value = _editProfileState.value.copy(fieldResults = results.toList())
-            } else Unit
-
-            _pendingBannerUri.value?.let { uri ->
-                _editProfileState.value = _editProfileState.value.copy(step = EditProfileStep.UPLOADING_BANNER)
-                try {
-                    val bytes = withContext(Dispatchers.Default) { ImagePrep.prepareForUpload(appContext, uri) }
-                    walletService.uploadKnsProfileImage(assetId, "banner", bytes)
-                    results.add(EditProfileFieldResult("bannerUrl", true))
-                } catch (e: Exception) {
-                    results.add(EditProfileFieldResult("bannerUrl", false, e.message))
-                }
-                _editProfileState.value = _editProfileState.value.copy(fieldResults = results.toList())
-            } ?: if (_bannerCleared.value && !currentProfile?.bannerUrl.isNullOrEmpty()) {
-                _editProfileState.value = _editProfileState.value.copy(step = EditProfileStep.SUBMITTING_FIELD, currentFieldLabel = "bannerUrl")
-                try {
-                    walletService.updateKnsProfileField(assetId, "bannerUrl", "")
-                    results.add(EditProfileFieldResult("bannerUrl", true))
-                } catch (e: Exception) {
-                    results.add(EditProfileFieldResult("bannerUrl", false, e.message))
-                }
-                _editProfileState.value = _editProfileState.value.copy(fieldResults = results.toList())
-            } else Unit
-
-            for ((fieldKey, rawValue) in textFields) {
-                val trimmed = rawValue.trim()
-                val existing = WalletService.fieldValue(currentProfile, fieldKey) ?: ""
-                if (trimmed == existing) continue
-                _editProfileState.value = _editProfileState.value.copy(step = EditProfileStep.SUBMITTING_FIELD, currentFieldLabel = fieldKey)
-                try {
-                    walletService.updateKnsProfileField(assetId, fieldKey, trimmed)
-                    results.add(EditProfileFieldResult(fieldKey, true))
-                } catch (e: Exception) {
-                    results.add(EditProfileFieldResult(fieldKey, false, e.message))
-                }
-                _editProfileState.value = _editProfileState.value.copy(fieldResults = results.toList())
-            }
-
-            if (editing != null) {
-                val reloaded = knsService.getProfileForEditing(assetId)
-                if (_editingDomain.value?.assetId == assetId) _editingDomainProfile.value = reloaded
-            } else {
-                refreshKnsProfile()
-            }
-            _pendingAvatarUri.value = null
-            _pendingBannerUri.value = null
-            _avatarCleared.value = false
-            _bannerCleared.value = false
-
-            val finalStep = when {
-                results.isEmpty() -> EditProfileStep.SUCCESS
-                results.all { it.success } -> EditProfileStep.SUCCESS
-                results.any { it.success } -> EditProfileStep.PARTIAL_FAILURE
-                else -> EditProfileStep.FAILED
-            }
-            _editProfileState.value = EditProfileUiState(step = finalStep, fieldResults = results)
-        }
-    }
-
-    enum class KnsInscribeUiStatus { IDLE, CHECKING_AVAILABILITY, FETCHING_FEE, SUBMITTING_COMMIT, SUBMITTING_REVEAL, VERIFYING, SUCCESS, FAILED }
 
     val kaspaExplorer: StateFlow<com.kachat.app.models.KaspaExplorer> = settings.kaspaExplorer
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), com.kachat.app.models.KaspaExplorer.default)
@@ -2696,13 +2260,5 @@ class WalletViewModel @Inject constructor(
     fun setShowSetupGuides(enabled: Boolean) {
         val addr = _address.value ?: return
         viewModelScope.launch { settings.setShowSetupGuides(addr, enabled) }
-    }
-
-    private fun WalletService.KnsInscribeStep.toUiStatus(): KnsInscribeUiStatus = when (this) {
-        WalletService.KnsInscribeStep.CHECKING_AVAILABILITY -> KnsInscribeUiStatus.CHECKING_AVAILABILITY
-        WalletService.KnsInscribeStep.FETCHING_FEE -> KnsInscribeUiStatus.FETCHING_FEE
-        WalletService.KnsInscribeStep.SUBMITTING_COMMIT -> KnsInscribeUiStatus.SUBMITTING_COMMIT
-        WalletService.KnsInscribeStep.SUBMITTING_REVEAL -> KnsInscribeUiStatus.SUBMITTING_REVEAL
-        WalletService.KnsInscribeStep.VERIFYING -> KnsInscribeUiStatus.VERIFYING
     }
 }

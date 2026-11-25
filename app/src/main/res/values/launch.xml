@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The cold launch (iOS 518fdc8c `LaunchBackground`): white, black in dark mode, behind the K
+     globe. The window follows the app's Appearance setting (MainActivity's WindowAppearance), so
+     the night variant below applies whenever K draws dark. -->
+<resources>
+    <color name="launch_background">#FFFFFF</color>
+    <!-- Dark status bar icons on the white launch background. -->
+    <bool name="launch_light_bars">true</bool>
+</resources>

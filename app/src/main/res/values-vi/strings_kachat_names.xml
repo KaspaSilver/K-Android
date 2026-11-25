@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">Gia hạn chúng trước khi thời gian ân hạn kết thúc để giữ chúng.</string>
-    <string name="kachat_expired_many_title">%1$d tên miền .kachat của bạn đã hết hạn</string>
+    <string name="kachat_expired_many_title">%1$d tên người dùng của bạn đã hết hạn</string>
     <string name="kachat_expired_one_body">Gia hạn %1$s trước khi thời gian ân hạn kết thúc vào %2$s để giữ nó.</string>
-    <string name="kachat_expired_one_title">Một tên miền .kachat của bạn đã hết hạn</string>
+    <string name="kachat_expired_one_title">Một tên người dùng của bạn đã hết hạn</string>
     <string name="kachat_names_on_address_hint">Các tên mà địa chỉ này nhận hoặc mua sẽ hiện ở đây khi tên .kachat ra mắt.</string>
-    <string name="kachat_names_this_address_owns">Các tên mà địa chỉ này sở hữu hiển thị ở đây.</string>
-    <string name="kachat_no_names_on_address">Không có tên .kachat trên địa chỉ này</string>
+    <string name="kachat_names_this_address_owns">Tên người dùng của địa chỉ này hiện ở đây.</string>
+    <string name="kachat_no_names_on_address">Địa chỉ này chưa có tên người dùng</string>
     <string name="kg_claim_body">Đây là tên mọi người thấy bạn trong K và trên liên kết hồ sơ. Không có tên, mọi người sẽ thấy địa chỉ của bạn.</string>
-    <string name="kg_claim_hint">Tìm tên bạn muốn trong thẻ .kachat, rồi nhận tên đó.</string>
+    <string name="kg_claim_hint">Tìm tên bạn muốn trong thẻ Tên người dùng, rồi nhận nó.</string>
     <string name="kg_claim_title">Nhận tên .kachat của bạn</string>
     <string name="kg_close">Đóng</string>
-    <string name="kg_finished_body">Hãy nhận tên của bạn trong thẻ .kachat bất cứ khi nào bạn sẵn sàng.</string>
+    <string name="kg_finished_body">Hãy nhận tên của bạn trong thẻ Tên người dùng bất cứ khi nào bạn sẵn sàng.</string>
     <string name="kg_finished_title">Đã xong</string>
     <string name="kg_how_body">Tên của bạn nằm trên mạng Kaspa, do địa chỉ trò chuyện của bạn nắm giữ. Khi còn là của bạn, không ai có thể lấy hay đổi nó.</string>
     <string name="kg_how_commit">Nhận tên cần hai giao dịch nhanh: giao dịch đầu giữ bí mật lựa chọn, giao dịch thứ hai đăng ký.</string>
     <string name="kg_how_miners">Khoản phí trả cho thợ đào của mạng, không phải cho K.</string>
     <string name="kg_how_period">Bạn trả cho từng kỳ một. Tên càng ngắn càng đắt.</string>
     <string name="kg_how_title">Tên hoạt động thế nào</string>
-    <string name="kg_keep_body">Tên của bạn nằm trong Ví &gt; Tên miền của bạn &gt; .kachat.</string>
+    <string name="kg_keep_body">Tên của bạn ở Ví &gt; Tên người dùng của bạn.</string>
     <string name="kg_keep_grace">Sau khi hết hạn có một thời gian ân hạn để gia hạn trước khi người khác có thể nhận.</string>
     <string name="kg_keep_renew">Gia hạn trước khi hết hạn. Mỗi tên đều hiện ngày.</string>
     <string name="kg_keep_title">Giữ lấy</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">Việc đăng ký dừng lại và 0.2 KAS của cam kết trở về bạn, trừ phí mạng.</string>
     <string name="kn_cancel_commit_title">Hủy cam kết?</string>
     <string name="kn_change_price">Đổi giá</string>
-    <string name="kn_claim_a_name">Nhận một tên</string>
     <string name="kn_claim_name_title">Nhận tên</string>
     <string name="kn_claim_your_name_on_kaspa">Nhận tên của bạn trên Kaspa</string>
     <string name="kn_claiming_name">Đang nhận %1$s</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">Đã giải phóng tên</string>
     <string name="kn_done_transferred">Đã chuyển tên</string>
     <string name="kn_err_address_key">Khóa của địa chỉ đó không hợp lệ.</string>
-    <string name="kn_err_enter_address_or_domain">Nhập địa chỉ hoặc tên miền.</string>
+    <string name="kn_err_enter_address_or_domain">Nhập địa chỉ hoặc tên người dùng.</string>
     <string name="kn_err_lookup">Không tra cứu được tên đó.</string>
     <string name="kn_err_name_address_cant_own">Địa chỉ của tên đó không thể sở hữu tên .kachat.</string>
     <string name="kn_err_not_network_address">Không phải địa chỉ Schnorr trên mạng này.</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">Đang chờ cam kết được xác nhận...</string>
     <string name="kn_taken">Đã có chủ</string>
     <string name="kn_taken_for_sale">Đã có chủ · đang bán với giá %1$s</string>
-    <string name="kn_transfer_footer_domain">Địa chỉ hoặc tên miền - tên .kachat được tra trước và được chuyển thành địa chỉ hiển thị.</string>
+    <string name="kn_transfer_footer_domain">Một địa chỉ hoặc tên người dùng - nó được chuyển thành địa chỉ hiển thị.</string>
     <string name="kn_transfer_warning">Không thể hoàn tác việc chuyển. Chủ mới nhận tên với hạn hiện tại; hồ sơ của bạn vẫn ở địa chỉ của bạn.</string>
     <string name="kn_view_transaction">Xem giao dịch</string>
     <string name="kn_withdraw">Rút</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">Mua và bán</string>
     <string name="kcn_kp_claim_pays_first_period">Nhận trả cho kỳ đầu (%1$s). Gia hạn trả cho mỗi kỳ sau đó.</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">Nhận tên sẽ gửi hai giao dịch: cam kết ngay bây giờ, đăng ký khoảng một phút sau. Cả hai đều trả theo mức phí này.</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Không thể tải các tên của địa chỉ này. Kéo xuống để thử lại.</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Không tải được tên người dùng của địa chỉ này. Kéo xuống để thử lại.</string>
     <string name="kcn_kp_d_day_e40b4">%1$s ngày</string>
     <string name="kcn_kp_d_days_0e3de">%1$s ngày</string>
     <string name="kcn_kp_dismiss_70afe">Bỏ qua</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">Người bán nhận đủ giá niêm yết: không có phí chợ.</string>
     <string name="kcn_kp_not_confirmed_b9e09">Chưa xác nhận</string>
     <string name="kcn_kp_one_character">1 ký tự</string>
-    <string name="kcn_kp_opens_the_kachat_tab">Mở thẻ .kachat</string>
+    <string name="kcn_kp_opens_the_kachat_tab">Mở thẻ Tên người dùng</string>
     <string name="kcn_kp_pay_up_to_at_a_time">Bạn có thể trả tối đa %1$s một lần.</string>
     <string name="kcn_kp_paying_ahead">Trả trước</string>
     <string name="kcn_kp_price_goes_to_miners">Giá trả cho thợ đào - K không lấy gì cả.</string>

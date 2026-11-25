@@ -302,14 +302,20 @@ class NotificationHelper @Inject constructor(
      *  to chat with you." (NO_HANDSHAKE_MESSAGING.md §4). The caller decides it is the first. Its
      *  tap opens Message Requests, where it is answered (iOS 4f8e14bb, the "message_requests"
      *  thread). */
-    suspend fun showMessageRequest(contactId: String, dedupeTxId: String? = null, fromPush: Boolean = false) {
+    suspend fun showMessageRequest(
+        contactId: String,
+        dedupeTxId: String? = null,
+        fromPush: Boolean = false,
+        /** Their `.kachat` name when it is known (a request Who Can Message You? held until then). */
+        displayName: String? = null,
+    ) {
         show(
             fromPush = fromPush,
             contactId = contactId,
             title = context.getString(com.kachat.app.R.string.new_message_request),
             text = context.getString(
                 com.kachat.app.R.string.wants_to_chat_with_you,
-                com.kachat.app.util.KaspaAddress.shortDisplay(contactId)
+                displayName?.takeIf { it.isNotBlank() } ?: com.kachat.app.util.KaspaAddress.shortDisplay(contactId)
             ),
             dedupeTxId = dedupeTxId,
             opensMessageRequests = true,

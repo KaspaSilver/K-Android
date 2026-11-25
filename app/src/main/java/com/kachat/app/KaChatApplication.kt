@@ -154,6 +154,11 @@ class KaChatApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var tokenWallet: dagger.Lazy<com.kachat.app.services.tokens.TokenWallet>
 
+    /** Finishes a KNS reveal an older version left unfinished, on every return to the app (iOS
+     *  `KNSRevealRecovery.resumeIfNeeded` on app-active, audit 2026-11-24 #4). */
+    @Inject
+    lateinit var walletService: dagger.Lazy<com.kachat.app.services.WalletService>
+
     // Public Chats (iOS 148a5331, from KaPost): built at startup so its observers - the
     // always-listen scan, the foreground sweep and the chess arena's stream gate - run for the
     // app's whole lifetime, not only once a room is opened.
@@ -370,6 +375,17 @@ class KaChatApplication : Application(), Configuration.Provider {
                 startupStep("kUSDT poll: foreground") { tokenWallet.get().startPolling() }
                 // KaPost activity while the app is active (iOS 148a5331).
                 startupStep("KaPost notifications: start") { kaPostsNotificationPoller.get().start() }
+                // A KNS commit an older version left without its reveal: finished now, which
+                // returns its coins (iOS KNSRevealRecovery on app-active, audit 2026-11-24 #4).
+                owner.lifecycleScope.launch(Dispatchers.IO + logOnly) {
+                    try {
+                        walletService.get().resumePendingKnsReveal()
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        android.util.Log.w("KaChatApplication", "KNS reveal resume failed: ${e.javaClass.simpleName}")
+                    }
+                }
                 // A scheduled post only this phone holds goes out when its time has come, each
                 // time the app comes to the front (iOS KaPostsScheduledStore on didBecomeActive).
                 owner.lifecycleScope.launch(Dispatchers.IO + logOnly) {

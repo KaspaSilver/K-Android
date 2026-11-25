@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">نام‌های کاربری</string>
+    <string name="shell54_tipping_footer">آنچه انعام می‌فرستد، روی پست و در گفتگو.</string>
+    <string name="shell54_chatting_picker_intro">اگر این کلمات هویت شما را از قبل در نشانی دیگری نگه می‌دارند - یک نام ‎.kachat یا موجودی گفتگوی شارژشده - آن را اینجا انتخاب کنید. فقط نشانی‌هایی که موجودی یا نام دارند نشان داده می‌شوند.</string>
+    <string name="shell54_what_others_can_see_caption">همه می‌توانند این آدرس و موجودی‌اش را در شبکه‌ی Kaspa ببینند، اما نمی‌توانند پیام‌هایتان را بخوانند. فقط برای گفت‌وگو و نام‌های کاربری از آن استفاده کنید.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... یا نام کاربری</string>
+    <string name="shell54_looking_up_username">در حال جست‌وجوی نام کاربری...</string>
+    <string name="shell54_portfolio_add_address_footer">یک آدرس Kaspa یا نام کاربری مثل name.kachat وارد کنید. هر تراکنش دریافتی در این آدرس خرید و هر تراکنش ارسالی فروش حساب می‌شود، با قیمت تاریخی KAS در همان روز. افزودن دوباره‌ی همین آدرس در آینده فقط تراکنش‌های پیدا‌شده از آخرین ورود را وارد می‌کند.</string>
+    <string name="shell54_report_copied">گزارش کپی شد</string>
+    <string name="shell54_report_no_mail_app">هیچ برنامه‌ی ایمیلی نتوانست آن را باز کند. گزارش را در ایمیلی به %1$s جای‌گذاری کنید.</string>
+    <string name="shell54_show_amounts">نمایش مبالغ</string>
+    <string name="shell54_hide_amounts">پنهان کردن مبالغ</string>
+    <string name="shell54_amount_unit">مبلغ (%1$s)</string>
+    <string name="shell54_price_per_kas">قیمت هر KAS</string>
+    <string name="shell54_total_spent">مجموع پرداختی</string>
+    <string name="shell54_total_received">مجموع دریافتی</string>
+    <string name="shell54_chart_settings">تنظیمات نمودار</string>
+    <string name="shell54_import_failed">وارد کردن ناموفق بود.</string>
+    <string name="shell54_export_csv">صدور CSV</string>
+    <string name="shell54_sent_on">%1$s ارسال شد، %2$s</string>
+    <string name="shell54_received_on">%1$s دریافت شد، %2$s</string>
+    <string name="shell54_this_portfolio">این سبد</string>
+    <string name="shell54_new_portfolio">سبد دارایی جدید</string>
+    <string name="shell54_time">زمان</string>
+    <string name="shell54_total_value">مجموع %1$s</string>
+    <string name="shell54_move_up">انتقال %1$s به بالا</string>
+    <string name="shell54_move_down">انتقال %1$s به پایین</string>
+    <string name="shell54_selected">انتخاب‌شده</string>
+    <string name="shell54_not_selected">انتخاب‌نشده</string>
+    <string name="shell54_not_valid_kpub">kpub معتبر نیست</string>
+    <string name="shell54_new_address_failed">ساخت آدرس تازه ممکن نشد. دوباره تلاش کنید.</string>
+</resources>

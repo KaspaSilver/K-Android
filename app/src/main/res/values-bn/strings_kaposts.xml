@@ -14,7 +14,7 @@
     <string name="feed54_tip_from_unreadable">টিপ পাঠানো যায়নি: আপনার টিপস ফ্রম ঠিকানা এখন পড়া যাচ্ছে না।</string>
     <string name="feed54_tip_minimum_footer">নেটওয়ার্ক সবচেয়ে ছোট যে টিপ নেয় তা %1$s।</string>
     <string name="feed54_tip_no_price">টিপ পাঠানো যায়নি: %1$s কে KAS-এ রূপান্তর করার মতো সাম্প্রতিক KAS দাম নেই।</string>
-    <string name="feed54_tip_too_small">টিপ পাঠানো যায়নি: নেটওয়ার্ক সবচেয়ে ছোট যে টিপ নেয় তা %1$s। সেটিংস &gt; KaPost-এ আপনার ডিফল্ট টিপ বদলান।</string>
+    <string name="feed54_tip_too_small">টিপ পাঠানো যায়নি: নেটওয়ার্ক সবচেয়ে ছোট যে টিপ নেয় তা %1$s। সেটিংস &gt; কাস্টমাইজেশন &gt; টিপ দেওয়া-তে আপনার ডিফল্ট টিপ বদলান।</string>
     <string name="feed54_tipped">%1$s টিপ %2$s-কে দেওয়া হয়েছে</string>
     <string name="feed54_tipped_privately">%1$s টিপ ব্যক্তিগতভাবে %2$s-কে দেওয়া হয়েছে</string>
     <string name="feed54_unfollow_posted">আনফলো নেটওয়ার্কে পোস্ট হয়েছে</string>
@@ -69,7 +69,7 @@
     <string name="kaposts_tip_title">টিপ</string>
     <string name="kaposts_tips">টিপ</string>
     <string name="kaposts_tips_from">টিপ কোথা থেকে</string>
-    <string name="kaposts_tips_from_footnote">Chatting Address থেকে দেওয়া টিপ পোস্টে গোনা হয়, আর আপনি টিপদাতাদের তালিকায় থাকেন। অন্য ঠিকানা থেকে টিপ ব্যক্তিগত: লেখক পান এবং আপনাদের চ্যাটে দেখেন, কিন্তু পোস্টে গোনা হয় না এবং আপনার নাম আসে না।</string>
+    <string name="kaposts_tips_from_footnote">Chatting Address থেকে দেওয়া টিপ পোস্টে গোনা হয়, আর আপনি টিপদাতাদের তালিকায় থাকেন। অন্য ঠিকানা থেকে টিপ ব্যক্তিগত: লেখক পান এবং আপনাদের চ্যাটে দেখেন, কিন্তু পোস্টে গোনা হয় না এবং আপনার নাম আসে না। চ্যাটে দেওয়া টিপও এখান থেকেই যায়।</string>
     <string name="kaposts_tips_from_not_available">উপলব্ধ নয়</string>
     <string name="kaposts_who_tipped">কে এই পোস্টে টিপ দিয়েছে</string>
     <string name="kn53_kaplay_beat_in_move">%1$s-কে %2$d চালে হারান</string>
@@ -81,9 +81,9 @@
     <string name="kp5_tip_in">টিপ কীসে</string>
     <string name="kp5_tip_in_ask">প্রতিবার জিজ্ঞাসা করুন</string>
     <string name="kp5_tip_in_ask_footer">টিপ প্রতিবার জিজ্ঞাসা করে Kaspa নাকি kUSDT পাঠাবে।</string>
-    <string name="kp5_tip_in_kusdt_footer">টিপ পোস্টকারীর চ্যাট ঠিকানায় kUSDT পাঠায়। kUSDT টিপ পোস্টে গোনা হয় না।</string>
+    <string name="kp5_tip_in_kusdt_footer">টিপ তাঁদের চ্যাট ঠিকানায় kUSDT পাঠায়। kUSDT টিপ পোস্টে গোনা হয় না।</string>
     <string name="kp5_tip_not_counted">পোস্টে গোনা হয় না</string>
-    <string name="kp5_tip_set_in_settings">টিপ কী পাঠাবে তা সেটিংস > KaPost > টিপ কীসে-তে বেছে নিন।</string>
+    <string name="kp5_tip_set_in_settings">টিপ কী পাঠাবে তা সেটিংস &gt; কাস্টমাইজেশন &gt; টিপ দেওয়া-তে বেছে নিন।</string>
     <string name="kp5_tip_title">টিপ</string>
     <string name="kp5_tip_what_in">আপনি কীসে টিপ দিচ্ছেন?</string>
     <string name="l53_already_in_your_language">ইতিমধ্যে আপনার ভাষায় আছে</string>

@@ -64,6 +64,13 @@ import javax.inject.Singleton
  * notifying Cold Storage addresses, none with Address Activity off) and everyone blocked or muted
  * on KaPost (`kaposts_blocked_pubkeys`, audit 2026-11-21 #16). All three are in the fingerprint.
  *
+ * Every notification switch the service knows is in the registration and its fingerprint, so a
+ * change re-sends it (iOS 8cb4c88e `buildWatchedSignature`, audit 2026-11-24 notifications): the
+ * rooms, KaPost's kinds with Mentions (`kaposts_notify_mentions`), Play sound (`notify_sound`),
+ * silenced groups, and the quiet members (muted and hidden) left out of the group ids. The
+ * chatting address is always watched, so a device with no chats still registers for Received
+ * KAS and .kachat pushes.
+ *
  * [PushState.setActive] is flipped true only after a registration round-trip succeeds while
  * system notifications are deliverable, and false on failure/unregister — the pollers consult it
  * to suppress their duplicate local banners for push-covered types (the iOS repo's PUSH_EXTENSIONS.md §4).
@@ -145,15 +152,21 @@ class PushRegistrationManager @Inject constructor(
         val watchOnlyInputs: Triple<Boolean, Boolean, Long> = Triple(false, false, 0L),
     )
 
-    /** The five KaPost switches the push service filters on (likes, dislikes, comments,
-     *  reposts, follows), in the request's order. */
+    /** The switches the push service filters on, in the request's order: KaPost's likes,
+     *  dislikes, comments, reposts, follows and mentions, then Settings > Notifications > Play
+     *  sound (`notify_sound`). Mentions and Play sound since iOS 8cb4c88e (audit 2026-11-24
+     *  notifications): a change to either re-registers, as the other five always did. */
     private val kaPostsKindsFlow = combine(
-        settings.kaPostsNotifyLikes,
-        settings.kaPostsNotifyDislikes,
-        settings.kaPostsNotifyComments,
-        settings.kaPostsNotifyReposts,
-        settings.kaPostsNotifyFollows,
-    ) { likes, dislikes, comments, reposts, follows -> listOf(likes, dislikes, comments, reposts, follows) }
+        combine(
+            settings.kaPostsNotifyLikes,
+            settings.kaPostsNotifyDislikes,
+            settings.kaPostsNotifyComments,
+            settings.kaPostsNotifyReposts,
+            settings.kaPostsNotifyFollows,
+        ) { likes, dislikes, comments, reposts, follows -> listOf(likes, dislikes, comments, reposts, follows) },
+        settings.kaPostsNotifyMentions,
+        settings.notificationSoundEnabled,
+    ) { five, mentions, sound -> five + mentions + sound }
 
     /** The active account's KaPost mutes and blocks, together (addresses). */
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -191,8 +204,9 @@ class PushRegistrationManager @Inject constructor(
                     contacts.filter { it.conversationStatus == "active" }.map { it.id }.toSet()
                 },
                 settings.groupSilent,
-                combine(groupRepository.getGroups(), settings.groupMutedMembers, groupRepository.groupKeysRestored) { groups, muted, keysRestored ->
-                    (groups.map { "${it.groupId}|${it.membersJson}" } + "keysRestored|$keysRestored").toSet() to muted
+                // Hidden members too (iOS 8cb4c88e): hiding or unhiding one changes the watched ids.
+                combine(groupRepository.getGroups(), settings.groupMutedMembers, settings.groupHiddenMembers, groupRepository.groupKeysRestored) { groups, muted, hidden, keysRestored ->
+                    (groups.map { "${it.groupId}|${it.membersJson}" } + "keysRestored|$keysRestored").toSet() to (muted + hidden.map { "hidden|$it" })
                 },
             ) { activeAddress, notificationsEnabled, activeContacts, silentGroups, watchedGroupKeys ->
                 Snapshot(
@@ -619,6 +633,12 @@ class PushRegistrationManager @Inject constructor(
                     kaPostsNotifyComments = features.kinds.getOrElse(2) { true },
                     kaPostsNotifyReposts = features.kinds.getOrElse(3) { true },
                     kaPostsNotifyFollows = features.kinds.getOrElse(4) { true },
+                    // Mentions and Play sound (iOS 8cb4c88e, audit 2026-11-24 notifications): the
+                    // service skips mention pushes while Mentions is off, and sends silent pushes
+                    // while Play sound is off - Received KAS and .kachat ones too, which the
+                    // system draws itself while the app is away.
+                    kaPostsNotifyMentions = features.kinds.getOrElse(5) { true },
+                    notifySound = features.kinds.getOrElse(6) { true },
                     kaPostsWatchAuthors = features.watchAuthors,
                     // KaPost Block and Mute stop pushes too (iOS 428a797b, audit #16).
                     kaPostsBlockedPubkeys = if (features.kaPostsPubkey == null) emptyList() else features.blockedPubkeys,
@@ -795,7 +815,10 @@ class PushRegistrationManager @Inject constructor(
      * `blinded_group_id` the indexer puts on the push event. Lowercase 64-hex, deduped.
      */
     private suspend fun collectWatchedGroupIds(walletAddress: String): List<String> {
-        val muted = runCatching { settings.groupMutedMembers.first() }.getOrDefault(emptySet())
+        // Muted ("never notify you") and hidden ("stop seeing their messages") members alike:
+        // someone whose messages you stopped seeing has no business ringing your phone with them
+        // (iOS 8cb4c88e `quietMemberAddresses`, audit 2026-11-24 notifications).
+        val muted = runCatching { settings.groupMutedMembers.first() + settings.groupHiddenMembers.first() }.getOrDefault(emptySet())
         val silent = runCatching { settings.groupSilent.first() }.getOrDefault(emptySet())
         val groups = runCatching { groupRepository.getGroups().first() }.getOrDefault(emptyList())
         val ids = mutableSetOf<String>()
@@ -809,7 +832,7 @@ class PushRegistrationManager @Inject constructor(
             val blindingKey = runCatching { bag.blindingKey.hexToBytes() }.getOrNull() ?: continue
             for (member in groupRepository.membersOf(group)) {
                 if (member.address == walletAddress) continue                     // exclude self
-                if ("${group.groupId}|${member.address}" in muted) continue       // exclude muted
+                if ("${group.groupId}|${member.address}" in muted) continue       // exclude muted and hidden
                 val pub = runCatching { member.xOnlyPubKeyHex.hexToBytes() }.getOrNull() ?: continue
                 ids += GroupCipher.deriveBlindedGroupId(blindingKey, pub).toHex()
             }

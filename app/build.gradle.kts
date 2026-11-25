@@ -69,6 +69,20 @@ val keystoreProperties = Properties().apply {
     }
 }
 
+// Swap's ChangeNOW key (iOS 518fdc8c: Secrets.xcconfig -> Info.plist ChangeNowAPIKey), built in from
+// the gitignored local.properties (`changenow.api.key=...`) or, on a build machine, the
+// CHANGENOW_API_KEY environment variable. Missing is fine: ChangeNOW coins then say "ChangeNOW swaps
+// aren't available in this build." (kUSDT still swaps through Trestly).
+val changeNowApiKey: String = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}.let { local ->
+    (local.getProperty("changenow.api.key") ?: local.getProperty("changenow.apiKey")
+        ?: System.getenv("CHANGENOW_API_KEY") ?: "").trim()
+}
+
 android {
     namespace = "com.kachat.app"
     compileSdk = 36
@@ -90,10 +104,11 @@ android {
         // permanent and per app, and unlike iOS it does NOT reset when versionName changes
         // (4.1's builds ran 35..47). A device will not treat a rebuild as an update unless it
         // moves, so it goes up with every handed-out build too, alongside the build number.
-        val kachatBuildNumber = 9
-        versionCode = 142
-        versionName = "5.3"
+        val kachatBuildNumber = 2
+        versionCode = 144
+        versionName = "5.4"
         buildConfigField("int", "KACHAT_BUILD_NUMBER", kachatBuildNumber.toString())
+        buildConfigField("String", "CHANGENOW_API_KEY", "\"${changeNowApiKey.replace("\\", "").replace("\"", "")}\"")
         // KACHAT_IS_RELEASE is set per flavour below rather than once here, because on Android the
         // two channels ARE the two answers iOS's single flag flips between: what goes to the Play
         // Store is the release and reports plain "5.1", while a handed-out GitHub build is a beta

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">أسماء المستخدم</string>
+    <string name="shell54_tipping_footer">ما ترسله الإكرامية، على المنشور وفي الدردشة.</string>
+    <string name="shell54_chatting_picker_intro">إذا كانت هذه الكلمات تحمل هويتك بالفعل في عنوان آخر - اسم ‎.kachat أو رصيد محادثة ممول - فاختره هنا. تُعرض فقط العناوين التي لديها رصيد أو أسماء.</string>
+    <string name="shell54_what_others_can_see_caption">يمكن لأي شخص رؤية هذا العنوان ورصيده على شبكة Kaspa، لكن لا يمكنه قراءة رسائلك. استخدمه فقط للدردشة وأسماء المستخدم.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... أو اسم مستخدم</string>
+    <string name="shell54_looking_up_username">جارٍ البحث عن اسم المستخدم...</string>
+    <string name="shell54_portfolio_add_address_footer">أدخل عنوان Kaspa أو اسم مستخدم مثل name.kachat. تصبح كل معاملة مستلمة على هذا العنوان عملية شراء، وكل معاملة مُرسلة عملية بيع، بسعر KAS التاريخي في ذلك اليوم. إعادة إضافة العنوان نفسه لاحقًا تستورد فقط المعاملات التي وُجدت منذ آخر استيراد.</string>
+    <string name="shell54_report_copied">تم نسخ البلاغ</string>
+    <string name="shell54_report_no_mail_app">لم يتمكن أي تطبيق بريد من فتحه. الصق البلاغ في رسالة بريد إلى %1$s.</string>
+    <string name="shell54_show_amounts">إظهار المبالغ</string>
+    <string name="shell54_hide_amounts">إخفاء المبالغ</string>
+    <string name="shell54_amount_unit">المبلغ (%1$s)</string>
+    <string name="shell54_price_per_kas">السعر لكل KAS</string>
+    <string name="shell54_total_spent">إجمالي المصروف</string>
+    <string name="shell54_total_received">إجمالي المستلم</string>
+    <string name="shell54_chart_settings">إعدادات الرسم البياني</string>
+    <string name="shell54_import_failed">فشل الاستيراد.</string>
+    <string name="shell54_export_csv">تصدير CSV</string>
+    <string name="shell54_sent_on">تم إرسال %1$s في %2$s</string>
+    <string name="shell54_received_on">تم استلام %1$s في %2$s</string>
+    <string name="shell54_this_portfolio">هذه المحفظة</string>
+    <string name="shell54_new_portfolio">محفظة استثمارية جديدة</string>
+    <string name="shell54_time">الوقت</string>
+    <string name="shell54_total_value">الإجمالي %1$s</string>
+    <string name="shell54_move_up">نقل %1$s لأعلى</string>
+    <string name="shell54_move_down">نقل %1$s لأسفل</string>
+    <string name="shell54_selected">محدد</string>
+    <string name="shell54_not_selected">غير محدد</string>
+    <string name="shell54_not_valid_kpub">ليس kpub صالحًا</string>
+    <string name="shell54_new_address_failed">تعذّر إنشاء عنوان جديد. حاول مرة أخرى.</string>
+</resources>

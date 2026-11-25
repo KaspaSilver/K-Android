@@ -2,24 +2,24 @@
 <!-- The .kachat market and names (iOS 148a5331, back from KaPay: KaChat-Wallet-Android). -->
 <resources>
     <string name="kachat_expired_many_body">Renove-os antes que os períodos de carência terminem para mantê-los.</string>
-    <string name="kachat_expired_many_title">%1$d dos seus domínios .kachat expiraram</string>
+    <string name="kachat_expired_many_title">%1$d dos seus nomes de usuário expiraram</string>
     <string name="kachat_expired_one_body">Renove %1$s antes que o período de carência termine em %2$s para mantê-lo.</string>
-    <string name="kachat_expired_one_title">Um dos seus domínios .kachat expirou</string>
+    <string name="kachat_expired_one_title">Um dos seus nomes de usuário expirou</string>
     <string name="kachat_names_on_address_hint">Os nomes que este endereço reivindicar ou comprar aparecem aqui quando os nomes .kachat forem lançados.</string>
-    <string name="kachat_names_this_address_owns">Os nomes deste endereço aparecem aqui.</string>
-    <string name="kachat_no_names_on_address">Nenhum nome .kachat neste endereço</string>
+    <string name="kachat_names_this_address_owns">Os nomes de usuário deste endereço aparecem aqui.</string>
+    <string name="kachat_no_names_on_address">Nenhum nome de usuário neste endereço</string>
     <string name="kg_claim_body">É o nome com que as pessoas veem você em todo o K e no link do seu perfil. Sem ele, elas veem seu endereço.</string>
-    <string name="kg_claim_hint">Procure o nome que você quer na aba .kachat e depois reivindique.</string>
+    <string name="kg_claim_hint">Procure o nome que você quer na aba Nomes de usuário e reivindique-o.</string>
     <string name="kg_claim_title">Reivindique seu nome .kachat</string>
     <string name="kg_close">Fechar</string>
-    <string name="kg_finished_body">Reivindique seu nome na aba .kachat quando estiver pronto.</string>
+    <string name="kg_finished_body">Reivindique seu nome na aba Nomes de usuário quando quiser.</string>
     <string name="kg_finished_title">Tudo pronto</string>
     <string name="kg_how_body">Seu nome vive na rede Kaspa, mantido pelo seu endereço de conversa. Enquanto for seu, ninguém pode tomá-lo nem alterá-lo.</string>
     <string name="kg_how_commit">Reivindicar leva duas transações rápidas: a primeira mantém sua escolha em segredo, a segunda o registra.</string>
     <string name="kg_how_miners">O preço vai para os mineradores da rede, não para o K.</string>
     <string name="kg_how_period">Você paga um período por vez. Nomes mais curtos custam mais.</string>
     <string name="kg_how_title">Como funciona um nome</string>
-    <string name="kg_keep_body">Seus nomes estão em Carteira &gt; Seus domínios &gt; .kachat.</string>
+    <string name="kg_keep_body">Seus nomes estão em Carteira &gt; Seus nomes de usuário.</string>
     <string name="kg_keep_grace">Depois que expira, há um período de carência para renovar antes que outra pessoa possa reivindicá-lo.</string>
     <string name="kg_keep_renew">Renove antes que expire. Cada nome mostra quando.</string>
     <string name="kg_keep_title">Mantenha-o</string>
@@ -119,7 +119,6 @@
     <string name="kn_cancel_commit_body">O registro para e os 0.2 KAS do compromisso voltam para você, menos a taxa de rede.</string>
     <string name="kn_cancel_commit_title">Cancelar o compromisso?</string>
     <string name="kn_change_price">Alterar preço</string>
-    <string name="kn_claim_a_name">Reivindicar um nome</string>
     <string name="kn_claim_name_title">Registrar nome</string>
     <string name="kn_claim_your_name_on_kaspa">Reivindique seu nome na Kaspa</string>
     <string name="kn_claiming_name">Reivindicando %1$s</string>
@@ -144,7 +143,7 @@
     <string name="kn_done_released">Nome liberado</string>
     <string name="kn_done_transferred">Nome transferido</string>
     <string name="kn_err_address_key">A chave desse endereço não é válida.</string>
-    <string name="kn_err_enter_address_or_domain">Digite um endereço ou um domínio.</string>
+    <string name="kn_err_enter_address_or_domain">Digite um endereço ou um nome de usuário.</string>
     <string name="kn_err_lookup">Não foi possível procurar esse nome.</string>
     <string name="kn_err_name_address_cant_own">O endereço desse nome não pode ter um nome .kachat.</string>
     <string name="kn_err_not_network_address">Não é um endereço Schnorr desta rede.</string>
@@ -245,7 +244,7 @@
     <string name="kn_stage_waiting_confirm">Aguardando a confirmação do compromisso...</string>
     <string name="kn_taken">Ocupado</string>
     <string name="kn_taken_for_sale">Ocupado · à venda por %1$s</string>
-    <string name="kn_transfer_footer_domain">Um endereço ou um domínio: nomes .kachat são procurados primeiro e resolvidos no endereço mostrado.</string>
+    <string name="kn_transfer_footer_domain">Um endereço ou um nome de usuário: ele é convertido no endereço mostrado.</string>
     <string name="kn_transfer_warning">Uma transferência não pode ser desfeita. O novo dono recebe o nome com a expiração atual; seu perfil fica com seu endereço.</string>
     <string name="kn_view_transaction">Ver transação</string>
     <string name="kn_withdraw">Retirar</string>
@@ -259,7 +258,7 @@
     <string name="kcn_kp_buying_and_selling">Comprar e vender</string>
     <string name="kcn_kp_claim_pays_first_period">Reivindicar paga o primeiro período (%1$s). Renovar paga cada um depois disso.</string>
     <string name="kcn_kp_claiming_sends_two_transactions_the_commit_4fe63">Reivindicar envia duas transações: o compromisso agora e o registro cerca de um minuto depois. Ambas pagam esta taxa.</string>
-    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Não foi possível carregar os nomes deste endereço. Puxe para baixo para tentar novamente.</string>
+    <string name="kcn_kp_couldn_t_load_this_address_s_3b10c">Não foi possível carregar os nomes de usuário deste endereço. Puxe para baixo para tentar de novo.</string>
     <string name="kcn_kp_d_day_e40b4">%1$s dia</string>
     <string name="kcn_kp_d_days_0e3de">%1$s dias</string>
     <string name="kcn_kp_dismiss_70afe">Descartar</string>
@@ -282,7 +281,7 @@
     <string name="kcn_kp_no_marketplace_fee">O vendedor recebe o preço anunciado inteiro: não há taxa do mercado.</string>
     <string name="kcn_kp_not_confirmed_b9e09">Não confirmado</string>
     <string name="kcn_kp_one_character">1 caractere</string>
-    <string name="kcn_kp_opens_the_kachat_tab">Abre a aba .kachat</string>
+    <string name="kcn_kp_opens_the_kachat_tab">Abre a aba Nomes de usuário</string>
     <string name="kcn_kp_pay_up_to_at_a_time">Você pode pagar até %1$s de uma vez.</string>
     <string name="kcn_kp_paying_ahead">Pagar adiantado</string>
     <string name="kcn_kp_price_goes_to_miners">O preço vai para os mineradores - o K não fica com nada.</string>

@@ -46,13 +46,6 @@ object ChessBotLinkRouter {
 object ChessBotLinks {
     const val SCHEME = "kachatchess"
 
-    /**
-     * The post Share to KaPost wrote, for the KaPost composer (iOS `KaPostsDeepLink
-     * .pendingComposeText` + `.openKaPost`). Whoever shows KaPost opens its composer with this
-     * text and sets it back to null; the player still taps Post there.
-     */
-    val pendingKaPostCompose = MutableStateFlow<String?>(null)
-
     private val _openGames = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     /** A bot challenge to play (iOS `.openGames`): the dock shows the KaPlay tab, wherever it
@@ -82,15 +75,15 @@ object ChessBotLinks {
         return ChessBotChallenge(bot, moves, by)
     }
 
-    /** Opens the KaPost composer with the post written ([pendingKaPostCompose]); the player still
-     *  taps Post there (iOS `shareToKaPosts`). */
-    fun shareToKaPost(bot: ChessBot, moves: Int, by: String, gameId: String) {
+    /** The post Share to KaPost writes after a win: the boast and the challenge link (iOS 518fdc8c
+     *  `shareText`). KaPlay slides KaPost's composer up over the game with it. */
+    fun shareText(bot: ChessBot, moves: Int, by: String, gameId: String): String {
         val challenge = challengeUrl(bot, moves, by, gameId)
         // One whole sentence, the bot's name and the numbers filled in (iOS 077d777).
         val boast = com.kachat.app.util.ChessText.format(
             "I beat %s (Level %d) in %d moves on K. Think you can do it in fewer?", bot.name, bot.level, moves,
         )
-        pendingKaPostCompose.value = "$boast\n\n$challenge"
+        return "$boast\n\n$challenge"
     }
 
     /** A challenge card's button in a post, or a `kachatchess://` link opened from anywhere: the

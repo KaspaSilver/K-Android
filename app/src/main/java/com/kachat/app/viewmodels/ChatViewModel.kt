@@ -2,6 +2,7 @@ package com.kachat.app.viewmodels
 
 import kotlinx.coroutines.flow.flowOn
 import com.kachat.app.util.UserFacingError
+import com.kachat.app.util.coalesced
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -13,10 +14,11 @@ import com.kachat.app.models.Conversation
 import com.kachat.app.models.MessageEntity
 import com.kachat.app.models.ReactionEntity
 import com.kachat.app.models.displayName
+import com.kachat.app.R
+import com.kachat.app.models.GroupActionProgress
+import com.kachat.app.models.GroupActionStep
 import com.kachat.app.repository.GroupConversation
 import com.kachat.app.services.ChatHistoryExportImportService
-import com.kachat.app.services.KnsProfileFields
-import com.kachat.app.services.KnsService
 import com.kachat.app.services.NextcloudFile
 import com.kachat.app.services.NextcloudService
 import com.kachat.app.services.VoiceRecorderService
@@ -57,7 +59,6 @@ class ChatViewModel @Inject constructor(
     private val settings: com.kachat.app.repository.AppSettingsRepository,
     private val walletService: com.kachat.app.services.WalletService,
     private val notificationHelper: com.kachat.app.services.NotificationHelper,
-    private val knsService: KnsService,
     private val chatHistoryExportImportService: ChatHistoryExportImportService,
     private val diagnosticsExportService: com.kachat.app.services.DiagnosticsExportService,
     private val voiceRecorderService: VoiceRecorderService,
@@ -420,7 +421,12 @@ class ChatViewModel @Inject constructor(
         chatRepository.getContacts(),
         chatRepository.getLatestMessages(),
         chatRepository.getUnreadCounts()
-    ) { contacts, latestMessages, unreadCounts ->
+    ) { contacts, latestMessages, unreadCounts -> Triple(contacts, latestMessages, unreadCounts) }
+        // Coalesced (180 ms, never held past a second): a sync files messages one by one, and
+        // rebuilding the list for each one stalled scrolling while it ran (iOS ChatListView,
+        // audit 2026-11-24 #27). An unchanged list isn't written back (the StateFlow compares).
+        .coalesced()
+        .map { (contacts, latestMessages, unreadCounts) ->
         val latestByContact = latestMessages.associateBy { it.contactId }
         val unreadByContact = unreadCounts.associateBy({ it.contactId }, { it.count })
         contacts
@@ -542,9 +548,24 @@ class ChatViewModel @Inject constructor(
         }.getOrDefault(false)
     }
 
-    /** Message Requests, newest first. */
-    val messageRequests: StateFlow<List<Conversation>> = combine(conversations, messageRequestIds) { all, requests ->
-        all.filter { it.contact.id in requests }.sortedByDescending { it.lastMessage?.blockTimestamp ?: 0L }
+    /** Message Requests, newest first, without the ones Who Can Message You? hides (iOS
+     *  `messageRequests`): with Only Users with a Username, a sender with no known .kachat name
+     *  waits unseen (not deleted) until a name lands or Anyone is chosen again. */
+    val messageRequests: StateFlow<List<Conversation>> = combine(
+        conversations,
+        messageRequestIds,
+        com.kachat.app.services.WhoCanMessage.flow(appContext),
+        com.kachat.app.services.kachatnames.KachatNamesRegistry.identityRevision,
+    ) { all, requests, choice, _ ->
+        val who = choice ?: com.kachat.app.services.WhoCanMessage.ANYONE
+        all.filter { convo ->
+            convo.contact.id in requests && !com.kachat.app.services.WhoCanMessage.hidesRequest(
+                who,
+                if (who == com.kachat.app.services.WhoCanMessage.USERNAMES) {
+                    com.kachat.app.services.kachatnames.KachatNamesRegistry.cachedIdentityOf(convo.contact.id)?.label
+                } else null,
+            )
+        }.sortedByDescending { it.lastMessage?.blockTimestamp ?: 0L }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /** Accept: the chat joins the chat list. Nothing is sent on chain. */
@@ -611,25 +632,6 @@ class ChatViewModel @Inject constructor(
         groupRepository.getLatestGroupReactions()
             .map { rows -> rows.associateBy { it.groupId } }
             .flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
-
-    /**
-     * Fetches KNS name + avatar for every member of a group - group rosters cache a `displayName`
-     * snapshot taken at add/join time (`GroupMember.displayName`), which never reflects a KNS name
-     * resolved afterward, so the thread/info screens call this on appear the same way
-     * [refreshKnsNamesForAllContacts] runs for the chat list. `refreshKnsProfile` works for any
-     * address (creates no contact row itself), so this is safe even for members added by address/QR
-     * with no KNS domain.
-     */
-    fun refreshKnsProfilesForGroupMembers(addresses: List<String>) {
-        refreshKnsNamesForAllContacts()
-        for (address in addresses) {
-            refreshKnsProfile(address)
-            viewModelScope.launch {
-                val explicitPrimary = knsService.identityPrimaryDomain(address)
-                _groupMemberPrimaryKnsByAddress.update { it + (address to explicitPrimary) }
-            }
-        }
-    }
 
     fun markAsRead(contactId: String) {
         viewModelScope.launch { chatRepository.markAsRead(contactId) }
@@ -767,6 +769,13 @@ class ChatViewModel @Inject constructor(
             chatRepository.addContact(getOrCreateContact(contactId), deliberate = true)
         }
     }
+
+    /** A saved contact (a chat here): a `?chat=1` profile link may open their chat straight away.
+     *  A stranger's link opens User Info and saves nothing, since a saved contact's first message
+     *  rings as an ordinary chat, skipping Message Requests and Who Can Message You? (iOS audit
+     *  2026-11-24 #20 `isKnownChatPartner`). */
+    suspend fun isKnownChatPartner(address: String): Boolean =
+        runCatching { chatRepository.getContact(address) != null }.getOrDefault(false)
 
     /** A profile link's person: their contact, auto-added when there is none yet, so the name and
      *  settings saved on User Info - or the chat a `chat=1` link opens - stick (iOS 81df734). */
@@ -1691,6 +1700,10 @@ class ChatViewModel @Inject constructor(
     /** A group's saved draft, and saving it - see [com.kachat.app.services.DraftStore]. */
     fun groupDraft(groupId: String): String = draftStore.draft(com.kachat.app.services.DraftStore.groupKey(groupId))
 
+    /** The open account's address, lowercased; null while there is none. */
+    fun currentAccountAddress(): String? =
+        runCatching { walletManager.getAddress() }.getOrNull()?.takeIf { it.isNotBlank() }?.lowercase()
+
     fun saveGroupDraft(groupId: String, text: String) =
         draftStore.setDraft(com.kachat.app.services.DraftStore.groupKey(groupId), text)
 
@@ -1806,20 +1819,6 @@ class ChatViewModel @Inject constructor(
                 return@launch
             }
             onResult(null)
-
-            // Added by raw address with no domain typed: record their primary KNS domain so
-            // `ContactEntity.displayName` can show it. It is deliberately NOT copied into
-            // `alias` — a contact is named only when the user names one, and a domain baked
-            // into the alias would go stale the moment the domain moved.
-            if (knsName == null) {
-                val primary = knsService.identityName(address)
-                if (primary != null) {
-                    chatRepository.getContact(address)?.let { current ->
-                        chatRepository.addContact(current.copy(knsName = primary))
-                    }
-                }
-            }
-            refreshKnsProfile(address)
         }
     }
 
@@ -1901,6 +1900,9 @@ class ChatViewModel @Inject constructor(
         addresses: List<String>,
         /** Compressed JPEG hex picked during creation - pushed once the group has an id. */
         photoHex: String? = null,
+        /** The steps of creating it, for the progress sheet - given once, before the first one. */
+        onProgress: (GroupActionProgress) -> Unit = {},
+        /** Called once every step is over; the screen opens the group when Done is tapped. */
         onCreated: (String) -> Unit,
     ) {
         val trimmedName = name.trim()
@@ -1933,6 +1935,20 @@ class ChatViewModel @Inject constructor(
         _isCreatingGroup.value = true
         _createGroupError.value = null
         viewModelScope.launch {
+            // The steps the progress sheet shows: setting up, each invite, the recovery copy, the
+            // photo (iOS AddContactView.createGroupChat, owner 2026-11-24).
+            val progress = run {
+                val steps = mutableListOf(GroupActionProgress.Step(GroupActionStep.SET_UP, appContext.getString(R.string.ga54_setting_up_group)))
+                for (address in trimmedAddresses) {
+                    steps += GroupActionProgress.Step(address, appContext.getString(R.string.ga54_inviting, groupActionName(address)))
+                }
+                steps += GroupActionProgress.Step(GroupActionStep.RECOVERY_COPY, appContext.getString(R.string.ga54_saving_recovery_copy))
+                if (!photoHex.isNullOrEmpty()) {
+                    steps += GroupActionProgress.Step(GroupActionStep.PHOTO, appContext.getString(R.string.ga54_adding_group_photo))
+                }
+                GroupActionProgress(appContext.getString(R.string.ga54_creating, trimmedName), steps)
+            }
+            onProgress(progress)
             try {
                 // A member who is not a contact yet is added deliberately: the user typed them
                 // in, as iOS's group creation does (addContact without isAutoAdded).
@@ -1945,20 +1961,37 @@ class ChatViewModel @Inject constructor(
                         publicKeyHex = null
                     ).also { chatRepository.addContact(it, deliberate = true) }
                 }
-                val group = groupRepository.createGroup(trimmedName, contacts)
+                val group = groupRepository.createGroup(trimmedName, contacts) { key, phase ->
+                    withContext(Dispatchers.Main) { progress.apply(key, phase, ::groupActionError) }
+                }
                 // Best effort: a failed photo send must not undo a group that was created
                 // successfully - the admin can set it again from Group Info.
                 if (!photoHex.isNullOrEmpty()) {
+                    progress.set(GroupActionStep.PHOTO, GroupActionProgress.State.Working)
                     runCatching { groupRepository.setGroupPhoto(group.groupId, photoHex) }
+                        .onSuccess { progress.set(GroupActionStep.PHOTO, GroupActionProgress.State.Done) }
+                        .onFailure { progress.set(GroupActionStep.PHOTO, GroupActionProgress.State.Failed(groupActionError(it))) }
                 }
                 _isCreatingGroup.value = false
+                progress.finish(appContext.getString(R.string.ga54_not_sent))
                 onCreated(group.groupId)
             } catch (e: Exception) {
                 _isCreatingGroup.value = false
-                _createGroupError.value = UserFacingError.message(e, "Failed to create group")
+                val message = UserFacingError.message(e, "Failed to create group")
+                progress.finish(message)
+                _createGroupError.value = message
             }
         }
     }
+
+    /** A person in a group action's steps: their name, else the short address (iOS
+     *  `contactsManager.displayName` ?? `Contact.generateDefaultAlias`). */
+    private suspend fun groupActionName(address: String): String =
+        chatRepository.getContact(address)?.displayName ?: com.kachat.app.models.addressDisplayName(address)
+
+    /** A failed step's line (iOS `error.localizedDescription`). */
+    private fun groupActionError(error: Throwable): String =
+        UserFacingError.message(error, appContext.getString(R.string.ga54_not_sent))
 
     /**
      * Ticks once a minute so expiring system lines drop out of an open thread on their own,
@@ -2152,6 +2185,28 @@ class ChatViewModel @Inject constructor(
         if (pins.any { it in groupIds }) settings.setGroupPins(walletAddress, pins.filterNot { it in groupIds })
     }
 
+    /** The public rooms pinned up into the Chats circles row (room names), newest pin first, per
+     *  wallet (iOS 2026-11-23 `kachat_room_pins_<wallet>`). */
+    fun roomPins(walletAddress: String): Flow<List<String>> = settings.roomPins(walletAddress)
+
+    /** Pins a room up into the row (newest pin first) or unpins it; returns whether it is pinned
+     *  now, for the toast (iOS `toggleRoomPin`). */
+    suspend fun toggleRoomPin(walletAddress: String, channelName: String): Boolean {
+        val pins = settings.roomPins(walletAddress).first()
+        val pinned = channelName !in pins
+        settings.setRoomPins(walletAddress, if (pinned) listOf(channelName) + pins else pins - channelName)
+        return pinned
+    }
+
+    /** A room switched off or deleted loses its pin, so it comes back in the list, not the row
+     *  (iOS `dropRoomPin`). */
+    fun dropRoomPin(walletAddress: String, channelName: String) {
+        viewModelScope.launch {
+            val pins = settings.roomPins(walletAddress).first()
+            if (channelName in pins) settings.setRoomPins(walletAddress, pins - channelName)
+        }
+    }
+
     /** Takes deleted chats' pins ("c:<address>") out of the Chats circles row (iOS 7abc06e). */
     suspend fun unpinChatCircles(walletAddress: String, ids: Collection<String>) {
         val pins = settings.chatCirclePins(walletAddress).first()
@@ -2258,13 +2313,41 @@ class ChatViewModel @Inject constructor(
          * ends up with some members holding the new root and some the old.
          */
         onProgress: (done: Int, total: Int) -> Unit = { _, _ -> },
+        /** The steps of adding, for the progress sheet (iOS AddGroupMembersView.addSelected,
+         *  owner 2026-11-24): who is being added and which member the new key is going to. Given
+         *  once, before the first add; finished when the last one is over. */
+        onSteps: (GroupActionProgress) -> Unit = {},
         onResult: (added: Int, failed: Int) -> Unit,
     ) {
         viewModelScope.launch {
             var added = 0
             var failed = 0
+            val steps = addresses.map { address ->
+                GroupActionProgress.Step(address, appContext.getString(R.string.ga54_adding, groupActionName(address)))
+            }
+            val progress = GroupActionProgress(
+                if (addresses.size == 1) appContext.getString(R.string.ga54_adding_one_member)
+                else appContext.getString(R.string.ga54_adding_n_members, addresses.size),
+                steps,
+            )
+            onSteps(progress)
             onProgress(0, addresses.size)
             for (address in addresses) {
+                progress.set(address, GroupActionProgress.State.Working)
+                // the members the new key goes to, counted as it goes
+                val myAddress = walletManager.getAddress()
+                val roster = runCatching {
+                    groupRepository.getGroups().first().firstOrNull { it.groupId == groupId }?.let { groupRepository.membersOf(it) }
+                }.getOrNull().orEmpty()
+                val keyTotal = roster.count { it.address != myAddress } + 1
+                var sent = 0
+                val report: com.kachat.app.models.GroupActionReport = { _, phase ->
+                    if (phase == com.kachat.app.models.GroupActionPhase.Started) {
+                        sent++
+                        val detail = appContext.getString(R.string.ga54_sending_group_key, minOf(sent, keyTotal), keyTotal)
+                        withContext(Dispatchers.Main) { progress.setDetail(address, detail) }
+                    }
+                }
                 try {
                     val contact = chatRepository.getContact(address) ?: ContactEntity(
                         id = address,
@@ -2273,11 +2356,16 @@ class ChatViewModel @Inject constructor(
                         knsName = null,
                         publicKeyHex = null
                     ).also { chatRepository.addContact(it) }
-                    groupRepository.addMember(contact, groupId)
+                    groupRepository.addMember(contact, groupId, report)
                     added++
-                } catch (e: Exception) { failed++ }
+                    progress.set(address, GroupActionProgress.State.Done)
+                } catch (e: Exception) {
+                    failed++
+                    progress.set(address, GroupActionProgress.State.Failed(groupActionError(e)))
+                }
                 onProgress(added + failed, addresses.size)
             }
+            progress.finish(appContext.getString(R.string.ga54_not_sent))
             onResult(added, failed)
         }
     }
@@ -2358,7 +2446,7 @@ class ChatViewModel @Inject constructor(
     /** Re-broadcast the group invite to every member (admin) - retries invites that failed to send. */
     fun resendGroupInvites(groupId: String, onResult: (String) -> Unit = {}) {
         viewModelScope.launch {
-            try { groupRepository.resendInvites(groupId); onResult("Invites resent to all members.") }
+            try { groupRepository.resendInvites(groupId); onResult(appContext.getString(com.kachat.app.R.string.c54_invites_resent_all)) }
             catch (e: Exception) { onResult(UserFacingError.message(e, "Failed to resend invites")) }
         }
     }
@@ -2374,7 +2462,7 @@ class ChatViewModel @Inject constructor(
     /** Re-broadcast the group invite to ONE member (admin) - a targeted retry. */
     fun resendGroupInviteToMember(groupId: String, address: String, onResult: (String) -> Unit = {}) {
         viewModelScope.launch {
-            try { groupRepository.resendInviteToMember(groupId, address); onResult("Invite resent.") }
+            try { groupRepository.resendInviteToMember(groupId, address); onResult(appContext.getString(com.kachat.app.R.string.c54_invite_resent)) }
             catch (e: Exception) { onResult(UserFacingError.message(e, "Failed to resend invite")) }
         }
     }
@@ -2415,196 +2503,19 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    data class KnsProfileUiState(
-        val ownedDomains: List<String> = emptyList(),
-        val selectedDomain: String? = null,
-        val profile: KnsProfileFields? = null,
-        /**
-         * The contact's REAL primary, straight from the reverse lookup, as distinct from
-         * [selectedDomain], which prefers a domain the user pinned for this chat. The Domains
-         * section marks this one, so it agrees with iOS and never presents a local preference,
-         * or the mere first domain owned, as the contact's own choice. Null when they have not
-         * set one.
-         */
-        val explicitPrimaryDomain: String? = null
-    )
-
-    private val _knsProfiles = MutableStateFlow<Map<String, KnsProfileUiState>>(emptyMap())
-    val knsProfiles: StateFlow<Map<String, KnsProfileUiState>> = _knsProfiles.asStateFlow()
+    /**
+     * address -> avatar URL for GROUP members: the contact-cached avatar. KNS profiles left with
+     * KNS (2026-11-23, iOS 518fdc8c); a member's .kachat picture is drawn by the screens.
+     */
+    val groupMemberAvatarsByAddress: StateFlow<Map<String, String?>> get() = contactAvatarsByAddress
 
     /**
-     * Address -> their *explicitly-set* primary KNS domain, or null if they've never set one -
-     * unlike [knsProfiles]/[KnsService.reverseResolve], this does NOT fall back to "first owned
-     * domain". Drives group chat's @mention autocomplete (only members with an explicit primary
-     * are mentionable), populated by [refreshKnsProfilesForGroupMembers].
+     * address -> display name for GROUP members: the contact alias. The screens add each member's
+     * .kachat name when they read this map (liveNameFor; iOS e52357d) - on a network with no
+     * launched registry, that is the short address. A blank result falls through to the roster
+     * displayName / shortened address at the call site.
      */
-    private val _groupMemberPrimaryKnsByAddress = MutableStateFlow<Map<String, String?>>(emptyMap())
-    val groupMemberPrimaryKnsByAddress: StateFlow<Map<String, String?>> = _groupMemberPrimaryKnsByAddress.asStateFlow()
-
-    /**
-     * address -> avatar URL for GROUP members. Group members are usually NOT saved contacts, so
-     * their avatar lives only in the address-keyed [knsProfiles] cache (fetched for every member by
-     * [refreshKnsProfilesForGroupMembers]), not in the contact-derived [contactAvatarsByAddress].
-     * Merge the two - contact-cached avatar wins, the KNS profile avatar fills in the rest - so
-     * group chats show avatars for every member like 1:1 does, instead of blank placeholders.
-     */
-    val groupMemberAvatarsByAddress: StateFlow<Map<String, String?>> =
-        combine(contactAvatarsByAddress, knsProfiles) { contacts, kns ->
-            val merged = contacts.toMutableMap()
-            for ((addr, state) in kns) {
-                val url = state.profile?.avatarUrl
-                if (!url.isNullOrBlank() && merged[addr].isNullOrBlank()) merged[addr] = url
-            }
-            merged
-        }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
-
-    /**
-     * address -> display name for GROUP members, resolved with the same priority as 1:1:
-     * manual/contact alias first, then the member's KNS primary name (explicit primary, else the
-     * active KNS domain resolved into [knsProfiles]). So a non-contact member shows their KNS name
-     * instead of a raw address. A blank result falls through to the roster displayName / shortened
-     * address at the call site.
-     */
-    val groupMemberNamesByAddress: StateFlow<Map<String, String>> =
-        combine(contactAliasesByAddress, groupMemberPrimaryKnsByAddress, knsProfiles) { aliases, primaryKns, kns ->
-            val merged = aliases.toMutableMap()
-            // Identity is .kachat (on every network since iOS 7227d69): KNS is not consulted, and
-            // the screens add each member's .kachat name when they read this map (liveNameFor;
-            // iOS e52357d) - on mainnet, with no launched registry, that is the short address.
-            if (com.kachat.app.services.kachatnames.KachatNamesService.isEnabled) return@combine merged
-            for (addr in (primaryKns.keys + kns.keys)) {
-                if (!merged[addr].isNullOrBlank()) continue
-                val name = primaryKns[addr]?.takeIf { it.isNotBlank() }
-                    ?: kns[addr]?.selectedDomain?.takeIf { it.isNotBlank() }
-                if (name != null) merged[addr] = name
-            }
-            merged
-        }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
-
-    /**
-     * Fetches this address's owned KNS domains + the active one's profile (avatar/bio/socials).
-     * Works for any address, not just a saved 1:1 contact — a broadcast sender viewed via "User
-     * Info" may never have a [ContactEntity] row at all, and their KNS profile should still show.
-     */
-    fun refreshKnsProfile(contactId: String) {
-        // Someone's .kas names are not shown since 5.2 (KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY):
-        // nothing to ask KNS for, and an empty state is what every reader falls back from.
-        if (!com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY) {
-            _knsProfiles.update { it + (contactId to KnsProfileUiState()) }
-            return
-        }
-        viewModelScope.launch { loadKnsProfile(contactId) }
-    }
-
-    private suspend fun loadKnsProfile(contactId: String): KnsProfileFields? {
-        val contact = chatRepository.getContact(contactId)
-        val ownedAssets = knsService.getOwnedDomains(contactId)
-        val ownedNames = ownedAssets.mapNotNull { it.asset }
-
-        if (ownedNames.isEmpty()) {
-            _knsProfiles.update { it + (contactId to KnsProfileUiState()) }
-            return null
-        }
-
-        // The real answer, before pickActiveDomain folds in the user's pinned choice.
-        val explicitPrimary = knsService.getExplicitPrimaryDomain(contactId)
-        val primary = explicitPrimary ?: ownedAssets.firstOrNull()?.asset
-        val activeName = KnsService.pickActiveDomain(ownedNames, contact?.knsName, primary)
-        val activeAsset = ownedAssets.firstOrNull { it.asset == activeName }
-        val profile = activeAsset?.assetId?.let { knsService.getProfile(it) }
-
-        _knsProfiles.update { it + (contactId to KnsProfileUiState(ownedNames, activeName, profile, explicitPrimary)) }
-
-        // Keep the chat list's cached avatar current — only meaningful for an actual saved contact.
-        if (contact != null && profile?.avatarUrl != contact.knsAvatarUrl) {
-            chatRepository.addContact(contact.copy(knsAvatarUrl = profile?.avatarUrl))
-        }
-        return profile
-    }
-
-    /**
-     * Records each contact's primary KNS domain, if they have one — matches iOS's
-     * fetchKNSDomainsForAllContacts, run whenever the chat list appears. It writes only
-     * `knsName`; `ContactEntity.displayName` reads it, so nothing here NAMES a contact.
-     * Never overwrites a real custom nickname the user typed in, never
-     * overwrites a contact linked to a system (phone) contact, and never overwrites a
-     * domain the user explicitly picked in Chat Info (tracked via `knsName` — once set,
-     * that choice is pinned until the user changes it themselves, even if the contact's
-     * on-chain primary is or becomes something else).
-     */
-    fun refreshKnsNamesForAllContacts(force: Boolean = false) {
-        // Debounced, and the stamp is PERSISTED. Every contact costs two uncached KNS calls
-        // (getPrimaryName, then assets-by-owner), and this runs whenever the chat list appears -
-        // so without a guard, opening the app walked the whole address book again every single
-        // time, including on a cold start seconds after the names were read from the database
-        // where they already live. An in-memory guard would still have re-walked on every
-        // launch, which is exactly the case worth stopping.
-        // Every result of this sweep is a .kas name to show for a contact, which 5.2 stopped doing
-        // (KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY), so it no longer asks KNS at all.
-        if (!com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY) return
-        val prefs = appContext.getSharedPreferences("kns_sweep", Context.MODE_PRIVATE)
-        val last = prefs.getLong(KNS_NAME_SWEEP_KEY, 0L)
-        val now = System.currentTimeMillis()
-        if (!force && now - last < KNS_NAME_SWEEP_INTERVAL_MS) return
-        if (!knsNameSweepRunning.compareAndSet(false, true)) return
-        viewModelScope.launch {
-            try {
-            val contacts = chatRepository.getContacts().first()
-            for (contact in contacts) {
-                if (!canAutoUpdateAliasToDomain(contact.alias, contact.knsName)) continue
-                val primary = knsService.reverseResolve(contact.id) ?: continue
-                if (primary != contact.knsName) {
-                    chatRepository.addContact(contact.copy(knsName = primary))
-                }
-            }
-            prefs.edit().putLong(KNS_NAME_SWEEP_KEY, System.currentTimeMillis()).apply()
-            } finally {
-                knsNameSweepRunning.set(false)
-            }
-        }
-    }
-
-    /**
-     * Fills in every chat's cached KNS avatar, in bounded-concurrency batches. Run whenever the
-     * chat list appears, alongside the name refresh - matches iOS's `preloadAvatarsForAllChats`.
-     *
-     * Without this the ONLY thing writing `knsAvatarUrl` was [refreshKnsProfile], which runs when
-     * you open a specific thread. So a freshly imported wallet showed initials for every chat
-     * until you had opened each one individually - the avatars were never missing, just never
-     * asked for.
-     *
-     * Skips contacts that already have one: this runs on every appearance, and re-resolving a
-     * cached avatar on each visit is a round trip per contact for an answer that rarely changes.
-     */
-    fun refreshKnsAvatarsForAllContacts() {
-        // .kas profiles are not shown since 5.2 (KnsService.LOADS_DOMAIN_PROFILES).
-        if (!com.kachat.app.services.KnsService.LOADS_DOMAIN_PROFILES) return
-        viewModelScope.launch {
-            val contacts = chatRepository.getContacts().first()
-            for (contact in contacts) {
-                // Skip ones that already have an avatar: this runs on every appearance, and
-                // re-resolving a cached answer per contact per visit is a round trip for
-                // something that rarely changes.
-                if (!contact.knsAvatarUrl.isNullOrBlank()) continue
-                val assets = try {
-                    knsService.getOwnedDomainsCached(contact.id)
-                } catch (e: Exception) {
-                    continue
-                }
-                if (assets.isEmpty()) continue
-                val primary = try { knsService.getExplicitPrimaryDomain(contact.id) } catch (e: Exception) { null }
-                // KnsAsset.asset is nullable on the wire, so filter rather than force it.
-                val names = assets.mapNotNull { it.asset }
-                if (names.isEmpty()) continue
-                val active = KnsService.pickActiveDomain(names, contact.knsName, primary ?: names.first())
-                val assetId = assets.firstOrNull { it.asset == active }?.assetId ?: continue
-                val avatar = try { knsService.getProfile(assetId)?.avatarUrl } catch (e: Exception) { null }
-                if (!avatar.isNullOrBlank() && avatar != contact.knsAvatarUrl) {
-                    chatRepository.addContact(contact.copy(knsAvatarUrl = avatar))
-                }
-            }
-        }
-    }
+    val groupMemberNamesByAddress: StateFlow<Map<String, String>> get() = contactAliasesByAddress
 
     private val _knsResolvedAddress = MutableStateFlow<String?>(null)
     val knsResolvedAddress: StateFlow<String?> = _knsResolvedAddress.asStateFlow()
@@ -3507,7 +3418,7 @@ class ChatViewModel @Inject constructor(
                 sendMessage(contactId, json, sendFailureAlert(contactId), mediaSend = true)
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Error preparing voice message", e)
-                reportSendFailure(contactId, "Failed to prepare audio: ${UserFacingError.message(e, appContext.getString(com.kachat.app.R.string.recording_failed_please_try_again))}")
+                reportSendFailure(contactId, appContext.getString(com.kachat.app.R.string.c54_failed_prepare_audio, UserFacingError.message(e, appContext.getString(com.kachat.app.R.string.recording_failed_please_try_again))))
             } finally {
                 file.delete()
             }
@@ -4051,9 +3962,7 @@ class ChatViewModel @Inject constructor(
     init {
         // Avatars stored from .kas profiles before 5.2 stop showing with the profiles themselves
         // (iOS d6ded9d strips its cached profiles on load the same way).
-        if (!com.kachat.app.services.KnsService.LOADS_DOMAIN_PROFILES) {
-            viewModelScope.launch(Dispatchers.IO) { runCatching { chatRepository.clearStoredKnsAvatars() } }
-        }
+        viewModelScope.launch(Dispatchers.IO) { runCatching { chatRepository.clearStoredKnsAvatars() } }
         // Every account opens with its chat with yourself already there, first in the list -
         // a new or just-imported account included, before any sync (iOS ef4f183).
         viewModelScope.launch {
@@ -4061,8 +3970,8 @@ class ChatViewModel @Inject constructor(
                 if (address != null) runCatching { chatRepository.ensureSelfConversation(address) }
                 // .kas names stop being people's names (iOS 509c0fe) - on every load, not once
                 // (iOS ce0b636): one can come back later (a Nextcloud backup another platform or
-                // an older build wrote) and it must not stay.
-                if (address != null && !com.kachat.app.services.KnsService.SHOWS_DOMAIN_NAMES_AS_IDENTITY) {
+                // an older build wrote) and it must not stay (iOS ContactsManager.clearKasDomainAliases).
+                if (address != null) {
                     runCatching { chatRepository.clearKasDomainNames(address) }
                 }
             }
@@ -4083,9 +3992,6 @@ class ChatViewModel @Inject constructor(
     fun getEdits(contactId: String): Flow<List<com.kachat.app.models.MessageEditEntity>> {
         return chatRepository.getEditsForContact(contactId)
     }
-
-    /** One sweep at a time - see [refreshKnsNamesForAllContacts]. */
-    private val knsNameSweepRunning = java.util.concurrent.atomic.AtomicBoolean(false)
 
     companion object {
         /**
@@ -4208,10 +4114,6 @@ class ChatViewModel @Inject constructor(
          *  nearTopPrefetchThresholdIndex. */
         const val THREAD_OLDER_PREFETCH_ROWS = 12
 
-        private const val KNS_NAME_SWEEP_KEY = "last_kns_name_sweep_ms"
-        /** A contact's primary domain changes rarely, and the name already lives in the
-         *  database, so the sweep is a refresh rather than something the UI waits on. */
-        private const val KNS_NAME_SWEEP_INTERVAL_MS = 6L * 60 * 60 * 1000
 
         /** What a long voice note's or multi-part photo's balance check leaves over, so the last
          *  part still has a change output (iOS `KasiaTransactionBuilder.dustThreshold`, 0.2 KAS). */
@@ -4282,17 +4184,5 @@ class ChatViewModel @Inject constructor(
         /** Matches iOS's `shouldShowRetry` — only failed outgoing non-payment messages can be retried. */
         internal fun shouldShowRetryOption(message: MessageEntity): Boolean =
             message.direction == "sent" && message.deliveryStatus == "failed" && message.type != com.kachat.app.util.MessageProtocol.TYPE_PAY
-
-        /**
-         * Safe to auto-overwrite a contact's alias with the detected primary KNS domain only if
-         * it's unset — never clobber a real custom nickname the user typed in, matching iOS's
-         * identical rule. Once any domain is associated with a contact (`knsName` set, whether by this
-         * same auto-detection or by an explicit pick in Chat Info), that choice is pinned —
-         * without this, an explicit non-primary domain selection would silently revert back to
-         * primary the next time this runs, since the selected domain also "looks like" a domain
-         * and would otherwise pass the old unset-or-domain-shaped check.
-         */
-        internal fun canAutoUpdateAliasToDomain(currentAlias: String?, knsName: String? = null): Boolean =
-            knsName == null && currentAlias == null
     }
 }

@@ -1,8 +1,8 @@
 package com.kachat.app.services
 
-import com.kachat.app.services.KnsInscriptionEngine.Companion.MISSING_COMMIT_LIFETIME_MS
-import com.kachat.app.services.KnsInscriptionEngine.Companion.missingCommitVerdict
-import com.kachat.app.services.KnsInscriptionEngine.Companion.MissingCommit
+import com.kachat.app.services.KnsRevealRecovery.Companion.MISSING_COMMIT_LIFETIME_MS
+import com.kachat.app.services.KnsRevealRecovery.Companion.missingCommitVerdict
+import com.kachat.app.services.KnsRevealRecovery.Companion.MissingCommit
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

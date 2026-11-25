@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">Tên người dùng</string>
+    <string name="shell54_tipping_footer">Thứ mà Tip gửi, trên bài đăng và trong cuộc trò chuyện.</string>
+    <string name="shell54_chatting_picker_intro">Nếu các từ này đã giữ danh tính của bạn ở một địa chỉ khác - một tên .kachat hoặc số dư trò chuyện có tiền - hãy chọn nó ở đây. Chỉ hiển thị các địa chỉ có số dư hoặc tên.</string>
+    <string name="shell54_what_others_can_see_caption">Ai cũng có thể thấy địa chỉ này và số dư của nó trên mạng Kaspa, nhưng không ai đọc được tin nhắn của bạn. Chỉ dùng nó để trò chuyện và cho tên người dùng.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... hoặc tên người dùng</string>
+    <string name="shell54_looking_up_username">Đang tra cứu tên người dùng...</string>
+    <string name="shell54_portfolio_add_address_footer">Nhập địa chỉ Kaspa hoặc tên người dùng như name.kachat. Mỗi giao dịch nhận vào địa chỉ này thành một lần mua, mỗi giao dịch gửi đi thành một lần bán, theo giá KAS lịch sử của ngày đó. Thêm lại cùng địa chỉ sau này chỉ nhập các giao dịch tìm thấy kể từ lần nhập trước.</string>
+    <string name="shell54_report_copied">Đã sao chép báo cáo</string>
+    <string name="shell54_report_no_mail_app">Không ứng dụng thư nào mở được. Hãy dán báo cáo vào email gửi tới %1$s.</string>
+    <string name="shell54_show_amounts">Hiện số tiền</string>
+    <string name="shell54_hide_amounts">Ẩn số tiền</string>
+    <string name="shell54_amount_unit">Số tiền (%1$s)</string>
+    <string name="shell54_price_per_kas">Giá mỗi KAS</string>
+    <string name="shell54_total_spent">Tổng chi</string>
+    <string name="shell54_total_received">Tổng nhận</string>
+    <string name="shell54_chart_settings">Cài đặt biểu đồ</string>
+    <string name="shell54_import_failed">Nhập thất bại.</string>
+    <string name="shell54_export_csv">Xuất CSV</string>
+    <string name="shell54_sent_on">Đã gửi %1$s vào %2$s</string>
+    <string name="shell54_received_on">Đã nhận %1$s vào %2$s</string>
+    <string name="shell54_this_portfolio">danh mục này</string>
+    <string name="shell54_new_portfolio">Danh mục mới</string>
+    <string name="shell54_time">Giờ</string>
+    <string name="shell54_total_value">Tổng %1$s</string>
+    <string name="shell54_move_up">Di chuyển %1$s lên</string>
+    <string name="shell54_move_down">Di chuyển %1$s xuống</string>
+    <string name="shell54_selected">Đã chọn</string>
+    <string name="shell54_not_selected">Chưa chọn</string>
+    <string name="shell54_not_valid_kpub">Không phải kpub hợp lệ</string>
+    <string name="shell54_new_address_failed">Không thể tạo địa chỉ mới. Hãy thử lại.</string>
+</resources>

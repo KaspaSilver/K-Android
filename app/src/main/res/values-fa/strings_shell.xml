@@ -6,17 +6,6 @@
     <string name="shell_tab_stats">آمار</string>
     <string name="shell_tab_websites">وب‌سایت‌ها</string>
     <string name="shell_kaspa_websites">وب‌سایت‌های Kaspa</string>
-    <string name="shell_customize_dock">سفارشی‌سازی داک</string>
-    <string name="shell_your_dock">داک شما</string>
-    <string name="shell_always_stays">%1$s همیشه در داک شما می‌ماند.</string>
-    <string name="shell_dock_full">داک شما پر است. برای افزودن یکی از این‌ها، یکی را از آن بردارید.</string>
-    <string name="shell_hub_order">به ترتیبی که %1$s نشانشان می‌دهد.</string>
-    <string name="shell_move_to">انتقال %1$s به %2$s</string>
-    <string name="shell_add_to_dock">افزودن %1$s به داک</string>
-    <string name="shell_always_in_dock">همیشه در داک شما</string>
-    <string name="shell_hub_empty_title">فعلاً چیزی اینجا نیست</string>
-    <string name="shell_hub_empty_body">هر چه در داک شما نیست اینجا نشان داده می‌شود. در سفارشی‌سازی داک مرتبشان کنید.</string>
-    <string name="shell_customize_dock_footer">انتخاب کنید چه چیزی در داک باشد. بقیه در Kaspa Hub است.</string>
     <string name="shell_terms_of_use">شرایط استفاده</string>
     <string name="shell_message_indexer_footer">KaPost، گفتگوهای عمومی و شطرنج هم از همین ایندکسر خوانده می‌شوند.</string>
     <string name="shell_ks_what_counts">چه چیزهایی شمرده می‌شود</string>

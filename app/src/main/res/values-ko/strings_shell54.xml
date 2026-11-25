@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4 shell, Settings, Hub and launch (iOS 518fdc8c). Generated from iOS Localizable.strings. -->
+<resources>
+    <string name="shell54_usernames">사용자 이름</string>
+    <string name="shell54_tipping_footer">팁으로 보낼 것 (게시물과 채팅에서).</string>
+    <string name="shell54_chatting_picker_intro">이 단어가 이미 다른 주소에 당신의 신원을 갖고 있다면(.kachat 이름 또는 잔액이 있는 채팅 주소) 여기서 선택하세요. 잔액이나 이름이 있는 주소만 표시됩니다.</string>
+    <string name="shell54_what_others_can_see_caption">누구나 Kaspa 네트워크에서 이 주소와 잔액을 볼 수 있지만 메시지는 읽을 수 없습니다. 채팅과 사용자 이름에만 사용하세요.</string>
+    <string name="shell54_kaspa_qr_or_username">kaspa:qr... 또는 사용자 이름</string>
+    <string name="shell54_looking_up_username">사용자 이름 찾는 중...</string>
+    <string name="shell54_portfolio_add_address_footer">Kaspa 주소 또는 name.kachat 같은 사용자 이름을 입력하세요. 이 주소로 받은 거래는 모두 매수, 보낸 거래는 모두 매도가 되며 그날의 과거 KAS 가격으로 계산됩니다. 나중에 같은 주소를 다시 추가하면 마지막 가져오기 이후의 거래만 가져옵니다.</string>
+    <string name="shell54_report_copied">신고 내용을 복사했습니다</string>
+    <string name="shell54_report_no_mail_app">메일 앱으로 열 수 없습니다. 신고 내용을 %1$s 주소로 보내는 이메일에 붙여 넣으세요.</string>
+    <string name="shell54_show_amounts">금액 보기</string>
+    <string name="shell54_hide_amounts">금액 숨기기</string>
+    <string name="shell54_amount_unit">금액(%1$s)</string>
+    <string name="shell54_price_per_kas">KAS당 가격</string>
+    <string name="shell54_total_spent">총 지출</string>
+    <string name="shell54_total_received">총 수령액</string>
+    <string name="shell54_chart_settings">차트 설정</string>
+    <string name="shell54_import_failed">가져오기에 실패했습니다.</string>
+    <string name="shell54_export_csv">CSV 내보내기</string>
+    <string name="shell54_sent_on">%1$s 보냄 (%2$s)</string>
+    <string name="shell54_received_on">%1$s 받음 (%2$s)</string>
+    <string name="shell54_this_portfolio">이 포트폴리오</string>
+    <string name="shell54_new_portfolio">새 포트폴리오</string>
+    <string name="shell54_time">시간</string>
+    <string name="shell54_total_value">합계 %1$s</string>
+    <string name="shell54_move_up">%1$s 위로 이동</string>
+    <string name="shell54_move_down">%1$s 아래로 이동</string>
+    <string name="shell54_selected">선택됨</string>
+    <string name="shell54_not_selected">선택 안 됨</string>
+    <string name="shell54_not_valid_kpub">유효한 kpub이 아닙니다</string>
+    <string name="shell54_new_address_failed">새 주소를 만들 수 없습니다. 다시 시도하세요.</string>
+</resources>
