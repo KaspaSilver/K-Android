@@ -129,34 +129,38 @@ class BroadcastReadStateStore @Inject constructor(
     }
 
     /**
-     * The rooms K joined on this account's behalf (default rooms, built in or from the indexer's
-     * list; iOS 65f8a765 `kachat_rooms_auto_joined_v1_<wallet>`), or null before this build first
-     * saved them. A room leaves it once the person joins it by name or posts in it
-     * ([keepRoomAsOwn]); one the indexer drops is left
-     * ([com.kachat.app.services.publicchats.PublicChatDefaultRooms]).
+     * The rooms this account has joined that the indexer's `/broadcast-channels` listed, per
+     * account (iOS 35b112ce `kachat_rooms_indexer_listed_v1_<wallet>`): the ones that leave when
+     * the indexer drops them ([com.kachat.app.services.publicchats.PublicChatDefaultRooms]). A
+     * room off the list and not joined is forgotten, so joining it later by name makes it an
+     * ordinary room.
      */
-    fun autoJoinedRooms(): Set<String>? = synchronized(lock) {
-        val key = wallet ?: return@synchronized null
-        prefs.getStringSet("rooms_auto_joined_v1_$key", null)?.toSet()
+    fun indexerListedRooms(): Set<String> = synchronized(lock) {
+        val key = wallet ?: return@synchronized emptySet()
+        prefs.getStringSet("rooms_indexer_listed_v1_$key", null)?.toSet().orEmpty()
     }
 
-    /** Changes the auto-joined rooms; [change] gets the saved set (empty before the first save).
-     *  [force] saves even when nothing changed (the first run's record). */
-    fun updateAutoJoined(force: Boolean = false, change: (Set<String>) -> Set<String>) = synchronized(lock) {
+    /** Changes the indexer-listed rooms; [change] gets the saved set. */
+    fun updateIndexerListed(change: (Set<String>) -> Set<String>) = synchronized(lock) {
         val key = wallet ?: return@synchronized
-        val stored = prefs.getStringSet("rooms_auto_joined_v1_$key", null)?.toSet()
-        val next = change(stored ?: emptySet())
-        if (next == stored && !force) return@synchronized
-        if (stored == null && next.isEmpty() && !force) return@synchronized
-        prefs.edit().putStringSet("rooms_auto_joined_v1_$key", next).apply()
+        val stored = prefs.getStringSet("rooms_indexer_listed_v1_$key", null)?.toSet().orEmpty()
+        val next = change(stored)
+        if (next == stored) return@synchronized
+        prefs.edit().putStringSet("rooms_indexer_listed_v1_$key", next).apply()
     }
 
-    /** The person made [channel] their own (joined it by name, from a link, or posted in it): it
-     *  stays when the indexer drops it (iOS 65f8a765 `keepRoomAsOwn`). */
-    fun keepRoomAsOwn(channel: String) {
-        val name = com.kachat.app.util.MessageProtocol.normalizeChannelName(channel)
-        if (autoJoinedRooms()?.contains(name) != true) return
-        updateAutoJoined { it - name }
+    /**
+     * Before iOS 35b112ce (2026-11-26) only the rooms K joined for the person were kept
+     * (`rooms_auto_joined_v1_<wallet>`). Read once, into the indexer-listed set, and removed;
+     * empty when there was none.
+     */
+    fun takeLegacyAutoJoined(): Set<String> = synchronized(lock) {
+        val key = wallet ?: return@synchronized emptySet()
+        val legacyKey = "rooms_auto_joined_v1_$key"
+        if (!prefs.contains(legacyKey)) return@synchronized emptySet()
+        val legacy = prefs.getStringSet(legacyKey, null)?.toSet().orEmpty()
+        prefs.edit().remove(legacyKey).apply()
+        legacy
     }
 
     /** A room left for good takes its read state with it. */

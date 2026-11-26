@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 48f5c357: the website wallet's Connect and Sign sheets (KaChatSiteWallet) -->
+<resources>
+    <string name="site_connect_to_k">K ile Bağlan</string>
+    <string name="site_connect_note">Bu site bağladığınız adresi ve bakiyesini görür. Giriş yapmanızı veya ödeme yapmanızı isteyebilir; burada onayınız olmadan hiçbir şey olmaz.</string>
+    <string name="site_connect_question">Hangi adresi bağlamak istiyorsunuz?</string>
+    <string name="site_connect_other_note">Başka bir adres, bu siteyi kullanıcı adınızdan ve sohbetlerinizden ayrı tutar.</string>
+    <string name="site_sign_message">Mesajı İmzala</string>
+    <string name="site_sign">İmzala</string>
+    <string name="site_sign_note">İmzalamak bu adresin size ait olduğunu kanıtlar. Ücretsizdir ve Kaspa göndermez.</string>
+    <string name="site_send_check_note">Göndermeden önce tutarı ve adresi kontrol edin.</string>
+</resources>

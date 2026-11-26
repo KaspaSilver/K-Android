@@ -256,10 +256,6 @@ class BroadcastRepository @Inject constructor(
     }
 
     /** The open account's joined rooms, read once (none signed out). */
-    /** The rooms, of [channels], where [sender] has a message on this phone (any case). */
-    suspend fun channelsWithMessagesFrom(channels: Collection<String>, sender: String): Set<String> =
-        channels.toList().chunked(500).flatMap { database.broadcastDao().channelsWithMessagesFrom(it, sender) }.toSet()
-
     suspend fun joinedChannelsNow(): List<BroadcastChannelEntity> {
         val address = myAddress() ?: return emptyList()
         return database.broadcastDao().getJoinedChannels(address).first()
@@ -2387,9 +2383,6 @@ class BroadcastRepository @Inject constructor(
         stillWanted: (() -> Boolean)? = null,
     ): String {
         if (stillWanted != null && !stillWanted()) throw SenderChangedException()
-        // Posting (a message, an edit, a reaction, a delete) makes the room the person's own: it
-        // stays if the indexer drops it (iOS 65f8a765 `keepRoomAsOwn`).
-        readState.keepRoomAsOwn(channelName)
         val payloadBytes = MessageProtocol.buildBcastPayload(channelName, content)
         return try {
             walletService.sendKaspa(

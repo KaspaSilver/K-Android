@@ -1123,6 +1123,13 @@ fun MainShell(
             // K's own block explorer (iOS 961fc05a); it replaced KaChat Stats.
             AppTab.EXPLORER -> com.kachat.app.ui.screens.explorer.ExplorerScreen()
             AppTab.APPS -> KaspaWebsitesScreen()
+            // kasshi.io in the in-app browser, its X back to the grid (iOS 35b112ce). Android's
+            // browser never pauses the node, so iOS's `powersDown: false` needs nothing here.
+            AppTab.KASSHI -> com.kachat.app.ui.screens.InAppBrowserScreen(
+                url = "https://kasshi.io",
+                title = stringResource(R.string.kasshi),
+                onClose = { HubRouter.close() },
+            )
         }
     }
 

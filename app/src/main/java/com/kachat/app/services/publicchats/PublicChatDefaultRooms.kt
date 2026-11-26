@@ -21,10 +21,11 @@ import javax.inject.Singleton
  *  - switched off: forgotten (and left) only after it has been missing for [GRACE_MS], so one
  *    short `/broadcast-channels` answer doesn't forget it was switched off and bring it back on
  *    (iOS 961fc05a `droppedRoomGrace`, audit 2026-11-25 C10);
- *  - joined by K for the person (auto-joined): left, pin too, once missing [AUTO_GRACE_MS], two of
+ *  - joined, and once on the indexer's list: left, pin too, once missing [AUTO_GRACE_MS], two of
  *    the hourly reads (iOS 65f8a765 `droppedAutoRoomGrace`): nobody indexes it any more, so its
- *    history and pushes would stop with no explanation. Rooms the person joined by name or posted
- *    in aren't auto-joined, and stay.
+ *    history and pushes would stop with no explanation. Since iOS 35b112ce (owner, 2026-11-26)
+ *    that's any such room, even one joined by name or posted in; a room the indexer never listed
+ *    (one the person made, or one with its own indexer) stays.
  */
 object DroppedDefaultRooms {
     const val GRACE_MS = 7L * 86_400_000
@@ -36,13 +37,13 @@ object DroppedDefaultRooms {
 
     /**
      * [saved]: since when each room was missing, as saved. [hidden]: the switched-off rooms.
-     * [autoJoined]: the auto-joined rooms still joined. [curated]: today's default rooms. A room
-     * back on the list, or switched on again, stops its clock; one newly missing starts it at
-     * [now]. A switched-off room keeps the long grace even when it was auto-joined.
+     * [indexerListed]: the joined rooms the indexer's list had. [curated]: today's default rooms.
+     * A room back on the list, or switched on again, stops its clock; one newly missing starts it
+     * at [now]. A switched-off room keeps the long grace even when the indexer listed it.
      */
-    fun step(saved: Map<String, Long>, hidden: Set<String>, curated: Set<String>, now: Long, autoJoined: Set<String> = emptySet()): Step {
+    fun step(saved: Map<String, Long>, hidden: Set<String>, curated: Set<String>, now: Long, indexerListed: Set<String> = emptySet()): Step {
         val absentHidden = hidden - curated
-        val absent = absentHidden + (autoJoined - curated)
+        val absent = absentHidden + (indexerListed - curated)
         val missing = saved.filterKeys { it in absent }.toMutableMap()
         for (name in absent) if (name !in missing) missing[name] = now
         val dropped = missing.filter { (name, since) -> now - since >= if (name in absentHidden) GRACE_MS else AUTO_GRACE_MS }.keys.toSet()
@@ -51,12 +52,12 @@ object DroppedDefaultRooms {
     }
 
     /**
-     * The rooms counted as auto-joined on the first run of this build (iOS 65f8a765
-     * `recordAutoJoined`): the indexer-listed rooms already joined - K joined those itself, and
-     * nobody had a way to tell them apart - except ones the person has posted in.
+     * The indexer-listed rooms after one pass (iOS 35b112ce `noteIndexerListedRooms`): the rooms on
+     * the indexer's list now ([listed]) and the rooms the build before kept as auto-joined
+     * ([legacy], read once) are added; a room off the list that isn't [joined] is forgotten.
      */
-    fun firstRunAutoJoined(joinedBefore: Set<String>, indexerRooms: Set<String>, postedIn: Set<String>): Set<String> =
-        (joinedBefore intersect indexerRooms) - postedIn
+    fun notedIndexerListed(saved: Set<String>, listed: Set<String>, legacy: Set<String>, joined: Set<String>): Set<String> =
+        (saved + listed + legacy).filter { it in listed || it in joined }.toSet()
 
     /** The room pins after a retired room's move to [new] (iOS `moveRetiredChannels`): the old
      *  pin takes the new name in its place, or goes when the new room is pinned already. Null
@@ -78,9 +79,9 @@ object DroppedDefaultRooms {
  *    (#report-bugs): the bell, the pin in the Chats circles and the switched-off state carry
  *    over, and the old room is left;
  *  - a switched-off room the indexer no longer lists is left after [DroppedDefaultRooms.GRACE_MS];
- *  - a room K joined for the person (remembered per account, iOS 65f8a765) that the indexer no
- *    longer lists is left, pin too, after [DroppedDefaultRooms.AUTO_GRACE_MS]; one the person
- *    joined by name or posted in is theirs and stays (`BroadcastReadStateStore.keepRoomAsOwn`);
+ *  - any joined room the indexer listed (remembered per account) that it no longer lists is left,
+ *    pin too, after [DroppedDefaultRooms.AUTO_GRACE_MS], even one joined by name or posted in
+ *    (iOS 35b112ce); a room the indexer never listed stays;
  *  - every default room not switched off is joined (silenced, as every room starts).
  */
 @Singleton
@@ -108,12 +109,13 @@ class PublicChatDefaultRooms @Inject constructor(
         val curated = FeaturedBroadcastChannels.CURATED_NAMES
         val saved = readState.hiddenMissingSince()
         val joined = repository.joinedChannelsNow().map { it.channelName }.toSet()
-        val autoJoined = (readState.autoJoinedRooms() ?: emptySet()) intersect joined
-        val step = DroppedDefaultRooms.step(saved, readState.state.value.hiddenCurated, curated.toSet(), System.currentTimeMillis(), autoJoined)
+        noteIndexerListedRooms(joined)
+        val indexerListed = readState.indexerListedRooms() intersect joined
+        val step = DroppedDefaultRooms.step(saved, readState.state.value.hiddenCurated, curated.toSet(), System.currentTimeMillis(), indexerListed)
         if (step.missingSince != saved) readState.setHiddenMissingSince(step.missingSince)
         if (step.dropped.isNotEmpty()) {
             readState.updateHiddenCurated { it - step.dropped }
-            readState.updateAutoJoined { it - step.dropped }
+            readState.updateIndexerListed { it - step.dropped }
             for (name in step.dropped) {
                 if (name !in joined) continue
                 android.util.Log.i("PublicChatDefaultRooms", "#$name left: the indexer no longer tracks it")
@@ -121,26 +123,16 @@ class PublicChatDefaultRooms @Inject constructor(
                 removeRoomPin(address, name)
             }
         }
-        val joinedBefore = repository.joinedChannelsNow().map { it.channelName }.toSet()
-        val hidden = readState.state.value.hiddenCurated
-        repository.ensureDefaultChannelsJoined(hidden, curated)
-        val joinedNow = curated.filter { it !in hidden && it !in joinedBefore }.toSet()
-        recordAutoJoined(address, joinedNow, joinedBefore)
+        repository.ensureDefaultChannelsJoined(readState.state.value.hiddenCurated, curated)
         silenceRoomsOnceIfNeeded()
     }
 
-    /** Notes the default rooms just joined for the person; on the first run, the indexer rooms
-     *  already joined too ([DroppedDefaultRooms.firstRunAutoJoined]). */
-    private suspend fun recordAutoJoined(address: String, joinedNow: Set<String>, joinedBefore: Set<String>) {
-        val firstRun = readState.autoJoinedRooms() == null
-        val earlier = if (!firstRun) emptySet() else {
-            val indexerRooms = FeaturedBroadcastChannels.indexerDefaultNames().toSet()
-            val candidates = joinedBefore intersect indexerRooms
-            val postedIn = if (candidates.isEmpty()) emptySet() else repository.channelsWithMessagesFrom(candidates, address)
-            DroppedDefaultRooms.firstRunAutoJoined(joinedBefore, indexerRooms, postedIn)
-        }
-        if (!firstRun && joinedNow.isEmpty()) return
-        readState.updateAutoJoined(force = firstRun) { it + joinedNow + earlier }
+    /** Adds the rooms on the indexer's list now; forgets ones off it that aren't joined (iOS
+     *  35b112ce `noteIndexerListedRooms`, [DroppedDefaultRooms.notedIndexerListed]). */
+    private fun noteIndexerListedRooms(joined: Set<String>) {
+        val listed = FeaturedBroadcastChannels.indexerDefaultNames().toSet()
+        val legacy = readState.takeLegacyAutoJoined()
+        readState.updateIndexerListed { DroppedDefaultRooms.notedIndexerListed(it, listed, legacy, joined) }
     }
 
     /** Takes a room out of the Chats list's room circles. */

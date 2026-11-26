@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.AccountCircle
@@ -75,7 +76,10 @@ enum class AppTab(
     // replaces it. A saved Hub order naming "kachatStats" drops it as it is read ([fromKey]).
     APPS("apps", "kaspa_websites", R.string.shell_tab_websites, Icons.Filled.Public, Icons.Outlined.Language),
     // K's own block explorer (iOS 961fc05a `.explorer`, "cube.transparent").
-    EXPLORER("explorer", "explorer", R.string.explorer, com.kachat.app.ui.screens.explorer.ExplorerSymbols.CubeTransparent, com.kachat.app.ui.screens.explorer.ExplorerSymbols.CubeTransparent);
+    EXPLORER("explorer", "explorer", R.string.explorer, com.kachat.app.ui.screens.explorer.ExplorerSymbols.CubeTransparent, com.kachat.app.ui.screens.explorer.ExplorerSymbols.CubeTransparent),
+    // Kasshi (iOS 35b112ce `.kasshi`, owner 2026-11-26): kasshi.io, pay-per-view video and music in
+    // KAS, in the in-app browser. Its own card, no longer one of the Websites. iOS "play.rectangle.fill".
+    KASSHI("kasshi", "kasshi", R.string.kasshi, Icons.Filled.SmartDisplay, Icons.Filled.SmartDisplay);
 
     companion object {
         /** The most tabs the dock shows (iOS `AppTab.maxDockItems`). */

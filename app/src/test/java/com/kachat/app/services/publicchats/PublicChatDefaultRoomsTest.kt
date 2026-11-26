@@ -66,11 +66,11 @@ class PublicChatDefaultRoomsTest {
     }
 
     @Test
-    fun `a room K joined that the indexer drops goes after two hours`() {
+    fun `a joined room the indexer listed and dropped goes after two hours`() {
         val now = 100 * day
         val hour = 3_600_000L
         val curated = setOf("kaspa", "report-bugs")
-        val first = DroppedDefaultRooms.step(emptyMap(), emptySet(), curated, now, autoJoined = setOf("miners"))
+        val first = DroppedDefaultRooms.step(emptyMap(), emptySet(), curated, now, indexerListed = setOf("miners"))
         assertEquals(mapOf("miners" to now), first.missingSince)
         assertTrue(first.dropped.isEmpty())
         // one hourly read later: still kept
@@ -82,27 +82,32 @@ class PublicChatDefaultRoomsTest {
     }
 
     @Test
-    fun `a switched-off auto-joined room keeps the week, a listed one has no clock`() {
+    fun `a switched-off listed room keeps the week, one back on the list has no clock`() {
         val now = 100 * day
         val saved = mapOf("miners" to now - 3 * 3_600_000L, "dev-talk" to now - 3 * 3_600_000L)
         // miners switched off: the week's grace; dev-talk back on the list: its clock stops
-        val step = DroppedDefaultRooms.step(saved, setOf("miners"), setOf("dev-talk"), now, autoJoined = setOf("miners", "dev-talk"))
+        val step = DroppedDefaultRooms.step(saved, setOf("miners"), setOf("dev-talk"), now, indexerListed = setOf("miners", "dev-talk"))
         assertTrue(step.dropped.isEmpty())
         assertEquals(setOf("miners"), step.missingSince.keys)
     }
 
     @Test
-    fun `a room the person made their own has no clock`() {
-        // not in the auto-joined set (joined by name, or posted in), not switched off
-        val step = DroppedDefaultRooms.step(emptyMap(), emptySet(), setOf("kaspa"), 100 * day, autoJoined = emptySet())
+    fun `a room the indexer never listed has no clock`() {
+        // one the person made, or one with its own indexer: never in the indexer-listed set
+        val step = DroppedDefaultRooms.step(emptyMap(), emptySet(), setOf("kaspa"), 100 * day, indexerListed = emptySet())
         assertTrue(step.missingSince.isEmpty())
     }
 
     @Test
-    fun `the first run counts joined indexer rooms except ones posted in`() {
-        val joined = setOf("kaspa", "report-bugs", "miners", "dev-talk", "my-own")
-        val indexerRooms = setOf("miners", "dev-talk", "kachat-bugs")
-        assertEquals(setOf("miners"), DroppedDefaultRooms.firstRunAutoJoined(joined, indexerRooms, postedIn = setOf("dev-talk")))
+    fun `listed rooms are noted, and one off the list is kept only while joined`() {
+        // iOS 35b112ce: joined by name or posted in no longer matters
+        val noted = DroppedDefaultRooms.notedIndexerListed(
+            saved = setOf("miners", "old-left", "old-joined"),
+            listed = setOf("dev-talk", "kachat-bugs"),
+            legacy = setOf("from-before"),
+            joined = setOf("miners", "old-joined", "from-before", "my-own"),
+        )
+        assertEquals(setOf("miners", "old-joined", "from-before", "dev-talk", "kachat-bugs"), noted)
     }
 
     @Test

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 35b112ce: the Chats page cycle's "Private Chats", Kaspa Hub's Kasshi card -->
+<resources>
+    <string name="chats_private_chats">비공개 채팅</string>
+    <string name="hub_blurb_kasshi">보고 듣고, 크리에이터에게 KAS로 지불하세요.</string>
+</resources>

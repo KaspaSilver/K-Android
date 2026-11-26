@@ -210,11 +210,6 @@ interface BroadcastDao {
     @Query("DELETE FROM broadcast_messages WHERE channelName = :channelName AND id IN (:ids)")
     suspend fun deleteMessagesIn(channelName: String, ids: List<String>): Int
 
-    /** The rooms, of [channels], where [sender] has a message on this phone, any case (iOS
-     *  65f8a765 `PublicChatStore.channels(_:withMessagesFrom:)`). */
-    @Query("SELECT DISTINCT channelName FROM broadcast_messages WHERE channelName IN (:channels) AND senderAddress = :sender COLLATE NOCASE")
-    suspend fun channelsWithMessagesFrom(channels: List<String>, sender: String): List<String>
-
     /** The rows that may be a reaction or edit naming [targetTxId]: a substring match only, so the
      *  caller parses each and deletes just the real ones (a reply whose text is "edit" matches
      *  too, audit 2026-11-25 T4). */

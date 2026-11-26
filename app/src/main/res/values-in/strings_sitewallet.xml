@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 48f5c357: the website wallet's Connect and Sign sheets (KaChatSiteWallet) -->
+<resources>
+    <string name="site_connect_to_k">Hubungkan ke K</string>
+    <string name="site_connect_note">Situs ini melihat alamat yang Anda hubungkan dan saldonya. Situs bisa meminta Anda masuk atau membayar, dan tidak ada yang terjadi tanpa persetujuan Anda di sini.</string>
+    <string name="site_connect_question">Alamat mana yang ingin Anda hubungkan?</string>
+    <string name="site_connect_other_note">Alamat lain menjaga situs ini terpisah dari nama pengguna dan obrolan Anda.</string>
+    <string name="site_sign_message">Tanda Tangani Pesan</string>
+    <string name="site_sign">Tanda Tangani</string>
+    <string name="site_sign_note">Tanda tangan membuktikan alamat ini milik Anda. Gratis dan tidak mengirim Kaspa.</string>
+    <string name="site_send_check_note">Periksa jumlah dan alamat sebelum mengirim.</string>
+</resources>

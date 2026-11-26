@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.ui.res.stringResource
 import com.kachat.app.R
+import com.kachat.app.services.KaChatSiteWallet
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +58,8 @@ import androidx.compose.runtime.getValue
  * "http://" when it isn't https), not the site it opened on ([title] is no longer shown, as on
  * iOS). It stays on the site it opened (that host and its subdomains, "www." aside): a link or
  * redirect to another http(s) site opens in the phone's browser, other schemes are refused
- * (iOS audit 2026-11-21 #2; security audit L3).
+ * (iOS audit 2026-11-21 #2; security audit L3). A site [KaChatSiteWallet] allows (Kasshi) gets K
+ * as its wallet, `window.kachat`, and its requests as sheets over the page (iOS 48f5c357).
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -65,6 +67,8 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
     val colors = LocalAppColors.current
     var currentUrl by remember(url) { mutableStateOf(url) }
     var isLoading by remember(url) { mutableStateOf(true) }
+    /** K as the page's wallet (`window.kachat`), on the sites [KaChatSiteWallet] allows (Kasshi). */
+    val siteWallet = rememberSiteWallet(url)
     val headerHost = remember(currentUrl) {
         val shown = runCatching { android.net.Uri.parse(currentUrl) }.getOrNull()
         val host = shown?.host.orEmpty()
@@ -145,10 +149,13 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
                     )
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
+                    // before the first load, so the script is there at document start
+                    siteWallet?.install(this)
                     webViewClient = InAppBrowserClient(
                         startUrl = url,
                         onPage = { now -> if (!now.startsWith("about:", ignoreCase = true)) currentUrl = now },
                         onLoading = { isLoading = it },
+                        onStarted = { view, started -> siteWallet?.injectOnPageStarted(view, started) },
                     )
                     loadUrl(url)
                 }
@@ -163,6 +170,7 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
             },
         )
     }
+    siteWallet?.let { SiteWalletSheetHost(it) }
 }
 
 /**
@@ -177,6 +185,9 @@ private class InAppBrowserClient(
     startUrl: String,
     private val onPage: (String) -> Unit,
     private val onLoading: (Boolean) -> Unit,
+    /** A main-frame page started loading: the site wallet's script on a WebView without
+     *  document-start scripts ([KaChatSiteWallet.injectOnPageStarted]). */
+    private val onStarted: ((WebView, String?) -> Unit)? = null,
 ) : WebViewClient() {
     /** The site the browser was opened on, without a leading "www.". */
     private val siteHost: String = run {
@@ -218,6 +229,7 @@ private class InAppBrowserClient(
     override fun onPageStarted(view: WebView, url: String?, favicon: android.graphics.Bitmap?) {
         onLoading(true)
         url?.let(onPage)
+        onStarted?.invoke(view, url)
     }
 
     override fun onPageFinished(view: WebView, url: String?) {

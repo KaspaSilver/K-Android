@@ -1395,7 +1395,8 @@ fun SendStepQuestion(text: String, modifier: Modifier = Modifier) {
  * and Choose an Address pills. Chatting Address shows a card with its address and [balanceSompi];
  * Choose an Address lists every address right on the screen ([OwnAddressList]), no sheet. Picking
  * the chatting address from the list goes back to its pill. [header] goes above the question (the
- * chat sheet's "To <name>" chip).
+ * chat sheet's "To <name>" chip). A website's Connect (iOS 48f5c357 `SiteConnectView`) asks its own
+ * [question] with its own [pickNote], and leaves quantum addresses out ([excludeQuantum]).
  */
 @Composable
 fun SendFromStepContent(
@@ -1406,6 +1407,9 @@ fun SendFromStepContent(
     balanceSompi: Long?,
     walletViewModel: WalletViewModel,
     header: @Composable () -> Unit = {},
+    question: String = stringResource(R.string.send_step_where_from),
+    pickNote: String = stringResource(R.string.send_step_pick_from),
+    excludeQuantum: Boolean = false,
 ) {
     val colors = LocalAppColors.current
     val chattingAddress by walletViewModel.address.collectAsState()
@@ -1418,7 +1422,7 @@ fun SendFromStepContent(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         header()
-        SendStepQuestion(stringResource(R.string.send_step_where_from))
+        SendStepQuestion(question)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             SelectablePill(
                 title = stringResource(R.string.chatting_address),
@@ -1435,7 +1439,7 @@ fun SendFromStepContent(
             ) { onChoosingFromChange(true) }
         }
         if (choosingFrom) {
-            Text(stringResource(R.string.send_step_pick_from), color = colors.textSecondary, fontSize = 13.sp)
+            Text(pickNote, color = colors.textSecondary, fontSize = 13.sp)
             OwnAddressList(
                 selected = if (source is SendSource.Chatting) null else source.address(chattingAddress),
                 walletViewModel = walletViewModel,
@@ -1444,6 +1448,7 @@ fun SendFromStepContent(
                     // the chatting address picked from the list: back on its own pill
                     if (picked is SendSource.Chatting) onChoosingFromChange(false)
                 },
+                excludeQuantum = excludeQuantum,
             )
         } else {
             val address = source.address(chattingAddress)

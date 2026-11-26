@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 48f5c357: the website wallet's Connect and Sign sheets (KaChatSiteWallet) -->
+<resources>
+    <string name="site_connect_to_k">Kết nối với K</string>
+    <string name="site_connect_note">Trang này thấy địa chỉ bạn kết nối và số dư của nó. Trang có thể yêu cầu bạn đăng nhập hoặc thanh toán, và không có gì xảy ra nếu bạn không đồng ý tại đây.</string>
+    <string name="site_connect_question">Bạn muốn kết nối địa chỉ nào?</string>
+    <string name="site_connect_other_note">Một địa chỉ khác giúp tách trang này khỏi tên người dùng và các cuộc trò chuyện của bạn.</string>
+    <string name="site_sign_message">Ký tin nhắn</string>
+    <string name="site_sign">Ký</string>
+    <string name="site_sign_note">Ký chứng minh địa chỉ này là của bạn. Miễn phí và không gửi Kaspa.</string>
+    <string name="site_send_check_note">Kiểm tra số tiền và địa chỉ trước khi gửi.</string>
+</resources>

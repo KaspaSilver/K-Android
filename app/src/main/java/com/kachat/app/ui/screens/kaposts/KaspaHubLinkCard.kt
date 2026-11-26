@@ -70,6 +70,7 @@ object HubCardLinks {
         "games" -> "kaplay"
         "apps" -> "websites"
         "explorer" -> "explorer"
+        "kasshi" -> "kasshi"
         else -> null
     }
 
@@ -94,6 +95,7 @@ object HubCardLinks {
         "games" -> R.string.kp55_hub_blurb_kaplay
         "apps" -> R.string.kp55_hub_blurb_websites
         "explorer" -> R.string.kp55_hub_blurb_explorer
+        "kasshi" -> R.string.hub_blurb_kasshi
         else -> null
     }
 }

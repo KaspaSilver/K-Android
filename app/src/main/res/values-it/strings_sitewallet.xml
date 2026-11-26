@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 48f5c357: the website wallet's Connect and Sign sheets (KaChatSiteWallet) -->
+<resources>
+    <string name="site_connect_to_k">Connetti a K</string>
+    <string name="site_connect_note">Questo sito vede l\'indirizzo che colleghi e il suo saldo. Può chiederti di accedere o di pagare, e nulla accade senza il tuo OK qui.</string>
+    <string name="site_connect_question">Quale indirizzo vuoi collegare?</string>
+    <string name="site_connect_other_note">Un altro indirizzo tiene questo sito separato dal tuo nome utente e dalle tue chat.</string>
+    <string name="site_sign_message">Firma messaggio</string>
+    <string name="site_sign">Firma</string>
+    <string name="site_sign_note">Firmare dimostra che questo indirizzo è tuo. Non costa nulla e non invia Kaspa.</string>
+    <string name="site_send_check_note">Controlla l\'importo e l\'indirizzo prima di inviare.</string>
+</resources>

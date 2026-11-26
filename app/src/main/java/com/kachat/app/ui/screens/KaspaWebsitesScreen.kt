@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.SmartDisplay
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.outlined.Article
 import androidx.compose.material.icons.outlined.Hardware
@@ -82,7 +81,6 @@ val KASPA_WEBSITES = listOf(
     KaspaWebsite("Kaspa Stream", "https://kaspa.stream", Icons.Outlined.MonitorHeart),          // waveform.path.ecg
     KaspaWebsite("Kaspa Explorer", "https://explorer.kaspa.org", Icons.Outlined.Search),        // magnifyingglass
     KaspaWebsite("KasMap", "https://kasmap.org", Icons.Outlined.Map),                           // map
-    KaspaWebsite("KasShi", "https://kasshi.io", Icons.Filled.SmartDisplay),                     // play.rectangle.fill
     KaspaWebsite("Kaspa News", "https://kaspa.news", Icons.Outlined.Newspaper),                 // newspaper
     KaspaWebsite("KasPlay", "https://kasplay.fun", Icons.Outlined.SportsEsports),               // gamecontroller
     KaspaWebsite("KasMart", "https://kasmart.org", Icons.Outlined.ShoppingCart),                // cart

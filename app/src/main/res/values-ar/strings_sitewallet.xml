@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 48f5c357: the website wallet's Connect and Sign sheets (KaChatSiteWallet) -->
+<resources>
+    <string name="site_connect_to_k">الاتصال بـ K</string>
+    <string name="site_connect_note">يرى هذا الموقع العنوان الذي توصله ورصيده. يمكنه أن يطلب منك تسجيل الدخول أو الدفع، ولا يحدث شيء دون موافقتك هنا.</string>
+    <string name="site_connect_question">أي عنوان تريد توصيله؟</string>
+    <string name="site_connect_other_note">عنوان آخر يُبقي هذا الموقع منفصلاً عن اسم المستخدم ومحادثاتك.</string>
+    <string name="site_sign_message">توقيع الرسالة</string>
+    <string name="site_sign">توقيع</string>
+    <string name="site_sign_note">التوقيع يثبت أن هذا العنوان ملكك. لا يكلف شيئاً ولا يرسل أي Kaspa.</string>
+    <string name="site_send_check_note">تحقق من المبلغ والعنوان قبل الإرسال.</string>
+</resources>

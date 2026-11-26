@@ -451,12 +451,7 @@ class BroadcastViewModel @Inject constructor(
             // A switch that is on means the room is in the Chats circles: switching on a room not
             // joined yet joins it (a local subscription - nothing on chain), so it appears at once,
             // with its bell off (iOS PublicChatService.setCuratedChannel).
-            // Still a default room, so it goes if the indexer drops it: joined as auto-joined, not
-            // as the person's own (iOS 65f8a765).
-            if (shown) viewModelScope.launch {
-                broadcastRepository.joinDefaultChannel(channelName)
-                readState.updateAutoJoined { it + channelName }
-            }
+            if (shown) viewModelScope.launch { broadcastRepository.joinDefaultChannel(channelName) }
             return
         }
         if (!shown) setNotifyEnabled(channelName, false)
@@ -652,8 +647,6 @@ class BroadcastViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 broadcastRepository.joinChannel(name)
-                // joined by the person (a link): theirs, whatever the indexer does (iOS 65f8a765)
-                readState.keepRoomAsOwn(name)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -677,8 +670,6 @@ class BroadcastViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 broadcastRepository.joinChannel(name)
-                // joined by name in New Public Chat: the person's own (iOS 65f8a765)
-                readState.keepRoomAsOwn(name)
                 onJoined(name)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
@@ -699,8 +690,6 @@ class BroadcastViewModel @Inject constructor(
         viewModelScope.launch {
             if (joinedChannels.value.none { it.channelName == name }) {
                 runCatching { broadcastRepository.joinChannel(name) }
-                // joined from a link or a push: the person's own (iOS 65f8a765)
-                readState.keepRoomAsOwn(name)
             }
             open(name)
         }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 35b112ce: the Chats page cycle's "Private Chats", Kaspa Hub's Kasshi card -->
+<resources>
+    <string name="chats_private_chats">প্রাইভেট চ্যাট</string>
+    <string name="hub_blurb_kasshi">দেখুন ও শুনুন, আর নির্মাতাকে KAS-এ পেমেন্ট করুন।</string>
+</resources>

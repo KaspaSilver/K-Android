@@ -27,6 +27,10 @@ object KaspaMessageSigner {
         return Schnorr.sign(toSign, privateKey).joinToString("") { "%02x".format(it) }
     }
 
+    /** rusty-kaspa's `calc_personal_message_hash`: blake2b-256 keyed "PersonalMessageSigningHash",
+     *  what KasWare and the K extension sign for `signMessage` (iOS 48f5c357 `KaChatSiteWallet.sign`). */
+    fun personalMessageHash(data: ByteArray): ByteArray = keyedBlake2b(data)
+
     private fun keyedBlake2b(data: ByteArray): ByteArray {
         val digest = Blake2bDigest(PERSONAL_MESSAGE_KEY, 32, null, null)
         digest.update(data, 0, data.size)

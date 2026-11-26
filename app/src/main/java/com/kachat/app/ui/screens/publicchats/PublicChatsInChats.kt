@@ -443,7 +443,8 @@ internal fun ChatsPageCycleButton(
     onSelect: (ChatsListPage) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val chatsTitle = stringResource(R.string.chats)
+    // "Private Chats" (iOS 35b112ce); the page's large title stays "Chats"
+    val chatsTitle = stringResource(R.string.chats_private_chats)
     val publicTitle = stringResource(R.string.pc_broadcasts)
     androidx.compose.foundation.layout.Box(modifier) {
         com.kachat.app.ui.components.CycleCapsuleButton(

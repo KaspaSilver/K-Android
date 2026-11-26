@@ -5419,6 +5419,12 @@ fun SpendingAddressSendFlow(
     /** The send went out (iOS `WithdrawKaspaView(onComplete:)`): a kUSDT send's Fund This Address
      *  builds its review again once the KAS lands (iOS 5b7c772c TokenSendView). */
     onComplete: (() -> Unit)? = null,
+    /** A website's `sendKaspa` in K's browser (iOS 48f5c357 `siteHost`, `KaChatSiteWallet`): its
+     *  host. The send opens on the Review (address, amount and From are fixed), says who asked,
+     *  and hands the txid back through [onSent]. */
+    siteHost: String? = null,
+    /** The txid of the send that went out (iOS 48f5c357 `onSent`). */
+    onSent: ((String) -> Unit)? = null,
     priceViewModel: com.kachat.app.viewmodels.KasPriceViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -5612,6 +5618,7 @@ fun SpendingAddressSendFlow(
         if (result.isSuccess) {
             result.getOrNull()?.let { txId ->
                 onComplete?.invoke()
+                onSent?.invoke(txId)
                 sentTransaction = SentTransaction(
                     txId = txId,
                     amountSompi = KaspaUnit.sompiFromUserText(amountInput)?.takeIf { it > 0 },
@@ -5851,12 +5858,12 @@ fun SpendingAddressSendFlow(
     // MARK: The steps (iOS bc3e1ff3)
 
     val dismissKeyboard = rememberDismissSystemKeyboard()
-    /** The step a send opens on: Compound UTXOs straight to the Review (its recipient and amount
-     *  are set), a payment request or a pre-filled recipient to From (or Amount, when From is
-     *  fixed). */
+    /** The step a send opens on: Compound UTXOs and a website's send straight to the Review (its
+     *  recipient and amount are set), a payment request or a pre-filled recipient to From (or
+     *  Amount, when From is fixed). */
     val afterRecipient = if (lockedSource == null) SendKaspaStep.FROM else SendKaspaStep.AMOUNT
     val initialStep = when {
-        isCompoundMode -> SendKaspaStep.REVIEW
+        isCompoundMode || siteHost != null -> SendKaspaStep.REVIEW
         paymentRequest != null || prefillAddress != null -> afterRecipient
         else -> SendKaspaStep.RECIPIENT
     }
@@ -5872,7 +5879,7 @@ fun SpendingAddressSendFlow(
             isCompoundMode || paymentRequest != null -> null
             else -> SendKaspaStep.RECIPIENT
         }
-        SendKaspaStep.REVIEW -> if (isCompoundMode) null else SendKaspaStep.AMOUNT
+        SendKaspaStep.REVIEW -> if (isCompoundMode || siteHost != null) null else SendKaspaStep.AMOUNT
         SendKaspaStep.FEE -> SendKaspaStep.REVIEW
     }
     fun go(next: SendKaspaStep) {
@@ -5893,8 +5900,13 @@ fun SpendingAddressSendFlow(
     val canContinueFromAmount = hasValidRecipient && (amountSompi ?: 0) > 0 && !exceedsBalance && !isEstimatingMax
     val screenTitle = when {
         isCompoundMode -> stringResource(R.string.compound_utxos)
-        activeRequest != null -> stringResource(R.string.pr_payment_request)
+        activeRequest != null && siteHost == null -> stringResource(R.string.pr_payment_request)
         else -> title
+    }
+    /** The request's card: a payment request's, or the website that asked for this send (iOS
+     *  48f5c357 `requestSummary`). */
+    val requestSummary: @Composable (com.kachat.app.models.PaymentRequest) -> Unit = { request ->
+        if (siteHost != null) SiteRequestNote(siteHost) else PaymentRequestSummary(request = request)
     }
     /** The recipient's name: the domain it resolved from, else its Contacts name. */
     val trimmedRecipient = effectiveAddress.trim()
@@ -6050,7 +6062,7 @@ fun SpendingAddressSendFlow(
                         verticalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
                         SendReviewAmount(stringResource(R.string.send_youre_sending), amountSompi?.takeIf { it > 0 }, fiatPriceInCurrency, fiatCurrencyCode)
-                        PaymentRequestSummary(request = request)
+                        requestSummary(request)
                         if (exceedsBalance) {
                             Text(stringResource(R.string.send_exceeds_balance), color = LocalAppColors.current.danger, fontSize = 13.sp, textAlign = TextAlign.Center)
                         }
@@ -6172,7 +6184,7 @@ fun SpendingAddressSendFlow(
                         }
                     }
 
-                    activeRequest?.let { PaymentRequestSummary(request = it) }
+                    activeRequest?.let { requestSummary(it) }
 
                     // The only things that can still change: the fee and the coins it spends.
                     SendFeeControls(
