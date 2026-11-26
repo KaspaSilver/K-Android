@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">bitti</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">K\'te %s rakibini (Seviye %d) %d hamlede yendim. Daha azında yapabilir misin?</string>
-    <string name="kp_f81826d956cc" formatted="false">K\'teki satranç turnuvama katıl: KaPlay &gt; Satranç &gt; Turnuvalar &gt; Kodla katıl\'ı aç ve %s kodunu gir.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">K\'te benimle satranç oyna: KaPlay &gt; Satranç &gt; 1v1 &gt; Kodla katıl\'ı aç ve %s kodunu gir.</string>
+    <string name="kp_ee8790114cec" formatted="false">K\'teki satranç turnuvama katıl: Arcade &gt; Satranç &gt; Turnuvalar &gt; Kodla katıl\'ı aç ve %s kodunu gir.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">K\'te benimle satranç oyna: Arcade &gt; Satranç &gt; 1v1 &gt; Kodla katıl\'ı aç ve %s kodunu gir.</string>
     <string name="kp_f4fa709cb963" formatted="false">Çeyrek finaller</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Sonuç gönderilmedi.</string>
     <string name="kaplay_leaderboard_all_time">Tüm zamanlar</string>

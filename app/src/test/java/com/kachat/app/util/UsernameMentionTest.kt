@@ -60,6 +60,16 @@ class UsernameMentionTest {
     }
 
     @Test
+    fun `a room draws each mention as @name, never with the ending`() {
+        // iOS 522fd9f4 `attributed`: "@alice" whatever the sender typed
+        val shown = UsernameMention.shown("hi @Alice.KaChat and (@bob), mail@carol.kachat")
+        assertEquals("hi @alice and (@bob), mail@carol.kachat", shown.text)
+        assertEquals(listOf("@alice", "@bob"), shown.mentions.map { shown.text.substring(it.range) })
+        assertEquals(listOf("alice", "bob"), shown.mentions.map { it.name })
+        assertEquals("no mentions", UsernameMention.shown("no mentions").text)
+    }
+
+    @Test
     fun `mentions checks the bare username`() {
         assertTrue(UsernameMention.mentions("hey @Alice.kachat", "alice"))
         assertTrue(UsernameMention.mentions("@alice", "alice"))

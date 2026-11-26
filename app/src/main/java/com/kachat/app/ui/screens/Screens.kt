@@ -8659,7 +8659,7 @@ fun SettingsScreen(
                     SettingsDivider(inset = IosRowTextInset)
                     // KaPost's own settings (tips, cool down), here since iOS 148a5331 rather than in
                     // the feed's menu; then Help, moved from the old Profile screen.
-                    SettingsNavigationItem(stringResource(R.string.shell_tab_kapost), com.kachat.app.ui.AppTab.KAPOSTS.hubIcon, onClick = { showKaPostSettings = true })
+                    SettingsNavigationItem(stringResource(R.string.tab_posts), com.kachat.app.ui.AppTab.KAPOSTS.hubIcon, onClick = { showKaPostSettings = true })
                     SettingsDivider(inset = IosRowTextInset)
                     SettingsNavigationItem(stringResource(R.string.help), Icons.AutoMirrored.Outlined.HelpOutline, onClick = { navController.navigate("help") })
                     SettingsDivider(inset = IosRowTextInset)
@@ -8791,12 +8791,10 @@ fun SettingsScreen(
             }
 
             if (sectionKey == "customization") {
-                val showKachatNameEndings by settingsViewModel.showKachatNameEndings.collectAsState()
-                // iOS customizationPage: one section - the three pickers, Show Fee Estimate and
-                // Show .kachat Endings, with the endings' footer (iOS 94ed3a35).
+                // iOS customizationPage: one section - the three pickers and Show Fee Estimate (no
+                // ending switch since iOS 522fd9f4: names are always bare).
                 SettingsFormSection(
                     title = stringResource(R.string.customization),
-                    footer = stringResource(R.string.turn_off_to_show_names_like_alice_instead),
                 ) {
                     // Appearance / Language / Currency are shared with the accounts screen's App
                     // Settings (iOS AppWideCustomizationPickers); the fee estimate belongs to this
@@ -8807,12 +8805,6 @@ fun SettingsScreen(
                     // which is a display preference, not a chat behaviour.
                     SettingsSwitchItem(stringResource(R.string.show_fee_estimate), showFeeEstimate) { enabled ->
                         settingsViewModel.setShowFeeEstimate(enabled)
-                    }
-                    SettingsDivider()
-                    // Off (the default since iOS 518fdc8c: .kachat is the only name service) shows
-                    // .kachat names bare ("alice"); on writes the ending out ("alice.kachat").
-                    SettingsSwitchItem(stringResource(R.string.show_kachat_endings), showKachatNameEndings) { enabled ->
-                        settingsViewModel.setShowKachatNameEndings(enabled)
                     }
                 }
                 // What Tip sends, the same in KaPost and in a 1:1 chat's + (owner's call, iOS
@@ -8913,7 +8905,7 @@ fun SettingsScreen(
                     })
                     // KaPost's kinds (iOS 148a5331); Public Chats rooms keep their own bells.
                     SettingsDivider(inset = IosRowTextInset)
-                    SettingsNavigationItem(stringResource(R.string.shell_tab_kapost), com.kachat.app.ui.AppTab.KAPOSTS.hubIcon, onClick = {
+                    SettingsNavigationItem(stringResource(R.string.tab_posts), com.kachat.app.ui.AppTab.KAPOSTS.hubIcon, onClick = {
                         navController.navigate(com.kachat.app.ui.SettingsShellRoutes.KAPOSTS_NOTIFICATIONS)
                     })
                 }
@@ -13086,8 +13078,7 @@ fun ChatInfoScreen(
                                 .padding(horizontal = 16.dp, vertical = 11.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            // Shown as Show .kachat Endings says; the copy above keeps the
-                            // ending either way (iOS 94ed3a35).
+                            // Shown bare (iOS 522fd9f4); the copy above keeps the ending.
                             Text(
                                 com.kachat.app.models.KachatNameLabel.display(name),
                                 color = LocalAppColors.current.textPrimary,
@@ -13106,11 +13097,12 @@ fun ChatInfoScreen(
                                 )
                             }
                             Spacer(Modifier.weight(1f).widthIn(min = 8.dp))
-                            // Set as Name: puts this .kachat name, in full ("alice.kachat"), in
-                            // this screen's name field. Nothing is saved until Save; Cancel leaves
-                            // their name as it was. Shown as set once the field holds it (iOS 413f6d6d).
+                            // Set as Name: puts this .kachat name, bare ("alice", never the
+                            // ending: owner, iOS 522fd9f4), in this screen's name field. Nothing is
+                            // saved until Save; Cancel leaves their name as it was. Shown as set
+                            // once the field holds it (iOS 413f6d6d).
                             if (!isSelf && !isBot) {
-                                if (contactName.trim() == full) {
+                                if (contactName.trim() == name) {
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Icon(Icons.Default.Check, contentDescription = null, tint = LocalAppColors.current.textSecondary, modifier = Modifier.size(14.dp))
                                         Text(stringResource(R.string.their_name), color = LocalAppColors.current.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
@@ -13126,7 +13118,7 @@ fun ChatInfoScreen(
                                             .background(KaspaTeal.copy(alpha = 0.15f))
                                             .clickable {
                                                 infoHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
-                                                contactName = full
+                                                contactName = name
                                                 infoSheet = null
                                             }
                                             .padding(horizontal = 10.dp, vertical = 6.dp),

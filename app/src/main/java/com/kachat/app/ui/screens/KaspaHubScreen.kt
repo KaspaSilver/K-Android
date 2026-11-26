@@ -370,8 +370,8 @@ private fun HubTile(tab: AppTab, badgeCount: Int, onClick: () -> Unit, onLongCli
 
 /**
  * A tab's icon at a size, as the Hub draws it (iOS `AppTabIcon`): Kaspa Hub is the Kaspa logo,
- * Usernames the ".kachat" wordmark (iOS 518fdc8c `KachatTabIcon.view(side: size * 1.25)`), every
- * other tab its symbol in the accent colour. A Material glyph is inset in its box, so it is drawn
+ * every other tab its symbol in the accent colour, Usernames included: its "@" (owner, iOS
+ * 522fd9f4; the ".kachat" wordmark until then). A Material glyph is inset in its box, so it is drawn
  * a little larger than the iOS point size to match.
  */
 @Composable
@@ -382,8 +382,6 @@ fun AppTabIcon(tab: AppTab, size: Dp) {
             contentDescription = null,
             modifier = Modifier.size(size),
         )
-    } else if (tab == AppTab.KACHAT_NAMES) {
-        KachatWordmark(height = size * 1.25f)
     } else {
         Icon(tab.hubIcon, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(size * 1.2f))
     }

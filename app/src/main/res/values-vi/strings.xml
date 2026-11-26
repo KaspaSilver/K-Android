@@ -84,7 +84,6 @@
     <string name="import_account">Nhập tài khoản</string>
     <string name="import_existing_account">Nhập tài khoản hiện có</string>
     <string name="incoming_notifications">Thông báo đến</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K cần kết nối với một nút. Bạn muốn kết nối như thế nào?</string>
     <string name="kaspa_explorer">Trình khám phá Kaspa</string>
     <string name="label_optional">Nhãn (tùy chọn)</string>
@@ -1432,8 +1431,6 @@
     <string name="your_account">Tài khoản của bạn</string>
     <string name="checking_this_wallets_address">Đang kiểm tra địa chỉ của ví này...</string>
     <string name="this_wallet_type_has_a_single_address">Loại ví này chỉ có một địa chỉ, nên không còn gì để quét thêm.</string>
-    <string name="show_kachat_endings">Hiện đuôi .kachat</string>
-    <string name="turn_off_to_show_names_like_alice_instead">Tắt để hiện tên như alice thay vì alice.kachat. Tên bạn tự đặt cho ai đó không bao giờ có đuôi này.</string>
     <string name="microphone_access_required">Cần quyền truy cập micrô</string>
     <string name="allow_camera_access_in_settings_to_take_photos">Cho phép truy cập camera trong Cài đặt để chụp ảnh trong cuộc trò chuyện.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">Cho phép truy cập micrô trong Cài đặt để ghi tin nhắn thoại.</string>

@@ -517,7 +517,7 @@ fun ChatsScreen(
                         modifier = Modifier.padding(top = 9.dp, bottom = 8.dp),
                     ) {
                         Text(
-                            stringResource(R.string.kachat),
+                            stringResource(R.string.tab_chats),
                             color = LocalAppColors.current.textPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = LargeTitleSize,

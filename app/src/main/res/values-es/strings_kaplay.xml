@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">terminada</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">Vencí a %s (nivel %d) en %d jugadas en K. ¿Crees que puedes hacerlo en menos?</string>
-    <string name="kp_f81826d956cc" formatted="false">Únete a mi torneo de ajedrez en K: abre KaPlay &gt; Ajedrez &gt; Torneos &gt; Unirse con un código e ingresa %s.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">Juega al ajedrez conmigo en K: abre KaPlay &gt; Ajedrez &gt; 1v1 &gt; Unirse con un código e ingresa %s.</string>
+    <string name="kp_ee8790114cec" formatted="false">Únete a mi torneo de ajedrez en K: abre Arcade &gt; Ajedrez &gt; Torneos &gt; Unirse con un código e ingresa %s.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">Juega al ajedrez conmigo en K: abre Arcade &gt; Ajedrez &gt; 1v1 &gt; Unirse con un código e ingresa %s.</string>
     <string name="kp_f4fa709cb963" formatted="false">Cuartos de final</string>
     <string name="kp_3ce0ac6e9413" formatted="false">El resultado no se envió.</string>
     <string name="kaplay_leaderboard_all_time">Histórico</string>

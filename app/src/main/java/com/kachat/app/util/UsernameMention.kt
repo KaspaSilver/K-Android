@@ -51,6 +51,31 @@ object UsernameMention {
         }.toList()
     }
 
+    /** Public text with each @token as a room draws it, and where each mention sits in it. */
+    data class Shown(val text: String, val mentions: List<Token>)
+
+    /**
+     * [text] with each @token drawn as "@alice": never with the ending, whatever the sender typed
+     * (owner, iOS 522fd9f4 `attributed`); each mention's [Token.range] is into the returned text.
+     * Display only: the message itself (a copy, a reply) keeps what was sent.
+     */
+    fun shown(text: String): Shown {
+        val found = tokens(text)
+        if (found.isEmpty()) return Shown(text, emptyList())
+        val out = StringBuilder(text.length)
+        val mentions = ArrayList<Token>(found.size)
+        var cursor = 0
+        for (token in found) {
+            out.append(text, cursor, token.range.first)
+            val start = out.length
+            out.append('@').append(token.name)
+            mentions += Token(start until out.length, token.name)
+            cursor = token.range.last + 1
+        }
+        out.append(text, cursor, text.length)
+        return Shown(out.toString(), mentions)
+    }
+
     /** Whether public [text] @'s [myName] (a bare username) by its username. */
     fun mentions(text: String, myName: String?): Boolean {
         val me = myName?.takeIf { it.isNotEmpty() } ?: return false
@@ -127,8 +152,8 @@ object UsernameMention {
     // The registry's cached identities
 
     /**
-     * The username someone is @'d by, as the app shows names (with or without the ending, per
-     * Show .kachat Endings): null when they have none, so they can't be mentioned.
+     * The username someone is @'d by, as the app shows names (bare, iOS 522fd9f4): null when
+     * they have none, so they can't be mentioned.
      */
     fun handle(address: String): String? {
         val label = KachatNamesRegistry.cachedIdentityOf(address)?.label ?: return null

@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">הסתיים</string>
     <string name="kp_691a77cd21a3" formatted="false">נגד</string>
     <string name="kp_aa93adb4f65c" formatted="false">ניצחתי את %s (רמה %d) ב-%d מסעים ב-K. חושבים שתצליחו בפחות?</string>
-    <string name="kp_f81826d956cc" formatted="false">הצטרפו לטורניר השחמט שלי ב-K: פתחו KaPlay &gt; שחמט &gt; טורנירים &gt; הצטרפות עם קוד, והזינו %s.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">בואו לשחק איתי שחמט ב-K: פתחו KaPlay &gt; שחמט &gt; 1v1 &gt; הצטרפות עם קוד, והזינו %s.</string>
+    <string name="kp_ee8790114cec" formatted="false">הצטרפו לטורניר השחמט שלי ב-K: פתחו ארקייד &gt; שחמט &gt; טורנירים &gt; הצטרפות עם קוד, והזינו %s.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">בואו לשחק איתי שחמט ב-K: פתחו ארקייד &gt; שחמט &gt; 1v1 &gt; הצטרפות עם קוד, והזינו %s.</string>
     <string name="kp_f4fa709cb963" formatted="false">רבע גמר</string>
     <string name="kp_3ce0ac6e9413" formatted="false">התוצאה לא נשלחה.</string>
     <string name="kaplay_leaderboard_all_time">כל הזמנים</string>

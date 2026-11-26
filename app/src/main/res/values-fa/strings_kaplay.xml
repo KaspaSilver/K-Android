@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">تمام‌شده</string>
     <string name="kp_691a77cd21a3" formatted="false">در برابر</string>
     <string name="kp_aa93adb4f65c" formatted="false">%s (سطح %d) را در %d حرکت در K شکست دادم. فکر می‌کنید با حرکت‌های کمتری می‌توانید؟</string>
-    <string name="kp_f81826d956cc" formatted="false">به تورنمنت شطرنج من در K بپیوند: KaPlay &gt; شطرنج &gt; تورنمنت‌ها &gt; پیوستن با کد را باز کن و %s را وارد کن.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">در K با من شطرنج بازی کن: KaPlay &gt; شطرنج &gt; 1v1 &gt; پیوستن با کد را باز کن و %s را وارد کن.</string>
+    <string name="kp_ee8790114cec" formatted="false">به تورنمنت شطرنج من در K بپیوند: آرکید &gt; شطرنج &gt; تورنمنت‌ها &gt; پیوستن با کد را باز کن و %s را وارد کن.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">در K با من شطرنج بازی کن: آرکید &gt; شطرنج &gt; 1v1 &gt; پیوستن با کد را باز کن و %s را وارد کن.</string>
     <string name="kp_f4fa709cb963" formatted="false">یک‌چهارم نهایی</string>
     <string name="kp_3ce0ac6e9413" formatted="false">نتیجه ارسال نشد.</string>
     <string name="kaplay_leaderboard_all_time">همه زمان‌ها</string>

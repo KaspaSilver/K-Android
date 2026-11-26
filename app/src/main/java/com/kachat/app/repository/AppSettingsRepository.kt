@@ -218,10 +218,6 @@ class AppSettingsRepository @Inject constructor(
          *  Default on (iOS ba352a2). */
         val KEY_SPENDING_RECEIVE_NOTIFICATIONS = booleanPreferencesKey("spending_receive_notifications_enabled")
         val KEY_SHOW_FEE_ESTIMATE = booleanPreferencesKey("show_fee_estimate")
-        // Settings > Customization > Show .kachat Endings (iOS 94ed3a35 KachatNameLabel, on by
-        // default): off shows .kachat names bare ("alice"). Mirrored into
-        // models.KachatNameLabel.showsEnding, which every display path reads.
-        val KEY_SHOW_KACHAT_NAME_ENDINGS = booleanPreferencesKey("kachat_show_name_endings")
 
         // Customizable double-tap quick-reaction set - see QUICK_REACTION_EMOJIS's default and
         // QuickReactionBar (Screens.kt) / QuickReactionBarView (iOS) for where this is read.
@@ -512,12 +508,6 @@ class AppSettingsRepository @Inject constructor(
         it[KEY_SHOW_FEE_ESTIMATE] ?: true
     }
 
-    /** See [KEY_SHOW_KACHAT_NAME_ENDINGS]. */
-    val showKachatNameEndings: Flow<Boolean> = dataStore.data.map {
-        // off by default since 2026-11-23 (iOS 518fdc8c `KachatNameLabel.showsEnding`)
-        it[KEY_SHOW_KACHAT_NAME_ENDINGS] ?: false
-    }
-
     /** Falls back to [DEFAULT_QUICK_REACTION_EMOJIS] (matches the default in `Screens.kt`'s
      *  `QUICK_REACTION_EMOJIS` / iOS's `AppSettings.defaultQuickReactionEmojis`) if never
      *  customized, or if a stored value somehow isn't exactly 6 entries. */
@@ -764,11 +754,6 @@ class AppSettingsRepository @Inject constructor(
     suspend fun clearOnboardingWizardPending() = dataStore.edit { it[KEY_ONBOARDING_WIZARD_PENDING] = false }
     suspend fun setNotificationsEnabled(value: Boolean) = dataStore.edit { it[KEY_NOTIFICATIONS_ENABLED] = value }
     suspend fun setShowFeeEstimate(value: Boolean) = dataStore.edit { it[KEY_SHOW_FEE_ESTIMATE] = value }
-    /** Names redraw as the switch moves, not after the write lands. */
-    suspend fun setShowKachatNameEndings(value: Boolean) {
-        com.kachat.app.models.KachatNameLabel.showsEnding = value
-        dataStore.edit { it[KEY_SHOW_KACHAT_NAME_ENDINGS] = value }
-    }
     suspend fun setQuickReactionEmojis(value: List<String>) = dataStore.edit { it[KEY_QUICK_REACTION_EMOJIS] = Gson().toJson(value) }
     suspend fun setNotificationSoundEnabled(value: Boolean) = dataStore.edit { it[KEY_NOTIFICATION_SOUND] = value }
     suspend fun setNotificationVibrationEnabled(value: Boolean) = dataStore.edit { it[KEY_NOTIFICATION_VIBRATION] = value }

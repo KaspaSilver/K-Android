@@ -84,7 +84,6 @@
     <string name="import_account">استيراد حساب</string>
     <string name="import_existing_account">استيراد حساب موجود</string>
     <string name="incoming_notifications">الإخطارات الواردة</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">يحتاج K إلى الاتصال بعقدة. كيف تريد الاتصال؟</string>
     <string name="kaspa_explorer">مستكشف كاسبا</string>
     <string name="label_optional">التسمية (اختياري)</string>
@@ -1437,8 +1436,6 @@
     <string name="your_account">حسابك</string>
     <string name="checking_this_wallets_address">جارٍ فحص عنوان هذه المحفظة...</string>
     <string name="this_wallet_type_has_a_single_address">نوع المحفظة هذا له عنوان واحد، لذا لا يوجد المزيد لفحصه.</string>
-    <string name="show_kachat_endings">إظهار لاحقة ‎.kachat</string>
-    <string name="turn_off_to_show_names_like_alice_instead">أوقفه لعرض الأسماء مثل alice بدلاً من alice.kachat. الاسم الذي أعطيته أنت لشخص ما لا يحمل اللاحقة أبداً.</string>
     <string name="microphone_access_required">مطلوب الوصول إلى الميكروفون</string>
     <string name="allow_camera_access_in_settings_to_take_photos">اسمح بالوصول إلى الكاميرا في الإعدادات لالتقاط الصور في المحادثات.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">اسمح بالوصول إلى الميكروفون في الإعدادات لتسجيل الرسائل الصوتية.</string>

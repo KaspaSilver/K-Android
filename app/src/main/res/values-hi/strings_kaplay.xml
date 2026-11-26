@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">समाप्त</string>
     <string name="kp_691a77cd21a3" formatted="false">बनाम</string>
     <string name="kp_aa93adb4f65c" formatted="false">मैंने K पर %s (लेवल %d) को %d चालों में हराया। क्या आप इससे कम में कर सकते हैं?</string>
-    <string name="kp_f81826d956cc" formatted="false">K में मेरे शतरंज टूर्नामेंट में शामिल हों: KaPlay &gt; शतरंज &gt; टूर्नामेंट &gt; कोड से शामिल हों खोलें, और %s दर्ज करें।</string>
-    <string name="kp_c2ecefef54c6" formatted="false">K में मुझसे शतरंज खेलें: KaPlay &gt; शतरंज &gt; 1v1 &gt; कोड से शामिल हों खोलें, और %s दर्ज करें।</string>
+    <string name="kp_ee8790114cec" formatted="false">K में मेरे शतरंज टूर्नामेंट में शामिल हों: आर्केड &gt; शतरंज &gt; टूर्नामेंट &gt; कोड से शामिल हों खोलें, और %s दर्ज करें।</string>
+    <string name="kp_74ad16e3c85d" formatted="false">K में मुझसे शतरंज खेलें: आर्केड &gt; शतरंज &gt; 1v1 &gt; कोड से शामिल हों खोलें, और %s दर्ज करें।</string>
     <string name="kp_f4fa709cb963" formatted="false">क्वार्टरफ़ाइनल</string>
     <string name="kp_3ce0ac6e9413" formatted="false">नतीजा नहीं भेजा गया।</string>
     <string name="kaplay_leaderboard_all_time">अब तक</string>

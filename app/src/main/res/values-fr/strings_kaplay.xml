@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">terminée</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">J\'ai battu %s (niveau %d) en %d coups sur K. Saurez-vous faire mieux ?</string>
-    <string name="kp_f81826d956cc" formatted="false">Rejoignez mon tournoi d\'échecs sur K : ouvrez KaPlay &gt; Echecs &gt; Tournois &gt; Rejoindre avec un code, et saisissez %s.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">Affrontez-moi aux échecs sur K : ouvrez KaPlay &gt; Echecs &gt; 1v1 &gt; Rejoindre avec un code, et saisissez %s.</string>
+    <string name="kp_ee8790114cec" formatted="false">Rejoignez mon tournoi d\'échecs sur K : ouvrez Arcade &gt; Echecs &gt; Tournois &gt; Rejoindre avec un code, et saisissez %s.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">Affrontez-moi aux échecs sur K : ouvrez Arcade &gt; Echecs &gt; 1v1 &gt; Rejoindre avec un code, et saisissez %s.</string>
     <string name="kp_f4fa709cb963" formatted="false">Quarts de finale</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Le résultat n\'a pas été envoyé.</string>
     <string name="kaplay_leaderboard_all_time">Depuis toujours</string>

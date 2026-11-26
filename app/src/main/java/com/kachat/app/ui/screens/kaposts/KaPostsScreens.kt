@@ -1375,7 +1375,7 @@ private fun KaPostsFeedScreen(
                         },
                     )
                     Text(
-                        text = "KaPost",
+                        text = stringResource(R.string.tab_posts),
                         color = colors.textPrimary,
                         fontSize = LargeTitleSize,
                         fontWeight = FontWeight.Bold,
@@ -6923,7 +6923,7 @@ private fun buildAnnotatedPostText(source: String): androidx.compose.ui.text.Ann
         val start = domain.range.first - 1 // include the '@'
         if (start < 0) null else start until (domain.range.last + 1)
     }.toList()
-    return androidx.compose.ui.text.buildAnnotatedString {
+    val built = androidx.compose.ui.text.buildAnnotatedString {
         append(text)
         for (span in rendered.spans) {
             if (span.start >= span.end || span.end > text.length) continue
@@ -6994,6 +6994,32 @@ private fun buildAnnotatedPostText(source: String): androidx.compose.ui.text.Ann
             )
             addStringAnnotation(LINK_ANNOTATION_TAG, normalizedLinkUrl(raw), start, end)
         }
+    }
+    return droppingKachatEndings(built, mentionMatches)
+}
+
+/**
+ * "@alice.kachat" drawn as "@alice": the ending is never shown (owner, iOS 522fd9f4
+ * `dropKachatEndings`). Only the mention's text; its annotation still names the whole token.
+ */
+private fun droppingKachatEndings(
+    built: androidx.compose.ui.text.AnnotatedString,
+    mentionMatches: List<MatchResult>,
+): androidx.compose.ui.text.AnnotatedString {
+    val ending = ".kachat"
+    val cuts = mentionMatches.mapNotNull { match ->
+        val domain = match.groups[2] ?: return@mapNotNull null
+        if (!domain.value.lowercase().endsWith(ending)) return@mapNotNull null
+        (domain.range.last + 1 - ending.length) until (domain.range.last + 1)
+    }
+    if (cuts.isEmpty()) return built
+    return androidx.compose.ui.text.buildAnnotatedString {
+        var cursor = 0
+        for (cut in cuts) {
+            append(built.subSequence(cursor, cut.first))
+            cursor = cut.last + 1
+        }
+        append(built.subSequence(cursor, built.length))
     }
 }
 
@@ -7770,7 +7796,7 @@ fun KaPostsSettingsOverlay(
 
     val pageTitle = when {
         part == KaPostsSettingsPart.TIPPING -> stringResource(R.string.kpui_tipping)
-        embedded -> "KaPost"
+        embedded -> stringResource(R.string.tab_posts)
         else -> stringResource(R.string.kpui_kapost_settings)
     }
     KaPostsOverlayScaffold(title = pageTitle, onClose = onClose, backBar = embedded) {
@@ -8839,7 +8865,7 @@ private fun KaPostsFeedDrawer(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "KaPost",
+                        stringResource(R.string.tab_posts),
                         color = colors.textPrimary,
                         fontSize = LargeTitleSize,
                         fontWeight = FontWeight.Bold,

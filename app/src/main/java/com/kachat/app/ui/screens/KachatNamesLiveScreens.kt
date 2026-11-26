@@ -929,7 +929,7 @@ private fun KachatLiveForm(
 /**
  * A square tile for one name in the marketplace grids (For sale, Available; iOS 27a4f39
  * `KachatNameTile`): the full name - it wraps onto more lines, never truncates, and the tile grows
- * to fit - with ".kachat" under it, then the footer: the price asked, and any button. Centered
+ * to fit - bare, no ".kachat" (iOS 522fd9f4), then the footer: the price asked, and any button. Centered
  * (iOS c488d1d). [name] null
  * draws the tile's shape redacted (the preview pages: no invented name). [onClick] opens the name;
  * a button in [footer] keeps its own tap.
@@ -953,12 +953,8 @@ fun KachatNameTile(
         Spacer(Modifier.weight(1f))
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
             if (name != null) {
+                // bare, never with the ending (owner, iOS 522fd9f4)
                 Text(name, color = colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 17.sp, textAlign = TextAlign.Center)
-                // the ending only when Show .kachat Endings is on (off by default): the marketplace
-                // sells names, and a name is just the name (iOS 518fdc8c)
-                if (com.kachat.app.models.KachatNameLabel.showsEnding) {
-                    Text(".kachat", color = KaspaTeal, fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
-                }
             } else {
                 Box(Modifier.size(90.dp, 17.dp).clip(RoundedCornerShape(4.dp)).background(redacted))
                 Box(Modifier.size(44.dp, 12.dp).clip(RoundedCornerShape(4.dp)).background(redacted))

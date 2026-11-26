@@ -418,6 +418,10 @@ class BroadcastViewModel @Inject constructor(
      * as the view model goes still counts as read.
      */
     fun markRoomRead(channelName: String) {
+        // A read room takes its notifications down too, ours and the ones a push drew, so the
+        // launcher's count drops with it (iOS 2026-11-26: a room read in the app left the icon at
+        // 1; Android's icon number comes from the notifications that are up).
+        broadcastNotifier.clearDelivered(channelName)
         val now = System.currentTimeMillis()
         broadcastRepository.sendScope.launch {
             val newest = runCatching { broadcastRepository.newestBlockTimestamp(channelName) }.getOrNull()

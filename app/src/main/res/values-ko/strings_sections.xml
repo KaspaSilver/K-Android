@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Section names (iOS 47631a48, owner 2026-11-26): Chats, Posts, Arcade. -->
+<resources>
+    <string name="tab_chats">채팅</string>
+    <string name="tab_posts">게시물</string>
+    <string name="tab_arcade">아케이드</string>
+</resources>

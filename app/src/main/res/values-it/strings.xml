@@ -84,7 +84,6 @@
     <string name="import_account">Importa account</string>
     <string name="import_existing_account">Importa account esistente</string>
     <string name="incoming_notifications">Notifiche in arrivo</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K deve connettersi a un nodo. Come vuoi connetterti?</string>
     <string name="kaspa_explorer">Kaspa Explorer</string>
     <string name="label_optional">Etichetta (opzionale)</string>
@@ -1433,8 +1432,6 @@
     <string name="your_account">Il tuo account</string>
     <string name="checking_this_wallets_address">Controllo dell\'indirizzo di questo wallet...</string>
     <string name="this_wallet_type_has_a_single_address">Questo tipo di wallet ha un solo indirizzo, quindi non c\'è altro da scansionare.</string>
-    <string name="show_kachat_endings">Mostra il suffisso .kachat</string>
-    <string name="turn_off_to_show_names_like_alice_instead">Disattiva per mostrare nomi come alice invece di alice.kachat. Un nome che hai dato tu a qualcuno non ha mai il suffisso.</string>
     <string name="microphone_access_required">Accesso al microfono richiesto</string>
     <string name="allow_camera_access_in_settings_to_take_photos">Consenti l’accesso alla fotocamera in Impostazioni per scattare foto nelle chat.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">Consenti l’accesso al microfono in Impostazioni per registrare messaggi vocali.</string>

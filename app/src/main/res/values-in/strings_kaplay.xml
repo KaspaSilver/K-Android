@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">selesai</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">Saya mengalahkan %s (Level %d) dalam %d langkah di K. Bisakah Anda lebih sedikit?</string>
-    <string name="kp_f81826d956cc" formatted="false">Ikuti turnamen caturku di K: buka KaPlay &gt; Catur &gt; Turnamen &gt; Gabung dengan kode, lalu masukkan %s.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">Ayo main catur denganku di K: buka KaPlay &gt; Catur &gt; 1v1 &gt; Gabung dengan kode, lalu masukkan %s.</string>
+    <string name="kp_ee8790114cec" formatted="false">Ikuti turnamen caturku di K: buka Arcade &gt; Catur &gt; Turnamen &gt; Gabung dengan kode, lalu masukkan %s.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">Ayo main catur denganku di K: buka Arcade &gt; Catur &gt; 1v1 &gt; Gabung dengan kode, lalu masukkan %s.</string>
     <string name="kp_f4fa709cb963" formatted="false">Perempat final</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Hasil tidak terkirim.</string>
     <string name="kaplay_leaderboard_all_time">Sepanjang waktu</string>

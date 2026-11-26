@@ -84,7 +84,6 @@
     <string name="import_account">ייבא חשבון</string>
     <string name="import_existing_account">ייבא חשבון קיים</string>
     <string name="incoming_notifications">הודעות נכנסות</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K צריך להתחבר לצומת. איך תרצה להתחבר?</string>
     <string name="kaspa_explorer">סייר קספה</string>
     <string name="label_optional">תווית (אופציונלי)</string>
@@ -1435,8 +1434,6 @@
     <string name="your_account">החשבון שלך</string>
     <string name="checking_this_wallets_address">בודק את כתובת הארנק הזה...</string>
     <string name="this_wallet_type_has_a_single_address">לסוג הארנק הזה יש כתובת אחת, ולכן אין מה לסרוק מעבר לה.</string>
-    <string name="show_kachat_endings">הצגת הסיומת ‎.kachat</string>
-    <string name="turn_off_to_show_names_like_alice_instead">כבו כדי להציג שמות כמו alice במקום alice.kachat. לשם שנתתם בעצמכם למישהו אף פעם אין את הסיומת.</string>
     <string name="microphone_access_required">נדרשת גישה למיקרופון</string>
     <string name="allow_camera_access_in_settings_to_take_photos">אפשרו גישה למצלמה בהגדרות כדי לצלם תמונות בצ׳אטים.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">אפשרו גישה למיקרופון בהגדרות כדי להקליט הודעות קוליות.</string>

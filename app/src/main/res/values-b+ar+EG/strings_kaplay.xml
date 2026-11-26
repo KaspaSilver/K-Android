@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">خلصت</string>
     <string name="kp_691a77cd21a3" formatted="false">ضد</string>
     <string name="kp_aa93adb4f65c" formatted="false">غلبت %s (المستوى %d) في %d نقلة على K. تفتكر تقدر تعملها في نقلات أقل؟</string>
-    <string name="kp_f81826d956cc" formatted="false">انضم لبطولة الشطرنج بتاعتي على K: افتح KaPlay &gt; الشطرنج &gt; البطولات &gt; الانضمام بكود، واكتب %s.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">العب معايا شطرنج على K: افتح KaPlay &gt; الشطرنج &gt; 1v1 &gt; الانضمام بكود، واكتب %s.</string>
+    <string name="kp_ee8790114cec" formatted="false">انضم لبطولة الشطرنج بتاعتي على K: افتح آركيد &gt; الشطرنج &gt; البطولات &gt; الانضمام بكود، واكتب %s.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">العب معايا شطرنج على K: افتح آركيد &gt; الشطرنج &gt; 1v1 &gt; الانضمام بكود، واكتب %s.</string>
     <string name="kp_f4fa709cb963" formatted="false">ربع النهائي</string>
     <string name="kp_3ce0ac6e9413" formatted="false">النتيجة ما اتبعتتش.</string>
     <string name="kaplay_leaderboard_all_time">كل الأوقات</string>

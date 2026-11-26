@@ -893,9 +893,8 @@ fun AddressBookEntryEditor(
         }
     }
     // What "Use Their Username" fills in: a typed name that resolved, else the address's
-    // .kachat name. Saved in full ("alice.kachat"), never the shortened form the hide-endings
-    // setting shows, since the book syncs to Nextcloud and KaPay, where that setting doesn't
-    // apply (iOS 413f6d6d, 518fdc8c).
+    // .kachat name. Saved in full ("alice.kachat"), never the bare form K shows names in, since
+    // the book syncs to Nextcloud and KaPay (iOS 413f6d6d, 518fdc8c).
     val domainSuggestion: String? = run {
         val tld = selectedTld
         val shown = resolvedName

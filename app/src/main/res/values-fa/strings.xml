@@ -99,7 +99,6 @@
     <string name="import_existing_account">وارد کردن حساب موجود</string>
     <string name="incoming_notifications">اعلان های دریافتی</string>
     <string name="invalid_address_format">فرمت آدرس نامعتبر است</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K باید به یک گره متصل شود. چگونه می‌خواهید متصل شوید؟</string>
     <string name="kaspa_explorer">کاوشگر کاسپا</string>
     <string name="label_optional">برچسب (اختیاری)</string>
@@ -1438,8 +1437,6 @@
     <string name="your_account">حساب شما</string>
     <string name="checking_this_wallets_address">در حال بررسی آدرس این کیف پول...</string>
     <string name="this_wallet_type_has_a_single_address">این نوع کیف پول فقط یک آدرس دارد، پس چیزی برای اسکن بیشتر نیست.</string>
-    <string name="show_kachat_endings">نمایش پسوند ‎.kachat</string>
-    <string name="turn_off_to_show_names_like_alice_instead">خاموشش کنید تا نام‌ها به‌صورت alice به‌جای alice.kachat نمایش داده شوند. نامی که خودتان به کسی داده‌اید هرگز این پسوند را ندارد.</string>
     <string name="microphone_access_required">دسترسی به میکروفون لازم است</string>
     <string name="allow_camera_access_in_settings_to_take_photos">برای گرفتن عکس در گفتگوها، دسترسی به دوربین را در تنظیمات مجاز کنید.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">برای ضبط پیام صوتی، دسترسی به میکروفون را در تنظیمات مجاز کنید.</string>

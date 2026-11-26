@@ -21,7 +21,7 @@ fun KaPostsNotificationSettingsScreen(onBack: () -> Unit, settingsViewModel: KaP
     val dislikes by settingsViewModel.kaPostsNotifyDislikes.collectAsState(true)
     val comments by settingsViewModel.kaPostsNotifyComments.collectAsState(true)
     val mentions by settingsViewModel.kaPostsNotifyMentions.collectAsState(true)
-    SettingsFormPage(title = "KaPost", onBack = onBack) {
+    SettingsFormPage(title = androidx.compose.ui.res.stringResource(com.kachat.app.R.string.tab_posts), onBack = onBack) {
         SettingsFormSection(title = null) {
             SettingsSwitchItem(stringResource(R.string.kaposts_likes), likes) { settingsViewModel.setKaPostsNotifyLikes(it) }
             SettingsDivider()

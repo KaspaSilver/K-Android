@@ -82,7 +82,6 @@
     <string name="import_account">Impor Akun</string>
     <string name="import_existing_account">Impor Akun yang Ada</string>
     <string name="incoming_notifications">Pemberitahuan Masuk</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K perlu terhubung ke sebuah node. Bagaimana Anda ingin terhubung?</string>
     <string name="kaspa_explorer">Penjelajah Kaspa</string>
     <string name="label_optional">Label (opsional)</string>
@@ -1431,8 +1430,6 @@
     <string name="your_account">Akun Anda</string>
     <string name="checking_this_wallets_address">Memeriksa alamat dompet ini...</string>
     <string name="this_wallet_type_has_a_single_address">Jenis dompet ini hanya punya satu alamat, jadi tidak ada lagi yang perlu dipindai.</string>
-    <string name="show_kachat_endings">Tampilkan Akhiran .kachat</string>
-    <string name="turn_off_to_show_names_like_alice_instead">Matikan untuk menampilkan nama seperti alice, bukan alice.kachat. Nama yang Anda berikan sendiri kepada seseorang tidak pernah memakai akhiran ini.</string>
     <string name="microphone_access_required">Akses Mikrofon Diperlukan</string>
     <string name="allow_camera_access_in_settings_to_take_photos">Izinkan akses kamera di Pengaturan untuk mengambil foto di chat.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">Izinkan akses mikrofon di Pengaturan untuk merekam pesan suara.</string>

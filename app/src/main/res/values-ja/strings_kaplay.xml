@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">終了</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">Kで%s（レベル%d）に%d手で勝ちました。もっと少ない手数で勝てる？</string>
-    <string name="kp_f81826d956cc" formatted="false">Kの私のチェストーナメントに参加しよう：KaPlay &gt; チェス &gt; トーナメント &gt; コードで参加 を開いて、%s を入力してね。</string>
-    <string name="kp_c2ecefef54c6" formatted="false">Kでチェスをしよう：KaPlay &gt; チェス &gt; 1v1 &gt; コードで参加 を開いて、%s を入力してね。</string>
+    <string name="kp_ee8790114cec" formatted="false">Kの私のチェストーナメントに参加しよう：アーケード &gt; チェス &gt; トーナメント &gt; コードで参加 を開いて、%s を入力してね。</string>
+    <string name="kp_74ad16e3c85d" formatted="false">Kでチェスをしよう：アーケード &gt; チェス &gt; 1v1 &gt; コードで参加 を開いて、%s を入力してね。</string>
     <string name="kp_f4fa709cb963" formatted="false">準々決勝</string>
     <string name="kp_3ce0ac6e9413" formatted="false">結果は送信されませんでした。</string>
     <string name="kaplay_leaderboard_all_time">全期間</string>

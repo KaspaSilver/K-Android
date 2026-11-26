@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">завершена</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">Победа над %s (уровень %d) за %d ходов в K. Сможете за меньшее число ходов?</string>
-    <string name="kp_f81826d956cc" formatted="false">Присоединяйся к моему шахматному турниру в K: открой «KaPlay» &gt; «Шахматы» &gt; «Турниры» &gt; «Войти по коду» и введи %s.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">Сыграй со мной в шахматы в K: открой «KaPlay» &gt; «Шахматы» &gt; 1v1 &gt; «Войти по коду» и введи %s.</string>
+    <string name="kp_ee8790114cec" formatted="false">Присоединяйся к моему шахматному турниру в K: открой «Аркада» &gt; «Шахматы» &gt; «Турниры» &gt; «Войти по коду» и введи %s.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">Сыграй со мной в шахматы в K: открой «Аркада» &gt; «Шахматы» &gt; 1v1 &gt; «Войти по коду» и введи %s.</string>
     <string name="kp_f4fa709cb963" formatted="false">Четвертьфиналы</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Результат не отправлен.</string>
     <string name="kaplay_leaderboard_all_time">За всё время</string>

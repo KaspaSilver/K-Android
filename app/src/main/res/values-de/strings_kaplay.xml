@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">beendet</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">Ich habe %s (Level %d) in %d Zügen auf K besiegt. Schaffst du es in weniger?</string>
-    <string name="kp_f81826d956cc" formatted="false">Tritt meinem Schachturnier in K bei: Öffne KaPlay &gt; Schach &gt; Turniere &gt; Mit Code beitreten und gib %s ein.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">Spiel Schach gegen mich in K: Öffne KaPlay &gt; Schach &gt; 1v1 &gt; Mit Code beitreten und gib %s ein.</string>
+    <string name="kp_ee8790114cec" formatted="false">Tritt meinem Schachturnier in K bei: Öffne Arcade &gt; Schach &gt; Turniere &gt; Mit Code beitreten und gib %s ein.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">Spiel Schach gegen mich in K: Öffne Arcade &gt; Schach &gt; 1v1 &gt; Mit Code beitreten und gib %s ein.</string>
     <string name="kp_f4fa709cb963" formatted="false">Viertelfinale</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Das Ergebnis wurde nicht gesendet.</string>
     <string name="kaplay_leaderboard_all_time">Gesamt</string>

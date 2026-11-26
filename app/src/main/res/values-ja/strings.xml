@@ -84,7 +84,6 @@
     <string name="import_account">アカウントをインポート</string>
     <string name="import_existing_account">既存のアカウントをインポート</string>
     <string name="incoming_notifications">受信通知</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">Kはノードに接続する必要があります。どのように接続しますか?</string>
     <string name="kaspa_explorer">Kaspaエクスプローラー</string>
     <string name="label_optional">ラベル (任意)</string>
@@ -1432,8 +1431,6 @@
     <string name="your_account">あなたのアカウント</string>
     <string name="checking_this_wallets_address">このウォレットのアドレスを確認しています...</string>
     <string name="this_wallet_type_has_a_single_address">このウォレットの種類にはアドレスが1つしかないため、これ以上スキャンするものはありません。</string>
-    <string name="show_kachat_endings">.kachat の末尾を表示</string>
-    <string name="turn_off_to_show_names_like_alice_instead">オフにすると、名前が alice.kachat ではなく alice と表示されます。あなたが自分で付けた名前には、この末尾は付きません。</string>
     <string name="microphone_access_required">マイクへのアクセスが必要です</string>
     <string name="allow_camera_access_in_settings_to_take_photos">チャットで写真を撮るには、設定でカメラへのアクセスを許可してください。</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">ボイスメッセージを録音するには、設定でマイクへのアクセスを許可してください。</string>

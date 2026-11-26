@@ -84,7 +84,7 @@ import androidx.compose.material.icons.filled.CheckCircle
  * which route a reselect was for.
  */
 sealed class Screen(val route: String, @androidx.annotation.StringRes val labelRes: Int, val icon: ImageVector) {
-    object Chats       : Screen(AppTab.CHATS.route,        R.string.kachat,          Icons.Default.Forum)
+    object Chats       : Screen(AppTab.CHATS.route,        R.string.tab_chats,          Icons.Default.Forum)
     object Wallet      : Screen(AppTab.WALLET.route,       R.string.wallet_title,    Icons.Filled.AccountBalanceWallet)
     object AddressBook : Screen(AppTab.ADDRESS_BOOK.route, R.string.ab_address_book, ContactsFilledIcon)
     object Profile     : Screen(AppTab.PROFILE.route,      R.string.profile,         Icons.Default.AccountCircle)

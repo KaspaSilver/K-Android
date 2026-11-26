@@ -84,7 +84,6 @@
     <string name="import_account">Hesabı İçe Aktar</string>
     <string name="import_existing_account">Mevcut Hesabı İçe Aktar</string>
     <string name="incoming_notifications">Gelen Bildirimler</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K\'in bir duguma baglanmasi gerekiyor. Nasil baglanmak istersiniz?</string>
     <string name="kaspa_explorer">Kaspa Kesif Motoru</string>
     <string name="label_optional">Etiket (istege bagli)</string>
@@ -1433,8 +1432,6 @@
     <string name="your_account">Hesabınız</string>
     <string name="checking_this_wallets_address">Bu cüzdanın adresi kontrol ediliyor...</string>
     <string name="this_wallet_type_has_a_single_address">Bu cüzdan türünün tek bir adresi var; taranacak başka bir şey yok.</string>
-    <string name="show_kachat_endings">.kachat Uzantısını Göster</string>
-    <string name="turn_off_to_show_names_like_alice_instead">Kapatırsanız adlar alice.kachat yerine alice olarak görünür. Birine kendi verdiğiniz adda bu uzantı hiçbir zaman olmaz.</string>
     <string name="microphone_access_required">Mikrofon Erişimi Gerekli</string>
     <string name="allow_camera_access_in_settings_to_take_photos">Sohbetlerde fotoğraf çekmek için Ayarlar’dan kamera erişimine izin verin.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">Sesli mesaj kaydetmek için Ayarlar’dan mikrofon erişimine izin verin.</string>

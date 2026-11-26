@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">종료</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">K에서 %s(레벨 %d)을(를) %d수 만에 이겼어요. 더 적은 수로 이길 수 있나요?</string>
-    <string name="kp_f81826d956cc" formatted="false">K에서 내 체스 토너먼트에 참여하세요: KaPlay &gt; 체스 &gt; 토너먼트 &gt; 코드로 참여를 열고 %s을(를) 입력하세요.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">K에서 나와 체스 한 판 둬요: KaPlay &gt; 체스 &gt; 1v1 &gt; 코드로 참여를 열고 %s을(를) 입력하세요.</string>
+    <string name="kp_ee8790114cec" formatted="false">K에서 내 체스 토너먼트에 참여하세요: 아케이드 &gt; 체스 &gt; 토너먼트 &gt; 코드로 참여를 열고 %s을(를) 입력하세요.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">K에서 나와 체스 한 판 둬요: 아케이드 &gt; 체스 &gt; 1v1 &gt; 코드로 참여를 열고 %s을(를) 입력하세요.</string>
     <string name="kp_f4fa709cb963" formatted="false">8강</string>
     <string name="kp_3ce0ac6e9413" formatted="false">결과가 전송되지 않았습니다.</string>
     <string name="kaplay_leaderboard_all_time">전체 기간</string>

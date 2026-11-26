@@ -84,7 +84,6 @@
     <string name="import_account">Konto importieren</string>
     <string name="import_existing_account">Bestehendes Konto importieren</string>
     <string name="incoming_notifications">Eingehende Benachrichtigungen</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K muss sich mit einem Knoten verbinden. Wie möchtest du dich verbinden?</string>
     <string name="kaspa_explorer">Kaspa Explorer</string>
     <string name="label_optional">Bezeichnung (optional)</string>
@@ -1432,8 +1431,6 @@
     <string name="your_account">Dein Konto</string>
     <string name="checking_this_wallets_address">Adresse dieses Wallets wird geprüft...</string>
     <string name="this_wallet_type_has_a_single_address">Dieser Wallet-Typ hat nur eine Adresse, es gibt also nichts weiter zu scannen.</string>
-    <string name="show_kachat_endings">.kachat-Endung anzeigen</string>
-    <string name="turn_off_to_show_names_like_alice_instead">Aus, um Namen wie alice statt alice.kachat anzuzeigen. Ein Name, den du jemandem selbst gegeben hast, hat nie die Endung.</string>
     <string name="microphone_access_required">Mikrofonzugriff erforderlich</string>
     <string name="allow_camera_access_in_settings_to_take_photos">Erlaube den Kamerazugriff in den Einstellungen, um in Chats Fotos aufzunehmen.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">Erlaube den Mikrofonzugriff in den Einstellungen, um Sprachnachrichten aufzunehmen.</string>

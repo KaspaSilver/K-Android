@@ -1704,24 +1704,30 @@ fun BroadcastChannelScreen(
                                     // matches 1:1/group chats' treatment of the same case.
                                     val linkColor = if (isMine) LocalAppColors.current.onOutgoingBubble else KaspaTeal
                                     val annotatedBody = remember(shownText, isMine) {
+                                        // @usernames drawn "@alice", never with the ending,
+                                        // whatever the sender typed (iOS 522fd9f4); links are
+                                        // found in the text as drawn.
+                                        val mentionsOn = com.kachat.app.util.MentionsFeature.ENABLED
+                                        val shown = if (mentionsOn) com.kachat.app.util.UsernameMention.shown(shownText) else null
+                                        val bodyText = shown?.text ?: shownText
                                         buildAnnotatedString {
-                                            append(shownText)
-                                            for (match in TextLinkify.findUrls(shownText)) {
+                                            append(bodyText)
+                                            for (match in TextLinkify.findUrls(bodyText)) {
                                                 addStyle(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline), match.range.first, match.range.last + 1)
                                                 addStringAnnotation("URL", match.uri, match.range.first, match.range.last + 1)
                                             }
                                             // kachat:// isn't a web URL, so TextLinkify never
                                             // sees it - style/annotate it here so it's tappable
                                             // inline too.
-                                            KaChatLink.findFirst(shownText)?.let { internal ->
+                                            KaChatLink.findFirst(bodyText)?.let { internal ->
                                                 addStyle(SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline), internal.range.first, internal.range.last + 1)
                                                 addStringAnnotation("URL", internal.raw, internal.range.first, internal.range.last + 1)
                                             }
                                             // @usernames styled and tappable: a tap opens that
                                             // person's profile (iOS UsernameMention.attributed,
                                             // 2026-11-24).
-                                            if (com.kachat.app.util.MentionsFeature.ENABLED) {
-                                                for (token in com.kachat.app.util.UsernameMention.tokens(shownText)) {
+                                            if (shown != null) {
+                                                for (token in shown.mentions) {
                                                     addStyle(SpanStyle(color = linkColor, fontWeight = FontWeight.SemiBold), token.range.first, token.range.last + 1)
                                                     addStringAnnotation(ROOM_MENTION_TAG, token.name, token.range.first, token.range.last + 1)
                                                 }

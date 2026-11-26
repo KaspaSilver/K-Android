@@ -41,7 +41,7 @@ enum class NameServiceTLD(val raw: String) {
 /** What a typed name points to. */
 data class NameResolution(
     val tld: NameServiceTLD,
-    /** The name as shown (with or without its ending, per Show .kachat Endings). */
+    /** The name as shown (bare, never the ending: iOS 522fd9f4). */
     val display: String,
     /** Where it points; null when the name is not registered (or has no address to pay). */
     val address: String?,

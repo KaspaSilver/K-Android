@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">已结束</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">我在 K 上战胜了 %s（等级 %d），只用了 %d 步。你能用更少的步数做到吗？</string>
-    <string name="kp_f81826d956cc" formatted="false">来 K 参加我的国际象棋锦标赛吧：打开 KaPlay &gt; 国际象棋 &gt; 锦标赛 &gt; 用代码加入，然后输入 %s。</string>
-    <string name="kp_c2ecefef54c6" formatted="false">来 K 和我下棋吧：打开 KaPlay &gt; 国际象棋 &gt; 1v1 &gt; 用代码加入，然后输入 %s。</string>
+    <string name="kp_ee8790114cec" formatted="false">来 K 参加我的国际象棋锦标赛吧：打开 街机 &gt; 国际象棋 &gt; 锦标赛 &gt; 用代码加入，然后输入 %s。</string>
+    <string name="kp_74ad16e3c85d" formatted="false">来 K 和我下棋吧：打开 街机 &gt; 国际象棋 &gt; 1v1 &gt; 用代码加入，然后输入 %s。</string>
     <string name="kp_f4fa709cb963" formatted="false">四分之一决赛</string>
     <string name="kp_3ce0ac6e9413" formatted="false">结果未发送。</string>
     <string name="kaplay_leaderboard_all_time">总榜</string>

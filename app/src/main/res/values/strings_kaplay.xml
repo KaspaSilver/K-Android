@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">finished</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">I beat %s (Level %d) in %d moves on K. Think you can do it in fewer?</string>
-    <string name="kp_f81826d956cc" formatted="false">Join my chess tournament in K: open KaPlay &gt; Chess &gt; Tournaments &gt; Join with a code, and enter %s.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">Play me at chess in K: open KaPlay &gt; Chess &gt; 1v1 &gt; Join with a code, and enter %s.</string>
+    <string name="kp_ee8790114cec" formatted="false">Join my chess tournament in K: open Arcade &gt; Chess &gt; Tournaments &gt; Join with a code, and enter %s.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">Play me at chess in K: open Arcade &gt; Chess &gt; 1v1 &gt; Join with a code, and enter %s.</string>
     <string name="kp_f4fa709cb963" formatted="false">Quarterfinals</string>
     <string name="kp_3ce0ac6e9413" formatted="false">The result was not sent.</string>
     <string name="kaplay_leaderboard_all_time">All time</string>
@@ -326,7 +326,6 @@
     <string name="kaplay_no_finished_duels_this_month">No finished 1v1 games this month yet.</string>
     <string name="kaplay_no_finished_tournaments">No finished tournaments yet.</string>
     <string name="kaplay_no_finished_tournaments_this_month">No finished tournaments this month yet.</string>
-    <string name="kaplay_tab_games" translatable="false">KaPlay</string>
     <string name="kaplay_tab_leaderboard">Leaderboard</string>
     <!-- K 5.4 (iOS 518fdc8c): Chess's own screen, its Play sheet, and audit 2026-11-24 #40. -->
     <string name="kp_640de0cb0b2c" formatted="false">Your record: %s won, %s lost</string>

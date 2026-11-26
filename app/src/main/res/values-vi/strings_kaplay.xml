@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">đã kết thúc</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">Tôi đã thắng %s (Cấp %d) trong %d nước trên K. Bạn có làm được với ít nước hơn không?</string>
-    <string name="kp_f81826d956cc" formatted="false">Tham gia giải cờ vua của tôi trên K: mở KaPlay &gt; Cờ vua &gt; Giải đấu &gt; Tham gia bằng mã, rồi nhập %s.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">Chơi cờ vua với tôi trên K: mở KaPlay &gt; Cờ vua &gt; 1v1 &gt; Tham gia bằng mã, rồi nhập %s.</string>
+    <string name="kp_ee8790114cec" formatted="false">Tham gia giải cờ vua của tôi trên K: mở Arcade &gt; Cờ vua &gt; Giải đấu &gt; Tham gia bằng mã, rồi nhập %s.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">Chơi cờ vua với tôi trên K: mở Arcade &gt; Cờ vua &gt; 1v1 &gt; Tham gia bằng mã, rồi nhập %s.</string>
     <string name="kp_f4fa709cb963" formatted="false">Tứ kết</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Kết quả chưa được gửi.</string>
     <string name="kaplay_leaderboard_all_time">Mọi thời đại</string>

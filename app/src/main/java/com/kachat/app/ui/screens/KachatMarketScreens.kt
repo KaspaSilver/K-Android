@@ -268,8 +268,15 @@ fun KachatMarketScreen(
                 // Hero: the logo, "Claim your name on Kaspa" and the testnet / setting-up status
                 // (iOS 27a4f39, 5848fb0).
                 Column(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // the wordmark, 56 tall (iOS KachatTabIcon.view(side: 56))
-                    KachatWordmark(56.dp)
+                    // "Usernames", where the ".kachat" wordmark was (owner, iOS 522fd9f4)
+                    Text(
+                        stringResource(R.string.shell54_usernames),
+                        color = KaspaTeal,
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontFamily = IosRoundedFontFamily,
+                        textAlign = TextAlign.Center,
+                    )
                     Text(stringResource(R.string.kn_claim_your_name_on_kaspa), color = colors.textSecondary, fontSize = 15.sp, textAlign = TextAlign.Center)
                     if (isLive) {
                         KachatTestnetBadge()
@@ -419,10 +426,6 @@ private fun KachatNameSearchCard(
                     tint = colors.textSecondary,
                     modifier = Modifier.size(20.dp).clip(CircleShape).clickable { onSearchText("") },
                 )
-            }
-            // the ending only when Show .kachat Endings is on (off by default, iOS 518fdc8c)
-            if (com.kachat.app.models.KachatNameLabel.showsEnding) {
-                Text(".kachat", color = KaspaTeal, fontWeight = FontWeight.SemiBold, fontSize = 20.sp)
             }
         }
         val typed = searchText.trim().lowercase()
@@ -901,8 +904,8 @@ fun KachatSetupGuideScreen(onClose: () -> Unit) {
                     header({ KachatWordmark(56.dp) }, R.string.kg_claim_title, R.string.kg_claim_body)
                     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(colors.surface).padding(12.dp)) {
+                            // no ".kachat" after it: the ending is never shown (iOS 522fd9f4)
                             Text("yourname", color = colors.textTertiary, modifier = Modifier.weight(1f))
-                            Text(".kachat", color = colors.textSecondary, fontWeight = FontWeight.SemiBold)
                         }
                         Text(stringResource(R.string.kg_claim_hint), color = colors.textSecondary, fontSize = 12.sp)
                     }
@@ -1233,12 +1236,8 @@ fun KachatAddressLiveNamesList(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        painter = rememberKachatWordmarkPainter(),
-                        contentDescription = null,
-                        tint = KaspaTeal,
-                        modifier = Modifier.size(width = 120.dp, height = 40.dp),
-                    )
+                    // the "@" symbol, no longer the wordmark (iOS 522fd9f4)
+                    Icon(Icons.Filled.AlternateEmail, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(40.dp))
                     Text(
                         stringResource(R.string.kachat_no_names_on_address),
                         color = colors.textPrimary,
@@ -1280,12 +1279,8 @@ private fun KachatAddressComingNote() {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(
-                    painter = rememberKachatWordmarkPainter(),
-                    contentDescription = null,
-                    tint = KaspaTeal,
-                    modifier = Modifier.size(width = 120.dp, height = 40.dp),
-                )
+                // the "@" symbol, no longer the wordmark (iOS 522fd9f4)
+                Icon(Icons.Filled.AlternateEmail, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(40.dp))
                 Text(
                     stringResource(R.string.kachat_no_names_on_address),
                     color = colors.textPrimary,

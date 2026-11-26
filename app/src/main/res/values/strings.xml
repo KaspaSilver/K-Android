@@ -107,7 +107,6 @@
     <string name="incoming_notifications">Incoming Notifications</string>
     <string name="invalid_address_format">Invalid address format</string>
     <!-- Someone ELSE'"'"'s domains, in Chat Info and the contact domains screen. "Your" is wrong there. -->
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K needs to connect to a node. How would you like to connect?</string>
     <string name="kaspa_explorer">Kaspa Explorer</string>
     <string name="label_optional">Label (optional)</string>
@@ -1470,8 +1469,6 @@
     <string name="your_account">Your Account</string>
     <string name="checking_this_wallets_address">Checking this wallet\'s address...</string>
     <string name="this_wallet_type_has_a_single_address">This wallet type has a single address, so there is nothing further to scan.</string>
-    <string name="show_kachat_endings">Show .kachat Endings</string>
-    <string name="turn_off_to_show_names_like_alice_instead">Turn off to show names like alice instead of alice.kachat. A name you gave someone yourself never has the ending.</string>
     <string name="microphone_access_required">Microphone Access Required</string>
     <string name="allow_camera_access_in_settings_to_take_photos">Allow camera access in Settings to take photos in chats.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">Allow microphone access in Settings to record voice messages.</string>

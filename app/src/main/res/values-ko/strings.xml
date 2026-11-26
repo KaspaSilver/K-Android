@@ -84,7 +84,6 @@
     <string name="import_account">계정 가져오기</string>
     <string name="import_existing_account">기존 계정 가져오기</string>
     <string name="incoming_notifications">수신 알림</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K이 노드에 연결해야 합니다. 어떻게 연결하시겠습니까?</string>
     <string name="kaspa_explorer">Kaspa 탐색기</string>
     <string name="label_optional">라벨 (선택 사항)</string>
@@ -1432,8 +1431,6 @@
     <string name="your_account">내 계정</string>
     <string name="checking_this_wallets_address">이 지갑의 주소를 확인하는 중...</string>
     <string name="this_wallet_type_has_a_single_address">이 지갑 유형은 주소가 하나뿐이라 더 스캔할 것이 없습니다.</string>
-    <string name="show_kachat_endings">.kachat 끝부분 표시</string>
-    <string name="turn_off_to_show_names_like_alice_instead">끄면 이름이 alice.kachat 대신 alice로 표시됩니다. 내가 직접 붙인 이름에는 끝부분이 붙지 않습니다.</string>
     <string name="microphone_access_required">마이크 접근 권한 필요</string>
     <string name="allow_camera_access_in_settings_to_take_photos">채팅에서 사진을 찍으려면 설정에서 카메라 접근을 허용하세요.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">음성 메시지를 녹음하려면 설정에서 마이크 접근을 허용하세요.</string>

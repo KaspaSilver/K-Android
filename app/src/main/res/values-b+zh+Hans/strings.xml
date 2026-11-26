@@ -84,7 +84,6 @@
     <string name="import_account">导入账户</string>
     <string name="import_existing_account">导入现有账户</string>
     <string name="incoming_notifications">传入通知</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K 需要连接到一个节点。您希望如何连接?</string>
     <string name="kaspa_explorer">Kaspa 浏览器</string>
     <string name="label_optional">标签(可选)</string>
@@ -1432,8 +1431,6 @@
     <string name="your_account">你的账户</string>
     <string name="checking_this_wallets_address">正在检查此钱包的地址...</string>
     <string name="this_wallet_type_has_a_single_address">此类钱包只有一个地址，所以没有更多可扫描的了。</string>
-    <string name="show_kachat_endings">显示 .kachat 后缀</string>
-    <string name="turn_off_to_show_names_like_alice_instead">关闭后，名称会显示为 alice，而不是 alice.kachat。你自己给别人起的名字永远不会带这个后缀。</string>
     <string name="microphone_access_required">需要麦克风访问权限</string>
     <string name="allow_camera_access_in_settings_to_take_photos">请在“设置”中允许访问相机，以便在聊天中拍照。</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">请在“设置”中允许访问麦克风，以便录制语音消息。</string>

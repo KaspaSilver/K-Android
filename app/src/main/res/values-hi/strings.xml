@@ -84,7 +84,6 @@
     <string name="import_account">खाता आयात करें</string>
     <string name="import_existing_account">मौजूदा खाता आयात करें</string>
     <string name="incoming_notifications">आने वाली सूचनाएं</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K को एक नोड से जुड़ने की आवश्यकता है। आप कैसे कनेक्ट करना चाहेंगे?</string>
     <string name="kaspa_explorer">कास्पा एक्सप्लोरर</string>
     <string name="label_optional">लेबल (वैकल्पिक)</string>
@@ -1433,8 +1432,6 @@
     <string name="your_account">आपका खाता</string>
     <string name="checking_this_wallets_address">इस वॉलेट का पता जांचा जा रहा है...</string>
     <string name="this_wallet_type_has_a_single_address">इस वॉलेट प्रकार में एक ही पता होता है, इसलिए आगे स्कैन करने के लिए कुछ नहीं है।</string>
-    <string name="show_kachat_endings">.kachat अंत दिखाएँ</string>
-    <string name="turn_off_to_show_names_like_alice_instead">बंद करने पर नाम alice.kachat की जगह alice दिखेंगे। जो नाम आपने खुद किसी को दिया है, उसमें यह अंत कभी नहीं होता।</string>
     <string name="microphone_access_required">माइक्रोफ़ोन एक्सेस आवश्यक</string>
     <string name="allow_camera_access_in_settings_to_take_photos">चैट में फ़ोटो लेने के लिए सेटिंग्स में कैमरा एक्सेस की अनुमति दें।</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">वॉइस मैसेज रिकॉर्ड करने के लिए सेटिंग्स में माइक्रोफ़ोन एक्सेस की अनुमति दें।</string>

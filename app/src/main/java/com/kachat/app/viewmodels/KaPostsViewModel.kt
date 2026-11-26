@@ -1236,7 +1236,7 @@ class KaPostsViewModel @Inject constructor(
 
     /**
      * Whether the search [needle] finds this author by name. A `.kachat` name matches in either
-     * form, whatever Show .kachat Endings shows: its label ("alice") or written out
+     * form: its label ("alice", as shown) or written out
      * ("alice.kachat"). The ending on its own doesn't count, or "kachat" would find every named
      * author (iOS 369794e `nameMatches`).
      */
@@ -2382,8 +2382,8 @@ class KaPostsViewModel @Inject constructor(
     // indexer turns each pubkey in mentioned_pubkeys into a "mention" notification)
 
     /**
-     * The @ suggestions for [query] ("" matches all), as names show in K - the ending only with
-     * Show .kachat Endings on: people you follow, people whose posts you've seen lately, then your
+     * The @ suggestions for [query] ("" matches all), as names show in K (bare, iOS 522fd9f4):
+     * people you follow, people whose posts you've seen lately, then your
      * contacts, only those with a username and never you, plus [extra] (the typed name looked up
      * live, [resolveMentionQuery]) first (iOS `KaPostMentionSources.handles`, 157790b0; it offered
      * contacts only before). Reads each person's cached name, so a composable calling it redraws

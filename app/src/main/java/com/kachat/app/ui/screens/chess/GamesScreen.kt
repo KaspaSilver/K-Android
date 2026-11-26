@@ -34,7 +34,7 @@ import com.kachat.app.viewmodels.WalletViewModel
 /**
  * The KaPlay tab (iOS `.games`, KaPlay's Play tab; iOS 518fdc8c `GamesView`): a card per game.
  * Chess, then the arcade (Snake and 2048, since 2026-11-23, ARCADE.md); a new game is one more
- * card here. Its title is "KaPlay", written as is in every language. No connection dot and no
+ * card here. Its title is "Arcade" in each language (iOS 47631a48; it was "KaPlay"). No connection dot and no
  * backup strip (iOS 518fdc8c: the dot is on Settings only, the strip on Profile only).
  *
  * A bot challenge from a post (`ChessBotLinks.open`, [ChessBotLinkRouter]) is for chess: this
@@ -85,7 +85,7 @@ fun GamesScreen(
     Scaffold(
         containerColor = LocalAppColors.current.background,
         contentWindowInsets = WindowInsets(0),
-        topBar = { ChessHomeBar(onBack = null, title = "KaPlay") },
+        topBar = { ChessHomeBar(onBack = null, title = androidx.compose.ui.res.stringResource(com.kachat.app.R.string.tab_arcade)) },
     ) { padding ->
         Column(
             Modifier

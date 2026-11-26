@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Section names (iOS 47631a48, owner 2026-11-26): Chats, Posts, Arcade. -->
+<resources>
+    <string name="tab_chats">聊天</string>
+    <string name="tab_posts">帖子</string>
+    <string name="tab_arcade">街机</string>
+</resources>

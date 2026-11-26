@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">terminata</string>
     <string name="kp_691a77cd21a3" formatted="false">vs</string>
     <string name="kp_aa93adb4f65c" formatted="false">Ho battuto %s (livello %d) in %d mosse su K. Pensi di farcela in meno?</string>
-    <string name="kp_f81826d956cc" formatted="false">Unisciti al mio torneo di scacchi su K: apri KaPlay &gt; Scacchi &gt; Tornei &gt; Unisciti con un codice e inserisci %s.</string>
-    <string name="kp_c2ecefef54c6" formatted="false">Gioca a scacchi con me su K: apri KaPlay &gt; Scacchi &gt; 1v1 &gt; Unisciti con un codice e inserisci %s.</string>
+    <string name="kp_ee8790114cec" formatted="false">Unisciti al mio torneo di scacchi su K: apri Arcade &gt; Scacchi &gt; Tornei &gt; Unisciti con un codice e inserisci %s.</string>
+    <string name="kp_74ad16e3c85d" formatted="false">Gioca a scacchi con me su K: apri Arcade &gt; Scacchi &gt; 1v1 &gt; Unisciti con un codice e inserisci %s.</string>
     <string name="kp_f4fa709cb963" formatted="false">Quarti di finale</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Il risultato non è stato inviato.</string>
     <string name="kaplay_leaderboard_all_time">Di sempre</string>

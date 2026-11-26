@@ -3,7 +3,6 @@
 <resources>
     <string name="shell_tab_kachat" translatable="false">.kachat</string>
     <string name="shell_kaspa_hub">Kaspa Hub</string>
-    <string name="shell_tab_kapost">KaPost</string>
     <string name="shell_tab_websites">Websites</string>
     <string name="shell_kaspa_websites">Kaspa Websites</string>
     <string name="shell_terms_of_use">Terms of Use</string>

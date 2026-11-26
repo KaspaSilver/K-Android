@@ -358,11 +358,6 @@ class KaChatApplication : Application(), Configuration.Provider {
         ProcessLifecycleOwner.get().lifecycleScope.launch(logOnly) {
             appSettingsRepository.get().verboseApiLogging.collect { com.kachat.app.util.ApiLogging.verbose = it }
         }
-        // Show .kachat Endings: the display rules (KachatNameLabel) read it synchronously from
-        // plain functions like addressDisplayName, so it lives in snapshot state (iOS 94ed3a35).
-        ProcessLifecycleOwner.get().lifecycleScope.launch(logOnly) {
-            appSettingsRepository.get().showKachatNameEndings.collect { com.kachat.app.models.KachatNameLabel.showsEnding = it }
-        }
 
         // Foreground/background transitions. There is deliberately NO mechanism here keeping the
         // process alive while backgrounded: FCM push (see PushRegistrationManager) is the only

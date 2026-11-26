@@ -84,7 +84,6 @@
     <string name="import_account">Импортировать аккаунт</string>
     <string name="import_existing_account">Импортировать существующий аккаунт</string>
     <string name="incoming_notifications">Входящие уведомления</string>
-    <string name="kachat">KaChat</string>
     <string name="kachat_needs_to_connect_to_a">K нужно подключиться к узлу. Как вы хотите подключиться?</string>
     <string name="kaspa_explorer">Kaspa Explorer</string>
     <string name="label_optional">Метка (необязательно)</string>
@@ -1435,8 +1434,6 @@
     <string name="your_account">Ваш аккаунт</string>
     <string name="checking_this_wallets_address">Проверяем адрес этого кошелька...</string>
     <string name="this_wallet_type_has_a_single_address">У этого типа кошелька один адрес, так что сканировать больше нечего.</string>
-    <string name="show_kachat_endings">Показывать окончание .kachat</string>
-    <string name="turn_off_to_show_names_like_alice_instead">Выключите, чтобы имена показывались как alice вместо alice.kachat. У имени, которое вы дали кому-то сами, окончания никогда нет.</string>
     <string name="microphone_access_required">Требуется доступ к микрофону</string>
     <string name="allow_camera_access_in_settings_to_take_photos">Разрешите доступ к камере в Настройках, чтобы снимать фото в чатах.</string>
     <string name="allow_microphone_access_in_settings_to_record_voice">Разрешите доступ к микрофону в Настройках, чтобы записывать голосовые сообщения.</string>

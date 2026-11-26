@@ -51,7 +51,7 @@ enum class AppTab(
     val dockIcon: ImageVector,
     val hubIcon: ImageVector,
 ) {
-    CHATS("chats", "chats", R.string.kachat, Icons.Default.Forum, Icons.Outlined.Forum),
+    CHATS("chats", "chats", R.string.tab_chats, Icons.Default.Forum, Icons.Outlined.Forum),
     WALLET("wallet", "wallet", R.string.wallet_title, Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet),
     // "Contacts" (iOS bc3e1ff3); the route keeps its old name.
     ADDRESS_BOOK("addressBook", "address_book", R.string.ab_address_book, com.kachat.app.ui.screens.ContactsFilledIcon, com.kachat.app.ui.screens.ContactsFilledIcon),
@@ -62,14 +62,15 @@ enum class AppTab(
     HUB("hub", "kaspa_hub", R.string.shell_kaspa_hub, Icons.Default.GridView, Icons.Default.GridView),
     PORTFOLIO("portfolio", "portfolio", R.string.portfolio, Icons.Filled.PieChart, Icons.Outlined.PieChart),
     COLD_STORAGE("coldStorage", "cold_storage", R.string.cold_storage, com.kachat.app.ui.theme.IosSymbols.LockShield, com.kachat.app.ui.theme.IosSymbols.LockShield),
-    // "Usernames", its icon the ".kachat" wordmark (owner's call, iOS 518fdc8c `AppTab.label`).
+    // "Usernames"; its Hub icon is the "@" symbol (owner, iOS 522fd9f4; the .kachat wordmark
+    // until then).
     KACHAT_NAMES("kachatNames", "kachat_names", R.string.shell54_usernames, Icons.Filled.AlternateEmail, Icons.Filled.AlternateEmail),
     // iOS square.text.square (KaPost's Feed tab)
-    KAPOSTS("kaposts", "kaposts", R.string.shell_tab_kapost, Icons.AutoMirrored.Filled.Article, Icons.AutoMirrored.Outlined.Article),
+    KAPOSTS("kaposts", "kaposts", R.string.tab_posts, Icons.AutoMirrored.Filled.Article, Icons.AutoMirrored.Outlined.Article),
     // KaPlay's Play tab. Its leaderboards are inside KaPlay > Chess since iOS 428a797b (owner's
     // call 2026-11-22): the old "leaderboard" tab is gone, and a saved arrangement naming it drops
     // it as it is read ([fromKey] knows no such key), as iOS's `AppTab(rawValue:)` does.
-    GAMES("games", "games", R.string.kaplay_tab_games, Icons.Filled.SportsEsports, Icons.Outlined.SportsEsports),
+    GAMES("games", "games", R.string.tab_arcade, Icons.Filled.SportsEsports, Icons.Outlined.SportsEsports),
     // KaChat Stats left again on 2026-11-25 (iOS 961fc05a): the Explorer's K Activity card
     // replaces it. A saved Hub order naming "kachatStats" drops it as it is read ([fromKey]).
     APPS("apps", "kaspa_websites", R.string.shell_tab_websites, Icons.Filled.Public, Icons.Outlined.Language),

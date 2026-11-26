@@ -313,8 +313,8 @@
     <string name="kp_f957097d7a22" formatted="false">শেষ</string>
     <string name="kp_691a77cd21a3" formatted="false">বনাম</string>
     <string name="kp_aa93adb4f65c" formatted="false">আমি K-তে %s (লেভেল %d)-কে %d চালে হারিয়েছি। আপনি কি এর চেয়ে কম চালে পারবেন?</string>
-    <string name="kp_f81826d956cc" formatted="false">K-তে আমার দাবা টুর্নামেন্টে যোগ দিন: KaPlay &gt; দাবা &gt; টুর্নামেন্ট &gt; কোড দিয়ে যোগ দিন খুলে %s লিখুন।</string>
-    <string name="kp_c2ecefef54c6" formatted="false">K-তে আমার সঙ্গে দাবা খেলুন: KaPlay &gt; দাবা &gt; 1v1 &gt; কোড দিয়ে যোগ দিন খুলে %s লিখুন।</string>
+    <string name="kp_ee8790114cec" formatted="false">K-তে আমার দাবা টুর্নামেন্টে যোগ দিন: আর্কেড &gt; দাবা &gt; টুর্নামেন্ট &gt; কোড দিয়ে যোগ দিন খুলে %s লিখুন।</string>
+    <string name="kp_74ad16e3c85d" formatted="false">K-তে আমার সঙ্গে দাবা খেলুন: আর্কেড &gt; দাবা &gt; 1v1 &gt; কোড দিয়ে যোগ দিন খুলে %s লিখুন।</string>
     <string name="kp_f4fa709cb963" formatted="false">কোয়ার্টার ফাইনাল</string>
     <string name="kp_3ce0ac6e9413" formatted="false">ফলাফল পাঠানো হয়নি।</string>
     <string name="kaplay_leaderboard_all_time">সর্বকালের</string>
