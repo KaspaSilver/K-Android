@@ -201,6 +201,12 @@ class NextcloudSyncService @Inject constructor(
         .stateIn(scope, SharingStarted.Eagerly, null)
 
     init {
+        // The old "KaChat" folder's contacts file, when "K" has one too: merged in by the usual
+        // rules, and what it adds reaches "K" on the next sync (iOS 961fc05a
+        // `mergeLegacyContactsFile`). The old file stays: a phone on an older build may still
+        // write it, and merging again changes nothing.
+        nextcloudService.legacyContactsMerger = { raw, wallet -> mergeLegacyContactsFile(raw, wallet) }
+
         // Keep the periodic fallback job enqueued exactly while it can do anything: an account
         // connected for the active wallet AND that wallet's Automatic Sync toggle on.
         // Disconnect, wallet logout, or toggle-off cancels the scheduled work.
@@ -346,6 +352,8 @@ class NextcloudSyncService @Inject constructor(
                 armUpload(address, waitMs)
                 return
             }
+            // "KaChat" -> "K" first, outside the lock its contacts merge takes (iOS 961fc05a)
+            nextcloudService.migrateLegacyFolderIfNeeded()
             syncMutex.withLock {
                 if (walletManager.activeAddressFlow.value != address) return
                 if (!isAutoSyncActive(address)) return
@@ -378,6 +386,7 @@ class NextcloudSyncService @Inject constructor(
     /** Back Up Contacts Now: the same sync, with no floor and its failure left to the caller. */
     suspend fun backUpContactsNow() {
         val address = walletManager.activeAddressFlow.value ?: throw IOException("Open a wallet account before backing up.")
+        nextcloudService.migrateLegacyFolderIfNeeded()
         syncMutex.withLock {
             val newEtag = syncContactsFile(address)
             if (newEtag != null) dataStore.edit { it[etagKey(address)] = newEtag }
@@ -388,7 +397,8 @@ class NextcloudSyncService @Inject constructor(
      *  written, on anything [contactsFileBody] won't touch. */
     private suspend fun syncContactsFile(address: String): String? {
         val key = BackupCrypto.deriveKey(walletManager.getPrivateKeyBytes())
-        return nextcloudService.runBackup { remote -> withContext(Dispatchers.IO) { contactsFileBody(address, remote, key) } }
+        // the callers settled the folder before taking syncMutex (the move's merge takes it too)
+        return nextcloudService.runBackup(settleFolder = false) { remote -> withContext(Dispatchers.IO) { contactsFileBody(address, remote, key) } }
     }
 
     /**
@@ -433,6 +443,10 @@ class NextcloudSyncService @Inject constructor(
      * [WATCHER_BACKOFF_CAP_MS]) and recover to the normal cadence on the first success.
      */
     private suspend fun watchRemoteChanges(address: String) {
+        // The watcher reads the contacts file in the backup folder: settle "KaChat" -> "K" first,
+        // or it polls a folder the move is about to change (iOS 961fc05a, audit 2026-11-25 M3).
+        runCatching { nextcloudService.migrateLegacyFolderIfNeeded() }
+            .onFailure { if (it is CancellationException) throw it }
         var consecutiveFailures = 0
         while (true) {
             var delayMs = if (meteredNetwork.isMetered) WATCHER_POLL_METERED_MS else WATCHER_POLL_MS
@@ -501,6 +515,30 @@ class NextcloudSyncService @Inject constructor(
             if (serverIsBehind) noteContactActivity()
             Log.i(TAG, "Nextcloud change watcher merged another device's contacts")
         }
+    }
+
+    /** See [NextcloudService.legacyContactsMerger]: true once dealt with, a file that isn't
+     *  this account's included; false to try again later. */
+    private suspend fun mergeLegacyContactsFile(raw: String, wallet: String): Boolean = syncMutex.withLock {
+        if (walletManager.activeAddressFlow.value != wallet) return@withLock false
+        val book = addressBookManagerLazy.get()
+        if (!book.holdsWallet(wallet)) return@withLock false
+        // no key yet (wallet still loading): not settled, try again later
+        val key = runCatching { BackupCrypto.deriveKey(walletManager.getPrivateKeyBytes()) }.getOrNull()
+            ?: return@withLock false
+        val serverIsBehind = try {
+            val plaintext = openContactsFile(raw, wallet) { BackupCrypto.decrypt(it, key) }
+                ?: throw IOException("It can't be decrypted.")
+            book.mergeBackup(plaintext.toByteArray(Charsets.UTF_8)).serverIsBehind
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Skipped the KaChat folder's contacts file: ${e.message}")
+            return@withLock true
+        }
+        Log.i(TAG, "Merged the KaChat folder's contacts into K")
+        if (serverIsBehind) noteContactActivity()
+        true
     }
 
     // -------------------------------------------------------------------------

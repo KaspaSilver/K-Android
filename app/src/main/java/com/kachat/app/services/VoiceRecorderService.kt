@@ -6,6 +6,7 @@ import android.os.Build
 import android.util.Log
 import com.kachat.app.util.VoiceMessage
 import com.kachat.app.util.VoiceNotePolicy
+import com.kachat.app.util.VoicePlaybackCoordinator
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
@@ -23,6 +24,10 @@ import javax.inject.Singleton
  *   instead, as a single note.
  * - Via Nextcloud ([startRecording]): one file as captured, by [OpusWebMRecorder] (iOS's own WebM
  *   layout, iOS 48f0dce) where the platform Opus encoder is there, else [MediaRecorder].
+ *
+ * While it records it holds the audio ([VoicePlaybackCoordinator.recordingWillStart]): any voice
+ * note playing stops, and the audio is given back when the recording stops, is cancelled or fails
+ * to start, so music another app was playing resumes (iOS 961fc05a, audit 2026-11-25 B8).
  *
  * Recording needs Android 10 (API 29) either way — callers must check [isSupported] before
  * offering the mic button. Every device this app runs on can still play back a received audio
@@ -63,6 +68,7 @@ class VoiceRecorderService @Inject constructor(
         check(!isRecording) { "A recording is already in progress" }
         if (VoiceNoteCodec.canEncode) {
             val maxSamples = (path.maxSeconds * PcmVoiceRecorder.SAMPLE_RATE_HZ).toInt()
+            VoicePlaybackCoordinator.recordingWillStart(context)
             PcmVoiceRecorder.start(maxSamples)?.let { started ->
                 pcmRecorder = started
                 maxDurationMs = path.maxMs
@@ -92,6 +98,7 @@ class VoiceRecorderService @Inject constructor(
         check(!isRecording) { "A recording is already in progress" }
 
         val file = File(context.cacheDir, "voice_${System.currentTimeMillis()}.webm")
+        VoicePlaybackCoordinator.recordingWillStart(context)
         this.maxDurationMs = maxDurationMs
         this.maxBytes = maxBytes
         this.fallbackStopsAtBytes = fallbackStopsAtBytes
@@ -119,6 +126,7 @@ class VoiceRecorderService @Inject constructor(
         } catch (e: Exception) {
             newRecorder.release()
             file.delete()
+            VoicePlaybackCoordinator.recordingDidEnd()
             throw e
         }
         recorder = newRecorder
@@ -146,6 +154,7 @@ class VoiceRecorderService @Inject constructor(
 
     /** Stops the active recording and returns it, or null if nothing usable was captured. */
     fun stop(): Recording? {
+        VoicePlaybackCoordinator.recordingDidEnd()
         pcmRecorder?.let { pcm ->
             pcmRecorder = null
             return pcm.stop()?.let { Recording.Pcm(it) }
@@ -156,6 +165,7 @@ class VoiceRecorderService @Inject constructor(
     /** Stops the active single-file recording and returns the file, or null if nothing usable
      *  was captured. */
     fun stopRecording(): File? {
+        VoicePlaybackCoordinator.recordingDidEnd()
         opusRecorder?.let { opus ->
             opusRecorder = null
             val file = outputFile
@@ -186,6 +196,7 @@ class VoiceRecorderService @Inject constructor(
 
     /** Stops (if needed) and discards the in-progress recording — no message should ever come out of this. */
     fun cancelRecording() {
+        VoicePlaybackCoordinator.recordingDidEnd()
         pcmRecorder?.let { pcm ->
             pcmRecorder = null
             pcm.cancel()

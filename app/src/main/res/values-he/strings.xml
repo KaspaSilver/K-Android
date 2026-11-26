@@ -160,7 +160,6 @@
     <string name="valid_address">כתובת תקפה</string>
     <string name="waiting_on_opponent">ממתין ליריב</string>
     <string name="the_recipient_wont_see_your_messages">הנמען לא יראה את ההודעות שלכם עד שישלח לכם הודעה או עד שתשלחו לו בקשת תקשורת. בקשת תקשורת עולה 0.2 KAS, והסכום מוחזר אליכם אם הוא מאשר. שליחת בקשת תקשורת פוגעת בפרטיות שלכם.</string>
-    <string name="host_port_or_grpcs_host">host:port או grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">בחר את שפתך</string>
     <string name="select_the_language_youd_like_to">בחר את השפה שבה תרצה להשתמש ב-K.</string>
     <string name="best">הכי טוב</string>
-    <string name="enter_as_host_port_or_grpcs_host">הזן בפורמט host:port או grpcs://host</string>
     <string name="receive_kaspa">קבל Kaspa</string>
     <string name="currency">מטבע</string>
     <string name="choose_your_currency">בחר את המטבע שלך</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">הוסף אנשי קשר מקובץ ייצוא של אנשי קשר.</string>
     <string name="ab_export_file_sub">שמור את אנשי הקשר שלך, עם התמונות שלהם, בקובץ.</string>
     <string name="ab_nc_import_sub">בחר קובץ ייצוא של אנשי קשר מה-Nextcloud שלך.</string>
-    <string name="ab_nc_export_sub">שמרו בתיקיית KaChat ב-Nextcloud כדי לייבא בכל מכשיר.</string>
     <string name="ab_nc_connect_hint">חברו Nextcloud בהגדרות &gt; אחסון כדי לשמור גם שם ולייבא במכשיר אחר.</string>
     <string name="ab_couldnt_read_file">לא ניתן לקרוא את הקובץ.</string>
     <string name="ab_nothing_to_export">עדיין אין מה לייצא. קודם צריך להוסיף איש קשר.</string>

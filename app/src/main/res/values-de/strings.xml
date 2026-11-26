@@ -160,7 +160,6 @@
     <string name="valid_address">Gültige Adresse</string>
     <string name="waiting_on_opponent">Warte auf Gegner</string>
     <string name="the_recipient_wont_see_your_messages">Der Empfänger sieht deine Nachrichten erst, wenn er dir schreibt oder du ihm eine Kommunikationsanfrage sendest. Kommunikationsanfragen kosten 0,2 KAS und werden dir erstattet, wenn er annimmt. Wenn du ihm eine Anfrage sendest, verlierst du an Privatsphäre.</string>
-    <string name="host_port_or_grpcs_host">Host:Port oder grpcs://Host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">Wähle deine Sprache</string>
     <string name="select_the_language_youd_like_to">Wähle die Sprache, die du in K verwenden möchtest.</string>
     <string name="best">Am besten</string>
-    <string name="enter_as_host_port_or_grpcs_host">Eingabe als host:port oder grpcs://host</string>
     <string name="receive_kaspa">Kaspa empfangen</string>
     <string name="currency">Währung</string>
     <string name="choose_your_currency">Wähle deine Währung</string>
@@ -642,7 +640,6 @@
     <string name="ab_import_file_sub">Kontakte aus einem Kontakte-Export hinzufügen.</string>
     <string name="ab_export_file_sub">Deine Kontakte mit ihren Fotos in einer Datei sichern.</string>
     <string name="ab_nc_import_sub">Wähle einen Kontakte-Export aus deiner Nextcloud.</string>
-    <string name="ab_nc_export_sub">Im KaChat-Ordner deiner Nextcloud speichern, um es auf jedem Gerät zu importieren.</string>
     <string name="ab_nc_connect_hint">Verbinde Nextcloud unter Einstellungen &gt; Speicher, um es auch dort zu speichern und auf einem anderen Gerät zu importieren.</string>
     <string name="ab_couldnt_read_file">Die Datei konnte nicht gelesen werden.</string>
     <string name="ab_nothing_to_export">Noch nichts zu exportieren. Füge zuerst einen Kontakt hinzu.</string>

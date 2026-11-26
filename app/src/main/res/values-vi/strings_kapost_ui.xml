@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">Thêm vào chuỗi</string>
     <string name="kpui_post_not_loaded">Không tải được bài đăng này</string>
     <string name="kpui_post_not_loaded_body">Có thể nó đã bị xóa, hoặc không kết nối được mạng.</string>
-    <string name="kpui_no_comments_yet">Chưa có bình luận - hãy là người đầu tiên trả lời.</string>
-    <string name="kpui_every_reply_above">Mọi câu trả lời đều nằm trong cuộc trò chuyện ở trên.</string>
     <string name="kpui_loading_replies">Đang tải các trả lời...</string>
     <string name="kpui_chat">Trò chuyện</string>
     <string name="kpui_followers">Người theo dõi</string>

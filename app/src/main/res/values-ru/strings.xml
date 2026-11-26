@@ -160,7 +160,6 @@
     <string name="valid_address">Действительный адрес</string>
     <string name="waiting_on_opponent">Ожидание соперника</string>
     <string name="the_recipient_wont_see_your_messages">Получатель не увидит ваших сообщений, пока не напишет вам или пока вы не отправите ему запрос на общение. Запрос на общение стоит 0,2 KAS и возвращается вам, если его примут. Отправляя запрос, вы теряете приватность.</string>
-    <string name="host_port_or_grpcs_host">хост:порт или grpcs://хост</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">Выберите язык</string>
     <string name="select_the_language_youd_like_to">Выберите язык, который вы хотите использовать в K.</string>
     <string name="best">Лучший</string>
-    <string name="enter_as_host_port_or_grpcs_host">Введите в формате host:port или grpcs://host</string>
     <string name="receive_kaspa">Получить Kaspa</string>
     <string name="currency">Валюта</string>
     <string name="choose_your_currency">Выберите валюту</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">Добавить контакты из экспорта контактов.</string>
     <string name="ab_export_file_sub">Сохранить контакты с их фото в файл.</string>
     <string name="ab_nc_import_sub">Выберите экспорт контактов в вашем Nextcloud.</string>
-    <string name="ab_nc_export_sub">Сохранить в папку KaChat в Nextcloud, чтобы импортировать на любом устройстве.</string>
     <string name="ab_nc_connect_hint">Подключите Nextcloud в Настройки &gt; Хранилище, чтобы сохранять туда и импортировать на другом устройстве.</string>
     <string name="ab_couldnt_read_file">Не удалось прочитать этот файл.</string>
     <string name="ab_nothing_to_export">Пока нечего экспортировать. Сначала добавьте контакт.</string>

@@ -434,7 +434,7 @@ private fun AddressBookActions(show: Boolean, onAdd: () -> Unit, onDismiss: () -
                 ActionSheetRow(
                     icon = Icons.Default.CloudUpload,
                     title = stringResource(R.string.pnc_export),
-                    subtitle = stringResource(R.string.ab_nc_export_sub),
+                    subtitle = stringResource(R.string.ab_nc_export_sub_k),
                 ) {
                     onDismiss()
                     exportToNextcloud()

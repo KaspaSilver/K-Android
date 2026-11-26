@@ -445,7 +445,6 @@
     <string name="valid_address">Alamat valid</string>
     <string name="waiting_on_opponent">Menunggu lawan</string>
     <string name="the_recipient_wont_see_your_messages">Penerima tidak akan melihat pesan Anda sampai mereka mengirimi Anda pesan atau Anda mengirimi mereka handshake. Handshake berbiaya 0,2 KAS dan dikembalikan kepada Anda jika mereka menerimanya. Anda kehilangan privasi jika mengirim handshake.</string>
-    <string name="host_port_or_grpcs_host">host:port atau grpcs://host</string>
     <string name="invalid_address_format">Format alamat tidak valid</string>
     <string name="fee_tier_normal">Normal</string>
     <string name="fee_tier_fast">Cepat</string>
@@ -635,7 +634,6 @@
     <string name="ab_import_file_sub">Tambahkan kontak dari ekspor kontak.</string>
     <string name="ab_export_file_sub">Simpan kontakmu, beserta fotonya, ke sebuah file.</string>
     <string name="ab_nc_import_sub">Pilih ekspor kontak dari Nextcloud-mu.</string>
-    <string name="ab_nc_export_sub">Simpan ke folder KaChat di Nextcloud Anda, untuk diimpor di perangkat mana pun.</string>
     <string name="ab_nc_connect_hint">Hubungkan Nextcloud di Pengaturan &gt; Penyimpanan agar bisa disimpan di sana dan diimpor di perangkat lain.</string>
     <string name="ab_couldnt_read_file">File itu tidak bisa dibaca.</string>
     <string name="ab_nothing_to_export">Belum ada yang bisa diekspor. Tambahkan kontak dulu.</string>
@@ -1351,7 +1349,6 @@
     <string name="nc_last_synced">Sinkronisasi terakhir</string>
     <string name="nc_backup_folder">Folder Cadangan</string>
     <string name="nc_default_folder">%1$s (bawaan)</string>
-    <string name="enter_as_host_port_or_grpcs_host">Masukkan sebagai host:port atau grpcs://host</string>
     <string name="qr_code">Kode QR</string>
     <string name="nc_back_up_now">Cadangkan Kontak Sekarang</string>
     <string name="nc_last_backup">Cadangan terakhir</string>

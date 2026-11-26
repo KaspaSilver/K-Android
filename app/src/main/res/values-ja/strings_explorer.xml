@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer (iOS 961fc05a): only the keys the iPhone translates; the rest are English there too. -->
+<resources>
+    <string name="ex_kind_payment">支払い</string>
+    <string name="ex_kind_handshake">通信リクエスト</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_username">ユーザー名</string>
+    <string name="ex_kind_swap">スワップ</string>
+    <string name="ex_kind_other">トランザクション</string>
+    <string name="ex_kind_payments">支払い</string>
+    <string name="ex_kind_chesses">チェスの指し手</string>
+    <string name="ex_kind_others">取引</string>
+    <string name="ex_period_day">24時間</string>
+    <string name="ex_period_week">7日間</string>
+    <string name="ex_period_all">全期間</string>
+    <string name="ex_one_day">1日</string>
+    <string name="ex_n_days">%1$d日</string>
+    <string name="ex_share">共有</string>
+    <string name="ex_your_chatting_address">あなたのチャットアドレス</string>
+    <string name="ex_no_transactions">まだ取引がありません。</string>
+</resources>

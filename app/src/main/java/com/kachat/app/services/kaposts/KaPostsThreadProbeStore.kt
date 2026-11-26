@@ -45,6 +45,12 @@ class KaPostsThreadProbeStore @Inject constructor(
     private fun loadIfNeeded() {
         if (loaded) return
         loaded = true
+        // v2 (iOS 961fc05a, 2026-11-25): opening a post used to record it as a thread root when
+        // its only reply was someone else's, and those roots were kept for good. New keys ask
+        // every post again under the poster-only rule; the old ones are removed once.
+        if (LEGACY_KEYS.any { prefs.contains(it) }) {
+            prefs.edit().apply { LEGACY_KEYS.forEach { remove(it) } }.apply()
+        }
         readArray(CLAIMED_KEY).forEach { id ->
             if (claimed.add(id)) order.addLast(id)
         }
@@ -113,6 +119,19 @@ class KaPostsThreadProbeStore @Inject constructor(
         scheduleSave()
     }
 
+    /**
+     * A root whose poster's own reply is gone (deleted, or a mark from before the poster-only
+     * rule): back to "no thread", held for [answerLifetimeMs] as a fresh probe's answer is (iOS
+     * 961fc05a `unmarkRoot`, audit 2026-11-25 L6: a root was never unmarked).
+     */
+    @Synchronized
+    fun unmarkRoot(remoteId: String, answerLifetimeMs: Long) {
+        loadIfNeeded()
+        if (!roots.remove(remoteId)) return
+        claim(remoteId, answerLifetimeMs)
+        scheduleSave()
+    }
+
     /** Persisted positive results - what the feed's thread-root flags start from. */
     @Synchronized
     fun persistedRoots(): Set<String> {
@@ -137,9 +156,10 @@ class KaPostsThreadProbeStore @Inject constructor(
     }
 
     companion object {
-        private const val CLAIMED_KEY = "claimed"
-        private const val ROOTS_KEY = "roots"
-        private const val EXPIRY_KEY = "expiry"
+        private const val CLAIMED_KEY = "claimed_v2"
+        private const val ROOTS_KEY = "roots_v2"
+        private const val EXPIRY_KEY = "expiry_v2"
+        private val LEGACY_KEYS = listOf("claimed", "roots", "expiry")
         private const val CAPACITY = 2048
         private const val DAY_MS = 86_400_000L
 

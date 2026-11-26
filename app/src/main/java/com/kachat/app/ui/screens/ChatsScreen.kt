@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -101,7 +102,7 @@ private sealed interface ChatListEntry {
         override val id get() = "g:${convo.group.groupId}"
     }
 
-    /** A public room (iOS 148a5331: rooms are rows in the Chats list, by latest activity). */
+    /** A public room (iOS 148a5331; on the Public Chats page since 961fc05a). */
     data class Room(val channel: com.kachat.app.models.BroadcastChannelEntity) : ChatListEntry {
         override val id get() = "r:${channel.channelName}"
     }
@@ -114,6 +115,11 @@ private sealed interface ChatListEntry {
  *
  * Select mode selects chats and groups; Select All takes everything visible, and mark read / mark
  * unread / delete act on the whole selection.
+ *
+ * The public rooms are the list's second page (iOS 961fc05a, owner 2026-11-25): the cycle button
+ * beside the title switches Chats and Public Chats (the rooms by latest activity, pinned rooms as
+ * circles above them), with their own Select (read, unread, pin, delete), + (New Public Chat) and
+ * gear (Edit Default Public Chats).
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -128,14 +134,17 @@ fun ChatsScreen(
     val balance by walletViewModel.fullBalance.collectAsState()
     // The chat list leaves out Message Requests and blocked chats - requests sit behind their own
     // row, and neither counts toward the unread badge (iOS f7ca401, 84e3402).
-    val chatListConversations by chatViewModel.chatListConversations.collectAsState()
+    // Lists stop with the app in the background (audit 2026-11-25 R6).
+    val chatListConversations by chatViewModel.chatListConversations.collectAsStateWhileStarted()
+    // Each chat's last message previews with its newest edit (iOS 961fc05a).
+    val chatPreviewEdits by chatViewModel.chatPreviewEdits.collectAsState()
     // Bot chats are never rows in the chat list (or its search): every bot is always a circle in
     // the row above it (iOS d54ea87).
     val conversations = remember(chatListConversations) {
         chatListConversations.filterNot { com.kachat.app.models.KaChatBot.isBot(it.contact.id) }
     }
     val botCircles by chatViewModel.botCircles.collectAsState()
-    val groupConversations by chatViewModel.groupConversations.collectAsState()
+    val groupConversations by chatViewModel.groupConversations.collectAsStateWhileStarted()
     val messageRequests by chatViewModel.messageRequests.collectAsState()
     // Groups you were added to wait in Message Requests too (iOS bfe9f022).
     val pendingGroupInvites by chatViewModel.pendingGroupInvites.collectAsState()
@@ -156,17 +165,25 @@ fun ChatsScreen(
     val haptic = com.kachat.app.util.rememberHaptics()
     // The bottom-right + : New Chat or New Group Chat, in one sheet (iOS d1844582).
     var showNewSheet by remember { mutableStateOf(false) }
+    /** The New sheet opens on New Public Chat (the Public Chats page's +, iOS 961fc05a). */
+    var newSheetStartsOnPublicChat by remember { mutableStateOf(false) }
     // Public rooms (iOS 148a5331 ChatListView): every default room listed from the start (switched
     // off ones aside), by latest activity with the chats; a room handed over by a tapped
     // notification or a room link opens here.
     val listedRooms by broadcastViewModel.listedChannels.collectAsState()
     val roomSummaries by broadcastViewModel.roomSummaries.collectAsState()
     val roomSenderAliases by broadcastViewModel.contactAliases.collectAsState()
+    /** Unread in the rooms with their bell on: the red count on the page button (iOS 961fc05a). */
+    val bellOnRoomUnread by broadcastViewModel.bellOnRoomUnread.collectAsState()
     /** A room you added, waiting on its delete confirmation (a default room is only switched off). */
     var roomToLeave by remember { mutableStateOf<String?>(null) }
-    /** Edit Default Public Chats, from the New sheet. */
+    /** Edit Default Public Chats, from the gear on the Public Chats page. */
     var showPublicChatsSettings by remember { mutableStateOf(false) }
-    PublicRoomHandoffEffect(navController, broadcastViewModel)
+    /** Chats or Public Chats (iOS 961fc05a `listPage`). */
+    var listPage by rememberSaveable { mutableStateOf(ChatsListPage.CHATS) }
+    val onChats = listPage == ChatsListPage.CHATS
+    // A room link or push switches to the rooms page (iOS `openRoomFromHandoff`).
+    PublicRoomHandoffEffect(navController, broadcastViewModel, onHandoff = { listPage = ChatsListPage.PUBLIC_CHATS })
 
     // What is pinned in the circles row, newest pin first, saved per wallet: bots ("b:<address>")
     // pinned to its front, and chats ("c:<address>") pinned up out of the list into the row (iOS
@@ -341,11 +358,16 @@ fun ChatsScreen(
             roomPins.mapNotNull { byName[it] }
         }
     }
-    val allEntries = remember(filteredConversations, displayedGroups, displayedRooms, roomSummaries) {
+    // Each page lists its own (iOS 961fc05a `allEntries`): the chats and groups, or the rooms -
+    // by latest activity, ties (rooms nobody has written in) keeping their order.
+    val allEntries = remember(listPage, filteredConversations, displayedGroups, displayedRooms, roomSummaries) {
         buildList<Pair<Long, ChatListEntry>> {
-            filteredConversations.forEach { add((it.lastMessage?.blockTimestamp ?: 0L) to ChatListEntry.Chat(it)) }
-            displayedGroups.forEach { add((it.lastMessage?.blockTimestamp ?: it.group.createdAt) to ChatListEntry.Group(it)) }
-            displayedRooms.forEach { add(publicRoomActivity(roomSummaries[it.channelName]) to ChatListEntry.Room(it)) }
+            if (listPage == ChatsListPage.PUBLIC_CHATS) {
+                displayedRooms.forEach { add(publicRoomActivity(roomSummaries[it.channelName]) to ChatListEntry.Room(it)) }
+            } else {
+                filteredConversations.forEach { add((it.lastMessage?.blockTimestamp ?: 0L) to ChatListEntry.Chat(it)) }
+                displayedGroups.forEach { add((it.lastMessage?.blockTimestamp ?: it.group.createdAt) to ChatListEntry.Group(it)) }
+            }
         }.sortedByDescending { it.first }.map { it.second }
     }
 
@@ -384,6 +406,36 @@ fun ChatsScreen(
     // An account switch keeps this screen alive: every account starts on its own list.
     LaunchedEffect(myAddress) {
         endSelection()
+    }
+    // Select is per page: any page change (a room handoff included) ends it, or the rooms page
+    // kept Select mode with no Cancel (iOS 961fc05a, audit 2026-11-25 C10).
+    LaunchedEffect(listPage) {
+        if (isSelectionMode || selectedEntryIds.isNotEmpty()) endSelection()
+        // On the Rooms page (shown, or back from a room or another tab): its rooms checked
+        // against the indexer, so a deleted message leaves a preview too (iOS d089011f).
+        if (listPage == ChatsListPage.PUBLIC_CHATS) broadcastViewModel.checkListedRoomsAgainstIndexer()
+    }
+    /** Select mode's Delete on the Public Chats page, already confirmed (iOS `deleteRooms`): a
+     *  default room is switched off, as its swipe does; a room you added is left and its cached
+     *  messages go. Either drops its pin. */
+    fun deleteRooms(names: List<String>) {
+        for (name in names) {
+            broadcastViewModel.removeFromList(name)
+            dropRoomPin(name)
+        }
+    }
+    /** Select mode's Pin on the Public Chats page: all picked rooms pinned, they're unpinned;
+     *  otherwise the ones not pinned yet are pinned (iOS `roomSelectionButtons`). One after the
+     *  other, so each reads the pins the last one wrote. */
+    fun togglePinRooms(names: List<String>) {
+        val address = myAddress ?: return
+        val allPinned = names.isNotEmpty() && names.all { it in roomPins }
+        scope.launch {
+            for (name in names) {
+                if ((name in roomPins) == allPinned) chatViewModel.toggleRoomPin(address, name)
+            }
+            IosToasts.show(context.getString(if (allPinned) R.string.chats_unpinned else R.string.pinned_to_top_row))
+        }
     }
 
     val pullRefreshState = rememberPullRefreshState(
@@ -440,9 +492,9 @@ fun ChatsScreen(
                             selectedEntryIds = if (isEverythingSelected) emptySet() else allEntries.map { it.id }.toSet()
                         },
                         // Public Chats' settings (iOS 8cb4c88e, owner 2026-11-24: here, not in the
-                        // + sheet): the default rooms and the language rooms on or off. Not while
-                        // selecting.
-                        leadingContent = if (isSelectionMode) null else {
+                        // + sheet): the default rooms and the language rooms on or off. Only on the
+                        // Public Chats page (iOS 961fc05a), and not while selecting.
+                        leadingContent = if (isSelectionMode || onChats) null else {
                             {
                                 ToolbarGlassGroup {
                                     ToolbarIconButton(
@@ -456,20 +508,34 @@ fun ChatsScreen(
                     )
                 }
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    Text(
-                        stringResource(R.string.kachat),
-                        color = LocalAppColors.current.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = LargeTitleSize,
+                    // The title, and beside it the Chats / Public Chats cycle button (iOS
+                    // 961fc05a `PinnedListHeader` accessory, `pageCycleButton`).
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         // measured on the iPhone: the title's cap 44 below the bar's centre
-                        modifier = Modifier.padding(top = 9.dp, bottom = 8.dp)
-                    )
+                        modifier = Modifier.padding(top = 9.dp, bottom = 8.dp),
+                    ) {
+                        Text(
+                            stringResource(R.string.kachat),
+                            color = LocalAppColors.current.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = LargeTitleSize,
+                            maxLines = 1,
+                        )
+                        ChatsPageCycleButton(
+                            page = listPage,
+                            roomUnread = bellOnRoomUnread,
+                            onSelect = { listPage = it },
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
 
                     // Search Bar (iOS's .searchable field, 44 high)
                     IosSearchField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        placeholder = stringResource(R.string.search_chats),
+                        placeholder = stringResource(if (onChats) R.string.search_chats else R.string.r55_search_public_chats),
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -519,6 +585,8 @@ fun ChatsScreen(
                 modifier = Modifier.padding(bottom = dockInset),
                 onClick = {
                     haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                    // the Public Chats page's + is New Public Chat itself (iOS 961fc05a)
+                    newSheetStartsOnPublicChat = !onChats
                     showNewSheet = true
                 },
                 icon = Icons.Default.Add,
@@ -527,9 +595,13 @@ fun ChatsScreen(
         },
         bottomBar = {
             // Mark read, mark unread and delete, for every selected chat and group (iOS
-            // `selectionActionBar`). Above the dock, which stays up, as iOS's sits above its tab
-            // bar (its `.safeAreaInset(edge: .bottom)`); the dock's inset includes the system bar.
+            // `selectionActionBar`); on the Public Chats page for the rooms, with Pin or Unpin too
+            // (iOS 961fc05a `roomSelectionButtons`). Above the dock, which stays up, as iOS's sits
+            // above its tab bar (its `.safeAreaInset(edge: .bottom)`); the dock's inset includes
+            // the system bar.
             if (isSelectionMode) {
+                val roomNames = selectedRoomNames(selectedEntryIds)
+                val allRoomsPinned = roomNames.isNotEmpty() && roomNames.all { it in roomPins }
                 Column(
                     modifier = Modifier
                         .background(LocalAppColors.current.background)
@@ -544,6 +616,7 @@ fun ChatsScreen(
                             onClick = {
                                 selectedChatIds().let { if (it.isNotEmpty()) chatViewModel.markContactsAsRead(it) }
                                 selectedGroupIds().let { if (it.isNotEmpty()) chatViewModel.markGroupsAsRead(it) }
+                                roomNames.forEach { broadcastViewModel.markRoomRead(it) }
                                 endSelection()
                             },
                             enabled = selectionCount > 0,
@@ -556,6 +629,7 @@ fun ChatsScreen(
                             onClick = {
                                 selectedChatIds().let { if (it.isNotEmpty()) chatViewModel.markContactsAsUnread(it) }
                                 selectedGroupIds().let { if (it.isNotEmpty()) chatViewModel.markGroupsAsUnread(it) }
+                                roomNames.forEach { broadcastViewModel.markRoomUnread(it) }
                                 endSelection()
                             },
                             enabled = selectionCount > 0,
@@ -563,6 +637,23 @@ fun ChatsScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(Icons.Default.MarkEmailUnread, stringResource(R.string.unread), tint = KaspaTeal, modifier = Modifier.size(18.dp))
+                        }
+                        // Pin or unpin the picked rooms (to the circles above them, on this page only).
+                        if (!onChats) Button(
+                            onClick = {
+                                togglePinRooms(roomNames)
+                                endSelection()
+                            },
+                            enabled = roomNames.isNotEmpty(),
+                            colors = ButtonDefaults.buttonColors(containerColor = LocalAppColors.current.surfaceVariant),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                if (allRoomsPinned) Icons.Default.PushPin else Icons.Outlined.PushPin,
+                                stringResource(if (allRoomsPinned) R.string.chats_circle_unpin else R.string.pin),
+                                tint = KaspaTeal,
+                                modifier = Modifier.size(18.dp),
+                            )
                         }
                         Button(
                             onClick = { showBulkDeleteConfirmation = true },
@@ -607,15 +698,17 @@ fun ChatsScreen(
             ) {
                 // The bot chats and the chats and groups you pinned, as circles under the search
                 // bar - swipe sideways for all of them. Tap opens, hold opens their half sheet.
-                item(key = "chat_circles") {
+                // Each page has its own circles: the Public Chats page only the rooms you pinned
+                // (iOS 961fc05a).
+                if (onChats || pinnedRooms.isNotEmpty()) item(key = "chat_circles") {
                     ChatCirclesStrip(
-                        items = circleItems,
-                        pins = circlePins,
-                        pinnedGroups = pinnedGroups,
+                        items = if (onChats) circleItems else emptyList(),
+                        pins = if (onChats) circlePins else emptyList(),
+                        pinnedGroups = if (onChats) pinnedGroups else emptyList(),
                         isSelectionMode = isSelectionMode,
                         onOpenGroup = { groupId -> navController.navigate("group_chat/$groupId") },
                         onLongPressGroup = { groupId -> groupActionTarget = groupId },
-                        pinnedRooms = pinnedRooms,
+                        pinnedRooms = if (onChats) emptyList() else pinnedRooms,
                         roomUnread = { roomSummaries[it]?.unreadCount ?: 0 },
                         onOpenRoom = { room ->
                             if (roomActionTarget == null) {
@@ -645,8 +738,8 @@ fun ChatsScreen(
                 }
                 // People who wrote first and haven't been accepted - one row, always there,
                 // right above the chats; hidden only while searching or selecting
-                // (NO_HANDSHAKE_MESSAGING.md, iOS f7ca401 / 74bd52c).
-                if (searchQuery.isBlank() && !isSelectionMode) {
+                // (NO_HANDSHAKE_MESSAGING.md, iOS f7ca401 / 74bd52c). The Chats page's only.
+                if (onChats && searchQuery.isBlank() && !isSelectionMode) {
                     item(key = "message_requests_row") {
                         Column {
                             MessageRequestsRow(count = messageRequests.size + pendingGroupInvites.size) {
@@ -832,6 +925,7 @@ fun ChatsScreen(
                                             latestReactionByContact[convo.contact.id],
                                             myAddress,
                                             chatFetchStates[convo.contact.id],
+                                            lastEdit = convo.lastMessage?.id?.let { chatPreviewEdits[it] },
                                         ) {
                                             if (isSelectionMode) {
                                                 toggleSelection(entry.id)
@@ -850,9 +944,9 @@ fun ChatsScreen(
                         }
                         }
                     }
-                    item {
-                        // The chats and groups listed - while searching, the ones that match (iOS
-                        // totalCount).
+                    // The chats and groups listed - while searching, the ones that match (iOS
+                    // totalCount). The Chats page's only (iOS 961fc05a).
+                    if (onChats) item {
                         val chatCount = allEntries.size
                         Text(
                             text = if (chatCount == 1) stringResource(R.string.one_chat) else stringResource(R.string.n_chats, chatCount),
@@ -956,7 +1050,11 @@ fun ChatsScreen(
             // Below the circles row rather than over it, and only when there are no chats at all:
             // a search that matches nothing leaves the list empty, as iOS does (ChatListView
             // emptyStateView, centred in the list and 120 lower).
-            if (allEntries.isEmpty() && searchQuery.isEmpty() && pinnedChats.isEmpty() && pinnedGroups.isEmpty() && pinnedRooms.isEmpty()) {
+            // Each page its own (iOS 961fc05a): no chats, or every room switched off or left.
+            val pageHasPinned = if (onChats) pinnedChats.isNotEmpty() || pinnedGroups.isNotEmpty() else pinnedRooms.isNotEmpty()
+            if (allEntries.isEmpty() && searchQuery.isEmpty() && !pageHasPinned && !onChats) {
+                PublicChatsEmptyView(modifier = Modifier.align(Alignment.Center).padding(top = 120.dp).padding(16.dp))
+            } else if (allEntries.isEmpty() && searchQuery.isEmpty() && !pageHasPinned) {
                 Column(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -1038,22 +1136,36 @@ fun ChatsScreen(
         // One confirmation for the whole selection (iOS `bulkDeleteAlertTitle`).
         if (showBulkDeleteConfirmation) {
             val chats = selectedEntryIds.size
+            // The Public Chats page's: default rooms are switched off, rooms you added deleted
+            // (iOS 961fc05a).
+            val rooms = selectedRoomNames(selectedEntryIds)
             com.kachat.app.ui.theme.IosAlertDialog(
                 onDismissRequest = { showBulkDeleteConfirmation = false },
                 containerColor = LocalAppColors.current.surface,
                 title = {
-                    Text(if (chats == 1) stringResource(R.string.delete_one_chat) else stringResource(R.string.delete_n_chats, chats), color = LocalAppColors.current.textPrimary)
+                    Text(
+                        when {
+                            !onChats -> if (rooms.size == 1) stringResource(R.string.r55_delete_one_public_chat) else stringResource(R.string.r55_delete_n_public_chats, rooms.size)
+                            chats == 1 -> stringResource(R.string.delete_one_chat)
+                            else -> stringResource(R.string.delete_n_chats, chats)
+                        },
+                        color = LocalAppColors.current.textPrimary,
+                    )
                 },
                 text = {
                     Text(
-                        stringResource(R.string.this_permanently_deletes_every_message_in_each),
+                        stringResource(if (onChats) R.string.this_permanently_deletes_every_message_in_each else R.string.r55_delete_public_chats_message),
                         color = LocalAppColors.current.textSecondary
                     )
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        deleteChats(selectedChatIds())
-                        deleteGroups(selectedGroupIds())
+                        if (onChats) {
+                            deleteChats(selectedChatIds())
+                            deleteGroups(selectedGroupIds())
+                        } else {
+                            deleteRooms(rooms)
+                        }
                         showBulkDeleteConfirmation = false
                         endSelection()
                     }) {
@@ -1219,6 +1331,7 @@ fun ChatsScreen(
             onChatCreated = { address -> navController.navigate("chat/$address") },
             onGroupCreated = { groupId -> navController.navigate("group_chat/$groupId") },
             onPublicRoomJoined = { room -> navController.navigate(PublicChatRoutes.room(room)) },
+            startsOnPublicChat = newSheetStartsOnPublicChat,
         )
     }
     // Edit Default Public Chats (iOS `PublicChatsSettingsView`), from the gear at the top left:
@@ -1609,6 +1722,8 @@ private fun messagePreviewText(message: MessageEntity?, context: android.content
         is KaChatLinkRef.KaPost -> return context.getString(R.string.shared_a_kapost)
         // Translated (iOS audit 2026-11-24 #33).
         is KaChatLinkRef.PublicChatRoom -> return context.getString(R.string.c54_public_chat_room, link.channel)
+        // A Kaspa Hub card's link (iOS 961fc05a): "Kaspa Hub: Explorer".
+        is KaChatLinkRef.HubSection -> return context.getString(R.string.kp55_kaspa_hub_card, context.getString(link.tab.labelRes))
         null -> {}
     }
     val trimmed = unwrapped.trim()
@@ -1671,6 +1786,8 @@ internal fun ConversationRow(
     latestReaction: com.kachat.app.services.database.LatestReactionRow?,
     myAddress: String?,
     fetchState: com.kachat.app.repository.ChatRepository.ChatFetchState? = null,
+    /** The newest edit's text of the last message, if it was edited (iOS 961fc05a). */
+    lastEdit: String? = null,
     onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
@@ -1720,13 +1837,9 @@ internal fun ConversationRow(
                 if (com.kachat.app.models.ContactNotificationMode.fromName(convo.contact.notificationOverride) ==
                     com.kachat.app.models.ContactNotificationMode.OFF
                 ) {
-                    Spacer(Modifier.width(5.dp))
-                    Icon(
-                        Icons.Default.NotificationsOff,
-                        contentDescription = stringResource(R.string.silenced),
-                        tint = LocalAppColors.current.textSecondary,
-                        modifier = Modifier.size(14.dp)
-                    )
+                    // a gray "Silenced" pill, not a bell icon (iOS ef760cfa `SilencedPill`)
+                    Spacer(Modifier.width(6.dp))
+                    SilencedPill()
                 }
               }
                 // This chat's own fetch (iOS chatFetchStates): a mini spinner while there is
@@ -1788,14 +1901,21 @@ internal fun ConversationRow(
             // media mime - cheap now, but not free, and there are as many of these as there are
             // visible rows.
             val previewContext = LocalContext.current
-            val lastBody = convo.lastMessage?.plaintextBody
+            // An edited last message reads with its newest text, as in the thread (iOS 961fc05a
+            // `messageForPreview`).
+            val previewMessage = convo.lastMessage?.let { last ->
+                if (lastEdit != null && com.kachat.app.util.MessageEdit.isEditable(last.plaintextBody)) {
+                    last.copy(plaintextBody = com.kachat.app.util.MessageEdit.apply(lastEdit, last.plaintextBody))
+                } else last
+            }
+            val lastBody = previewMessage?.plaintextBody
             // The whole body is the key, as iOS's preview cache: it can change under one id (an
             // edit, or a message that could not be decrypted until now), and "length + first 24
             // characters" showed one message's preview for another (iOS audit 2026-11-21 #21). A
             // very long one is keyed by a hash of all of it.
             val previewKey = lastBody?.let { if (it.length <= 4_096) "t:$it" else "h:${it.length}|${it.hashCode()}" }
             val preview = remember(convo.lastMessage?.id, previewKey) {
-                messagePreviewText(convo.lastMessage, previewContext)
+                messagePreviewText(previewMessage, previewContext)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // The row said nothing about whether your own last message went out. iOS's list
@@ -2214,10 +2334,12 @@ private fun ChatsNewSheet(
     onGroupCreated: (String) -> Unit,
     /** New Public Chat joined a room: it opens (iOS 148a5331 `joinRoomFromCreateSheet`). */
     onPublicRoomJoined: (String) -> Unit,
+    /** Opened by the Public Chats page's +: New Public Chat itself (iOS 961fc05a). */
+    startsOnPublicChat: Boolean = false,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
-    var page by remember { mutableStateOf(ChatsNewPage.MENU) }
+    var page by remember { mutableStateOf(if (startsOnPublicChat) ChatsNewPage.NEW_PUBLIC_CHAT else ChatsNewPage.MENU) }
 
     /** Closes the sheet and runs [then] once it has gone (iOS `closeCreateSheet(then:)`). */
     fun close(then: () -> Unit = {}) {
@@ -2262,10 +2384,13 @@ private fun ChatsNewSheet(
                         )
                     }
                     ChatsNewPage.NEW_PUBLIC_CHAT -> Box(Modifier.fillMaxHeight().padding(top = 10.dp)) {
+                        // Only the Public Chats page's + opens it (iOS ef760cfa), so there's no
+                        // New menu behind it: Cancel closes the sheet.
                         NewPublicChatPage(
                             broadcastViewModel = broadcastViewModel,
-                            onBack = { page = ChatsNewPage.MENU },
+                            onBack = { close() },
                             onJoined = { room -> close { onPublicRoomJoined(room) } },
+                            backLabel = stringResource(R.string.cancel),
                         )
                     }
                     ChatsNewPage.MENU -> Column(
@@ -2294,13 +2419,7 @@ private fun ChatsNewSheet(
                             title = stringResource(R.string.chats_new_group_chat),
                             subtitle = stringResource(R.string.chats_new_group_subtitle),
                         ) { page = ChatsNewPage.NEW_GROUP }
-                        // Public Chats (iOS 148a5331): join or create a room. Edit Default Public
-                        // Chats is the gear at the top left of Chats (iOS 8cb4c88e).
-                        ActionSheetRow(
-                            icon = Icons.Default.Tag,
-                            title = stringResource(R.string.pc_new_public_chat),
-                            subtitle = stringResource(R.string.pc_new_public_chat_subtitle),
-                        ) { page = ChatsNewPage.NEW_PUBLIC_CHAT }
+                        // No New Public Chat here since iOS ef760cfa: the Public Chats page's + opens it.
                     }
                 }
                 IosSheetGrabber(Modifier.align(Alignment.TopCenter))
@@ -2310,6 +2429,6 @@ private fun ChatsNewSheet(
     }
 }
 
-/** New Chat and New Group Chat open at full height (iOS d1844582 `createMenuHeight`: 330 pt
- *  since 8cb4c88e, with New Public Chat; Edit Default Public Chats moved to the gear). */
-private val ChatsNewSheetHeight = 330.dp
+/** New Chat and New Group Chat open at full height (iOS `createMenuHeight`: 250 pt again since
+ *  ef760cfa, New Public Chat having left the sheet for the Public Chats page's +). */
+private val ChatsNewSheetHeight = 250.dp

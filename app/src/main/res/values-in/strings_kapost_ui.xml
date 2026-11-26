@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">Tambah ke utas</string>
     <string name="kpui_post_not_loaded">Postingan ini tidak bisa dimuat</string>
     <string name="kpui_post_not_loaded_body">Mungkin sudah dihapus, atau jaringan tidak dapat dijangkau.</string>
-    <string name="kpui_no_comments_yet">Belum ada komentar - jadilah yang pertama membalas.</string>
-    <string name="kpui_every_reply_above">Semua balasan ada di percakapan di atas.</string>
     <string name="kpui_loading_replies">Memuat balasan...</string>
     <string name="kpui_chat">Obrolan</string>
     <string name="kpui_followers">Pengikut</string>

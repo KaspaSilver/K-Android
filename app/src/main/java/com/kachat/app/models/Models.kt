@@ -22,7 +22,12 @@ import androidx.room.Index
 @Entity(
     tableName = "messages",
     primaryKeys = ["id", "walletAddress"],
-    indices = [Index(value = ["walletAddress", "contactId", "blockTimestamp"])]
+    indices = [
+        Index(value = ["walletAddress", "contactId", "blockTimestamp"]),
+        // The unread badges' query (re-run on every write to `messages`) reads only unread rows
+        // with it, not every message of the wallet (v46, audit 2026-11-25 S16).
+        Index(value = ["walletAddress", "isRead", "direction"]),
+    ]
 )
 data class MessageEntity(
     val id: String,                         // Kaspa transaction ID

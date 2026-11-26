@@ -160,7 +160,6 @@
     <string name="valid_address">Gecerli adres</string>
     <string name="waiting_on_opponent">Rakip bekleniyor</string>
     <string name="the_recipient_wont_see_your_messages">Alıcı, sana mesaj gönderene veya sen ona bir iletişim isteği gönderene kadar mesajlarını görmez. İletişim isteği 0,2 KAS tutar ve kabul ederse sana iade edilir. İletişim isteği gönderirsen gizliliğini kaybedersin.</string>
-    <string name="host_port_or_grpcs_host">host:port veya grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">Dilinizi Secin</string>
     <string name="select_the_language_youd_like_to">K\'te kullanmak istediginiz dili secin.</string>
     <string name="best">En iyi</string>
-    <string name="enter_as_host_port_or_grpcs_host">host:port veya grpcs://host olarak girin</string>
     <string name="receive_kaspa">Kaspa Al</string>
     <string name="currency">Para Birimi</string>
     <string name="choose_your_currency">Para Biriminizi Secin</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">Bir kişiler dışa aktarımından kişi ekle.</string>
     <string name="ab_export_file_sub">Kişilerini fotoğraflarıyla birlikte bir dosyaya kaydet.</string>
     <string name="ab_nc_import_sub">Nextcloud\'undan bir kişiler dışa aktarımı seç.</string>
-    <string name="ab_nc_export_sub">Herhangi bir cihazda içe aktarmak için Nextcloud\'undaki KaChat klasörüne kaydet.</string>
     <string name="ab_nc_connect_hint">Oraya da kaydedip başka bir cihazda içe aktarmak için Ayarlar &gt; Depolama\'da Nextcloud\'u bağla.</string>
     <string name="ab_couldnt_read_file">Bu dosya okunamadı.</string>
     <string name="ab_nothing_to_export">Henüz dışa aktarılacak bir şey yok. Önce bir kişi ekle.</string>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">Itu bukan alamat tahan kuantum. Pindai alamat KCC-3 yang ditampilkan KasSigner.</string>
+    <string name="coldq_error_already_added">Alamat itu sudah ada di akun ini.</string>
+    <string name="coldq_error_in_other_account">Alamat itu sudah ada di akun Cold Storage-mu “%1$s”.</string>
+    <string name="coldq_added_toast">Alamat tahan kuantum ditambahkan.</string>
+    <string name="coldq_add_action">Tambah Alamat Tahan Kuantum</string>
+    <string name="coldq_add_action_subtitle">Pindai alamat KCC-3 dari layar alamat KasSigner.</string>
+    <string name="coldq_stop_watching">Berhenti Memantau</string>
+    <string name="coldq_stop_watching_subtitle">Menghapus alamat kuantum ini dari akun. Pindai lagi untuk menambahkannya kembali.</string>
+    <string name="coldq_address_header">Alamat Tahan Kuantum</string>
+    <string name="coldq_address_footer">Di KasSigner, buka alamat KCC-3 yang kamu inginkan dan pindai kode QR-nya. Kuncinya tetap di perangkat sampai alamat itu membelanjakan dana.</string>
+    <string name="coldq_number_header">Nomor Alamat di KasSigner</string>
+    <string name="coldq_add_title">Tambah Alamat Kuantum</string>
+    <string name="coldq_number_not_whole">Nomor alamat harus berupa bilangan bulat.</string>
+    <string name="coldq_needs_v11">Membutuhkan KasSigner v1.1 atau lebih baru, yang menandatangani alamat tahan kuantum (KCC-3).</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner tidak mengembalikan skrip kunci untuk alamat tahan kuantum ini, jadi transaksi tidak akan disiarkan. Pastikan perangkat menjalankan KasSigner v1.1 atau lebih baru dan menyimpan alamat ini.</string>
+    <string name="coldq_error_unexpected_covenant">Transaksi yang ditandatangani menambahkan syarat covenant yang tidak pernah diminta pengiriman ini, jadi tidak akan disiarkan.</string>
+    <string name="coldq_label_receive">Alamat Kuantum</string>
+    <string name="coldq_label_change">Alamat Kembalian Kuantum</string>
+    <string name="coldq_label_receive_n">Alamat Kuantum #%1$d</string>
+    <string name="coldq_label_change_n">Alamat Kembalian Kuantum #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">Pengiriman ini membuka kunci alamat ini di chain, jadi kembaliannya tidak bisa kembali ke sini. Tambahkan dulu alamat tahan kuantum yang belum dipakai dari KasSigner (paling baik alamat kembalian, #0 sampai #4), atau kirim seluruh saldo.</string>
+    <string name="coldq_error_compound_needs_fresh">Menggabungkan membuka kunci alamat ini di chain, jadi koinnya pindah ke alamat tahan kuantum yang belum dipakai di akun ini. Tambahkan satu dari KasSigner dulu (paling baik alamat kembalian, #0 sampai #4).</string>
+    <string name="coldq_stop_watching_title">Berhenti Memantau Alamat Ini?</string>
+    <string name="coldq_stop_watching_message">%1$s KAS-nya tetap di chain di alamat ini, di KasSigner-mu; K hanya berhenti menampilkannya. Pindai alamat ini lagi dari KasSigner untuk memantaunya lagi.</string>
+    <string name="coldq_edit_number">Ubah Nomor Alamat</string>
+    <string name="coldq_edit_number_subtitle">Nomor dan rantai yang ditampilkan KasSigner untuk alamat ini.</string>
+    <string name="coldq_chain">Rantai</string>
+    <string name="coldq_number_footer">Nomor yang ditampilkan KasSigner untuk alamat ini, dan apakah ini alamat penerimaan atau alamat kembalian. Dengan nomor ini, perangkat langsung menemukan kuncinya saat menandatangani; tanpa nomor ini, perangkat mencarinya. KasSigner menandai kembalian yang dikirim ke alamat kembaliannya #0 sampai #4 sebagai kembalian; alamat lain ditampilkannya sebagai pembayaran.</string>
+    <string name="coldq_number_too_large">Nomor itu terlalu besar: nomor alamat KasSigner di bawah 2147483648.</string>
+    <string name="coldq_compound_note">Memindahkan semua koin alamat ini menjadi satu, di alamat tahan kuantum yang belum dipakai di akun ini: transaksi ini membuka kunci alamat ini di chain.</string>
+    <string name="coldq_coins_left_behind">Alamat ini menyimpan lebih banyak koin daripada yang bisa dibelanjakan satu transaksi: %1$d tertinggal di balik kunci yang dibuka pengiriman ini di chain. Kirimkan dalam transaksi lain segera setelahnya.</string>
+    <string name="coldq_coins_move_to">Koin pindah ke alamat kuantummu:</string>
+    <string name="coldq_change_goes_to">Kembalian masuk ke alamat kuantummu:</string>
+    <string name="coldq_unit_marks_change">KasSigner menampilkan output ini sebagai kembalian.</string>
+    <string name="coldq_unit_shows_payment">KasSigner akan menampilkan output ini sebagai pembayaran biasa, bukan kembalian: pastikan ini alamat ini sebelum menandatangani.</string>
+    <string name="coldq_sign_without_number">Tandatangani Tanpa Nomor Alamat</string>
+    <string name="coldq_sign_without_number_note">Jika KasSigner menolak permintaan ini, nomor alamatnya mungkin salah. Tanpa nomor itu, perangkat mencari alamatnya sendiri. Ubah Nomor Alamat memperbaikinya untuk lain kali.</string>
+    <string name="coldq_compound_footer">Menggabungkan semua UTXO di alamat ini menjadi satu di alamat tahan kuantum yang belum dipakai di akun ini, karena ini membuka kunci alamat ini di chain.</string>
+    <string name="coldq_visibility_quantum_header">Alamat Tahan Kuantum</string>
+    <string name="coldq_receive_address">Alamat Penerimaan</string>
+    <string name="coldq_change_address">Alamat Kembalian</string>
+    <string name="coldq_optional">Opsional</string>
+</resources>

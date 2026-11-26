@@ -80,6 +80,85 @@ class BroadcastReadStateStore @Inject constructor(
         save(current.copy(hiddenCurated = if (shown) current.hiddenCurated - channel else current.hiddenCurated + channel))
     }
 
+    /** The account this store is pointed at (lowercased), or null. */
+    val currentWallet: String? get() = synchronized(lock) { wallet }
+
+    /** Changes the switched-off default rooms in one step: a retired room's switched-off state
+     *  moving to its replacement, or rooms the indexer dropped being forgotten (iOS 961fc05a
+     *  `updateSavedHiddenCuratedChannels`). */
+    fun updateHiddenCurated(change: (Set<String>) -> Set<String>) = synchronized(lock) {
+        if (wallet == null) return@synchronized
+        val current = _state.value
+        val next = change(current.hiddenCurated)
+        if (next != current.hiddenCurated) save(current.copy(hiddenCurated = next))
+    }
+
+    /**
+     * Since when each switched-off room has been missing from the default rooms (millis), for this
+     * account (iOS 961fc05a `kachat_broadcast_hidden_missing_<wallet>`): a room the indexer stops
+     * listing is forgotten only after a grace period ([com.kachat.app.services.publicchats.DroppedDefaultRooms]).
+     */
+    fun hiddenMissingSince(): Map<String, Long> = synchronized(lock) {
+        val key = wallet ?: return@synchronized emptyMap()
+        runCatching {
+            val json = JSONObject(prefs.getString("hidden_missing_$key", null) ?: "{}")
+            json.keys().asSequence().associateWith { json.getLong(it) }
+        }.getOrDefault(emptyMap())
+    }
+
+    fun setHiddenMissingSince(map: Map<String, Long>) = synchronized(lock) {
+        val key = wallet ?: return@synchronized
+        if (map.isEmpty()) {
+            prefs.edit().remove("hidden_missing_$key").apply()
+        } else {
+            val json = JSONObject().apply { map.forEach { (name, ms) -> put(name, ms) } }
+            prefs.edit().putString("hidden_missing_$key", json.toString()).apply()
+        }
+    }
+
+    /** Whether this account's rooms were silenced once on this build (iOS ef760cfa
+     *  `kachat_rooms_silenced_once_v1_<wallet>`). True with no account, so nothing happens. */
+    fun roomsSilencedOnce(): Boolean = synchronized(lock) {
+        val key = wallet ?: return@synchronized true
+        prefs.getBoolean("rooms_silenced_once_v1_$key", false)
+    }
+
+    fun markRoomsSilencedOnce() = synchronized(lock) {
+        val key = wallet ?: return@synchronized
+        prefs.edit().putBoolean("rooms_silenced_once_v1_$key", true).apply()
+    }
+
+    /**
+     * The rooms K joined on this account's behalf (default rooms, built in or from the indexer's
+     * list; iOS 65f8a765 `kachat_rooms_auto_joined_v1_<wallet>`), or null before this build first
+     * saved them. A room leaves it once the person joins it by name or posts in it
+     * ([keepRoomAsOwn]); one the indexer drops is left
+     * ([com.kachat.app.services.publicchats.PublicChatDefaultRooms]).
+     */
+    fun autoJoinedRooms(): Set<String>? = synchronized(lock) {
+        val key = wallet ?: return@synchronized null
+        prefs.getStringSet("rooms_auto_joined_v1_$key", null)?.toSet()
+    }
+
+    /** Changes the auto-joined rooms; [change] gets the saved set (empty before the first save).
+     *  [force] saves even when nothing changed (the first run's record). */
+    fun updateAutoJoined(force: Boolean = false, change: (Set<String>) -> Set<String>) = synchronized(lock) {
+        val key = wallet ?: return@synchronized
+        val stored = prefs.getStringSet("rooms_auto_joined_v1_$key", null)?.toSet()
+        val next = change(stored ?: emptySet())
+        if (next == stored && !force) return@synchronized
+        if (stored == null && next.isEmpty() && !force) return@synchronized
+        prefs.edit().putStringSet("rooms_auto_joined_v1_$key", next).apply()
+    }
+
+    /** The person made [channel] their own (joined it by name, from a link, or posted in it): it
+     *  stays when the indexer drops it (iOS 65f8a765 `keepRoomAsOwn`). */
+    fun keepRoomAsOwn(channel: String) {
+        val name = com.kachat.app.util.MessageProtocol.normalizeChannelName(channel)
+        if (autoJoinedRooms()?.contains(name) != true) return
+        updateAutoJoined { it - name }
+    }
+
     /** A room left for good takes its read state with it. */
     fun forget(channel: String) = synchronized(lock) {
         if (wallet == null) return@synchronized

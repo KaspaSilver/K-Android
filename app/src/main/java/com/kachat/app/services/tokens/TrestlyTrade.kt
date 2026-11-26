@@ -193,11 +193,15 @@ class TrestlyTrade @Inject constructor(
             }
             val result = done.get("result")?.takeIf { it.isJsonObject }?.asJsonObject
                 ?: throw TrestlyProvider.ProviderError(Code.FAILED, "Trestly's pool code gave no result.")
-            result.get("txid")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString?.let { txid ->
+            val txid = result.get("txid")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString
+            if (txid != null) {
                 addressActivityNotifier.markOwnTransaction(txid)
+                // looked up again until the swap's coins show (iOS 961fc05a `followTrade`)
+                tokenWallet.followTrade(txid, target.address)
+            } else {
+                // TokenWallet looks again once the pool's new coins can be listed (iOS: 4 s)
+                refreshTokensSoon()
             }
-            // TokenWallet looks again once the pool's new coins can be listed (iOS: 4 s)
-            refreshTokensSoon()
             return Done(result, prepared, done.get("fee"))
         }
     }

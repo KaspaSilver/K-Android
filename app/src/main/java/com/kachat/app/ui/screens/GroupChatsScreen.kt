@@ -147,9 +147,17 @@ internal fun GroupChatRow(
         }
     }
     val previewContext = androidx.compose.ui.platform.LocalContext.current
+    // An edited message reads with its newest text, as in the thread (iOS 961fc05a).
+    val previewEdits by chatViewModel.groupPreviewEdits.collectAsState()
+    val lastEdit = convo.lastMessage?.txId?.let { previewEdits[it] }
     // Keyed on the text too: an edit keeps the txid (iOS audit 2026-11-24 #10).
-    val preview = remember(convo.lastMessage?.txId, convo.lastMessage?.content, members, memberNamesByAddress) {
-        groupMessagePreviewText(previewContext, convo.lastMessage, members, resolveName)
+    val preview = remember(convo.lastMessage?.txId, convo.lastMessage?.content, lastEdit, members, memberNamesByAddress) {
+        val shown = convo.lastMessage?.let { last ->
+            if (lastEdit != null && com.kachat.app.util.MessageEdit.isEditable(last.content)) {
+                last.copy(content = com.kachat.app.util.MessageEdit.apply(lastEdit, last.content))
+            } else last
+        }
+        groupMessagePreviewText(previewContext, shown, members, resolveName)
     }
 
     Row(
@@ -174,14 +182,10 @@ internal fun GroupChatRow(
                         modifier = Modifier.weight(1f, fill = false)
                     )
                     // Silenced: no banner from this group, mentioned or not.
+                    // A gray "Silenced" pill, not a bell icon (iOS ef760cfa `SilencedPill`).
                     if (group.groupId in silentGroups) {
-                        Spacer(Modifier.width(5.dp))
-                        Icon(
-                            Icons.Default.NotificationsOff,
-                            contentDescription = stringResource(R.string.silenced),
-                            tint = colors.textSecondary,
-                            modifier = Modifier.size(14.dp)
-                        )
+                        Spacer(Modifier.width(6.dp))
+                        SilencedPill()
                     }
                 }
                 convo.lastMessage?.let { last ->

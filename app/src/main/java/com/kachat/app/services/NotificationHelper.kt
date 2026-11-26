@@ -21,12 +21,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Local notifications for new messages/handshakes/payments — fired directly from
- * ChatRepository's existing poll loop. There's no server-side push infrastructure yet
- * (see the commented-out FCM service in AndroidManifest), so these only fire while the
- * app process is alive (foreground or recently backgrounded), not after the OS has
- * fully killed it. Settings > Notifications controls whether these fire at all, and
- * whether they carry sound/vibration.
+ * Every notification K posts: the FCM handler's (KaChatFirebaseMessagingService) and the app's
+ * own, from its syncs, scans and polls ([mayBannerLocally], [PushState]), one per message (the
+ * txId ledger). Settings > Notifications controls whether these fire at all, and whether they
+ * carry sound/vibration (one channel per combination, [channelFor]).
  */
 @Singleton
 class NotificationHelper @Inject constructor(
@@ -72,8 +70,11 @@ class NotificationHelper @Inject constructor(
             // to pre-create one channel per combination and post through whichever one
             // matches the current settings.
             val manager = context.getSystemService(NotificationManager::class.java)
+            // Each its own name (audit 2026-11-25 P5): four channels all called "Messages" left the
+            // system settings guessing which one a change applied to. Re-created on every start,
+            // which only updates the name (in the app's language) and keeps the user's choices.
             CHANNELS.forEach { (channelId, soundOn, vibrationOn) ->
-                val channel = NotificationChannel(channelId, context.getString(R.string.messages), NotificationManager.IMPORTANCE_HIGH).apply {
+                val channel = NotificationChannel(channelId, context.getString(channelNameRes(soundOn, vibrationOn)), NotificationManager.IMPORTANCE_HIGH).apply {
                     description = context.getString(R.string.new_messages_connection_requests_and_payments)
                     enableVibration(vibrationOn)
                     if (!soundOn) setSound(null, null)
@@ -140,6 +141,26 @@ class NotificationHelper @Inject constructor(
      * app from a push - which has left the shade by then - never banners it a second time.
      */
     fun pushArrived(key: String?): Boolean = PushArrivalRecord.arrived(context, key)
+
+    /** Group pushes the FCM handler could not read while the app was open and left to the app's
+     *  own banner (audit 2026-11-25 P2). LRU-capped, like [notifiedTxIds]. */
+    private val deferredToApp = object : LinkedHashMap<String, Boolean>(16, 0.75f, false) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?) = size > 100
+    }
+
+    /**
+     * The push for [txId] reached the phone but posted nothing: the app, which is open, banners
+     * the message when it ingests it. [pushArrived] alone would stop that banner, so the push
+     * hands it over here (audit 2026-11-25 P2).
+     */
+    @Synchronized
+    fun deferToApp(txId: String?) {
+        if (!txId.isNullOrBlank()) deferredToApp[txId.lowercase()] = true
+    }
+
+    @Synchronized
+    private fun isDeferredToApp(txId: String?): Boolean =
+        !txId.isNullOrBlank() && deferredToApp.containsKey(txId.lowercase())
 
     /**
      * Whether a message the app found itself (its sync, scans, sweeps and polls) may banner now
@@ -289,6 +310,9 @@ class NotificationHelper @Inject constructor(
      *  seconds (see GroupScanningService). */
     val viewingGroupId: String? get() = activeGroupId.value
 
+    /** [viewingGroupId] as it changes: opening a group wakes the live poll's beat sleep. */
+    val viewingGroupIdFlow: kotlinx.coroutines.flow.StateFlow<String?> get() = activeGroupId
+
     /** Same for 1:1 threads: a message that lands WHILE its conversation is on screen inserts as
      *  already-read, so leaving the chat doesn't show an unread badge for messages you watched arrive. */
     fun isViewingContact(contactId: String): Boolean = activeContactId.value == contactId
@@ -297,6 +321,9 @@ class NotificationHelper @Inject constructor(
      *  ChatRepository's poll loop keep just the open conversation on the fast tick while the
      *  full contact sweep is throttled. */
     val currentContactId: String? get() = activeContactId.value
+
+    /** [currentContactId] as it changes: opening a 1:1 chat wakes the poll loop's beat sleep. */
+    val currentContactIdFlow: kotlinx.coroutines.flow.StateFlow<String?> get() = activeContactId
 
     /** The one notification a new Message Request gets: "New message request - <address> wants
      *  to chat with you." (NO_HANDSHAKE_MESSAGING.md §4). The caller decides it is the first. Its
@@ -518,7 +545,8 @@ class NotificationHelper @Inject constructor(
         if (walletManager.isLoggedOut) return
         if (activeGroupId.value == groupId) return // already looking at this group's thread
         if (!settings.notificationsEnabled.first()) return
-        if (!fromPush && pushArrived(dedupeTxId)) return // its push came already (iOS `InAppBanner.pushArrived`)
+        // its push came already (iOS `InAppBanner.pushArrived`) - unless that push left it to us (P2)
+        if (!fromPush && pushArrived(dedupeTxId) && !isDeferredToApp(dedupeTxId)) return
         if (!claimTxId(dedupeTxId)) return // the other delivery path (scan/sync vs push) got here first
         if (isShowing(dedupeTxId)) return // its push is in the shade already (iOS 428a797b)
 
@@ -754,5 +782,13 @@ class NotificationHelper @Inject constructor(
 
         internal fun channelFor(soundEnabled: Boolean, vibrationEnabled: Boolean) =
             CHANNELS.first { it.second == soundEnabled && it.third == vibrationEnabled }.first
+
+        /** The name system settings show for each channel (P5): the usual one keeps "Messages". */
+        internal fun channelNameRes(soundEnabled: Boolean, vibrationEnabled: Boolean): Int = when {
+            soundEnabled && vibrationEnabled -> R.string.messages
+            soundEnabled -> R.string.notification_channel_no_vibration
+            vibrationEnabled -> R.string.notification_channel_vibrate_only
+            else -> R.string.notification_channel_silent
+        }
     }
 }

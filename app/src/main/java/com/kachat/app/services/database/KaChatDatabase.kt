@@ -44,7 +44,7 @@ import com.kachat.app.models.ReactionEntity
         PortfolioTransactionEntity::class,
         PortfolioEntity::class,
     ],
-    version = 45,
+    version = 46,
     exportSchema = true
 )
 abstract class KaChatDatabase : RoomDatabase() {
@@ -606,6 +606,17 @@ abstract class KaChatDatabase : RoomDatabase() {
                     "CREATE TABLE IF NOT EXISTS `portfolios` (`id` TEXT NOT NULL, `walletAddress` TEXT NOT NULL, " +
                         "`name` TEXT NOT NULL, `sortOrder` INTEGER NOT NULL, `createdAtMillis` INTEGER NOT NULL, " +
                         "`updatedAtMillis` INTEGER, PRIMARY KEY(`id`))"
+                )
+            }
+        }
+
+        /** v45 -> v46: an index for the unread badges' query (audit 2026-11-25 S16). `IF NOT
+         *  EXISTS` keeps a replay safe. */
+        val MIGRATION_45_46 = object : Migration(45, 46) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_messages_walletAddress_isRead_direction` " +
+                        "ON `messages` (`walletAddress`, `isRead`, `direction`)"
                 )
             }
         }

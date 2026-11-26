@@ -41,6 +41,9 @@ class ColdStorageViewModel @Inject constructor(
      *  labels beside KasSigner's) - never the words or a key. */
     private val walletManager: com.kachat.app.services.WalletManager,
     addressActivityNotifier: com.kachat.app.services.AddressActivityNotifier,
+    /** Whether a quantum address has spent (the slashed shield, iOS 961fc05a): the same probe
+     *  the hot wallet's quantum addresses use. */
+    private val walletServiceLazy: dagger.Lazy<com.kachat.app.services.WalletService>,
 ) : ViewModel() {
 
     /** Own addresses whose balance just changed (cold ones included): the detail screen reloads
@@ -117,8 +120,22 @@ class ColdStorageViewModel @Inject constructor(
         // actually confirmed the row's balance. Snapshot-painted rows come back false — the
         // spending list's identical rule — so visibility toggles know when they can trust the
         // row instantly versus when they must fall back to a fail-closed live check.
-        val liveChecked: Boolean = false
-    )
+        val liveChecked: Boolean = false,
+        /** A KasSigner quantum-resistant (KCC-3) address, added by scan (iOS 961fc05a). Its
+         *  [index] is [ColdStorageManager.QUANTUM_INDEX_BASE] + its place in the account's list. */
+        val isQuantum: Boolean = false,
+        /** The unit's number for a quantum address, when known. */
+        val unitIndex: Long? = null,
+        /** The unit's KCC-3 chain for a quantum address (0 receive, 1 change). */
+        val quantumChain: Int = 0,
+    ) {
+        /** The row's name: its label, else "Quantum Address #n" for a quantum one, else
+         *  "Address #n" (iOS `ColdStorageAddressEntry.displayLabel`). */
+        val displayLabel: String
+            get() = label?.takeIf { it.isNotBlank() }
+                ?: if (isQuantum) ColdStorageManager.ColdQuantumAddress.defaultLabel(quantumChain, unitIndex)
+                else com.kachat.app.util.tr(com.kachat.app.R.string.kp_address_lld_64ab3, index)
+    }
 
     private val _addresses = MutableStateFlow<List<AddressRow>>(emptyList())
     val addresses: StateFlow<List<AddressRow>> = _addresses.asStateFlow()
@@ -213,7 +230,9 @@ class ColdStorageViewModel @Inject constructor(
                             .getOrNull()?.let { index to it }
                     }
                 }
-                val balances = addressDiscovery.fetchBalances(derived.map { it.second })
+                // The quantum addresses added by scan are read in the same round trip (iOS 961fc05a).
+                val quantum = coldStorageManager.currentQuantumAddresses(accountId)
+                val balances = addressDiscovery.fetchBalances(derived.map { it.second } + quantum.map { it.address })
                 if (balances == null) {
                     // Nothing could be checked live. Keep whatever is painted (snapshot or
                     // previous rows) — a stale list beats a blank screen claiming no addresses.
@@ -232,7 +251,9 @@ class ColdStorageViewModel @Inject constructor(
                         hidden = index in hiddenIndices,
                         liveChecked = liveBalance != null
                     )
-                }.sortedByDescending { it.index }
+                }.plus(quantumRows(accountId, quantum, balances, known, labels, hiddenIndices))
+                    .sortedByDescending { it.index }
+                refreshQuantumSpent(quantum.map { it.address })
 
                 // Pass 2 — discovery: gap-limit scan BEYOND the derived bound for addresses
                 // funded/used before they were ever shown here (plus the scan's trailing fresh
@@ -332,6 +353,104 @@ class ColdStorageViewModel @Inject constructor(
         }
     }
 
+    /** The account's quantum addresses as rows, after the regular ones, in the order added. */
+    private fun quantumRows(
+        accountId: String,
+        quantum: List<ColdStorageManager.ColdQuantumAddress>,
+        balances: Map<String, Long>,
+        known: Map<Int, AddressRow>,
+        labels: Map<Int, String>,
+        hiddenIndices: Set<Int>,
+    ): List<AddressRow> = quantum.mapIndexed { position, entry ->
+        val index = ColdStorageManager.QUANTUM_INDEX_BASE + position
+        val prior = known[index]?.takeIf { it.address == entry.address }
+        val liveBalance = balances[entry.address]
+        val balance = liveBalance ?: prior?.balanceSompi ?: 0L
+        AddressRow(
+            index = index,
+            address = entry.address,
+            balanceSompi = balance,
+            hasHistory = prior?.hasHistory == true || balance > 0L,
+            label = labels[index],
+            hidden = index in hiddenIndices,
+            liveChecked = liveBalance != null,
+            isQuantum = true,
+            unitIndex = entry.unitIndex,
+            quantumChain = entry.chain,
+        )
+    }
+
+    /** Quantum addresses whose key a spend has put on chain (the slashed shield). */
+    private val _quantumSpentAddresses = MutableStateFlow<Set<String>>(emptySet())
+    val quantumSpentAddresses: StateFlow<Set<String>> = _quantumSpentAddresses.asStateFlow()
+
+    private fun refreshQuantumSpent(addresses: List<String>) {
+        if (addresses.isEmpty()) return
+        viewModelScope.launch {
+            val walletService = walletServiceLazy.get()
+            val spent = HashSet<String>()
+            for (address in addresses) {
+                if (walletService.quantumAddressSpentState(address) == true) spent.add(address.lowercase())
+            }
+            _quantumSpentAddresses.value = _quantumSpentAddresses.value + spent
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Quantum-resistant (KCC-3) addresses (iOS 961fc05a)
+    // -------------------------------------------------------------------------
+
+    /** Adds a scanned or pasted KCC-3 address; the error's message is the localized reason. */
+    fun addQuantumAddress(accountId: String, text: String, unitIndex: Long?, chain: Int): Result<ColdStorageManager.ColdQuantumAddress> {
+        val result = coldStorageManager.addQuantumAddress(text, unitIndex, chain, accountId)
+        if (result.isSuccess) {
+            _accounts.value = coldStorageManager.getAccounts()
+            refreshAddresses(accountId)
+        }
+        return result
+    }
+
+    /** Edit Address Number: sets or clears the number and chain on the unit (Q4). */
+    fun updateQuantumAddress(accountId: String, address: String, unitIndex: Long?, chain: Int) {
+        coldStorageManager.updateQuantumAddress(address, unitIndex, chain, accountId)
+        _accounts.value = coldStorageManager.getAccounts()
+        _addresses.value = _addresses.value.map {
+            if (it.isQuantum && it.address == address) it.copy(unitIndex = unitIndex, quantumChain = chain) else it
+        }
+    }
+
+    /** Stop Watching: the address leaves the account; its coins stay on chain. The rows after it
+     *  move up a place, as their labels and hidden flags do. */
+    fun stopWatchingQuantumAddress(accountId: String, address: String) {
+        coldStorageManager.removeQuantumAddress(address, accountId)
+        _accounts.value = coldStorageManager.getAccounts()
+        _addresses.value = _addresses.value.filterNot { it.isQuantum && it.address == address }
+        refreshAddresses(accountId)
+    }
+
+    /** The stored record of a quantum address (its number and chain now, not a row's copy). */
+    fun quantumRecord(address: String): ColdStorageManager.ColdQuantumAddress? =
+        coldStorageManager.quantumAddressRecord(address)?.second
+
+    /** The index an edit of [row] files under now: a quantum row's moves when an earlier quantum
+     *  address stops being watched, and the row may be from before that (Q7). */
+    fun currentIndex(accountId: String, row: AddressRow): Int? =
+        if (row.isQuantum) coldStorageManager.currentQuantumIndex(row.address, accountId) else row.index
+
+    /** Whether Compound is offered on [address]: a quantum one moves its coins to another quantum
+     *  address of the account, so only when there is another (iOS 961fc05a `canCompound`). */
+    fun canCompound(address: String): Boolean {
+        val (account, _) = coldStorageManager.quantumAddressRecord(address) ?: return !ColdStorageManager.isScriptHashAddress(address)
+        return account.quantumList.size > 1
+    }
+
+    /** Every address of the account holding [address] (lowercased), for the history rows (L3). */
+    suspend fun accountAddresses(address: String): Set<String> =
+        withContext(Dispatchers.Default) { coldStorageManager.accountAddresses(address) }
+
+    /** The name a quantum address shows (its label, else its default). */
+    fun quantumDisplayLabel(address: String): String? = coldStorageManager.quantumDisplayLabel(address)
+
     private val gson = com.google.gson.Gson()
 
     /** Last fully-loaded row list for [accountId], from [ColdStorageManager.getAddressSnapshot] —
@@ -412,8 +531,11 @@ class ColdStorageViewModel @Inject constructor(
                 }
             }
             null
+        } ?: coldStorageManager.quantumAddressRecord(address)?.let { (account, entry) ->
+            coldStorageManager.currentQuantumIndex(entry.address, account.id)?.let { Triple(account.id, it, entry.address) }
         } ?: return null
         val (accountId, index, candidate) = match
+        val quantumEntry = if (ColdStorageManager.isQuantumIndex(index)) coldStorageManager.quantumAddressRecord(candidate)?.second else null
         val balance = addressDiscovery.fetchBalances(listOf(candidate))?.get(candidate) ?: 0L
         return AddressRow(
             index = index,
@@ -422,6 +544,9 @@ class ColdStorageViewModel @Inject constructor(
             hasHistory = true,
             label = coldStorageManager.getAddressLabels(accountId)[index],
             hidden = index in coldStorageManager.getHiddenIndices(accountId),
+            isQuantum = quantumEntry != null,
+            unitIndex = quantumEntry?.unitIndex,
+            quantumChain = quantumEntry?.chain ?: 0,
         )
     }
 
@@ -459,7 +584,8 @@ class ColdStorageViewModel @Inject constructor(
      */
     fun revealColdAddress(accountId: String, index: Int) {
         val account = coldStorageManager.getAccounts().find { it.id == accountId } ?: return
-        val currentMax = maxOf(account.maxDerivedIndex, _addresses.value.maxOfOrNull { it.index } ?: -1)
+        // The kpub chain's highest index; quantum entries (1,000,000+) aren't on it (Q5).
+        val currentMax = maxOf(account.maxDerivedIndex, _addresses.value.filterNot { it.isQuantum }.maxOfOrNull { it.index } ?: -1)
         if (index > currentMax) {
             coldStorageManager.ensureMaxDerivedIndexAtLeast(accountId, index)
             for (i in (currentMax + 1) until index) coldStorageManager.setAddressHidden(accountId, i, true)
@@ -519,6 +645,29 @@ class ColdStorageViewModel @Inject constructor(
             onResult(true)
             return
         }
+        if (ColdStorageManager.isQuantumIndex(index)) {
+            // A scanned quantum address: its balance read live, fail-closed as the rest.
+            val address = row?.address ?: coldStorageManager.currentQuantumAddresses(accountId)
+                .getOrNull(index - ColdStorageManager.QUANTUM_INDEX_BASE)?.address
+            if (address == null) {
+                onResult(false)
+                return
+            }
+            viewModelScope.launch {
+                val balance = addressDiscovery.fetchBalances(listOf(address))?.get(address)
+                if (balance == null || balance > 0) {
+                    if (balance != null) {
+                        _addresses.value = _addresses.value.map { if (it.index == index) it.copy(balanceSompi = balance, liveChecked = true) else it }
+                    }
+                    onResult(false)
+                    return@launch
+                }
+                coldStorageManager.setAddressHidden(accountId, index, true)
+                _addresses.value = _addresses.value.map { if (it.index == index) it.copy(hidden = true, liveChecked = true) else it }
+                onResult(true)
+            }
+            return
+        }
         viewModelScope.launch {
             val rootKey = rootKeyFor(accountId)
             if (rootKey == null) {
@@ -565,7 +714,9 @@ class ColdStorageViewModel @Inject constructor(
                 // Recycle only HIDDEN rows this session live-confirmed as empty and unused — a
                 // snapshot-painted row could be funded since; deriving past the end (below) is
                 // always safe, so unconfirmed rows are skipped rather than trusted.
-                val recycled = _addresses.value.sortedBy { it.index }
+                // Only the kpub's chain: a quantum entry is a scanned address, not the next one to
+                // hand out, and Generate More must never un-hide one (audit 2026-11-25 Q5).
+                val recycled = _addresses.value.filterNot { it.isQuantum }.sortedBy { it.index }
                     .firstOrNull { it.hidden && it.liveChecked && it.balanceSompi == 0L && !it.hasHistory }
                 if (recycled != null) {
                     coldStorageManager.setAddressHidden(accountId, recycled.index, false)
@@ -575,7 +726,7 @@ class ColdStorageViewModel @Inject constructor(
                     onResult(recycled.index)
                     return@launch
                 }
-                val nextIndex = maxOf(account.maxDerivedIndex, _addresses.value.maxOfOrNull { it.index } ?: -1) + 1
+                val nextIndex = maxOf(account.maxDerivedIndex, _addresses.value.filterNot { it.isQuantum }.maxOfOrNull { it.index } ?: -1) + 1
                 // Derive BEFORE persisting anything: if the kpub can't produce this address the
                 // press must refuse cleanly instead of toasting an index that never appears.
                 val address = coldAddressAt(accountId, nextIndex)
@@ -614,6 +765,15 @@ class ColdStorageViewModel @Inject constructor(
     }
 
     fun setAddressLabel(accountId: String, index: Int, label: String) {
+        coldStorageManager.setAddressLabel(accountId, index, label)
+        _addresses.value = _addresses.value.map {
+            if (it.index == index) it.copy(label = label.trim().ifBlank { null }) else it
+        }
+    }
+
+    /** Rename from a row: a quantum row files under its index now (Q7), else its own. */
+    fun setAddressLabel(accountId: String, row: AddressRow, label: String) {
+        val index = currentIndex(accountId, row) ?: return
         coldStorageManager.setAddressLabel(accountId, index, label)
         _addresses.value = _addresses.value.map {
             if (it.index == index) it.copy(label = label.trim().ifBlank { null }) else it
@@ -668,6 +828,18 @@ class ColdStorageViewModel @Inject constructor(
     // fetch in the background to keep it current - stale-while-revalidate, not stale-forever.
     private val txHistoryCache = mutableMapOf<String, List<ColdStorageAddressDiscovery.AddressTransaction>>()
     private val utxoCache = mutableMapOf<String, List<ColdStorageAddressDiscovery.AddressUtxo>>()
+    /** Each address's account addresses, for its history rows; loaded once per address while
+     *  the accounts' address sets stay as they were ([ownAddressesStamp]). */
+    private val ownAddressesCache = mutableMapOf<String, Set<String>>()
+    /** The accounts' address sets when [ownAddressesCache] was filled: a quantum address added or
+     *  dropped, or more addresses derived, empties it, so change to a new address is never read
+     *  as Sent (audit 2026-11-25 T5). */
+    private var ownAddressesStamp: Int? = null
+
+    private fun ownAddressesStampNow(): Int =
+        coldStorageManager.getAccounts().map { account ->
+            Triple(account.id, account.maxDerivedIndex, account.quantumList.map { it.address })
+        }.hashCode()
 
     fun loadTxHistory(address: String) {
         val cached = txHistoryCache[address]
@@ -677,7 +849,14 @@ class ColdStorageViewModel @Inject constructor(
         viewModelScope.launch {
             if (cached == null) _isLoadingTxHistory.value = true
             try {
-                val result = addressDiscovery.getTransactionHistoryResult(address)
+                // The account's own addresses: change to another of them isn't Sent (L3).
+                val stamp = ownAddressesStampNow()
+                if (stamp != ownAddressesStamp) {
+                    ownAddressesCache.clear()
+                    ownAddressesStamp = stamp
+                }
+                val own = ownAddressesCache[address] ?: accountAddresses(address).also { ownAddressesCache[address] = it }
+                val result = addressDiscovery.getTransactionHistoryResult(address, ownAddresses = own)
                 _txHistoryIncomplete.value = !result.complete
                 // A fetch that got nothing at all leaves what was already shown.
                 if (result.complete || result.transactions.isNotEmpty() || cached == null) {
@@ -746,7 +925,86 @@ class ColdStorageViewModel @Inject constructor(
         /** The broadcast's answer was lost (it may have gone): "Not confirmed" with Done only, as
          *  every send in the app ends (`SendOutcomeUnknownException`). */
         val outcomeUnknown: Boolean = false,
+        /** What the signing step says about a send from a quantum address (iOS 961fc05a
+         *  `quantumSendNote`); null for any other send. */
+        val quantum: QuantumSendInfo? = null,
     )
+
+    /** A quantum source's built request, as the signing step shows it. */
+    data class QuantumSendInfo(
+        /** Where the change (or a quantum compound's coins) goes; null when there is none. */
+        val ownOutput: String?,
+        /** Its name: the person's label, else "Quantum Address #n". */
+        val ownOutputLabel: String?,
+        /** KasSigner will mark that output as CHANGE (change chain #0-4), else it shows it as a
+         *  payment (audit 2026-11-25 Q2). */
+        val unitMarksAsChange: Boolean,
+        /** Coins past one transaction's input cap, left behind the revealed key (Q6). */
+        val coinsLeftBehind: Int,
+        /** The request names the address's number: Sign Without the Address Number is offered (Q4). */
+        val hasUnitIndex: Boolean,
+    )
+
+    /** The quantum address this send reserved for its change (or a quantum compound's
+     *  destination), handed back if the send never goes out (iOS 961fc05a `reservedChange`). */
+    private var reservedChange: String? = null
+    /** Whether [reservedChange] is a quantum compound's destination (it stays across rebuilds). */
+    private var reservedIsCompoundDestination = false
+
+    /** Compound on a quantum address: its coins move to a fresh quantum address of the account,
+     *  reserved now for this flow; null (Something Went Wrong) when there is none (Q6). */
+    suspend fun reserveQuantumCompoundDestination(fromAddress: String): String? {
+        sendEngine.releaseQuantumChange(reservedChange)
+        val fresh = sendEngine.freshQuantumChangeAddress(fromAddress)
+        reservedChange = fresh
+        reservedIsCompoundDestination = fresh != null
+        return fresh
+    }
+
+    /** The localized message for a quantum compound with nowhere to go. */
+    fun quantumCompoundNeedsFreshAddressMessage(): String =
+        com.kachat.app.util.tr(com.kachat.app.R.string.coldq_error_compound_needs_fresh)
+
+    private fun releaseReservedChange() {
+        sendEngine.releaseQuantumChange(reservedChange)
+        reservedChange = null
+        reservedIsCompoundDestination = false
+    }
+
+    private fun quantumInfo(unsigned: ColdStorageSendEngine.UnsignedColdTx, compound: Boolean): QuantumSendInfo? {
+        if (!unsigned.isQuantumSource) return null
+        val own = if (compound) reservedChange else unsigned.changeAddress
+        val record = own?.let { coldStorageManager.quantumAddressRecord(it)?.second }
+        return QuantumSendInfo(
+            ownOutput = own,
+            ownOutputLabel = own?.let { coldStorageManager.quantumDisplayLabel(it) },
+            unitMarksAsChange = record?.unitMarksAsChange == true,
+            coinsLeftBehind = unsigned.coinsLeftBehind,
+            hasUnitIndex = unsigned.quantumUnitIndex != null,
+        )
+    }
+
+    /**
+     * Sign Without the Address Number: the same transaction again with no KCC-3 hint, for a unit
+     * that refused the number (a wrong one, or the wrong chain); the unit then searches its
+     * quantum addresses itself (iOS 961fc05a, audit 2026-11-25 Q4). The new QR frames, or null.
+     */
+    fun signWithoutAddressNumber(): List<ByteArray>? {
+        val unsigned = pendingUnsignedTx ?: return null
+        if (!unsigned.isQuantumSource) return null
+        val withoutHint = unsigned.copy(quantumUnitIndex = null)
+        return try {
+            val frames = QrFrameChunker.chunk(sendEngine.toKspt(withoutHint))
+            pendingUnsignedTx = withoutHint
+            _sendState.value = _sendState.value.copy(
+                qrFrames = frames,
+                quantum = _sendState.value.quantum?.copy(hasUnitIndex = false)
+            )
+            frames
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     private val _sendState = MutableStateFlow(ColdSendUiState())
     val sendState: StateFlow<ColdSendUiState> = _sendState.asStateFlow()
@@ -779,28 +1037,56 @@ class ColdStorageViewModel @Inject constructor(
         extraFeeSompi: Long = 0L,
         /** [manualUtxos] are the review's automatic preview, not a coin-control pick (iOS
          *  `previewed`, see [ColdStorageSendEngine.buildUnsignedTransaction]). */
-        previewed: Boolean = false
+        previewed: Boolean = false,
+        /** Compound: a quantum source's coins go to the destination reserved for this flow. */
+        isCompound: Boolean = false,
     ) {
         val step = _sendState.value.step
         if (step != ColdSendStep.IDLE && step != ColdSendStep.SUCCESS && step != ColdSendStep.FAILED) return
 
         _sendState.value = ColdSendUiState(step = ColdSendStep.BUILDING)
         val generation = sendGeneration
+        val quantumRecord = coldStorageManager.quantumAddressRecord(fromAddress)?.second
         viewModelScope.launch {
-            sendEngine.buildUnsignedTransaction(fromAddress, toAddress, amountSompi, feeRateOverride, manualUtxos, extraFeeSompi, previewed).fold(
+            // A quantum source's change goes to a fresh quantum address of the account: this
+            // spend makes the source's key public, and the build refuses change back to it. A
+            // rebuild hands the earlier pick back and chooses again. (A quantum compound's
+            // destination was reserved when the flow opened and stays.)
+            var changeAddress: String? = null
+            if (quantumRecord != null && !isCompound) {
+                releaseReservedChange()
+                changeAddress = sendEngine.freshQuantumChangeAddress(fromAddress)
+                reservedChange = changeAddress
+            }
+            val result = sendEngine.buildUnsignedTransaction(
+                fromAddress, toAddress, amountSompi, feeRateOverride, manualUtxos, extraFeeSompi, previewed,
+                changeAddress = changeAddress,
+                quantumUnitIndex = quantumRecord?.unitIndex,
+                quantumUnitChain = quantumRecord?.chain ?: ColdStorageManager.ColdQuantumAddress.CHAIN_RECEIVE,
+            )
+            result.fold(
                 onSuccess = { unsigned ->
+                    // No change after all (a Max send): the address isn't taken.
+                    if (!isCompound && changeAddress != null && unsigned.changeAddress == null) releaseReservedChange()
                     if (generation != sendGeneration) return@fold
-                    pendingUnsignedTx = unsigned
-                    val kspt = sendEngine.toKspt(unsigned)
-                    publishSendState(generation) {
-                        ColdSendUiState(
-                            step = ColdSendStep.SHOWING_QR,
-                            qrFrames = QrFrameChunker.chunk(kspt),
-                            feeSompi = unsigned.feeSompi
-                        )
+                    try {
+                        val kspt = sendEngine.toKspt(unsigned)
+                        pendingUnsignedTx = unsigned
+                        publishSendState(generation) {
+                            ColdSendUiState(
+                                step = ColdSendStep.SHOWING_QR,
+                                qrFrames = QrFrameChunker.chunk(kspt),
+                                feeSompi = unsigned.feeSompi,
+                                quantum = quantumInfo(unsigned, isCompound),
+                            )
+                        }
+                    } catch (e: Exception) {
+                        if (!isCompound) releaseReservedChange()
+                        publishSendState(generation) { ColdSendUiState(step = ColdSendStep.FAILED, errorMessage = UserFacingError.message(e, "Failed to build transaction")) }
                     }
                 },
                 onFailure = { e ->
+                    if (!isCompound) releaseReservedChange()
                     publishSendState(generation) { ColdSendUiState(step = ColdSendStep.FAILED, errorMessage = UserFacingError.message(e, "Failed to build transaction")) }
                 }
             )
@@ -812,6 +1098,11 @@ class ColdStorageViewModel @Inject constructor(
         val unsigned = pendingUnsignedTx ?: return
         _sendState.value = _sendState.value.let { it.copy(step = ColdSendStep.BROADCASTING, errorMessage = null, attempt = it.attempt + 1) }
         val generation = sendGeneration
+        // The quantum address this send pays its change (or a compound) to, read now: a later
+        // screen may reset the reservation fields while the broadcast runs (audit 2026-11-25 T2).
+        val ownQuantumOutput = if (unsigned.isQuantumSource) {
+            if (reservedIsCompoundDestination) reservedChange else unsigned.changeAddress
+        } else null
         viewModelScope.launch {
             val decoded = KsptCodec.decode(scannedBytes).getOrElse { e ->
                 publishSendState(generation) {
@@ -824,11 +1115,17 @@ class ColdStorageViewModel @Inject constructor(
             }
             sendEngine.broadcastSigned(unsigned, decoded).fold(
                 onSuccess = { txId ->
+                    // The quantum address that took the change (or the compound) is used now, and
+                    // stays taken (iOS 961fc05a `noteQuantumChangeSent`).
+                    if (unsigned.isQuantumSource) noteOwnQuantumOutputSent(ownQuantumOutput, generation)
                     if (generation == sendGeneration) pendingUnsignedTx = null
                     publishSendState(generation) { ColdSendUiState(step = ColdSendStep.SUCCESS, txId = txId) }
                 },
                 onFailure = { e ->
                     val unknown = e is com.kachat.app.services.SendOutcomeUnknownException
+                    // It may have landed: its change address counts as used and is never handed
+                    // back to the pool (audit 2026-11-25 T2).
+                    if (unknown && unsigned.isQuantumSource) noteOwnQuantumOutputSent(ownQuantumOutput, generation)
                     if (unknown && generation == sendGeneration) pendingUnsignedTx = null
                     publishSendState(generation) {
                         it.copy(step = ColdSendStep.FAILED, errorMessage = UserFacingError.message(e, "Broadcast failed"), outcomeUnknown = unknown)
@@ -838,10 +1135,27 @@ class ColdStorageViewModel @Inject constructor(
         }
     }
 
+    /** The quantum address that took the change (or the compound) is used now, and stays taken
+     *  (iOS 961fc05a `noteQuantumChangeSent`). */
+    private fun noteOwnQuantumOutputSent(address: String?, generation: Int) {
+        sendEngine.noteQuantumChangeSent(address)
+        if (generation == sendGeneration) {
+            reservedChange = null
+            reservedIsCompoundDestination = false
+        }
+    }
+
     fun resetColdSendState() {
         sendGeneration++
         pendingUnsignedTx = null
         _sendState.value = ColdSendUiState()
+    }
+
+    /** The send screen closed: a change address it reserved and never sent to goes back to the
+     *  pool (iOS 961fc05a `.onDisappear`). */
+    fun closeColdSend() {
+        releaseReservedChange()
+        resetColdSendState()
     }
 
     suspend fun estimateMaxAmount(

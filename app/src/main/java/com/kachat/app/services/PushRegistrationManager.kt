@@ -45,6 +45,9 @@ import javax.inject.Singleton
  *
  * Idempotent and safe to call repeatedly — the server upserts by device token, and an unchanged
  * registration snapshot (see [lastRegisteredFingerprint]) short-circuits before any network I/O.
+ * The accepted fingerprint is kept across launches too (audit 2026-11-25 N3): a new process - a
+ * push or a periodic job waking K included - re-registers only when something changed, the app
+ * was updated, or the last registration is a day old ([registrationStillFresh]).
  *
  * Beyond the explicit [registerAsync]/[onTokenRefreshed] entry points, the init block observes
  * everything the registration payload is built from — active account, active-contact set, held
@@ -196,6 +199,14 @@ class PushRegistrationManager @Inject constructor(
         .combine(watchOnlyInputsFlow) { inputs, watchOnly -> inputs.copy(watchOnlyInputs = watchOnly) }
 
     init {
+        // The background gate's "could anything be shown?" half (audit 2026-11-25 N7): signed in
+        // with K's Notifications on. Android's own switch is read here too, off the main thread.
+        scope.launch {
+            pushState.refreshSystemNotifications()
+            combine(walletManager.signedInAddressFlow, settings.notificationsEnabled) { address, enabled ->
+                address != null && enabled
+            }.distinctUntilChanged().collect { pushState.setLocalBannersWanted(it) }
+        }
         scope.launch {
             combine(
                 walletManager.activeAddressFlow,
@@ -291,7 +302,7 @@ class PushRegistrationManager @Inject constructor(
     suspend fun registerAndWait() {
         check(settings.pushIndexerUrl.first().isNotBlank()) { "no push service on this network" }
         val finished = kotlinx.coroutines.withTimeoutOrNull(30_000) {
-            withContext(Dispatchers.IO) { register(null) }
+            withContext(Dispatchers.IO) { register(null, force = true) }
             true
         }
         check(finished == true) { "push registration timed out" }
@@ -300,7 +311,7 @@ class PushRegistrationManager @Inject constructor(
     /** Called from [KaChatFirebaseMessagingService.onNewToken] when FCM rotates the token. */
     fun onTokenRefreshed(token: String) {
         scope.launch {
-            runCatching { register(token) }
+            runCatching { register(token, force = true) }
                 .onFailure { Log.w(TAG, "push re-registration failed: ${it.message}") }
         }
     }
@@ -339,7 +350,7 @@ class PushRegistrationManager @Inject constructor(
     }
 
     private fun markUnregisterPending() {
-        lastRegisteredFingerprint = null
+        forgetRegistration()
         pushPrefs.edit().putBoolean(KEY_PENDING_UNREGISTER, true).apply()
     }
 
@@ -375,7 +386,7 @@ class PushRegistrationManager @Inject constructor(
         // Whatever happens below, this device is no longer in remote-push mode: the pollers must
         // resume posting notifications, and the next register must not be fingerprint-skipped.
         setPushActive(false)
-        lastRegisteredFingerprint = null
+        forgetRegistration()
 
         // No push service on this network: nothing left to retry here.
         val api = pushApiOrNull() ?: run { clearUnregisterPending(); return@withLock }
@@ -418,20 +429,46 @@ class PushRegistrationManager @Inject constructor(
     // MARK: - No push service on this network (testnet) - iOS df52425
 
     private val gson = com.google.gson.Gson()
-    private val pushPrefs by lazy { context.getSharedPreferences("kachat_push_registration", Context.MODE_PRIVATE) }
+    private val pushPrefs by lazy { context.getSharedPreferences(PushState.PREFS_NAME, Context.MODE_PRIVATE) }
 
-    init {
-        // A process woken to handle a push or a periodic sync catches up long before its first
-        // registration answers, and with the flag still false that catch-up bannered what the push
-        // is the source for. The last known answer stands until this launch's registration replaces it.
-        pushState.setActive(pushPrefs.getBoolean(KEY_PUSH_ACTIVE, false))
-    }
+    // A process woken to handle a push or a periodic sync catches up long before its first
+    // registration answers, and with the flag still false that catch-up bannered what the push is
+    // the source for. The last known answer stands until this launch's registration replaces it:
+    // PushState reads it back itself as it is built (audit 2026-11-25 S7).
 
     /** [PushState.setActive], remembered for the next process. */
     private fun setPushActive(active: Boolean) {
         pushState.setActive(active)
-        pushPrefs.edit().putBoolean(KEY_PUSH_ACTIVE, active).apply()
+        pushPrefs.edit().putBoolean(PushState.KEY_PUSH_ACTIVE, active).apply()
     }
+
+    /** The registration the service accepted, remembered for this process and the next ones
+     *  (audit 2026-11-25 N3). */
+    private fun rememberRegistration(fingerprint: String, walletAddress: String) {
+        lastRegisteredFingerprint = fingerprint
+        lastRegisteredAddress = walletAddress
+        pushPrefs.edit()
+            .putString(KEY_FINGERPRINT, fingerprint)
+            .putLong(KEY_FINGERPRINT_AT, System.currentTimeMillis())
+            .putLong(KEY_FINGERPRINT_BUILD, com.kachat.app.BuildConfig.VERSION_CODE.toLong())
+            .apply()
+    }
+
+    /** Nothing is known to be registered any more: the next trigger registers for real. */
+    private fun forgetRegistration() {
+        lastRegisteredFingerprint = null
+        pushPrefs.edit().remove(KEY_FINGERPRINT).remove(KEY_FINGERPRINT_AT).remove(KEY_FINGERPRINT_BUILD).apply()
+    }
+
+    /** Whether an earlier process registered exactly [fingerprint] recently, with this build. */
+    private fun registeredInEarlierProcess(fingerprint: String): Boolean = registrationStillFresh(
+        storedFingerprint = pushPrefs.getString(KEY_FINGERPRINT, null),
+        storedAtMs = pushPrefs.getLong(KEY_FINGERPRINT_AT, 0L),
+        storedBuild = pushPrefs.getLong(KEY_FINGERPRINT_BUILD, -1L),
+        fingerprint = fingerprint,
+        nowMs = System.currentTimeMillis(),
+        build = com.kachat.app.BuildConfig.VERSION_CODE.toLong(),
+    )
 
     /** The push API, or null when this network has no push service (a blank URL - testnet). It
      *  used to wait for a client that a blank URL never builds. */
@@ -448,7 +485,7 @@ class PushRegistrationManager @Inject constructor(
      */
     private suspend fun leavePushServiceOfOtherNetworkIfNeeded() {
         setPushActive(false)
-        lastRegisteredFingerprint = null
+        forgetRegistration()
         // Registrations made before this was recorded went to the default service of the time,
         // kachat.duckdns.org (indexer.kachat.app since).
         val registeredBase = pushPrefs.getString(KEY_REGISTERED_BASE_URL, null)?.takeIf { it.isNotBlank() }
@@ -500,14 +537,15 @@ class PushRegistrationManager @Inject constructor(
         okhttp3.OkHttpClient.Builder().callTimeout(20, java.util.concurrent.TimeUnit.SECONDS).build()
     }
 
-    private suspend fun register(tokenOverride: String?) {
+    /** [force]: a token rotation or the Settings switch - sent even when nothing changed. */
+    private suspend fun register(tokenOverride: String?, force: Boolean = false) {
         // An unregister still running (Log Out a moment ago) goes first, so its DELETE can't land
         // after this registration and wipe it (iOS 83806b3d).
         pendingUnregister?.join()
-        registerLocked(tokenOverride)
+        registerLocked(tokenOverride, force)
     }
 
-    private suspend fun registerLocked(tokenOverride: String?) = mutex.withLock {
+    private suspend fun registerLocked(tokenOverride: String?, force: Boolean) = mutex.withLock {
         if (!walletManager.hasWallet()) return@withLock
         // Signed out stays unregistered, a cold start on the sign-in screen included (iOS has no
         // current wallet then); login() registers.
@@ -558,7 +596,18 @@ class PushRegistrationManager @Inject constructor(
         // this is what collapses the startup trigger + init-observer + foreground triggers into
         // one actual registration.
         val fingerprint = registrationFingerprint(token, walletAddress, watchedAddresses, aliases, watchedGroupIds, features)
-        if (fingerprint == lastRegisteredFingerprint) return@withLock
+        if (!force && fingerprint == lastRegisteredFingerprint) return@withLock
+        // The same registration an earlier process sent, under a day ago with this build: a cold
+        // start (a push or a periodic job waking K included) no longer sends it again (N3).
+        if (!force && registeredInEarlierProcess(fingerprint)) {
+            lastRegisteredFingerprint = fingerprint
+            lastRegisteredAddress = walletAddress
+            // Android's notification switch may have changed since; the rest stands.
+            setPushActive(NotificationManagerCompat.from(context).areNotificationsEnabled())
+            pushState.recordAttempt("register (unchanged since an earlier launch)", succeeded = true, error = null, fcmTokenPresent = true)
+            Log.i(TAG, "push registration unchanged since an earlier launch, not sent again (active=${pushState.isActive})")
+            return@withLock
+        }
 
         try {
             submitRegistration(api, token, privateKey, walletAddress, watchedAddresses, aliases, watchedGroupIds, features)
@@ -573,8 +622,7 @@ class PushRegistrationManager @Inject constructor(
             submitRegistration(api, token, privateKey, walletAddress, watchedAddresses, aliases, watchedGroupIds, features)
         }
 
-        lastRegisteredFingerprint = fingerprint
-        lastRegisteredAddress = walletAddress
+        rememberRegistration(fingerprint, walletAddress)
         // This registration replaced anything an earlier unregister still owed the service.
         clearUnregisterPending()
         // Remote-push mode is only real if the system will actually show what FCM delivers;
@@ -653,7 +701,7 @@ class PushRegistrationManager @Inject constructor(
             // Any failed attempt drops us out of remote-push mode so the pollers keep notifying,
             // and forgets the fingerprint so the next trigger retries for real.
             setPushActive(false)
-            lastRegisteredFingerprint = null
+            forgetRegistration()
             pushState.recordAttempt(
                 "register",
                 succeeded = false,
@@ -938,6 +986,26 @@ class PushRegistrationManager @Inject constructor(
                 "02" + payload.joinToString("") { "%02x".format(it) }
             }
 
+        /** How long an accepted registration stands for a new process before it is sent again
+         *  anyway, in case the service lost it (iOS re-registers once per build for the same reason). */
+        internal const val REGISTRATION_RENEW_MS = 24L * 60 * 60 * 1000
+
+        /**
+         * Whether a new process may skip sending [fingerprint] (audit 2026-11-25 N3): an earlier
+         * one registered exactly it, with this [build], under [REGISTRATION_RENEW_MS] ago (a clock
+         * set back counts as stale).
+         */
+        internal fun registrationStillFresh(
+            storedFingerprint: String?,
+            storedAtMs: Long,
+            storedBuild: Long,
+            fingerprint: String,
+            nowMs: Long,
+            build: Long,
+        ): Boolean =
+            storedFingerprint != null && storedFingerprint == fingerprint && storedBuild == build &&
+                storedAtMs > 0L && nowMs >= storedAtMs && nowMs - storedAtMs < REGISTRATION_RENEW_MS
+
         internal fun supersededBase(storedBase: String?, currentBase: String): String? {
             val old = storedBase?.trim()?.takeIf { it.isNotEmpty() } ?: return null
             val current = currentBase.trim().takeIf { it.isNotEmpty() } ?: return null
@@ -946,7 +1014,10 @@ class PushRegistrationManager @Inject constructor(
 
         private const val KEY_REGISTERED_BASE_URL = "registered_base_url"
         private const val KEY_LEFT = "left_push_service"
-        private const val KEY_PUSH_ACTIVE = "push_active"
+        /** The fingerprint the service last accepted, when, and with which build (N3). */
+        private const val KEY_FINGERPRINT = "registered_fingerprint"
+        private const val KEY_FINGERPRINT_AT = "registered_fingerprint_at"
+        private const val KEY_FINGERPRINT_BUILD = "registered_fingerprint_build"
         /** Set while an unregister the service hasn't confirmed is owed (iOS `push_pending_unregister`). */
         private const val KEY_PENDING_UNREGISTER = "push_pending_unregister"
         // Shared with KaChatFirebaseMessagingService so `adb logcat -s KaChatPush` shows the

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer (iOS 961fc05a): only the keys the iPhone translates; the rest are English there too. -->
+<resources>
+    <string name="ex_kind_payment">Платёж</string>
+    <string name="ex_kind_handshake">Запрос на общение</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_username">Имя пользователя</string>
+    <string name="ex_kind_swap">Обмен</string>
+    <string name="ex_kind_other">Транзакция</string>
+    <string name="ex_kind_payments">Платежи</string>
+    <string name="ex_kind_chesses">Шахматные ходы</string>
+    <string name="ex_kind_others">Транзакции</string>
+    <string name="ex_period_day">24 часа</string>
+    <string name="ex_period_week">7 дней</string>
+    <string name="ex_period_all">Всё время</string>
+    <string name="ex_one_day">1 день</string>
+    <string name="ex_n_days">%1$d дн.</string>
+    <string name="ex_share">Поделиться</string>
+    <string name="ex_your_chatting_address">Ваш адрес для чатов</string>
+    <string name="ex_no_transactions">Пока нет транзакций.</string>
+</resources>

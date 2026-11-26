@@ -70,8 +70,11 @@ enum class AppTab(
     // call 2026-11-22): the old "leaderboard" tab is gone, and a saved arrangement naming it drops
     // it as it is read ([fromKey] knows no such key), as iOS's `AppTab(rawValue:)` does.
     GAMES("games", "games", R.string.kaplay_tab_games, Icons.Filled.SportsEsports, Icons.Outlined.SportsEsports),
-    KACHAT_STATS("kachatStats", "kachat_stats", R.string.shell_tab_stats, Icons.Filled.BarChart, Icons.Outlined.BarChart),
-    APPS("apps", "kaspa_websites", R.string.shell_tab_websites, Icons.Filled.Public, Icons.Outlined.Language);
+    // KaChat Stats left again on 2026-11-25 (iOS 961fc05a): the Explorer's K Activity card
+    // replaces it. A saved Hub order naming "kachatStats" drops it as it is read ([fromKey]).
+    APPS("apps", "kaspa_websites", R.string.shell_tab_websites, Icons.Filled.Public, Icons.Outlined.Language),
+    // K's own block explorer (iOS 961fc05a `.explorer`, "cube.transparent").
+    EXPLORER("explorer", "explorer", R.string.explorer, com.kachat.app.ui.screens.explorer.ExplorerSymbols.CubeTransparent, com.kachat.app.ui.screens.explorer.ExplorerSymbols.CubeTransparent);
 
     companion object {
         /** The most tabs the dock shows (iOS `AppTab.maxDockItems`). */
@@ -177,9 +180,9 @@ object HubRouter {
 }
 
 /**
- * The app icon's badge (iOS `ChatService.updateAppBadge`): the Chats tab's count (chats, groups,
- * and public rooms with their bell on) plus KaPost's unseen activity. The shell keeps it current
- * while it is on screen; whoever posts the launcher badge collects [count].
+ * The app icon's badge (iOS `AppTabBadge.appIconCount`, 961fc05a): the Chats tab's count (chats
+ * and groups), plus public rooms with their bell on, plus KaPost's unseen activity. The shell keeps
+ * it current while it is on screen; whoever posts the launcher badge collects [count].
  */
 object AppIconBadge {
     private val _count = MutableStateFlow(0)
@@ -198,8 +201,9 @@ class ShellBadgesViewModel @Inject constructor(
 ) : ViewModel() {
     /** Profile: every notification behind its bell, KaPost's and the wallet's. */
     val profileCount: StateFlow<Int> = allNotifications.count
-    /** The rooms' part of the Chats badge: rooms with their bell on. */
-    val roomsCount: StateFlow<Int> = publicChats.chatsBadgeCount
+    /** Unread in the public rooms with their bell on: the app icon adds it in, the dock doesn't
+     *  (iOS 961fc05a badge split). */
+    val roomsCount: StateFlow<Int> = publicChats.bellOnUnreadCount
     /** KaPost's unseen activity, for the app icon. */
     val kaPostsUnseen: StateFlow<Int> = kaPostsUnseen.unseenCount
 }

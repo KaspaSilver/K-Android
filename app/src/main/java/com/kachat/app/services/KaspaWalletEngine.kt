@@ -562,6 +562,8 @@ class KaspaWalletEngine @Inject constructor(
             val submitted = try {
                 attempt(utxos)
             } catch (e: Exception) {
+                // A real cancellation is never retried or turned into a result (audit 2026-11-25 P3).
+                if (e is kotlinx.coroutines.CancellationException && e !is kotlinx.coroutines.TimeoutCancellationException) throw e
                 // The node pool's submit node can be a few seconds behind the node that served
                 // the UTXO snapshot, or behind a just-accepted send whose change was chained.
                 // It then rejects with kaspad's raw "orphan" / "already spent" text - a
@@ -588,6 +590,10 @@ class KaspaWalletEngine @Inject constructor(
             recordSpend(fromAddress, changeAddress, submitted.spentUtxos, submitted.changeUtxo)
             Result.success(submitted.txId)
         } catch (e: Exception) {
+            // The caller's coroutine was cancelled (the screen went, mid-submit): thrown, never a
+            // plain failure, since the transaction may already be on the network. Callers treat it
+            // as an unknown outcome (audit 2026-11-25 P3, as SubmitConfirmation does).
+            if (e is kotlinx.coroutines.CancellationException && e !is kotlinx.coroutines.TimeoutCancellationException) throw e
             Log.e("KaspaWalletEngine", "Error sending Kaspa", e)
             Result.failure(e)
         }
@@ -684,6 +690,10 @@ class KaspaWalletEngine @Inject constructor(
             // Interrupted with the outcome unknown: revealed, as revealing a slot is always safe
             // and handing out one that may hold change is not.
             pick?.let { walletManager.finishQuantumChangePick(it, reveal = true) }
+            // cancelled mid-submit: it may have gone, so the key may be on chain (audit 2026-11-25 P3)
+            if (e is kotlinx.coroutines.CancellationException && isQuantumSource) {
+                walletManager.markQuantumAddressSpent(sourceSpendingAddress, owner = owner)
+            }
             throw e
         }
         // Revealed, not made primary (iOS revealSpendingAddress), only when the send went

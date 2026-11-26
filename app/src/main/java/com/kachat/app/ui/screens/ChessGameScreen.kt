@@ -54,7 +54,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -200,21 +199,29 @@ fun ChessGameScreen(
     }
     val clockPrefsKey = remember(gameId) { "chess_clock_$gameId" }
 
-    // Thinking time (ms) spent at the board this turn. Seeded from the persisted record when it
-    // matches the current move count; reset to zero whenever the move count advances (my own
-    // optimistic send included) or the stored record belongs to an older turn.
-    var thinkingElapsedMs by remember(gameId) { mutableStateOf(0L) }
+    // Thinking time (ms) banked at the board this turn, before the stretch now running
+    // ([clockRunSince]). Seeded from the persisted record when it matches the current move count;
+    // reset to zero whenever the move count advances (my own optimistic send included) or the
+    // stored record belongs to an older turn. Held with its move count, so a stretch that ends as
+    // the turn changes never lands on the next turn.
+    var thinkingBanked by remember(gameId) { mutableStateOf(-1 to 0L) }
+    val thinkingBankedMs = if (thinkingBanked.first == moveCount) thinkingBanked.second else 0L
+    // When the clock's current running stretch began (elapsedRealtime); null while it's stopped.
+    // The elapsed time is worked out from it, so nothing ticks to keep it: the chip draws itself
+    // on its own timeline (iOS 961fc05a `ChessClockChip`, audit 2026-11-25 B14). It was a 10x/s
+    // state write and a save every second.
+    var clockRunSince by remember(gameId) { mutableStateOf<Long?>(null) }
     LaunchedEffect(gameId, moveCount, isTimed, summary != null) {
         if (!isTimed || summary == null) return@LaunchedEffect
         val stored = clockPrefs.getString(clockPrefsKey, null)?.split("|")
-        thinkingElapsedMs = if (stored?.size == 2 && stored[0].toIntOrNull() == moveCount) {
+        thinkingBanked = moveCount to if (stored?.size == 2 && stored[0].toIntOrNull() == moveCount) {
             stored[1].toLongOrNull() ?: 0L
         } else {
             0L
         }
     }
 
-    // Screen resumed-ness gates the tick: a backgrounded app (or this destination left) must not
+    // Screen resumed-ness gates the clock: a backgrounded app (or this destination left) must not
     // burn clock. No lifecycle-runtime-compose dependency in this project, so observe manually.
     val lifecycleOwner = LocalLifecycleOwner.current
     var isResumed by remember {
@@ -236,37 +243,45 @@ fun ChessGameScreen(
         val color = myColor
         if (color != null) summary?.lastReportedClockMs(color.opposite) else null
     }
-    // Derived, not read here directly: the clock ticks every 100 ms, and reading it at the screen
-    // root recomposed the whole board 10 times a second. Only the clock chip reads the value; the
-    // root sees the two booleans below, which change once a turn.
-    val myRemainingMsState = remember(gameId, isTimed, myLastReportedClockMs) {
-        derivedStateOf {
-            if (isTimed) ((myLastReportedClockMs ?: 0L) - thinkingElapsedMs).coerceAtLeast(0L) else null
-        }
+    // What my chip starts from: the base minus what's banked (changes once per stretch).
+    val myBankedRemainingMs: Long? =
+        if (isTimed) ((myLastReportedClockMs ?: 0L) - thinkingBankedMs).coerceAtLeast(0L) else null
+    /** My remaining time right now, the running stretch included. */
+    fun myRemainingNowMs(): Long? {
+        val banked = myBankedRemainingMs ?: return null
+        val since = clockRunSince ?: return banked
+        return (banked - (android.os.SystemClock.elapsedRealtime() - since).coerceAtLeast(0L)).coerceAtLeast(0L)
     }
-    val myClockPositive by remember(myRemainingMsState) { derivedStateOf { (myRemainingMsState.value ?: 0L) > 0L } }
-    val myClockExpired by remember(myRemainingMsState) { derivedStateOf { myRemainingMsState.value?.let { it <= 0L } == true } }
+    val myClockPositive = (myBankedRemainingMs ?: 0L) > 0L
+    val myClockExpired = myBankedRemainingMs?.let { it <= 0L } == true
 
+    // While my clock runs: saves the thinking time every 5 s and stops at zero, sleeping until
+    // then rather than ticking. Untimed games never have one running.
     val clockRunning = isTimed && isMyTurn && isResumed && myClockPositive
     LaunchedEffect(clockRunning, moveCount, gameId) {
         if (!clockRunning) return@LaunchedEffect
-        var lastTick = android.os.SystemClock.elapsedRealtime()
-        var lastPersist = lastTick
+        val turn = moveCount
+        val banked = thinkingBankedMs
+        val base = myLastReportedClockMs ?: 0L
+        val start = android.os.SystemClock.elapsedRealtime()
+        clockRunSince = start
+        fun elapsedNow() = banked + (android.os.SystemClock.elapsedRealtime() - start).coerceAtLeast(0L)
         try {
             while (true) {
-                delay(100)
-                val now = android.os.SystemClock.elapsedRealtime()
-                thinkingElapsedMs += now - lastTick
-                lastTick = now
-                if (now - lastPersist >= 1000) {
-                    clockPrefs.edit().putString(clockPrefsKey, "$moveCount|$thinkingElapsedMs").apply()
-                    lastPersist = now
-                }
+                val remaining = base - elapsedNow()
+                if (remaining <= 0L) break
+                delay(minOf(remaining, 5_000L))
+                clockPrefs.edit().putString(clockPrefsKey, "$turn|${elapsedNow()}").apply()
             }
         } finally {
-            // Screen closed / turn ended / app backgrounded: persist the final tally so reopening
-            // resumes from here rather than refunding up to a second of think time.
-            clockPrefs.edit().putString(clockPrefsKey, "$moveCount|$thinkingElapsedMs").apply()
+            // Stopped (zero, the turn ended, the screen closed or the app backgrounded): bank the
+            // stretch and save it, so reopening resumes from here rather than refunding it.
+            val total = elapsedNow()
+            if (clockRunSince == start) clockRunSince = null
+            if (thinkingBanked.first == turn) {
+                thinkingBanked = turn to total
+                clockPrefs.edit().putString(clockPrefsKey, "$turn|$total").apply()
+            }
         }
     }
 
@@ -323,8 +338,10 @@ fun ChessGameScreen(
     val coroutineScope = rememberCoroutineScope()
     var isReplayingMove by remember { mutableStateOf(false) }
     var unconfirmedMoveNowMs by remember { mutableStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(lastMoveSendStatus) {
-        if (lastMoveSendStatus != "warning") return@LaunchedEffect
+    // Only while the board is in front: no 5 s wakes in the background (audit 2026-11-25 B10).
+    val unconfirmedTicking = rememberScreenRunning()
+    LaunchedEffect(lastMoveSendStatus, unconfirmedTicking) {
+        if (lastMoveSendStatus != "warning" || !unconfirmedTicking) return@LaunchedEffect
         while (true) {
             unconfirmedMoveNowMs = System.currentTimeMillis()
             delay(5_000)
@@ -359,9 +376,9 @@ fun ChessGameScreen(
             // that value becomes my authoritative clock until my next move. The local thinking
             // accumulator resets (the persisted record is keyed to a move count that just
             // advanced, so it's stale either way; clear it eagerly).
-            val newClockMs = summary?.timeControl?.clockMsAfterMove(myRemainingMsState.value ?: 0L)
+            val newClockMs = summary?.timeControl?.clockMsAfterMove(myRemainingNowMs() ?: 0L)
             clockPrefs.edit().remove(clockPrefsKey).apply()
-            thinkingElapsedMs = 0L
+            thinkingBanked = -1 to 0L
             chatViewModel.sendChessMove(contactId, gameId, move, clockMs = newClockMs)
         } else {
             chatViewModel.sendChessMove(contactId, gameId, move)
@@ -558,7 +575,7 @@ fun ChessGameScreen(
                 }
                 if (isTimed) {
                     Spacer(Modifier.height(6.dp))
-                    LiveChessClockRow(remainingMs = myRemainingMsState, isSideToMove = isMyTurn)
+                    LiveChessClockRow(startMs = myBankedRemainingMs ?: 0L, runningSince = clockRunSince, isSideToMove = isMyTurn)
                 }
                 Spacer(Modifier.height(8.dp))
                 HorizontalDivider()
@@ -703,9 +720,26 @@ private fun WinLossCounter(wins: Int, losses: Int) {
  *  emphasized (teal fill, bold, brighter text); under 20 seconds the chip tints red. Monospace
  *  digits so the display doesn't jitter as it ticks. */
 @Composable
-private fun LiveChessClockRow(remainingMs: androidx.compose.runtime.State<Long?>, isSideToMove: Boolean) {
-    // The ticking value is read here, so each tick redraws only this chip.
-    ChessClockRow(remainingMs = remainingMs.value ?: 0L, isSideToMove = isSideToMove)
+private fun LiveChessClockRow(startMs: Long, runningSince: Long?, isSideToMove: Boolean) {
+    // Its own timeline, so the running clock redraws this chip and nothing else: once a second,
+    // just after the shown second changes, and every tenth under 10 seconds, where the chip shows
+    // tenths (iOS 961fc05a `ChessClockChip`).
+    var now by remember { mutableStateOf(android.os.SystemClock.elapsedRealtime()) }
+    // Not in the background or a hidden Hub section: nothing shows it (audit 2026-11-25 B10).
+    val ticking = rememberScreenRunning()
+    LaunchedEffect(startMs, runningSince, ticking) {
+        if (!ticking) return@LaunchedEffect
+        val since = runningSince ?: return@LaunchedEffect
+        while (true) {
+            val current = android.os.SystemClock.elapsedRealtime()
+            now = current
+            val remaining = startMs - (current - since).coerceAtLeast(0L)
+            if (remaining <= 0L) break
+            delay(if (remaining < 10_000L) 100L else remaining % 1_000L + 1L)
+        }
+    }
+    val remaining = if (runningSince == null) startMs else (startMs - (now - runningSince).coerceAtLeast(0L)).coerceAtLeast(0L)
+    ChessClockRow(remainingMs = remaining, isSideToMove = isSideToMove)
 }
 
 @Composable
@@ -757,7 +791,10 @@ private fun formatChessClock(ms: Long): String {
 @Composable
 internal fun WaitingOnOpponentOverlay() {
     var dotCount by remember { mutableStateOf(1) }
-    LaunchedEffect(Unit) {
+    // Not in the background or a hidden Hub section (audit 2026-11-25 B10).
+    val ticking = rememberScreenRunning()
+    LaunchedEffect(ticking) {
+        if (!ticking) return@LaunchedEffect
         while (true) {
             delay(500)
             dotCount = (dotCount % 3) + 1

@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material.icons.outlined.MonetizationOn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
@@ -57,6 +58,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -101,10 +103,20 @@ class AllNotificationsBadge @Inject constructor(
 class AllNotificationsViewModel @Inject constructor(
     val badge: AllNotificationsBadge,
     val walletCenter: GlobalNotificationCenterStore,
+    private val kaPostsPoller: dagger.Lazy<com.kachat.app.services.KaPostsNotificationPoller>,
 ) : ViewModel() {
     val count: StateFlow<Int> = badge.count
     init {
         walletCenter.reloadIfNeeded()
+    }
+
+    /** Looking at Profile catches the count up, as X does when you look at its bell: with push the
+     *  KaPost poll is otherwise only every 5 minutes (iOS 961fc05a `pollForBell`). Built off the
+     *  main thread if it isn't yet. */
+    fun pollForBell() {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.Default) {
+            runCatching { kaPostsPoller.get().pollForBell() }
+        }
     }
 }
 
@@ -112,6 +124,7 @@ class AllNotificationsViewModel @Inject constructor(
 @Composable
 fun AllNotificationsBell(onClick: () -> Unit, viewModel: AllNotificationsViewModel = hiltViewModel()) {
     val count by viewModel.count.collectAsState()
+    LaunchedEffect(viewModel) { viewModel.pollForBell() }
     val label = stringResource(R.string.notifications)
     Box(modifier = Modifier.semantics { contentDescription = if (count > 0) "$label, $count" else label }) {
         ToolbarGlassGroup {
@@ -136,7 +149,9 @@ fun AllNotificationsBell(onClick: () -> Unit, viewModel: AllNotificationsViewMod
 
 /**
  * Profile's bell (iOS 148a5331 `AllNotificationsView` = `KaPostsNotificationsView(allInOne: true)`):
- * one list, newest first, of KaPost activity and the wallet's (Kaspa and kUSDT received), in a
+ * one list, newest first, of KaPost activity, the wallet's (Kaspa and kUSDT received) and every
+ * room or group @mention of you (iOS d089011f; a mention row opens the room at the message, or the
+ * group), in a
  * sheet with a large "Notifications" title and Done - no tabs, no settings gear, no back arrow
  * (owner's calls). Opening it is seeing it: both unseen counts clear. A KaPost row closes the
  * sheet, then its post (or, for a follow, the follower's profile) opens on the KaPost tab; a wallet
@@ -201,7 +216,7 @@ fun AllNotificationsSheet(
                         }
                     },
                     // A follow has no post: the follower's KaPost profile, on the KaPost tab.
-                    onOpenProfile = { address -> closeThen { KaPostsDeepLink.pendingProfileAddress.value = address } },
+                    onOpenProfile = { address -> closeThen { KaPostsDeepLink.openProfile(address, viewModel.myAddress()) } },
                     bottomInset = 0.dp,
                     walletEntries = walletEntries,
                     onOpenWalletEntry = { entry ->
@@ -214,7 +229,7 @@ fun AllNotificationsSheet(
 }
 
 /**
- * A wallet notification (Kaspa or kUSDT received) in Profile's bell, drawn like the KaPost rows
+ * A wallet notification (Kaspa or kUSDT received) or a room or group @mention of you in Profile's bell, drawn like the KaPost rows
  * (iOS 148a5331 `walletRow`): the Kaspa logo (or the token's mark) on an accent disc, the title,
  * the body, how long ago, and a chevron.
  */
@@ -239,7 +254,9 @@ internal fun KaPostsWalletNotificationRow(entry: GlobalNotificationCenterStore.E
                     modifier = Modifier.size(22.dp),
                 )
             } else {
-                Icon(Icons.Outlined.MonetizationOn, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
+                // dollarsign.circle for a token, at for a mention (iOS `entry.source.icon`)
+                val icon = if (entry.source == GlobalNotificationCenterStore.SOURCE_MENTION) Icons.Outlined.AlternateEmail else Icons.Outlined.MonetizationOn
+                Icon(icon, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
             }
         }
         Spacer(modifier = Modifier.width(12.dp))

@@ -1,7 +1,11 @@
 package com.kachat.app.services
 
+import android.content.Context
+import androidx.core.app.NotificationManagerCompat
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,10 +45,22 @@ import javax.inject.Singleton
  * A separate dependency-free holder (rather than a flag on PushRegistrationManager) because the
  * manager depends on ChatRepository/BroadcastRepository — the very classes that need to read the
  * flag — and Dagger can't resolve that cycle.
+ *
+ * It restores the last known answer itself, as it is built (audit 2026-11-25 S7): the loops that
+ * read it start before [PushRegistrationManager] is built, and with the flag still false a
+ * process woken for a push or a periodic job ran one full node probe and 1:1 sweep first.
+ *
+ * [backgroundQuiet] is the gate the background loops use (audit 2026-11-25 N7, B4): the no-push
+ * fallback is for a device that must banner by itself, so it runs only when there is something
+ * it could show - signed in, Notifications on in K and in Android, and no push.
  */
 @Singleton
-class PushState @Inject constructor() {
-    private val _pushActive = MutableStateFlow(false)
+class PushState @Inject constructor(
+    @ApplicationContext private val context: Context,
+) {
+    private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    private val _pushActive = MutableStateFlow(prefs.getBoolean(KEY_PUSH_ACTIVE, false))
 
     /** Observable form, for anything that wants to react to the mode changing. */
     val pushActive: StateFlow<Boolean> = _pushActive
@@ -54,6 +70,75 @@ class PushState @Inject constructor() {
 
     internal fun setActive(active: Boolean) {
         _pushActive.value = active
+        recomputeQuiet()
+    }
+
+    /** Signed in with K's Notifications switch on: fed by [PushRegistrationManager], and
+     *  remembered for the next process like [pushActive]. True until first known, so a device
+     *  that must banner by itself never misses a poll on the first launch. */
+    private val localBannersWanted = MutableStateFlow(prefs.getBoolean(KEY_LOCAL_BANNERS_WANTED, true))
+
+    /** Android's own switch for K's notifications (and, on 13+, the permission). Read again on
+     *  every [isBackgroundQuiet], each foreground and background move and Android's block-state
+     *  broadcast; assumed on until first read, off the main thread. */
+    private val systemNotificationsOn = MutableStateFlow(true)
+
+    private val _backgroundQuiet = MutableStateFlow(
+        backgroundQuiet(_pushActive.value, localBannersWanted.value, systemNotificationsOn.value)
+    )
+
+    /**
+     * True while the background has nothing to deliver by itself: push is the source, or nothing
+     * may be shown at all (signed out, Notifications off in K or in Android). The background loops
+     * (the 1:1 poll, the node pool, the room stream, SyncWorker) pause on this instead of on
+     * [pushActive] alone, and resume when it turns false or the app comes to the front.
+     */
+    val backgroundQuiet: StateFlow<Boolean> = _backgroundQuiet.asStateFlow()
+
+    /** [backgroundQuiet] now, Android's notification switch read again first. Off the main
+     *  thread (one binder call). */
+    val isBackgroundQuiet: Boolean
+        get() {
+            refreshSystemNotifications()
+            return _backgroundQuiet.value
+        }
+
+    /** Signed in and K's Notifications switch on ([PushRegistrationManager] follows both). */
+    internal fun setLocalBannersWanted(wanted: Boolean) {
+        if (localBannersWanted.value != wanted) {
+            prefs.edit().putBoolean(KEY_LOCAL_BANNERS_WANTED, wanted).apply()
+        }
+        localBannersWanted.value = wanted
+        recomputeQuiet()
+    }
+
+    /** Reads Android's notification switch for K again (a binder call). */
+    fun refreshSystemNotifications() {
+        val on = runCatching { NotificationManagerCompat.from(context).areNotificationsEnabled() }.getOrDefault(true)
+        systemNotificationsOn.value = on
+        recomputeQuiet()
+    }
+
+    @Synchronized
+    private fun recomputeQuiet() {
+        _backgroundQuiet.value = backgroundQuiet(_pushActive.value, localBannersWanted.value, systemNotificationsOn.value)
+    }
+
+    init {
+        // Android tells an app when the user blocks or unblocks its notifications (API 28+), so
+        // the gate follows a change made while K is away without polling for it.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            runCatching {
+                androidx.core.content.ContextCompat.registerReceiver(
+                    context,
+                    object : android.content.BroadcastReceiver() {
+                        override fun onReceive(c: Context?, intent: android.content.Intent?) = refreshSystemNotifications()
+                    },
+                    android.content.IntentFilter(android.app.NotificationManager.ACTION_APP_BLOCK_STATE_CHANGED),
+                    androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+                )
+            }
+        }
     }
 
     /**
@@ -91,5 +176,29 @@ class PushState @Inject constructor() {
             fcmTokenPresent = fcmTokenPresent,
             lastAction = action,
         )
+    }
+
+    companion object {
+        /** The prefs [PushRegistrationManager] keeps its registration state in. */
+        internal const val PREFS_NAME = "kachat_push_registration"
+        internal const val KEY_PUSH_ACTIVE = "push_active"
+        private const val KEY_LOCAL_BANNERS_WANTED = "local_banners_wanted"
+
+        /**
+         * Whether push can't deliver on this device (MainActivity's battery exemption): not
+         * active, and either there is no push service to register with (testnet, no Play
+         * services) or the last registration attempt failed. Unknown (nothing tried yet) is not
+         * unavailable, and neither is notifications switched off (an unregister).
+         */
+        internal fun pushUnavailable(
+            pushActive: Boolean,
+            noPushService: Boolean,
+            lastAction: String?,
+            lastAttemptSucceeded: Boolean?,
+        ): Boolean = !pushActive && (noPushService || (lastAction == "register" && lastAttemptSucceeded == false))
+
+        /** The [backgroundQuiet] rule: quiet with push, or when nothing could be shown. */
+        internal fun backgroundQuiet(pushActive: Boolean, localBannersWanted: Boolean, systemNotificationsOn: Boolean): Boolean =
+            pushActive || !localBannersWanted || !systemNotificationsOn
     }
 }

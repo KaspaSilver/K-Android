@@ -180,7 +180,6 @@
     <string name="valid_address">آدرس معتبر</string>
     <string name="waiting_on_opponent">در انتظار حریف</string>
     <string name="the_recipient_wont_see_your_messages">گیرنده تا وقتی به شما پیام ندهد یا شما با دست‌دهی او را خبر نکنید، پیام‌هایتان را نمی‌بیند. دست‌دهی 0.2 KAS هزینه دارد و اگر بپذیرد به شما بازگردانده می‌شود. با فرستادن دست‌دهی بخشی از حریم خصوصی خود را از دست می‌دهید.</string>
-    <string name="host_port_or_grpcs_host">host:port یا grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -265,7 +264,6 @@
     <string name="choose_your_language">زبان خود را انتخاب کنید</string>
     <string name="select_the_language_youd_like_to">زبانی که می‌خواهید در K استفاده کنید را انتخاب کنید.</string>
     <string name="best">بهترین</string>
-    <string name="enter_as_host_port_or_grpcs_host">به‌صورت host:port یا grpcs://host وارد کنید</string>
     <string name="receive_kaspa">دریافت Kaspa</string>
     <string name="currency">واحد پول</string>
     <string name="choose_your_currency">واحد پول خود را انتخاب کنید</string>
@@ -651,7 +649,6 @@
     <string name="ab_import_file_sub">افزودن مخاطبان از یک فایل خروجی مخاطبان.</string>
     <string name="ab_export_file_sub">مخاطبان خود را با عکس‌هایشان در یک فایل ذخیره کنید.</string>
     <string name="ab_nc_import_sub">یک فایل خروجی مخاطبان را از Nextcloud خود انتخاب کنید.</string>
-    <string name="ab_nc_export_sub">آن را در پوشه KaChat در Nextcloud ذخیره کنید تا روی هر دستگاهی وارد شود.</string>
     <string name="ab_nc_connect_hint">Nextcloud را در تنظیمات &gt; فضای ذخیره‌سازی وصل کنید تا آنجا هم ذخیره و روی دستگاه دیگری وارد شود.</string>
     <string name="ab_couldnt_read_file">خواندن آن فایل ممکن نشد.</string>
     <string name="ab_nothing_to_export">هنوز چیزی برای خروجی گرفتن نیست. اول یک مخاطب اضافه کنید.</string>

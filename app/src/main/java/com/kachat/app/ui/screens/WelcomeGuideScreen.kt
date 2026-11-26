@@ -119,7 +119,7 @@ fun WelcomeGuideScreen(
         mutableStateOf(if (nodeChoice == NodeChoice.OWN_NODE) trustedNodeAddress else "")
     }
     var nodeValidationError by remember { mutableStateOf<String?>(null) }
-    val enterAsHostPortError = stringResource(R.string.enter_as_host_port_or_grpcs_host)
+    val enterAsHostPortError = stringResource(R.string.nodes_enter_as_host_port_grpcs_or_wss)
 
     // One step back. Null at Welcome so the shared button row renders Previous disabled there.
     val goBack: (() -> Unit)? = if (step == WelcomeGuideStep.WELCOME) null else {
@@ -625,7 +625,7 @@ private fun WelcomeGuideNodeConnectionStep(
             TextField(
                 value = ownNodeInput,
                 onValueChange = onOwnNodeInputChange,
-                placeholder = { Text(stringResource(R.string.host_port_or_grpcs_host), color = LocalAppColors.current.textTertiary) },
+                placeholder = { Text(stringResource(R.string.nodes_address_placeholder), color = LocalAppColors.current.textTertiary) },
                 modifier = Modifier.fillMaxWidth().height(50.dp).clip(RoundedCornerShape(12.dp)),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),

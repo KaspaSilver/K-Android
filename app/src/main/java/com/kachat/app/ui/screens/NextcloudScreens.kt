@@ -154,6 +154,10 @@ fun NextcloudPickerDialog(
     LaunchedEffect(currentPath) {
         isLoading = true
         errorMessage = null
+        // "KaChat" -> "K" settled before anything is listed, so the picker never shows the old
+        // folder a move is about to rename (iOS 961fc05a, audit 2026-11-25 M3). Returns at once
+        // when already settled.
+        service.migrateLegacyFolderIfNeeded()
         entries = try {
             service.listFolder(currentPath)
         } catch (e: Exception) {
@@ -435,6 +439,8 @@ fun NextcloudFolderSelectDialog(
     LaunchedEffect(currentPath) {
         isLoading = true
         errorMessage = null
+        // settled before listing, as the pickers' load (M3)
+        service.migrateLegacyFolderIfNeeded()
         folders = try {
             // Newest-first comes from listFolder; this only drops the non-folder entries.
             service.listFolder(currentPath).filter { it.isDirectory }
@@ -957,7 +963,7 @@ fun NextcloudSettingsSection(chatViewModel: ChatViewModel) {
             service = service,
             onDismiss = { showBackupFolderPicker = false },
             onSelect = { path ->
-                // Selecting the root resets back to the default "KaChat" folder.
+                // Selecting the root resets back to the default "K" folder.
                 service.setBackupFolder(path)
                 showBackupFolderPicker = false
                 // The backup lives per folder - re-check what exists at the new destination.
@@ -1231,8 +1237,8 @@ private fun NcLabelButtonRow(
 
 /**
  * Pick one file from the connected Nextcloud (iOS aa5d783, NextcloudFileSelectView): browsing
- * starts in the KaChat folder, with All Files for the root; only [allowedExtensions] can be picked
- * and other files show dimmed. A KaChat folder that doesn't exist yet reads as empty rather than an
+ * starts in the K folder, with All Files for the root; only [allowedExtensions] can be picked
+ * and other files show dimmed. A K folder that doesn't exist yet reads as empty rather than an
  * error.
  */
 @Composable
@@ -1253,10 +1259,18 @@ fun NextcloudFileSelectDialog(
     LaunchedEffect(currentPath) {
         isLoading = true
         errorMessage = null
+        // "KaChat" -> "K" settled before anything is listed (iOS 961fc05a, M3): a start in the
+        // old folder the move just renamed starts in the new one.
+        service.migrateLegacyFolderIfNeeded()
+        val settled = service.backupFolderPath.trim('/')
+        if (pathStack.size == 1 && currentPath == kachatFolder && settled != kachatFolder) {
+            pathStack = listOf(settled)
+            return@LaunchedEffect
+        }
         entries = try {
             service.listFolder(currentPath)
         } catch (e: Exception) {
-            // The KaChat folder is only made on the first export or backup.
+            // The K folder is only made on the first export or backup.
             if (currentPath == kachatFolder && e.message?.contains("404") == true) emptyList()
             else {
                 errorMessage = UserFacingError.message(e, "Could not load this folder.")

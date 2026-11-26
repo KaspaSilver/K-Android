@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">Đó không phải là địa chỉ chống lượng tử. Hãy quét địa chỉ KCC-3 mà KasSigner hiển thị.</string>
+    <string name="coldq_error_already_added">Địa chỉ đó đã có trong tài khoản này.</string>
+    <string name="coldq_error_in_other_account">Địa chỉ đó đã có trong tài khoản Cold Storage “%1$s” của bạn.</string>
+    <string name="coldq_added_toast">Đã thêm địa chỉ chống lượng tử.</string>
+    <string name="coldq_add_action">Thêm địa chỉ chống lượng tử</string>
+    <string name="coldq_add_action_subtitle">Quét một địa chỉ KCC-3 từ màn hình địa chỉ của KasSigner.</string>
+    <string name="coldq_stop_watching">Ngừng theo dõi</string>
+    <string name="coldq_stop_watching_subtitle">Xóa địa chỉ lượng tử này khỏi tài khoản. Quét lại để thêm lại.</string>
+    <string name="coldq_address_header">Địa chỉ chống lượng tử</string>
+    <string name="coldq_address_footer">Trên KasSigner, mở địa chỉ KCC-3 bạn muốn và quét mã QR của nó. Khóa của nó ở lại trên thiết bị cho đến khi địa chỉ chi tiêu.</string>
+    <string name="coldq_number_header">Số địa chỉ trên KasSigner</string>
+    <string name="coldq_add_title">Thêm địa chỉ lượng tử</string>
+    <string name="coldq_number_not_whole">Số địa chỉ phải là số nguyên.</string>
+    <string name="coldq_needs_v11">Cần KasSigner v1.1 trở lên, phiên bản ký được địa chỉ chống lượng tử (KCC-3).</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner không trả về script khóa cho địa chỉ chống lượng tử này, nên giao dịch sẽ không được phát lên mạng. Hãy kiểm tra thiết bị đang chạy KasSigner v1.1 trở lên và có địa chỉ này.</string>
+    <string name="coldq_error_unexpected_covenant">Giao dịch đã ký thêm các điều khoản covenant mà lần gửi này chưa từng yêu cầu, nên sẽ không được phát lên mạng.</string>
+    <string name="coldq_label_receive">Địa chỉ lượng tử</string>
+    <string name="coldq_label_change">Địa chỉ tiền thừa lượng tử</string>
+    <string name="coldq_label_receive_n">Địa chỉ lượng tử #%1$d</string>
+    <string name="coldq_label_change_n">Địa chỉ tiền thừa lượng tử #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">Lần gửi này công khai khóa của địa chỉ này trên chuỗi, nên tiền thừa không thể quay về đây. Hãy thêm trước một địa chỉ chống lượng tử chưa dùng từ KasSigner (tốt nhất là địa chỉ tiền thừa, #0 đến #4), hoặc gửi toàn bộ số dư.</string>
+    <string name="coldq_error_compound_needs_fresh">Gộp sẽ công khai khóa của địa chỉ này trên chuỗi, nên các đồng của nó chuyển sang một địa chỉ chống lượng tử chưa dùng của tài khoản này. Hãy thêm một địa chỉ từ KasSigner trước (tốt nhất là địa chỉ tiền thừa, #0 đến #4).</string>
+    <string name="coldq_stop_watching_title">Ngừng theo dõi địa chỉ này?</string>
+    <string name="coldq_stop_watching_message">%1$s KAS của nó vẫn nằm trên chuỗi tại địa chỉ này, trên KasSigner của bạn; K chỉ ngừng hiển thị. Quét lại địa chỉ từ KasSigner để theo dõi lại.</string>
+    <string name="coldq_edit_number">Sửa số địa chỉ</string>
+    <string name="coldq_edit_number_subtitle">Số và chuỗi mà KasSigner hiển thị cho địa chỉ này.</string>
+    <string name="coldq_chain">Chuỗi</string>
+    <string name="coldq_number_footer">Số mà KasSigner hiển thị cho địa chỉ này, và đây là địa chỉ nhận hay địa chỉ tiền thừa. Có số này, thiết bị tìm thấy khóa ngay khi ký; không có, thiết bị sẽ tìm khóa. KasSigner đánh dấu tiền thừa gửi đến các địa chỉ tiền thừa #0 đến #4 của nó là tiền thừa; mọi địa chỉ khác nó hiển thị là thanh toán.</string>
+    <string name="coldq_number_too_large">Số đó quá lớn: số địa chỉ của KasSigner nhỏ hơn 2147483648.</string>
+    <string name="coldq_compound_note">Chuyển tất cả các đồng của địa chỉ này thành một, tại một địa chỉ chống lượng tử chưa dùng của tài khoản này: giao dịch này công khai khóa của địa chỉ này trên chuỗi.</string>
+    <string name="coldq_coins_left_behind">Địa chỉ này có nhiều đồng hơn số một giao dịch có thể chi: %1$d đồng ở lại sau khóa mà lần gửi này công khai trên chuỗi. Hãy gửi chúng tiếp trong một giao dịch khác ngay sau đó.</string>
+    <string name="coldq_coins_move_to">Các đồng chuyển đến địa chỉ lượng tử của bạn:</string>
+    <string name="coldq_change_goes_to">Tiền thừa chuyển đến địa chỉ lượng tử của bạn:</string>
+    <string name="coldq_unit_marks_change">KasSigner hiển thị đầu ra này là tiền thừa.</string>
+    <string name="coldq_unit_shows_payment">KasSigner sẽ hiển thị đầu ra này là thanh toán thông thường, không phải tiền thừa: hãy kiểm tra đúng là địa chỉ này trước khi ký.</string>
+    <string name="coldq_sign_without_number">Ký không cần số địa chỉ</string>
+    <string name="coldq_sign_without_number_note">Nếu KasSigner từ chối yêu cầu này, số địa chỉ có thể sai. Không có số, thiết bị tự tìm địa chỉ. Sửa số địa chỉ sẽ chỉnh lại cho lần sau.</string>
+    <string name="coldq_compound_footer">Gộp tất cả UTXO tại địa chỉ này thành một tại một địa chỉ chống lượng tử chưa dùng của tài khoản này, vì việc này công khai khóa của địa chỉ này trên chuỗi.</string>
+    <string name="coldq_visibility_quantum_header">Địa chỉ chống lượng tử</string>
+    <string name="coldq_receive_address">Địa chỉ nhận</string>
+    <string name="coldq_change_address">Địa chỉ tiền thừa</string>
+    <string name="coldq_optional">Không bắt buộc</string>
+</resources>

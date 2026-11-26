@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Node transport: wRPC over wss, the public wss fallback (iPhone 961fc05a). -->
+<resources>
+    <string name="nodes_public_fallback_note">এই মুহূর্তে gRPC নোডে পৌঁছানো যাচ্ছে না, তাই K wss-এর মাধ্যমে একটি পাবলিক নোড ব্যবহার করছে।</string>
+    <string name="nodes_address_placeholder">host:port, grpcs:// বা wss://</string>
+    <string name="nodes_enter_as_host_port_grpcs_or_wss">host:port, grpcs://host অথবা wss://host হিসেবে লিখুন</string>
+    <string name="nodes_wss_secure">wss (নিরাপদ)</string>
+    <string name="nodes_ws_plaintext">ws (প্লেইনটেক্সট)</string>
+</resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPost and Kaspa Hub card links (iOS 961fc05a, 2026-11-25). -->
+<resources>
+    <string name="kp55_link_copied">Link copiado</string>
+    <string name="kp55_hub_link_subtitle">Um link que abre este cartão no K.</string>
+    <string name="kp55_open">Abrir</string>
+    <string name="kp55_opens_this_card">Abre este cartão.</string>
+    <string name="kp55_kaspa_hub_card">Kaspa Hub: %1$s</string>
+    <string name="kp55_tap_to_open_in_k">Toque para abrir no K.</string>
+    <string name="kp55_opens_it_in_k">Abre no K.</string>
+    <string name="kp55_hub_blurb_contacts">Seus endereços Kaspa salvos.</string>
+    <string name="kp55_hub_blurb_portfolio">Acompanhe suas moedas e o valor delas.</string>
+    <string name="kp55_hub_blurb_cold_storage">Acompanhe suas carteiras frias e assine por elas.</string>
+    <string name="kp55_hub_blurb_usernames">Reivindique, compre e venda nomes de usuário .kachat.</string>
+    <string name="kp55_hub_blurb_kapost">Posts e respostas na Kaspa.</string>
+    <string name="kp55_hub_blurb_kaplay">Xadrez, Snake e 2048, pontuações na blockchain.</string>
+    <string name="kp55_hub_blurb_websites">Sites construídos na Kaspa.</string>
+    <string name="kp55_hub_blurb_explorer">Blocos, transações e endereços, ao vivo.</string>
+    <!-- Profile's bell: a room or group @mention of you (iOS d089011f). -->
+    <string name="kp55_mentioned_you_in">%1$s mencionou você em %2$s</string>
+</resources>

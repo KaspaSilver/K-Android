@@ -107,7 +107,7 @@ interface BroadcastDao {
     @Query(
         "SELECT * FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network " +
             "AND (deliveryStatus = 'sent' OR senderAddress = :myAddress) AND senderAddress NOT IN (:hidden) " +
-            "AND content NOT LIKE '%\"reaction\"%' AND content NOT LIKE '%\"edit\"%' " +
+            "AND content NOT LIKE '%\"reaction\"%' AND content NOT LIKE '%\"edit\"%' AND content NOT LIKE '%\"delete\"%' " +
             "ORDER BY blockTimestamp DESC LIMIT 1"
     )
     fun summaryNewestPlain(channelName: String, network: String, myAddress: String, hidden: List<String>): Flow<BroadcastMessageEntity?>
@@ -117,17 +117,27 @@ interface BroadcastDao {
     @Query(
         "SELECT * FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network " +
             "AND (deliveryStatus = 'sent' OR senderAddress = :myAddress) AND senderAddress NOT IN (:hidden) " +
-            "AND (content LIKE '%\"reaction\"%' OR content LIKE '%\"edit\"%') AND blockTimestamp > :afterMillis " +
+            "AND (content LIKE '%\"reaction\"%' OR content LIKE '%\"edit\"%' OR content LIKE '%\"delete\"%') AND blockTimestamp > :afterMillis " +
             "ORDER BY blockTimestamp DESC LIMIT :limit"
     )
     fun summaryMarkedAfter(channelName: String, network: String, myAddress: String, hidden: List<String>, afterMillis: Long, limit: Int): Flow<List<BroadcastMessageEntity>>
+
+    /** The edit rows its own sender may have written for one message (its txid in the content),
+     *  newest first: the Chats list previews a room's last message with its newest edit before
+     *  the room is ever opened (iOS 961fc05a, audit 2026-11-25 C10). The caller parses them. */
+    @Query(
+        "SELECT * FROM broadcast_messages WHERE channelName = :channelName AND senderAddress = :senderAddress " +
+            "AND deliveryStatus != 'failed' AND content LIKE '%\"edit\"%' AND content LIKE '%' || :targetTxId || '%' " +
+            "ORDER BY blockTimestamp DESC LIMIT 8"
+    )
+    fun summaryEditsOf(channelName: String, senderAddress: String, targetTxId: String): Flow<List<BroadcastMessageEntity>>
 
     /** Other people's plain messages newer than the read marker: the unread count, in SQL. */
     @Query(
         "SELECT COUNT(*) FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network " +
             "AND deliveryStatus = 'sent' AND senderAddress != :myAddress AND senderAddress NOT IN (:hidden) " +
             "AND blockTimestamp > :afterMillis " +
-            "AND content NOT LIKE '%\"reaction\"%' AND content NOT LIKE '%\"edit\"%' AND content NOT LIKE '%\"voicePart\"%'"
+            "AND content NOT LIKE '%\"reaction\"%' AND content NOT LIKE '%\"edit\"%' AND content NOT LIKE '%\"delete\"%' AND content NOT LIKE '%\"voicePart\"%'"
     )
     fun summaryUnreadPlainCount(channelName: String, network: String, myAddress: String, hidden: List<String>, afterMillis: Long): Flow<Int>
 
@@ -136,12 +146,12 @@ interface BroadcastDao {
      *  is all its tag needs - not its ~20 KB of audio. */
     @Query(
         "SELECT id, channelName, senderAddress, blockTimestamp, deliveryStatus, " +
-            "CASE WHEN content LIKE '%\"voicePart\"%' AND content NOT LIKE '%\"reaction\"%' AND content NOT LIKE '%\"edit\"%' " +
+            "CASE WHEN content LIKE '%\"voicePart\"%' AND content NOT LIKE '%\"reaction\"%' AND content NOT LIKE '%\"edit\"%' AND content NOT LIKE '%\"delete\"%' " +
             "THEN substr(content, 1, 2048) ELSE content END AS content " +
             "FROM broadcast_messages WHERE channelName = :channelName AND senderAddress LIKE :network " +
             "AND deliveryStatus = 'sent' AND senderAddress != :myAddress AND senderAddress NOT IN (:hidden) " +
             "AND blockTimestamp > :afterMillis " +
-            "AND (content LIKE '%\"reaction\"%' OR content LIKE '%\"edit\"%' OR content LIKE '%\"voicePart\"%')"
+            "AND (content LIKE '%\"reaction\"%' OR content LIKE '%\"edit\"%' OR content LIKE '%\"delete\"%' OR content LIKE '%\"voicePart\"%')"
     )
     fun summaryUnreadMarked(channelName: String, network: String, myAddress: String, hidden: List<String>, afterMillis: Long): Flow<List<BroadcastMessageEntity>>
 
@@ -185,6 +195,34 @@ interface BroadcastDao {
     /** Removes a single message by id — used to drop a "pending_<uuid>" placeholder once its real send resolves (success swaps it for the real-txId row; see BroadcastRepository.sendBroadcast). */
     @Query("DELETE FROM broadcast_messages WHERE id = :id")
     suspend fun deleteMessage(id: String)
+
+    /** The delivered rows a room holds with a block time in [from]..[to], for checking against an
+     *  indexer page (iOS 2026-11-25 `PublicChatStore.deliveredMessages`): only sent rows; a pending
+     *  or unconfirmed send isn't the indexer's to answer for. */
+    @Query(
+        "SELECT id, blockTimestamp, senderAddress FROM broadcast_messages WHERE channelName = :channelName " +
+            "AND senderAddress LIKE :network AND deliveryStatus = 'sent' AND blockTimestamp >= :from AND blockTimestamp <= :to"
+    )
+    suspend fun deliveredInSpan(channelName: String, network: String, from: Long, to: Long): List<BroadcastSpanRow>
+
+    /** Messages gone from a room (deleted for everyone, or removed from the indexer). Keep [ids]
+     *  under SQLite's 999-variable limit. Returns how many went. */
+    @Query("DELETE FROM broadcast_messages WHERE channelName = :channelName AND id IN (:ids)")
+    suspend fun deleteMessagesIn(channelName: String, ids: List<String>): Int
+
+    /** The rooms, of [channels], where [sender] has a message on this phone, any case (iOS
+     *  65f8a765 `PublicChatStore.channels(_:withMessagesFrom:)`). */
+    @Query("SELECT DISTINCT channelName FROM broadcast_messages WHERE channelName IN (:channels) AND senderAddress = :sender COLLATE NOCASE")
+    suspend fun channelsWithMessagesFrom(channels: List<String>, sender: String): List<String>
+
+    /** The rows that may be a reaction or edit naming [targetTxId]: a substring match only, so the
+     *  caller parses each and deletes just the real ones (a reply whose text is "edit" matches
+     *  too, audit 2026-11-25 T4). */
+    @Query(
+        "SELECT * FROM broadcast_messages WHERE channelName = :channelName " +
+            "AND (content LIKE '%\"reaction\"%' OR content LIKE '%\"edit\"%') AND content LIKE '%' || :targetTxId || '%'"
+    )
+    suspend fun controlCandidatesNaming(channelName: String, targetTxId: String): List<BroadcastMessageEntity>
 
     /** Flips a message's own delivery status in place (pending -> sent/failed) — used by sendBroadcast/retryBroadcast, mirroring ChatRepository.updateMessageStatus for 1:1 chats. */
     @Query("UPDATE broadcast_messages SET deliveryStatus = :status WHERE id = :id")
@@ -237,3 +275,6 @@ interface BroadcastDao {
 }
 
 data class ChannelRetention(val channelName: String, val retentionMillis: Long)
+
+/** One delivered room row's id, chain time and sender ([BroadcastDao.deliveredInSpan]). */
+data class BroadcastSpanRow(val id: String, val blockTimestamp: Long, val senderAddress: String)

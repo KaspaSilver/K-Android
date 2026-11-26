@@ -31,8 +31,8 @@ class DockLayoutTest {
 
     @Test
     fun `a tab added in an update lands at the end of the Hub`() {
-        val (_, hub) = DockLayout.arrangement(listOf(AppTab.KACHAT_STATS))
-        assertEquals(AppTab.KACHAT_STATS, hub.first())
+        val (_, hub) = DockLayout.arrangement(listOf(AppTab.EXPLORER))
+        assertEquals(AppTab.EXPLORER, hub.first())
         assertEquals(AppTab.entries.size - AppTab.DEFAULT_DOCK.size, hub.size)
     }
 

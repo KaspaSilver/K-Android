@@ -40,11 +40,9 @@
     <string name="pc_keep">نگه دار</string>
     <string name="pc_keep_subtitle">اتاق را همان‌طور که هست بگذارید.</string>
     <string name="pc_new_public_chat">گفتگوی عمومی جدید</string>
-    <string name="pc_new_public_chat_subtitle">به یک اتاق عمومی بپیوندید یا یکی بسازید.</string>
     <string name="pc_edit_default_public_chats">ویرایش گفتگوهای عمومی پیش‌فرض</string>
     <string name="pc_new_public_chat_explainer">هر کسی به همان نام کانال بپیوندد می‌تواند پیام‌ها را آنجا ببیند و ارسال کند - مالک و دعوتی در کار نیست.</string>
     <string name="pc_join">پیوستن</string>
-    <string name="pc_back">بازگشت</string>
     <string name="pc_channel_name_rules">نام کانال باید ۱ تا %1$d نویسه، بدون فاصله یا دونقطه باشد.</string>
     <string name="pc_join_failed">هنگام پیوستن به آن کانال مشکلی پیش آمد.</string>
     <string name="pc_report">گزارش</string>

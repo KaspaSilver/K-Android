@@ -2505,6 +2505,12 @@ class KaPostsViewModel @Inject constructor(
     fun openMentionProfile(domain: String, signed: List<String> = emptyList()) {
         viewModelScope.launch {
             val owner = mentionAddress(domain, signed) ?: return@launch
+            // your own @: the dock's Profile tab, not a visitor's copy (iOS d089011f)
+            val me = myAddress()
+            if (com.kachat.app.ui.screens.KaPostsDeepLink.isOwnAddress(owner, me)) {
+                com.kachat.app.ui.screens.KaPostsDeepLink.openProfile(owner, me)
+                return@launch
+            }
             openPosterProfile(owner, null)
         }
     }
@@ -2734,6 +2740,22 @@ class KaPostsViewModel @Inject constructor(
         }
     }
 
+    /** Parent post id -> its author, for "Replying to" (iOS 961fc05a `ReplyParentAuthors`). */
+    private val replyParentAuthors = ReplyParentAuthors()
+
+    /**
+     * Who [post] answers, as an address, for "Replying to <name>" on a reply shown outside its
+     * conversation (a profile's Replies, Bookmarks; iOS 961fc05a `replyingToLabel`, audit
+     * 2026-11-25 L5). Cheap enough for a row drawn while scrolling: the parent search is
+     * remembered ([ReplyParentAuthors]) and the pubkey mapping cached
+     * ([KaPostsService.kaspaAddressFromPubkey]). Null for a post.
+     */
+    fun replyingToAddress(post: KaPostDraft): String? = KaPostsConversation.replyingToAddress(
+        post,
+        addressOf = { KaPostsService.kaspaAddressFromPubkey(it) },
+        parentAuthor = { parentId -> replyParentAuthors.author(parentId) { findPostByRemoteId(it) } },
+    )
+
     /** Ancestor chains from get-thread, keyed by the post's txid and held root first. */
     private val _fetchedAncestors = MutableStateFlow<Map<String, List<KaPostDraft>>>(emptyMap())
     val fetchedAncestors: StateFlow<Map<String, List<KaPostDraft>>> = _fetchedAncestors.asStateFlow()
@@ -2781,25 +2803,41 @@ class KaPostsViewModel @Inject constructor(
             val chain = mutableListOf<KaPostDraft>()
             var currentRemote = rootRemote
             var hops = 0
+            // The root's own first page answered: only then can "no reply of the poster's" unmark
+            // a root (a failed fetch says nothing about it).
+            var rootPageAnswered = false
             while (hops < 25) {
                 val page = try { kaPostsService.fetchRepliesPage(currentRemote, 25, null) } catch (_: Exception) { break }
-                val replies = page.items.mapNotNull { mapRemotePost(it) }
-                // An UNBRANCHED continuation is the conversation, whoever wrote it: a two-person
-                // back-and-forth is one thread to read, and following only the root author's own
-                // replies left every other message behind a tap - one tap down per message, and as
-                // many Backs to leave. With SEVERAL replies there is a real branch, and picking one
-                // would hide the others, so that keeps the old rule and the rest stay in the list.
-                val next = if (replies.size == 1) {
-                    replies.first()
-                } else {
-                    replies.filter { it.posterAddress == post.posterAddress }.minByOrNull { it.timestamp }
-                } ?: break
+                if (hops == 0) rootPageAnswered = true
+                val replies = page.items.mapNotNull { mapRemotePost(it) }.filter { it.remoteId != null && !isHidden(it.posterAddress) }
+                // A thread is the poster's own posts, each under their previous one, as on X (iOS
+                // 961fc05a, owner 2026-11-25): someone else's reply is a comment, never part of
+                // the thread, even when it's the only reply. Following any lone reply made a post
+                // with one comment from someone else show "View thread" and put that comment in
+                // the Thread section.
+                val next = KaPostsConversation.selfThreadNext(replies, post.posterAddress) ?: break
                 chain.add(next)
                 hops += 1
                 currentRemote = next.remoteId ?: break
             }
             _threadChains.value = _threadChains.value + (post.id to chain)
-            if (chain.isNotEmpty()) _threadRootFlags.value = _threadRootFlags.value + (rootRemote to true)
+            if (chain.isNotEmpty()) {
+                // Walking the chain answered the probe's question for this post, so it is claimed
+                // and recorded as a root the same way a positive probe result is.
+                threadProbeStore.claim(rootRemote)
+                threadProbeStore.markRoot(rootRemote)
+                _threadRootFlags.value = _threadRootFlags.value + (rootRemote to true)
+            } else if (rootPageAnswered && (_threadRootFlags.value[rootRemote] == true || rootRemote in threadProbeStore.persistedRoots())) {
+                // Marked as a root, but the indexer's first page has no reply of the poster's: it
+                // would show "View thread" for good (iOS audit 2026-11-25 L6: a mark from before
+                // the poster-only rule, or a deleted reply). Back to "no thread", held as long as
+                // a fresh probe's answer.
+                _threadRootFlags.value = _threadRootFlags.value - rootRemote
+                threadProbeStore.unmarkRoot(
+                    rootRemote,
+                    com.kachat.app.services.KaPostsThreadProbeStore.noThreadAnswerLifetimeMs(System.currentTimeMillis() - post.timestamp),
+                )
+            }
         }
     }
 

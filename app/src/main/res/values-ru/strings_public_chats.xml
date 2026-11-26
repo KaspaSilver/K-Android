@@ -40,11 +40,9 @@
     <string name="pc_keep">Оставить</string>
     <string name="pc_keep_subtitle">Оставить комнату как есть.</string>
     <string name="pc_new_public_chat">Новый публичный чат</string>
-    <string name="pc_new_public_chat_subtitle">Войдите в публичную комнату или создайте свою.</string>
     <string name="pc_edit_default_public_chats">Изменить общие чаты по умолчанию</string>
     <string name="pc_new_public_chat_explainer">Любой, кто зайдёт в канал с тем же названием, увидит и сможет писать сообщения - у канала нет владельца и не нужно приглашений.</string>
     <string name="pc_join">Присоединиться</string>
-    <string name="pc_back">Назад</string>
     <string name="pc_channel_name_rules">Название канала: 1–%1$d символов, без пробелов и двоеточий.</string>
     <string name="pc_join_failed">Не удалось присоединиться к этому каналу.</string>
     <string name="pc_report">Пожаловаться</string>

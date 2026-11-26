@@ -40,11 +40,9 @@
     <string name="pc_keep">השאר</string>
     <string name="pc_keep_subtitle">השאר את החדר כפי שהוא.</string>
     <string name="pc_new_public_chat">צ\'אט ציבורי חדש</string>
-    <string name="pc_new_public_chat_subtitle">הצטרפו לחדר ציבורי או צרו אחד.</string>
     <string name="pc_edit_default_public_chats">עריכת צ׳אטים ציבוריים ברירת מחדל</string>
     <string name="pc_new_public_chat_explainer">כל מי שמצטרף לאותו שם ערוץ יכול לראות ולפרסם שם הודעות - אין בעלים ואין הזמנה.</string>
     <string name="pc_join">הצטרף</string>
-    <string name="pc_back">חזרה</string>
     <string name="pc_channel_name_rules">שמות ערוצים חייבים להיות באורך 1-%1$d תווים, בלי רווחים או נקודתיים.</string>
     <string name="pc_join_failed">משהו השתבש בהצטרפות לערוץ הזה.</string>
     <string name="pc_report">דווח</string>

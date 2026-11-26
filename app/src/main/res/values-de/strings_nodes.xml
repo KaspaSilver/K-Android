@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Node transport: wRPC over wss, the public wss fallback (iPhone 961fc05a). -->
+<resources>
+    <string name="nodes_public_fallback_note">gRPC-Nodes sind gerade nicht erreichbar, daher nutzt K einen öffentlichen Node über wss.</string>
+    <string name="nodes_address_placeholder">Host:Port, grpcs:// oder wss://</string>
+    <string name="nodes_enter_as_host_port_grpcs_or_wss">Eingabe als host:port, grpcs://host oder wss://host</string>
+    <string name="nodes_wss_secure">wss (sicher)</string>
+    <string name="nodes_ws_plaintext">ws (Klartext)</string>
+</resources>

@@ -10,7 +10,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,7 +20,9 @@ import javax.inject.Singleton
 /**
  * While the app is in the FOREGROUND (KaChatApplication's process lifecycle observer calls
  * [start]/[stop] on foreground/background transitions), polls the indexer's notification stream
- * every 20 s, keeps the unseen count and shows a banner for new activity on your posts (iOS
+ * on the shared foreground beat ([ForegroundBeat]: every 30 s on Wi-Fi, 60 s on a metered path;
+ * iOS 961fc05a, audit 2026-11-25 B4), or every 5 minutes as a safety net while push is active (the
+ * push asks for a poll itself; owner, 2026-11-25: "do it like X", B15), keeps the unseen count and shows a banner for new activity on your posts (iOS
  * 428a797b `KaPostsNotificationService`, owner 2026-11-22), so a banner shows even when the push
  * service misses one; one banner per action when the push comes too. A KaPost push while the app
  * is open asks for a poll at once ([pollSoon]). Once the app is backgrounded or closed, the push
@@ -46,6 +49,8 @@ class KaPostsNotificationPoller @Inject constructor(
     // Actor naming (iOS parity): your saved contact name wins, then their .kachat name,
     // then the shortened address — never a bare address when a better name exists.
     private val chatRepository: com.kachat.app.repository.ChatRepository,
+    // Push active: KaPost activity arrives as pushes, and the poll is only a safety net (B15).
+    private val pushState: PushState,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.kachat.app.util.StartupSafety.logOnlyHandler("KaPostsNotificationPoller"))
     private var pollJob: Job? = null
@@ -83,17 +88,49 @@ class KaPostsNotificationPoller @Inject constructor(
     /** When the last poll started, so a burst of pushes asks the indexer once. */
     @Volatile private var lastPollAt = 0L
 
+    /**
+     * Follows the signed-in account (iOS 961fc05a, audit 2026-11-25 B19): the poll stops on Log
+     * Out, Delete Account and a switch, and starts again for the next account while the app is open.
+     */
+    private val walletObserver = scope.launch {
+        walletManager.signedInAddressFlow
+            .distinctUntilChanged()
+            .drop(1)
+            .collect { address ->
+                stop()
+                if (address != null && appNotifications.isAppInForeground) start()
+            }
+    }
+
     @Synchronized
     fun start() {
         if (pollJob?.isActive == true) return
+        // signed out (the sign-in screen): nothing to poll for (iOS 961fc05a, B19)
+        if (walletManager.isLoggedOut) return
         pollJob = scope.launch {
+            // At once: K just opened or came back (or a push asked, [pollSoon]).
+            runPoll()
             while (true) {
-                lastPollAt = System.currentTimeMillis()
-                try { pollOnce() } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) { Log.w("KaPostsPoller", "poll failed", e) }
-                delay(POLL_INTERVAL_MS)
+                // On the shared beat, so a poll never wakes the radio by itself. With push
+                // working, the push is the notice and asks for a poll itself ([pollSoon]); the
+                // poll is only a safety net then, every 5 minutes. Without push, every beat, since
+                // nothing else brings the banner. Checked each beat, so registering or losing push
+                // takes effect at once.
+                ForegroundBeat.sleepUntilNextBeat(offsetMs = 800L)
+                if (!shouldPollOnBeat(pushState.isActive, lastPollAt, System.currentTimeMillis())) continue
+                runPoll()
             }
         }
     }
+
+    private suspend fun runPoll() {
+        lastPollAt = System.currentTimeMillis()
+        try { pollOnce() } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) { Log.w("KaPostsPoller", "poll failed", e) }
+    }
+
+    /** Profile's bell shows: its count and banners catch up now, unless a poll ran in the last
+     *  15 s (iOS 961fc05a `pollForBell`: with push the poll is otherwise only every 5 minutes). */
+    fun pollForBell() = pollSoon()
 
     /** A KaPost push arrived while the app is open: poll now (the bell's count comes from the
      *  poll), unless one started in the last 15 s. Does nothing while the poller is stopped (iOS
@@ -253,31 +290,37 @@ class KaPostsNotificationPoller @Inject constructor(
         }
     }
 
-    private companion object {
-        /** Same cadence as iOS's KaPostsNotificationService. */
-        const val POLL_INTERVAL_MS = 20_000L
+    companion object {
+        /** With push active, how often the poll runs anyway, in case a push went missing (iOS
+         *  961fc05a `pushSafetyNetInterval`). */
+        const val PUSH_SAFETY_NET_MS = 5 * 60 * 1000L
+
+        /** Whether a beat runs the poll: always without push; with push only once the safety net's
+         *  five minutes (less a few seconds of beat jitter) have passed since the last poll. */
+        fun shouldPollOnBeat(pushActive: Boolean, lastPollAtMs: Long, nowMs: Long): Boolean =
+            !pushActive || lastPollAtMs <= 0L || nowMs - lastPollAtMs >= PUSH_SAFETY_NET_MS - 5_000L
 
         /** A push asks for a poll at once, unless one started this recently (iOS 428a797b `pollSoon`). */
-        const val POLL_SOON_MIN_GAP_MS = 15_000L
+        private const val POLL_SOON_MIN_GAP_MS = 15_000L
 
         /** Activity older than this when a poll finds it gets no banner (it is in the bell): a
          *  return after a long absence doesn't replay a stack of banners (iOS 428a797b). */
-        const val BANNER_MAX_AGE_MS = 10 * 60 * 1000L
+        private const val BANNER_MAX_AGE_MS = 10 * 60 * 1000L
 
         /** The most banners one poll shows; the rest are only counted in the bell (iOS 428a797b). */
-        const val MAX_BANNERS_PER_POLL = 3
+        private const val MAX_BANNERS_PER_POLL = 3
 
         /** Indexer timestamps are milliseconds; a seconds value is scaled up. */
-        fun milliseconds(timestamp: Long): Long = if (timestamp < 100_000_000_000L) timestamp * 1000 else timestamp
+        private fun milliseconds(timestamp: Long): Long = if (timestamp < 100_000_000_000L) timestamp * 1000 else timestamp
 
         /** The first [count] characters of [text], never cutting an emoji in half. */
-        fun prefixCodePoints(text: String, count: Int): String {
+        private fun prefixCodePoints(text: String, count: Int): String {
             val points = text.codePointCount(0, text.length)
             return if (points <= count) text else text.substring(0, text.offsetByCodePoints(0, count))
         }
 
         /** How far back one poll follows the bell's count (50 a page, iOS ee5ec98). */
-        const val MAX_UNSEEN_COUNT_PAGES = 10
+        private const val MAX_UNSEEN_COUNT_PAGES = 10
     }
 
     private fun actionText(contentType: String?, voteType: String?, text: String, tipAmountSompi: Long? = null): String = when (contentType) {

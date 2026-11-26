@@ -160,7 +160,6 @@
     <string name="valid_address">Địa chỉ hợp lệ</string>
     <string name="waiting_on_opponent">Dang cho doi thu</string>
     <string name="the_recipient_wont_see_your_messages">Người nhận sẽ không thấy tin nhắn của bạn cho đến khi họ nhắn cho bạn hoặc bạn gửi yêu cầu liên lạc cho họ. Yêu cầu liên lạc tốn 0,2 KAS và được hoàn lại cho bạn nếu họ chấp nhận. Bạn mất quyền riêng tư nếu gửi yêu cầu liên lạc.</string>
-    <string name="host_port_or_grpcs_host">host:port hoặc grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">Chon ngon ngu cua ban</string>
     <string name="select_the_language_youd_like_to">Chon ngon ngu ban muon su dung trong K.</string>
     <string name="best">Tot nhat</string>
-    <string name="enter_as_host_port_or_grpcs_host">Nhap dang host:port hoac grpcs://host</string>
     <string name="receive_kaspa">Nhan Kaspa</string>
     <string name="currency">Loai tien te</string>
     <string name="choose_your_currency">Chon loai tien te cua ban</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">Thêm liên hệ từ một tệp xuất danh bạ.</string>
     <string name="ab_export_file_sub">Lưu danh bạ của bạn, kèm ảnh, vào một tệp.</string>
     <string name="ab_nc_import_sub">Chọn một tệp xuất danh bạ từ Nextcloud của bạn.</string>
-    <string name="ab_nc_export_sub">Lưu vào thư mục KaChat trên Nextcloud để nhập trên mọi thiết bị.</string>
     <string name="ab_nc_connect_hint">Kết nối Nextcloud trong Cài đặt &gt; Lưu trữ để lưu ở đó và nhập trên thiết bị khác.</string>
     <string name="ab_couldnt_read_file">Không đọc được tệp đó.</string>
     <string name="ab_nothing_to_export">Chưa có gì để xuất. Hãy thêm một liên hệ trước.</string>

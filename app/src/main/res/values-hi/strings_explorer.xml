@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer (iOS 961fc05a): only the keys the iPhone translates; the rest are English there too. -->
+<resources>
+    <string name="ex_kind_payment">भुगतान</string>
+    <string name="ex_kind_handshake">संचार अनुरोध</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_username">उपयोगकर्ता नाम</string>
+    <string name="ex_kind_swap">स्वैप</string>
+    <string name="ex_kind_other">लेन-देन</string>
+    <string name="ex_kind_payments">भुगतान</string>
+    <string name="ex_kind_chesses">शतरंज की चालें</string>
+    <string name="ex_kind_others">लेन-देन</string>
+    <string name="ex_period_day">24 घंटे</string>
+    <string name="ex_period_week">7 दिन</string>
+    <string name="ex_period_all">अब तक</string>
+    <string name="ex_one_day">1 दिन</string>
+    <string name="ex_n_days">%1$d दिन</string>
+    <string name="ex_share">शेयर करें</string>
+    <string name="ex_your_chatting_address">आपका चैटिंग पता</string>
+    <string name="ex_no_transactions">अभी तक कोई लेन-देन नहीं।</string>
+</resources>

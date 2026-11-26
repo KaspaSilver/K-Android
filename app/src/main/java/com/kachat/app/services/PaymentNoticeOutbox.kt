@@ -157,6 +157,10 @@ class PaymentNoticeOutbox @Inject constructor(
                     walletServiceLazy.get().sendKasiaMessage(notice.contactAddress, notice.payload, firstContactTag = false)
                     done += notice.txId
                     Log.i(TAG, "Sent a kept payment_notice for ${notice.txId.take(12)}")
+                } catch (e: com.kachat.app.services.SendOutcomeUnknownException) {
+                    // It may have landed: dropped, so it is never sent twice (audit 2026-11-25 P6).
+                    done += notice.txId
+                    Log.w(TAG, "Kept payment_notice ${notice.txId.take(12)} not confirmed; not resent")
                 } catch (e: Exception) {
                     Log.w(TAG, "Kept payment_notice ${notice.txId.take(12)} still not sent: ${e.message}")
                 }

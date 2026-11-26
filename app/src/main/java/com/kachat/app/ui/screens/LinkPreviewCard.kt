@@ -117,7 +117,10 @@ fun LinkPreviewCard(
      *  show the linked site's picture, or the shared photo itself, so until that unlocks nothing
      *  is fetched and the card is the same tile a hidden photo gets (iOS 4f8e14bb). */
     photosBlocked: Boolean = false,
-    blockedSenderName: String = ""
+    blockedSenderName: String = "",
+    /** KaPost: the card fills the post's column, as on X, instead of a chat bubble's 260 dp (iOS
+     *  961fc05a `fillsWidth`, owner 2026-11-25: the card sat short of the edge on an opened post). */
+    fillsWidth: Boolean = false,
 ) {
     // An in-app KaChat link (a shared profile or payment request) is previewed LOCALLY: no
     // metadata fetch, and therefore no stranger tap-to-load gate either. Handled here rather than
@@ -183,7 +186,7 @@ fun LinkPreviewCard(
             // PDF/generic files get an attachment card: icon + filename + kind/size caption.
             NextcloudAttachmentCard(data = data, url = url, txId = txId, kaspaExplorer = kaspaExplorer, onSelect = onSelect, onDoubleTap = onDoubleTap)
         } else {
-            LinkPreviewCardContent(data = data, url = url, txId = txId, kaspaExplorer = kaspaExplorer, onSelect = onSelect, onDoubleTap = onDoubleTap)
+            LinkPreviewCardContent(data = data, url = url, txId = txId, kaspaExplorer = kaspaExplorer, onSelect = onSelect, onDoubleTap = onDoubleTap, fillsWidth = fillsWidth)
         }
     } else if (hasFinishedLoading && fallbackText != null) {
         LinkPreviewFallbackBubble(text = fallbackText, url = url, txId = txId, kaspaExplorer = kaspaExplorer, onSelect = onSelect, onDoubleTap = onDoubleTap)
@@ -686,7 +689,7 @@ private fun NextcloudAttachmentCard(data: LinkPreviewData, url: String, txId: St
 }
 
 @Composable
-private fun LinkPreviewCardContent(data: LinkPreviewData, url: String, txId: String, kaspaExplorer: KaspaExplorer, onSelect: (() -> Unit)? = null, onDoubleTap: (() -> Unit)? = null) {
+private fun LinkPreviewCardContent(data: LinkPreviewData, url: String, txId: String, kaspaExplorer: KaspaExplorer, onSelect: (() -> Unit)? = null, onDoubleTap: (() -> Unit)? = null, fillsWidth: Boolean = false) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val clipboardManager = LocalClipboardManager.current
@@ -698,7 +701,7 @@ private fun LinkPreviewCardContent(data: LinkPreviewData, url: String, txId: Str
 
     Column(
         modifier = Modifier
-            .widthIn(max = 260.dp)
+            .then(if (fillsWidth) Modifier.fillMaxWidth() else Modifier.widthIn(max = 260.dp))
             .clip(RoundedCornerShape(14.dp))
             .background(LocalAppColors.current.surface)
             .pointerInput(url, onDoubleTap != null) {
@@ -740,9 +743,11 @@ private fun LinkPreviewCardContent(data: LinkPreviewData, url: String, txId: Str
                     contentDescription = null,
                     imageLoader = LinkPreviewService.previewImageLoader(context),
                     contentScale = ContentScale.Crop,
+                    // The picture takes the card's width, never its own (iOS 961fc05a); taller
+                    // in a KaPost's full-width card.
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(140.dp)
+                        .height(if (fillsWidth) 190.dp else 140.dp)
                 )
                 if (isVideoLink) {
                     Box(
@@ -847,6 +852,10 @@ sealed class KaChatLinkRef {
     /** A Public Chats room: opens it, joining it first once asked (iOS 148a5331
      *  `KaChatInternalLink.publicChatRoom`, [PublicChatLinkRouter]). Always a validated name. */
     data class PublicChatRoom(val channel: String) : KaChatLinkRef()
+    /** A Kaspa Hub card (Explorer, KaPlay, Portfolio...): opens that section, wherever it lives
+     *  (iOS 961fc05a `KaChatInternalLink.hubSection`, 2026-11-25: a hold on a Hub card copies it).
+     *  `https://kachat.app/hub/<slug>` or `kachat://hub/<slug>` ([HubCardLinks]). */
+    data class HubSection(val tab: com.kachat.app.ui.AppTab) : KaChatLinkRef()
 }
 
 /** [raw] is the exact link substring as it appears in the message, [range] where it sits in it. */
@@ -888,6 +897,11 @@ object KaChatLink {
         """(?:kachat://broadcast/|kaposts://broadcast/|https?://(?:www\.)?kachat\.app/broadcast/)[^\s<>"']+""",
         RegexOption.IGNORE_CASE
     )
+    // A Kaspa Hub card's link (iOS 961fc05a): one fixed word naming the card ([HubCardLinks]).
+    private val HUB_LINK_REGEX = Regex(
+        """(?:kachat://hub/|https?://(?:www\.)?kachat\.app/hub/)([^\s<>"']+)""",
+        RegexOption.IGNORE_CASE
+    )
     private val TRAILING_PUNCTUATION = setOf('.', ',', '!', '?', ';', ':', '\'', '"', ')', ']', '}', '>')
 
     /** True when [raw] is nothing but one of these links (no surrounding text). */
@@ -902,6 +916,7 @@ object KaChatLink {
         }
         PAY_LINK_REGEX.matchEntire(trimmed)?.let { return paymentRequestRef(it.groupValues[1]) }
         KAPOST_LINK_REGEX.matchEntire(trimmed)?.let { return kaPostRef(it.groupValues[1]) }
+        HUB_LINK_REGEX.matchEntire(trimmed)?.let { return hubRef(it.groupValues[1]) }
         val match = LINK_REGEX.matchEntire(trimmed) ?: return null
         return refFor(match)
     }
@@ -915,7 +930,7 @@ object KaChatLink {
         ) return null
         // Every pattern, in the order the links appear in the text (iOS scans with one).
         val candidates = (LINK_REGEX.findAll(text) + PAY_LINK_REGEX.findAll(text) + KAPOST_LINK_REGEX.findAll(text) +
-            ROOM_LINK_REGEX.findAll(text))
+            ROOM_LINK_REGEX.findAll(text) + HUB_LINK_REGEX.findAll(text))
             .sortedBy { it.range.first }
         for (match in candidates) {
             var end = match.range.last
@@ -964,6 +979,15 @@ object KaChatLink {
         if (id.length !in 8..128) return null
         if (!id.all { it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' || it == '-' || it == '_' }) return null
         return KaChatLinkRef.KaPost(id)
+    }
+
+    /** A Hub card link's path tail: exactly one segment (any query or fragment ignored, as iOS
+     *  reads only the path), one of the fixed card words. */
+    private fun hubRef(tail: String): KaChatLinkRef? {
+        val path = tail.substringBefore('#').substringBefore('?')
+        if (path.isEmpty() || '/' in path) return null
+        val slug = runCatching { android.net.Uri.decode(path) }.getOrNull() ?: return null
+        return HubCardLinks.tab(slug)?.let(KaChatLinkRef::HubSection)
     }
 
     /** A linked address is attacker-controlled like everything else in a link: it has to be a
@@ -1029,6 +1053,8 @@ fun openKaChatLink(context: android.content.Context, ref: KaChatLinkRef, fromCha
         }
         // The room, joining it first once asked (iOS 148a5331 `openPublicChatRoom`).
         is KaChatLinkRef.PublicChatRoom -> PublicChatLinkRouter.open(context, ref.channel)
+        // That card, wherever it lives; KaPost's screens close first (iOS 961fc05a, audit L1).
+        is KaChatLinkRef.HubSection -> HubLinkRouter.open(ref.tab)
     }
 }
 
@@ -1151,18 +1177,22 @@ fun KaChatInternalLinkCard(
         is KaChatLinkRef.PaymentRequest -> Icons.Outlined.ArrowCircleUp
         is KaChatLinkRef.KaPost -> Icons.AutoMirrored.Outlined.Chat
         is KaChatLinkRef.PublicChatRoom -> Icons.Default.Tag
+        // drawn as the card's own icon below ([AppTabIcon]), as the Hub grid draws it
+        is KaChatLinkRef.HubSection -> ref.tab.hubIcon
     }
     val eyebrow = when (ref) {
         is KaChatLinkRef.Profile -> "KaChat Profile"
         is KaChatLinkRef.PaymentRequest -> payEyebrow
         is KaChatLinkRef.KaPost -> "KaPost"
         is KaChatLinkRef.PublicChatRoom -> "Public Chat Room"
+        is KaChatLinkRef.HubSection -> stringResource(R.string.shell_kaspa_hub)
     }
     val title = when (ref) {
         is KaChatLinkRef.Profile -> profileName ?: com.kachat.app.util.KaspaAddress.shortDisplay(ref.address)
         is KaChatLinkRef.PaymentRequest -> "${ref.request.amountText} ${com.kachat.app.util.KaspaUnit.symbol}"
         is KaChatLinkRef.KaPost -> kaPostAuthorName ?: kaPostFallbackTitle
         is KaChatLinkRef.PublicChatRoom -> "#${ref.channel}"
+        is KaChatLinkRef.HubSection -> stringResource(ref.tab.labelRes)
     }
     val subtitle = when (ref) {
         is KaChatLinkRef.Profile ->
@@ -1177,6 +1207,11 @@ fun KaChatInternalLinkCard(
         ).joinToString("\n")
         is KaChatLinkRef.KaPost -> kaPostPreview?.text ?: kaPostFallbackSubtitle
         is KaChatLinkRef.PublicChatRoom -> roomSubtitle
+        // what the card holds, then what a tap does (iOS 961fc05a)
+        is KaChatLinkRef.HubSection -> listOfNotNull(
+            HubCardLinks.blurbRes(ref.tab)?.let { stringResource(it) },
+            stringResource(R.string.kp55_tap_to_open_in_k),
+        ).joinToString("\n")
     }
     val subtitleMaxLines = 3
 
@@ -1203,7 +1238,12 @@ fun KaChatInternalLinkCard(
                 .background(KaspaTeal.copy(alpha = 0.18f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
+            if (ref is KaChatLinkRef.HubSection) {
+                // the card's own icon, as the Hub grid draws it (the .kachat wordmark too)
+                AppTabIcon(ref.tab, 18.dp)
+            } else {
+                Icon(icon, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
+            }
         }
         Spacer(Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

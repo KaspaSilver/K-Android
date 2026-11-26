@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">Ajouter au fil</string>
     <string name="kpui_post_not_loaded">Cette publication n\'a pas pu être chargée</string>
     <string name="kpui_post_not_loaded_body">Il a peut-être été supprimé, ou le réseau est injoignable.</string>
-    <string name="kpui_no_comments_yet">Pas encore de commentaires - soyez le premier à répondre.</string>
-    <string name="kpui_every_reply_above">Toutes les réponses figurent dans la conversation ci-dessus.</string>
     <string name="kpui_loading_replies">Chargement des réponses...</string>
     <string name="kpui_chat">Discussion</string>
     <string name="kpui_followers">Abonnés</string>

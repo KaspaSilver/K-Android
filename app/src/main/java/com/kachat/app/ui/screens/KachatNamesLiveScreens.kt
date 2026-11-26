@@ -459,6 +459,8 @@ class KachatLiveViewModel @Inject constructor(
     /** The block explorer picked in Settings, for the finished-transaction sheet (iOS 0870fcc). */
     val settings: com.kachat.app.repository.AppSettingsRepository,
     private val walletManager: WalletManager,
+    /** Own-address balance changes, which end the "not enough funds" popup's wait. */
+    val addressActivity: com.kachat.app.services.AddressActivityNotifier,
 ) : ViewModel() {
     sealed class Search {
         object Idle : Search()
@@ -1698,7 +1700,7 @@ fun KachatGraceTile(n: NameInfo, vm: KachatLiveViewModel, onOpen: () -> Unit, mo
     // One clock for every tile on screen, ticking every second for the countdown (iOS
     // TimelineView(.periodic(by: 1))); a timer per tile made a long grid redraw all of itself
     // every second (performance audit M10).
-    val clock = KachatSecondClock.now.collectAsState()
+    val clock = rememberKachatCountdownClock()
     val releaseAt = kachatClampedSum(n.expiresAt, graceMs)
     // the hub reloads once when it's released
     var reloaded by remember(n.name) { mutableStateOf(false) }
@@ -1733,6 +1735,24 @@ private fun KachatGraceTileCountdown(releaseAt: Long, clock: State<Long>) {
         color = colors.warning, fontWeight = FontWeight.Bold, fontSize = 15.sp,
         style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum")
     )
+}
+
+/**
+ * A countdown's once-a-second clock, which stops while its .kachat section is kept hidden in Kaspa
+ * Hub: there it holds the time it was hidden at, and ticks again when the section shows (iOS
+ * 961fc05a `KachatCountdownTimeline`; every tile and the name page ticked 1 Hz behind other
+ * sections, audit 2026-11-25 B20).
+ */
+@Composable
+internal fun rememberKachatCountdownClock(): State<Long> {
+    val hidden = LocalHubSectionHidden.current
+    val clock = remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(hidden) {
+        clock.longValue = System.currentTimeMillis()
+        if (hidden) return@LaunchedEffect
+        KachatSecondClock.now.collect { clock.longValue = it }
+    }
+    return clock
 }
 
 /** The time now, once a second, shared by every grace tile on screen; it ticks only while one is
@@ -4792,13 +4812,11 @@ fun KachatProfileSaveSheet(
             fee = null
             quoteTick++
         }
-        LaunchedEffect(Unit) {
-            // nothing else pushes a balance update while the popup is up (see
-            // rememberZeroBalanceFundingGate): fetch now, then every 10 s
-            while (true) {
-                vm.wallet.refreshBalance()
-                delay(10_000)
-            }
+        // As rememberZeroBalanceFundingGate: fetch now, then on the chatting address's first
+        // funds and on the shared beat, only while the screen is in front (audit 2026-11-25 R2).
+        LaunchedEffect(Unit) { vm.wallet.refreshBalance() }
+        ZeroBalanceFundingRefresh(rememberScreenRunning(), vm.addressActivity.utxoActivityEvents) {
+            vm.wallet.refreshBalance()
         }
         // iOS onChange: a change of the balance, not the one it opens with
         LaunchedEffect(Unit) {
@@ -5375,13 +5393,8 @@ fun KachatLiveProfileEditorScreen(
  *  only this line, not the whole name detail screen. */
 @Composable
 private fun KachatGraceCountdownText(ends: Long, color: androidx.compose.ui.graphics.Color) {
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(ends) {
-        while (true) {
-            delay(1_000)
-            now = System.currentTimeMillis()
-        }
-    }
+    // still while the .kachat section is kept hidden in Kaspa Hub (audit 2026-11-25 B20)
+    val now by rememberKachatCountdownClock()
     val releasedIn = stringResource(R.string.kn_released_in)
     val left = KachatLive.countdown(ends - now, androidx.compose.ui.platform.LocalContext.current)
     Text(

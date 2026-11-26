@@ -159,19 +159,32 @@ class GroupScanningService @Inject constructor(
     }
 
     private suspend fun runLivePoll() {
-        var lastFullPass = 0L
+        // The full pass runs on the shared foreground beat, with a group open too (audit
+        // 2026-11-25 B3): it used to count 30 s from its own last run while a group was open, a
+        // phase of its own. The first pass runs at once.
+        var nextFullPassAt = 0L
         while (true) {
             val metered = meteredNetwork.isMetered
-            val fullEvery = LIVE_POLL_ALL_GROUPS_MS * (if (metered) 2 else 1)
-            val now = System.currentTimeMillis()
-            if (now - lastFullPass >= fullEvery) {
-                lastFullPass = now
+            if (System.currentTimeMillis() >= nextFullPassAt) {
                 if (!applyLivePoll(onlyGroupId = null, includeControl = true, openGroup = false)) return
+                val done = System.currentTimeMillis()
+                nextFullPassAt = done + ForegroundBeat.delayToNextBeat(ForegroundBeat.intervalMs, FULL_PASS_BEAT_OFFSET_MS, done)
             } else {
                 val open = notificationHelper.viewingGroupId
                 if (open != null && !applyLivePoll(onlyGroupId = open, includeControl = false, openGroup = true)) return
             }
-            delay(LIVE_POLL_OPEN_GROUP_MS * (if (metered) 3 else 1))
+            if (notificationHelper.viewingGroupId == null) {
+                // No group open: nothing to do until the next full pass (iOS 961fc05a, audit
+                // 2026-11-25 B4, B16; it used to tick every 5 s for nothing). Opening a group ends
+                // the sleep for its fast poll; it doesn't bring the full pass forward, which made
+                // each open cost a sweep of every group (audit 2026-11-25 M7).
+                val wait = (nextFullPassAt - System.currentTimeMillis()).coerceAtLeast(0L)
+                kotlinx.coroutines.withTimeoutOrNull(wait) {
+                    notificationHelper.viewingGroupIdFlow.first { it != null }
+                }
+            } else {
+                delay(LIVE_POLL_OPEN_GROUP_MS * (if (metered) 3 else 1))
+            }
         }
     }
 
@@ -218,20 +231,30 @@ class GroupScanningService @Inject constructor(
     private fun startInternal() {
         if (isRunning) return
         scanJob = scope.launch {
+            var failures = 0
             while (true) {
                 var conn: KaspadConnection? = null
+                var subscribed = false
+                var subscribedAt = 0L
                 try {
                     conn = nodePoolManager.getBroadcastConnection()
                     // Captured BEFORE subscribing: a death/reconnect racing the NOTIFY_START
                     // must read as "generation moved" below, not get swallowed.
                     val subscribedGeneration = conn.connectionGeneration.value
-                    val blocks = conn.subscribeToBlockAdded(owner = "groups")
+                    // Recorded BEFORE subscribing (as KaPostsChainFallback does, audit 2026-11-25
+                    // N5): a stop while the NOTIFY_START is in flight still sends its STOP here.
                     subscribedConnection = conn
+                    val blocks = conn.subscribeToBlockAdded(owner = "groups")
+                    subscribed = true
+                    subscribedAt = System.currentTimeMillis()
                     // Re-establishing after a gap: backfill from the indexer what the dead
-                    // stream missed, then go live again - see hadLiveScan's doc comment.
+                    // stream missed, then go live again - see hadLiveScan's doc comment. The
+                    // coalesced catch-up, so it never runs beside another (audit 2026-11-25 S10).
                     if (hadLiveScan) {
                         try {
-                            groupRepository.syncGroups()
+                            groupRepository.runGroupCatchUp()
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
                         } catch (e: Exception) {
                             Log.w("GroupScanningService", "Post-reconnect group catch-up failed", e)
                         }
@@ -248,12 +271,31 @@ class GroupScanningService @Inject constructor(
                         conn.connectionGeneration.first { it != subscribedGeneration }
                         collector.cancel()
                     }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Log.w("GroupScanningService", "Block scanning interrupted, retrying", e)
+                    // A NOTIFY_START that failed may still have reached the node: take this
+                    // owner back off so its STOP isn't held up (audit 2026-11-25 N5).
+                    val failed = conn
+                    if (!subscribed && failed != null) {
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                            kotlinx.coroutines.withTimeoutOrNull(STOP_TIMEOUT_MS) {
+                                runCatching { failed.unsubscribeFromBlockAdded(owner = "groups") }
+                            }
+                        }
+                    }
                 } finally {
                     if (subscribedConnection === conn) subscribedConnection = null
                 }
-                delay(RETRY_DELAY_MS)
+                // A stream that ran a while was healthy: the next try comes soon. Failures back
+                // off, doubling to a cap, instead of redialling every 5 s for as long as the node
+                // is down (audit 2026-11-25 N1).
+                val healthy = subscribed && System.currentTimeMillis() - subscribedAt >= HEALTHY_STREAM_MS
+                failures = if (healthy) 0 else failures + 1
+                delay(retryDelayMs(failures))
+                // Offline every try fails: wait for the network instead (audit 2026-11-25 N1).
+                nodePoolManager.awaitOnline()
             }
         }
     }
@@ -318,6 +360,20 @@ class GroupScanningService @Inject constructor(
 
     companion object {
         private const val RETRY_DELAY_MS = 5_000L
+        private const val RETRY_MAX_DELAY_MS = 120_000L
+        /** A stream that stayed up this long resets the backoff. */
+        private const val HEALTHY_STREAM_MS = 30_000L
+        private const val STOP_TIMEOUT_MS = 5_000L
+        /** The full pass's place in the shared beat, after the room sweep and KaPost. */
+        private const val FULL_PASS_BEAT_OFFSET_MS = 3_000L
+
+        /** The wait before the next subscribe after [failures] failed or short-lived tries in a
+         *  row: 5 s for the first, then doubling to 2 minutes. */
+        internal fun retryDelayMs(failures: Int): Long {
+            if (failures <= 1) return RETRY_DELAY_MS
+            val shift = (failures - 1).coerceAtMost(5)
+            return minOf(RETRY_MAX_DELAY_MS, RETRY_DELAY_MS shl shift)
+        }
     }
 }
 

@@ -35,6 +35,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -139,7 +140,10 @@ class KachatNamesActions @Inject constructor(
     private val coldStorageManager: com.kachat.app.services.ColdStorageManager,
     /** Whether a spending address was ever used ([ownNameKeys], iOS d1026de: ChatService's
      *  `spendingAddressUsedState`). Lazy: only read when the registry is asked about them. */
-    private val walletService: dagger.Lazy<com.kachat.app.services.WalletService>
+    private val walletService: dagger.Lazy<com.kachat.app.services.WalletService>,
+    /** Whether the app is in front: the registration driver pauses in the background (audit
+     *  2026-11-25 B9; iOS is suspended there). */
+    private val notificationHelper: dagger.Lazy<com.kachat.app.services.NotificationHelper>,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.kachat.app.util.StartupSafety.logOnlyHandler("KachatNamesActions"))
     private val gson = Gson()
@@ -1531,17 +1535,25 @@ class KachatNamesActions @Inject constructor(
             if (driver?.isActive == true || _pending.value.none { it.needsDriving }) return
             driver = scope.launch {
                 try {
+                    // passes in a row in which the node or the registry couldn't be asked
+                    var unansweredPasses = 0
                     while (isActive) {
+                        // In the background it sleeps until the app is back in front: no node
+                        // reads every 2-5 s with the screen off (audit 2026-11-25 B9).
+                        val foreground = notificationHelper.get().appForegroundFlow
+                        if (!foreground.value) foreground.first { it }
                         val address = myAddress
                         // stops while the registry is being upgraded (a v1 manifest, iOS d2e0673)
                         if (!KachatNamesService.isLaunched || address == null || address != pendingWallet ||
                             service.registryUpgrading.value || _pending.value.none { it.needsDriving }
                         ) break
+                        unansweredThisPass = false
                         for (p in _pending.value.filter { it.needsDriving }) advance(p)
+                        unansweredPasses = if (unansweredThisPass) unansweredPasses + 1 else 0
                         // waiting for a registration's acceptance: check often, so the receipt
                         // shows within a couple of seconds of it (iOS d65fd1a)
                         val registering = _pending.value.any { it.stage == PendingRegistration.Stage.REGISTERING }
-                        delay(if (registering) 2_000 else 5_000)
+                        delay(KachatNamesActions.driverDelayMs(registering, unansweredPasses))
                     }
                 } finally {
                     synchronized(lock) { if (driver === coroutineContext[Job]) driver = null }
@@ -1638,6 +1650,10 @@ class KachatNamesActions @Inject constructor(
     }
 
     /** One step of one registration. */
+    /** Set by [advance] when the node or the registry couldn't be asked this pass: the driver
+     *  backs off after a few such passes in a row (audit 2026-11-25 B9). */
+    @Volatile private var unansweredThisPass = false
+
     private suspend fun advance(p: PendingRegistration) {
         val now = System.currentTimeMillis()
         val sinceUpdate = now - p.updatedAt
@@ -1647,7 +1663,10 @@ class KachatNamesActions @Inject constructor(
                     is CommitRead.Live -> read.utxo
                     // the node couldn't be asked: asked again on the next tick, never read as "gone"
                     // (a hiccup would fail a claim whose commit is on chain, or resend the commit)
-                    CommitRead.Unknown -> return
+                    CommitRead.Unknown -> {
+                        unansweredThisPass = true
+                        return
+                    }
                     CommitRead.Gone -> null
                 }
                 if (commit == null) {
@@ -1675,7 +1694,7 @@ class KachatNamesActions @Inject constructor(
                             set(p) { it.copy(stage = PendingRegistration.Stage.FAILED, lastError = why) }
                         }
                         // the registry can't be read right now: asked again on the next tick, not failed (iOS 2da5f4b)
-                        null -> Unit
+                        null -> unansweredThisPass = true
                     }
                     return
                 }
@@ -1688,6 +1707,7 @@ class KachatNamesActions @Inject constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (_: Exception) {
+                    unansweredThisPass = true
                     return
                 }
                 _virtualDaa.value = dag.virtualDaaScore
@@ -1700,7 +1720,10 @@ class KachatNamesActions @Inject constructor(
                 // In a block: no node holds it in a mempool any more, and the commit it spends is
                 // gone from the UTXO set (only this owner's register or cancel can spend it).
                 // Node only (iOS e426432).
-                if (tx != null && !service.isInMempool(tx) && commitSpent(p) == true) {
+                val spent = if (tx != null && !service.isInMempool(tx)) commitSpent(p) else false
+                // the node couldn't say: the driver backs off if that keeps up (audit 2026-11-25 B9)
+                if (spent == null) unansweredThisPass = true
+                if (tx != null && spent == true) {
                     // Accepted is registered: the gap only accepts a register that mints this
                     // owner's name. The receipt shows now; the registry catches up in the
                     // background instead of first (a chain walk while the indexer follows
@@ -2061,6 +2084,19 @@ class KachatNamesActions @Inject constructor(
     }
 
     companion object {
+        /**
+         * The registration driver's wait before its next pass (audit 2026-11-25 B9): 2 s while a
+         * register waits for acceptance, 5 s otherwise; after 3 passes in a row in which the node
+         * or the registry couldn't be asked, 30 s, and 60 s after 10, so a node that never answers
+         * doesn't keep it reading every few seconds for good.
+         */
+        internal fun driverDelayMs(registering: Boolean, unansweredPasses: Int): Long = when {
+            unansweredPasses >= 10 -> 60_000L
+            unansweredPasses >= 3 -> 30_000L
+            registering -> 2_000L
+            else -> 5_000L
+        }
+
         private const val TAG = "KachatNames"
         private const val SALT_PREFS_NAME = "kachat_names_secure_prefs"
         private val PENDING_LIST_TYPE = object : TypeToken<List<PendingRegistration>>() {}.type

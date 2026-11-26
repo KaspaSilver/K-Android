@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">থ্রেডে যোগ করুন</string>
     <string name="kpui_post_not_loaded">এই পোস্ট লোড করা যায়নি</string>
     <string name="kpui_post_not_loaded_body">এটি সরানো হয়ে থাকতে পারে, অথবা নেটওয়ার্কে পৌঁছানো যাচ্ছে না।</string>
-    <string name="kpui_no_comments_yet">এখনো কোনো মন্তব্য নেই - প্রথম উত্তরটি আপনিই দিন।</string>
-    <string name="kpui_every_reply_above">প্রতিটি উত্তর ওপরের কথোপকথনে আছে।</string>
     <string name="kpui_loading_replies">উত্তর লোড হচ্ছে...</string>
     <string name="kpui_chat">চ্যাট</string>
     <string name="kpui_followers">ফলোয়ার</string>

@@ -102,7 +102,17 @@ class AccountFeatureCleanup @Inject constructor(
                 .remove("last_read_$lowered")
                 .remove("manual_unread_$lowered")
                 .remove("hidden_curated_$lowered")
+                // since when a switched-off indexer room has been missing (iOS 961fc05a)
+                .remove("hidden_missing_$lowered")
+                // this build's one-time silencing of the rooms (iOS ef760cfa)
+                .remove("rooms_silenced_once_v1_$lowered")
+                // the rooms K joined for the account (iOS 65f8a765)
+                .remove("rooms_auto_joined_v1_$lowered")
                 .remove("featured_notify_default_$lowered")
+                .apply()
+            // rooms' deletes for everyone (iOS `kachat_room_deletes_<wallet>`, RoomDeleteStore)
+            context.getSharedPreferences(com.kachat.app.services.publicchats.RoomDeleteStore.PREFS, Context.MODE_PRIVATE).edit()
+                .remove("kachat_room_deletes_v2_$lowered")
                 .apply()
         }
         // .kachat (iOS 428a797b `KachatNamesActions.removeAllLocalData`): claims in progress

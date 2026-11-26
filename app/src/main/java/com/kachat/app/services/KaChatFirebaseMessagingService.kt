@@ -64,6 +64,10 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
      *  after it. Pushes are handled one at a time. */
     @Volatile private var pushReceivedAtMs = 0L
 
+    /** [handleIntent]'s estimate of when the push it is handling reached the phone (audit
+     *  2026-11-25 P4): one queued behind others arrived before its handling starts. */
+    @Volatile private var intentArrivalMs = 0L
+
     /** The push being handled came before, by its txid or id ([PushArrivalRecord.record]): a
      *  KaPost tip's second push (iOS NotificationService `pushSeenBefore`). */
     @Volatile private var pushSeenBefore = false
@@ -77,25 +81,37 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
      * the shade by the time the app looks.
      */
     override fun handleIntent(intent: android.content.Intent) {
-        val action = intent.action
-        val messageType = runCatching { intent.getStringExtra("message_type") }.getOrNull()
-        val isMessage = (action == "com.google.android.c2dm.intent.RECEIVE" || action == "com.google.firebase.messaging.RECEIVE_DIRECT_BOOT") &&
-            (messageType == null || messageType == "gcm")
-        if (isMessage) {
-            pushSeenBefore = runCatching {
-                intent.extras?.let { PushArrivalRecord.record(applicationContext, RemoteMessage(it)) } ?: false
-            }.getOrDefault(false)
-            // A push the system would draw itself while the app is away that a switch has turned
-            // off since the registration: dropped here, before it is drawn - Android's version of
-            // iOS's push extension silencing it (iOS 8cb4c88e, audit 2026-11-24 notifications).
-            // Recorded above all the same.
-            val dropped = runCatching { intent.extras?.let { dropsBeforeTheSystemDraws(RemoteMessage(it)) } ?: false }
-                .getOrDefault(false)
-            if (dropped) return
+        // FCM hands intents over one at a time, so in a burst (a voice note's parts, a busy group)
+        // a push can wait seconds before its handling starts, and FCM's ~20 s window runs from its
+        // arrival, not from here. Pushes handled back to back count as arrived no later than the
+        // first of the run started, or than their own send time if that is later (P4).
+        val startedAtMs = System.currentTimeMillis()
+        if (startedAtMs - lastHandlerEndMs > QUEUE_GAP_MS) queueStartMs = startedAtMs
+        val sentTimeMs = runCatching { intent.extras?.let { RemoteMessage(it).sentTime } }.getOrNull() ?: 0L
+        intentArrivalMs = arrivalEstimate(startedAtMs, queueStartMs, sentTimeMs)
+        try {
+            val action = intent.action
+            val messageType = runCatching { intent.getStringExtra("message_type") }.getOrNull()
+            val isMessage = (action == "com.google.android.c2dm.intent.RECEIVE" || action == "com.google.firebase.messaging.RECEIVE_DIRECT_BOOT") &&
+                (messageType == null || messageType == "gcm")
+            if (isMessage) {
+                pushSeenBefore = runCatching {
+                    intent.extras?.let { PushArrivalRecord.record(applicationContext, RemoteMessage(it)) } ?: false
+                }.getOrDefault(false)
+                // A push the system would draw itself while the app is away that a switch has turned
+                // off since the registration: dropped here, before it is drawn - Android's version of
+                // iOS's push extension silencing it (iOS 8cb4c88e, audit 2026-11-24 notifications).
+                // Recorded above all the same.
+                val dropped = runCatching { intent.extras?.let { dropsBeforeTheSystemDraws(RemoteMessage(it)) } ?: false }
+                    .getOrDefault(false)
+                if (dropped) return
+            }
+            super.handleIntent(intent)
+            // A KaPost tip push the system just drew (app away) after the tip's payment notice.
+            runCatching { intent.extras?.let { afterSystemDrawnKaPostTip(RemoteMessage(it)) } }
+        } finally {
+            lastHandlerEndMs = System.currentTimeMillis()
         }
-        super.handleIntent(intent)
-        // A KaPost tip push the system just drew (app away) after the tip's payment notice.
-        runCatching { intent.extras?.let { afterSystemDrawnKaPostTip(RemoteMessage(it)) } }
     }
 
     /**
@@ -160,6 +176,10 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                 val channel = (data["channel"] ?: threadId.removePrefix("broadcast:"))
                     .let { com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(it) }
                     ?: return true
+                // An edit or a delete for everyone is never announced, even while the app is away
+                // (iOS NotificationService empties both, 2026-11-25).
+                if (com.kachat.app.util.BroadcastPushPreview.isEditEnvelope(body) ||
+                    com.kachat.app.util.MessageDelete.isDeleteEnvelope(body)) return false
                 roomPushWanted(channel, data)
             }
             type == "kaposts" || threadId.startsWith("kaposts") ->
@@ -227,7 +247,12 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
 
         val type = data["type"].orEmpty()
         val body = data["body"].orEmpty()
-        pushReceivedAtMs = System.currentTimeMillis()
+        // From its arrival as handleIntent estimated it (P4); now, if that is missing or odd.
+        pushReceivedAtMs = System.currentTimeMillis().let { now ->
+            val arrival = intentArrivalMs
+            intentArrivalMs = 0L
+            if (arrival <= 0L) now else arrival.coerceIn(now - HANDLER_BUDGET_MS * 4, now)
+        }
         Log.i(TAG, "push received: type=$type txId=${data["tx_id"].orEmpty().take(16)}")
 
         // NotificationHelper.show* are suspend and quick; block so the work completes before the
@@ -279,7 +304,8 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                     // registration's watch_only_addresses).
                     "address_activity" -> handleAddressActivityPush(data, body)
 
-                    "broadcast" -> handleRoomPush(data, body)
+                    // a room push's collapse id is its message's txid (iOS 961fc05a)
+                    "broadcast" -> handleRoomPush(data, body, message.collapseKey)
 
                     "kaposts" -> handleKaPostPush(data, body)
 
@@ -340,7 +366,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
      * an earlier message in place), and the room's raw on-chain body shown as a friendly preview.
      * The banner itself stays down for the room on screen ([com.kachat.app.services.publicchats.BroadcastNotifier]).
      */
-    private suspend fun handleRoomPush(data: Map<String, String>, body: String) {
+    private suspend fun handleRoomPush(data: Map<String, String>, body: String, collapseKey: String? = null) {
         val txId = data["tx_id"]?.takeIf { it.isNotBlank() }
         // Through the same gate as a room link's name, before it can show anything.
         val channel = data["channel"]
@@ -365,6 +391,13 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             Log.i(TAG, "Edit push dropped: an edit is never announced")
             return
         }
+        // A delete for everyone takes an earlier message away: nothing to announce either (iOS
+        // 2026-11-25 NotificationService `isDeleteEnvelope`).
+        if (com.kachat.app.util.MessageDelete.isDeleteEnvelope(body)) {
+            txId?.let { notificationHelper.claimWithoutNotifying(it) }
+            Log.i(TAG, "Delete push dropped: a delete is never announced")
+            return
+        }
         // A long voice note's (or multi-part photo's) later parts while the app is open (iOS
         // 148a5331 `RoomVoicePushBursts`): the indexer pushes every part as its own "Voice
         // message", so a media push from the same sender in the same room within a minute of the
@@ -374,6 +407,13 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         ) {
             txId?.let { notificationHelper.claimWithoutNotifying(it) }
             return
+        }
+        // A room push while the app is open: the message lands in the room and the Chats list
+        // first, then the banner (at most 4 s later), never the other way round (iOS 961fc05a
+        // `fetchBeforePushBanner`; an indexer marked down isn't asked, audit 2026-11-25 C9).
+        if (notificationHelper.isAppInForeground) {
+            runCatching { broadcastRepositoryLazy.get().fetchBeforePushBanner(channel, txId ?: collapseKey) }
+                .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
         }
         broadcastNotifierLazy.get().showBroadcast(
             channelName = channel,
@@ -514,8 +554,18 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
      *  Null for any other payment. */
     private suspend fun tipPaymentPushBody(data: Map<String, String>): String? {
         val txId = data["tx_id"]?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        // The push's own payload (raw hex), when it carries one, answers without a request (iOS
+        // 961fc05a, audit 2026-11-25 B18 / M10). The indexer doesn't send it yet.
+        val pushed = data["payload"]?.trim()?.takeIf { it.isNotEmpty() }
+        if (pushed != null) {
+            val postId = KaPostTipLedger.tipPostIdFromPayloadHex(pushed) ?: return null
+            KaPostTipLedger.record(applicationContext, txId, postId)
+            return tipWording(KaPostTipLedger.kasText(data["amount"]))
+        }
+        // Else a short look at the chain (payload only): most payments aren't tips, and the tip's
+        // own KaPost push words it too, so a payment notice isn't held while the API catches up.
         KaPostTipLedger.postId(applicationContext, txId)
-            ?: kotlinx.coroutines.withTimeoutOrNull(CHAIN_READ_BUDGET_MS) { KaPostTipLedger.tipPostId(applicationContext, txId) }
+            ?: kotlinx.coroutines.withTimeoutOrNull(TIP_CHECK_BUDGET_MS) { KaPostTipLedger.tipPostId(applicationContext, txId) }
             ?: return null
         return tipWording(KaPostTipLedger.kasText(data["amount"]))
     }
@@ -553,7 +603,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         val readOffChain = data["enc_payload"].isNullOrBlank()
         val payload = data["enc_payload"]?.takeIf { it.isNotBlank() }?.let { "kchat:1:gcomm:$it" }
             ?: txId.takeIf { it.isNotBlank() }?.let { id ->
-                readOffChainWithRetry({ groupRepository.readChainPayload(id) }) { it != null }
+                readOffChainWithRetry("group:${groupId.lowercase()}", { groupRepository.readChainPayload(id) }) { it != null }
             }
         // Back-to-back pushes from one sender in one group that couldn't be read ring once (iOS
         // ca013fc8 `part_push_bursts`; the blinded id is per group and sender). A part that was
@@ -561,14 +611,14 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         val burstOwner = "group:${groupId.lowercase()}"
         val read = groupRepository.readGroupMessagePush(payload)
         if (read is GroupMessagePush.Banner) postGroupBanner(read, txId)
-        // Stores the message, and brings the keys of a group this device has only just heard of.
-        // Bounded: syncGroups() is a full catch-up (every group, backfill sends included) and FCM
-        // gives this handler about 20 s. A sync still running at 8 s - or at what is left of the
-        // handler's time after the reads above - is left behind and the generic fallback below
-        // posts in time (audit AND-008).
+        // Stores the message: a read one with its own group's lanes only; an unreadable one with
+        // the full catch-up, coalesced, as it may bring the keys of a group this device has only
+        // just heard of (audit 2026-11-25 N10, S6). Bounded: FCM gives this handler about 20 s.
+        // A sync still running at 8 s - or at what is left of the handler's time after the reads
+        // above - is left behind and the generic fallback below posts in time (audit AND-008).
         try {
             syncBudgetMs().takeIf { it > 0L }?.let { budget ->
-                kotlinx.coroutines.withTimeoutOrNull(budget) { groupRepository.syncGroups() }
+                kotlinx.coroutines.withTimeoutOrNull(budget) { groupRepository.catchUpAfterGroupMessagePush(groupId, read) }
             }
         } catch (e: Exception) {
             Log.w(TAG, "Push-triggered group sync failed: ${e.message}")
@@ -615,6 +665,9 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         // couldn't read is never shown as the generic line (iOS KaChatApp `rawGroupPush`,
         // 2026-11-24). The txId stays unclaimed, so the app's own banner can follow.
         if (notificationHelper.isAppInForeground) {
+            // This push is already recorded as arrived, which would stop the app's own banner for
+            // it (NotificationHelper.showGroup): handed over to the app explicitly (audit P2).
+            notificationHelper.deferToApp(txId)
             Log.i(TAG, "Generic group fallback skipped: the app is open")
             return
         }
@@ -677,20 +730,34 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         return minOf(GROUP_SYNC_BUDGET_MS, left)
     }
 
-    private suspend fun <T> readOffChainWithRetry(read: suspend () -> T?, done: (T?) -> Boolean): T? {
+    /**
+     * [burstOwner] is who sent it where ("dm:<sender>", "group:<blinded id>"): once a read for
+     * the same owner finished, read or not, within [BURST_READ_WINDOW_MS], this one makes a single
+     * attempt - the parts of one photo or voice note are sent together, so the API has them all
+     * by then, or is not answering for any (audit 2026-11-25 N11). A push already past its read
+     * time (queued behind others, P4) also makes one short attempt only.
+     */
+    private suspend fun <T> readOffChainWithRetry(burstOwner: String?, read: suspend () -> T?, done: (T?) -> Boolean): T? {
+        val singleAttempt = burstOwner != null && recentBurstRead(burstOwner, System.currentTimeMillis())
         var attempt = 0
         var result: T? = null
-        while (true) {
-            val remaining = CHAIN_READ_DEADLINE_MS - (System.currentTimeMillis() - pushReceivedAtMs)
-            if (remaining <= 1_000L) return result
-            result = runCatching { kotlinx.coroutines.withTimeoutOrNull(minOf(CHAIN_READ_BUDGET_MS, remaining)) { read() } }.getOrNull()
-            if (done(result)) return result
-            // Not on the API yet, busy, or no answer: try again shortly, while there's time.
-            val delayMs = minOf(1_000L + attempt * 750L, 3_000L)
-            val left = CHAIN_READ_DEADLINE_MS - (System.currentTimeMillis() - pushReceivedAtMs)
-            if (left <= delayMs + 1_000L) return result
-            kotlinx.coroutines.delay(delayMs)
-            attempt++
+        try {
+            while (true) {
+                val remaining = CHAIN_READ_DEADLINE_MS - (System.currentTimeMillis() - pushReceivedAtMs)
+                val late = remaining <= 1_000L
+                if (late && attempt > 0) return result
+                val budget = if (late) LATE_CHAIN_READ_BUDGET_MS else minOf(CHAIN_READ_BUDGET_MS, remaining)
+                result = runCatching { kotlinx.coroutines.withTimeoutOrNull(budget) { read() } }.getOrNull()
+                if (done(result) || late || singleAttempt) return result
+                // Not on the API yet, busy, or no answer: try again shortly, while there's time.
+                val delayMs = minOf(1_000L + attempt * 750L, 3_000L)
+                val left = CHAIN_READ_DEADLINE_MS - (System.currentTimeMillis() - pushReceivedAtMs)
+                if (left <= delayMs + 1_000L) return result
+                kotlinx.coroutines.delay(delayMs)
+                attempt++
+            }
+        } finally {
+            if (burstOwner != null) noteBurstRead(burstOwner, System.currentTimeMillis())
         }
     }
 
@@ -718,10 +785,11 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             GroupControlPush.Update -> notificationHelper.claimWithoutNotifying(txId)
             GroupControlPush.Quiet, GroupControlPush.Unreadable -> Unit
         }
-        // Brings in whatever else it can see. Bounded: a push handler has seconds, not minutes.
+        // Brings in whatever else it can see, through the one coalesced catch-up (audit
+        // 2026-11-25 S10). Bounded: a push handler has seconds, not minutes.
         runCatching {
             syncBudgetMs().takeIf { it > 0L }?.let { budget ->
-                kotlinx.coroutines.withTimeoutOrNull(budget) { groupRepository.syncGroups() }
+                kotlinx.coroutines.withTimeoutOrNull(budget) { groupRepository.runGroupCatchUp() }
             }
         }
         if (read !is GroupControlPush.Unreadable) return
@@ -760,7 +828,7 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
         // Retried while the API catches up with the transaction (iOS ca013fc8).
         val pushedPlaintext = decryptDirectMessage(data["enc_payload"])
         val chainRead = if (pushedPlaintext != null) null else data["tx_id"]?.takeIf { it.isNotBlank() }?.let { txId ->
-            readOffChainWithRetry({ chatRepository.readChainMessage(txId) }) { it != null && it !is ChatRepository.ContextualRead.Unreadable }
+            readOffChainWithRetry("dm:${sender.lowercase()}", { chatRepository.readChainMessage(txId) }) { it != null && it !is ChatRepository.ContextualRead.Unreadable }
         }
         // The indexer picks devices by who sent a message, not who it's for, so a contact's
         // message to someone else can reach this phone: it isn't ours, so it says nothing and
@@ -972,6 +1040,10 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
          *  timeoutInterval 8). */
         private const val CHAIN_READ_BUDGET_MS = 8_000L
 
+        /** A payment push's tip check reads the chain only this long: one or two tries, not what
+         *  a message preview may wait (iOS 961fc05a `tipCheckDeadline`, audit 2026-11-25 B18). */
+        private const val TIP_CHECK_BUDGET_MS = 4_000L
+
         /** How long a payload-less push's chain reads keep trying, from the push's arrival (iOS
          *  ca013fc8 `chainReadDeadline`: 20 s of the extension's 30). FCM gives this handler about
          *  20 s in all, so the reads stop sooner and leave the banner and a short catch-up their
@@ -980,6 +1052,42 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
 
         /** All a push may take, from its arrival: under FCM's ~20 s for onMessageReceived. */
         private const val HANDLER_BUDGET_MS = 18_000L
+
+        /** One read for a push already past its read time (P4), or a later part of a burst (N11). */
+        private const val LATE_CHAIN_READ_BUDGET_MS = 3_000L
+
+        /** A push handled within this long of the previous one ending was queued behind it (P4). */
+        private const val QUEUE_GAP_MS = 1_000L
+
+        /** How long a finished read makes later reads for the same sender single attempts (N11). */
+        internal const val BURST_READ_WINDOW_MS = 60_000L
+
+        // Process-wide, like FCM's one handler thread: when the last handling ended, when the
+        // current run of back-to-back pushes began, and each sender's last finished read.
+        @Volatile private var lastHandlerEndMs = 0L
+        @Volatile private var queueStartMs = 0L
+        private val burstReadsDoneAt = HashMap<String, Long>()
+
+        private fun recentBurstRead(owner: String, nowMs: Long): Boolean =
+            synchronized(burstReadsDoneAt) { singleBurstRead(burstReadsDoneAt[owner], nowMs) }
+
+        private fun noteBurstRead(owner: String, nowMs: Long) = synchronized(burstReadsDoneAt) {
+            burstReadsDoneAt.entries.removeAll { nowMs - it.value >= BURST_READ_WINDOW_MS }
+            burstReadsDoneAt[owner] = nowMs
+        }
+
+        /** Whether a read for an owner whose last read finished at [lastDoneAtMs] makes one attempt (N11). */
+        internal fun singleBurstRead(lastDoneAtMs: Long?, nowMs: Long): Boolean =
+            lastDoneAtMs != null && nowMs >= lastDoneAtMs && nowMs - lastDoneAtMs < BURST_READ_WINDOW_MS
+
+        /**
+         * When a push reached the phone, as best known (P4): handled at [nowMs] in a run of
+         * back-to-back pushes that began at [queueStartMs], it came no earlier than that, nor than
+         * FCM's [sentTimeMs] (0 when unknown), and no later than now. A push handled on its own
+         * ([queueStartMs] == [nowMs]) arrived now.
+         */
+        internal fun arrivalEstimate(nowMs: Long, queueStartMs: Long, sentTimeMs: Long): Long =
+            maxOf(queueStartMs, sentTimeMs).coerceAtMost(nowMs)
 
         /** Kept back from a catch-up for the fallback banner that may follow it. */
         private const val FALLBACK_RESERVE_MS = 1_500L

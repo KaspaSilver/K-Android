@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- iOS 961fc05a: the Nextcloud folder is "K" (agent F, misc 5.5) -->
+    <string name="ab_nc_export_sub_k">Save it to the K folder in your Nextcloud, to import on any device.</string>
+    <string name="pnc_export_sub_k">Save the CSV to the K folder in your Nextcloud.</string>
+</resources>

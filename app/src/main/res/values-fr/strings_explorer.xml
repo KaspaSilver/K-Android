@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer (iOS 961fc05a): only the keys the iPhone translates; the rest are English there too. -->
+<resources>
+    <string name="ex_kind_payment">Paiement</string>
+    <string name="ex_kind_handshake">Demande de communication</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_username">Nom d\'utilisateur</string>
+    <string name="ex_kind_swap">Échanger</string>
+    <string name="ex_kind_other">Transaction</string>
+    <string name="ex_kind_payments">Paiements</string>
+    <string name="ex_kind_chesses">Coups d\'échecs</string>
+    <string name="ex_kind_others">Transactions</string>
+    <string name="ex_period_day">24 heures</string>
+    <string name="ex_period_week">7 jours</string>
+    <string name="ex_period_all">Tout</string>
+    <string name="ex_one_day">1 jour</string>
+    <string name="ex_n_days">%1$d jours</string>
+    <string name="ex_share">Partager</string>
+    <string name="ex_your_chatting_address">Votre adresse de discussion</string>
+    <string name="ex_no_transactions">Aucune transaction pour l\'instant.</string>
+</resources>

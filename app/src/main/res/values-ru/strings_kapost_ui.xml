@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">Добавить в цепочку</string>
     <string name="kpui_post_not_loaded">Не удалось загрузить этот пост</string>
     <string name="kpui_post_not_loaded_body">Возможно, его удалили, или сеть недоступна.</string>
-    <string name="kpui_no_comments_yet">Комментариев пока нет - ответьте первым.</string>
-    <string name="kpui_every_reply_above">Все ответы есть в обсуждении выше.</string>
     <string name="kpui_loading_replies">Загрузка ответов...</string>
     <string name="kpui_chat">Чат</string>
     <string name="kpui_followers">Подписчики</string>

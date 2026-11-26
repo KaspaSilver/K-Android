@@ -8,7 +8,7 @@ object BroadcastRetention {
     val MAX_MILLIS = 3L * 24 * 60 * 60 * 1000L
     val DEFAULT_MILLIS = 3L * 60 * 60 * 1000L
 
-    /** Retention for the FEATURED indexer-backed rooms (#kaspa / #kachat-bugs): the KaChat
+    /** Retention for the FEATURED indexer-backed rooms (#kaspa / #report-bugs): the KaChat
      *  indexer holds 30 days and the room should always show all of it — the 3-day cap
      *  silently pruned days 4-30 locally even after a full backfill (matches iOS/desktop). */
     val INDEXER_MILLIS = 30L * 24 * 60 * 60 * 1000L
@@ -17,8 +17,24 @@ object BroadcastRetention {
 /** Curated rooms shown in the Broadcasts "Popular" tab — recommended channels baked into the app, not derived from any usage/activity data. */
 object FeaturedBroadcastChannels {
     /** The two rooms pinned to the top of Public Chats. Since iOS 8cb4c88e (owner, 2026-11-24)
-     *  they start silenced like every room (see `BroadcastViewModel.ensureDefaultRoomsJoined`). */
-    val NAMES: List<String> = listOf("kaspa", "kachat-bugs")
+     *  they start silenced like every room (see `PublicChatDefaultRooms`). #report-bugs took
+     *  #kachat-bugs's place (iOS 961fc05a); #kachat-bugs is an indexer room again (ef760cfa). */
+    val NAMES: List<String> = listOf("kaspa", "report-bugs")
+
+    /**
+     * Default rooms retired for a new name, old -> new (iOS `PublicChatService.retiredChannels`).
+     * An account that had the old room is moved over once its rooms load (bell, pin and
+     * switched-off state, `PublicChatDefaultRooms`), and the old room is left. Joining the old
+     * name (a link, a push, the New Public Chat sheet) opens the new room (audit 2026-11-25 C2).
+     * Empty (iOS ef760cfa): #kachat-bugs was retired for #report-bugs on 2026-11-25, and the same
+     * day the owner brought it back as a room of its own, since the indexer still tracks it: it's
+     * an indexer room ([indexerDefaultNames]), under More Rooms with its bell off. Accounts
+     * already moved keep what they have.
+     */
+    val RETIRED: Map<String, String> = emptyMap()
+
+    /** [name] as the room that replaced it when it is a retired default room, else as it is. */
+    fun replacingRetired(name: String): String = RETIRED[name] ?: name
 
     /**
      * Curated per-language rooms, listed straight in Public Chats under the two in [NAMES] (KaPosts
@@ -45,16 +61,47 @@ object FeaturedBroadcastChannels {
         "kaspa-hebrew",
     )
 
+    /** The rooms the app ships as defaults (Popular + the language rooms; iOS
+     *  `builtInCuratedChannels`). */
+    val BUILT_IN_CURATED_NAMES: List<String> = NAMES + LANGUAGE_NAMES
+
     /**
-     * The rooms the app ships as defaults (Popular + the language rooms): always in the list,
-     * switched off rather than left, "Popular" in Room Info. Only auto-join and the pinned
-     * Popular list use [NAMES] alone (iOS `curatedChannels`).
+     * The default rooms: the built-in ones plus every room the app-wide indexer reports it tracks
+     * ([indexerDefaultNames]). Always in the list, switched off rather than left, "Popular" in
+     * Room Info. Only auto-join and the pinned Popular list use [NAMES] alone (iOS
+     * `curatedChannels`, 961fc05a).
      */
-    val CURATED_NAMES: List<String> = NAMES + LANGUAGE_NAMES
+    val CURATED_NAMES: List<String> get() = BUILT_IN_CURATED_NAMES + indexerDefaultNames()
 
     /** The chess arena's hidden room (iOS `ChessTournamentCodec.arenaChannel`, merged into Public
      *  Chats in iOS 148a5331). */
     const val ARENA_CHANNEL = "chess-arena"
+
+    /** Rooms the indexer tracks that are machinery, never chats: chess, the bots, the arcade
+     *  (iOS `PublicChatService.hiddenIndexerRooms`). */
+    val HIDDEN_INDEXER_ROOMS: Set<String> = setOf(
+        ARENA_CHANNEL, com.kachat.app.util.ChessBotCodec.CHANNEL, com.kachat.app.services.arcade.ArcadeStamp.CHANNEL,
+    )
+
+    /**
+     * Rooms the operator added on the indexer (iOS `PublicChatService.indexerDefaultChannels`,
+     * owner 2026-11-25): what its `/broadcast-channels` reports beyond the built-in rooms, so a room
+     * added in the indexer's panel becomes a default room in K - joined with its bell off, with a
+     * switch under More Rooms in Edit Default Public Chats - with no app update. The machinery
+     * rooms and retired names are left out. A room the indexer drops stops being a default:
+     * joined, it stays as an ordinary room; switched off, it's left (after a grace period).
+     */
+    fun indexerDefaultNames(): List<String> =
+        indexerDefaultNames(com.kachat.app.services.IndexerTrackedRooms.reportedRooms())
+
+    /** [indexerDefaultNames] from the indexer's reported list (pure, for tests). */
+    fun indexerDefaultNames(reported: List<String>): List<String> {
+        val builtIn = BUILT_IN_CURATED_NAMES.toSet()
+        return reported.filter {
+            com.kachat.app.util.MessageProtocol.isValidChannelName(it) && it !in builtIn &&
+                it !in HIDDEN_INDEXER_ROOMS && it !in RETIRED
+        }
+    }
 
     /**
      * Rooms the app uses as machinery, never chats: out of the Chats list, the unread counts, the
@@ -74,12 +121,13 @@ object FeaturedBroadcastChannels {
      */
     fun isIndexerTracked(channelName: String): Boolean {
         val name = channelName.trim().lowercase()
-        return name in CURATED_NAMES || com.kachat.app.services.IndexerTrackedRooms.contains(name)
+        // The indexer-listed defaults are in IndexerTrackedRooms already.
+        return name in BUILT_IN_CURATED_NAMES || com.kachat.app.services.IndexerTrackedRooms.contains(name)
     }
 
     /** Every room [isIndexerTracked] says yes to, as far as this phone knows. */
     fun indexerTrackedNames(): Set<String> =
-        CURATED_NAMES.toSet() + com.kachat.app.services.IndexerTrackedRooms.all()
+        BUILT_IN_CURATED_NAMES.toSet() + com.kachat.app.services.IndexerTrackedRooms.all()
 
     /**
      * Native-language label for a curated language room, e.g. "kaspa-espanol" -> "Español".

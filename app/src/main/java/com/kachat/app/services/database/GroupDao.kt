@@ -50,6 +50,18 @@ interface GroupDao {
     fun getMessages(groupId: String, walletAddress: String): Flow<List<GroupMessageEntity>>
 
     /**
+     * The open thread's live query: each row's txId and status only, in thread order. Room re-runs
+     * it on every write to the table, so it reads the two small columns, not the ciphertext; the
+     * thread reads full rows only for txIds it hasn't decoded yet (audit 2026-11-25 S9).
+     */
+    @Query("SELECT txId, deliveryStatus FROM group_messages WHERE groupId = :groupId AND walletAddress = :walletAddress ORDER BY blockTimestamp ASC")
+    fun getMessageKeys(groupId: String, walletAddress: String): Flow<List<GroupMessageKey>>
+
+    /** Full rows by txId, for [getMessageKeys]' new entries (at most 999 ids per call). */
+    @Query("SELECT * FROM group_messages WHERE walletAddress = :walletAddress AND txId IN (:txIds)")
+    suspend fun getMessagesByTxIds(walletAddress: String, txIds: List<String>): List<GroupMessageEntity>
+
+    /**
      * The newest message in a group, for the Group Chats list's preview line. The list used to
      * subscribe to a group's ENTIRE message flow and decrypt all of it just to find this one -
      * per group, on every emission. One row, one decrypt.
@@ -127,3 +139,9 @@ interface GroupDao {
     @Query("DELETE FROM group_sync_cursors WHERE walletAddress = :walletAddress AND syncKey LIKE :prefix || '%'")
     suspend fun deleteGroupSyncCursorsWithPrefix(walletAddress: String, prefix: String)
 }
+
+/** Row of [GroupDao.getMessageKeys]. */
+data class GroupMessageKey(
+    val txId: String,
+    val deliveryStatus: String,
+)

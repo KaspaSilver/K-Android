@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">افزودن به رشته</string>
     <string name="kpui_post_not_loaded">این پست بارگذاری نشد</string>
     <string name="kpui_post_not_loaded_body">ممکن است حذف شده باشد، یا شبکه در دسترس نباشد.</string>
-    <string name="kpui_no_comments_yet">هنوز نظری نیست - اولین نفر باشید که پاسخ می‌دهد.</string>
-    <string name="kpui_every_reply_above">همه پاسخ‌ها در گفتگوی بالا هستند.</string>
     <string name="kpui_loading_replies">در حال بارگذاری پاسخ‌ها...</string>
     <string name="kpui_chat">گفتگو</string>
     <string name="kpui_followers">دنبال‌کنندگان</string>

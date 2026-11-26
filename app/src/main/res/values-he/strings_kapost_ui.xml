@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">הוסף לשרשור</string>
     <string name="kpui_post_not_loaded">לא ניתן היה לטעון את הפוסט הזה</string>
     <string name="kpui_post_not_loaded_body">ייתכן שהוא הוסר, או שהרשת אינה זמינה.</string>
-    <string name="kpui_no_comments_yet">עדיין אין תגובות - היה הראשון להגיב.</string>
-    <string name="kpui_every_reply_above">כל התגובות נמצאות בשיחה שלמעלה.</string>
     <string name="kpui_loading_replies">טוען תגובות...</string>
     <string name="kpui_chat">צ\'אט</string>
     <string name="kpui_followers">עוקבים</string>

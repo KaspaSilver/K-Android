@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">זו לא כתובת עמידה לקוונטים. סרקו את כתובת ה-KCC-3 ש-KasSigner מציג.</string>
+    <string name="coldq_error_already_added">הכתובת הזו כבר נמצאת בחשבון הזה.</string>
+    <string name="coldq_error_in_other_account">הכתובת הזו כבר נמצאת בחשבון ה-Cold Storage שלכם „%1$s”.</string>
+    <string name="coldq_added_toast">כתובת עמידה לקוונטים נוספה.</string>
+    <string name="coldq_add_action">הוספת כתובת עמידה לקוונטים</string>
+    <string name="coldq_add_action_subtitle">סרקו כתובת KCC-3 ממסך הכתובת של KasSigner.</string>
+    <string name="coldq_stop_watching">הפסקת מעקב</string>
+    <string name="coldq_stop_watching_subtitle">מסיר את הכתובת הקוונטית הזו מהחשבון. סרקו אותה שוב כדי להוסיף אותה בחזרה.</string>
+    <string name="coldq_address_header">כתובת עמידה לקוונטים</string>
+    <string name="coldq_address_footer">ב-KasSigner, פתחו את כתובת ה-KCC-3 הרצויה וסרקו את קוד ה-QR שלה. המפתח שלה נשאר במכשיר עד שהכתובת מוציאה כספים.</string>
+    <string name="coldq_number_header">מספר הכתובת ב-KasSigner</string>
+    <string name="coldq_add_title">הוספת כתובת קוונטית</string>
+    <string name="coldq_number_not_whole">מספר הכתובת חייב להיות מספר שלם.</string>
+    <string name="coldq_needs_v11">נדרש KasSigner בגרסה 1.1 ומעלה, שחותם על כתובות עמידות לקוונטים (KCC-3).</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner לא החזיר את סקריפט המפתח של הכתובת העמידה לקוונטים הזו, ולכן היא לא תשודר. ודאו שהמכשיר מריץ KasSigner בגרסה 1.1 ומעלה ומחזיק את הכתובת הזו.</string>
+    <string name="coldq_error_unexpected_covenant">העסקה החתומה מוסיפה תנאי חוזה שהשליחה הזו לא ביקשה, ולכן היא לא תשודר.</string>
+    <string name="coldq_label_receive">כתובת קוונטית</string>
+    <string name="coldq_label_change">כתובת עודף קוונטית</string>
+    <string name="coldq_label_receive_n">כתובת קוונטית #%1$d</string>
+    <string name="coldq_label_change_n">כתובת עודף קוונטית #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">השליחה הזו חושפת את המפתח של הכתובת הזו בשרשרת, לכן העודף שלה לא יכול לחזור לכאן. הוסיפו קודם כתובת עמידה לקוונטים שלא נוצלה מ-KasSigner (עדיף כתובת עודף, ‎#0 עד ‎#4), או שלחו את כל היתרה.</string>
+    <string name="coldq_error_compound_needs_fresh">האיחוד חושף את המפתח של הכתובת הזו בשרשרת, לכן המטבעות שלה עוברים לכתובת עמידה לקוונטים שלא נוצלה בחשבון הזה. הוסיפו קודם אחת מ-KasSigner (עדיף כתובת עודף, ‎#0 עד ‎#4).</string>
+    <string name="coldq_stop_watching_title">להפסיק לעקוב אחרי הכתובת הזו?</string>
+    <string name="coldq_stop_watching_message">ה-%1$s KAS שלה נשארים בשרשרת בכתובת הזו, ב-KasSigner שלכם; K רק מפסיק להציג אותם. סרקו שוב את הכתובת מ-KasSigner כדי לעקוב אחריה שוב.</string>
+    <string name="coldq_edit_number">עריכת מספר הכתובת</string>
+    <string name="coldq_edit_number_subtitle">המספר והשרשרת ש-KasSigner מציג לכתובת הזו.</string>
+    <string name="coldq_chain">שרשרת</string>
+    <string name="coldq_number_footer">המספר ש-KasSigner מציג לכתובת הזו, והאם זו כתובת קבלה או כתובת עודף. איתו המכשיר מוצא את המפתח מיד בחתימה; בלעדיו הוא מחפש אותו. KasSigner מסמן כעודף את מה שנשלח לכתובות העודף שלו ‎#0 עד ‎#4; כל כתובת אחרת הוא מציג כתשלום.</string>
+    <string name="coldq_number_too_large">המספר גדול מדי: מספרי הכתובות של KasSigner קטנים מ-2147483648.</string>
+    <string name="coldq_compound_note">מעביר את כל המטבעות של הכתובת הזו למטבע אחד, בכתובת עמידה לקוונטים שלא נוצלה בחשבון הזה: העסקה הזו חושפת את המפתח של הכתובת הזו בשרשרת.</string>
+    <string name="coldq_coins_left_behind">בכתובת הזו יש יותר מטבעות ממה שעסקה אחת יכולה להוציא: %1$d נשארים מאחורי המפתח שהשליחה הזו חושפת בשרשרת. שלחו אותם הלאה בעסקה נוספת מיד אחר כך.</string>
+    <string name="coldq_coins_move_to">המטבעות עוברים לכתובת הקוונטית שלכם:</string>
+    <string name="coldq_change_goes_to">העודף עובר לכתובת הקוונטית שלכם:</string>
+    <string name="coldq_unit_marks_change">KasSigner מציג את הפלט הזה כעודף.</string>
+    <string name="coldq_unit_shows_payment">KasSigner יציג את הפלט הזה כתשלום רגיל, לא כעודף: ודאו שזו הכתובת הזו לפני החתימה.</string>
+    <string name="coldq_sign_without_number">חתימה בלי מספר הכתובת</string>
+    <string name="coldq_sign_without_number_note">אם KasSigner דוחה את הבקשה, ייתכן שמספר הכתובת שגוי. בלעדיו המכשיר מחפש את הכתובת בעצמו. עריכת מספר הכתובת מתקנת אותו לפעם הבאה.</string>
+    <string name="coldq_compound_footer">מאחד את כל ה-UTXO בכתובת הזו לאחד בכתובת עמידה לקוונטים שלא נוצלה בחשבון הזה, כי זה חושף את המפתח של הכתובת הזו בשרשרת.</string>
+    <string name="coldq_visibility_quantum_header">כתובות עמידות לקוונטים</string>
+    <string name="coldq_receive_address">כתובת קבלה</string>
+    <string name="coldq_change_address">כתובת עודף</string>
+    <string name="coldq_optional">אופציונלי</string>
+</resources>

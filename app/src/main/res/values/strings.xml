@@ -190,7 +190,6 @@
     <string name="valid_address">Valid address</string>
     <string name="waiting_on_opponent">Waiting on opponent</string>
     <string name="the_recipient_wont_see_your_messages">The recipient won\'t see your messages until they message you or you ping them with a handshake. Handshakes cost 0.2 KAS and are returned to you if they accept. You lose privacy if you ping them.</string>
-    <string name="host_port_or_grpcs_host">host:port or grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -275,7 +274,6 @@
     <string name="choose_your_language">Choose Your Language</string>
     <string name="select_the_language_youd_like_to">Select the language you\'d like to use in K.</string>
     <string name="best">Best</string>
-    <string name="enter_as_host_port_or_grpcs_host">Enter as host:port or grpcs://host</string>
     <string name="receive_kaspa">Receive Kaspa</string>
     <string name="currency">Currency</string>
     <string name="choose_your_currency">Choose Your Currency</string>
@@ -721,7 +719,6 @@
     <string name="ab_import_file_sub">Add contacts from a contacts export.</string>
     <string name="ab_export_file_sub">Save your contacts, with their photos, to a file.</string>
     <string name="ab_nc_import_sub">Pick a contacts export from your Nextcloud.</string>
-    <string name="ab_nc_export_sub">Save it to the KaChat folder in your Nextcloud, to import on any device.</string>
     <string name="ab_nc_connect_hint">Connect Nextcloud in Settings &gt; Storage to also save it there and import it on another device.</string>
     <string name="ab_couldnt_read_file">Couldn\'t read that file.</string>
     <string name="ab_nothing_to_export">Nothing to export yet. Add a contact first.</string>

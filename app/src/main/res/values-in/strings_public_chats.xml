@@ -40,11 +40,9 @@
     <string name="pc_keep">Simpan</string>
     <string name="pc_keep_subtitle">Biarkan ruang seperti semula.</string>
     <string name="pc_new_public_chat">Obrolan Publik Baru</string>
-    <string name="pc_new_public_chat_subtitle">Bergabung ke ruang publik, atau buat sendiri.</string>
     <string name="pc_edit_default_public_chats">Edit Obrolan Publik Bawaan</string>
     <string name="pc_new_public_chat_explainer">Siapa pun yang bergabung dengan nama kanal yang sama bisa melihat dan mengirim pesan di sana - tidak ada pemilik dan tidak perlu undangan.</string>
     <string name="pc_join">Gabung</string>
-    <string name="pc_back">Kembali</string>
     <string name="pc_channel_name_rules">Nama kanal harus 1-%1$d karakter tanpa spasi atau titik dua.</string>
     <string name="pc_join_failed">Terjadi kesalahan saat bergabung ke kanal itu.</string>
     <string name="pc_report">Laporkan</string>

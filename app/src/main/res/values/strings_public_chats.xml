@@ -40,11 +40,9 @@
     <string name="pc_keep">Keep</string>
     <string name="pc_keep_subtitle">Leave the room as it is.</string>
     <string name="pc_new_public_chat">New Public Chat</string>
-    <string name="pc_new_public_chat_subtitle">Join a public room, or create one.</string>
     <string name="pc_edit_default_public_chats">Edit Default Public Chats</string>
     <string name="pc_new_public_chat_explainer">Anyone who joins the same channel name can see and post messages there - there is no owner and no invite.</string>
     <string name="pc_join">Join</string>
-    <string name="pc_back">Back</string>
     <string name="pc_channel_name_rules">Channel names must be 1-%1$d characters with no spaces or colons.</string>
     <string name="pc_join_failed">Something went wrong joining that channel.</string>
     <string name="pc_report">Report</string>

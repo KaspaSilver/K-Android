@@ -40,11 +40,9 @@
     <string name="pc_keep">保留</string>
     <string name="pc_keep_subtitle">保持房间不变。</string>
     <string name="pc_new_public_chat">新公共聊天</string>
-    <string name="pc_new_public_chat_subtitle">加入公共聊天室，或创建一个。</string>
     <string name="pc_edit_default_public_chats">编辑默认公开聊天</string>
     <string name="pc_new_public_chat_explainer">任何加入同名频道的人都可以在其中查看和发布消息。没有所有者，也不需要邀请。</string>
     <string name="pc_join">加入</string>
-    <string name="pc_back">返回</string>
     <string name="pc_channel_name_rules">频道名称须为 1-%1$d 个字符，不含空格或冒号。</string>
     <string name="pc_join_failed">加入该频道时出错。</string>
     <string name="pc_report">举报</string>

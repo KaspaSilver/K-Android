@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">24 घंटे का बदलाव अभी उपलब्ध नहीं है</string>
     <string name="kp_about_amount">लगभग %1$s</string>
-    <string name="kp_about_hashrate_e7fb8">हैशरेट के बारे में</string>
     <string name="kp_add_61cc5">जोड़ें</string>
     <string name="kp_add_kaspa_address_5dd6b">Kaspa पता जोड़ें</string>
     <string name="kp_add_to_portfolio_9eb23">पोर्टफोलियो में जोड़ें</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">1 लेनदेन %1$s में आयात किया गया</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">KAS मूल्य</string>
-    <string name="kp_kaspa_network_fceee">Kaspa नेटवर्क</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSigner दिखाता है कि वह किस पर हस्ताक्षर कर रहा है। मिलान करें, हस्ताक्षर करें, फिर वह जो हस्ताक्षरित लेन-देन दिखाए उसे स्कैन करें।</string>
     <string name="kp_kept_in_the_position">पोज़िशन में रखा गया</string>
     <string name="kp_kept_in_your_token">आपके टोकन में रखा गया</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">प्रति दिन</string>
     <string name="kp_mining_per_month">प्रति माह</string>
     <string name="kp_mining_per_week">प्रति सप्ताह</string>
-    <string name="kp_network_hashrate_c3cc8">नेटवर्क हैशरेट</string>
     <string name="kp_new_portfolio_5c1c7">नया पोर्टफोलियो</string>
-    <string name="kp_next_block_reward">अगला ब्लॉक रिवॉर्ड</string>
-    <string name="kp_next_block_reward_reduction">अगली ब्लॉक रिवॉर्ड कटौती</string>
     <string name="kp_no_addresses_discovered_yet_15738">अभी तक कोई पता नहीं मिला।</string>
     <string name="kp_no_used_addresses_yet">अभी तक कोई इस्तेमाल किया गया पता नहीं</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">अभी पर्याप्त इतिहास नहीं है - कुछ दिनों की गतिविधि के बाद फिर देखें।</string>
@@ -235,7 +230,6 @@
     <string name="pf_add_transaction_sub">किसी खरीद या बिक्री को हाथ से दर्ज करें।</string>
     <string name="pf_export_csv_sub">इस पोर्टफोलियो के लेन-देन एक फ़ाइल में लिखें।</string>
     <string name="pf_import_csv_sub">किसी फ़ाइल से लेन-देन पढ़ें।</string>
-    <string name="pnc_export_sub">CSV को आपके Nextcloud के KaChat फ़ोल्डर में सहेजता है।</string>
     <string name="pnc_import_sub">अपने Nextcloud से एक CSV फ़ाइल चुनें।</string>
     <string name="portfolio">पोर्टफोलियो</string>
     <string name="portfolio_add_chatting_address">चैट पता जोड़ें</string>

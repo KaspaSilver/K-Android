@@ -160,7 +160,6 @@
     <string name="valid_address">عنوان صالح</string>
     <string name="waiting_on_opponent">في انتظار الخصم</string>
     <string name="the_recipient_wont_see_your_messages">المستلم مش هيشوف رسايلك لحد ما يبعتلك أو تبعتله مصافحة. المصافحة بتكلف 0.2 KAS وبترجعلك لو وافق. هتخسر جزء من خصوصيتك لو بعتله مصافحة.</string>
-    <string name="host_port_or_grpcs_host">host:port أو grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">اختر لغتك</string>
     <string name="select_the_language_youd_like_to">اختر اللغة التي ترغب في استخدامها في K.</string>
     <string name="best">الأفضل</string>
-    <string name="enter_as_host_port_or_grpcs_host">أدخل بصيغة host:port أو grpcs://host</string>
     <string name="receive_kaspa">استلام Kaspa</string>
     <string name="currency">العملة</string>
     <string name="choose_your_currency">اختر عملتك</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">أضف جهات اتصال من ملف تصدير جهات اتصال.</string>
     <string name="ab_export_file_sub">احفظ جهات اتصالك مع صورها في ملف.</string>
     <string name="ab_nc_import_sub">اختر ملف تصدير جهات اتصال من Nextcloud.</string>
-    <string name="ab_nc_export_sub">احفظه في مجلد KaChat على Nextcloud لاستيراده على أي جهاز.</string>
     <string name="ab_nc_connect_hint">اربط Nextcloud من الإعدادات &gt; التخزين لحفظه هناك أيضًا واستيراده على جهاز آخر.</string>
     <string name="ab_couldnt_read_file">تعذّرت قراءة هذا الملف.</string>
     <string name="ab_nothing_to_export">مافيش حاجة تتصدّر لسه. ضيف جهة اتصال الأول.</string>

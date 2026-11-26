@@ -87,6 +87,13 @@ class ConnectionViewModel @Inject constructor(
      *  explanation on the connection status screen. See NodePoolManager.nodeConnectionsBlocked. */
     val nodeConnectionsBlocked: StateFlow<Boolean> = nodePoolManager.nodeConnectionsBlocked
 
+    /** True while public wss nodes stand in for gRPC nodes that can't be reached (iOS 961fc05a
+     *  `NodePoolService.usingPublicFallback`): Connection Status says so under the protocol. */
+    val usingPublicFallback: StateFlow<Boolean> = nodePoolManager.usingPublicFallback
+
+    /** The node requests go to now (iOS `primaryEndpoint`), for the protocol and node rows. */
+    val primaryAddress: StateFlow<String?> = nodePoolManager.primaryAddress
+
     /** Wall-clock ms when the active-node list last became empty; null while any node is
      *  active. Tracked by an always-live collector, NOT inside the WhileSubscribed pipelines,
      *  so leaving and re-entering a screen can never reset the disconnection stopwatch. */

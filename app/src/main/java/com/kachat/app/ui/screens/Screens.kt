@@ -246,7 +246,8 @@ fun ChatThreadScreen(
     // Each flow is remembered: built inline, a new instance on every recomposition restarted its
     // collection and re-ran the window query (media included) for nothing.
     val threadMessagesFlow = remember(contactId) { chatViewModel.threadMessages(contactId) }
-    val allMessages by threadMessagesFlow.collectAsState(initial = emptyList())
+    // The thread's queries stop with the app in the background (audit 2026-11-25 R6).
+    val allMessages by threadMessagesFlow.collectAsStateWhileStarted(initial = emptyList())
     val isLoadingOlderFlow = remember(contactId) { chatViewModel.isLoadingOlderMessages(contactId) }
     val isLoadingOlderMessages by isLoadingOlderFlow.collectAsState(initial = false)
     val hasOlderFlow = remember(contactId) { chatViewModel.hasOlderMessages(contactId) }
@@ -283,12 +284,12 @@ fun ChatThreadScreen(
         unlockAt == null || System.currentTimeMillis() < unlockAt
     }
     val reactionsFlow = remember(contactId) { chatViewModel.getReactions(contactId) }
-    val reactions by reactionsFlow.collectAsState(initial = emptyList())
+    val reactions by reactionsFlow.collectAsStateWhileStarted(initial = emptyList())
     val reactionsByTxId = remember(reactions) { reactions.groupBy { it.targetTxId } }
     // The newest edit per message (see MessageEdit) - applied to the bubble as it is drawn, the
     // stored row is never rewritten.
     val editsFlow = remember(contactId) { chatViewModel.getEdits(contactId) }
-    val edits by editsFlow.collectAsState(initial = emptyList())
+    val edits by editsFlow.collectAsStateWhileStarted(initial = emptyList())
     val editsByTxId = remember(edits) { edits.associateBy { it.targetTxId } }
     val editingMessage by chatViewModel.editingMessage.collectAsState()
     val handshakeSendInFlight by chatViewModel.handshakeSendInFlight.collectAsState()
@@ -3672,6 +3673,30 @@ object VoicePlayback {
         runCatching { if (entry.player.isPlaying) entry.player.stop() }
         runCatching { entry.player.release() }
         entry.tempFile?.delete()
+        // its audio stops with it: give it back (iOS 961fc05a, audit 2026-11-25 B8)
+        com.kachat.app.util.VoicePlaybackCoordinator.didStop(entry.player)
+    }
+
+    /**
+     * Plays [player] through [com.kachat.app.util.VoicePlaybackCoordinator] (iOS 961fc05a, audit
+     * 2026-11-25 B8): any other note stops, and the audio goes back when this one pauses, stops or
+     * ends. [onStopped] puts the bubble's button back to Play when another note or a call stops
+     * it. The player itself is the owner, so a bubble that adopts it keeps the same claim.
+     */
+    fun start(context: android.content.Context, player: android.media.MediaPlayer, onStopped: () -> Unit): Boolean {
+        val started = com.kachat.app.util.VoicePlaybackCoordinator.willStart(context, player) {
+            runCatching { if (player.isPlaying) player.pause() }
+            onStopped()
+        }
+        if (!started) return false
+        if (player.currentPosition >= player.duration) player.seekTo(0)
+        player.start()
+        return true
+    }
+
+    /** [player] paused or finished: the audio goes back. */
+    fun stopped(player: android.media.MediaPlayer) {
+        com.kachat.app.util.VoicePlaybackCoordinator.didStop(player)
     }
 }
 
@@ -3686,44 +3711,50 @@ object VoicePlayback {
 @Composable
 fun AudioBubble(voiceContent: VoiceMessageContent, isSent: Boolean, onLongPress: () -> Unit, onDoubleClick: () -> Unit = {}) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    var isPlaying by remember { mutableStateOf(false) }
-    var durationMs by remember { mutableStateOf(0) }
-    var isReady by remember { mutableStateOf(false) }
-    var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+    // Stable per message: the same voice note scrolling back in finds the player it left
+    // playing (see VoicePlayback), and its length in VoiceNoteDurationCache.
+    val playbackKey = remember(voiceContent.content) { "${voiceContent.content.length}:${voiceContent.content.hashCode()}" }
+    var isPlaying by remember(playbackKey) { mutableStateOf(false) }
+    var isLoading by remember(playbackKey) { mutableStateOf(false) }
+    var durationMs by remember(playbackKey) { mutableStateOf(0) }
+    var isReady by remember(playbackKey) { mutableStateOf(false) }
+    var mediaPlayer by remember(playbackKey) { mutableStateOf<android.media.MediaPlayer?>(null) }
+    var tempFile by remember(playbackKey) { mutableStateOf<java.io.File?>(null) }
 
-    DisposableEffect(voiceContent.content) {
-        // Stable per message: the same voice note scrolling back in finds the player it left
-        // playing (see VoicePlayback).
-        val playbackKey = "${voiceContent.content.length}:${voiceContent.content.hashCode()}"
-        var tempFile: java.io.File? = null
+    // The length without a player (iOS 961fc05a `VoiceNoteInfoCache`, audit 2026-11-25 B9): read
+    // from the note's own packets off the main thread, once per note. The audio is written to a
+    // file and a player made only on Play, so a bubble scrolling by costs nothing.
+    LaunchedEffect(playbackKey) {
+        if (mediaPlayer != null) return@LaunchedEffect
+        val length = withContext(Dispatchers.Default) {
+            com.kachat.app.util.VoiceNoteDurationCache.durationMs("one:$playbackKey") {
+                runCatching {
+                    val bytes = android.util.Base64.decode(VoiceMessage.base64Payload(voiceContent), android.util.Base64.DEFAULT)
+                    com.kachat.app.util.WebMOpusPartsDecoder.durationMs(listOf(bytes))
+                }.getOrDefault(0L)
+            }
+        }
+        if (mediaPlayer == null && length > 0) durationMs = length.toInt()
+        isReady = true
+    }
+
+    DisposableEffect(playbackKey) {
         val adopted = VoicePlayback.adopt(playbackKey)
         if (adopted != null) {
             val (player, file) = adopted
             tempFile = file
-            player.setOnCompletionListener { isPlaying = false }
+            player.setOnCompletionListener {
+                isPlaying = false
+                VoicePlayback.stopped(player)
+            }
             durationMs = runCatching { player.duration }.getOrDefault(0)
             isReady = true
             isPlaying = runCatching { player.isPlaying }.getOrDefault(false)
             mediaPlayer = player
-        } else {
-            try {
-                val bytes = android.util.Base64.decode(VoiceMessage.base64Payload(voiceContent), android.util.Base64.DEFAULT)
-                val file = java.io.File(context.cacheDir, "voice_playback_${System.nanoTime()}.webm")
-                file.writeBytes(bytes)
-                tempFile = file
-                val player = android.media.MediaPlayer()
-                player.setDataSource(file.absolutePath)
-                player.setOnPreparedListener {
-                    durationMs = it.duration
-                    isReady = true
-                }
-                player.setOnCompletionListener { isPlaying = false }
-                player.prepareAsync()
-                mediaPlayer = player
-            } catch (e: Exception) {
-                android.util.Log.e("AudioBubble", "Could not prepare voice message for playback", e)
-            }
+            // still playing: this bubble's button is the one another note or a call resets
+            if (isPlaying) VoicePlayback.start(context, player) { isPlaying = false }
         }
         onDispose {
             val player = mediaPlayer
@@ -3733,8 +3764,60 @@ fun AudioBubble(voiceContent: VoiceMessageContent, isSent: Boolean, onLongPress:
             if (player != null && runCatching { player.isPlaying }.getOrDefault(false)) {
                 VoicePlayback.detach(playbackKey, player, tempFile)
             } else {
-                player?.release()
+                player?.let {
+                    runCatching { it.release() }
+                    VoicePlayback.stopped(it)
+                }
                 tempFile?.delete()
+            }
+            tempFile = null
+        }
+    }
+
+    // Play: the audio is written and its player prepared off the main thread, then it plays.
+    fun play() {
+        mediaPlayer?.let { player ->
+            if (VoicePlayback.start(context, player) { isPlaying = false }) isPlaying = true
+            return
+        }
+        if (isLoading) return
+        isLoading = true
+        scope.launch {
+            var file: java.io.File? = null
+            var player: android.media.MediaPlayer? = null
+            try {
+                val prepared = withContext(Dispatchers.IO) {
+                    val bytes = android.util.Base64.decode(VoiceMessage.base64Payload(voiceContent), android.util.Base64.DEFAULT)
+                    val written = java.io.File(context.cacheDir, "voice_playback_${System.nanoTime()}.webm")
+                    file = written
+                    written.writeBytes(bytes)
+                    android.media.MediaPlayer().apply {
+                        player = this
+                        setDataSource(written.absolutePath)
+                        prepare()
+                    }
+                }
+                prepared.setOnCompletionListener {
+                    isPlaying = false
+                    VoicePlayback.stopped(prepared)
+                }
+                tempFile = file
+                mediaPlayer = prepared
+                prepared.duration.takeIf { it > 0 }?.let { durationMs = it }
+                isReady = true
+                if (VoicePlayback.start(context, prepared) { isPlaying = false }) isPlaying = true
+            } catch (e: Exception) {
+                // scrolled away mid-load (cancelled) or the audio didn't read
+                if (e !is kotlinx.coroutines.CancellationException) {
+                    android.util.Log.e("AudioBubble", "Could not prepare voice message for playback", e)
+                }
+                if (mediaPlayer == null || mediaPlayer !== player) {
+                    player?.let { runCatching { it.release() } }
+                    file?.delete()
+                }
+                if (e is kotlinx.coroutines.CancellationException) throw e
+            } finally {
+                isLoading = false
             }
         }
     }
@@ -3751,31 +3834,34 @@ fun AudioBubble(voiceContent: VoiceMessageContent, isSent: Boolean, onLongPress:
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
-                enabled = isReady,
+                enabled = isReady && !isLoading,
                 onClick = {
-                    val player = mediaPlayer ?: return@IconButton
-                    if (isPlaying) {
-                        player.pause()
+                    val player = mediaPlayer
+                    if (isPlaying && player != null) {
+                        runCatching { player.pause() }
                         isPlaying = false
+                        VoicePlayback.stopped(player)
                     } else {
-                        if (player.currentPosition >= player.duration) player.seekTo(0)
-                        player.start()
-                        isPlaying = true
+                        play()
                     }
                 },
                 modifier = Modifier.size(32.dp)
             ) {
-                Icon(
-                    if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
-                    tint = if (isReady) KaspaTeal else LocalAppColors.current.textSecondary
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(color = KaspaTeal, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+                } else {
+                    Icon(
+                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        tint = if (isReady) KaspaTeal else LocalAppColors.current.textSecondary
+                    )
+                }
             }
             Spacer(Modifier.width(8.dp))
             Icon(Icons.Default.GraphicEq, contentDescription = null, tint = LocalAppColors.current.textSecondary, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
             Text(
-                text = if (isReady) VoiceMessage.formatDuration(durationMs) else "...",
+                text = if (isReady && durationMs > 0) VoiceMessage.formatDuration(durationMs) else "...",
                 color = LocalAppColors.current.textPrimary,
                 fontSize = 13.sp
             )
@@ -3792,45 +3878,98 @@ fun AudioBubble(voiceContent: VoiceMessageContent, isSent: Boolean, onLongPress:
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AudioFileBubble(file: java.io.File, isSent: Boolean, onLongPress: () -> Unit, onDoubleClick: () -> Unit = {}) {
+    val context = LocalContext.current
     var isPlaying by remember { mutableStateOf(false) }
     var durationMs by remember { mutableStateOf(0) }
     var isReady by remember { mutableStateOf(false) }
     var mediaPlayer by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+    var isPreparing by remember { mutableStateOf(false) }
+    // Stable per file: the same note scrolling back in finds the player it left playing.
+    val playbackKey = "file:${file.absolutePath}"
+
+    // A player made and prepared; [then] runs once it is ready. Only on Play now, or when the
+    // file's length can't be read without one: every bubble scrolling into view used to set up a
+    // native player and decoder for a note nobody played (audit 2026-11-25 R8, as AudioBubble).
+    fun preparePlayer(then: (android.media.MediaPlayer) -> Unit) {
+        if (mediaPlayer != null || isPreparing) return
+        try {
+            val player = android.media.MediaPlayer()
+            player.setDataSource(file.absolutePath)
+            player.setOnPreparedListener {
+                isPreparing = false
+                durationMs = it.duration
+                isReady = true
+                then(it)
+            }
+            player.setOnCompletionListener {
+                isPlaying = false
+                VoicePlayback.stopped(player)
+            }
+            player.setOnErrorListener { _, _, _ ->
+                isPreparing = false
+                false
+            }
+            isPreparing = true
+            player.prepareAsync()
+            mediaPlayer = player
+        } catch (e: Exception) {
+            isPreparing = false
+            android.util.Log.e("AudioFileBubble", "Could not prepare voice note for playback", e)
+        }
+    }
 
     DisposableEffect(file.absolutePath) {
-        // Stable per file: the same note scrolling back in finds the player it left playing.
-        val playbackKey = "file:${file.absolutePath}"
         val adopted = VoicePlayback.adopt(playbackKey)
         if (adopted != null) {
             val (player, _) = adopted
-            player.setOnCompletionListener { isPlaying = false }
+            player.setOnCompletionListener {
+                isPlaying = false
+                VoicePlayback.stopped(player)
+            }
             durationMs = runCatching { player.duration }.getOrDefault(0)
             isReady = true
             isPlaying = runCatching { player.isPlaying }.getOrDefault(false)
             mediaPlayer = player
-        } else {
-            try {
-                val player = android.media.MediaPlayer()
-                player.setDataSource(file.absolutePath)
-                player.setOnPreparedListener {
-                    durationMs = it.duration
-                    isReady = true
-                }
-                player.setOnCompletionListener { isPlaying = false }
-                player.prepareAsync()
-                mediaPlayer = player
-            } catch (e: Exception) {
-                android.util.Log.e("AudioFileBubble", "Could not prepare voice note for playback", e)
-            }
+            if (isPlaying) VoicePlayback.start(context, player) { isPlaying = false }
         }
         onDispose {
             val player = mediaPlayer
             mediaPlayer = null
+            isPreparing = false
             if (player != null && runCatching { player.isPlaying }.getOrDefault(false)) {
                 VoicePlayback.detach(playbackKey, player, null)
             } else {
-                player?.release()
+                player?.let {
+                    runCatching { it.release() }
+                    VoicePlayback.stopped(it)
+                }
             }
+        }
+    }
+    // The length from the file's header, off the main thread and cached; a file whose header
+    // doesn't say gets a player to ask, as before.
+    LaunchedEffect(file.absolutePath) {
+        if (isReady) return@LaunchedEffect
+        val cacheKey = "$playbackKey:${file.length()}:${file.lastModified()}"
+        val known = withContext(Dispatchers.IO) {
+            com.kachat.app.util.VoiceNoteDurationCache.durationMs(cacheKey) {
+                val retriever = android.media.MediaMetadataRetriever()
+                try {
+                    retriever.setDataSource(file.absolutePath)
+                    retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+                } catch (e: Exception) {
+                    0L
+                } finally {
+                    runCatching { retriever.release() }
+                }
+            }
+        }
+        if (isReady) return@LaunchedEffect
+        if (known > 0L) {
+            durationMs = known.toInt()
+            isReady = true
+        } else {
+            preparePlayer { }
         }
     }
 
@@ -3848,13 +3987,19 @@ fun AudioFileBubble(file: java.io.File, isSent: Boolean, onLongPress: () -> Unit
             IconButton(
                 enabled = isReady,
                 onClick = {
-                    val player = mediaPlayer ?: return@IconButton
+                    val player = mediaPlayer
+                    if (player == null) {
+                        preparePlayer { prepared ->
+                            if (VoicePlayback.start(context, prepared) { isPlaying = false }) isPlaying = true
+                        }
+                        return@IconButton
+                    }
+                    if (isPreparing) return@IconButton
                     if (isPlaying) {
                         player.pause()
                         isPlaying = false
-                    } else {
-                        if (player.currentPosition >= player.duration) player.seekTo(0)
-                        player.start()
+                        VoicePlayback.stopped(player)
+                    } else if (VoicePlayback.start(context, player) { isPlaying = false }) {
                         isPlaying = true
                     }
                 },
@@ -3986,13 +4131,17 @@ fun ImageBubble(
     // A real GIF within the play limits plays, in the bubble and full screen (iOS d7c56280
     // AnimatedImageView, 5b7c772c isSafeToAnimate: whatever MIME type it was sent as, at most
     // 1,024 px and 300 frames). Anything else - animated WebP / PNG included - keeps its still.
+    // Worked out once per message (SafeGifBytes), not on every scroll back into view (audit
+    // 2026-11-25 R7).
     val animatedGif by produceState<ByteArray?>(initialValue = null, key1 = imageContent.content) {
         value = withContext(Dispatchers.Default) {
-            val payload = ImageMessage.base64Payload(imageContent)
-            // "R0lGOD" is "GIF8" in base64: nothing else is a GIF, so nothing else is decoded here.
-            if (!payload.startsWith("R0lGOD")) return@withContext null
-            runCatching { android.util.Base64.decode(payload, android.util.Base64.DEFAULT) }.getOrNull()
-                ?.takeIf { com.kachat.app.util.GifPrep.isSafeToAnimate(it) }
+            SafeGifBytes.get(imageContent.content) {
+                val payload = ImageMessage.base64Payload(imageContent)
+                // "R0lGOD" is "GIF8" in base64: nothing else is a GIF, so nothing else is decoded here.
+                if (!payload.startsWith("R0lGOD")) return@get null
+                runCatching { android.util.Base64.decode(payload, android.util.Base64.DEFAULT) }.getOrNull()
+                    ?.takeIf { com.kachat.app.util.GifPrep.isSafeToAnimate(it) }
+            }
         }
     }
 
@@ -4044,7 +4193,10 @@ fun ImageBubble(
                 still = resolvedBitmap.asImageBitmap(),
                 contentDescription = stringResource(R.string.photo_message),
                 modifier = Modifier.clip(RoundedCornerShape(16.dp)),
-                contentScale = ContentScale.FillWidth
+                contentScale = ContentScale.FillWidth,
+                // the full-screen viewer plays it meanwhile: one decode loop, not two (R7)
+                paused = showFullScreen,
+                alreadyChecked = true,
             )
         } else {
             Image(
@@ -4073,7 +4225,8 @@ fun ImageBubble(
                         still = resolvedBitmap.asImageBitmap(),
                         contentDescription = stringResource(R.string.photo_message_full_screen),
                         modifier = Modifier.fillMaxWidth(),
-                        contentScale = ContentScale.Fit
+                        contentScale = ContentScale.Fit,
+                        alreadyChecked = true,
                     )
                 } else {
                     Image(
@@ -4205,6 +4358,9 @@ fun ManageAddressesScreen(
     onNavigateToVisibility: () -> Unit = {},
     onAddressPicked: ((com.kachat.app.services.WalletService.SpendingAddressEntry) -> Unit)? = null,
     settingsViewModel: com.kachat.app.viewmodels.SettingsViewModel = hiltViewModel(),
+    /** A regular address handed out here (Copy, Generate Non-Quantum Address) is watched for kUSDT
+     *  like Receive's (iOS 961fc05a, audit 2026-11-25 M2). */
+    tokenViewModel: com.kachat.app.viewmodels.TokenViewModel = hiltViewModel(),
 ) {
     val addresses by viewModel.manageAddresses.collectAsState()
     val chattingAddress by viewModel.address.collectAsState()
@@ -4304,6 +4460,9 @@ fun ManageAddressesScreen(
                     // 5b7c772c `generateNew(quantum:)`).
                     viewModel.generateNewSpendingAddress(quantum = quantum) { index ->
                         isGeneratingAddress = false
+                        // A new regular address is about to be handed out: watched for kUSDT like
+                        // Receive's (M2). Quantum addresses never hold tokens.
+                        if (!quantum && index != null) viewModel.spendingAddressAt(index)?.let { tokenViewModel.noteReceiveAddressShown(it) }
                         // The chain-local number, never the raw public index (1000000+ for a quantum slot).
                         if (index != null) IosToasts.show(context.getString(R.string.address_number_is_ready, com.kachat.app.services.WalletManager.addressNumber(index)))
                         else IosToasts.error(context.getString(R.string.could_not_check_addresses_try_again_when))
@@ -4476,6 +4635,9 @@ fun ManageAddressesScreen(
                             onClick = { if (onAddressPicked != null) onAddressPicked(entry) else onNavigateToTxHistory(entry.index) },
                             onCopyClick = {
                                 clipboardManager.setText(AnnotatedString(entry.address))
+                                // A copied address can be handed out for kUSDT like Receive's (M2).
+                                // Quantum addresses never hold tokens.
+                                if (!entry.isQuantum) tokenViewModel.noteReceiveAddressShown(entry.address)
                                 showAddressCopiedToast(context, entry.address)
                             },
                             onQrClick = { qrAddress = entry.address },
@@ -7069,16 +7231,29 @@ private fun SpendingAddressTxHistoryRow(
     val breakdown by produceState<OutgoingBreakdown?>(null, tx.txId, ownerAddress, splits) {
         if (!splits || ownerAddress == null || ownAddressLabel == null) return@produceState
         val self = ownerAddress.lowercase()
-        val labels = tx.outputs.map { it.first.lowercase() }.filter { it.isNotEmpty() && it != self }
+        val labels = (tx.outputs.map { it.first.lowercase() } + tx.inputs.map { it.first.lowercase() })
+            .filter { it.isNotEmpty() && it != self }
             .distinct().associateWith { ownAddressLabel(it) }
-        value = OutgoingBreakdown.of(ownerAddress, tx.outputs) { labels[it] }
+        // A swap also spends the pool's coins: count only what left this wallet (several of its
+        // addresses funding one send each show the whole send; iOS 961fc05a `ownHistoryAmount`).
+        value = OutgoingBreakdown.withOwnHistory(
+            base = OutgoingBreakdown.of(ownerAddress, tx.outputs) { labels[it] },
+            thisAddress = ownerAddress,
+            inputs = tx.inputs,
+            outputs = tx.outputs,
+            feeSompi = tx.feeSompi,
+            isOwnAddress = { labels[it] != null },
+        )
     }
-    val moved = breakdown?.moved == true
+    // The wallet came out ahead (a swap that paid it Kaspa): a Received row.
+    val cameOutAhead = breakdown?.receivedSompi
+    val sentShown = tx.sent && cameOutAhead == null
+    val moved = sentShown && breakdown?.moved == true
     // A split row waits for its breakdown rather than flash the old total first.
-    val shownAmountSompi = if (splits) breakdown?.amountSompi else tx.amountSompi
+    val shownAmountSompi = if (splits) (cameOutAhead ?: breakdown?.amountSompi) else tx.amountSompi
     val directionColor = when {
         !directionKnown -> colors.textSecondary
-        tx.sent -> colors.danger
+        sentShown -> colors.danger
         else -> colors.success
     }
     // iOS `.formatted(date: .abbreviated, time: .shortened)`: "Sep 24, 2026 at 2:25 PM".
@@ -7095,12 +7270,12 @@ private fun SpendingAddressTxHistoryRow(
     ) {
         // "arrow.up.circle.fill" / "arrow.down.circle.fill" at title2: a 22 disc, the arrow cut
         // out of it in the card's colour.
-        FilledCircleArrow(up = directionKnown && tx.sent, color = directionColor, cutout = Color(0xFF1C1C1E), size = 22.dp)
+        FilledCircleArrow(up = directionKnown && sentShown, color = directionColor, cutout = Color(0xFF1C1C1E), size = 22.dp)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 when {
                     !directionKnown -> stringResource(R.string.transaction)
-                    tx.sent -> if (moved) stringResource(R.string.history_moved) else stringResource(R.string.sent)
+                    sentShown -> if (moved) stringResource(R.string.history_moved) else stringResource(R.string.sent)
                     else -> stringResource(R.string.payment_received)
                 },
                 color = directionColor,
@@ -7135,7 +7310,7 @@ private fun SpendingAddressTxHistoryRow(
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
             if (directionKnown && shownAmountSompi != null) {
                 Text(
-                    "${if (tx.sent) "-" else "+"}%.8f ${KaspaUnit.symbol}".format(java.util.Locale.US, shownAmountSompi / 100_000_000.0),
+                    "${if (sentShown) "-" else "+"}%.8f ${KaspaUnit.symbol}".format(java.util.Locale.US, shownAmountSompi / 100_000_000.0),
                     color = directionColor,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -10118,14 +10293,30 @@ fun ConnectionStatusScreen(
                     ConnectionStatusRow(stringResource(R.string.latency), "$latencyMs ms", valueColor = latencyColor)
                 }
                 SettingsDivider()
+                // gRPC, or wss / ws for a wRPC node (iOS 961fc05a `activeProtocol`): the node
+                // requests go to now.
+                val connectionPrimary by viewModel.primaryAddress.collectAsState()
+                val usingPublicFallback by viewModel.usingPublicFallback.collectAsState()
+                val protocolNode = (connectionPrimary ?: activeNodes.firstOrNull()?.ip)?.let { com.kachat.app.services.grpc.parseNodeAddress(it) }
                 ConnectionStatusRow(
                     stringResource(R.string.protocol),
-                    if (activeNodes.firstOrNull()?.ip?.let { com.kachat.app.services.grpc.parseNodeAddress(it)?.secure } == true) {
-                        stringResource(R.string.grpc_secure)
-                    } else {
-                        stringResource(R.string.grpc_plaintext)
+                    when {
+                        protocolNode?.webSocket == true && protocolNode.secure -> stringResource(R.string.nodes_wss_secure)
+                        protocolNode?.webSocket == true -> stringResource(R.string.nodes_ws_plaintext)
+                        protocolNode?.secure == true -> stringResource(R.string.grpc_secure)
+                        else -> stringResource(R.string.grpc_plaintext)
                     }
                 )
+                // gRPC unreachable: public wss nodes stand in (NodePoolManager's public fallback).
+                if (usingPublicFallback) {
+                    Text(
+                        stringResource(R.string.nodes_public_fallback_note),
+                        color = LocalAppColors.current.textSecondary,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+                    )
+                }
                 // Honest all-blocked explanation: only shown once the pool has concluded that
                 // NO node answers at all on this network (see NodePoolManager's
                 // nodeConnectionsBlocked doc) - a plain red "Disconnected" with no reason
@@ -10650,7 +10841,7 @@ private fun AddressBookSection(viewModel: ConnectionViewModel) {
             TextField(
                 value = newAddress,
                 onValueChange = { newAddress = it; addError = null },
-                placeholder = { Text(stringResource(R.string.host_port_or_grpcs_host), color = LocalAppColors.current.textTertiary) },
+                placeholder = { Text(stringResource(R.string.nodes_address_placeholder), color = LocalAppColors.current.textTertiary) },
                 modifier = Modifier.weight(1f).height(50.dp).clip(RoundedCornerShape(12.dp)),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = LocalAppColors.current.surfaceVariant,
@@ -10668,7 +10859,7 @@ private fun AddressBookSection(viewModel: ConnectionViewModel) {
                     val trimmed = newAddress.trim()
                     if (trimmed.isEmpty()) return@IconButton
                     if (com.kachat.app.services.grpc.parseNodeAddress(trimmed) == null) {
-                        addError = context.getString(R.string.enter_as_host_port_or_grpcs_host)
+                        addError = context.getString(R.string.nodes_enter_as_host_port_grpcs_or_wss)
                     } else {
                         addError = null
                         viewModel.addSavedNodeAddress(newLabel.trim(), trimmed)
@@ -11040,7 +11231,12 @@ fun ActiveNodeRow(node: NodeInfo) {
             // much longer than the old hardcoded IPv4 seeds — elides instead of squeezing the
             // badge down to near-zero width, which forced its own text to wrap letter by letter.
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Default.Shield, null, tint = Color(0xFF2196F3), modifier = Modifier.size(16.dp))
+                // A public wss stand-in: iOS's teal globe (961fc05a).
+                if (node.type == com.kachat.app.services.grpc.NodeRegistry.TYPE_PUBLIC) {
+                    Icon(Icons.Default.Public, null, tint = Color(0xFF30B0C7), modifier = Modifier.size(16.dp))
+                } else {
+                    Icon(Icons.Default.Shield, null, tint = Color(0xFF2196F3), modifier = Modifier.size(16.dp))
+                }
                 Spacer(Modifier.width(8.dp))
                 Text(node.ip, color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
@@ -11075,7 +11271,11 @@ fun AllNodeRow(node: NodeInfo) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
             Box(modifier = Modifier.size(8.dp).background(Color(node.color), CircleShape))
             Spacer(Modifier.width(8.dp))
-            Icon(Icons.Default.Shield, null, tint = Color(0xFF2196F3), modifier = Modifier.size(16.dp))
+            if (node.type == com.kachat.app.services.grpc.NodeRegistry.TYPE_PUBLIC) {
+                Icon(Icons.Default.Public, null, tint = Color(0xFF30B0C7), modifier = Modifier.size(16.dp))
+            } else {
+                Icon(Icons.Default.Shield, null, tint = Color(0xFF2196F3), modifier = Modifier.size(16.dp))
+            }
             Spacer(Modifier.width(8.dp))
             Text(node.ip, color = LocalAppColors.current.textPrimary, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }

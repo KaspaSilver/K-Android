@@ -40,11 +40,9 @@
     <string name="pc_keep">إبقاء</string>
     <string name="pc_keep_subtitle">اترك الغرفة كما هي.</string>
     <string name="pc_new_public_chat">دردشة عامة جديدة</string>
-    <string name="pc_new_public_chat_subtitle">انضم إلى غرفة عامة أو أنشئ واحدة.</string>
     <string name="pc_edit_default_public_chats">تعديل المحادثات العامة الافتراضية</string>
     <string name="pc_new_public_chat_explainer">يمكن لأي شخص ينضم إلى اسم القناة نفسه رؤية الرسائل ونشرها هناك - لا يوجد مالك ولا دعوة.</string>
     <string name="pc_join">انضمام</string>
-    <string name="pc_back">رجوع</string>
     <string name="pc_channel_name_rules">يجب أن تكون أسماء القنوات من 1 إلى %1$d حرفًا بلا مسافات أو نقطتين.</string>
     <string name="pc_join_failed">حدث خطأ أثناء الانضمام إلى تلك القناة.</string>
     <string name="pc_report">إبلاغ</string>

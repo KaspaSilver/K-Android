@@ -385,14 +385,30 @@ class KaPostsService @Inject constructor(
          * app's normal contacts/.kachat chain.
          */
         fun kaspaAddressFromPubkey(pubkeyHex: String): String? {
+            // The network is part of the key: the same pubkey is a different address on testnet.
+            val hrp = com.kachat.app.util.KaspaNetwork.hrp
+            val key = "$hrp|$pubkeyHex"
+            addressByPubkey[key]?.let { return it }
             val raw = decodeHex(pubkeyHex) ?: return null
             val xOnly = when (raw.size) {
                 33 -> raw.sliceArray(1..32)
                 32 -> raw
                 else -> return null
             }
-            return KaspaAddress.encode(com.kachat.app.util.KaspaNetwork.hrp, 0x00, xOnly)
+            return KaspaAddress.encode(hrp, 0x00, xOnly).also {
+                if (addressByPubkey.size >= ADDRESS_CACHE_LIMIT) addressByPubkey.clear()
+                addressByPubkey[key] = it
+            }
         }
+
+        /**
+         * [kaspaAddressFromPubkey]'s answers, per network (iOS 961fc05a `addressByPubkey`, audit
+         * 2026-11-25 L5): feed rows ("Replying to", tips, notifications) map the same pubkeys on
+         * every redraw while scrolling, and each mapping was a hex decode and a bech32 encode.
+         * Thread-safe and bounded; misses (bad hex) aren't kept, they're rare and cheap to refuse.
+         */
+        private val addressByPubkey = java.util.concurrent.ConcurrentHashMap<String, String>()
+        private const val ADDRESS_CACHE_LIMIT = 4096
 
         /**
          * The inverse bridge for @mentions: a Kaspa address' 32-byte x-only payload as the

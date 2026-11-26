@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channel names (audit 2026-11-25 P5) -->
+    <string name="notification_channel_no_vibration">বার্তা - কম্পন ছাড়া</string>
+    <string name="notification_channel_vibrate_only">বার্তা - শুধু কম্পন</string>
+    <string name="notification_channel_silent">বার্তা - নীরব</string>
+</resources>

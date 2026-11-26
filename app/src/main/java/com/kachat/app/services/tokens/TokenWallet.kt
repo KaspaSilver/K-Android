@@ -70,6 +70,7 @@ class TokenWallet @Inject constructor(
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val lock = Any()
 
+
     // MARK: Published state
 
     private val _holdings = MutableStateFlow<Map<String, List<TokenHolding>>>(emptyMap())
@@ -145,22 +146,24 @@ class TokenWallet @Inject constructor(
     /** Refreshes unless the balances are under [maxAgeMs] old (and for this account).
      *  [everyAddress]: every revealed address (Manage kUSDT, Send's From); otherwise only the ones
      *  that matter ([pollTargets], audit #14). */
-    suspend fun refreshIfStale(maxAgeMs: Long = 60_000L, everyAddress: Boolean = false) {
+    /** [background]: the regular poll, which doesn't publish [isRefreshing] (nothing on screen
+     *  asked, and a dozen views observe it; iOS 961fc05a, audit 2026-11-25 B13). */
+    suspend fun refreshIfStale(maxAgeMs: Long = 60_000L, everyAddress: Boolean = false, background: Boolean = false) {
         val last = lastRefreshed
         if (currentAccount() == loadedAccount && last != null && System.currentTimeMillis() - last < maxAgeMs) return
-        refresh(everyAddress)
+        refresh(everyAddress, background)
     }
 
     /** Looks the balances up again. One at a time: a call while another lookup runs waits for it,
      *  then runs only if that one was for another account (or a narrower look than asked for). */
-    suspend fun refresh(everyAddress: Boolean = false) {
+    suspend fun refresh(everyAddress: Boolean = false, background: Boolean = false) {
         val running = runningLookup
         if (running != null) {
             running.join()
             val last = lastRefreshed
             if (loadedAccount == currentAccount() && last != null && System.currentTimeMillis() - last < 5_000L && !everyAddress) return
         }
-        runLookup { performRefresh(everyAddress) }
+        runLookup { performRefresh(everyAddress, background) }
     }
 
     /** Runs [work] as the one lookup, after any other one finishes. */
@@ -187,11 +190,11 @@ class TokenWallet @Inject constructor(
         _holdings.value = emptyMap()
     }
 
-    private suspend fun performRefresh(everyAddress: Boolean) {
+    private suspend fun performRefresh(everyAddress: Boolean, background: Boolean = false) {
         val account = currentAccount() ?: return
         adoptAccount(account)
         loadActivityIfNeeded(account)
-        _isRefreshing.value = true
+        if (!background) _isRefreshing.value = true
         try {
             val targets = if (everyAddress || lastRefreshed == null) allRevealedTargets(account) else pollTargets(account)
             val results = lookUp(targets)
@@ -229,10 +232,12 @@ class TokenWallet @Inject constructor(
 
     /**
      * What the regular refresh asks Trestly about: the Chatting Address, the addresses holding or
-     * listed for kUSDT, ones with kUSDT history here, ones a send is waiting on, the newest few
-     * revealed and any a receive screen showed in the last week. Not every address every time:
-     * Trestly would see them all together, from one IP, every 30 seconds, and could link them
-     * (audit #14). Derives.
+     * listed for kUSDT, ones with kUSDT history here, ones a send is waiting on, and any a receive
+     * screen showed or a swap paid to in the last week. Not every address every time: Trestly
+     * would see them all together, from one IP, every 30 seconds, and could link them (audit #14).
+     * No longer the newest few revealed: for an account with no kUSDT that was three lookups a
+     * beat for nothing (iOS 961fc05a, audit 2026-11-25 B13); the first lookup after a launch still
+     * asks about every revealed address. Derives.
      */
     private fun pollTargets(account: String): List<Target> {
         val maxIndex = maxSpendingIndex()
@@ -242,7 +247,7 @@ class TokenWallet @Inject constructor(
         _activity.value[WalletToken.KUSDT.id].orEmpty().forEach { row ->
             if (row.holdingId.startsWith("s")) row.holdingId.drop(1).toIntOrNull()?.let { indices += it }
         }
-        if (maxIndex >= 0) indices += (maxOf(0, maxIndex - 2)..maxIndex)
+        loadReceiveWatchIfNeeded(account)
         val now = System.currentTimeMillis()
         val watched = synchronized(lock) {
             pendingCoins.map { it.address.lowercase() }.toSet() +
@@ -257,10 +262,62 @@ class TokenWallet @Inject constructor(
         return targets
     }
 
-    /** A receive screen showed this address: the regular refresh watches it for a week (iOS
-     *  AddressReceiveView calls this as it draws the address). */
+    /**
+     * A receive screen showed this address, or it was handed out another way (Manage Addresses'
+     * Copy and Generate Non-Quantum Address, a regular address picked for Request Payment), or a
+     * swap paid to it: the regular refresh watches it for a week (iOS AddressReceiveView calls
+     * this as it draws the address). Kept on the phone per account
+     * (`token_receivewatch_kusdt_<account>`), so a Receive shown before a relaunch is still
+     * watched (iOS 961fc05a, audit 2026-11-25 B13). Never called for quantum addresses.
+     */
     fun noteReceiveAddressShown(address: String) {
-        synchronized(lock) { recentReceiveAddresses[address.lowercase()] = System.currentTimeMillis() }
+        val account = currentAccount() ?: return
+        loadReceiveWatchIfNeeded(account)
+        val now = System.currentTimeMillis()
+        val saved = synchronized(lock) {
+            recentReceiveAddresses[address.lowercase()] = now
+            recentReceiveAddresses.entries.removeAll { now - it.value >= WEEK_MS }
+            recentReceiveAddresses.toMap()
+        }
+        prefs.edit().putString(receiveWatchKey(account), encodeReceiveWatch(saved)).apply()
+    }
+
+    private var recentReceiveAccount: String? = null
+
+    private fun receiveWatchKey(account: String) = "token_receivewatch_${WalletToken.KUSDT.id}_$account"
+
+    /** The account's watched receive addresses, read once per account. */
+    private fun loadReceiveWatchIfNeeded(account: String) {
+        synchronized(lock) {
+            if (recentReceiveAccount == account) return
+            recentReceiveAccount = account
+            recentReceiveAddresses.clear()
+            recentReceiveAddresses.putAll(decodeReceiveWatch(prefs.getString(receiveWatchKey(account), null)))
+        }
+    }
+
+    @Volatile private var tradeFollowJob: Job? = null
+
+    /**
+     * A swap from this phone went out ([TrestlyTrade]). The coins it made for you (the kUSDT
+     * bought, or a sell's kUSDT change) show only once Trestly lists them, which takes longer than
+     * the one look 4 s later that used to be all a swap got: with Address Activity notifications
+     * off nothing else looked again, so the balance stayed old until a pull to refresh. Looks
+     * again on a widening schedule (3 s to about 1.5 minutes) until a coin from the swap shows
+     * (iOS 961fc05a `followTrade`).
+     */
+    fun followTrade(txid: String, address: String) {
+        // the regular look covers this address from now on, whatever it held before
+        noteReceiveAddressShown(address)
+        tradeFollowJob?.cancel()
+        tradeFollowJob = scope.launch {
+            for (seconds in TRADE_FOLLOW_SECONDS) {
+                delay(seconds * 1_000L)
+                refresh()
+                val landed = synchronized(lock) { coins.values.any { list -> list.any { it.transactionId == txid } } }
+                if (landed) return@launch
+            }
+        }
     }
 
     private class LookupResult(val spendingIndex: Int?, val result: KusdtBalances.AddressResult)
@@ -623,11 +680,16 @@ class TokenWallet @Inject constructor(
                 .mapTo(HashSet()) { it.lowercase() }
 
             val received = ArrayList<Pair<String, Long>>()
-            val checked = HashMap<String, Boolean>()
+            val checked = HashMap<String, Pair<Boolean, Long?>>()
+            // Whether any coin announced now came in the last few minutes: only those ring. Coins
+            // that came while K was closed or this account was signed out go to the bell quietly,
+            // dated when they came (owner, 2026-11-25: switching accounts pinged old receives).
+            var anyCurrent = false
+            var newest: Long? = null
             for ((holdingId, list) in byHolding) {
                 for (coin in list) {
                     if (coin.outpointKey !in freshKeys) continue
-                    val own = checked.getOrPut(coin.transactionId) {
+                    val (own, at) = checked.getOrPut(coin.transactionId) {
                         isOwnTransfer(coin.transactionId, known, ownAddresses, fallback = ownCoinSpent)
                     }
                     if (own || coin.state.amount <= 0) continue
@@ -646,13 +708,18 @@ class TokenWallet @Inject constructor(
                     }
                     synchronized(awaitingNotice) { awaitingNotice.remove(key) }
                     // a contact's Send Dollars the chat already showed and announced: no second banner
-                    if (!filedByChat) received += holdingId to coin.state.amount
+                    if (!filedByChat) {
+                        received += holdingId to coin.state.amount
+                        // an unknown time counts as now, as the chats' banners have it (C10)
+                        if (isWithinRingWindow(at, now)) anyCurrent = true
+                        if (at != null) newest = maxOf(newest ?: at, at)
+                    }
                     record(TokenActivity("${coin.transactionId}:$holdingId:received", TokenActivity.Kind.RECEIVED.raw,
-                        coin.state.amount, "", System.currentTimeMillis(), holdingId = holdingId), token, account)
+                        coin.state.amount, "", at ?: System.currentTimeMillis(), holdingId = holdingId), token, account)
                 }
             }
             if (received.isEmpty() || !notificationsEnabled()) return
-            postReceived(received, token)
+            postReceived(received, token, ring = anyCurrent, happenedAtMs = newest)
         } finally {
             rememberSeen(current.filter { it.outpointKey !in held }, account, token)
         }
@@ -662,30 +729,34 @@ class TokenWallet @Inject constructor(
     private val awaitingNotice = HashMap<String, Long>()
 
     /** Whether the transaction that made a coin was your own: it spent a coin of yours, or an
-     *  input came from one of your addresses. When the REST API can't say, [fallback]. */
-    private suspend fun isOwnTransfer(txid: String, known: Set<String>, ownAddresses: Set<String>, fallback: Boolean): Boolean {
-        val api = networkService.kaspaRestApi.value ?: return fallback
-        val tx = try { api.getTransactionWithInputAddresses(txid) } catch (e: CancellationException) { throw e } catch (e: Exception) { return fallback }
+     *  input came from one of your addresses. When the REST API can't say, [fallback]. Also when
+     *  it happened (its block time, ms), null when unknown (iOS 961fc05a). */
+    private suspend fun isOwnTransfer(txid: String, known: Set<String>, ownAddresses: Set<String>, fallback: Boolean): Pair<Boolean, Long?> {
+        val api = networkService.kaspaRestApi.value ?: return fallback to null
+        val tx = try { api.getTransactionWithInputAddresses(txid) } catch (e: CancellationException) { throw e } catch (e: Exception) { return fallback to null }
+        val at = tx.blockTime?.takeIf { it > 0L }
         val inputs = tx.inputs
-        if (inputs.isEmpty()) return fallback
+        if (inputs.isEmpty()) return fallback to at
         for (input in inputs) {
             val hash = (input.previousOutpointHash as String?)?.lowercase()
-            if (hash != null && "$hash:${input.previousOutpointIndex}" in known) return true
+            if (hash != null && "$hash:${input.previousOutpointIndex}" in known) return true to at
             val address = input.previousOutpointAddress?.lowercase()
-            if (address != null && address in ownAddresses) return true
+            if (address != null && address in ownAddresses) return true to at
         }
-        return false
+        return false to at
     }
 
-    private suspend fun postReceived(received: List<Pair<String, Long>>, token: WalletToken) {
+    /** [ring] false: the bell only, no notification (none of the coins is from the last few
+     *  minutes); [happenedAtMs] dates the bell's row. */
+    private suspend fun postReceived(received: List<Pair<String, Long>>, token: WalletToken, ring: Boolean, happenedAtMs: Long?) {
         val total = received.sumOf { it.second }
         // Just "Received 1.00 kUSDT" (iOS, owner 2026-11-22): no "On your Chatting Address" line,
         // in the notification or the bell.
         val title = context.getString(R.string.token_received_title, TokenAmount.amount(total, token))
         val body = ""
         val id = "token-received-${token.id}-${java.util.UUID.randomUUID()}"
-        notificationHelper.showAddressActivity(title = title, text = body, dedupeKey = id, kind = NOTIFICATION_KIND)
-        notificationCenter.record(id, NOTIFICATION_SOURCE, title, body, System.currentTimeMillis(), token.id)
+        if (ring) notificationHelper.showAddressActivity(title = title, text = body, dedupeKey = id, kind = NOTIFICATION_KIND)
+        notificationCenter.record(id, NOTIFICATION_SOURCE, title, body, happenedAtMs ?: System.currentTimeMillis(), token.id)
     }
 
     /** Settings > Notifications > Address Activity, and notifications on at all (as for Kaspa). */
@@ -711,17 +782,24 @@ class TokenWallet @Inject constructor(
 
     @Volatile private var pollJob: Job? = null
 
-    /** While the app is open and signed in, the balances are checked every 30 seconds (90 until
-     *  2026-11-22, when a Received kUSDT came minutes late; iOS startPolling), so a token that
-     *  arrives is announced - only with Address Activity notifications on; the screens refresh
-     *  themselves either way. Started on foreground by KaChatApplication. */
+    /** While the app is open and signed in, the balances are checked on every foreground beat
+     *  ([com.kachat.app.services.ForegroundBeat]: 30 s on Wi-Fi, 60 s on a metered path, 1.5 s
+     *  after the room sweep, so the radio wakes once per beat; iOS 961fc05a, audit 2026-11-25 B4),
+     *  so a token that arrives is announced - only with Address Activity notifications on; the
+     *  screens refresh themselves either way. Started on foreground by KaChatApplication. */
     fun startPolling() {
         if (pollJob?.isActive == true) return
         pollJob = scope.launch {
             while (isActive) {
-                delay(POLL_INTERVAL_MS)
-                if (!notificationHelper.isAppInForeground || currentAccount() == null || !notificationsEnabled()) continue
-                refreshIfStale(maxAgeMs = POLL_MAX_AGE_MS)
+                com.kachat.app.services.ForegroundBeat.sleepUntilNextBeat(offsetMs = 1_500L)
+                // Signed out: the loop ends rather than waking every beat for nothing; the next
+                // foreground starts it again (iOS 961fc05a, audit 2026-11-25 B19).
+                if (currentAccount() == null) {
+                    pollJob = null
+                    return@launch
+                }
+                if (!notificationHelper.isAppInForeground || !notificationsEnabled()) continue
+                refreshIfStale(maxAgeMs = POLL_MAX_AGE_MS, background = true)
             }
         }
     }
@@ -801,7 +879,7 @@ class TokenWallet @Inject constructor(
      */
     fun forgetLocalData(account: String) {
         val editor = prefs.edit()
-        for (token in tokens) for (kind in listOf("activity", "seen", "hidden", "shown")) editor.remove("token_${kind}_${token.id}_$account")
+        for (token in tokens) for (kind in listOf("activity", "seen", "hidden", "shown", "receivewatch")) editor.remove("token_${kind}_${token.id}_$account")
         editor.apply()
         // What Trestly's code kept for each spending address's key (liquidity positions, followed
         // trades): read now, while the account's derived-address cache still exists (iOS
@@ -826,6 +904,10 @@ class TokenWallet @Inject constructor(
             if (activityAccount == account) {
                 activityAccount = null
                 clearActivity = true
+            }
+            if (recentReceiveAccount == account) {
+                recentReceiveAddresses.clear()
+                recentReceiveAccount = null
             }
         }
         if (clearHoldings) _holdings.value = emptyMap()
@@ -913,6 +995,18 @@ class TokenWallet @Inject constructor(
         }
     }
 
+
+    // Last in the class: every property above is initialised before the collector can run.
+    init {
+        // The poll ends when the account signs out (B19); the next sign-in while the app is open
+        // starts it again, as iOS's MainTabView does.
+        scope.launch {
+            walletManager.signedInAddressFlow.collect { address ->
+                if (address != null && notificationHelper.isAppInForeground) startPolling()
+            }
+        }
+    }
+
     companion object {
         private const val TAG = "kUSDT"
         private const val PREFS_NAME = "kachat_tokens"
@@ -930,6 +1024,27 @@ class TokenWallet @Inject constructor(
         internal fun shouldHoldForNotice(firstSeenMs: Long?, nowMs: Long): Boolean =
             firstSeenMs != null && nowMs - firstSeenMs < NOTICE_WAIT_MS
         private const val WEEK_MS = 7 * 86_400_000L
+
+        /** How old a received coin may be and still ring: Trestly lists new coins late, and a coin
+         *  on the Chatting Address waits up to [NOTICE_WAIT_MS] for its chat notice, so wider than
+         *  the chats' 3 minutes (iOS 961fc05a `ringWindow`). */
+        internal const val RING_WINDOW_MS = 6 * 60_000L
+
+        /** Whether a coin made at [atMs] (null: unknown, so now) still rings at [nowMs]. */
+        internal fun isWithinRingWindow(atMs: Long?, nowMs: Long): Boolean =
+            atMs == null || nowMs - atMs <= RING_WINDOW_MS
+
+        /** When a swap's coins are looked for again, seconds apart (iOS `followTrade`). */
+        private val TRADE_FOLLOW_SECONDS = listOf(3L, 4L, 6L, 8L, 10L, 15L, 20L, 30L)
+
+        internal fun encodeReceiveWatch(map: Map<String, Long>): String =
+            map.entries.joinToString(",") { "${it.key}=${it.value}" }
+
+        internal fun decodeReceiveWatch(raw: String?): Map<String, Long> =
+            raw.orEmpty().split(',').mapNotNull { entry ->
+                val at = entry.indexOf('=')
+                if (at <= 0) null else entry.substring(0, at) to (entry.substring(at + 1).toLongOrNull() ?: return@mapNotNull null)
+            }.toMap()
 
         /** [NotificationHelper.showAddressActivity]'s `kind` for a "Received kUSDT" notification:
          *  its tap opens Manage kUSDT on the Wallet tab (iOS `TokenWallet.notificationThread`). */

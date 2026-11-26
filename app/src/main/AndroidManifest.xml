@@ -114,6 +114,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="kachat" android:host="broadcast" />
             </intent-filter>
+            <!-- Kaspa Hub cards: kachat://hub/<card> opens that card (iOS 961fc05a). Only the
+                 fixed card words are taken. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kachat" android:host="hub" />
+            </intent-filter>
             <!-- The retired apps' own schemes, registered here since KaChat is the all-in-one app
                  again (iOS 148a5331 Info.plist): kaposts:// (KaPost: posts, rooms, compose),
                  kapay:// and kachatwallet:// (KaPay: profiles, payment requests, the market) and
@@ -144,6 +152,8 @@
                 <data android:scheme="https" android:host="kachat.app" android:pathPrefix="/post/" />
                 <!-- Public chat room invites (iOS 148a5331). -->
                 <data android:scheme="https" android:host="kachat.app" android:pathPrefix="/broadcast/" />
+                <!-- Kaspa Hub card links: a hold on a Hub card > Copy Link (iOS 961fc05a). -->
+                <data android:scheme="https" android:host="kachat.app" android:pathPrefix="/hub/" />
             </intent-filter>
             <!-- System share sheet: text/links and images shared from any app land in a chat's
                  composer (see ShareShortcutsManager/ShareIntake + MainActivity.handleShareIntent).

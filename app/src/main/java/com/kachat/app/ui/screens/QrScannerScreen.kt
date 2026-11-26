@@ -74,9 +74,14 @@ import androidx.compose.runtime.getValue
  * just can't resolve a small or distant QR's fine modules at the default settings — this matters
  * most when scanning a QR displayed on another device's screen (KasSigner), whose code density is
  * fixed by its own firmware and isn't something this app can simplify.
+ *
+ * The one scanner both sheets use (this file's and Cold Storage's `ColdQrViews`). Its use cases
+ * are bound to the HOST screen's lifecycle (a sheet's popup inherits it), so they are unbound
+ * when the scanner leaves composition; otherwise CameraX keeps the camera open behind the closed
+ * sheet and reopens it on every return to the app (audit 2026-11-25 R1).
  */
 @Composable
-private fun CameraQrScanner(modifier: Modifier = Modifier, onResult: (Result) -> Unit) {
+internal fun CameraQrScanner(modifier: Modifier = Modifier, onResult: (Result) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var camera by remember { mutableStateOf<Camera?>(null) }
@@ -87,11 +92,18 @@ private fun CameraQrScanner(modifier: Modifier = Modifier, onResult: (Result) ->
     // provider answers never sets the analyzer at all.
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     val analysisRef = remember { arrayOfNulls<ImageAnalysis>(1) }
+    val previewRef = remember { arrayOfNulls<Preview>(1) }
+    val providerRef = remember { arrayOfNulls<ProcessCameraProvider>(1) }
     val disposed = remember { booleanArrayOf(false) }
     DisposableEffect(Unit) {
         onDispose {
             disposed[0] = true
             analysisRef[0]?.clearAnalyzer()
+            // onDispose runs on the main thread, as CameraX's unbind requires.
+            val bound = listOfNotNull(previewRef[0], analysisRef[0])
+            if (bound.isNotEmpty()) {
+                runCatching { providerRef[0]?.unbind(*bound.toTypedArray()) }
+            }
             analysisExecutor.shutdown()
         }
     }
@@ -136,6 +148,8 @@ private fun CameraQrScanner(modifier: Modifier = Modifier, onResult: (Result) ->
                     decodeQrCode(imageProxy, onResult)
                 }
                 analysisRef[0] = analysis
+                previewRef[0] = preview
+                providerRef[0] = cameraProvider
                 try {
                     cameraProvider.unbindAll()
                     camera = cameraProvider.bindToLifecycle(

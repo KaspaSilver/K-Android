@@ -73,8 +73,10 @@ class BroadcastViewModel @Inject constructor(
     private val readState: com.kachat.app.services.BroadcastReadStateStore,
     /** The KaPosts translation service, reused as-is for public chat messages (iOS 03e5128). */
     private val translationService: com.kachat.app.services.PostTranslationService,
-    /** The rooms' summaries and unread counts, shared with the dock badge. */
+    /** The rooms' summaries and unread counts, shared with the badges. */
     private val unreadBadge: com.kachat.app.services.publicchats.PublicChatUnreadBadge,
+    /** Every default room joined, retired ones moved, dropped ones left (iOS 961fc05a). */
+    private val defaultRooms: com.kachat.app.services.publicchats.PublicChatDefaultRooms,
 ) : ViewModel() {
 
     // Address -> KNS avatar URL (or null if fetched but no avatar/domain exists) for whoever's
@@ -343,6 +345,7 @@ class BroadcastViewModel @Inject constructor(
     override fun onCleared() {
         roomClosed = true
         stopLiveViewing()
+        acquiredRoom?.let { releaseRoom(it) }
         // Avoid leaking a live MediaRecorder if the screen/ViewModel is torn down mid-recording.
         // (One being encoded finishes and sends: it was already sent from the bar.)
         if (_voiceRecordingState.value.status == VoiceRecordingStatus.RECORDING) {
@@ -362,6 +365,10 @@ class BroadcastViewModel @Inject constructor(
      * so a write to the room table re-reads each room once, not once per screen (audit H4).
      */
     val roomSummaries: StateFlow<Map<String, BroadcastRepository.RoomSummary>> get() = unreadBadge.roomSummaries
+
+    /** Unread messages in the rooms with their bell on: the red count on the KaChat title's
+     *  Chats / Public Chats button (iOS 961fc05a `pageCycleButton`; not the dock's). */
+    val bellOnRoomUnread: StateFlow<Int> get() = unreadBadge.bellOnUnreadCount
 
     /**
      * The rooms the Public Chats list shows, in its order: the two Popular rooms on top, then every
@@ -440,7 +447,12 @@ class BroadcastViewModel @Inject constructor(
             // A switch that is on means the room is in the Chats circles: switching on a room not
             // joined yet joins it (a local subscription - nothing on chain), so it appears at once,
             // with its bell off (iOS PublicChatService.setCuratedChannel).
-            if (shown) viewModelScope.launch { broadcastRepository.joinChannel(channelName) }
+            // Still a default room, so it goes if the indexer drops it: joined as auto-joined, not
+            // as the person's own (iOS 65f8a765).
+            if (shown) viewModelScope.launch {
+                broadcastRepository.joinDefaultChannel(channelName)
+                readState.updateAutoJoined { it + channelName }
+            }
             return
         }
         if (!shown) setNotifyEnabled(channelName, false)
@@ -465,11 +477,20 @@ class BroadcastViewModel @Inject constructor(
      * (iOS KaPosts ensureDefaultChannelsJoined, 865c9ab). Every room joins silenced, bell off
      * (iOS 8cb4c88e, owner 2026-11-24: new downloads start with public chats silenced; until then
      * #kaspa and #kachat-bugs had their bell switched on once per wallet, and accounts that
-     * already got that keep the bells they have).
+     * already got that keep the bells they have). A retired room is moved to its replacement and
+     * the indexer's rooms join too (iOS 961fc05a, [com.kachat.app.services.publicchats.PublicChatDefaultRooms]).
      */
     private suspend fun ensureDefaultRoomsJoined() {
-        val hidden = readState.state.value.hiddenCurated
-        broadcastRepository.ensureDefaultChannelsJoined(hidden)
+        defaultRooms.ensureJoined()
+    }
+
+    /**
+     * Edit Default Public Chats opened: the app-wide indexer's rooms are asked for again if the
+     * last answer is over a minute old, so a room just added there shows under More Rooms (and
+     * joins) within a minute (iOS 961fc05a `refreshIndexerTrackedRooms(maxAge: 60)`).
+     */
+    fun refreshIndexerRoomsSoon() {
+        viewModelScope.launch { runCatching { broadcastRepository.refreshIndexerTrackedRooms(maxAgeMs = 60_000L) } }
     }
 
     /**
@@ -531,7 +552,7 @@ class BroadcastViewModel @Inject constructor(
     }
 
     // Rooms join with notifications OFF and stay off until the user turns a bell on (iOS
-    // 8cb4c88e: #kaspa and #kachat-bugs no longer switched on once per wallet).
+    // 8cb4c88e: #kaspa and #kachat-bugs, now #report-bugs, no longer switched on once per wallet).
 
     private var indexerPollJob: kotlinx.coroutines.Job? = null
     /** The room [indexerPollJob] polls, so an account switch can start it again for the new one. */
@@ -587,6 +608,10 @@ class BroadcastViewModel @Inject constructor(
                         // gated by its own interval: a few minutes at most between runs
                         runCatching { broadcastScanningService.pruneIfDue() }
                     }
+                } else if (!notificationHelper.isAppInForeground) {
+                    // Asleep until the app is back, not waking every 8 s (audit 2026-11-25 B10).
+                    notificationHelper.appForegroundFlow.first { it }
+                    continue
                 }
                 kotlinx.coroutines.delay(8_000)
             }
@@ -617,11 +642,14 @@ class BroadcastViewModel @Inject constructor(
     /** Joins a room a share link asked for (the room screen's join request). The name is checked
      *  again; a failure is only logged, as the room opens either way. */
     fun joinChannel(rawName: String) {
-        val name = MessageProtocol.normalizeChannelName(rawName)
+        // a retired room's name opens the room that replaced it (iOS 961fc05a)
+        val name = FeaturedBroadcastChannels.replacingRetired(MessageProtocol.normalizeChannelName(rawName))
         if (!MessageProtocol.isValidChannelName(name)) return
         viewModelScope.launch {
             try {
                 broadcastRepository.joinChannel(name)
+                // joined by the person (a link): theirs, whatever the indexer does (iOS 65f8a765)
+                readState.keepRoomAsOwn(name)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -636,7 +664,8 @@ class BroadcastViewModel @Inject constructor(
      * it is in the list (the sheet then opens it).
      */
     fun joinFromCreateSheet(rawName: String, onError: (String) -> Unit, onJoined: (String) -> Unit) {
-        val name = MessageProtocol.normalizeChannelName(rawName)
+        // a retired room's name opens the room that replaced it (audit 2026-11-25 C2)
+        val name = FeaturedBroadcastChannels.replacingRetired(MessageProtocol.normalizeChannelName(rawName))
         if (!MessageProtocol.isValidChannelName(name)) {
             onError(appContext.getString(com.kachat.app.R.string.pc_channel_name_rules, MessageProtocol.MAX_BROADCAST_CHANNEL_NAME_LENGTH))
             return
@@ -644,6 +673,8 @@ class BroadcastViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 broadcastRepository.joinChannel(name)
+                // joined by name in New Public Chat: the person's own (iOS 65f8a765)
+                readState.keepRoomAsOwn(name)
                 onJoined(name)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
@@ -664,6 +695,8 @@ class BroadcastViewModel @Inject constructor(
         viewModelScope.launch {
             if (joinedChannels.value.none { it.channelName == name }) {
                 runCatching { broadcastRepository.joinChannel(name) }
+                // joined from a link or a push: the person's own (iOS 65f8a765)
+                readState.keepRoomAsOwn(name)
             }
             open(name)
         }
@@ -853,7 +886,10 @@ class BroadcastViewModel @Inject constructor(
             .flatMapLatest { limit ->
                 // The widened window's first answer is what "Loading…" waits for.
                 broadcastRepository.getMessageWindow(channelName, limit)
-                    .onEach { loadingEarlier.value = loadingEarlier.value - channelName }
+                    .onEach {
+                        lastRoomWindows[channelName] = it
+                        loadingEarlier.value = loadingEarlier.value - channelName
+                    }
             }
 
     /** Rooms whose "Load earlier messages" is still being read (iOS `isLoadingOlder`). */
@@ -878,11 +914,63 @@ class BroadcastViewModel @Inject constructor(
     }
 
     /** The room closed: back to the newest [BroadcastRepository.ROOM_WINDOW_SIZE] next time it
-     *  opens (iOS f954738 `release`: `windowSizeByChannel.removeValue`). */
+     *  opens (iOS f954738 `release`: `windowSizeByChannel.removeValue`), two minutes later, not
+     *  now (iOS d089011f `windowTrimWork`): a room only hidden behind another tab (a profile
+     *  opened from it) comes back with its rows, so the reader's place holds. Opening the room
+     *  again meanwhile ([keepRoomWindow]) calls it off. */
     fun resetRoomWindow(channelName: String) {
-        if (channelName !in roomWindows.value) return
-        roomWindows.value = roomWindows.value - channelName
-        loadingEarlier.value = loadingEarlier.value - channelName
+        roomWindowTrims.remove(channelName)?.cancel()
+        roomWindowTrims[channelName] = viewModelScope.launch {
+            delay(ROOM_WINDOW_TRIM_DELAY_MS)
+            roomWindowTrims.remove(channelName)
+            lastRoomWindows.remove(channelName)
+            if (channelName !in roomWindows.value) return@launch
+            roomWindows.value = roomWindows.value - channelName
+            loadingEarlier.value = loadingEarlier.value - channelName
+        }
+    }
+
+    /** The room is on screen again: a waiting trim ([resetRoomWindow]) is called off. */
+    fun keepRoomWindow(channelName: String) {
+        roomWindowTrims.remove(channelName)?.cancel()
+    }
+
+    /** The rows the room last showed, while its trim waits: drawn at once when it comes back
+     *  from behind another tab, so the list is the same length under the reader. */
+    fun cachedRoomWindow(channelName: String): BroadcastRepository.RoomWindow? = lastRoomWindows[channelName]
+
+    private val roomWindowTrims = HashMap<String, kotlinx.coroutines.Job>()
+    private val lastRoomWindows = java.util.concurrent.ConcurrentHashMap<String, BroadcastRepository.RoomWindow>()
+
+    /** The room's screen opened or closed (iOS `acquire` / `release`): its first indexer read
+     *  after opening removes a message the indexer no longer has on one miss. */
+    private var acquiredRoom: String? = null
+
+    fun acquireRoom(channelName: String) {
+        acquiredRoom?.let { broadcastRepository.releaseRoom(it) }
+        acquiredRoom = channelName
+        broadcastRepository.acquireRoom(channelName)
+    }
+
+    fun releaseRoom(channelName: String) {
+        if (acquiredRoom != channelName) return
+        acquiredRoom = null
+        broadcastRepository.releaseRoom(channelName)
+    }
+
+    /**
+     * The Rooms page is on screen (iOS d089011f `checkListedRoomsAgainstIndexer`): each listed
+     * indexed room nothing else keeps current (bell off, not open) is read from the indexer, at
+     * most every 2 minutes, so a deleted message leaves its preview too. Waits briefly for the
+     * list's first answer when the page has only just appeared.
+     */
+    fun checkListedRoomsAgainstIndexer() {
+        viewModelScope.launch {
+            val rooms = listedChannels.value.ifEmpty {
+                kotlinx.coroutines.withTimeoutOrNull(3_000L) { listedChannels.first { it.isNotEmpty() } } ?: return@launch
+            }
+            broadcastRepository.checkListedRoomsAgainstIndexer(rooms)
+        }
     }
 
     // The message currently being replied to (double-tap on its bubble to set this), shown as a
@@ -910,6 +998,27 @@ class BroadcastViewModel @Inject constructor(
 
     fun cancelEditing() {
         _editingMessage.value = null
+    }
+
+    /**
+     * Delete for Everyone, confirmed (iOS 2026-11-25 `deletePublicChatMessage`): a delete envelope
+     * goes out and the message goes from this phone once it has; a failure leaves it in the room
+     * and [onFailed] says so. In the repository's long-lived scope, so leaving the room doesn't
+     * cancel a delete already on its way.
+     */
+    fun deleteForEveryone(message: BroadcastMessageEntity, onFailed: () -> Unit) {
+        broadcastRepository.sendScope.launch {
+            try {
+                broadcastRepository.deletePublicChatMessage(message)
+                if (_replyingTo.value?.id == message.id) _replyingTo.value = null
+                if (_editingMessage.value?.id == message.id) _editingMessage.value = null
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("BroadcastViewModel", "Delete for everyone failed: ${e.message}")
+                onFailed()
+            }
+        }
     }
 
     init {
@@ -1420,6 +1529,9 @@ class BroadcastViewModel @Inject constructor(
 
         /** How often an open room prunes expired rows (iOS PublicChatChannelView: 300 s). */
         private const val ROOM_PRUNE_INTERVAL_MS = 5L * 60 * 1000
+
+        /** How long a closed room keeps its widened window and rows (iOS d089011f: 120 s). */
+        private const val ROOM_WINDOW_TRIM_DELAY_MS = 120_000L
 
         /** The quote a reply carries, and the reply and edit banners' line: never raw JSON
          *  (iOS `MessageReplyCodec.previewText`, which a reply is built with). */

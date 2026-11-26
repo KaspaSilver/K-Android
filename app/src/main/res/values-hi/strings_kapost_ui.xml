@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">थ्रेड में जोड़ें</string>
     <string name="kpui_post_not_loaded">यह पोस्ट लोड नहीं हो सकी</string>
     <string name="kpui_post_not_loaded_body">हो सकता है इसे हटा दिया गया हो, या नेटवर्क तक पहुँचा न जा रहा हो।</string>
-    <string name="kpui_no_comments_yet">अभी कोई टिप्पणी नहीं - सबसे पहले जवाब दें।</string>
-    <string name="kpui_every_reply_above">हर जवाब ऊपर की बातचीत में है।</string>
     <string name="kpui_loading_replies">जवाब लोड हो रहे हैं...</string>
     <string name="kpui_chat">चैट</string>
     <string name="kpui_followers">फ़ॉलोअर्स</string>

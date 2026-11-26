@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -158,6 +159,12 @@ class BroadcastRepository @Inject constructor(
     private val nodePoolManager: com.kachat.app.services.NodePoolManager,
     // A long voice note's balance check reads the coins a room message can spend (iOS 1b15521).
     private val walletEngine: com.kachat.app.services.KaspaWalletEngine,
+    // Messages their sender deleted for everyone, per account (iOS 2026-11-25 `recordDelete`).
+    private val roomDeletes: com.kachat.app.services.publicchats.RoomDeleteStore,
+    // Which rooms K joined for the account: posting in one makes it the person's own (iOS 65f8a765).
+    private val readState: com.kachat.app.services.BroadcastReadStateStore,
+    // A new message that @'s you: a row in Profile's bell (iOS d089011f `insertRoomMessages`).
+    private val roomMentionBell: dagger.Lazy<com.kachat.app.services.RoomMentionBell>,
 ) {
     /**
      * Where a room's sends run - messages, edits, reactions, retries and voice notes - so they
@@ -217,25 +224,45 @@ class BroadcastRepository @Inject constructor(
 
     /**
      * Every default room is in Public Chats from the start (iOS KaPosts 865c9ab
-     * `ensureDefaultChannelsJoined`): #kaspa, #kachat-bugs and the language rooms, auto-joined
-     * with the FIXED retention their indexer backfill serves - except any in [hidden], switched
-     * off with the customize button. They join with notifications off, which is what keeps the
-     * language rooms cheap: the background scan and the push registration only cover rooms whose
-     * bell is on. Idempotent - joinChannel inserts with IGNORE, so an already-joined row (and its
-     * bell/listen toggles) is left completely untouched.
+     * `ensureDefaultChannelsJoined`): #kaspa, #report-bugs, the language rooms and the rooms the
+     * indexer lists (iOS 961fc05a), auto-joined with the FIXED retention their indexer backfill
+     * serves - except any in [hidden], switched off with the customize button. They join with
+     * notifications off, which is what keeps the language rooms cheap: the background scan and
+     * the push registration only cover rooms whose bell is on. Idempotent - joinChannel inserts
+     * with IGNORE, so an already-joined row (and its bell/listen toggles) is left completely
+     * untouched. [com.kachat.app.services.publicchats.PublicChatDefaultRooms] runs it.
      */
-    suspend fun ensureDefaultChannelsJoined(hidden: Set<String>) {
-        val address = try { walletManager.getAddress() } catch (_: Exception) { return }
-        for (name in FeaturedBroadcastChannels.CURATED_NAMES) {
+    suspend fun ensureDefaultChannelsJoined(
+        hidden: Set<String>,
+        names: List<String> = FeaturedBroadcastChannels.CURATED_NAMES,
+    ) {
+        for (name in names) {
             if (name in hidden) continue
-            database.broadcastDao().joinChannel(
-                BroadcastChannelEntity(
-                    channelName = name,
-                    walletAddress = address,
-                    retentionMillis = BroadcastRetention.MAX_MILLIS,
-                )
-            )
+            joinDefaultChannel(name)
         }
+    }
+
+    /** Joins one default room as [ensureDefaultChannelsJoined] does; an already-joined row is
+     *  left untouched. */
+    suspend fun joinDefaultChannel(name: String) {
+        val address = try { walletManager.getAddress() } catch (_: Exception) { return }
+        database.broadcastDao().joinChannel(
+            BroadcastChannelEntity(
+                channelName = name,
+                walletAddress = address,
+                retentionMillis = BroadcastRetention.MAX_MILLIS,
+            )
+        )
+    }
+
+    /** The open account's joined rooms, read once (none signed out). */
+    /** The rooms, of [channels], where [sender] has a message on this phone (any case). */
+    suspend fun channelsWithMessagesFrom(channels: Collection<String>, sender: String): Set<String> =
+        channels.toList().chunked(500).flatMap { database.broadcastDao().channelsWithMessagesFrom(it, sender) }.toSet()
+
+    suspend fun joinedChannelsNow(): List<BroadcastChannelEntity> {
+        val address = myAddress() ?: return emptyList()
+        return database.broadcastDao().getJoinedChannels(address).first()
     }
 
     /**
@@ -293,6 +320,9 @@ class BroadcastRepository @Inject constructor(
     data class RoomSummary(
         val lastMessage: BroadcastMessageEntity?,
         val unreadCount: Int,
+        /** The newest edit's text of [lastMessage], when its sender edited it: the row previews
+         *  with it, as in the room (iOS 961fc05a `loadLastMessageEdits`, audit 2026-11-25 C10). */
+        val lastEditText: String? = null,
     )
 
     /**
@@ -329,11 +359,22 @@ class BroadcastRepository @Inject constructor(
                             (com.kachat.app.util.BroadcastVoiceParts.noteKey(it)?.let { note -> seenNotes.add(note) } ?: true)
                     }
                 }
-                combine(lastMessage, unread) { last, count -> RoomSummary(lastMessage = last, unreadCount = count) }
+                // Its newest edit, read with it, so a room never opened still previews the edit.
+                val lastWithEdit = lastMessage.distinctUntilChanged().flatMapLatest { last ->
+                    if (last == null || !com.kachat.app.util.MessageEdit.isEditable(last.content)) flowOf(last to null)
+                    else dao.summaryEditsOf(channelName, last.senderAddress, last.id).map { rows -> last to newestEditText(rows, last.id) }
+                }
+                combine(lastWithEdit, unread) { (last, edit), count -> RoomSummary(lastMessage = last, unreadCount = count, lastEditText = edit) }
             }
             .distinctUntilChanged()
             .flowOn(Dispatchers.Default)
     }
+
+    /** The text of the newest edit among [rows] (newest first) that names [targetTxId]. */
+    private fun newestEditText(rows: List<BroadcastMessageEntity>, targetTxId: String): String? =
+        rows.firstNotNullOfOrNull { row ->
+            com.kachat.app.util.MessageEdit.parseOrNull(row.content)?.takeIf { it.targetTxId == targetTxId }?.text
+        }
 
     /** The SQL LIKE pattern for the running network's senders, "kaspa:%" or "kaspatest:%": the
      *  room table holds both networks' rows, and every room read keeps to the running one
@@ -652,6 +693,8 @@ class BroadcastRepository @Inject constructor(
 
         /** How often the app-wide indexer is asked which rooms it tracks (iOS: hourly). */
         private const val TRACKED_ROOMS_CHECK_INTERVAL_MS = 60L * 60 * 1000
+        /** How long a room push's banner waits for its message at most (iOS 961fc05a: 4 s). */
+        const val PUSH_BANNER_FETCH_TIMEOUT_MS = 4_000L
 
         /** Deep backfill re-runs while some rows' senders are still unverified (XP-012). */
         private const val DEEP_UNVERIFIED_RETRIES = 3
@@ -698,9 +741,17 @@ class BroadcastRepository @Inject constructor(
         /** A message row, not a reaction or an edit (both are rows of the same table). A cheap
          *  substring check first: the type marker has to be there for either to parse, and most
          *  rows - photos and voice parts with ~20 KB of base64 among them - never reach Gson. */
+        /** The message a reaction or edit row names, or null when [content] is neither. */
+        fun controlTarget(content: String?): String? =
+            MessageReaction.parseOrNull(content)?.targetTxId
+                ?: com.kachat.app.util.MessageEdit.parseOrNull(content)?.targetTxId
+
         fun isReadableContent(content: String): Boolean {
             if (content.contains("\"reaction\"") && MessageReaction.parseOrNull(content) != null) return false
             if (content.contains("\"edit\"") && com.kachat.app.util.MessageEdit.parseOrNull(content) != null) return false
+            // A delete for everyone is never a row (iOS 2026-11-25); one stored by an older build
+            // isn't shown either.
+            if (content.contains("\"delete\"") && com.kachat.app.util.MessageDelete.parseOrNull(content) != null) return false
             return true
         }
 
@@ -1364,6 +1415,43 @@ class BroadcastRepository @Inject constructor(
      */
     suspend fun refreshFromIndexerNow(channelName: String): Boolean = fetchNewestAndMerge(channelName, 40) != null
 
+    /** Where [fetchBeforePushBanner]'s fetches run: one the banner stopped waiting for keeps
+     *  going and merges when it answers. */
+    private val pushFetchScope = kotlinx.coroutines.CoroutineScope(
+        kotlinx.coroutines.SupervisorJob() + Dispatchers.IO +
+            com.kachat.app.util.StartupSafety.logOnlyHandler("BroadcastRepository.pushFetch")
+    )
+
+    /**
+     * A room push that came while the app is open: its message is fetched before the banner
+     * shows, so the banner never announces a message the Chats list and the room don't have yet
+     * (iOS 961fc05a `fetchBeforePushBanner`; the next sweep used to bring it). Asks again until the
+     * push's transaction is in the store (the indexer can push a moment before it serves the
+     * row), giving up after [timeoutMs] so the banner is never held long. Each fetch races the
+     * time left (one can take 20 s; it keeps running and merges when it answers, the banner
+     * doesn't wait), and an indexer marked down isn't asked at all (audit 2026-11-25 C9).
+     */
+    suspend fun fetchBeforePushBanner(rawChannel: String, txId: String?, timeoutMs: Long = PUSH_BANNER_FETCH_TIMEOUT_MS) {
+        val channel = MessageProtocol.normalizeChannelName(rawChannel)
+        if (joinedChannelsNow().none { it.channelName == channel }) return
+        val base = indexerBaseUrl(channel)
+        if (base.isEmpty() || base in _unreachableIndexers.value) return
+        if (channel == ARENA && arenaIndexerDown.value) return
+        val deadline = System.currentTimeMillis() + timeoutMs
+        val wanted = txId?.trim()?.lowercase()?.takeIf { PushBannerFetch.isTxIdShaped(it) }
+        while (true) {
+            val left = deadline - System.currentTimeMillis()
+            if (left <= 0) return
+            val job = pushFetchScope.async { refreshFromIndexerNow(channel) }
+            val ok = kotlinx.coroutines.withTimeoutOrNull(left) { job.await() } ?: false
+            if (!ok || wanted == null) return
+            val dao = database.broadcastDao()
+            if (dao.getMessage(wanted) != null || dao.getMessage(wanted.uppercase()) != null) return
+            if (System.currentTimeMillis() + PushBannerFetch.RETRY_GAP_MS >= deadline) return
+            kotlinx.coroutines.delay(PushBannerFetch.RETRY_GAP_MS)
+        }
+    }
+
     /** Null when there was no answer; otherwise the rows that were new to the store. */
     private suspend fun fetchNewestAndMerge(channelName: String, limit: Int): List<BroadcastMessageEntity>? {
         val api = indexerApi(channelName) ?: return null
@@ -1395,8 +1483,12 @@ class BroadcastRepository @Inject constructor(
         // Asked for the account that has since logged out or switched: not this one's (iOS
         // b78fdb0). The arena's rows are the arena's, whoever is signed in.
         if (!isArena && !isCurrentWallet(turn)) return null
+        // A message a moderator removed goes from closed rooms too, not only when one opens (iOS
+        // 2026-11-25 `dropRowsTheIndexerNoLongerHas`).
+        if (!isArena) dropRowsTheIndexerNoLongerHas(page.messages.orEmpty(), before = null, base = base, channelName = channelName, turn = turn)
+        if (!isArena && !isCurrentWallet(turn)) return null
         // Neither a reaction nor an edit is a message anyone reads; the room's own backfill is
-        // what persists them.
+        // what persists them. A delete for everyone goes on to be applied (never stored).
         val wanted = page.messages.orEmpty().filter { message ->
             val content = message.content ?: return@filter false
             MessageReaction.parseOrNull(content) == null && com.kachat.app.util.MessageEdit.parseOrNull(content) == null
@@ -1449,10 +1541,21 @@ class BroadcastRepository @Inject constructor(
     ): Admitted {
         if (!stillWanted()) return Admitted(emptyList(), 0)
         val toVerify = ArrayList<com.kachat.app.services.BroadcastHistoryRow>()
+        // Deletes for everyone on this page, by their verified sender (iOS 2026-11-25
+        // `applyIncomingDeletes`): applied, never stored.
+        val deletes = ArrayList<Pair<String, String>>()
         for (row in rows) {
             val txId = row.txId?.takeIf { it.isNotBlank() } ?: continue
             if (row.content == null) continue
             val existing = database.broadcastDao().getMessage(txId)
+            val delete = com.kachat.app.util.MessageDelete.parseOrNull(row.content)
+            if (existing != null && delete != null) {
+                // An older build stored it as a row: applied by its stored (verified) sender, and
+                // the row goes.
+                deletes += delete.targetTxId to existing.senderAddress
+                if (existing.deliveryStatus == "sent") database.broadcastDao().deleteMessage(txId)
+                continue
+            }
             if (existing != null) {
                 val chainTime = row.blockTime
                 // The chain's time reached an own service-room row (iOS da59726).
@@ -1482,7 +1585,14 @@ class BroadcastRepository @Inject constructor(
             when (judged.verdict) {
                 com.kachat.app.services.BroadcastSenderVerifier.Verdict.VERIFIED -> {
                     val sender = judged.senderAddress ?: continue
+                    val delete = com.kachat.app.util.MessageDelete.parseOrNull(row.content)
+                    if (delete != null) {
+                        deletes += delete.targetTxId to sender
+                        continue
+                    }
                     if (skipSender(sender)) continue
+                    // Never a message its sender deleted for everyone.
+                    if (isDeletedRow(channelName, txId, sender)) continue
                     val entity = BroadcastMessageEntity(
                         id = txId,
                         channelName = channelName,
@@ -1502,9 +1612,215 @@ class BroadcastRepository @Inject constructor(
                 }
             }
         }
+        if (deletes.isNotEmpty() && stillWanted()) applyIncomingDeletes(deletes, channelName)
+        // each new message that @'s you: a row in Profile's bell (iOS d089011f)
+        if (inserted.isNotEmpty() && stillWanted()) roomMentionBell.get().recordMentions(inserted)
         return Admitted(inserted, unknown, recentUnknown)
     }
 
+    // MARK: - Deleted for everyone, and removed from the indexer (iOS 2026-11-25)
+
+    /** Whether the open account holds a delete of this room's row from [sender]. */
+    fun isDeletedRow(channelName: String, txId: String, sender: String): Boolean =
+        roomDeletes.isDeleted(myAddress(), channelName, txId, sender)
+
+    /**
+     * Delete envelopes seen in a room (block scan or indexer page), as (target, sender) (iOS
+     * `applyIncomingDeletes`). A delete counts only from the sender of the message it names:
+     * remembered for that room and sender, so the message never comes back, and gone now when
+     * this phone holds it, with its reactions and edits. A delete naming someone else's message
+     * does nothing and isn't kept. Never in the machinery rooms (chess, the bots, the arcade): a
+     * move or a result can't be taken back. True when a message went.
+     */
+    suspend fun applyIncomingDeletes(deletes: List<Pair<String, String>>, rawChannel: String): Boolean {
+        val channel = MessageProtocol.normalizeChannelName(rawChannel)
+        if (deletes.isEmpty() || channel in FeaturedBroadcastChannels.SERVICE_CHANNELS ||
+            channel in FeaturedBroadcastChannels.HIDDEN_INDEXER_ROOMS) return false
+        val wallet = myAddress() ?: return false
+        val dao = database.broadcastDao()
+        val gone = LinkedHashSet<String>()
+        for ((target, sender) in deletes) {
+            val held = (dao.getMessage(target) ?: dao.getMessage(target.lowercase()))?.takeIf { it.channelName == channel }
+            if (held != null) {
+                // someone else's message: not theirs to delete
+                if (!held.senderAddress.equals(sender, ignoreCase = true)) continue
+                gone += held.id
+            }
+            // held from that sender, or not here (yet): remembered either way
+            roomDeletes.record(wallet, channel, target, sender)
+        }
+        return removeMessages(channel, gone)
+    }
+
+    /** Deletes these messages from a room with the reactions and edits naming them; true when
+     *  any went (iOS `PublicChatStore.deleteMessages`). */
+    private suspend fun removeMessages(channel: String, ids: Collection<String>): Boolean {
+        if (ids.isEmpty()) return false
+        val dao = database.broadcastDao()
+        // as given and lowercased: another client may write a txid in capitals
+        val all = ids.flatMap { listOf(it, it.lowercase()) }.distinct()
+        var removed = 0
+        for (chunk in all.chunked(500)) removed += dao.deleteMessagesIn(channel, chunk)
+        // What hung off them: only rows that parse as a reaction or edit naming one of them, never
+        // a reply that merely quotes the txid (iOS deletes by targetTxId, audit 2026-11-25 T4).
+        val targets = all.map { it.lowercase() }.toSet()
+        val controls = LinkedHashSet<String>()
+        for (id in all) {
+            for (row in dao.controlCandidatesNaming(channel, id)) {
+                if (controlTarget(row.content)?.lowercase() in targets) controls += row.id
+            }
+        }
+        for (chunk in controls.toList().chunked(500)) dao.deleteMessagesIn(channel, chunk)
+        return removed > 0
+    }
+
+    /**
+     * Deletes one of this account's own delivered messages in a room for everyone (iOS
+     * `deletePublicChatMessage`): a delete envelope goes out, one transaction like an edit, and
+     * once it has, the message goes from this phone (and is remembered as deleted). Nothing
+     * changes here until the send went out, so a failure (thrown) leaves the message exactly as it
+     * was. A send whose outcome is unknown leaves it too: if it landed, its own delete comes back
+     * through the room's reads and removes it then. Never a row of its own.
+     */
+    suspend fun deletePublicChatMessage(message: BroadcastMessageEntity) {
+        val channel = MessageProtocol.normalizeChannelName(message.channelName)
+        if (channel in FeaturedBroadcastChannels.SERVICE_CHANNELS || channel in FeaturedBroadcastChannels.HIDDEN_INDEXER_ROOMS) return
+        val turn = currentWalletTurn()
+        val me = turn.address ?: return
+        if (!message.senderAddress.equals(me, ignoreCase = true) || message.deliveryStatus != "sent" ||
+            !PushBannerFetch.isTxIdShaped(message.id)) return
+        try {
+            // Sent only while the account that tapped is still the open one: another account's
+            // delete is ignored by everyone and only costs a fee (audit 2026-11-25 T6).
+            val txId = submitBroadcast(
+                channel, com.kachat.app.util.MessageDelete.encode(message.id),
+                stillWanted = { isCurrentWallet(turn) },
+            )
+            // Signed here, so its sender is known when it comes back from the chain (XP-012).
+            senderVerifier.rememberOwnBroadcast(txId, me)
+        } catch (e: com.kachat.app.services.SendOutcomeUnknownException) {
+            return
+        } catch (e: SenderChangedException) {
+            // the account changed before the send: nothing went, nothing changes here
+            return
+        }
+        roomDeletes.record(me, channel, message.id, me)
+        removeMessages(channel, listOf(message.id))
+    }
+
+    /** How many reads in a row each cached room message ("room|txid") was missing from (iOS
+     *  `absenceStrikes`): a row goes on its second miss, or its first on a room's first read. */
+    private val absenceStrikes = IndexerAbsence.Strikes()
+
+    /**
+     * For a room the indexer tracks, the indexer is the truth (iOS d089011f
+     * `dropRowsTheIndexerNoLongerHas`, owner 2026-11-25: "work like KaPost"): a delivered message
+     * this phone holds in the span the read answers for, that the read doesn't have, goes with its
+     * reactions and edits - a moderator's removal, its sender's delete, anything the indexer no
+     * longer serves. The cache stays for drawing at once, the Chats list, outages and rooms with
+     * no indexer. See [IndexerAbsence]: the newest page answers up to 90 seconds ago, an older one
+     * between its oldest row and [before]; only the app-wide indexer, never the machinery rooms, an
+     * empty page or a failed read; this phone's own messages once 5 minutes old (pending and
+     * unconfirmed sends never); a row goes on its second miss, or its first on the first read after
+     * the room opens and in the Rooms list's check. No brake on how many go at once. A message
+     * only missing, not deleted for everyone, comes back with the read that has it again.
+     */
+    private suspend fun dropRowsTheIndexerNoLongerHas(
+        page: List<com.kachat.app.services.BroadcastHistoryRow>,
+        before: Long?,
+        base: String,
+        channelName: String,
+        turn: WalletTurn,
+    ) {
+        val channel = MessageProtocol.normalizeChannelName(channelName)
+        if (channel in FeaturedBroadcastChannels.SERVICE_CHANNELS || channel in FeaturedBroadcastChannels.HIDDEN_INDEXER_ROOMS) return
+        if (!FeaturedBroadcastChannels.isIndexerTracked(channel) || !isAppWideIndexer(base)) return
+        val oldest = page.mapNotNull { it.blockTime }.minOrNull() ?: return
+        val now = System.currentTimeMillis()
+        val span = IndexerAbsence.span(oldest, before, now, BroadcastRetention.INDEXER_MILLIS) ?: return
+        val onPage = page.mapNotNull { it.txId?.lowercase() }.toSet()
+        val held = database.broadcastDao().deliveredInSpan(channel, networkSenderPattern(), span.first, span.last)
+        if (!isCurrentWallet(turn)) return
+        val considered = held
+            .filter {
+                PushBannerFetch.isTxIdShaped(it.id) &&
+                    IndexerAbsence.considers(isLocalAccountAddress(it.senderAddress), it.blockTimestamp, now)
+            }
+            .map { it.id }
+        // The first read after the room opens, or a Rooms list check, removes on one miss: the
+        // reader is looking at it now. Background reads keep the second miss.
+        val needed = IndexerAbsence.missesNeeded(firstMissRemovesChannels.remove(channel))
+        val gone = absenceStrikes.strike(channel, considered, onPage, needed = needed)
+        if (gone.isEmpty()) return
+        if (!removeMessages(channel, gone) || !isCurrentWallet(turn)) return
+        absenceStrikes.forget(channel, gone)
+        android.util.Log.i("BroadcastRepository", "#$channel: ${gone.size} message(s) no longer on the indexer, removed here too")
+    }
+
+    /** Rooms whose next indexer read removes a missing message on the first miss (iOS
+     *  `firstMissRemovesChannels`): a room just opened, and the Rooms list's check. */
+    private val firstMissRemovesChannels: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+    /** How many screens have each room open (iOS `liveViewRefCounts`). */
+    private val openRoomCounts = HashMap<String, Int>()
+
+    /** A room's screen opened (iOS `acquire`): its first indexer read removes on one miss. */
+    fun acquireRoom(channelName: String) {
+        val channel = MessageProtocol.normalizeChannelName(channelName)
+        synchronized(openRoomCounts) {
+            val count = openRoomCounts[channel] ?: 0
+            if (count == 0) firstMissRemovesChannels.add(channel)
+            openRoomCounts[channel] = count + 1
+        }
+    }
+
+    /** Pairs with [acquireRoom]. */
+    fun releaseRoom(channelName: String) {
+        val channel = MessageProtocol.normalizeChannelName(channelName)
+        synchronized(openRoomCounts) {
+            val count = openRoomCounts[channel] ?: return
+            if (count <= 1) openRoomCounts.remove(channel) else openRoomCounts[channel] = count - 1
+        }
+    }
+
+    private fun isRoomOpen(channel: String): Boolean = synchronized(openRoomCounts) { channel in openRoomCounts }
+
+    /** When the Rooms list last checked each room against the indexer. */
+    private val listCheckedAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    @Volatile private var listCheckJob: kotlinx.coroutines.Job? = null
+
+    /**
+     * The Rooms list is on screen (iOS d089011f `checkListedRoomsAgainstIndexer`): each indexed
+     * room it shows that nothing else keeps current (bell off, not open) is read from the indexer
+     * once, at most every 2 minutes, so a message deleted there leaves the row's preview too, and
+     * new messages show. One at a time; bell-on rooms are on the foreground sweep already. Only
+     * from the screen, so never in the background.
+     */
+    fun checkListedRoomsAgainstIndexer(rooms: List<BroadcastChannelEntity>) {
+        if (!isSignedIn() || listCheckJob?.isActive == true) return
+        val due = IndexerAbsence.roomsDueForListCheck(
+            rooms = rooms.map { MessageProtocol.normalizeChannelName(it.channelName) to it.notifyEnabled },
+            isOpen = ::isRoomOpen,
+            isIndexed = FeaturedBroadcastChannels::isIndexerTracked,
+            isExcluded = { it in FeaturedBroadcastChannels.SERVICE_CHANNELS || it in FeaturedBroadcastChannels.HIDDEN_INDEXER_ROOMS },
+            lastCheckedAt = { listCheckedAt[it] },
+            now = System.currentTimeMillis(),
+        )
+        if (due.isEmpty()) return
+        listCheckJob = pushFetchScope.launch {
+            for (name in due) {
+                if (!isSignedIn()) break
+                listCheckedAt[name] = System.currentTimeMillis()
+                firstMissRemovesChannels.add(name)
+                try {
+                    fetchNewestAndMerge(name, 40)
+                } finally {
+                    // unless the room opened meanwhile: its own first read keeps the one miss
+                    if (!isRoomOpen(name)) firstMissRemovesChannels.remove(name)
+                }
+            }
+        }
+    }
     /**
      * One pass over the cached public-chat rows stored before sender verification existed
      * (audit XP-012): those took output 0's address (live scan) or the indexer's guess as the
@@ -1554,15 +1870,17 @@ class BroadcastRepository @Inject constructor(
      * Asks the app-wide public chat indexer which rooms it tracks (`/broadcast-channels`), at
      * most once an hour per indexer - on app open and wallet switch. An indexer without the
      * endpoint answers nothing and the set keeps what it learned from served rows
-     * (iOS `PublicChatService.refreshIndexerTrackedRooms`, 21c480d).
+     * (iOS `PublicChatService.refreshIndexerTrackedRooms`, 21c480d). [maxAgeMs] is shorter where
+     * a new room is looked for (Edit Default Public Chats: a minute, iOS 961fc05a); a new list
+     * joins its rooms at once ([com.kachat.app.services.publicchats.PublicChatDefaultRooms]).
      */
-    suspend fun refreshIndexerTrackedRooms() {
+    suspend fun refreshIndexerTrackedRooms(maxAgeMs: Long = TRACKED_ROOMS_CHECK_INTERVAL_MS) {
         val base = settings.broadcastIndexerUrl.first().trim()
         if (base.isEmpty()) return
         val now = System.currentTimeMillis()
         synchronized(this) {
             val last = trackedRoomsCheckedAt
-            if (last != null && last.first == base && now - last.second < TRACKED_ROOMS_CHECK_INTERVAL_MS) return
+            if (last != null && last.first == base && now - last.second < maxAgeMs) return
             trackedRoomsCheckedAt = base to now
         }
         val api = broadcastIndexers.broadcastIndexerApiFor(base) ?: return
@@ -1668,6 +1986,9 @@ class BroadcastRepository @Inject constructor(
         // The newest page goes in FIRST, before any history is paged (iOS fetchFromIndexerAndMerge).
         merge(newest)
         if (!stillWanted()) return -1
+        // What the indexer no longer has in this page's span goes (iOS 2026-11-25).
+        if (!isArena) dropRowsTheIndexerNoLongerHas(newest, before = null, base = base, channelName = channelName, turn = turn)
+        if (!stillWanted()) return -1
         // The newest page is in: the polling's cover reaches to when it was asked for.
         indexerCoveredUntil[channelName] = askedAt
         val newestTimes = newest.mapNotNull { it.blockTime }
@@ -1719,6 +2040,8 @@ class BroadcastRepository @Inject constructor(
                 val messages = page.messages.orEmpty()
                 if (messages.isEmpty()) break
                 merge(messages)
+                if (!stillWanted()) return -1
+                if (!isArena) dropRowsTheIndexerNoLongerHas(messages, before = before, base = base, channelName = channelName, turn = turn)
                 if (!stillWanted()) return -1
                 hasMore = page.hasMore == true
                 // The indexer's `before` is exclusive (`block_time < before`), and rows of one
@@ -2064,6 +2387,9 @@ class BroadcastRepository @Inject constructor(
         stillWanted: (() -> Boolean)? = null,
     ): String {
         if (stillWanted != null && !stillWanted()) throw SenderChangedException()
+        // Posting (a message, an edit, a reaction, a delete) makes the room the person's own: it
+        // stays if the indexer drops it (iOS 65f8a765 `keepRoomAsOwn`).
+        readState.keepRoomAsOwn(channelName)
         val payloadBytes = MessageProtocol.buildBcastPayload(channelName, content)
         return try {
             walletService.sendKaspa(

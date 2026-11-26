@@ -55,6 +55,8 @@ import com.kachat.app.util.showAddressCopiedToast
 import com.kachat.app.viewmodels.ChatViewModel
 import com.kachat.app.viewmodels.WalletViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 // ---------------------------------------------------------------------------------------------
 // Zero-balance funding gate — shared by the 1:1 chat thread, group chat thread, broadcast rooms
@@ -67,24 +69,52 @@ import kotlinx.coroutines.delay
 data class ZeroBalanceFundingGate(val active: Boolean, val chattingAddress: String?)
 
 /** Observes [ChatViewModel.chattingBalanceGateActive] for the calling screen and keeps it
- *  honest: fetches a fresh chatting-address balance once on entry, then re-polls every 10s for
- *  as long as the gate is showing, so receiving funds from anywhere dismisses the gate on its own — nothing else pushes a balance update into WalletService
- *  while the user just sits on a gated screen. */
+ *  honest: fetches a fresh chatting-address balance once on entry; then, while the gate shows and
+ *  the screen is really in front (resumed, its Hub section showing), re-reads it when the chatting
+ *  address's funds arrive ([ChatViewModel.ownAddressUtxoActivityEvents]) and, as a fallback, on the
+ *  shared [com.kachat.app.services.ForegroundBeat] (30 s, 60 s metered). Never in the background or
+ *  a hidden Hub section: it used to poll the node every 10 s there too (audit 2026-11-25 R2, B8). */
 @Composable
 fun rememberZeroBalanceFundingGate(): ZeroBalanceFundingGate {
     val chatViewModel: ChatViewModel = hiltViewModel()
     val walletViewModel: WalletViewModel = hiltViewModel()
     val active by chatViewModel.chattingBalanceGateActive.collectAsState()
     val address by walletViewModel.address.collectAsState()
+    val running = rememberScreenRunning()
     LaunchedEffect(Unit) { chatViewModel.refreshChattingBalance() }
-    LaunchedEffect(active) {
-        while (active) {
-            delay(10_000)
-            chatViewModel.refreshChattingBalance()
-        }
+    ZeroBalanceFundingRefresh(active && running, chatViewModel.ownAddressUtxoActivityEvents) {
+        chatViewModel.refreshChattingBalance()
     }
     return ZeroBalanceFundingGate(active, address)
 }
+
+/** While [enabled]: [refresh] after each own-address balance change (the bursts coalesced, as
+ *  WalletScreen does) and on every [com.kachat.app.services.ForegroundBeat] as a fallback. Shared
+ *  with the .kachat profile-save "not enough funds" popup. */
+@Composable
+internal fun ZeroBalanceFundingRefresh(
+    enabled: Boolean,
+    activity: kotlinx.coroutines.flow.Flow<Set<String>>,
+    refresh: suspend () -> Unit,
+) {
+    val latestRefresh by androidx.compose.runtime.rememberUpdatedState(refresh)
+    LaunchedEffect(enabled) {
+        if (!enabled) return@LaunchedEffect
+        launch {
+            activity.collectLatest {
+                delay(500L)
+                latestRefresh()
+            }
+        }
+        while (true) {
+            com.kachat.app.services.ForegroundBeat.sleepUntilNextBeat(FUNDING_GATE_BEAT_OFFSET_MS)
+            latestRefresh()
+        }
+    }
+}
+
+/** Where in the shared beat the funding fallback reads the balance (the other loops sit at 0-2 s). */
+internal const val FUNDING_GATE_BEAT_OFFSET_MS = 1_500L
 
 /** Dims a composer the way iOS does - `.grayscale(1)` then `.opacity(0.45)` - and makes it inert
  *  while [active]. Consuming every pointer event in the Initial pass keeps all descendants

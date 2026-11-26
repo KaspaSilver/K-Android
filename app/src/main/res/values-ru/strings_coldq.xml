@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">Это не квантово-устойчивый адрес. Отсканируйте адрес KCC-3, который показывает KasSigner.</string>
+    <string name="coldq_error_already_added">Этот адрес уже есть в этом аккаунте.</string>
+    <string name="coldq_error_in_other_account">Этот адрес уже есть в вашем аккаунте Cold Storage «%1$s».</string>
+    <string name="coldq_added_toast">Квантово-устойчивый адрес добавлен.</string>
+    <string name="coldq_add_action">Добавить квантово-устойчивый адрес</string>
+    <string name="coldq_add_action_subtitle">Отсканируйте адрес KCC-3 с экрана адреса KasSigner.</string>
+    <string name="coldq_stop_watching">Перестать отслеживать</string>
+    <string name="coldq_stop_watching_subtitle">Удаляет этот квантовый адрес из аккаунта. Отсканируйте его снова, чтобы вернуть.</string>
+    <string name="coldq_address_header">Квантово-устойчивый адрес</string>
+    <string name="coldq_address_footer">Откройте на KasSigner нужный адрес KCC-3 и отсканируйте его QR-код. Его ключ остаётся на устройстве, пока с адреса не будет трата.</string>
+    <string name="coldq_number_header">Номер адреса на KasSigner</string>
+    <string name="coldq_add_title">Добавить квантовый адрес</string>
+    <string name="coldq_number_not_whole">Номер адреса должен быть целым числом.</string>
+    <string name="coldq_needs_v11">Нужен KasSigner v1.1 или новее, который подписывает квантово-устойчивые (KCC-3) адреса.</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner не вернул скрипт ключа для этого квантово-устойчивого адреса, поэтому транзакция не будет отправлена в сеть. Проверьте, что на устройстве KasSigner v1.1 или новее и на нём есть этот адрес.</string>
+    <string name="coldq_error_unexpected_covenant">Подписанная транзакция добавляет условия ковенанта, которые эта отправка не запрашивала, поэтому она не будет отправлена в сеть.</string>
+    <string name="coldq_label_receive">Квантовый адрес</string>
+    <string name="coldq_label_change">Квантовый адрес сдачи</string>
+    <string name="coldq_label_receive_n">Квантовый адрес #%1$d</string>
+    <string name="coldq_label_change_n">Квантовый адрес сдачи #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">Эта отправка раскрывает ключ этого адреса в блокчейне, поэтому сдача не может вернуться сюда. Сначала добавьте неиспользованный квантово-устойчивый адрес из KasSigner (лучше адрес сдачи, от #0 до #4) или отправьте весь баланс.</string>
+    <string name="coldq_error_compound_needs_fresh">Объединение раскрывает ключ этого адреса в блокчейне, поэтому его монеты переходят на неиспользованный квантово-устойчивый адрес этого аккаунта. Сначала добавьте такой из KasSigner (лучше адрес сдачи, от #0 до #4).</string>
+    <string name="coldq_stop_watching_title">Перестать отслеживать этот адрес?</string>
+    <string name="coldq_stop_watching_message">Его %1$s KAS остаются в блокчейне на этом адресе, в вашем KasSigner; K только перестаёт их показывать. Отсканируйте адрес из KasSigner снова, чтобы снова отслеживать его.</string>
+    <string name="coldq_edit_number">Изменить номер адреса</string>
+    <string name="coldq_edit_number_subtitle">Номер и цепочка, которые KasSigner показывает для этого адреса.</string>
+    <string name="coldq_chain">Цепочка</string>
+    <string name="coldq_number_footer">Номер, который KasSigner показывает для этого адреса, и то, адрес это получения или сдачи. С ним устройство сразу находит ключ при подписи, без него ищет его. KasSigner отмечает как сдачу то, что уходит на его адреса сдачи от #0 до #4; любой другой адрес он показывает как платёж.</string>
+    <string name="coldq_number_too_large">Слишком большой номер: номера адресов KasSigner меньше 2147483648.</string>
+    <string name="coldq_compound_note">Переводит все монеты этого адреса в одну, на неиспользованный квантово-устойчивый адрес этого аккаунта: эта транзакция раскрывает ключ этого адреса в блокчейне.</string>
+    <string name="coldq_coins_left_behind">На этом адресе больше монет, чем может потратить одна транзакция: %1$d остаются за ключом, который эта отправка раскрывает в блокчейне. Отправьте их другой транзакцией сразу после.</string>
+    <string name="coldq_coins_move_to">Монеты переходят на ваш квантовый адрес:</string>
+    <string name="coldq_change_goes_to">Сдача уходит на ваш квантовый адрес:</string>
+    <string name="coldq_unit_marks_change">KasSigner показывает этот выход как сдачу.</string>
+    <string name="coldq_unit_shows_payment">KasSigner покажет этот выход как обычный платёж, а не как сдачу: перед подписью проверьте, что это этот адрес.</string>
+    <string name="coldq_sign_without_number">Подписать без номера адреса</string>
+    <string name="coldq_sign_without_number_note">Если KasSigner отклоняет этот запрос, номер адреса может быть неверным. Без него устройство само ищет адрес. «Изменить номер адреса» исправит его на следующий раз.</string>
+    <string name="coldq_compound_footer">Объединяет все UTXO этого адреса в один на неиспользованном квантово-устойчивом адресе этого аккаунта, так как это раскрывает ключ этого адреса в блокчейне.</string>
+    <string name="coldq_visibility_quantum_header">Квантово-устойчивые адреса</string>
+    <string name="coldq_receive_address">Адрес получения</string>
+    <string name="coldq_change_address">Адрес сдачи</string>
+    <string name="coldq_optional">Необязательно</string>
+</resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer (iOS 961fc05a): only the keys the iPhone translates; the rest are English there too. -->
+<resources>
+    <string name="ex_kind_payment">Pembayaran</string>
+    <string name="ex_kind_handshake">Handshake</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_username">Nama pengguna</string>
+    <string name="ex_kind_swap">Tukar</string>
+    <string name="ex_kind_other">Transaksi</string>
+    <string name="ex_kind_payments">Pembayaran</string>
+    <string name="ex_kind_chesses">Langkah Catur</string>
+    <string name="ex_kind_others">Transaksi</string>
+    <string name="ex_period_day">24 Jam</string>
+    <string name="ex_period_week">7 Hari</string>
+    <string name="ex_period_all">Semua Waktu</string>
+    <string name="ex_one_day">1 hari</string>
+    <string name="ex_n_days">%1$d hari</string>
+    <string name="ex_share">Bagikan</string>
+    <string name="ex_your_chatting_address">Alamat Obrolan Anda</string>
+    <string name="ex_no_transactions">Belum ada transaksi.</string>
+</resources>

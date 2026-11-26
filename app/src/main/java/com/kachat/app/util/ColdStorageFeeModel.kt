@@ -52,11 +52,13 @@ object ColdUtxoSelector {
          *  spent, so this send and that one can't both land (iOS 5848fb0 `leadingOutpoint`). Null,
          *  or a coin not among [utxos], changes nothing. */
         leadingOutpoint: String? = null,
+        /** Each input's signature-script size: a KasSigner quantum (KCC-3) source's carry the
+         *  101-byte script ([KaspaMass.KIP22_SIGNATURE_SCRIPT_LEN], iOS 961fc05a). */
+        signatureScriptSize: Int = KaspaMass.SCHNORR_SIGNATURE_SCRIPT_LEN,
     ): ColdSelection {
         var totalSelected = 0L
         val selectedUtxos = mutableListOf<UtxoEntry>()
         var estimatedFee = 0L
-        val signatureScriptSize = KaspaMass.SCHNORR_SIGNATURE_SCRIPT_LEN
         val outputScriptLens = if (amountSompi > 0) listOf(recipientScriptLen, changeScriptLen) else listOf(changeScriptLen)
 
         var storageMassBlocked = false
@@ -166,8 +168,8 @@ object ColdUtxoSelector {
         recipientScriptLen: Int,
         changeScriptLen: Int,
         extraFeeSompi: Long = 0L,
+        signatureScriptSize: Int = KaspaMass.SCHNORR_SIGNATURE_SCRIPT_LEN,
     ): ColdSelection {
-        val signatureScriptSize = KaspaMass.SCHNORR_SIGNATURE_SCRIPT_LEN
         val totalSelected = UtxoMath.total(utxos.map { it.utxoEntry.amount })
         val outputScriptLens = if (amountSompi > 0) listOf(recipientScriptLen, changeScriptLen) else listOf(changeScriptLen)
         val mass = KaspaMass.calculateMass(
@@ -230,10 +232,12 @@ object ColdSendFeeModel {
         customExtraFeeSompi: Long? = null,
         recipientScriptLen: Int = SendFeeModel.STANDARD_SCRIPT_LEN,
         changeScriptLen: Int = SendFeeModel.STANDARD_SCRIPT_LEN,
+        signatureScriptSize: Int = KaspaMass.SCHNORR_SIGNATURE_SCRIPT_LEN,
     ): Long {
         val base = SendFeeModel.baseFee(
             inputCount, feeRateSompiPerGram, 0,
             recipientScriptLen = recipientScriptLen, changeScriptLen = changeScriptLen,
+            signatureScriptSize = signatureScriptSize,
         )
         val extra = SendFeeModel.extraFee(base, feeMultiplier, customExtraFeeSompi)
         return (totalSompi - base - extra).coerceAtLeast(0L)
@@ -261,6 +265,7 @@ object ColdSendFeeModel {
         extraFeeSompi: Long,
         recipientScriptLen: Int = SendFeeModel.STANDARD_SCRIPT_LEN,
         changeScriptLen: Int = SendFeeModel.STANDARD_SCRIPT_LEN,
+        signatureScriptSize: Int = KaspaMass.SCHNORR_SIGNATURE_SCRIPT_LEN,
     ): Long? = try {
         ColdUtxoSelector.selectManual(
             utxos = utxos,
@@ -269,6 +274,7 @@ object ColdSendFeeModel {
             recipientScriptLen = recipientScriptLen,
             changeScriptLen = changeScriptLen,
             extraFeeSompi = extraFeeSompi,
+            signatureScriptSize = signatureScriptSize,
         ).let { it.estimatedFee + it.foldedChangeSompi }
     } catch (e: IllegalStateException) {
         null
@@ -289,13 +295,27 @@ object ColdSendFeeModel {
         recipientScriptLen: Int = SendFeeModel.STANDARD_SCRIPT_LEN,
         changeScriptLen: Int = SendFeeModel.STANDARD_SCRIPT_LEN,
         leadingOutpoint: String? = null,
+        signatureScriptSize: Int = KaspaMass.SCHNORR_SIGNATURE_SCRIPT_LEN,
+        /** Every coin in [utxos] is spent (a KasSigner quantum source, iOS 961fc05a: no coin may
+         *  stay behind the key the spend reveals), priced as coin control is. */
+        spendAll: Boolean = false,
     ): Preview? {
         if (amountSompi <= 0 || utxos.isEmpty()) return null
         var extra = customExtraFeeSompi?.coerceAtLeast(0L) ?: 0L
         var preview: Preview? = null
         repeat(MAX_PREVIEW_PASSES) {
             val selection = try {
-                ColdUtxoSelector.select(
+                if (spendAll) {
+                    ColdUtxoSelector.selectManual(
+                        utxos = utxos,
+                        amountSompi = amountSompi,
+                        feeRateSompiPerGram = feeRateSompiPerGram,
+                        recipientScriptLen = recipientScriptLen,
+                        changeScriptLen = changeScriptLen,
+                        extraFeeSompi = extra,
+                        signatureScriptSize = signatureScriptSize,
+                    )
+                } else ColdUtxoSelector.select(
                     utxos = utxos,
                     amountSompi = amountSompi,
                     feeRateSompiPerGram = feeRateSompiPerGram,
@@ -303,6 +323,7 @@ object ColdSendFeeModel {
                     changeScriptLen = changeScriptLen,
                     extraFeeSompi = extra,
                     leadingOutpoint = leadingOutpoint,
+                    signatureScriptSize = signatureScriptSize,
                 )
             } catch (e: IllegalStateException) {
                 return null // invalid node data (UtxoMath): no preview rather than a wrong one

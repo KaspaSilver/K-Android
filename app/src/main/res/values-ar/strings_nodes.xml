@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Node transport: wRPC over wss, the public wss fallback (iPhone 961fc05a). -->
+<resources>
+    <string name="nodes_public_fallback_note">تعذّر الوصول إلى عقد gRPC الآن، لذا يستخدم K عقدة عامة عبر wss.</string>
+    <string name="nodes_address_placeholder">host:port أو grpcs:// أو wss://</string>
+    <string name="nodes_enter_as_host_port_grpcs_or_wss">أدخل بصيغة host:port أو grpcs://host أو wss://host</string>
+    <string name="nodes_wss_secure">wss (آمن)</string>
+    <string name="nodes_ws_plaintext">ws (نص عادي)</string>
+</resources>

@@ -416,7 +416,13 @@ private fun SendProgressScreen(
         // From the top rather than centred: while the swipe is still rising, the DAG is the first
         // thing that comes into view.
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().height(200.dp)) {
-            BlockDagAnimation(highlight = isSending && failure == null, modifier = Modifier.fillMaxSize().alpha(dagAlpha))
+            // Still once it has faded behind the outcome: a confirmation left open no longer draws
+            // every frame (audit 2026-11-25 R5).
+            BlockDagAnimation(
+                highlight = isSending && failure == null,
+                modifier = Modifier.fillMaxSize().alpha(dagAlpha),
+                paused = dagSettled(finished, dagAlpha),
+            )
             // Not the ColumnScope overload: this sits in a Box.
             androidx.compose.animation.AnimatedVisibility(visible = done, enter = scaleIn(initialScale = 0.4f) + fadeIn()) {
                 // iOS checkmark.circle.fill in black on the accent: the check shows the black disc
@@ -561,6 +567,10 @@ private fun kasText(sompi: Long): String {
     return "$text ${KaspaUnit.symbol}"
 }
 
+/** The send screens' DAG stops moving once the transaction is Sent or Failed and its fade to 35%
+ *  has finished (audit 2026-11-25 R5). */
+internal fun dagSettled(finished: Boolean, alpha: Float): Boolean = finished && alpha <= 0.35f + 0.005f
+
 /**
  * Kaspa's BlockDAG drifting right to left (iOS 7abc06e `BlockDAGAnimationView`): columns of
  * blocks, each pointing back at one or two blocks of the column before (several parents, not a
@@ -569,7 +579,16 @@ private fun kasText(sompi: Long): String {
  * index, so the picture is stable as it moves.
  */
 @Composable
-fun BlockDagAnimation(highlight: Boolean, modifier: Modifier = Modifier) {
+fun BlockDagAnimation(
+    highlight: Boolean,
+    modifier: Modifier = Modifier,
+    /** Stops drawing new frames (iOS 961fc05a, audit 2026-11-25 B2): the Explorer's card sets it
+     *  while its Hub section is hidden or the app isn't in front. */
+    paused: Boolean = false,
+    /** The shortest time between frames; null draws at the display's rate (the send screens). The
+     *  Explorer's small card asks for 30 fps. */
+    minimumIntervalMs: Long? = null,
+) {
     val density = LocalDensity.current
     val spacing = with(density) { 54.dp.toPx() }
     val speed = with(density) { 60.dp.toPx() } // per second
@@ -579,10 +598,14 @@ fun BlockDagAnimation(highlight: Boolean, modifier: Modifier = Modifier) {
     val primary = LocalAppColors.current.textPrimary
 
     var elapsed by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(paused, minimumIntervalMs) {
+        if (paused) return@LaunchedEffect
+        // on again from where it stood
+        val resumedAt = elapsed
         val start = withFrameNanos { it }
         while (true) {
-            withFrameNanos { now -> elapsed = (now - start) / 1_000_000_000f }
+            withFrameNanos { now -> elapsed = resumedAt + (now - start) / 1_000_000_000f }
+            if (minimumIntervalMs != null) kotlinx.coroutines.delay(minimumIntervalMs)
         }
     }
     /** When [highlight] turned on: the block entering on the right then is the transaction's. */

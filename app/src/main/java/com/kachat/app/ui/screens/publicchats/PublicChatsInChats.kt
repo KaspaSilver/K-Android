@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -61,8 +64,9 @@ import com.kachat.app.viewmodels.BroadcastViewModel
 
 /**
  * Public Chats in the Chats list (iOS 148a5331 `ChatListView`, rooms moved in from their own tab
- * on 2026-11-21): the room rows, their swipes, the leave confirmation, and the New sheet's New
- * Public Chat page. The Chats screen only places them.
+ * on 2026-11-21; the list's second page since iOS 961fc05a): the room rows, their swipes, the leave
+ * confirmation, the page button, and the New sheet's New Public Chat page. The Chats screen only
+ * places them.
  */
 object PublicChatRoutes {
     /** A room's screen ([BroadcastChannelScreen]); the navigation registers "broadcast/{channelName}". */
@@ -96,6 +100,17 @@ object PublicChatRoutes {
 }
 
 /**
+ * The Chats list's two pages, switched by the cycle button beside the KaChat title (iOS 961fc05a
+ * `ListPage`, owner 2026-11-25): your chats and groups (with the bots and Message Requests), or the
+ * public rooms.
+ */
+internal enum class ChatsListPage { CHATS, PUBLIC_CHATS }
+
+/** The rooms picked in Select mode on the Public Chats page, by name (iOS `selectedRoomNames`). */
+internal fun selectedRoomNames(selectedEntryIds: Set<String>): List<String> =
+    selectedEntryIds.mapNotNull { if (it.startsWith("r:")) it.removePrefix("r:") else null }.sorted()
+
+/**
  * When a room last had a message: where it sits among the chats (iOS `roomActivity`). A room
  * nobody has written in yet goes to the bottom - the default rooms are all joined at once, on
  * first launch, and by their join time they sat above every chat.
@@ -111,9 +126,10 @@ internal fun displayedPublicRooms(rooms: List<BroadcastChannelEntity>, searchQue
 }
 
 /**
- * One room in the Chats list (iOS `roomRow`): drawn like a chat ([PublicChatRow]), swipe left for
- * Delete and Mute (no full swipe, so a long swipe can't start a delete), right for Mark as Read or
- * Mark as Unread. In Select mode a tap picks it (the bar's actions leave rooms alone, as on iOS).
+ * One room on the Public Chats page (iOS `roomRow`): drawn like a chat ([PublicChatRow]), swipe left
+ * for Delete and Mute (no full swipe, so a long swipe can't start a delete), right for Mark as Read
+ * or Mark as Unread. In Select mode a tap picks it for the bar's read, unread, pin and delete (iOS
+ * 961fc05a).
  */
 @Composable
 internal fun PublicRoomChatsRow(
@@ -142,7 +158,11 @@ internal fun PublicRoomChatsRow(
     val yesterday = stringResource(R.string.pc_yesterday)
     val last = summary?.lastMessage
     // Worked out once per message (iOS `PublicChatRoomSummaries.previewMemo`): by id and content.
-    val lastPreview = remember(last?.id, last?.content) { last?.let { publicRoomPreview(it.content) } }
+    // An edited message previews with its newest text, as in the room (iOS 961fc05a).
+    val editText = summary?.lastEditText
+    val lastPreview = remember(last?.id, last?.content, editText) {
+        last?.let { publicRoomPreview(if (editText != null) com.kachat.app.util.MessageEdit.apply(editText, it.content) else it.content) }
+    }
     val preview = last?.let { message ->
         val sender = when {
             myAddress != null && message.senderAddress.equals(myAddress, ignoreCase = true) -> youLabel
@@ -286,14 +306,18 @@ internal fun LeavePublicRoomSheet(
 }
 
 /**
- * New Public Chat, in the Chats + sheet (iOS `createJoinRoom`): join or create a room by name -
- * anyone who joins the same name sees and posts there. Joining opens the room ([onJoined]).
+ * New Public Chat, the Public Chats page's + (iOS `createJoinRoom`; the Chats page's New sheet has
+ * no room row since ef760cfa): join or create a room by name - anyone who joins the same name sees
+ * and posts there. Joining opens the room ([onJoined]).
  */
 @Composable
 internal fun NewPublicChatPage(
     broadcastViewModel: BroadcastViewModel,
     onBack: () -> Unit,
     onJoined: (String) -> Unit,
+    /** The bar's leading button: Cancel since iOS ef760cfa (only the Public Chats page's + opens
+     *  it, so it closes the sheet). */
+    backLabel: String = stringResource(R.string.cancel),
 ) {
     val colors = LocalAppColors.current
     var name by remember { mutableStateOf("") }
@@ -316,7 +340,7 @@ internal fun NewPublicChatPage(
     Column(modifier = Modifier.fillMaxSize()) {
         SheetNavBar(
             title = stringResource(R.string.pc_new_public_chat),
-            leading = { SheetBarButton(stringResource(R.string.pc_back), onClick = onBack) },
+            leading = { SheetBarButton(backLabel, onClick = onBack) },
         )
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp),
@@ -390,13 +414,113 @@ internal fun NewPublicChatPage(
  * name is checked again and a room with no row is joined first.
  */
 @Composable
-internal fun PublicRoomHandoffEffect(navController: NavController, broadcastViewModel: BroadcastViewModel) {
+internal fun PublicRoomHandoffEffect(
+    navController: NavController,
+    broadcastViewModel: BroadcastViewModel,
+    /** The list switches to its Public Chats page (iOS 961fc05a: a room link or push does). */
+    onHandoff: () -> Unit = {},
+) {
     val pending by BroadcastDeepLink.pendingChannel.collectAsState()
     LaunchedEffect(pending) {
         val raw = pending ?: return@LaunchedEffect
         BroadcastDeepLink.consumePending()
         broadcastViewModel.openRoomFromHandoff(raw) { name ->
+            onHandoff()
             navController.navigate(PublicChatRoutes.room(name)) { launchSingleTop = true }
         }
+    }
+}
+
+/**
+ * Chats or Public Chats, beside the KaChat title (iOS 961fc05a `pageCycleButton`): a tap fades to
+ * the other page. Its red count is the public chats' unread on either page (rooms with their bell
+ * on); the dock's KaChat badge counts the chats and groups (owner, 2026-11-25).
+ */
+@Composable
+internal fun ChatsPageCycleButton(
+    page: ChatsListPage,
+    roomUnread: Int,
+    onSelect: (ChatsListPage) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val chatsTitle = stringResource(R.string.chats)
+    val publicTitle = stringResource(R.string.pc_broadcasts)
+    androidx.compose.foundation.layout.Box(modifier) {
+        com.kachat.app.ui.components.CycleCapsuleButton(
+            options = ChatsListPage.entries,
+            selection = page,
+            onSelect = onSelect,
+            title = { if (it == ChatsListPage.CHATS) chatsTitle else publicTitle },
+            hint = stringResource(R.string.r55_page_cycle_hint),
+        )
+        if (roomUnread > 0) {
+            Text(
+                if (roomUnread > 99) "99+" else roomUnread.toString(),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                textAlign = TextAlign.Center,
+                style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 6.dp, y = (-7).dp)
+                    .background(Color.Red, RoundedCornerShape(percent = 50))
+                    .defaultMinSize(minWidth = 18.dp, minHeight = 18.dp)
+                    .padding(horizontal = 5.dp, vertical = 1.dp),
+            )
+        }
+    }
+}
+
+/**
+ * The "Silenced" tag beside a chat's, group's or room's name in the Chats list (iOS ef760cfa
+ * `SilencedPill`, owner 2026-11-25, teal since iOS 53303688: a pill, plainer than the old bell-slash icon). Never squeezed:
+ * the name truncates first (give the name `weight(1f, fill = false)`).
+ */
+@Composable
+internal fun SilencedPill(modifier: Modifier = Modifier) {
+    // Teal, the app's accent (iOS 53303688: `.accentColor`, was gray).
+    Text(
+        stringResource(R.string.silenced),
+        color = KaspaTeal,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.SemiBold,
+        maxLines = 1,
+        softWrap = false,
+        modifier = modifier
+            .background(KaspaTeal.copy(alpha = 0.16f), RoundedCornerShape(percent = 50))
+            .padding(horizontal = 7.dp, vertical = 2.dp),
+    )
+}
+
+/** The Public Chats page with every room switched off or left (iOS 961fc05a `emptyRoomsView`). */
+@Composable
+internal fun PublicChatsEmptyView(modifier: Modifier = Modifier) {
+    val colors = LocalAppColors.current
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            Icons.Default.Tag,
+            contentDescription = null,
+            tint = colors.textSecondary,
+            modifier = Modifier.size(60.dp),
+        )
+        Text(
+            stringResource(R.string.r55_no_public_chats),
+            color = colors.textPrimary,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            stringResource(R.string.r55_no_public_chats_hint),
+            color = colors.textSecondary,
+            fontSize = 15.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
     }
 }

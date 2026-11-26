@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">إضافة إلى السلسلة</string>
     <string name="kpui_post_not_loaded">تعذّر تحميل هذا المنشور</string>
     <string name="kpui_post_not_loaded_body">ربما أُزيل، أو ربما تعذّر الوصول إلى الشبكة.</string>
-    <string name="kpui_no_comments_yet">لا تعليقات بعد - كن أول من يرد.</string>
-    <string name="kpui_every_reply_above">كل الردود في المحادثة أعلاه.</string>
     <string name="kpui_loading_replies">جارٍ تحميل الردود...</string>
     <string name="kpui_chat">دردشة</string>
     <string name="kpui_followers">المتابِعون</string>

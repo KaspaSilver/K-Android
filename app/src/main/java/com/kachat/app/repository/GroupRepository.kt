@@ -62,6 +62,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.withLock
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -265,11 +266,14 @@ class GroupRepository @Inject constructor(
         database.groupDao().markGroupUnread(groupId, walletAddress)
     }
 
-    /** True whenever a wallet is active, regardless of group state - see [com.kachat.app.services.GroupScanningService] for why `gctl` scanning must key off this instead of group count. */
-    val hasActiveWallet: Flow<Boolean> = walletManager.activeAddressFlow.map { it != null }
+    /** True whenever a wallet is signed in, regardless of group state - not just an account kept
+     *  after Log Out (audit 2026-11-25 B6): signed out, the group stream and live poll stop
+     *  instead of running with nothing to deliver to. */
+    val hasActiveWallet: Flow<Boolean> = walletManager.signedInAddressFlow.map { it != null }
 
-    /** The active account's address - the live group poll keys its cursors to it. */
-    val activeWalletAddress: Flow<String?> = walletManager.activeAddressFlow
+    /** The signed-in account's address, null while signed out - the live group poll keys its
+     *  cursors to it. */
+    val activeWalletAddress: Flow<String?> = walletManager.signedInAddressFlow
 
     /** "kaspa" or "kaspatest", read off the active wallet's own address - used to reconstruct a sender's address from a raw pubkey/script for the active network instead of assuming mainnet. */
     fun addressPrefix(): String = walletManager.getAddress().substringBefore(":")
@@ -307,6 +311,26 @@ class GroupRepository @Inject constructor(
         val snap = membersOf(group).firstOrNull { it.address == senderAddress }?.displayName?.trim()
         if (!snap.isNullOrEmpty()) return snap
         return KaspaAddress.shortDisplay(senderAddress)
+    }
+
+    /** A message that @'s you (`@<your address>`, the group wire format): a row in Profile's bell
+     *  (iOS d089011f `recordMentionIfAny`), whatever the group's notification setting. Not your
+     *  own, not from a member you muted or hid; history from before you joined never gets here
+     *  (the caller's floors). The preview names mentions as the group does. */
+    private suspend fun recordMentionIfAny(
+        group: GroupEntity, senderAddress: String, walletAddress: String, plaintext: String, txId: String, blockTimestamp: Long,
+    ) {
+        if (senderAddress == walletAddress || walletAddress.isEmpty()) return
+        val unwrapped = MessageReply.parseOrNull(plaintext)?.text ?: plaintext
+        if (!unwrapped.contains("@$walletAddress")) return
+        if (isQuietGroupMember(group.groupId, senderAddress)) return
+        val preview = com.kachat.app.util.UsernameMention.mentionsAsNames(MessageReply.previewText(plaintext)) { address ->
+            groupSenderLabel(address, walletAddress, group)
+        }
+        notificationCenter.recordMention(
+            sender = groupSenderLabel(senderAddress, walletAddress, group), place = group.name, preview = preview,
+            txId = txId, blockTimeMs = blockTimestamp, target = "group:${group.groupId}",
+        )
     }
 
     /** Insert an iMessage-style membership line into the group thread, stored as a negative-epoch
@@ -366,23 +390,59 @@ class GroupRepository @Inject constructor(
             }
     }
 
-    /** Decrypted messages for a group, oldest first - decryption happens here, on read, from stored ciphertext. */
+    /**
+     * Decrypted messages for a group, oldest first - decryption happens here, on read, from stored
+     * ciphertext.
+     *
+     * The live query is only the thread's (txId, deliveryStatus) list, which Room re-runs on any
+     * write to `group_messages`; an unchanged list (another group's write) stops there. Full rows
+     * are read and decrypted only for txIds this collection hasn't decoded yet, so a new message
+     * costs one row and one decrypt, not a re-read and re-map of the whole history, and a thread
+     * past the shared cache's size no longer re-decrypts everything on each write (audit
+     * 2026-11-25 S9; iOS keeps the decrypted history in memory the same way).
+     */
     fun getMessages(groupId: String): Flow<List<GroupMessage>> {
         return walletManager.activeAddressFlow.flatMapLatest { address ->
-            if (address == null) flowOf(emptyList())
-            else database.groupDao().getMessages(groupId, address).map { entities ->
-                val bag = groupSecretStore.loadBag(address, groupId) ?: return@map emptyList()
-                val groupIdBytes = groupId.hexToByteArray()
-                // A row an older build stored before it knew the type: never a bubble.
-                entities.mapNotNull { decryptCached(it, bag, groupIdBytes) }
-                    .filterNot { GroupMemberStatus.isHiddenEnvelope(it.content) }
-            }
-            // Room delivers on its own executor, but the map above ran wherever the collector
-            // lives - the main thread for a StateFlow in a ViewModel - so a sync that inserted a
-            // message re-decrypted the whole thread on the UI thread and dropped frames.
-            .flowOn(Dispatchers.Default)
+            if (address == null) flowOf(emptyList()) else threadMessages(groupId, address)
         }
     }
+
+    private fun threadMessages(groupId: String, address: String): Flow<List<GroupMessage>> = kotlinx.coroutines.flow.flow {
+        // Per collection: rows are immutable once stored except deliveryStatus, which the key
+        // list carries.
+        val decoded = HashMap<String, GroupMessage>()
+        val groupIdBytes = runCatching { groupId.hexToByteArray() }.getOrNull()
+        database.groupDao().getMessageKeys(groupId, address).distinctUntilChanged().collect { keys ->
+            val bag = groupSecretStore.loadBag(address, groupId)
+            if (bag == null || groupIdBytes == null) {
+                emit(emptyList())
+                return@collect
+            }
+            val missing = keys.filter { it.txId !in decoded }.map { it.txId }
+            // Under SQLite's 999 bound parameters.
+            for (chunk in missing.chunked(500)) {
+                for (entity in database.groupDao().getMessagesByTxIds(address, chunk)) {
+                    if (entity.groupId != groupId) continue
+                    decryptCached(entity, bag, groupIdBytes)?.let { decoded[entity.txId] = it }
+                }
+            }
+            // Deleted rows (a local delete, a delivered send's placeholder) leave the map too.
+            if (missing.isNotEmpty() || decoded.size > keys.size) {
+                val present = keys.mapTo(HashSet(keys.size)) { it.txId }
+                decoded.keys.retainAll(present)
+            }
+            val messages = keys.mapNotNull { key ->
+                val message = decoded[key.txId] ?: return@mapNotNull null
+                if (message.deliveryStatus == key.deliveryStatus) message
+                else message.copy(deliveryStatus = key.deliveryStatus).also { decoded[key.txId] = it }
+            }
+            // A row an older build stored before it knew the type: never a bubble.
+            emit(messages.filterNot { GroupMemberStatus.isHiddenEnvelope(it.content) })
+        }
+    }
+        // Room delivers on its own executor, but the work above ran wherever the collector lives -
+        // the main thread for a StateFlow in a ViewModel - and dropped frames.
+        .flowOn(Dispatchers.Default)
 
     /**
      * Whether any of this group's messages contains [query] (case-insensitive) - the message half
@@ -488,6 +548,20 @@ class GroupRepository @Inject constructor(
         return walletManager.activeAddressFlow.flatMapLatest { address ->
             if (address == null) flowOf(emptyList())
             else database.messageEditDao().getEditsForGroup(groupId, address)
+        }
+    }
+
+    /**
+     * The newest edit's text of each of these messages (the groups' last messages), by txid: the
+     * Chats list previews an edited message with its newest text, as the thread shows it (iOS
+     * 961fc05a `GroupChatRow.previewText`).
+     */
+    fun lastMessageEditTexts(targetTxIds: List<String>): Flow<Map<String, String>> {
+        if (targetTxIds.isEmpty()) return flowOf(emptyMap())
+        return walletManager.activeAddressFlow.flatMapLatest { address ->
+            if (address == null) flowOf(emptyMap())
+            else database.messageEditDao().getGroupEditsForTargets(targetTxIds.take(900), address)
+                .map { rows -> rows.associate { it.targetTxId to it.text } }
         }
     }
 
@@ -1581,14 +1655,9 @@ class GroupRepository @Inject constructor(
                     markGroupRead(group.groupId)
                     return
                 }
-                // Global notification center (Profile bell): list this message when it
-                // @mentions the wallet's own KNS domain (deduped by txId inside the store).
-                notificationCenter.recordGroupMentionIfNeeded(
-                    groupId = group.groupId, groupName = group.name,
-                    senderAddress = senderAddress,
-                    senderName = com.kachat.app.util.KaspaAddress.shortDisplay(senderAddress),
-                    text = plaintext, txId = txId, timestampMs = blockTimestamp,
-                )
+                // A message that @'s you: a row in Profile's bell, whatever the group's
+                // notification setting (iOS d089011f `recordMentionIfAny`).
+                recordMentionIfAny(group, senderAddress, walletAddress, plaintext, txId, blockTimestamp)
                 if (notificationHelper.isViewingGroup(group.groupId)) {
                     // Already looking at this group's thread right now - keep it marked read
                     // instead of letting the badge tick up for a message arriving live.
@@ -2445,27 +2514,81 @@ class GroupRepository @Inject constructor(
      *    fan-out-to-every-device push fallback for that same case.
      */
     private val catchUpMutex = kotlinx.coroutines.sync.Mutex()
+    private val catchUpQueued = java.util.concurrent.atomic.AtomicBoolean(false)
+    /** The wallet and time of the last catch-up that got past its guards, for a push's
+     *  coalescing (audit 2026-11-25 N10). */
     @Volatile
-    private var catchUpQueued = false
+    private var lastCatchUpDone: Pair<String, Long>? = null
 
     /**
      * [syncGroups], one at a time: a request during one queues exactly one more, and any further
      * request while that one waits is already covered by it. Opening a group runs this at once
      * (iOS 360e5d2 runGroupCatchUp), so a thread opened from a tapped notification shows what
      * arrived while the app was away without two full syncs running side by side.
+     *
+     * [skipIfDoneWithinMs]: nothing to do when a catch-up for this wallet finished that recently,
+     * checked again once the lock is ours, so a burst of pushes runs one (audit 2026-11-25 N10).
      */
-    suspend fun runGroupCatchUp() {
-        if (catchUpMutex.isLocked) {
-            if (catchUpQueued) return
-            catchUpQueued = true
-        }
-        catchUpMutex.lock()
+    suspend fun runGroupCatchUp(skipIfDoneWithinMs: Long = 0L) {
+        if (catchUpDoneWithin(skipIfDoneWithinMs)) return
+        val queued = catchUpMutex.isLocked
+        if (queued && !catchUpQueued.compareAndSet(false, true)) return
         try {
-            catchUpQueued = false
-            syncGroups()
+            catchUpMutex.lock()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // A push's budget ran out while it waited: the next request may queue again.
+            if (queued) catchUpQueued.set(false)
+            throw e
+        }
+        try {
+            catchUpQueued.set(false)
+            if (catchUpDoneWithin(skipIfDoneWithinMs)) return
+            syncAllGroupsLocked()
         } finally {
             catchUpMutex.unlock()
         }
+    }
+
+    private fun catchUpDoneWithin(ms: Long): Boolean =
+        catchUpIsFresh(lastCatchUpDone, walletManager.getActiveAccount()?.address, System.currentTimeMillis(), ms)
+
+    /**
+     * The full catch-up, waiting its turn behind one already running. Every caller goes through
+     * the one lock: two runs side by side could each broadcast the same self-invite or tombstone
+     * backfill, since the bag is updated only once the send returns (audit 2026-11-25 S10).
+     */
+    suspend fun syncGroups() {
+        catchUpMutex.withLock { syncAllGroupsLocked() }
+    }
+
+    private suspend fun syncAllGroupsLocked() {
+        val wallet = syncAllGroups() ?: return
+        lastCatchUpDone = wallet to System.currentTimeMillis()
+    }
+
+    /**
+     * A `group_message` push's catch-up, after its banner (audit 2026-11-25 N10, S6). It used to
+     * run the full [syncGroups] - every group, every member lane, the backfills - for every push.
+     * A push read here names its group, so only that group's lanes are asked, in one batched
+     * `since` read, to store the message. One that couldn't be read may be from a group this
+     * device hasn't got the keys of yet, so that one still runs the full catch-up, coalesced so a
+     * burst runs it once.
+     */
+    suspend fun catchUpAfterGroupMessagePush(blindedGroupIdHex: String?, read: GroupMessagePush) {
+        val groupId = when (read) {
+            is GroupMessagePush.Banner -> read.groupId
+            GroupMessagePush.Silent -> blindedGroupIdHex?.let { runCatching { findGroupByBlindedId(it) }.getOrNull()?.groupId }
+            GroupMessagePush.Unreadable -> null
+        }
+        if (groupId != null && !IndexerHealth.isDown.value) {
+            val since = System.currentTimeMillis() - PUSH_CATCH_UP_LOOKBACK_MS
+            when (pollLiveGroupTraffic(onlyGroupId = groupId, includeControl = false, cursor = since)) {
+                // Stored, or nothing learned (offline): the foreground catch-up brings it.
+                is LiveGroupPoll.Answered, LiveGroupPoll.Failed -> return
+                LiveGroupPoll.Unsupported -> Unit
+            }
+        }
+        runGroupCatchUp(skipIfDoneWithinMs = PUSH_CATCH_UP_COALESCE_MS)
     }
 
     /** What one live pass against the indexer's `since` reads learned. */
@@ -2558,16 +2681,18 @@ class GroupRepository @Inject constructor(
         }
     }
 
-    suspend fun syncGroups() {
+    /** The catch-up itself; only ever under [catchUpMutex]. The wallet it ran for, or null when
+     *  a guard stopped it. */
+    private suspend fun syncAllGroups(): String? {
         // Signed out: nothing runs for this wallet, above all not the tombstones, recovery invites
         // and invite answers below, each a transaction (iOS has no current wallet then, and its
         // catch-up guards on that; getActiveAccount survives logout here).
-        if (walletManager.isLoggedOut) return
-        val api = networkService.indexerApi.value ?: return
+        if (walletManager.isLoggedOut) return null
+        val api = networkService.indexerApi.value ?: return null
         // On a cold foreground before the user has logged in/imported a wallet there's no active
         // account yet, and getAddress() would throw IllegalStateException. Bail out the same way
         // as the missing-api guard above rather than crashing the on-foreground catch-up.
-        val walletAddress = walletManager.getActiveAccount()?.address ?: return
+        val walletAddress = walletManager.getActiveAccount()?.address ?: return null
 
         // Backfill recovery invites for any admin group lacking one for its current epoch — i.e.
         // every group created before this feature existed. One-time per group per epoch; once on
@@ -2600,7 +2725,7 @@ class GroupRepository @Inject constructor(
         // Not while the indexer is down: what's missed is read from the chain instead (iOS 4f8e14bb).
         if (IndexerHealth.isDown.value) {
             catchUpGroupsFromChain(walletAddress)
-            return
+            return walletAddress
         }
 
         val restoringKeys = prepareToRestoreMissingGroupKeys(walletAddress)
@@ -2633,7 +2758,7 @@ class GroupRepository @Inject constructor(
         // The indexer went down during this pass.
         if (IndexerHealth.isDown.value) {
             catchUpGroupsFromChain(walletAddress)
-            return
+            return walletAddress
         }
 
         settlePendingSendsFromBeforeThisRun(walletAddress)
@@ -2642,6 +2767,7 @@ class GroupRepository @Inject constructor(
         if (restoringKeys.any { groupSecretStore.loadBag(walletAddress, it.groupId) != null }) {
             _groupKeysRestored.update { it + 1 }
         }
+        return walletAddress
     }
 
     // -------------------------------------------------------------------------
@@ -3230,7 +3356,8 @@ class GroupRepository @Inject constructor(
      * run per key per launch starts from nothing instead, which the DAO's txId dedupe makes free
      * to repeat.
      */
-    private val deepBackfilledGroupKeys = mutableSetOf<String>()
+    // Concurrent: forceRefreshGroup's walk can overlap a catch-up (audit 2026-11-25 S10).
+    private val deepBackfilledGroupKeys: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
     /**
      * One fetched row's ingest, on its own: a row that throws is logged and skipped. Without this
@@ -3443,6 +3570,21 @@ private const val LIVE_POLL_REWIND_MS = 10_000L
 
 /** Rows per `since` page; a full page is followed straight away. */
 private const val LIVE_POLL_PAGE = 200
+
+/** A group push's one-group read looks back this far: the message was mined just before the
+ *  push, and the read rewinds [LIVE_POLL_REWIND_MS] more (audit 2026-11-25 N10). */
+private const val PUSH_CATCH_UP_LOOKBACK_MS = 2 * 60 * 1000L
+
+/** A push's full catch-up is skipped when one for the wallet finished this recently, so a burst
+ *  of unreadable pushes runs it once (audit 2026-11-25 N10). */
+internal const val PUSH_CATCH_UP_COALESCE_MS = 60_000L
+
+/** Whether the catch-up [last] (wallet, finished at) covers [wallet] at [nowMs] within [windowMs];
+ *  never with no window, for another wallet, or with a clock that went back. */
+internal fun catchUpIsFresh(last: Pair<String, Long>?, wallet: String?, nowMs: Long, windowMs: Long): Boolean {
+    if (windowMs <= 0L || last == null || wallet == null || last.first != wallet) return false
+    return nowMs - last.second in 0 until windowMs
+}
 
 /** Member lanes per `since` read: the indexer takes at most this many ids in one request (iOS
  *  `liveIdsPerRead`). */

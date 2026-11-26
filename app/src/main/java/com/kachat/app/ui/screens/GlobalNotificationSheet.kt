@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AlternateEmail
 import androidx.compose.material.icons.outlined.ArrowCircleDown
 import androidx.compose.material.icons.outlined.Campaign
 import androidx.compose.material.icons.outlined.Groups
@@ -69,6 +70,8 @@ private fun routeNotificationEntry(
         "wallet" -> close {
             if (target.isNotEmpty()) com.kachat.app.ui.OwnAddressRoute.pending.value = target
         }
+        // A room or group @mention of you: the room at the message, or the group (iOS d089011f).
+        GlobalNotificationCenterStore.SOURCE_MENTION -> openMentionEntry(entry, close)
         // A token received: that token's Manage screen, on the Wallet tab (iOS 5b7c772c TokenRoute).
         "token" -> close {
             walletViewModel.openTokenRoute(target.ifEmpty { com.kachat.app.services.tokens.WalletToken.KUSDT.id })
@@ -213,6 +216,8 @@ private fun sourceIcon(source: String): ImageVector = when (source) {
     "wallet" -> Icons.Outlined.ArrowCircleDown
     // dollarsign.circle (iOS 5b7c772c)
     "token" -> Icons.Outlined.MonetizationOn
+    // at (iOS d089011f `.mention`)
+    GlobalNotificationCenterStore.SOURCE_MENTION -> Icons.Outlined.AlternateEmail
     "kaposts" -> Icons.Outlined.Campaign
     "group" -> Icons.Outlined.Groups
     else -> Icons.Outlined.Sensors

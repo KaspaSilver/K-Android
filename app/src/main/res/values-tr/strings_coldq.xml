@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">Bu kuantuma dayanıklı bir adres değil. KasSigner\'ın gösterdiği KCC-3 adresini tara.</string>
+    <string name="coldq_error_already_added">Bu adres zaten bu hesapta.</string>
+    <string name="coldq_error_in_other_account">Bu adres zaten “%1$s” Cold Storage hesabında.</string>
+    <string name="coldq_added_toast">Kuantuma dayanıklı adres eklendi.</string>
+    <string name="coldq_add_action">Kuantuma Dayanıklı Adres Ekle</string>
+    <string name="coldq_add_action_subtitle">KasSigner\'ın adres ekranından bir KCC-3 adresi tara.</string>
+    <string name="coldq_stop_watching">İzlemeyi Durdur</string>
+    <string name="coldq_stop_watching_subtitle">Bu kuantum adresini hesaptan kaldırır. Geri eklemek için tekrar tara.</string>
+    <string name="coldq_address_header">Kuantuma Dayanıklı Adres</string>
+    <string name="coldq_address_footer">KasSigner\'da istediğin KCC-3 adresini aç ve QR kodunu tara. Bu adresten harcama yapılana kadar anahtarı cihazda kalır.</string>
+    <string name="coldq_number_header">KasSigner\'daki Adres Numarası</string>
+    <string name="coldq_add_title">Kuantum Adresi Ekle</string>
+    <string name="coldq_number_not_whole">Adres numarası bir tam sayı olmalı.</string>
+    <string name="coldq_needs_v11">Kuantuma dayanıklı (KCC-3) adresleri imzalayan KasSigner v1.1 veya üstü gerekir.</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner bu kuantuma dayanıklı adresin anahtar betiğini döndürmedi, bu yüzden yayınlanmayacak. Cihazda KasSigner v1.1 veya üstünün çalıştığını ve bu adresin cihazda olduğunu kontrol et.</string>
+    <string name="coldq_error_unexpected_covenant">İmzalanan işlem, bu gönderimin hiç istemediği covenant koşulları ekliyor, bu yüzden yayınlanmayacak.</string>
+    <string name="coldq_label_receive">Kuantum Adresi</string>
+    <string name="coldq_label_change">Kuantum Para Üstü Adresi</string>
+    <string name="coldq_label_receive_n">Kuantum Adresi #%1$d</string>
+    <string name="coldq_label_change_n">Kuantum Para Üstü Adresi #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">Bu gönderim bu adresin anahtarını zincirde açığa çıkarır, bu yüzden para üstü buraya dönemez. Önce KasSigner\'dan kullanılmamış bir kuantuma dayanıklı adres ekle (en iyisi bir para üstü adresi, #0 ile #4 arası) ya da bakiyenin tamamını gönder.</string>
+    <string name="coldq_error_compound_needs_fresh">Birleştirme bu adresin anahtarını zincirde açığa çıkarır, bu yüzden coin\'leri bu hesabın kullanılmamış bir kuantuma dayanıklı adresine taşınır. Önce KasSigner\'dan bir tane ekle (en iyisi bir para üstü adresi, #0 ile #4 arası).</string>
+    <string name="coldq_stop_watching_title">Bu Adresi İzlemeyi Durdur?</string>
+    <string name="coldq_stop_watching_message">%1$s KAS\'ı zincirde bu adreste, KasSigner\'ında kalır; K yalnızca göstermeyi bırakır. Yeniden izlemek için adresi KasSigner\'dan tekrar tara.</string>
+    <string name="coldq_edit_number">Adres Numarasını Düzenle</string>
+    <string name="coldq_edit_number_subtitle">KasSigner\'ın bu adres için gösterdiği numara ve zincir.</string>
+    <string name="coldq_chain">Zincir</string>
+    <string name="coldq_number_footer">KasSigner\'ın bu adres için gösterdiği numara ve bunun alma mı yoksa para üstü adresi mi olduğu. Numarayla cihaz imzalarken anahtarı hemen bulur; numara olmadan anahtarı arar. KasSigner, #0 ile #4 arası para üstü adreslerine giden para üstünü para üstü olarak işaretler; diğer her adresi ödeme olarak gösterir.</string>
+    <string name="coldq_number_too_large">Bu numara çok büyük: KasSigner\'ın adres numaraları 2147483648\'den küçüktür.</string>
+    <string name="coldq_compound_note">Bu adresin tüm coin\'lerini bu hesabın kullanılmamış bir kuantuma dayanıklı adresinde tek bir coin\'e taşır: bu işlem bu adresin anahtarını zincirde açığa çıkarır.</string>
+    <string name="coldq_coins_left_behind">Bu adreste bir işlemin harcayabileceğinden fazla coin var: %1$d tanesi bu gönderimin zincirde açığa çıkardığı anahtarın arkasında kalır. Hemen ardından başka bir işlemle gönder.</string>
+    <string name="coldq_coins_move_to">Coin\'ler kuantum adresine taşınır:</string>
+    <string name="coldq_change_goes_to">Para üstü kuantum adresine gider:</string>
+    <string name="coldq_unit_marks_change">KasSigner bu çıktıyı para üstü olarak gösterir.</string>
+    <string name="coldq_unit_shows_payment">KasSigner bu çıktıyı para üstü olarak değil, sıradan bir ödeme olarak gösterecek: imzalamadan önce bu adres olduğunu kontrol et.</string>
+    <string name="coldq_sign_without_number">Adres Numarası Olmadan İmzala</string>
+    <string name="coldq_sign_without_number_note">KasSigner bu isteği reddederse adres numarası yanlış olabilir. Numara olmadan cihaz adresi kendisi arar. Adres Numarasını Düzenle bir dahaki sefer için düzeltir.</string>
+    <string name="coldq_compound_footer">Bu işlem bu adresin anahtarını zincirde açığa çıkardığı için bu adresteki tüm UTXO\'ları bu hesabın kullanılmamış bir kuantuma dayanıklı adresinde tek bir UTXO\'da birleştirir.</string>
+    <string name="coldq_visibility_quantum_header">Kuantuma Dayanıklı Adresler</string>
+    <string name="coldq_receive_address">Alma Adresi</string>
+    <string name="coldq_change_address">Para Üstü Adresi</string>
+    <string name="coldq_optional">İsteğe bağlı</string>
+</resources>

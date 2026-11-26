@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">Variation sur 24 h pas encore disponible</string>
     <string name="kp_about_amount">environ %1$s</string>
-    <string name="kp_about_hashrate_e7fb8">À propos du taux de hachage</string>
     <string name="kp_add_61cc5">Ajouter</string>
     <string name="kp_add_kaspa_address_5dd6b">Ajouter une adresse Kaspa</string>
     <string name="kp_add_to_portfolio_9eb23">Ajouter au portefeuille</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">1 transaction importée dans %1$s</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">Prix du KAS</string>
-    <string name="kp_kaspa_network_fceee">Réseau Kaspa</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSigner affiche ce qu\'il signe. Vérifiez la correspondance, signez, puis scannez la transaction signée qu\'il affiche.</string>
     <string name="kp_kept_in_the_position">Conservé dans la position</string>
     <string name="kp_kept_in_your_token">Conservé dans votre jeton</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">Par jour</string>
     <string name="kp_mining_per_month">Par mois</string>
     <string name="kp_mining_per_week">Par semaine</string>
-    <string name="kp_network_hashrate_c3cc8">Taux de hachage du réseau</string>
     <string name="kp_new_portfolio_5c1c7">Nouveau portefeuille</string>
-    <string name="kp_next_block_reward">Prochaine récompense de bloc</string>
-    <string name="kp_next_block_reward_reduction">Prochaine baisse de la récompense de bloc</string>
     <string name="kp_no_addresses_discovered_yet_15738">Aucune adresse découverte pour l\'instant.</string>
     <string name="kp_no_used_addresses_yet">Aucune adresse utilisée pour l\'instant</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Pas encore assez d\'historique - revenez après quelques jours d\'activité.</string>
@@ -235,7 +230,6 @@
     <string name="pf_add_transaction_sub">Enregistrez un achat ou une vente à la main.</string>
     <string name="pf_export_csv_sub">Écrivez les transactions de ce portefeuille dans un fichier.</string>
     <string name="pf_import_csv_sub">Lisez des transactions depuis un fichier.</string>
-    <string name="pnc_export_sub">Enregistre le CSV dans le dossier KaChat de votre Nextcloud.</string>
     <string name="pnc_import_sub">Choisissez un fichier CSV dans votre Nextcloud.</string>
     <string name="portfolio">Portefeuille</string>
     <string name="portfolio_add_chatting_address">Ajouter l\'adresse de discussion</string>

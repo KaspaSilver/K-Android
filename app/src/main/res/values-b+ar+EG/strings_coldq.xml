@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">هذا ليس عنوانًا مقاومًا للحوسبة الكمّية. امسح عنوان KCC-3 الذي يعرضه KasSigner.</string>
+    <string name="coldq_error_already_added">هذا العنوان موجود بالفعل في هذا الحساب.</string>
+    <string name="coldq_error_in_other_account">هذا العنوان موجود بالفعل في حساب Cold Storage «%1$s».</string>
+    <string name="coldq_added_toast">تمت إضافة العنوان المقاوم للحوسبة الكمّية.</string>
+    <string name="coldq_add_action">إضافة عنوان مقاوم للحوسبة الكمّية</string>
+    <string name="coldq_add_action_subtitle">امسح عنوان KCC-3 من شاشة العناوين في KasSigner.</string>
+    <string name="coldq_stop_watching">إيقاف المراقبة</string>
+    <string name="coldq_stop_watching_subtitle">يزيل هذا العنوان الكمّي من الحساب. امسحه مرة أخرى لإعادة إضافته.</string>
+    <string name="coldq_address_header">عنوان مقاوم للحوسبة الكمّية</string>
+    <string name="coldq_address_footer">على KasSigner، افتح عنوان KCC-3 الذي تريده وامسح رمز QR الخاص به. يبقى مفتاحه على الجهاز حتى يُنفَق من العنوان.</string>
+    <string name="coldq_number_header">رقم العنوان على KasSigner</string>
+    <string name="coldq_add_title">إضافة عنوان كمّي</string>
+    <string name="coldq_number_not_whole">يجب أن يكون رقم العنوان عددًا صحيحًا.</string>
+    <string name="coldq_needs_v11">يتطلب KasSigner الإصدار 1.1 أو أحدث، الذي يوقّع العناوين المقاومة للحوسبة الكمّية (KCC-3).</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">لم يُرجع KasSigner سكربت المفتاح لهذا العنوان المقاوم للحوسبة الكمّية، لذا لن تُبث المعاملة. تأكد أن الجهاز يعمل بـ KasSigner الإصدار 1.1 أو أحدث وأنه يحمل هذا العنوان.</string>
+    <string name="coldq_error_unexpected_covenant">المعاملة الموقّعة تضيف شروط عقد لم يطلبها هذا الإرسال، لذا لن تُبث.</string>
+    <string name="coldq_label_receive">عنوان كمّي</string>
+    <string name="coldq_label_change">عنوان باقي كمّي</string>
+    <string name="coldq_label_receive_n">عنوان كمّي #%1$d</string>
+    <string name="coldq_label_change_n">عنوان باقي كمّي #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">هذا الإرسال يضع مفتاح هذا العنوان على السلسلة، لذا لا يمكن أن يعود الباقي إليه. أضف أولًا عنوانًا مقاومًا للحوسبة الكمّية غير مستخدم من KasSigner (والأفضل عنوان باقي، من #0 إلى #4)، أو أرسل الرصيد كله.</string>
+    <string name="coldq_error_compound_needs_fresh">الدمج يضع مفتاح هذا العنوان على السلسلة، لذا تنتقل عملاته إلى عنوان مقاوم للحوسبة الكمّية غير مستخدم في هذا الحساب. أضف واحدًا من KasSigner أولًا (والأفضل عنوان باقي، من #0 إلى #4).</string>
+    <string name="coldq_stop_watching_title">إيقاف مراقبة هذا العنوان؟</string>
+    <string name="coldq_stop_watching_message">تبقى %1$s KAS على السلسلة في هذا العنوان، على KasSigner الخاص بك؛ K يتوقف فقط عن عرضها. امسح العنوان مرة أخرى من KasSigner لمراقبته من جديد.</string>
+    <string name="coldq_edit_number">تعديل رقم العنوان</string>
+    <string name="coldq_edit_number_subtitle">الرقم والسلسلة اللذان يعرضهما KasSigner لهذا العنوان.</string>
+    <string name="coldq_chain">السلسلة</string>
+    <string name="coldq_number_footer">الرقم الذي يعرضه KasSigner لهذا العنوان، وهل هو عنوان استلام أم عنوان باقي. به يجد الجهاز المفتاح فورًا عند التوقيع، ومن دونه يبحث عنه. يعرض KasSigner الباقي المرسل إلى عناوين الباقي من #0 إلى #4 على أنه باقٍ، وأي عنوان آخر على أنه دفعة.</string>
+    <string name="coldq_number_too_large">هذا الرقم كبير جدًا: أرقام عناوين KasSigner أقل من 2147483648.</string>
+    <string name="coldq_compound_note">ينقل كل عملات هذا العنوان إلى عملة واحدة في عنوان مقاوم للحوسبة الكمّية غير مستخدم في هذا الحساب: هذه المعاملة تضع مفتاح هذا العنوان على السلسلة.</string>
+    <string name="coldq_coins_left_behind">يحمل هذا العنوان عملات أكثر مما تستطيع معاملة واحدة إنفاقه: يبقى %1$d خلف المفتاح الذي يضعه هذا الإرسال على السلسلة. أرسلها في معاملة أخرى مباشرة بعد ذلك.</string>
+    <string name="coldq_coins_move_to">تنتقل العملات إلى عنوانك الكمّي:</string>
+    <string name="coldq_change_goes_to">يذهب الباقي إلى عنوانك الكمّي:</string>
+    <string name="coldq_unit_marks_change">يعرض KasSigner هذا المُخرَج على أنه باقٍ.</string>
+    <string name="coldq_unit_shows_payment">سيعرض KasSigner هذا المُخرَج كدفعة عادية، لا كباقٍ: تأكد أنه هذا العنوان قبل التوقيع.</string>
+    <string name="coldq_sign_without_number">التوقيع دون رقم العنوان</string>
+    <string name="coldq_sign_without_number_note">إذا رفض KasSigner هذا الطلب، فقد يكون رقم العنوان خاطئًا. من دونه يبحث الجهاز عن العنوان بنفسه. «تعديل رقم العنوان» يصححه للمرة القادمة.</string>
+    <string name="coldq_compound_footer">يدمج كل UTXOs في هذا العنوان في واحدة في عنوان مقاوم للحوسبة الكمّية غير مستخدم في هذا الحساب، لأن هذا يضع مفتاح هذا العنوان على السلسلة.</string>
+    <string name="coldq_visibility_quantum_header">عناوين مقاومة للحوسبة الكمّية</string>
+    <string name="coldq_receive_address">عنوان استلام</string>
+    <string name="coldq_change_address">عنوان باقي</string>
+    <string name="coldq_optional">اختياري</string>
+</resources>

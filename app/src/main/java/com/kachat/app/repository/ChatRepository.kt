@@ -99,6 +99,9 @@ class ChatRepository @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val gson = Gson()
 
+    /** One sync at a time - see [syncMessages]. Declared before the poll loop in init uses it. */
+    private val syncMutex = kotlinx.coroutines.sync.Mutex()
+
     init {
         // A hidden request rings once its sender's name is known (Who Can Message You?, audit
         // 2026-11-24 #13): asked again when names land (2 s, as iOS), when chats arrive (1 s) and
@@ -121,96 +124,180 @@ class ChatRepository @Inject constructor(
     }
 
     init {
-        // Real-time-ish receive for the LIVE UI while the app is open: poll the indexer
-        // periodically, mirroring NodePoolManager's probe-loop pattern. syncMessages()
-        // already no-ops safely if there's no active wallet yet. Each cycle is just a
-        // couple of lightweight indexer GETs, so this can run much faster than a typical
-        // polling interval — Kaspa's block time is far faster than 15s ever reflected.
-        //
-        // Backgrounded, this loop normally freezes with the process (nothing keeps it alive,
-        // by design) — but on battery-exempted devices the process can live on for hours, and
-        // an un-gated loop would keep polling every 2s the whole time. So the gate below
-        // pauses it while the app is BACKGROUNDED and native FCM push is active: the push
-        // service is the delivery/notification path then, and the message store catches up
-        // via the immediate sync the moment the gate reopens (foreground, or push turning
-        // unreliable/unregistered — PushRegistrationManager flips PushState.pushActive false
-        // on any registration failure, so the loop resumes as the only delivery path exactly
-        // as before). Without FCM (no google-services.json) pushActive can never turn true
-        // and this gate never engages — behavior is identical to today's.
+        // The live 1:1 receive path while the app is open, and the no-push fallback behind it
+        // (audit 2026-11-25 A1/B1/S1, A3/S2/B4/N7). Android has no live UTXO subscription for 1:1
+        // chats, so the indexer poll is the live path, shaped like iPhone's (K-iPhone CLAUDE.md
+        // "Foreground contact sweep", [ChatPollSchedule]):
+        //  - the open 1:1 chat, and only it, on a 2 s tick (5 s metered);
+        //  - a contact sweep - 12 contacts: the 4 most recent plus a rotating slice of the rest,
+        //    with incoming handshakes, the inbox and payments - on the shared ForegroundBeat
+        //    (30 s Wi-Fi / 60 s metered, twice that with push active), counted from the end of
+        //    the last sweep;
+        //  - a catch-up sweep of the 40 most recent chats, outgoing handshakes too, at process
+        //    start and on coming back after five minutes or more.
+        // In the background: nothing while push delivers, or while nothing could be shown (signed
+        // out, notifications off in K or in Android); otherwise (no push) a light pass every five
+        // minutes - incoming reads only. Signed out: nothing at all until someone signs in.
         scope.launch {
             try {
                 pruneOldMessages() // once on startup, matching iOS's on-launch retention prune
             } catch (e: Exception) {
                 Log.w("ChatRepository", "Startup prune failed", e)
             }
-            // Consecutive cycles in which the indexer errored (see noteIndexerError) — drives
-            // the exponential backoff below so a dead indexer doesn't get the full fan-out
-            // retried at the fast cadence forever.
+            // Consecutive passes in which the indexer errored (see noteIndexerError): backs the
+            // tick and the sweep off so a dead indexer isn't asked at the fast cadence forever.
             var consecutiveIndexerFailures = 0
+            var nextSweepAt = 0L
+            var lastCatchUpAt = 0L
+            var lastPassEndAt = 0L
+            var returnedToFront = false
             while (true) {
-                // Pause while backgrounded with healthy push; resume instantly (suspend on the
-                // combined flow, no polling) on foreground or push loss, then sync immediately
-                // so the reopened app's chat list is current without waiting a cycle.
-                if (!notificationHelper.isAppInForeground && pushState.isActive) {
-                    // Payments made while paused are never pushed (a plain KAS payment gets no
-                    // push): the first sync back fetches them from here on (iOS 20155aa).
-                    requestPaymentCatchUp(lookBackMs = 2 * 60 * 1000L)
-                    combine(notificationHelper.appForegroundFlow, pushState.pushActive) { foreground, pushActive ->
-                        foreground || !pushActive
-                    }.first { it }
-                }
-                // Guarded: this loop is the ONLY live 1:1 receive path while the app is open,
-                // and it runs for the whole process lifetime. syncMessages() catches its own
-                // network errors, but one uncaught throw anywhere in it (a DataStore read, a
-                // Room call outside the per-item guards) would kill this coroutine and
+                // Guarded: this loop runs for the whole process lifetime, and one uncaught throw
+                // (a DataStore read, a Room call outside the per-item guards) would kill it and
                 // silently stop all live chat refresh until the process is restarted.
-                // Nothing syncs while the setup wizard is on screen - an import's from-genesis
-                // sync of every contact made typing through it crawl. Suspends here (no polling)
-                // until the wizard releases the gate.
-                onboardingGate.awaitOpen()
-                sawIndexerErrorThisCycle = false
                 try {
-                    syncMessages(fromPollLoop = true)
-                } catch (e: Exception) {
-                    sawIndexerErrorThisCycle = true
-                    Log.w("ChatRepository", "Poll-loop sync cycle failed", e)
-                }
-                consecutiveIndexerFailures =
-                    if (sawIndexerErrorThisCycle) consecutiveIndexerFailures + 1 else 0
-                // Only a note on the wipe-and-resync sheet: a failed read's cursor stays put and
-                // this loop keeps retrying, and the next clean cycle clears it (iOS 76aec44f).
-                _syncTrouble.value = consecutiveIndexerFailures >= SYNC_TROUBLE_AFTER_FAILED_CYCLES
-
-                // Cadence tiers: the fast tick exists solely so a conversation ON SCREEN feels
-                // live; with no chat open the chat list only needs to stay fresh-ish, and on
-                // metered (cellular) networks both tiers relax further. WiFi in-chat keeps the
-                // original 2s exactly.
-                val metered = meteredNetwork.isMetered
-                val baseDelay = if (notificationHelper.isChatOpen) {
-                    if (metered) POLL_INTERVAL_IN_CHAT_METERED_MS else POLL_INTERVAL_MS
-                } else {
-                    if (metered) POLL_INTERVAL_IDLE_METERED_MS else POLL_INTERVAL_IDLE_MS
-                }
-                // Exponential backoff while the indexer is erroring: double per consecutive
-                // failed cycle, capped, reset by the first clean cycle.
-                var delayMs = baseDelay
-                repeat(minOf(consecutiveIndexerFailures, 6)) {
-                    delayMs = minOf(delayMs * 2, POLL_BACKOFF_CAP_MS)
-                }
-                if (!notificationHelper.isAppInForeground) {
-                    // Backgrounded without push (the gate above lets only that through): this
-                    // loop is still the only delivery path, so it keeps running, but at a
-                    // background pace - a chat left open behind the home screen no longer polls
-                    // every 2 s for hours on a battery-exempted phone. Coming back to the front
-                    // ends the wait at once, so the reopened app syncs straight away.
-                    kotlinx.coroutines.withTimeoutOrNull(maxOf(delayMs, POLL_INTERVAL_BACKGROUND_NO_PUSH_MS)) {
-                        notificationHelper.appForegroundFlow.first { it }
+                    if (walletManager.isLoggedOut) {
+                        walletManager.loggedOutFlow.first { !it }
+                        nextSweepAt = 0L
+                        lastCatchUpAt = 0L
+                        continue
                     }
-                } else {
-                    delay(delayMs)
+                    if (!notificationHelper.isAppInForeground) {
+                        val mode = backgroundPollMode()
+                        if (mode == ChatPollSchedule.Background.PAUSE) {
+                            // Payments made while paused are never pushed (a plain KAS payment
+                            // gets no push): the first sync back fetches them from here on (iOS
+                            // 20155aa). Suspends (no polling) until the front or no push.
+                            requestPaymentCatchUp(lookBackMs = 2 * 60 * 1000L)
+                            awaitBackgroundPollWanted()
+                        } else {
+                            val sinceLast = System.currentTimeMillis() - lastPassEndAt
+                            if (sinceLast < ChatPollSchedule.BACKGROUND_LIGHT_INTERVAL_MS) {
+                                // Coming back to the front ends the wait at once.
+                                kotlinx.coroutines.withTimeoutOrNull(ChatPollSchedule.BACKGROUND_LIGHT_INTERVAL_MS - sinceLast) {
+                                    notificationHelper.appForegroundFlow.first { it }
+                                }
+                            } else {
+                                onboardingGate.awaitOpen()
+                                runPollPass(PollPass.BACKGROUND)
+                                lastPassEndAt = System.currentTimeMillis()
+                            }
+                        }
+                        if (notificationHelper.isAppInForeground) {
+                            returnedToFront = true
+                            nextSweepAt = 0L
+                        }
+                        continue
+                    }
+                    // Nothing syncs while the setup wizard is on screen - an import's from-genesis
+                    // sync of every contact made typing through it crawl. Suspends here (no
+                    // polling) until the wizard releases the gate.
+                    onboardingGate.awaitOpen()
+                    val startedAt = System.currentTimeMillis()
+                    val pass = when {
+                        lastCatchUpAt == 0L ||
+                            (returnedToFront && startedAt - lastCatchUpAt >= ChatPollSchedule.CATCH_UP_MIN_GAP_MS) -> PollPass.CATCH_UP
+                        startedAt >= nextSweepAt -> PollPass.SWEEP
+                        else -> PollPass.OPEN_CHAT
+                    }
+                    returnedToFront = false
+                    sawIndexerErrorThisCycle = false
+                    try {
+                        runPollPass(pass)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        sawIndexerErrorThisCycle = true
+                        Log.w("ChatRepository", "Poll-loop sync cycle failed", e)
+                    }
+                    consecutiveIndexerFailures =
+                        if (sawIndexerErrorThisCycle) consecutiveIndexerFailures + 1 else 0
+                    // Only a note on the wipe-and-resync sheet: a failed read's cursor stays put
+                    // and this loop keeps retrying, and the next clean cycle clears it (iOS 76aec44f).
+                    _syncTrouble.value = consecutiveIndexerFailures >= SYNC_TROUBLE_AFTER_FAILED_CYCLES
+                    val endedAt = System.currentTimeMillis()
+                    lastPassEndAt = endedAt
+                    if (pass != PollPass.OPEN_CHAT) {
+                        if (pass == PollPass.CATCH_UP) lastCatchUpAt = endedAt
+                        val interval = ChatPollSchedule.sweepIntervalMs(
+                            com.kachat.app.services.ForegroundBeat.intervalMs, pushState.isActive, consecutiveIndexerFailures
+                        )
+                        nextSweepAt = ChatPollSchedule.nextSweepAt(endedAt, interval)
+                    }
+                    // Until the next sweep, or the open chat's next tick; opening a chat or
+                    // leaving the app ends the wait early.
+                    val tickAt = if (notificationHelper.currentContactId != null) {
+                        endedAt + ChatPollSchedule.openChatTickMs(meteredNetwork.isMetered, consecutiveIndexerFailures)
+                    } else Long.MAX_VALUE
+                    val waitMs = minOf(tickAt, nextSweepAt) - System.currentTimeMillis()
+                    if (waitMs > 0) {
+                        kotlinx.coroutines.withTimeoutOrNull(waitMs) {
+                            combine(notificationHelper.currentContactIdFlow, notificationHelper.appForegroundFlow) { open, foreground ->
+                                !foreground || (open != null && tickAt == Long.MAX_VALUE)
+                            }.first { it }
+                        }
+                    }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w("ChatRepository", "Poll loop iteration failed", e)
+                    delay(ChatPollSchedule.TICK_BACKOFF_CAP_MS)
                 }
             }
         }
+    }
+
+    /** What one poll-loop pass reads - see the loop in init and [syncContextualMessages]. */
+    internal enum class PollPass {
+        /** The open 1:1 chat only (its incoming and own sends). */
+        OPEN_CHAT,
+
+        /** The open chat plus a window of 12 contacts, incoming handshakes, the inbox, payments. */
+        SWEEP,
+
+        /** [SWEEP] over the 40 most recent chats, outgoing handshakes too: at start and on return. */
+        CATCH_UP,
+
+        /** In the background without push: [SWEEP]'s reads minus own sends and alias discovery. */
+        BACKGROUND,
+    }
+
+    /** One pass of the poll loop. Skipped while a full sync runs: that one reads everything. */
+    private suspend fun runPollPass(pass: PollPass) {
+        if (!syncMutex.tryLock()) return
+        try {
+            runSync(pass)
+        } finally {
+            syncMutex.unlock()
+        }
+    }
+
+    /** Whether notifications from K can show at all: K's own switch and Android's. */
+    private suspend fun notificationsCanShow(): Boolean =
+        settingsRepository.notificationsEnabled.first() &&
+            androidx.core.app.NotificationManagerCompat.from(appContext).areNotificationsEnabled()
+
+    private suspend fun backgroundPollMode(): ChatPollSchedule.Background = ChatPollSchedule.background(
+        pushActive = pushState.isActive,
+        signedIn = !walletManager.isLoggedOut,
+        notificationsOn = notificationsCanShow(),
+    )
+
+    /** Suspends until K is in front, or the background needs the no-push fallback after all. */
+    private suspend fun awaitBackgroundPollWanted() {
+        combine(
+            notificationHelper.appForegroundFlow,
+            pushState.pushActive,
+            walletManager.loggedOutFlow,
+            settingsRepository.notificationsEnabled,
+        ) { foreground, pushActive, loggedOut, notificationsOn ->
+            foreground || ChatPollSchedule.background(
+                pushActive = pushActive,
+                signedIn = !loggedOut,
+                notificationsOn = notificationsOn &&
+                    androidx.core.app.NotificationManagerCompat.from(appContext).areNotificationsEnabled(),
+            ) == ChatPollSchedule.Background.LIGHT
+        }.first { it }
     }
 
     /** Sync has been failing for a while right now, as opposed to one bad cycle. */
@@ -356,9 +443,6 @@ class ChatRepository @Inject constructor(
 
     // MARK: - Message Requests (NO_HANDSHAKE_MESSAGING.md, iOS 9fbcfd7)
 
-    /** Last time the poll path asked the inbox - see [syncMessages]. */
-    @Volatile
-    private var lastInboxSyncAt = 0L
     private val inboxSyncMutex = kotlinx.coroutines.sync.Mutex()
 
     /** Whether each indexer answers inbox lookups, by URL. */
@@ -1046,10 +1130,12 @@ class ChatRepository @Inject constructor(
         database.messageDao().insert(message)
     }
 
-    private fun isDeletedOnThisDevice(message: MessageEntity): Boolean =
+    /** Off the main thread: the log is a small SQLite database now (audit 2026-11-25 S17). */
+    private suspend fun isDeletedOnThisDevice(message: MessageEntity): Boolean = kotlinx.coroutines.withContext(Dispatchers.IO) {
         com.kachat.app.services.DeletedMessageLog.contains(
             appContext, message.id, com.kachat.app.services.DeletedMessageLog.Kind.CHAT, message.walletAddress
         )
+    }
 
     /** [insertMessage] that never replaces a stored row ([MessageDao.insertIfAbsent]): false when
      *  nothing was filed - the id is stored already, or the row is from the other network. */
@@ -1244,10 +1330,11 @@ class ChatRepository @Inject constructor(
      * Repair sweep for stuck pairs that already exist: an orphaned provisional outgoing row
      * whose delivered sibling — same conversation, same trimmed content, real txId, status
      * "sent", within [PROVISIONAL_MATCH_WINDOW_MS] — is also present. The placeholder is
-     * deleted; the delivered row is the message. Runs on EVERY sync cycle (the query is a cheap
-     * indexed-by-wallet scan and almost always returns nothing), so a pair created after
-     * startup — e.g. an import that raced this cycle — heals within seconds, not on the next
-     * app launch. Placeholders younger than [PROVISIONAL_REPAIR_MIN_AGE_MS] are never touched:
+     * deleted; the delivered row is the message. Runs once per account per process and again a
+     * while after a send failed ([runSync], audit 2026-11-25 S5): its query walks every message of
+     * the wallet, and running it on every poll tick cost that every 2 s. A pair created later - an
+     * import that raced a send - is also healed where the delivered copy is filed
+     * ([matchProvisionalOutgoing]). Placeholders younger than [PROVISIONAL_REPAIR_MIN_AGE_MS] are never touched:
      * a genuinely in-flight send must not be swept while its broadcast is still returning.
      *
      * Deliberately NOT widened to the sole-candidate rule the importer uses: the importer holds
@@ -1316,6 +1403,11 @@ class ChatRepository @Inject constructor(
 
     suspend fun updateMessageStatus(id: String, status: String) {
         database.messageDao().updateStatus(id, walletManager.getAddress(), status)
+        // A failed send may have landed after all: the stuck-pair repair runs again once the row
+        // is old enough for it to touch (audit 2026-11-25 S5, [runSync]).
+        if (status == "failed") {
+            provisionalRepairDueAt = minOf(provisionalRepairDueAt, System.currentTimeMillis() + PROVISIONAL_REPAIR_MIN_AGE_MS + 1_000L)
+        }
     }
 
     suspend fun deleteMessage(id: String) {
@@ -1330,7 +1422,9 @@ class ChatRepository @Inject constructor(
     suspend fun deleteMessagesOnThisDevice(ids: Collection<String>) {
         if (ids.isEmpty()) return
         val wallet = walletManager.getAddress()
-        com.kachat.app.services.DeletedMessageLog.add(appContext, ids, com.kachat.app.services.DeletedMessageLog.Kind.CHAT, wallet)
+        kotlinx.coroutines.withContext(Dispatchers.IO) {
+            com.kachat.app.services.DeletedMessageLog.add(appContext, ids, com.kachat.app.services.DeletedMessageLog.Kind.CHAT, wallet)
+        }
         ids.forEach { database.messageDao().deleteById(it, wallet) }
     }
 
@@ -1373,6 +1467,24 @@ class ChatRepository @Inject constructor(
         return scopedToActiveAccount(
             { address -> database.messageEditDao().getEditsForContact(contactId, address) },
             emptyList(),
+        )
+    }
+
+    /**
+     * The newest edit's text of each of these messages (the chats' last messages), by txid: the
+     * Chats list previews an edited message with its newest text, as the thread shows it (iOS
+     * 961fc05a `previewEditsByTxId`; the edits are kept newest-wins per message, so an older edit
+     * arriving later never replaces the preview, audit 2026-11-25 C10). Scoped to the signed-in
+     * account, so nothing of the last account shows after a Log Out (M9).
+     */
+    fun lastMessageEditTexts(targetTxIds: List<String>): Flow<Map<String, String>> {
+        if (targetTxIds.isEmpty()) return kotlinx.coroutines.flow.flowOf(emptyMap())
+        return scopedToActiveAccount(
+            { address ->
+                database.messageEditDao().getContactEditsForTargets(targetTxIds.take(900), address)
+                    .map { rows -> rows.associate { it.targetTxId to it.text } }
+            },
+            emptyMap(),
         )
     }
 
@@ -1425,6 +1537,12 @@ class ChatRepository @Inject constructor(
         val existing = database.messageEditDao().getEdit(edit.targetTxId, myAddress)
         if (existing != null && existing.deliveryStatus == "sent" &&
             existing.blockTimestamp > blockTime && existing.editTxId != editTxId) return
+        // This very edit, applied already (audit 2026-11-25 S11): the rewind window serves it again
+        // on every fetch, and each write re-ran the edits queries of the thread and the chat list.
+        val text = edit.text.take(com.kachat.app.util.MessageEdit.MAX_LENGTH)
+        if (existing != null && existing.editTxId == editTxId && existing.deliveryStatus == "sent" &&
+            existing.text == text && existing.blockTimestamp == blockTime
+        ) return
         database.messageEditDao().upsertEdit(
             com.kachat.app.models.MessageEditEntity(
                 targetTxId = edit.targetTxId,
@@ -1563,12 +1681,16 @@ class ChatRepository @Inject constructor(
         noticeBubbleStore.removeAllData(address)
         photoUnlockStore.removeAllData(address)
         // The messages deleted on this device, 1:1 and group (iOS d7c56280 DeletedMessageLog.forget).
-        com.kachat.app.services.DeletedMessageLog.forget(appContext, address)
+        kotlinx.coroutines.withContext(Dispatchers.IO) { com.kachat.app.services.DeletedMessageLog.forget(appContext, address) }
         contactNotesLazy.get().removeAllData(address)
         settingsRepository.removeWalletData(address)
+        forgetAliasDeepReads(address)
         // What this process remembers of it too: a re-import in this same run reads it all again.
         ownSendsHandled.clear()
         seenPaymentTxIds.clear()
+        noticeChains.clear()
+        selfConversationEnsured.remove(address.lowercase())
+        provisionalRepairDone.remove(address.lowercase())
     }
 
     /**
@@ -1697,12 +1819,30 @@ class ChatRepository @Inject constructor(
      * decrypting both with the same KasiaCipher/MessageProtocol code already
      * built for sending — no separate crypto path for receiving.
      *
-     * [fromPollLoop] marks the recurring 2s-30s cycle from init, which carries the traffic
-     * shaping (contact-sweep throttle/cap/spacing, payments on their own slower cadence with a
-     * small page). Manual refreshes and the resync flows pass false and keep the full,
-     * unthrottled behavior.
+     * A full sync (pull-to-refresh, the post-wizard initial sync, the indexer-outage catch-up):
+     * every chat, unthrottled. Serialized with the poll loop's passes (audit 2026-11-25 S12): two
+     * runs side by side decrypted and filed the same messages twice. A pass that finds a full
+     * sync running is skipped; a full sync waits for the pass in flight.
      */
-    suspend fun syncMessages(fromPollLoop: Boolean = false) {
+    suspend fun syncMessages() {
+        syncMutex.withLock { runSync(pass = null) }
+    }
+
+    /** Where the sweep's rotating slice resumes ([ChatPollSchedule.window]). */
+    @Volatile
+    private var sweepRotation = 0
+
+    /** Accounts whose self-chat [ensureSelfConversation] has made sure of, this process (S15). */
+    private val selfConversationEnsured = java.util.Collections.synchronizedSet(HashSet<String>())
+
+    /** Accounts the stuck-send repair has run for this process, and when it is due again after a
+     *  send failed ([repairStuckProvisionalMessages], audit S5). */
+    private val provisionalRepairDone = java.util.Collections.synchronizedSet(HashSet<String>())
+    @Volatile
+    private var provisionalRepairDueAt = Long.MAX_VALUE
+
+    /** [pass] is a poll-loop pass ([PollPass]); null is a full sync. */
+    private suspend fun runSync(pass: PollPass?) {
         // Every other caller (pull-to-refresh, the sync worker, push handling) is held too - the
         // wizard is exclusive. The post-wizard initial sync releases the gate before running.
         if (onboardingGate.isHeld) return
@@ -1710,65 +1850,68 @@ class ChatRepository @Inject constructor(
         // or announced for it until then (iOS logout stops the sync; bfe9f022).
         if (walletManager.isLoggedOut) return
         val myAddress = try { walletManager.getAddress() } catch (e: Exception) { return }
+        val full = pass == null
+        // A sweep of any kind, as opposed to the open chat's tick.
+        val sweeping = pass != PollPass.OPEN_CHAT
         // Before the indexer gate on purpose: healing stuck send-placeholders needs no network.
-        repairStuckProvisionalMessages(myAddress)
+        // Once per account per process, and again a while after a send failed (audit S5): its
+        // query walks every message of the wallet, and it used to run on every 2 s tick.
+        val now = System.currentTimeMillis()
+        if (provisionalRepairDone.add(myAddress.lowercase()) || now >= provisionalRepairDueAt) {
+            provisionalRepairDueAt = Long.MAX_VALUE
+            repairStuckProvisionalMessages(myAddress)
+        }
         val api = networkService.indexerApi.value ?: return
         // Any phase below that fails to read the indexer bumps this (see [noteIndexerError]).
         val indexerErrorsBefore = indexerErrorCount.get()
-        val sweepBefore = lastContactSweepAt
         liveBaselineMs = settingsRepository.liveNotificationBaseline(myAddress)
 
-        ensureSelfConversation(myAddress)
-        if (!fromPollLoop) dropOtherNetworkChats(myAddress)
+        // Once per account per process (audit S15): it is a write transaction every time.
+        if (full || selfConversationEnsured.add(myAddress.lowercase())) ensureSelfConversation(myAddress)
+        if (full) dropOtherNetworkChats(myAddress)
 
-        syncHandshakes(myAddress, api)
-        syncOutgoingHandshakes(myAddress, api)
+        // Handshakes and the inbox once per sweep, not on the open chat's tick (audit S1).
+        if (sweeping) syncHandshakes(myAddress, api)
+        // Outgoing handshakes are a bootstrap read (iOS fetchHandshakesOnly): full syncs and the
+        // catch-up sweep at start and on return only.
+        if (full || pass == PollPass.CATCH_UP) syncOutgoingHandshakes(myAddress, api)
         // People writing to us for the first time, without a handshake (Message Requests) - its
-        // own cursor, its own phase. On the fast poll tick only every so often.
-        val nowForInbox = System.currentTimeMillis()
-        if (!fromPollLoop || nowForInbox - lastInboxSyncAt >= INBOX_POLL_INTERVAL_MS) {
-            lastInboxSyncAt = nowForInbox
-            syncInbox(myAddress, api)
-        }
+        // own cursor, its own phase.
+        if (sweeping) syncInbox(myAddress, api)
         // Messages a push told us about that are not stored yet (iOS 60c9fd0).
         ingestPushedMessages(myAddress, api)
         // Saved-handshake notes: re-create chats that never had a handshake after a fresh
-        // import, and write the notes still missing (iOS fe45704). Not on the fast poll tick.
-        if (!fromPollLoop) contactNotesLazy.get().syncNotesInBackground()
-        syncContextualMessages(myAddress, api, pollShaped = fromPollLoop)
-        // Payments get their own, slower cadence on the poll path: the endpoint is
+        // import, and write the notes still missing (iOS fe45704). Full syncs only.
+        if (full) contactNotesLazy.get().syncNotesInBackground()
+        syncContextualMessages(myAddress, api, pollPass = pass)
+        // Payments once per sweep on the poll path, with a small page: the endpoint is
         // full-transactions (inputs + outputs + payloads resolved server-side — by far the
-        // heaviest GET in the cycle) and has no cursor, so polling it every fast tick
-        // re-downloaded the same recent window over and over. A payment surfacing within ~20s
-        // is still well inside "feels live" for a payment bubble.
+        // heaviest GET in the cycle) and has no cursor.
         // A payment that may have been missed (the poll paused in the background, a sender not
         // resolved yet - [paymentCatchUpSince]) is fetched now, back to when the gap opened,
-        // even on the poll path (iOS 20155aa).
-        val now = System.currentTimeMillis()
+        // even on the open chat's tick (iOS 20155aa).
         val catchUpSince = paymentCatchUpSince
-        if (!fromPollLoop || catchUpSince != null || now - lastPaymentPollAt >= PAYMENT_POLL_INTERVAL_MS) {
+        if (sweeping || catchUpSince != null) {
             networkService.kaspaRestApi.value?.let {
                 val caughtUp = syncPayments(
                     myAddress, it,
-                    limit = if (fromPollLoop && catchUpSince == null) PAYMENT_POLL_LIMIT else 50,
+                    limit = if (!full && catchUpSince == null) PAYMENT_POLL_LIMIT else 50,
                     since = catchUpSince,
                     // The one-time whole-history read ([syncPayments]) belongs to a full sync -
                     // the post-import initial sync, launch, pull-to-refresh - never to the
-                    // fast poll tick, which would otherwise retry a failing 200-page read every
-                    // 20 seconds.
-                    allowHistoryScan = !fromPollLoop
+                    // poll, which would otherwise retry a failing 200-page read every sweep.
+                    allowHistoryScan = full
                 )
-                lastPaymentPollAt = now
                 // caught up: a gap that opened during this fetch would have set an earlier one
                 if (caughtUp && catchUpSince != null) {
                     synchronized(this) { if (paymentCatchUpSince == catchUpSince) paymentCatchUpSince = null }
                 }
             }
         }
-        // A full fetch read every chat: anything but the poll tick, or a poll tick that ran its
-        // contact sweep. Only one in which every phase read the indexer, for the account it
-        // started under, settles last run's sends (iOS: `syncSucceeded && isFullFetch`).
-        val fullFetch = !fromPollLoop || lastContactSweepAt != sweepBefore
+        // A full fetch read every chat: a full sync, or the catch-up sweep over the most recent
+        // chats. Only one in which every phase read the indexer, for the account it started
+        // under, settles last run's sends (iOS: `syncSucceeded && isFullFetch`).
+        val fullFetch = full || pass == PollPass.CATCH_UP
         val stillActive = runCatching { walletManager.getAddress() }.getOrNull() == myAddress
         if (fullFetch && stillActive && indexerErrorCount.get() == indexerErrorsBefore) {
             failPendingSendsFromBeforeThisRun(myAddress)
@@ -1915,10 +2058,6 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    /** Last time the poll path actually hit the payments endpoint — see [syncMessages]. */
-    @Volatile
-    private var lastPaymentPollAt = 0L
-
     /**
      * Payments may have been missed from this block time (ms) on (iOS 20155aa
      * `paymentCatchUpSince`): the next sync fetches them - right away, past the poll path's
@@ -1939,10 +2078,6 @@ class ChatRepository @Inject constructor(
             paymentCatchUpSince = minOf(paymentCatchUpSince ?: since, since)
         }
     }
-
-    /** Throttle stamp for the full contact sweep on the poll path — see [syncContextualMessages]. */
-    @Volatile
-    private var lastContactSweepAt = 0L
 
     /**
      * Payment tx ids already fetched and handled this process — cheap early diff so the
@@ -2189,6 +2324,28 @@ class ChatRepository @Inject constructor(
     /** When each contact's transactions were last read for aliases - see [discoverPeerAliases]. */
     private val aliasDiscoveryAt = java.util.concurrent.ConcurrentHashMap<String, Long>()
 
+    /** When each contact's last [ALIAS_DISCOVERY_TX_LIMIT]-transaction alias read was, kept across
+     *  restarts so a cold start doesn't repeat it for every contact (audit S4). Keys `wallet|contact`. */
+    private val aliasDeepReads by lazy {
+        appContext.getSharedPreferences(ALIAS_DISCOVERY_PREFS, android.content.Context.MODE_PRIVATE)
+    }
+
+    private fun aliasDeepReadAt(key: String): Long = runCatching { aliasDeepReads.getLong(key, 0L) }.getOrDefault(0L)
+
+    private fun noteAliasDeepRead(key: String, at: Long) {
+        runCatching { aliasDeepReads.edit().putLong(key, at).apply() }
+    }
+
+    /** Delete Account: the account's alias-read times go with it. */
+    private fun forgetAliasDeepReads(wallet: String) {
+        runCatching {
+            val prefix = "$wallet|"
+            val editor = aliasDeepReads.edit()
+            aliasDeepReads.all.keys.filter { it.startsWith(prefix) }.forEach { editor.remove(it) }
+            editor.apply()
+        }
+    }
+
     /** Contacts whose stored handshakes have been read for aliases this process. */
     private val aliasBackfilled = java.util.Collections.newSetFromMap(java.util.concurrent.ConcurrentHashMap<String, Boolean>())
 
@@ -2204,7 +2361,10 @@ class ChatRepository @Inject constructor(
      * Also reads, once per contact per process, every handshake of theirs already stored here:
      * those name aliases the single contact field has since forgotten.
      *
-     * Throttled: the conversation on screen at most every 30 seconds, anyone else every 5 minutes.
+     * Throttled (audit 2026-11-25 S4): the conversation on screen at most every 2 minutes, anyone
+     * else every 5. Only one read a day per contact - kept across restarts - asks for the last
+     * [ALIAS_DISCOVERY_TX_LIMIT] transactions, payloads and all; the others ask for the last
+     * [ALIAS_DISCOVERY_SHALLOW_TX_LIMIT], enough to catch a new alias in use since.
      */
     private suspend fun discoverPeerAliases(myAddress: String, contact: ContactEntity, onScreen: Boolean, privateKey: ByteArray) {
         if (contact.id == myAddress) return
@@ -2227,7 +2387,10 @@ class ChatRepository @Inject constructor(
         aliasDiscoveryAt[key] = now
 
         val known = peerAliasStore.aliases(myAddress, contact.id) + listOfNotNull(contact.theirAlias)
-        val transactions = restApi.getTransactions(contact.id, limit = ALIAS_DISCOVERY_TX_LIMIT, resolvePreviousOutpoints = "no")
+        val deep = now - aliasDeepReadAt(key) !in 0 until ALIAS_DISCOVERY_DEEP_INTERVAL_MS
+        val limit = if (deep) ALIAS_DISCOVERY_TX_LIMIT else ALIAS_DISCOVERY_SHALLOW_TX_LIMIT
+        val transactions = restApi.getTransactions(contact.id, limit = limit, resolvePreviousOutpoints = "no")
+        if (deep) noteAliasDeepRead(key, now)
         val tried = mutableSetOf<String>()
         for (tx in transactions) {
             val bytes = tx.payload?.takeIf { it.isNotEmpty() }?.let { runCatching { it.hexToBytes() }.getOrNull() } ?: continue
@@ -2248,21 +2411,25 @@ class ChatRepository @Inject constructor(
      * streams finish — the per-chat progress feed for the blocking resync modal (it may throw
      * to abort the loop, e.g. on an account switch). Returns how many contacts were synced.
      *
-     * [pollShaped] (the recurring poll loop only) applies the iOS-shaped traffic model: the
-     * conversation on screen is fetched on EVERY tick (that's what makes an open chat feel
-     * live), but the fan-out over every other contact — the expensive part, two indexer GETs
-     * per contact per alias — runs at most every [CONTACT_SWEEP_MIN_INTERVAL_MS], capped at the
-     * [CONTACT_SWEEP_CAP] most recently active contacts, with [CONTACT_SWEEP_SPACING_MS]
-     * between contacts so a sweep is a drizzle, not a burst. Mirrors iOS ChatService's
-     * startForegroundContactSweep. Manual refresh/resync flows never pass this.
+     * [pollPass] (the poll loop only, see [PollPass]) applies the iOS-shaped traffic model
+     * (audit 2026-11-25 A1): the conversation on screen is fetched on every tick (that's what
+     * makes an open chat feel live), and the fan-out over every other contact - the expensive
+     * part - only on a sweep: a window of [ChatPollSchedule.SWEEP_WINDOW] (the most recent few
+     * plus a rotating slice), or the [ChatPollSchedule.CATCH_UP_CAP] most recent on a catch-up,
+     * with [CONTACT_SWEEP_SPACING_MS] between contacts so a sweep is a drizzle, not a burst.
+     * Mirrors iOS ChatService's startForegroundContactSweep. Manual refresh/resync flows never
+     * pass this.
      */
     private suspend fun syncContextualMessages(
         myAddress: String,
         api: KasiaIndexerApi,
         onlyContactIds: Set<String>? = null,
-        pollShaped: Boolean = false,
+        pollPass: PollPass? = null,
         onContactDone: (suspend (done: Int, total: Int) -> Unit)? = null
     ): Int {
+        val pollShaped = pollPass != null
+        // In the background without push: incoming only - no own sends, no alias discovery (A3).
+        val incomingOnly = pollPass == PollPass.BACKGROUND
         // Fetch for BOTH active and pending contacts. Gating the FETCH on "active" made a
         // mis-classified conversation unrecoverable: after a fresh import every peer-initiated
         // conversation derives "pending" (the local evidence that you accepted it was wiped),
@@ -2286,29 +2453,27 @@ class ChatRepository @Inject constructor(
         if (stillDeleted.isNotEmpty()) syncableContacts = syncableContacts.filter { it.id !in stillDeleted }
 
         var sweepSpacing = false
-        if (pollShaped) {
-            val openContactId = notificationHelper.currentContactId
-            val now = System.currentTimeMillis()
-            if (now - lastContactSweepAt >= CONTACT_SWEEP_MIN_INTERVAL_MS) {
-                lastContactSweepAt = now
-                sweepSpacing = true
-                if (syncableContacts.size > CONTACT_SWEEP_CAP) {
-                    // Prioritize by most recent message activity; the open conversation always
-                    // makes the cut regardless of where its history ranks.
-                    val latestByContact = database.messageDao().getLatestMessagePerContact(myAddress, MessageEntity.HIDDEN_PLACEHOLDERS)
-                        .first().associate { it.contactId to it.blockTimestamp }
-                    val top = syncableContacts
-                        .sortedByDescending { latestByContact[it.id] ?: 0L }
-                        .take(CONTACT_SWEEP_CAP)
-                    syncableContacts = if (openContactId != null && top.none { it.id == openContactId }) {
-                        top + syncableContacts.filter { it.id == openContactId }
-                    } else {
-                        top
-                    }
-                }
+        if (pollPass != null) {
+            // The open chat (on screen, in front) is always read; a background pass has none.
+            val openContactId = notificationHelper.currentContactId.takeIf { pollPass != PollPass.BACKGROUND }
+            val open = syncableContacts.filter { it.id == openContactId }
+            if (pollPass == PollPass.OPEN_CHAT) {
+                syncableContacts = open
             } else {
-                // Between sweeps only the thread on screen stays on the fast tick.
-                syncableContacts = syncableContacts.filter { it.id == openContactId }
+                sweepSpacing = true
+                // Most recent message activity first; the open conversation goes first anyway.
+                val latestByContact = database.messageDao().getLatestMessagePerContact(myAddress, MessageEntity.HIDDEN_PLACEHOLDERS)
+                    .first().associate { it.contactId to it.blockTimestamp }
+                val others = syncableContacts.filter { it.id != openContactId }
+                    .sortedByDescending { latestByContact[it.id] ?: 0L }
+                val window = if (pollPass == PollPass.CATCH_UP) {
+                    others.take(ChatPollSchedule.CATCH_UP_CAP)
+                } else {
+                    val (window, nextRotation) = ChatPollSchedule.window(others, sweepRotation)
+                    sweepRotation = nextRotation
+                    window
+                }
+                syncableContacts = open + window
             }
         }
 
@@ -2344,7 +2509,9 @@ class ChatRepository @Inject constructor(
                 // aliases, which need not be the one its last handshake named; missing it meant not
                 // one of their messages ever arrived here, while ours reached them fine.
                 val knownAliasHexes = try {
-                    discoverPeerAliases(myAddress, contact, onScreen = contact.id == notificationHelper.currentContactId, privateKey = privateKey)
+                    if (!incomingOnly) {
+                        discoverPeerAliases(myAddress, contact, onScreen = contact.id == notificationHelper.currentContactId, privateKey = privateKey)
+                    }
                     peerAliasStore.aliases(myAddress, contact.id).map { hexEncodeAscii(it) }
                 } catch (e: Exception) {
                     Log.w("ChatRepository", "Alias discovery failed for ${contact.id.takeLast(8)}", e)
@@ -2402,7 +2569,6 @@ class ChatRepository @Inject constructor(
                             break
                         }
                         if (messages.isEmpty()) break
-                        markChatFetchLoading(contact.id)
 
                         for (message in messages) {
                             // A switch of account mid-fetch: the rest is the next sync's, and the
@@ -2413,6 +2579,9 @@ class ChatRepository @Inject constructor(
                                 // decrypt now replaces it and the message appears (iOS c130dc1).
                                 if (database.messageDao().existsShown(message.txId, myAddress, MessageEntity.HIDDEN_PLACEHOLDERS)) continue
                                 if (isTombstoned(deleted, message.txId, message.blockTime)) continue
+                                // The spinner only for a row that is new (audit S15): the rewind
+                                // window serves the same rows again on every sweep.
+                                markChatFetchLoading(contact.id)
                                 processContextualMessage(myAddress, contact, message, privateKey)
                             } catch (e: Exception) {
                                 Log.w("ChatRepository", "Failed to process message ${message.txId.take(12)}…", e)
@@ -2442,7 +2611,7 @@ class ChatRepository @Inject constructor(
                 }
                 // Phase isolation, as iOS: a failed incoming pass must not starve the outgoing one -
                 // each alias moves only its own cursor.
-                try {
+                if (!incomingOnly) try {
                     syncOutgoingContextualMessages(myAddress, contact, api, privateKey, pollShaped, sharedLegacyAliases, deleted)
                 } catch (e: Exception) {
                     noteChatFetchFailed(contact.id, e)
@@ -2573,7 +2742,8 @@ class ChatRepository @Inject constructor(
                 }
                 legacyOutgoingAliasPolledAt[laneKey] = now
                 if (messages.isEmpty()) break
-                markChatFetchLoading(contact.id)
+                // The spinner only for an own send not settled yet (audit S15).
+                if (messages.any { "$myAddress|${it.txId}" !in ownSendsHandled }) markChatFetchLoading(contact.id)
                 for (message in messages.sortedWith(compareBy({ it.blockTime }, { it.txId }))) {
                     try {
                         // A switch of account mid-fetch: the rest is the next sync's.
@@ -2823,9 +2993,17 @@ class ChatRepository @Inject constructor(
         // created for this tx. The sender of an incoming reaction is always this contact.
         val reaction = MessageReaction.parseOrNull(plaintext)
         if (reaction != null) {
+            // Only a change is written (audit 2026-11-25 S11): a reaction never becomes a message
+            // row, so every fetch whose rewind window covers it reads it again, and each write
+            // re-ran the open thread's and the chat list's reaction queries.
+            val stored = database.reactionDao().getReaction(reaction.targetTxId, myAddress, contact.id)
             if (reaction.action == "add") {
-                upsertReaction(reaction.targetTxId, contact.id, contact.id, reaction.emoji, message.txId, message.blockTime, walletAddress = myAddress)
-            } else {
+                val same = stored != null && stored.reactionTxId == message.txId && stored.emoji == reaction.emoji &&
+                    stored.deliveryStatus == "sent" && stored.contactId == contact.id
+                if (!same) {
+                    upsertReaction(reaction.targetTxId, contact.id, contact.id, reaction.emoji, message.txId, message.blockTime, walletAddress = myAddress)
+                }
+            } else if (stored != null) {
                 removeReaction(reaction.targetTxId, contact.id, walletAddress = myAddress)
             }
             return
@@ -2869,25 +3047,32 @@ class ChatRepository @Inject constructor(
         val backfill = isBackfill(message.blockTime)
         // A later-arriving part of a long voice note or multi-part photo (iOS 7c5c22e3): the
         // note is one message, so only its first part to arrive counts as unread and notifies.
-        val laterPart = contact.id != myAddress && isLaterMediaPart(contact.id, myAddress, message.txId, plaintext)
-        insertMessage(
-            MessageEntity(
-                id = message.txId,
-                contactId = contact.id,
-                walletAddress = myAddress,
-                type = MessageProtocol.TYPE_COMM,
-                // Self-chat: a note you sent to yourself is outgoing on every device (decryption
-                // already scopes the by-sender(self) query to your own self->self messages).
-                direction = if (contact.id == myAddress) "sent" else "received",
-                plaintextBody = plaintext,
-                encryptedPayload = message.messagePayload,
-                amountSompi = null,
-                blockTimestamp = message.blockTime,
-                // Read when it's backfilled history OR the user is looking at this thread
-                // right now - watching a message arrive must not leave an unread badge.
-                isRead = backfill || laterPart || notificationHelper.isViewingContact(contact.id)
-            )
+        val laterPart = contact.id != myAddress && isLaterMediaPart(contact.id, myAddress, message.txId, plaintext, message.blockTime)
+        val row = MessageEntity(
+            id = message.txId,
+            contactId = contact.id,
+            walletAddress = myAddress,
+            type = MessageProtocol.TYPE_COMM,
+            // Self-chat: a note you sent to yourself is outgoing on every device (decryption
+            // already scopes the by-sender(self) query to your own self->self messages).
+            direction = if (contact.id == myAddress) "sent" else "received",
+            plaintextBody = plaintext,
+            encryptedPayload = message.messagePayload,
+            amountSompi = null,
+            blockTimestamp = message.blockTime,
+            // Read when it's backfilled history OR the user is looking at this thread
+            // right now - watching a message arrive must not leave an unread badge.
+            isRead = backfill || laterPart || notificationHelper.isViewingContact(contact.id)
         )
+        // Never over a row another fetch filed meanwhile (audit 2026-11-25 S12): a pull-to-refresh,
+        // an opened chat or a push's fetch racing this one wrote it back unread after the chat had
+        // been opened. Only a hidden placeholder ("[Encrypted message]") is replaced, keeping a
+        // read mark it had (iOS c130dc1).
+        if (!insertMessageIfAbsent(row)) {
+            val stored = database.messageDao().getById(row.id, myAddress) ?: return
+            if (!stored.isHiddenPlaceholder) return
+            insertMessage(row.copy(isRead = row.isRead || stored.isRead))
+        }
 
         val replyContent = MessageReply.parseOrNull(plaintext)
         // A reply to a message this device never received is the one signal that a message was
@@ -2922,9 +3107,14 @@ class ChatRepository @Inject constructor(
 
     /** True when [plaintext] is a part of a long voice note or multi-part photo from [contactId]
      *  and another part of it is already here (iOS 7c5c22e3 `VoicePartGrouping.isLaterPart`). */
-    private suspend fun isLaterMediaPart(contactId: String, myAddress: String, txId: String, plaintext: String): Boolean {
+    private suspend fun isLaterMediaPart(contactId: String, myAddress: String, txId: String, plaintext: String, blockTime: Long): Boolean {
         val tag = com.kachat.app.util.VoicePartTag.sniff(plaintext) ?: return false
-        val others = database.messageDao().findReceivedMatching(contactId, myAddress, txId, "%\"id\":\"${tag.id}\"%")
+        // The parts of one note go out together: only that day's received rows are searched, not
+        // every earlier photo and voice note of the chat (audit 2026-11-25 S16).
+        val others = database.messageDao().findReceivedMatching(
+            contactId, myAddress, txId, "%\"id\":\"${tag.id}\"%",
+            fromBlockTime = blockTime - MEDIA_PART_WINDOW_MS, toBlockTime = blockTime + MEDIA_PART_WINDOW_MS,
+        )
         if (others.isEmpty()) return false
         val probe = MessageEntity(
             id = txId, contactId = contactId, walletAddress = myAddress, type = MessageProtocol.TYPE_COMM,
@@ -2970,12 +3160,37 @@ class ChatRepository @Inject constructor(
         }
         val memo = com.kachat.app.util.PaymentPoolProtocol.noticeMemo(notice.memo)
         // The chain check is a network round trip - in the background, so a sync is never held
-        // up by it (iOS runs the whole filing in a Task).
-        scope.launch {
+        // up by it (iOS runs the whole filing in a Task). One chain per payment at a time
+        // ([noticeChains], audit 2026-11-25 S3): the notice is read again on every fetch whose
+        // rewind window still covers it.
+        launchNoticeChain(myAddress, txId) {
             try {
                 fileCheckedPaymentNotice(myAddress, contact, notice, txId, memo, noticeTxId, blockTime, isOutgoing, plaintext)
             } catch (e: Exception) {
                 Log.d("ChatRepository", "payment_notice ${txId.take(12)} not filed: ${e.message}")
+            }
+        }
+    }
+
+    /** The payment notices whose chain check runs, or is done - see [launchNoticeChain]. */
+    private val noticeChains = NoticeChainGate()
+
+    /**
+     * Runs [chain] for the payment [paymentTxId] names unless one runs already, or one settled it
+     * (audit S3). A chain that leaves only this notice's unverified bubble may run again a minute
+     * on, when the notice is read again.
+     */
+    private fun launchNoticeChain(myAddress: String, paymentTxId: String, chain: suspend () -> Unit) {
+        val key = "${myAddress.lowercase()}|$paymentTxId"
+        if (!noticeChains.tryStart(key)) return
+        scope.launch {
+            var settled = false
+            try {
+                chain()
+                val row = database.messageDao().getById(paymentTxId, myAddress)
+                settled = !(row != null && row.type == "pay" && row.direction == "received" && row.deliveryStatus == "warning")
+            } finally {
+                noticeChains.finish(key, settled)
             }
         }
     }
@@ -3355,7 +3570,8 @@ class ChatRepository @Inject constructor(
             Log.i("ChatRepository", "Dropped token_payment_notice ${txId.take(12)} - not a payment to the chatting address")
             return
         }
-        scope.launch {
+        // One chain per payment at a time, as for a KAS notice (audit S3).
+        launchNoticeChain(myAddress, txId) {
             try {
                 fileCheckedTokenNotice(myAddress, contact, notice, token, txId, noticeTxId, blockTime, isOutgoing)
             } catch (e: kotlinx.coroutines.CancellationException) {
@@ -4216,7 +4432,7 @@ class ChatRepository @Inject constructor(
                 settingsRepository.setHandshakeOutSyncCursor(myAddress, floor)
             }
         }
-        syncMessages(fromPollLoop = false)
+        syncMessages()
     }
 
     /**
@@ -4229,6 +4445,9 @@ class ChatRepository @Inject constructor(
         val tagged = com.kachat.app.services.ChainHistoryRows.hex(
             MessageProtocol.DM_PREFIX + com.kachat.app.util.InboxTag.compute(wallet) + ":"
         )
+        // Doubling from 5 s while it keeps failing, and offline it waits for the network (audit
+        // 2026-11-25 N1).
+        val retry = nodePoolManagerLazy.get().blockStreamRetry()
         while (true) {
             var conn: com.kachat.app.services.grpc.KaspadConnection? = null
             var subscribed = false
@@ -4268,7 +4487,7 @@ class ChatRepository @Inject constructor(
                     }
                 }
             }
-            delay(INBOX_SCAN_RETRY_MS)
+            retry.pause()
         }
     }
 
@@ -4695,30 +4914,18 @@ class ChatRepository @Inject constructor(
         internal fun hexEncodeAscii(s: String): String =
             s.toByteArray(Charsets.UTF_8).joinToString("") { "%02x".format(it) }
 
-        /** In-chat tick on WiFi — the one cadence deliberately kept from before. */
-        private const val POLL_INTERVAL_MS = 2_000L
-
-        /** No conversation on screen: the chat list only needs fresh-ish, not live. */
-        private const val POLL_INTERVAL_IDLE_MS = 15_000L
-
-        /** Metered (cellular) tiers — see the poll loop in init. */
-        private const val POLL_INTERVAL_IN_CHAT_METERED_MS = 5_000L
-        private const val POLL_INTERVAL_IDLE_METERED_MS = 30_000L
-
-        /** Backgrounded with no push to deliver instead - see the poll loop in init. */
-        private const val POLL_INTERVAL_BACKGROUND_NO_PUSH_MS = 60_000L
-
-        /** Cap for the double-per-consecutive-indexer-failure backoff in the poll loop. */
-        private const val POLL_BACKOFF_CAP_MS = 60_000L
+        /** The poll loop's cadences live in [ChatPollSchedule]. */
         private const val SYNC_TROUBLE_AFTER_FAILED_CYCLES = 3
 
         /** How often a contact's own transactions are read for aliases - see [discoverPeerAliases]. */
-        private const val ALIAS_DISCOVERY_ON_SCREEN_MS = 30_000L
+        private const val ALIAS_DISCOVERY_ON_SCREEN_MS = 2 * 60_000L
         private const val ALIAS_DISCOVERY_INTERVAL_MS = 5 * 60_000L
         private const val ALIAS_DISCOVERY_TX_LIMIT = 25
+        private const val ALIAS_DISCOVERY_SHALLOW_TX_LIMIT = 5
+        private const val ALIAS_DISCOVERY_DEEP_INTERVAL_MS = 24L * 60 * 60 * 1000
+        private const val ALIAS_DISCOVERY_PREFS = "kachat_alias_discovery"
 
-        /** Poll-path payments cadence/page — see [syncMessages]; manual refresh keeps limit 50. */
-        private const val PAYMENT_POLL_INTERVAL_MS = 20_000L
+        /** Poll-path payments page (once per sweep) — see [runSync]; manual refresh keeps limit 50. */
         private const val PAYMENT_POLL_LIMIT = 10
         /** How far back a payment catch-up pages at most (x 50 transactions) - iOS 20155aa. */
         private const val PAYMENT_CATCH_UP_MAX_PAGES = 4
@@ -4729,16 +4936,11 @@ class ChatRepository @Inject constructor(
         /** Pauses before each try of one history page (iOS historyPageRetryDelaysSeconds). */
         private val PAYMENT_HISTORY_RETRY_DELAYS_MS = listOf(0L, 600L, 2_000L, 5_000L)
 
-        /** Poll-path contact-sweep shape — see [syncContextualMessages]. Matches iOS's
-         *  startForegroundContactSweep (5s between sweeps, 100-120ms between contacts, cap 40). */
-        private const val CONTACT_SWEEP_MIN_INTERVAL_MS = 5_000L
         /** Tries per pushed message before the ingest leaves it to the regular sync, and the
          *  least time between two of them. */
         private const val PUSHED_MAX_ATTEMPTS = 6
         private const val PUSHED_RETRY_SPACING_MS = 10_000L
-        /** How often the fast poll tick also asks the inbox for first-contact messages. */
-        private const val INBOX_POLL_INTERVAL_MS = 30_000L
-        private const val CONTACT_SWEEP_CAP = 40
+        /** Between contacts in a sweep (iOS 120 ms) - see [syncContextualMessages]. */
         private const val CONTACT_SWEEP_SPACING_MS = 110L
 
         /**
@@ -4754,8 +4956,9 @@ class ChatRepository @Inject constructor(
         /** Own sends' cursors sit beside the incoming ones, per (contact, alias) - see
          *  [syncOutgoingContextualMessages]. */
         private const val OUTGOING_CURSOR_PREFIX = "out|"
-        /** How often the poll path reads the own sends of a chat that isn't on screen. */
-        private const val OUTGOING_SWEEP_INTERVAL_MS = 60_000L
+        /** How often the poll path reads the own sends of a chat that isn't on screen (audit
+         *  2026-11-25 B1: 60 s made every sweep read them; another device's send also pushes). */
+        private const val OUTGOING_SWEEP_INTERVAL_MS = 5 * 60_000L
         /** iOS `legacyAliasPollIntervalMs`: quiet old-style aliases, once per launch, then daily. */
         private const val LEGACY_OUTGOING_ALIAS_POLL_INTERVAL_MS = 24L * 60 * 60 * 1000
         /** iOS's wait before it trusts that an own transaction isn't this device's send in flight. */
@@ -4767,6 +4970,9 @@ class ChatRepository @Inject constructor(
         /** The same for the fast open-chat tick - iOS liveTailReorgBufferMs. Small, so the tick
          *  does not re-download a ten-minute window every two seconds. */
         private const val LIVE_TAIL_REORG_REWIND_MS = 90L * 1000
+
+        /** How far apart in block time the parts of one voice note or photo are looked for. */
+        private const val MEDIA_PART_WINDOW_MS = 24L * 60 * 60 * 1000
 
         /** How far behind a reply to look for the message it replied to - iOS replyRecoveryRewindMs. */
         private const val REPLY_RECOVERY_REWIND_MS = 24L * 60 * 60 * 1000

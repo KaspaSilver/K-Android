@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channel names (audit 2026-11-25 P5) -->
+    <string name="notification_channel_no_vibration">Mesajlar - titreşimsiz</string>
+    <string name="notification_channel_vibrate_only">Mesajlar - yalnızca titreşim</string>
+    <string name="notification_channel_silent">Mesajlar - sessiz</string>
+</resources>

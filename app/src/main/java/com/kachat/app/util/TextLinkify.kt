@@ -20,7 +20,20 @@ object TextLinkify {
     )
     private val TRAILING_PUNCTUATION = setOf('.', ',', '!', '?', ';', ':', '\'', '"', ')', ']', '}', '>')
 
+    /** Links found per text: every chat bubble asks two or three times as it comes on screen
+     *  (the styled text, the preview card, "is it only a link"), and again whenever it scrolls back
+     *  (iOS d089011f `LinkifiedMessageTextView.sharedAttributed`, 2026-11-25 smoothness sweep).
+     *  Texts above [MEMO_MAX_LENGTH] are scanned each time rather than held. */
+    private val urlMemo = RenderMemo<String, List<UrlMatch>>(maxCount = 500)
+    private const val MEMO_MAX_LENGTH = 4_000
+
     fun findUrls(text: String): List<UrlMatch> {
+        if (text.isEmpty()) return emptyList()
+        if (text.length > MEMO_MAX_LENGTH) return scanUrls(text)
+        return urlMemo.getOrPut(text) { scanUrls(text) }
+    }
+
+    private fun scanUrls(text: String): List<UrlMatch> {
         return URL_REGEX.findAll(text).mapNotNull { match ->
             var end = match.range.last
             while (end >= match.range.first && text[end] in TRAILING_PUNCTUATION) end--
@@ -39,9 +52,9 @@ object TextLinkify {
     fun isEntirelyLink(text: String): Boolean {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return false
-        val match = URL_REGEX.find(trimmed) ?: return false
-        var end = match.range.last
-        while (end >= match.range.first && trimmed[end] in TRAILING_PUNCTUATION) end--
-        return match.range.first == 0 && end == trimmed.length - 1
+        // the first link of the trimmed text, trailing punctuation off, through the memo above
+        // (the same text, untrimmed, is usually the same string, so it's found once)
+        val match = findUrls(trimmed).firstOrNull() ?: return false
+        return match.range.first == 0 && match.range.last == trimmed.length - 1
     }
 }

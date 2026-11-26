@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">שינוי של 24 שעות עדיין לא זמין</string>
     <string name="kp_about_amount">בערך %1$s</string>
-    <string name="kp_about_hashrate_e7fb8">על קצב הגיבוב</string>
     <string name="kp_add_61cc5">הוסף</string>
     <string name="kp_add_kaspa_address_5dd6b">הוספת כתובת Kaspa</string>
     <string name="kp_add_to_portfolio_9eb23">הוסף לתיק ההשקעות</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">יובאה עסקה אחת אל %1$s</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">מחיר KAS</string>
-    <string name="kp_kaspa_network_fceee">רשת Kaspa</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSigner מציג על מה הוא חותם. ודאו שזה תואם, חתמו, ואז סרקו את העסקה החתומה שהוא מציג.</string>
     <string name="kp_kept_in_the_position">נשמר בפוזיציה</string>
     <string name="kp_kept_in_your_token">נשמר בטוקן שלכם</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">ליום</string>
     <string name="kp_mining_per_month">לחודש</string>
     <string name="kp_mining_per_week">לשבוע</string>
-    <string name="kp_network_hashrate_c3cc8">קצב הגיבוב של הרשת</string>
     <string name="kp_new_portfolio_5c1c7">תיק השקעות חדש</string>
-    <string name="kp_next_block_reward">תגמול הבלוק הבא</string>
-    <string name="kp_next_block_reward_reduction">ההפחתה הבאה בתגמול הבלוק</string>
     <string name="kp_no_addresses_discovered_yet_15738">טרם התגלו כתובות.</string>
     <string name="kp_no_used_addresses_yet">עדיין אין כתובות בשימוש</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">עדיין אין מספיק היסטוריה - חזרו אחרי כמה ימים של פעילות.</string>
@@ -235,7 +230,6 @@
     <string name="pf_add_transaction_sub">רשמו קנייה או מכירה באופן ידני.</string>
     <string name="pf_export_csv_sub">כתבו את העסקאות של תיק ההשקעות הזה לקובץ.</string>
     <string name="pf_import_csv_sub">קראו עסקאות מקובץ.</string>
-    <string name="pnc_export_sub">שומר את קובץ ה-CSV בתיקיית KaChat ב-Nextcloud שלכם.</string>
     <string name="pnc_import_sub">בחרו קובץ CSV מה-Nextcloud שלכם.</string>
     <string name="portfolio">תיק השקעות</string>
     <string name="portfolio_add_chatting_address">הוספת כתובת הצ\'אט</string>

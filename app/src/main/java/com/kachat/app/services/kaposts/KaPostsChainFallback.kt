@@ -128,7 +128,11 @@ class KaPostsIndexerHealth @Inject constructor(
         probeJob = scope.launch {
             while (isActive) {
                 delay(PROBE_INTERVAL_MS)
-                if (!notificationHelper.isAppInForeground) continue
+                if (!notificationHelper.isAppInForeground) {
+                    // Asleep until the app is back, not waking every minute (audit 2026-11-25 B10).
+                    notificationHelper.appForegroundFlow.first { it }
+                    continue
+                }
                 val passed = service.get().probeIndexer()
                 if (!isActive || !_isDown.value) return@launch
                 if (!passed) {
@@ -642,6 +646,9 @@ class KaPostsLiveChainFeed @Inject constructor(
         val previous = streamJob
         streamJob = scope.launch {
             previous?.join()
+            // Doubling from 5 s while it keeps failing, and offline it waits for the network
+            // (audit 2026-11-25 N1).
+            val retry = nodePoolManager.blockStreamRetry(firstDelayMs = RETRY_DELAY_MS)
             while (isActive) {
                 var conn: KaspadConnection? = null
                 try {
@@ -680,7 +687,7 @@ class KaPostsLiveChainFeed @Inject constructor(
                         }
                     }
                 }
-                delay(RETRY_DELAY_MS)
+                retry.pause()
             }
         }
     }

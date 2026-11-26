@@ -9,7 +9,8 @@ import com.kachat.app.viewmodels.PortfolioViewModel
 import com.kachat.app.viewmodels.WalletViewModel
 
 /**
- * The full-screen charts the Portfolio tab pushes (KAS price, portfolio value, network hashrate).
+ * The full-screen charts the Portfolio tab pushes (KAS price, portfolio value; network hashrate
+ * moved to the Explorer, iOS 961fc05a).
  * Each is registered in the NavHost and should get the same [PortfolioViewModel] the tab shows,
  * so the price history, range and summary are already loaded (KaPay took it from the tab's back
  * stack entry).
@@ -17,7 +18,6 @@ import com.kachat.app.viewmodels.WalletViewModel
 object PortfolioRoutes {
     const val PRICE_CHART = "portfolio_price_chart"
     const val VALUE_CHART = "portfolio_value_chart"
-    const val HASHRATE_CHART = "portfolio_hashrate_chart"
 }
 
 /**

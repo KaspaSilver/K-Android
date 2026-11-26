@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">That isn\'t a quantum-resistant address. Scan the KCC-3 address KasSigner shows.</string>
+    <string name="coldq_error_already_added">That address is already in this account.</string>
+    <string name="coldq_error_in_other_account">That address is already in your Cold Storage account “%1$s”.</string>
+    <string name="coldq_added_toast">Quantum-resistant address added.</string>
+    <string name="coldq_add_action">Add Quantum-Resistant Address</string>
+    <string name="coldq_add_action_subtitle">Scan a KCC-3 address from KasSigner\'s address screen.</string>
+    <string name="coldq_stop_watching">Stop Watching</string>
+    <string name="coldq_stop_watching_subtitle">Removes this quantum address from the account. Scan it again to add it back.</string>
+    <string name="coldq_address_header">Quantum-Resistant Address</string>
+    <string name="coldq_address_footer">On KasSigner, open the KCC-3 address you want and scan its QR code. Its key stays on the unit until the address spends.</string>
+    <string name="coldq_number_header">Address Number on KasSigner</string>
+    <string name="coldq_add_title">Add Quantum Address</string>
+    <string name="coldq_number_not_whole">The address number must be a whole number.</string>
+    <string name="coldq_needs_v11">Needs KasSigner v1.1 or later, which signs quantum-resistant (KCC-3) addresses.</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner didn\'t return the key script for this quantum-resistant address, so it won\'t be broadcast. Check the unit runs KasSigner v1.1 or later and holds this address.</string>
+    <string name="coldq_error_unexpected_covenant">The signed transaction adds covenant terms this send never asked for, so it won\'t be broadcast.</string>
+    <string name="coldq_label_receive">Quantum Address</string>
+    <string name="coldq_label_change">Quantum Change Address</string>
+    <string name="coldq_label_receive_n">Quantum Address #%1$d</string>
+    <string name="coldq_label_change_n">Quantum Change Address #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">This send puts this address\'s key on chain, so its change can\'t come back here. Add an unused quantum-resistant address from KasSigner first (a change address, #0 to #4, is best), or send the whole balance.</string>
+    <string name="coldq_error_compound_needs_fresh">Compounding puts this address\'s key on chain, so its coins move to an unused quantum-resistant address of this account. Add one from KasSigner first (a change address, #0 to #4, is best).</string>
+    <string name="coldq_stop_watching_title">Stop Watching This Address?</string>
+    <string name="coldq_stop_watching_message">Its %1$s KAS stay on chain at this address, on your KasSigner; K only stops showing them. Scan the address again from KasSigner to watch it again.</string>
+    <string name="coldq_edit_number">Edit Address Number</string>
+    <string name="coldq_edit_number_subtitle">The number and chain KasSigner shows for this address.</string>
+    <string name="coldq_chain">Chain</string>
+    <string name="coldq_number_footer">The number KasSigner shows for this address, and whether it is a receive or a change address. With it the unit finds the key at once when signing; without it the unit searches for it. KasSigner marks change sent to its change addresses #0 to #4 as change; any other address it shows as a payment.</string>
+    <string name="coldq_number_too_large">That number is too large: KasSigner\'s address numbers are below 2147483648.</string>
+    <string name="coldq_compound_note">Moves all of this address\'s coins into one, at an unused quantum-resistant address of this account: this transaction puts this address\'s key on chain.</string>
+    <string name="coldq_coins_left_behind">This address holds more coins than one transaction can spend: %1$d stay behind the key this send puts on chain. Send them on in another transaction right after.</string>
+    <string name="coldq_coins_move_to">The coins move to your quantum address:</string>
+    <string name="coldq_change_goes_to">The change goes to your quantum address:</string>
+    <string name="coldq_unit_marks_change">KasSigner shows this output as change.</string>
+    <string name="coldq_unit_shows_payment">KasSigner will show this output as an ordinary payment, not as change: check it is this address before you sign.</string>
+    <string name="coldq_sign_without_number">Sign Without the Address Number</string>
+    <string name="coldq_sign_without_number_note">If KasSigner refuses this request, the address number may be wrong. Without it, the unit looks for the address itself. Edit Address Number puts it right for next time.</string>
+    <string name="coldq_compound_footer">Combines all UTXOs at this address into one at an unused quantum-resistant address of this account, since this puts this address\'s key on chain.</string>
+    <string name="coldq_visibility_quantum_header">Quantum-Resistant Addresses</string>
+    <string name="coldq_receive_address">Receive Address</string>
+    <string name="coldq_change_address">Change Address</string>
+    <string name="coldq_optional">Optional</string>
+</resources>

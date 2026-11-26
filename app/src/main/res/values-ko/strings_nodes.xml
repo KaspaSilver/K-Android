@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Node transport: wRPC over wss, the public wss fallback (iPhone 961fc05a). -->
+<resources>
+    <string name="nodes_public_fallback_note">지금은 gRPC 노드에 연결할 수 없어 K가 wss를 통해 공개 노드를 사용하고 있습니다.</string>
+    <string name="nodes_address_placeholder">host:port, grpcs:// 또는 wss://</string>
+    <string name="nodes_enter_as_host_port_grpcs_or_wss">host:port, grpcs://host 또는 wss://host 형식으로 입력하세요</string>
+    <string name="nodes_wss_secure">wss (보안)</string>
+    <string name="nodes_ws_plaintext">ws (평문)</string>
+</resources>

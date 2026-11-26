@@ -47,10 +47,59 @@ import java.util.concurrent.atomic.AtomicLong
  * port inference (GrpcService.url in grpc_service.dart), needed for nodes like Kaspium's own
  * that terminate TLS at the gRPC port itself and reject plaintext HTTP/2 entirely.
  */
-data class ParsedNodeAddress(val host: String, val port: Int, val secure: Boolean)
+data class ParsedNodeAddress(
+    val host: String,
+    val port: Int,
+    val secure: Boolean,
+    /** gRPC (the default), or wRPC's JSON encoding over a WebSocket ([WrpcJson]) for `ws://` /
+     *  `wss://` nodes (iOS 961fc05a `NodeTransport`). */
+    val webSocket: Boolean = false,
+    /** A WebSocket node's path, e.g. "/kaspa/mainnet/wrpc/json"; "" for gRPC. */
+    val path: String = "",
+) {
+    /** "grpcs://host:port" / "grpc://host:port", or a WebSocket node's whole URL. */
+    val url: String
+        get() = if (webSocket) {
+            val shownHost = if (host.contains(':') && !host.startsWith("[")) "[$host]" else host
+            "${if (secure) "wss" else "ws"}://$shownHost:$port$path"
+        } else {
+            if (secure) "grpcs://$host:$port" else "grpc://$host:$port"
+        }
+
+    /** gRPC nodes keep "host:port"; a WebSocket node's key is its whole URL, so it can never
+     *  collide with a gRPC node on the same host and port (iOS `Endpoint.key`). */
+    val key: String get() = if (webSocket) url else "$host:$port"
+}
+
+/** Whether [raw] names a wRPC node over a WebSocket (`ws://` / `wss://`). */
+fun isWebSocketNodeAddress(raw: String): Boolean {
+    val lower = raw.trim().lowercase()
+    return lower.startsWith("wss://") || lower.startsWith("ws://")
+}
+
+/** The same node as [a] and [b], however each was written (scheme, default port, the Borsh
+ *  path for the JSON one): compared by [ParsedNodeAddress.key] (audit 2026-11-25 C10). */
+fun isSameNode(a: String, b: String): Boolean {
+    val ka = parseNodeAddress(a)?.key ?: return a.trim().equals(b.trim(), ignoreCase = true)
+    val kb = parseNodeAddress(b)?.key ?: return false
+    return ka.equals(kb, ignoreCase = true)
+}
 
 fun parseNodeAddress(raw: String): ParsedNodeAddress? {
-    var clean = raw.trim()
+    val trimmed = raw.trim()
+    if (isWebSocketNodeAddress(trimmed)) {
+        // ws(s)://host[:port][/path] - the public nodes' resolver hands out Borsh URLs; K speaks
+        // the JSON encoding, which the same node serves next to it (iOS `Endpoint(url:)`).
+        val uri = try { java.net.URI(trimmed) } catch (e: Exception) { return null }
+        val host = uri.host?.removePrefix("[")?.removeSuffix("]")?.takeIf { it.isNotEmpty() } ?: return null
+        val secure = trimmed.lowercase().startsWith("wss://")
+        var path = uri.rawPath ?: ""
+        if (path == "/") path = ""
+        if (path.endsWith("/wrpc/borsh")) path = path.removeSuffix("/wrpc/borsh") + "/wrpc/json"
+        val port = if (uri.port > 0) uri.port else if (secure) 443 else 80
+        return ParsedNodeAddress(host, port, secure, webSocket = true, path = path)
+    }
+    var clean = trimmed
     var secure = false
     when {
         clean.startsWith("grpcs://") -> { secure = true; clean = clean.removePrefix("grpcs://") }
@@ -93,6 +142,23 @@ fun isGossipedNodeAddress(raw: String): Boolean {
 }
 
 /**
+ * The gRPC address to try for [raw], an address another node gossiped, or null to skip it (audit
+ * 2026-11-25 N8). Peers gossip their P2P port (16111, 16211 on testnet), where no gRPC answers:
+ * that is mapped to the gRPC port ([grpcPort], 16110 / 16210) of the same host. Any other port is
+ * dropped, since each one was a dead dial every cycle and came back with the next gossip.
+ */
+fun gossipedGrpcCandidate(raw: String, grpcPort: Int): String? {
+    if (!isGossipedNodeAddress(raw)) return null
+    val lastColon = raw.lastIndexOf(':')
+    val port = raw.substring(lastColon + 1).toIntOrNull() ?: return null
+    return when (port) {
+        grpcPort -> raw
+        grpcPort + 1 -> raw.substring(0, lastColon + 1) + grpcPort
+        else -> null
+    }
+}
+
+/**
  * A single gRPC connection to one Kaspa node ("ip:port", plaintext by default; see
  * [parseNodeAddress] for the TLS-secured "grpcs://"/"https://" link format), wrapping the
  * node's single bidirectional-streaming `MessageStream` RPC. Requests/responses
@@ -105,13 +171,18 @@ fun isGossipedNodeAddress(raw: String): Boolean {
  */
 class KaspadConnection internal constructor(
     private val scope: CoroutineScope,
-    private val channel: ManagedChannel,
-    private val address: String = "unknown"
+    /** The gRPC channel; null for a WebSocket node, which [webSocketUrl] names instead. */
+    private val channel: ManagedChannel?,
+    private val address: String = "unknown",
+    /** A `ws://` / `wss://` node's URL: spoken to in wRPC JSON ([WrpcSocket]) instead of gRPC
+     *  (iOS 961fc05a). Everything else - request matching, timeouts, reconnects - is shared. */
+    private val webSocketUrl: String? = null,
 ) {
-    constructor(address: String, scope: CoroutineScope) : this(
+    constructor(address: String, scope: CoroutineScope, keepAliveSeconds: Long = KEEPALIVE_SECONDS) : this(
         scope,
-        buildChannel(address),
-        address
+        if (isWebSocketNodeAddress(address)) null else buildChannel(address, keepAliveSeconds),
+        address,
+        parseNodeAddress(address)?.takeIf { it.webSocket }?.url
     )
 
     companion object {
@@ -121,7 +192,32 @@ class KaspadConnection internal constructor(
         /** A request within this long counts as "in use lately" (iOS 10 minutes). */
         const val RECENT_USE_MS = 10 * 60 * 1000L
 
-        private fun buildChannel(address: String): ManagedChannel {
+        /** HTTP/2 keepalive on an unmetered path. It fires only after this long with nothing read,
+         *  and the pool's own probe (every 30 s on the foreground beat) already reads, so in front it
+         *  is only the backstop for a socket that died silently; it was 20 s, a second wake-up in
+         *  every 30 s window beside the probe (audit 2026-11-25 N9, B3). */
+        const val KEEPALIVE_SECONDS = 60L
+
+        /** On a metered path: above the 60 s beat the probe runs on, so the two never wake the
+         *  radio separately, and still under the ~100 s a proxy lets a connection sit idle (iOS
+         *  961fc05a; audit 2026-11-25 N9, B3; 45 s before). */
+        const val METERED_KEEPALIVE_SECONDS = 75L
+
+        /** How long a NOTIFY_STOP sent for a subscribe that failed may take (audit 2026-11-25 N5). */
+        private const val FAILED_SUBSCRIBE_STOP_TIMEOUT_MS = 3_000L
+
+        /** Whether the device is online; set by the node pool. Offline, a dropped connection
+         *  doesn't redial on its own (every attempt would fail): the pool redials the ones it needs
+         *  when the network is back (iOS 961fc05a, audit 2026-11-25 B7). */
+        @Volatile
+        var isNetworkOnline: () -> Boolean = { true }
+
+        /** How many live-block clients want whole blocks (the Explorer): a WebSocket node's blocks
+         *  are then decoded in full, else only their payload transactions (iOS
+         *  `ExplorerBlockDetail.wanted`). */
+        internal val fullBlockClients = java.util.concurrent.atomic.AtomicInteger(0)
+
+        private fun buildChannel(address: String, keepAliveSeconds: Long): ManagedChannel {
             val parsed = parseNodeAddress(address)
             val target = if (parsed != null) "${parsed.host}:${parsed.port}" else address
             val builder = ManagedChannelBuilder.forTarget(target)
@@ -133,12 +229,37 @@ class KaspadConnection internal constructor(
                 // handoff) without the app finding out until the next RPC silently hangs for a
                 // full 5s timeout. HTTP/2 keepalive pings detect that proactively and force gRPC
                 // to fail fast and reconnect instead.
-                .keepAliveTime(20, TimeUnit.SECONDS)
+                .keepAliveTime(keepAliveSeconds, TimeUnit.SECONDS)
                 .keepAliveTimeout(10, TimeUnit.SECONDS)
                 .keepAliveWithoutCalls(true)
                 .build()
         }
     }
+
+    /** Whether this connection speaks wRPC over a WebSocket rather than gRPC. */
+    val isWebSocket: Boolean get() = webSocketUrl != null
+
+    /** The WebSocket while one is open (a WebSocket node only). */
+    @Volatile
+    private var socket: WrpcSocket? = null
+
+    /** When the node last pushed a notification on this connection (epoch millis), null before
+     *  the first. A node that just spoke needs no keepalive probe (iOS 961fc05a
+     *  `lastNotificationAt`): answers to the probes themselves don't count. */
+    @Volatile
+    var lastNotificationAtMs: Long? = null
+        private set
+
+    /** When the node last answered a request on this connection (epoch millis), null before the
+     *  first: the pool spares its keepalive probe when something else just got an answer (audit
+     *  2026-11-25 N9). */
+    @Volatile
+    var lastResponseAtMs: Long? = null
+        private set
+
+    /** Someone on this connection's current stream wants block-added notifications. */
+    val hasBlockSubscribers: Boolean
+        get() = synchronized(blockSubscribers) { blockSubscribersGeneration == generation.value && blockSubscribers.isNotEmpty() }
 
     /** True once [connect] has (re)launched the stream-collecting coroutine and it hasn't since
      * died - see the doc comment on the `catch` block in [connect] for what clears this. */
@@ -164,7 +285,7 @@ class KaspadConnection internal constructor(
     @Volatile
     private var closed = false
 
-    private val stub = RPCGrpcKt.RPCCoroutineStub(channel)
+    private val stub = channel?.let { RPCGrpcKt.RPCCoroutineStub(it) }
 
     private val outbound = Channel<Messages.KaspadRequest>(Channel.UNLIMITED)
     private val pending = ConcurrentHashMap<Long, CompletableDeferred<Messages.KaspadResponse>>()
@@ -221,35 +342,81 @@ class KaspadConnection internal constructor(
         if (isConnected || closed) return
         isConnected = true
         generation.value++
+        if (webSocketUrl != null) {
+            connectWebSocket(webSocketUrl)
+            return
+        }
+        val stub = this.stub ?: return
         streamJob = scope.launch {
             try {
-                stub.messageStream(outbound.receiveAsFlow()).collect { response ->
-                    // The node really is talking on this stream, so the backoff can start over.
-                    reconnectAttempts = 0
-                    val matched = pending.remove(response.id)
-                    if (matched != null) {
-                        matched.complete(response)
-                    } else if (response.hasBlockAddedNotification()) {
-                        blockAddedNotifications.tryEmit(response.blockAddedNotification.block)
-                    }
-                    // Any other unsolicited response is still ignored.
-                }
+                stub.messageStream(outbound.receiveAsFlow()).collect { response -> handleIncoming(response) }
             } catch (e: CancellationException) {
                 // A deliberate close() cancels this job itself - `closed`/`isConnected` are
                 // already set there, so this must not be treated as an unexpected drop.
                 throw e
             } catch (e: Exception) {
-                isConnected = false
-                // Death is its own generation bump (not just the later reconnect's): a watcher
-                // must learn its subscription is gone even if this connection never reconnects
-                // (e.g. NodePoolManager closes it and hands out a different node next).
-                generation.value++
-                pending.values.forEach { it.completeExceptionally(e) }
-                pending.clear()
-                Log.w("KaspadConnection", "Stream died unexpectedly on $address: ${e.javaClass.simpleName}: ${e.message}")
-                scheduleAutoReconnect()
+                handleTransportDeath(e)
             }
         }
+    }
+
+    /** One message from the node, on either transport. */
+    private fun handleIncoming(response: Messages.KaspadResponse) {
+        // The node really is talking on this stream, so the backoff can start over.
+        reconnectAttempts = 0
+        val matched = if (response.id != 0L) pending.remove(response.id) else null
+        if (matched != null) {
+            lastResponseAtMs = System.currentTimeMillis()
+            matched.complete(response)
+        } else if (response.hasBlockAddedNotification()) {
+            lastNotificationAtMs = System.currentTimeMillis()
+            // Nothing listening: dropped without a copy (iOS 961fc05a, audit B1).
+            if (blockAddedNotifications.subscriptionCount.value > 0) {
+                blockAddedNotifications.tryEmit(response.blockAddedNotification.block)
+            }
+        }
+        // Any other unsolicited response is still ignored.
+    }
+
+    /** The stream or socket ended on its own (not through [close]). */
+    private fun handleTransportDeath(e: Throwable) {
+        isConnected = false
+        // Death is its own generation bump (not just the later reconnect's): a watcher
+        // must learn its subscription is gone even if this connection never reconnects
+        // (e.g. NodePoolManager closes it and hands out a different node next).
+        generation.value++
+        pending.values.forEach { it.completeExceptionally(e) }
+        pending.clear()
+        Log.w("KaspadConnection", "Stream died unexpectedly on $address: ${e.javaClass.simpleName}: ${e.message}")
+        scheduleAutoReconnect()
+    }
+
+    /** Opens a WebSocket node's socket; its frames come back through [handleIncoming] exactly as
+     *  a gRPC stream's messages do (iOS `connectWebSocket`). */
+    private fun connectWebSocket(url: String) {
+        lateinit var created: WrpcSocket
+        created = WrpcSocket(
+            url = url,
+            scope = scope,
+            onMessage = { response -> if (socket === created) handleIncoming(response) },
+            onClosed = { error ->
+                // The close of an older socket says nothing about the one running now.
+                if (socket === created && !closed) {
+                    socket = null
+                    handleTransportDeath(error as? Exception ?: java.io.IOException("Socket closed", error))
+                }
+            },
+            blockDetail = {
+                when {
+                    blockAddedNotifications.subscriptionCount.value == 0 -> WrpcJson.BlockDetail.NONE
+                    fullBlockClients.get() > 0 -> WrpcJson.BlockDetail.FULL
+                    else -> WrpcJson.BlockDetail.PAYLOADS
+                }
+            },
+        )
+        socket?.close()
+        socket = created
+        created.open()
     }
 
     /**
@@ -274,6 +441,12 @@ class KaspadConnection internal constructor(
                 ((backoffSeconds + Math.random() * 0.3 * backoffSeconds) * 1000).toLong()
             }
             delay(delayMs)
+            // Offline, every attempt fails: stop here. The pool redials the connections it needs
+            // when the network is back (iOS 961fc05a `GRPCStreamConnection`, audit B7).
+            if (!runCatching { isNetworkOnline() }.getOrDefault(true)) {
+                Log.i("KaspadConnection", "Offline - $address waits for the network to reconnect")
+                return@launch
+            }
             // Only the pool's pinned nodes reconnect without end. Any other connection tries a few
             // times while it was in use lately, then stays down until a request needs it ([call]
             // reconnects then) - iOS 83806b3d `shouldKeepReconnecting`.
@@ -304,7 +477,21 @@ class KaspadConnection internal constructor(
         val deferred = CompletableDeferred<Messages.KaspadResponse>()
         pending[id] = deferred
         try {
-            outbound.send(build(id))
+            val request = build(id)
+            if (webSocketUrl != null) {
+                // A socket that can't take the write is gone: failed as a lost answer, as a dead
+                // gRPC stream fails its requests.
+                val socket = this.socket ?: throw java.io.IOException("Connection to $address closed")
+                if (!socket.send(request)) {
+                    throw if (runCatching { WrpcJson.request(request) }.isFailure) {
+                        UnsupportedOperationException("This request can't be sent over wRPC")
+                    } else {
+                        java.io.IOException("Connection to $address closed")
+                    }
+                }
+            } else {
+                outbound.send(request)
+            }
             return withTimeout(timeoutMs) { extract(deferred.await()) }
         } finally {
             // Must clean up on timeout/cancellation too, not just on success — otherwise a
@@ -376,30 +563,77 @@ class KaspadConnection internal constructor(
      * [Rpc.RpcBlock] for as long as this connection stays open. The caller is responsible for
      * calling [unsubscribeFromBlockAdded] when scanning should stop.
      */
-    suspend fun subscribeToBlockAdded(owner: String): Flow<Rpc.RpcBlock> {
-        synchronized(blockSubscribers) {
+    suspend fun subscribeToBlockAdded(owner: String, timeoutMs: Long = 5000): Flow<Rpc.RpcBlock> {
+        val subscribedGeneration = synchronized(blockSubscribers) {
             if (blockSubscribersGeneration != generation.value) {
                 // A new stream: the node has no subscription from the old one to count.
                 blockSubscribers.clear()
                 blockSubscribersGeneration = generation.value
             }
             blockSubscribers.add(owner)
+            blockSubscribersGeneration
         }
-        // Sent on every subscribe, not only the first: NOTIFY_START is idempotent on the node,
-        // and a second subscriber must not rely on a first one's START still in flight.
-        val response = call(
+        try {
+            // Sent on every subscribe, not only the first: NOTIFY_START is idempotent on the node,
+            // and a second subscriber must not rely on a first one's START still in flight.
+            val response = call(
+                timeoutMs = timeoutMs,
+                build = { id ->
+                    kaspadRequest {
+                        this.id = id
+                        notifyBlockAddedRequest = notifyBlockAddedRequestMessage { command = Rpc.RpcNotifyCommand.NOTIFY_START }
+                    }
+                },
+                extract = { it.notifyBlockAddedResponse }
+            )
+            if (response.hasError()) {
+                throw IllegalStateException(response.error.message)
+            }
+        } catch (e: Throwable) {
+            withdrawFailedSubscribe(owner, subscribedGeneration)
+            throw e
+        }
+        return blockAddedNotifications.asSharedFlow()
+    }
+
+    /**
+     * A NOTIFY_START that timed out, was refused or was cancelled (the app going to the background,
+     * a room closing) may still have reached the node. The callers only remember a connection once
+     * its subscribe succeeded, so their stops sent nothing, and [owner] stayed in the set: every
+     * other owner's stop then saw someone left and held its NOTIFY_STOP back, and the background
+     * close kept the connection for its "block client". The owner comes off here, and when nobody
+     * is left the node is told to stop, whatever the caller does (audit 2026-11-25 N5).
+     */
+    private suspend fun withdrawFailedSubscribe(owner: String, subscribedGeneration: Long) {
+        val lastOut = synchronized(blockSubscribers) {
+            if (blockSubscribersGeneration != subscribedGeneration || generation.value != subscribedGeneration) {
+                // That stream is gone, and the node's subscription with it.
+                false
+            } else {
+                blockSubscribers.remove(owner) && blockSubscribers.isEmpty()
+            }
+        }
+        // Only on the stream the START went out on: a call on a dead one would redial it.
+        if (!lastOut || closed || !isConnected) return
+        kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+            try {
+                kotlinx.coroutines.withTimeoutOrNull(FAILED_SUBSCRIBE_STOP_TIMEOUT_MS) { sendNotifyStop() }
+            } catch (e: Exception) {
+                Log.d("KaspadConnection", "NOTIFY_STOP after a failed subscribe on $address failed: ${e.message}")
+            }
+        }
+    }
+
+    private suspend fun sendNotifyStop() {
+        call(
             build = { id ->
                 kaspadRequest {
                     this.id = id
-                    notifyBlockAddedRequest = notifyBlockAddedRequestMessage { command = Rpc.RpcNotifyCommand.NOTIFY_START }
+                    notifyBlockAddedRequest = notifyBlockAddedRequestMessage { command = Rpc.RpcNotifyCommand.NOTIFY_STOP }
                 }
             },
             extract = { it.notifyBlockAddedResponse }
         )
-        if (response.hasError()) {
-            throw IllegalStateException(response.error.message)
-        }
-        return blockAddedNotifications.asSharedFlow()
     }
 
     /**
@@ -416,20 +650,13 @@ class KaspadConnection internal constructor(
                 // The stream this owner subscribed on is gone, and the node's state with it.
                 false
             } else {
-                blockSubscribers.remove(owner)
-                blockSubscribers.isEmpty()
+                // An owner already off (its subscribe failed and withdrew it, which sent the stop
+                // if one was due) sends nothing more.
+                blockSubscribers.remove(owner) && blockSubscribers.isEmpty()
             }
         }
         if (!lastOut) return
-        call(
-            build = { id ->
-                kaspadRequest {
-                    this.id = id
-                    notifyBlockAddedRequest = notifyBlockAddedRequestMessage { command = Rpc.RpcNotifyCommand.NOTIFY_STOP }
-                }
-            },
-            extract = { it.notifyBlockAddedResponse }
-        )
+        sendNotifyStop()
     }
 
     /**
@@ -579,12 +806,20 @@ class KaspadConnection internal constructor(
         }
     }
 
+    /** The phone is back online: a channel whose dials failed while it was offline tries again
+     *  now rather than at the end of its own backoff (up to two minutes). */
+    fun resetConnectBackoff() {
+        runCatching { channel?.resetConnectBackoff() }
+    }
+
     fun close() {
         closed = true
         isConnected = false
         generation.value++
         autoReconnectJob?.cancel()
         streamJob?.cancel()
+        socket?.close()
+        socket = null
         // A call still waiting fails as a lost answer, not a cancellation: a submit cut off here
         // may already be with the node, so its sender must ask the network before calling it
         // failed (SubmitConfirmation treats an IOException as a lost answer; a plain
@@ -592,7 +827,7 @@ class KaspadConnection internal constructor(
         val closedError = java.io.IOException("Connection to $address closed")
         pending.values.forEach { it.completeExceptionally(closedError) }
         pending.clear()
-        channel.shutdownNow()
+        channel?.shutdownNow()
     }
 }
 

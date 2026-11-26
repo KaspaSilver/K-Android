@@ -1,6 +1,8 @@
 package com.kachat.app.services.grpc
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -28,5 +30,25 @@ class GossipedNodeAddressTest {
         assertFalse(isGossipedNodeAddress("host/path:80"))
         assertFalse(isGossipedNodeAddress("grpc://1.2.3.4:16110"))
         assertFalse(isGossipedNodeAddress(""))
+    }
+
+    @Test
+    fun `a gossiped P2P port is tried on the gRPC port, other ports are skipped (audit 2026-11-25 N8)`() {
+        assertEquals("1.2.3.4:16110", gossipedGrpcCandidate("1.2.3.4:16111", 16110))
+        assertEquals("1.2.3.4:16110", gossipedGrpcCandidate("1.2.3.4:16110", 16110))
+        assertEquals("[2001:db8::1]:16110", gossipedGrpcCandidate("[2001:db8::1]:16111", 16110))
+        assertEquals("5.6.7.8:16210", gossipedGrpcCandidate("5.6.7.8:16211", 16210))
+        assertNull(gossipedGrpcCandidate("1.2.3.4:443", 16110))
+        assertNull(gossipedGrpcCandidate("1.2.3.4:16112", 16110))
+        assertNull(gossipedGrpcCandidate("a b:16111", 16110))
+    }
+
+    @Test
+    fun `a manual wss node is one key however it is typed (audit 2026-11-25 T7)`() {
+        val a = parseNodeAddress("wss://n.example")?.key
+        val b = parseNodeAddress("wss://n.example:443/wrpc/borsh")?.key
+        val c = parseNodeAddress("wss://n.example:443/wrpc/json")?.key
+        assertEquals(parseNodeAddress("wss://n.example:443")?.key, a)
+        assertEquals(b, c)
     }
 }

@@ -64,6 +64,13 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var addressActivityNotifierLazy: dagger.Lazy<com.kachat.app.services.AddressActivityNotifier>
     // The Appearance setting, put on the window too (iOS 518fdc8c `WindowAppearance`).
     @Inject lateinit var appSettingsLazy: dagger.Lazy<com.kachat.app.repository.AppSettingsRepository>
+    // Whether push works here: the battery exemption is asked for only where it doesn't.
+    @Inject lateinit var pushStateLazy: dagger.Lazy<com.kachat.app.services.PushState>
+    @Inject lateinit var pushRegistrationManagerLazy: dagger.Lazy<com.kachat.app.services.PushRegistrationManager>
+
+    /** Push can't deliver here (no push service, no Play services, its registration failing):
+     *  the only case the battery exemption helps (audit 2026-11-25). False until known. */
+    @Volatile private var pushUnavailable = false
 
     // The KaChat sheet that explains the battery exemption before Android's own dialog. Re-derived
     // on every resume (see refreshBatteryRationale), so it follows the notification answer.
@@ -114,9 +121,15 @@ class MainActivity : AppCompatActivity() {
      * Android 13+ a launch AFTER notifications were granted, seemingly at random; below 13, the
      * first launch, over whatever was on screen. Now [BatteryExemptionRationale] says why first,
      * and Android's dialog only opens from its Allow. Asked once either way, as before.
+     *
+     * Only where push doesn't work (audit 2026-11-25, the lead's call): a high-priority push
+     * wakes K through Doze by itself, so with push working the exemption only let background
+     * work run through Doze, at the battery's cost. Without push the app's own background poll
+     * is the delivery path, and that is what the exemption keeps alive.
      */
     private fun batteryExemptionDue(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
+        if (!pushUnavailable) return false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
@@ -170,6 +183,7 @@ class MainActivity : AppCompatActivity() {
         guarded("payment request link") { handlePaymentRequestDeepLink(intent) }
         guarded("KaPost link") { handleKaPostDeepLink(intent) }
         guarded("public chat link") { handlePublicChatDeepLink(intent) }
+        guarded("Kaspa Hub card link") { handleHubCardDeepLink(intent) }
         guarded("KaPost, KaPay and KaPlay links") { handleRetiredAppLinks(intent) }
         guarded("share") { handleShareIntent(intent) }
         guarded("clear intent payload") { clearConsumedIntentPayload(intent) }
@@ -211,6 +225,24 @@ class MainActivity : AppCompatActivity() {
         // link to route. Each is guarded on its own: one that throws is logged, and the app
         // still opens (KaChatApplication's startup rule).
         guarded("battery rationale") { refreshBatteryRationale() }
+        // The battery sheet follows whether push works: known once the registration answers.
+        lifecycleScope.launch {
+            runCatching {
+                val push = pushStateLazy.get()
+                val noPushService = withContext(Dispatchers.IO) { !pushRegistrationManagerLazy.get().canRegister() }
+                kotlinx.coroutines.flow.combine(push.pushActive, push.diagnostics) { active, diagnostics ->
+                    com.kachat.app.services.PushState.pushUnavailable(
+                        pushActive = active,
+                        noPushService = noPushService,
+                        lastAction = diagnostics.lastAction,
+                        lastAttemptSucceeded = diagnostics.lastAttemptSucceeded,
+                    )
+                }.collect { unavailable ->
+                    pushUnavailable = unavailable
+                    guarded("battery rationale") { refreshBatteryRationale() }
+                }
+            }.onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
+        }
         handleLaunchIntent(intent)
         // The stored Appearance, as it loads and on every change in Settings > Customization: the
         // window's night mode follows it, so the window under Compose, the system bars and the
@@ -623,6 +655,17 @@ class MainActivity : AppCompatActivity() {
         if (intent.action != Intent.ACTION_VIEW) return
         val uri = intent.data ?: return
         val ref = com.kachat.app.ui.screens.KaChatLink.parse(uri.toString()) as? com.kachat.app.ui.screens.KaChatLinkRef.PublicChatRoom
+            ?: return
+        com.kachat.app.ui.screens.openKaChatLink(this, ref)
+    }
+
+    /** kachat://hub/<card> or https://kachat.app/hub/<card> - a Kaspa Hub card (iOS 961fc05a: a
+     *  hold on a Hub card copies it): that card opens, wherever it lives. Only the fixed card
+     *  words are taken. */
+    private fun handleHubCardDeepLink(intent: Intent) {
+        if (intent.action != Intent.ACTION_VIEW) return
+        val uri = intent.data ?: return
+        val ref = com.kachat.app.ui.screens.KaChatLink.parse(uri.toString()) as? com.kachat.app.ui.screens.KaChatLinkRef.HubSection
             ?: return
         com.kachat.app.ui.screens.openKaChatLink(this, ref)
     }

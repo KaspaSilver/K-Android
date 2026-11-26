@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">24 saatlik değişim henüz kullanılamıyor</string>
     <string name="kp_about_amount">yaklaşık %1$s</string>
-    <string name="kp_about_hashrate_e7fb8">Hash Oranı Hakkında</string>
     <string name="kp_add_61cc5">Ekle</string>
     <string name="kp_add_kaspa_address_5dd6b">Kaspa Adresi Ekle</string>
     <string name="kp_add_to_portfolio_9eb23">Portfoye Ekle</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">1 işlem içe aktarıldı: %1$s</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">KAS Fiyati</string>
-    <string name="kp_kaspa_network_fceee">Kaspa Ağı</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSigner neyi imzaladığını gösterir. Eşleştiğini kontrol et, imzala, ardından gösterdiği imzalı işlemi tara.</string>
     <string name="kp_kept_in_the_position">Pozisyonda Tutulan</string>
     <string name="kp_kept_in_your_token">Token\'ınızda Tutulan</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">Günlük</string>
     <string name="kp_mining_per_month">Aylık</string>
     <string name="kp_mining_per_week">Haftalık</string>
-    <string name="kp_network_hashrate_c3cc8">Ağ Hash Oranı</string>
     <string name="kp_new_portfolio_5c1c7">Yeni Portföy</string>
-    <string name="kp_next_block_reward">Sonraki Blok Ödülü</string>
-    <string name="kp_next_block_reward_reduction">Sonraki Blok Ödülü Düşüşü</string>
     <string name="kp_no_addresses_discovered_yet_15738">Henuz kesfedilen adres yok.</string>
     <string name="kp_no_used_addresses_yet">Henüz kullanılmış adres yok</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Henüz yeterli geçmiş yok - birkaç günlük etkinlikten sonra tekrar bak.</string>
@@ -235,7 +230,6 @@
     <string name="pf_add_transaction_sub">Bir alım veya satımı elle kaydet.</string>
     <string name="pf_export_csv_sub">Bu portföyün işlemlerini bir dosyaya yaz.</string>
     <string name="pf_import_csv_sub">İşlemleri bir dosyadan oku.</string>
-    <string name="pnc_export_sub">CSV\'yi Nextcloud\'undaki KaChat klasörüne kaydeder.</string>
     <string name="pnc_import_sub">Nextcloud\'undan bir CSV dosyası seç.</string>
     <string name="portfolio">Portfoy</string>
     <string name="portfolio_add_chatting_address">Sohbet Adresini Ekle</string>

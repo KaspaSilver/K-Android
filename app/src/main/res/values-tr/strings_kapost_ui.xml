@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">Konuya ekle</string>
     <string name="kpui_post_not_loaded">Bu gönderi yüklenemedi</string>
     <string name="kpui_post_not_loaded_body">Kaldırılmış olabilir ya da ağa ulaşılamıyor olabilir.</string>
-    <string name="kpui_no_comments_yet">Henüz yorum yok - ilk yanıtı sen ver.</string>
-    <string name="kpui_every_reply_above">Tüm yanıtlar yukarıdaki konuşmada.</string>
     <string name="kpui_loading_replies">Yanıtlar yükleniyor...</string>
     <string name="kpui_chat">Sohbet</string>
     <string name="kpui_followers">Takipçiler</string>

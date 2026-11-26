@@ -40,11 +40,9 @@
     <string name="pc_keep">Tut</string>
     <string name="pc_keep_subtitle">Odayı olduğu gibi bırak.</string>
     <string name="pc_new_public_chat">Yeni Herkese Açık Sohbet</string>
-    <string name="pc_new_public_chat_subtitle">Herkese açık bir odaya katıl veya bir tane oluştur.</string>
     <string name="pc_edit_default_public_chats">Varsayılan Herkese Açık Sohbetleri Düzenle</string>
     <string name="pc_new_public_chat_explainer">Aynı kanal adına katılan herkes orada mesajları görebilir ve gönderebilir - sahibi ya da daveti yoktur.</string>
     <string name="pc_join">Katil</string>
-    <string name="pc_back">Geri</string>
     <string name="pc_channel_name_rules">Kanal adları boşluk veya iki nokta olmadan 1-%1$d karakter olmalı.</string>
     <string name="pc_join_failed">O kanala katılırken bir sorun oluştu.</string>
     <string name="pc_report">Bildir</string>

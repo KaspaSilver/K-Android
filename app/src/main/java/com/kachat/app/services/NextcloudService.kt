@@ -10,6 +10,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,7 +41,7 @@ data class NextcloudAccount(
     val appPassword: String,
     /** Where "Send from Nextcloud" starts browsing — null means the files root. */
     val startFolder: String? = null,
-    /** Where message backups upload — null means the default "KaChat" folder at the files root. */
+    /** Where message backups upload — null means the default "K" folder at the files root. */
     val backupFolder: String? = null
 ) {
     val displayName: String
@@ -174,10 +175,22 @@ class NextcloudService @Inject constructor(
                 .take(8)
                 .joinToString("") { "%02x".format(it) }
 
-        const val BACKUP_FOLDER_NAME = "KaChat"
+        /** "K" since 2026-11-25 (owner, iOS 961fc05a); accounts that have the old "KaChat" folder
+         *  get it moved ([migrateLegacyFolderIfNeeded]). */
+        const val BACKUP_FOLDER_NAME = "K"
+        const val LEGACY_BACKUP_FOLDER_NAME = "KaChat"
 
-        /** Where "Send Media via Nextcloud" uploads land: a fixed KaChat/Media folder at the files root. */
+        /** Where "Send Media via Nextcloud" uploads land: a fixed K/Media folder at the files root. */
         const val MEDIA_FOLDER_PATH = "$BACKUP_FOLDER_NAME/Media"
+
+        /** A settled account is looked at again after a week: a phone still on an older build
+         *  makes "KaChat" again and writes its contacts there, and those get merged in. */
+        private const val LEGACY_FOLDER_RECHECK_MS = 7L * 24 * 3600 * 1000
+        /** A MOVE refused with only "KaChat" there is tried again after a day (audit 2026-11-25
+         *  M3: every backup, info read and upload used to retry it). */
+        private const val LEGACY_FOLDER_RETRY_MS = 24L * 3600 * 1000
+        /** Plain prefs for the folder-move records, keyed "<kind>|<wallet suffix>|<server>|<user>". */
+        private const val LEGACY_FOLDER_PREFS = "kachat_nextcloud_k_folder_v1"
         /** FIXED filename, identical to iOS/desktop — same archive schema, so a backup written by
          *  one platform restores cleanly on any other. */
         const val BACKUP_FILE_NAME = "kachat-contacts.json"
@@ -303,7 +316,7 @@ class NextcloudService @Inject constructor(
      */
     val isOffForTestnet: Boolean get() = com.kachat.app.util.KaspaNetwork.isTestnet
 
-    /** The folder backups actually go to — the user's chosen folder, or "KaChat" by default. */
+    /** The folder backups actually go to — the user's chosen folder, or "K" by default. */
     val backupFolderPath: String get() = _account.value?.backupFolder ?: BACKUP_FOLDER_NAME
 
     // -------------------------------------------------------------------------
@@ -417,6 +430,9 @@ class NextcloudService @Inject constructor(
         val editor = prefs.edit()
         for (base in ALL_PREF_BASES) editor.remove(scopedKey(base, suffix))
         editor.apply()
+        // the folder-move dates and merged ETag outlived the account (iOS 961fc05a, audit
+        // 2026-11-25 M9)
+        removeLegacyFolderState(suffix)
         if (walletAddress == currentWalletAddress) {
             _account.value = null
             _autoBackupEnabled.value = false
@@ -497,6 +513,7 @@ class NextcloudService @Inject constructor(
                 setBackupFolder(found)
             }
         }
+        migrateLegacyFolderIfNeeded(force = true)
         _autoBackupEnabled.value = autoSync
     }
 
@@ -587,16 +604,17 @@ class NextcloudService @Inject constructor(
     }
 
     /**
-     * Finds the KaChat folder this account already has, instead of assuming there isn't one.
+     * Finds the K (or old KaChat) folder this account already has, instead of assuming there isn't one.
      *
-     * The backup destination defaults to "KaChat" at the files root, so an account whose folder
+     * The backup destination defaults to "K" at the files root, so an account whose folder
      * lives anywhere else - moved, nested under a Documents/Apps folder, made on another device
      * pointed elsewhere - looked to a fresh connection like an account with no backup at all, and
      * the app would happily start a second one beside it.
      *
-     * Prefers a folder that actually holds [BACKUP_FILE_NAME]; a folder merely NAMED KaChat is the
-     * fallback. Breadth-first and bounded - a WebDAV walk of someone's whole drive is not a thing
-     * to do on connect.
+     * Prefers a folder that actually holds [BACKUP_FILE_NAME]; a folder merely NAMED "K" or "KaChat"
+     * at the files root, with that exact name, is the fallback (iOS 961fc05a, audit 2026-11-25 C7:
+     * a "k" three levels down is someone's own folder). Breadth-first and bounded - a WebDAV walk
+     * of someone's whole drive is not a thing to do on connect.
      */
     suspend fun discoverExistingBackupFolder(): String? {
         if (_account.value == null) return null
@@ -614,7 +632,8 @@ class NextcloudService @Inject constructor(
                 return path.ifEmpty { null }
             }
             for (entry in entries.filter { it.isDirectory }) {
-                if (namedCandidate == null && entry.name.equals(BACKUP_FOLDER_NAME, ignoreCase = true)) {
+                if (namedCandidate == null && path.isEmpty() &&
+                    (entry.name == BACKUP_FOLDER_NAME || entry.name == LEGACY_BACKUP_FOLDER_NAME)) {
                     namedCandidate = entry.path
                 }
                 // Depth cap: a backup folder buried deeper than this is not something the app put
@@ -627,7 +646,7 @@ class NextcloudService @Inject constructor(
         return namedCandidate
     }
 
-    /** Persists the backup destination folder (null/"" = the default "KaChat" folder). */
+    /** Persists the backup destination folder (null/"" = the default "K" folder). */
     fun setBackupFolder(path: String?) {
         val current = _account.value ?: return
         persistAccount(current.copy(backupFolder = path?.trim()?.takeIf { it.isNotEmpty() }))
@@ -660,11 +679,11 @@ class NextcloudService @Inject constructor(
     }
 
     // -------------------------------------------------------------------------
-    // Plain files in the KaChat folder (Portfolio CSV export / import, iOS aa5d783)
+    // Plain files in the K folder (Portfolio CSV export / import, iOS aa5d783)
     // -------------------------------------------------------------------------
 
     /**
-     * Uploads [bytes] as [filename] into the KaChat folder ([backupFolderPath] - the same folder
+     * Uploads [bytes] as [filename] into the K folder ([backupFolderPath] - the same folder
      * the chat backup lives in), creating the folder chain if it isn't there yet, and returns the
      * stored path. A file of the same name is replaced - exports carry a timestamp in their name.
      * [keepSpaces] keeps a name the user gave (a portfolio's, "KaChat Contacts") readable in
@@ -675,6 +694,16 @@ class NextcloudService @Inject constructor(
         filename: String,
         contentType: String,
         keepSpaces: Boolean = false,
+    ): String {
+        migrateLegacyFolderIfNeeded()
+        return uploadToBackupFolder(bytes, filename, contentType, keepSpaces)
+    }
+
+    private suspend fun uploadToBackupFolder(
+        bytes: ByteArray,
+        filename: String,
+        contentType: String,
+        keepSpaces: Boolean,
     ): String = withContext(Dispatchers.IO) {
         val account = requireAccount()
         val folder = backupFolderPath.trim('/')
@@ -937,7 +966,7 @@ class NextcloudService @Inject constructor(
     // -------------------------------------------------------------------------
 
     /**
-     * Uploads one media file to `KaChat/Media/` and returns a public `/s/TOKEN` share link for it —
+     * Uploads one media file to `K/Media/` and returns a public `/s/TOKEN` share link for it —
      * the whole "send a photo as a link instead of on-chain bytes" flow in one call. The stored
      * name is prefixed with 8 random hex chars so two `photo_<ts>.jpg` sends can never collide
      * (a PUT to an existing WebDAV path silently overwrites). Throws on any failure; callers fall
@@ -954,10 +983,11 @@ class NextcloudService @Inject constructor(
      * straight from wherever they live into the PUT.
      */
     suspend fun uploadMediaAndShare(body: okhttp3.RequestBody, filename: String): String {
+        migrateLegacyFolderIfNeeded()
         val relativePath = withContext(Dispatchers.IO) {
             val account = requireAccount()
 
-            // Ensure KaChat/ then KaChat/Media/ exist. MKCOL answers 405 when the folder is
+            // Ensure K/ then K/Media/ exist. MKCOL answers 405 when the folder is
             // already there, which is the common case after the first send.
             for (folder in listOf(BACKUP_FOLDER_NAME, MEDIA_FOLDER_PATH)) {
                 val mkcol = Request.Builder()
@@ -992,6 +1022,213 @@ class NextcloudService @Inject constructor(
     }
 
     // -------------------------------------------------------------------------
+    // The "KaChat" folder becomes "K" (iOS 961fc05a, owner 2026-11-25; NEXTCLOUD_SYNC.md §2)
+    // -------------------------------------------------------------------------
+
+    private val legacyFolderPrefs = context.getSharedPreferences(LEGACY_FOLDER_PREFS, Context.MODE_PRIVATE)
+    /** Accounts (wallet suffix|server|user) whose old folder was already looked at this session. */
+    private val legacyFolderChecked = java.util.Collections.synchronizedSet(HashSet<String>())
+    /** The migration running for each account, so concurrent callers (connect, a backup, the
+     *  watcher, a media send) await the one in flight instead of each issuing a MOVE (audit
+     *  2026-11-25 C7). */
+    private val legacyFolderMigrations = HashMap<String, kotlinx.coroutines.Deferred<Unit>>()
+
+    /**
+     * Reads the old folder's contacts file into this account's contacts by the usual rules
+     * (NEXTCLOUD_SYNC.md: newest edit or deletion wins per address), set by
+     * [NextcloudSyncService]: (raw file, wallet) -> true once dealt with (a file that isn't this
+     * account's included), false to try again later (no key yet, the wallet changed).
+     */
+    @Volatile
+    var legacyContactsMerger: (suspend (raw: String, wallet: String) -> Boolean)? = null
+
+    /**
+     * Moves the old "KaChat" folder to "K" the first time this account touches Nextcloud since
+     * the rename (owner, 2026-11-25), one WebDAV MOVE, so the contacts backup, exports and media
+     * all come along (public share links follow the file, not the path). Only for the default
+     * folder (or one the search linked at the root "KaChat"): a folder the user picked stays.
+     * When "K" already exists the old folder stays put: a contacts backup "K" lacks is moved in,
+     * and one both hold is merged into the contacts ([legacyContactsMerger]), which the next sync
+     * writes to "K". Failures leave everything as it was; the next call tries again, except a MOVE
+     * refused with only "KaChat" there, which keeps using "KaChat" and is tried again after a day.
+     *
+     * One run per account at a time, registered before its first suspension; every later caller
+     * awaits that run. Once settled it's remembered on the phone and looked at again weekly
+     * ([force], from connect, looks now).
+     */
+    suspend fun migrateLegacyFolderIfNeeded(force: Boolean = false) {
+        val account = _account.value ?: return
+        val wallet = currentWalletAddress ?: return
+        val suffix = currentSuffix ?: return
+        val accountKey = "$suffix|${account.server}|${account.username}"
+        synchronized(legacyFolderMigrations) { legacyFolderMigrations[accountKey] }?.let {
+            it.await()
+            return
+        }
+        if (!force) {
+            if (accountKey in legacyFolderChecked) return
+            val now = System.currentTimeMillis()
+            val checkedAt = legacyFolderPrefs.getLong("checked|$accountKey", 0L)
+            if (checkedAt > 0L && now - checkedAt < LEGACY_FOLDER_RECHECK_MS) {
+                legacyFolderChecked += accountKey
+                return
+            }
+            // a MOVE that failed lately: "KaChat" is in use meanwhile, tried again after a day
+            if (now < legacyFolderPrefs.getLong("retry|$accountKey", 0L)) return
+        }
+        val task = synchronized(legacyFolderMigrations) {
+            legacyFolderMigrations[accountKey] ?: serviceScope.async<Unit>(Dispatchers.IO) {
+                try {
+                    runLegacyFolderMigration(wallet, account, accountKey)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w(TAG, "The KaChat folder check failed: ${e.message}")
+                }
+            }.also { legacyFolderMigrations[accountKey] = it }
+        }
+        try {
+            task.await()
+        } finally {
+            synchronized(legacyFolderMigrations) {
+                if (legacyFolderMigrations[accountKey] === task) legacyFolderMigrations.remove(accountKey)
+            }
+        }
+    }
+
+    /** Settled for this account: not looked at again this session, nor for a week. */
+    private fun markLegacyFolderSettled(accountKey: String) {
+        legacyFolderChecked += accountKey
+        legacyFolderPrefs.edit()
+            .putLong("checked|$accountKey", System.currentTimeMillis())
+            .remove("retry|$accountKey")
+            .apply()
+    }
+
+    /** Every folder-move record of this wallet's accounts (their keys carry its suffix). */
+    private fun removeLegacyFolderState(walletSuffix: String) {
+        val editor = legacyFolderPrefs.edit()
+        for (key in legacyFolderPrefs.all.keys) {
+            if (key.substringAfter('|').startsWith("$walletSuffix|")) editor.remove(key)
+        }
+        editor.apply()
+        synchronized(legacyFolderChecked) { legacyFolderChecked.removeAll { it.startsWith("$walletSuffix|") } }
+    }
+
+    /**
+     * The migration itself. [listFolder] and [setBackupFolder] act on the CURRENT account, so the
+     * account is re-checked after every request: a wallet switch mid-move drops the rest (the new
+     * account runs its own).
+     */
+    private suspend fun runLegacyFolderMigration(wallet: String, account: NextcloudAccount, accountKey: String) {
+        fun stillCurrent(): Boolean {
+            val current = _account.value
+            return currentWalletAddress == wallet && current != null && current.server == account.server && current.username == account.username
+        }
+        suspend fun rootFolders(): Pair<Boolean, Boolean>? {
+            val root = runCatching { listFolder("") }.getOrNull() ?: return null
+            if (!stillCurrent()) return null
+            // exact case: "k" or "kachat" at the root is someone's own folder
+            return root.any { it.isDirectory && it.name == LEGACY_BACKUP_FOLDER_NAME } to
+                root.any { it.isDirectory && it.name == BACKUP_FOLDER_NAME }
+        }
+        val legacy = LEGACY_BACKUP_FOLDER_NAME
+        val chosen = account.backupFolder
+        if (chosen != null && chosen != legacy && chosen != BACKUP_FOLDER_NAME) {
+            markLegacyFolderSettled(accountKey)
+            return
+        }
+        var (hasLegacy, hasNew) = rootFolders() ?: return
+        if (!hasLegacy) {
+            if (chosen != null) setBackupFolder(null)
+            markLegacyFolderSettled(accountKey)
+            return
+        }
+        if (!hasNew) {
+            if (move(account, legacy, BACKUP_FOLDER_NAME)) {
+                if (!stillCurrent()) return
+                Log.i(TAG, "Moved the KaChat folder to K")
+                if (chosen != null) setBackupFolder(null)
+                markLegacyFolderSettled(accountKey)
+                return
+            }
+            // A failed MOVE may still mean the folder moved (another device, or an answer lost on
+            // the way back): look again before deciding which folder to use.
+            val again = rootFolders() ?: return
+            hasLegacy = again.first
+            hasNew = again.second
+            if (!hasLegacy) {
+                if (hasNew) {
+                    if (chosen != null) setBackupFolder(null)
+                    markLegacyFolderSettled(accountKey)
+                }
+                return
+            }
+            if (!hasNew) {
+                // really still only "KaChat": keep using it, and try again in a day
+                if (chosen == null) setBackupFolder(legacy)
+                legacyFolderPrefs.edit()
+                    .putLong("retry|$accountKey", System.currentTimeMillis() + LEGACY_FOLDER_RETRY_MS)
+                    .apply()
+                return
+            }
+            // both there now: on to the merge
+        }
+        if (chosen != null) setBackupFolder(null)
+        // Both there: bring the contacts backup over if "K" has none, else merge the old one in.
+        val newListing = runCatching { listFolder(BACKUP_FOLDER_NAME) }.getOrNull() ?: return
+        if (!stillCurrent()) return
+        val oldListing = runCatching { listFolder(legacy) }.getOrNull() ?: return
+        if (!stillCurrent()) return
+        val newHasBackup = newListing.any { !it.isDirectory && it.name == BACKUP_FILE_NAME }
+        val oldHasBackup = oldListing.any { !it.isDirectory && it.name == BACKUP_FILE_NAME }
+        if (!oldHasBackup) {
+            markLegacyFolderSettled(accountKey)
+            return
+        }
+        val oldPath = "$legacy/$BACKUP_FILE_NAME"
+        if (!newHasBackup) {
+            if (move(account, oldPath, "$BACKUP_FOLDER_NAME/$BACKUP_FILE_NAME")) {
+                if (stillCurrent()) markLegacyFolderSettled(accountKey)
+                return
+            }
+            if (!stillCurrent()) return
+            val listing = runCatching { listFolder(BACKUP_FOLDER_NAME) }.getOrNull() ?: return
+            if (!stillCurrent() || listing.none { !it.isDirectory && it.name == BACKUP_FILE_NAME }) return
+            // "K" has one after all: merge the old one in below
+        }
+        // The same old file as last time is merged already: no download (audit 2026-11-25 M3).
+        // A file whose ETag can't be read is merged anyway; merging again changes nothing.
+        val oldEtag = runCatching { fetchBackupEtag(account, legacy) }.getOrNull()
+        if (!stillCurrent()) return
+        if (oldEtag != null && legacyFolderPrefs.getString("etag|$accountKey", null) == oldEtag) {
+            markLegacyFolderSettled(accountKey)
+            return
+        }
+        val merger = legacyContactsMerger ?: return
+        val raw = runCatching { String(downloadFile(oldPath), Charsets.UTF_8) }.getOrNull() ?: return
+        if (!stillCurrent()) return
+        if (merger(raw, wallet)) {
+            if (oldEtag != null) legacyFolderPrefs.edit().putString("etag|$accountKey", oldEtag).apply()
+            markLegacyFolderSettled(accountKey)
+        }
+    }
+
+    /** WebDAV MOVE of [from] to [to] (paths under the user's files), never overwriting. */
+    private suspend fun move(account: NextcloudAccount, from: String, to: String): Boolean = withContext(Dispatchers.IO) {
+        runCatching {
+            val request = Request.Builder()
+                .url(davUrl(account, from))
+                .method("MOVE", null)
+                .header("Destination", davUrl(account, to).toString())
+                .header("Overwrite", "F")
+                .header("Authorization", basicAuth(account))
+                .build()
+            client.newCall(request).execute().use { it.isSuccessful }
+        }.getOrDefault(false)
+    }
+
+    // -------------------------------------------------------------------------
     // Chat-history backup (WebDAV PUT/GET of the archive JSON)
     // -------------------------------------------------------------------------
 
@@ -1012,7 +1249,15 @@ class NextcloudService @Inject constructor(
      * own write for another device's change. Throws [NextcloudUploadCutOffException] when the
      * server kept fewer bytes than were sent (§4.6).
      */
-    suspend fun runBackup(buildBody: suspend (String?) -> String?): String? = backupMutex.withLock {
+    suspend fun runBackup(settleFolder: Boolean = true, buildBody: suspend (String?) -> String?): String? {
+        // "KaChat" -> "K" settled first, so the file read and written is the one that stays. A
+        // caller that holds a lock the folder move's contacts merge takes settles it before that
+        // lock and passes false.
+        if (settleFolder) migrateLegacyFolderIfNeeded()
+        return runBackupLocked(buildBody)
+    }
+
+    private suspend fun runBackupLocked(buildBody: suspend (String?) -> String?): String? = backupMutex.withLock {
         // Snapshot the account/folder/wallet so a wallet switch mid-backup can't redirect the upload.
         val account = requireAccount()
         val folder = backupFolderPath
@@ -1225,6 +1470,7 @@ class NextcloudService @Inject constructor(
 
     /** The backup file's server-side metadata (null = no backup yet). A missing folder lists as a 404, which also just means "no backup yet". */
     suspend fun fetchBackupInfo(): NextcloudFile? {
+        migrateLegacyFolderIfNeeded()
         val listing = runCatching { listFolder(backupFolderPath) }.getOrNull() ?: return null
         return listing.firstOrNull { it.name == BACKUP_FILE_NAME && !it.isDirectory }
     }

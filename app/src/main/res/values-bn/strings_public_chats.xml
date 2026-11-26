@@ -40,11 +40,9 @@
     <string name="pc_keep">রাখুন</string>
     <string name="pc_keep_subtitle">রুমটি যেমন আছে তেমনই রাখুন।</string>
     <string name="pc_new_public_chat">নতুন পাবলিক চ্যাট</string>
-    <string name="pc_new_public_chat_subtitle">একটি পাবলিক রুমে যোগ দিন, বা নতুন তৈরি করুন।</string>
     <string name="pc_edit_default_public_chats">ডিফল্ট পাবলিক চ্যাট সম্পাদনা</string>
     <string name="pc_new_public_chat_explainer">একই চ্যানেল নামে যোগ দেওয়া যে কেউ সেখানে বার্তা দেখতে ও পোস্ট করতে পারে - কোনো মালিক নেই, কোনো আমন্ত্রণও নেই।</string>
     <string name="pc_join">যোগ দিন</string>
-    <string name="pc_back">ফিরে যান</string>
     <string name="pc_channel_name_rules">চ্যানেলের নাম ১-%1$d অক্ষরের হতে হবে, স্পেস বা কোলন ছাড়া।</string>
     <string name="pc_join_failed">ওই চ্যানেলে যোগ দেওয়ার সময় কিছু ভুল হয়েছে।</string>
     <string name="pc_report">রিপোর্ট করুন</string>

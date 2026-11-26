@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- iOS 961fc05a: the Nextcloud folder is "K" (agent F, misc 5.5) -->
+    <string name="ab_nc_export_sub_k">آن را در پوشه K در Nextcloud ذخیره کنید تا روی هر دستگاهی وارد شود.</string>
+    <string name="pnc_export_sub_k">فایل CSV را در پوشه K در Nextcloud شما ذخیره می‌کند.</string>
+</resources>

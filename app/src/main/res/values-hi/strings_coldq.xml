@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">यह क्वांटम-प्रतिरोधी पता नहीं है। KasSigner जो KCC-3 पता दिखाता है, उसे स्कैन करें।</string>
+    <string name="coldq_error_already_added">यह पता पहले से इस खाते में है।</string>
+    <string name="coldq_error_in_other_account">यह पता पहले से आपके Cold Storage खाते “%1$s” में है।</string>
+    <string name="coldq_added_toast">क्वांटम-प्रतिरोधी पता जोड़ा गया।</string>
+    <string name="coldq_add_action">क्वांटम-प्रतिरोधी पता जोड़ें</string>
+    <string name="coldq_add_action_subtitle">KasSigner की पता स्क्रीन से एक KCC-3 पता स्कैन करें।</string>
+    <string name="coldq_stop_watching">वॉच करना बंद करें</string>
+    <string name="coldq_stop_watching_subtitle">यह क्वांटम पता खाते से हटाता है। इसे वापस जोड़ने के लिए फिर से स्कैन करें।</string>
+    <string name="coldq_address_header">क्वांटम-प्रतिरोधी पता</string>
+    <string name="coldq_address_footer">KasSigner पर अपना चाहा हुआ KCC-3 पता खोलें और उसका QR कोड स्कैन करें। जब तक इस पते से खर्च नहीं होता, इसकी कुंजी डिवाइस पर ही रहती है।</string>
+    <string name="coldq_number_header">KasSigner पर पता संख्या</string>
+    <string name="coldq_add_title">क्वांटम पता जोड़ें</string>
+    <string name="coldq_number_not_whole">पता संख्या एक पूर्ण संख्या होनी चाहिए।</string>
+    <string name="coldq_needs_v11">KasSigner v1.1 या बाद का संस्करण चाहिए, जो क्वांटम-प्रतिरोधी (KCC-3) पतों पर साइन करता है।</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner ने इस क्वांटम-प्रतिरोधी पते की कुंजी स्क्रिप्ट नहीं लौटाई, इसलिए इसे ब्रॉडकास्ट नहीं किया जाएगा। जाँचें कि डिवाइस पर KasSigner v1.1 या बाद का संस्करण चल रहा है और उसमें यह पता है।</string>
+    <string name="coldq_error_unexpected_covenant">साइन किया गया लेन-देन ऐसी कॉवनेंट शर्तें जोड़ता है जो इस भेजने में कभी माँगी नहीं गईं, इसलिए इसे ब्रॉडकास्ट नहीं किया जाएगा।</string>
+    <string name="coldq_label_receive">क्वांटम पता</string>
+    <string name="coldq_label_change">क्वांटम चेंज पता</string>
+    <string name="coldq_label_receive_n">क्वांटम पता #%1$d</string>
+    <string name="coldq_label_change_n">क्वांटम चेंज पता #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">यह भेजना इस पते की कुंजी चेन पर डाल देता है, इसलिए इसका चेंज यहाँ वापस नहीं आ सकता। पहले KasSigner से एक अप्रयुक्त क्वांटम-प्रतिरोधी पता जोड़ें (चेंज पता, #0 से #4, सबसे अच्छा है), या पूरा बैलेंस भेजें।</string>
+    <string name="coldq_error_compound_needs_fresh">समेकन इस पते की कुंजी चेन पर डाल देता है, इसलिए इसके कॉइन इस खाते के एक अप्रयुक्त क्वांटम-प्रतिरोधी पते पर जाते हैं। पहले KasSigner से एक जोड़ें (चेंज पता, #0 से #4, सबसे अच्छा है)।</string>
+    <string name="coldq_stop_watching_title">इस पते को वॉच करना बंद करें?</string>
+    <string name="coldq_stop_watching_message">इसके %1$s KAS इसी पते पर चेन पर, आपके KasSigner पर रहते हैं; K बस उन्हें दिखाना बंद करता है। फिर से वॉच करने के लिए KasSigner से पता फिर से स्कैन करें।</string>
+    <string name="coldq_edit_number">पता संख्या बदलें</string>
+    <string name="coldq_edit_number_subtitle">वह संख्या और चेन जो KasSigner इस पते के लिए दिखाता है।</string>
+    <string name="coldq_chain">चेन</string>
+    <string name="coldq_number_footer">वह संख्या जो KasSigner इस पते के लिए दिखाता है, और यह प्राप्ति पता है या चेंज पता। इसके साथ डिवाइस साइन करते समय कुंजी तुरंत ढूँढ लेता है; इसके बिना डिवाइस उसे खोजता है। KasSigner अपने चेंज पतों #0 से #4 पर भेजे गए चेंज को चेंज दिखाता है; किसी भी दूसरे पते को भुगतान के रूप में दिखाता है।</string>
+    <string name="coldq_number_too_large">यह संख्या बहुत बड़ी है: KasSigner की पता संख्याएँ 2147483648 से कम होती हैं।</string>
+    <string name="coldq_compound_note">इस पते के सभी कॉइन को एक में, इस खाते के एक अप्रयुक्त क्वांटम-प्रतिरोधी पते पर ले जाता है: यह लेन-देन इस पते की कुंजी चेन पर डाल देता है।</string>
+    <string name="coldq_coins_left_behind">इस पते में इतने कॉइन हैं जितने एक लेन-देन खर्च नहीं कर सकता: %1$d उस कुंजी के पीछे रह जाते हैं जो यह भेजना चेन पर डाल देता है। ठीक बाद एक और लेन-देन में उन्हें आगे भेजें।</string>
+    <string name="coldq_coins_move_to">कॉइन आपके क्वांटम पते पर जाते हैं:</string>
+    <string name="coldq_change_goes_to">चेंज आपके क्वांटम पते पर जाता है:</string>
+    <string name="coldq_unit_marks_change">KasSigner इस आउटपुट को चेंज के रूप में दिखाता है।</string>
+    <string name="coldq_unit_shows_payment">KasSigner इस आउटपुट को चेंज नहीं, सामान्य भुगतान के रूप में दिखाएगा: साइन करने से पहले जाँचें कि यह यही पता है।</string>
+    <string name="coldq_sign_without_number">पता संख्या के बिना साइन करें</string>
+    <string name="coldq_sign_without_number_note">अगर KasSigner यह अनुरोध ठुकरा दे, तो पता संख्या गलत हो सकती है। इसके बिना डिवाइस खुद पता ढूँढता है। पता संख्या बदलें अगली बार के लिए इसे ठीक कर देता है।</string>
+    <string name="coldq_compound_footer">इस पते के सभी UTXO को इस खाते के एक अप्रयुक्त क्वांटम-प्रतिरोधी पते पर एक में मिलाता है, क्योंकि यह इस पते की कुंजी चेन पर डाल देता है।</string>
+    <string name="coldq_visibility_quantum_header">क्वांटम-प्रतिरोधी पते</string>
+    <string name="coldq_receive_address">प्राप्ति पता</string>
+    <string name="coldq_change_address">चेंज पता</string>
+    <string name="coldq_optional">वैकल्पिक</string>
+</resources>

@@ -34,6 +34,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -62,7 +63,6 @@ import com.kachat.app.ui.screens.chess.kaPlayGraph
 import com.kachat.app.ui.screens.chess.kaPlayShowsDock
 import com.kachat.app.ui.screens.coldstorage.ColdStorageTab
 import com.kachat.app.ui.screens.coldstorage.isOwnColdAddress
-import com.kachat.app.ui.screens.portfolio.PortfolioHashrateChartScreen
 import com.kachat.app.ui.screens.portfolio.PortfolioPriceChartScreen
 import com.kachat.app.ui.screens.portfolio.PortfolioRoutes
 import com.kachat.app.ui.screens.portfolio.PortfolioTab
@@ -70,6 +70,7 @@ import com.kachat.app.ui.screens.portfolio.PortfolioValueChartScreen
 import com.kachat.app.ui.screens.PublicChatRoutes
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
+import com.kachat.app.ui.screens.collectAsStateWhileStarted
 import com.kachat.app.viewmodels.WalletViewModel
 import com.kachat.app.viewmodels.ChatViewModel
 import androidx.compose.ui.window.Dialog
@@ -132,7 +133,7 @@ private val walletPushedRoutes = setOf(
 
 /** Portfolio's chart pages (iOS NavigationLinks inside PortfolioView: the tab bar stays). */
 private val portfolioPushedRoutes = setOf(
-    PortfolioRoutes.PRICE_CHART, PortfolioRoutes.VALUE_CHART, PortfolioRoutes.HASHRATE_CHART,
+    PortfolioRoutes.PRICE_CHART, PortfolioRoutes.VALUE_CHART,
 )
 
 /** A public room and its Room Info, pushed inside Chats with the dock kept (iOS). */
@@ -203,6 +204,7 @@ fun KaChatApp(
 
     val isLoggedIn by walletViewModel.isLoggedIn.collectAsState()
     val startupResolved by walletViewModel.startupResolved.collectAsState()
+    val pendingAccountSwitch by walletViewModel.pendingAccountSwitch.collectAsState()
 
     if (!startupResolved) {
         // Cold start, routing decision still loading (the async biometrics-for-login read that
@@ -211,6 +213,15 @@ fun KaChatApp(
         // the account: the launch's K globe instead, where the splash screen drew it (iOS
         // 518fdc8c `LoadingView`).
         LaunchGlobeView()
+    } else if (!isLoggedIn && pendingAccountSwitch != null) {
+        // Between one account's Log Out and the next one's sign-in (Profile's account chip): the
+        // globe, never the sign-in screen (iOS 961fc05a `isSwitchingAccount`, owner 2026-11-25:
+        // "a seamless transfer to another profile"). The old account's tabs are gone here, so the
+        // new one still gets new tabs; a failed sign-in ends on the sign-in screen with why.
+        LaunchGlobeView()
+        androidx.compose.runtime.LaunchedEffect(pendingAccountSwitch) {
+            walletViewModel.finishPendingAccountSwitch()
+        }
     } else if (!isLoggedIn) {
         OnboardingScreen(walletViewModel)
     } else {
@@ -445,6 +456,21 @@ fun MainShell(
     // `consumePendingNotificationRoute`).
     // ---------------------------------------------------------------------------------------
 
+    // Who is signed in, for "your own @ opens the Profile tab" (iOS d089011f
+    // `KaPostsDeepLink.openProfile`).
+    val shellWalletAddress by walletViewModel.address.collectAsState()
+    LaunchedEffect(shellWalletAddress) { com.kachat.app.ui.screens.KaPostsDeepLink.signedInAddress = shellWalletAddress }
+    // A group @mention tapped in Profile's bell: Chats, then the group on top of it (iOS d089011f
+    // `pendingGroupNavigation` + `.openGroup`).
+    val pendingMentionGroup by com.kachat.app.ui.screens.MentionGroupRoute.pending.collectAsState()
+    LaunchedEffect(pendingMentionGroup) {
+        val groupId = pendingMentionGroup ?: return@LaunchedEffect
+        com.kachat.app.ui.screens.MentionGroupRoute.pending.value = null
+        com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+        show(AppTab.CHATS)
+        navController.navigate("group_chat/$groupId")
+    }
+
     // KaPost: a post, a profile, a pre-written post or the scheduled list opens the KaPost tab.
     val pendingKaPostTxId by com.kachat.app.ui.screens.KaPostsDeepLink.pendingPostTxId.collectAsState()
     val pendingKaPostProfile by com.kachat.app.ui.screens.KaPostsDeepLink.pendingProfileAddress.collectAsState()
@@ -478,6 +504,16 @@ fun MainShell(
             com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
             show(AppTab.CHATS)
         }
+    }
+    // A Kaspa Hub card's link (`kachat.app/hub/<slug>`, iOS 961fc05a `.openHubSection`): that
+    // card, wherever it lives. A post or profile open over KaPost, where most card links are
+    // tapped, closes first, or the card opened under it (audit 2026-11-25 L1).
+    val pendingHubCard by com.kachat.app.ui.screens.HubLinkRouter.pending.collectAsState()
+    LaunchedEffect(pendingHubCard) {
+        val tab = pendingHubCard ?: return@LaunchedEffect
+        com.kachat.app.ui.screens.HubLinkRouter.consume()
+        com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+        show(tab)
     }
     // A bot challenge (a KaPost card, a kachatchess:// link): KaPlay, which opens Chess and the
     // bot. Covers over KaPost close first (iOS `.openGames`). A challenge waiting from a cold
@@ -726,16 +762,19 @@ fun MainShell(
 
     // ---------------------------------------------------------------------------------------
     // Badges (iOS `AppTabBadge`): Profile adds up every notification behind its bell (KaPost's
-    // and the wallet's), Chats its chats', groups' and belled rooms' unread messages, and Kaspa
-    // Hub what the tabs inside it hold. The rest show none. The app icon is Chats' count plus
-    // KaPost's unseen activity (iOS `ChatService.updateAppBadge`).
+    // and the wallet's), Chats its chats' and groups' unread messages (not the rooms': their count
+    // is on the Chats / Public Chats button beside KaChat's title, iOS 961fc05a, owner
+    // 2026-11-25), and Kaspa Hub what the tabs inside it hold. The rest show none. The app icon is
+    // Chats' count plus bell-on rooms plus KaPost's unseen activity (iOS `AppTabBadge.appIconCount`).
     // ---------------------------------------------------------------------------------------
     val badgesVm: ShellBadgesViewModel = hiltViewModel()
     val profileBadge by badgesVm.profileCount.collectAsState()
     val roomsBadge by badgesVm.roomsCount.collectAsState()
     val kaPostsUnseen by badgesVm.kaPostsUnseen.collectAsState()
-    val dockChatsUnread by chatViewModel.chatListUnreadCount.collectAsState()
-    val dockGroupsUnread by chatViewModel.groupsUnreadCount.collectAsState()
+    // Not in the background: these re-run the whole chat and group lists on every database
+    // write, for a dock nobody sees (audit 2026-11-25 R6). Nothing else reads the icon count.
+    val dockChatsUnread by chatViewModel.chatListUnreadCount.collectAsStateWhileStarted()
+    val dockGroupsUnread by chatViewModel.groupsUnreadCount.collectAsStateWhileStarted()
     // The wallet's notification store is a singleton keyed per wallet internally; reload whenever
     // the active account changes so a switch never leaves the previous account's count showing.
     val dockNotifVm: com.kachat.app.viewmodels.NotificationCenterViewModel = hiltViewModel()
@@ -745,13 +784,13 @@ fun MainShell(
     }
     fun badgeCount(tab: AppTab): Int = when (tab) {
         AppTab.PROFILE -> profileBadge
-        AppTab.CHATS -> dockChatsUnread + dockGroupsUnread + roomsBadge
+        AppTab.CHATS -> dockChatsUnread + dockGroupsUnread
         AppTab.HUB -> hubTabs.sumOf { if (it == AppTab.HUB) 0 else badgeCount(it) }
         else -> 0
     }
-    val chatsBadgeTotal = dockChatsUnread + dockGroupsUnread + roomsBadge
-    LaunchedEffect(chatsBadgeTotal, kaPostsUnseen) {
-        AppIconBadge.update(chatsBadgeTotal + kaPostsUnseen)
+    val chatsBadgeTotal = dockChatsUnread + dockGroupsUnread
+    LaunchedEffect(chatsBadgeTotal, roomsBadge, kaPostsUnseen) {
+        AppIconBadge.update(chatsBadgeTotal + roomsBadge + kaPostsUnseen)
     }
 
     // Which tab the glass pill sits under. The tab you are IN, the way iOS's tab bar keeps the tab
@@ -844,21 +883,20 @@ fun MainShell(
                     animationSpec = if (dockDragIndex != null) tween(90) else spring(dampingRatio = 0.75f, stiffness = 420f),
                     label = "dockPill",
                 )
-                // The bar itself: the backdrop blurred, tinted with the surface colour.
+                // The bar itself: the surface colour at 92% over the page. It used to blur the
+                // page under that tint on every frame the page moved (a scroll, a spinner), for
+                // the 8% that shows through; a flat fill of the same colour over the page's
+                // background looks the same and costs no offscreen pass (audit 2026-11-25 R10).
+                // The drag lens below still samples the blurred page while a finger slides.
+                val barFill = com.kachat.app.ui.screens.toolbarGlassFill().copy(alpha = 0.92f)
+                    .compositeOver(LocalAppColors.current.background)
                 Box(
                     Modifier
                         .height(60.dp)
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(30.dp))
-                        .hazeChild(
-                            state = dockHaze,
-                            shape = RoundedCornerShape(30.dp),
-                            style = HazeStyle(
-                                // iOS's bar on black reads #191919 (the toolbar glass)
-                                tint = com.kachat.app.ui.screens.toolbarGlassFill().copy(alpha = 0.92f),
-                                blurRadius = 24.dp,
-                            ),
-                        )
+                        // iOS's bar on black reads #191919 (the toolbar glass)
+                        .background(barFill)
                         .border(0.5.dp, com.kachat.app.ui.screens.toolbarGlassEdge(), RoundedCornerShape(30.dp)),
                 )
                 if (dockDragIndex == null && selectedDockIndex >= 0) {
@@ -1082,7 +1120,8 @@ fun MainShell(
             // The one KaPost instance that opens links and pushes (it is in one place at a time).
             AppTab.KAPOSTS -> KaPostsScreen(navController = navController, walletViewModel = walletViewModel)
             AppTab.GAMES -> GamesScreen(navController = navController, walletViewModel = walletViewModel)
-            AppTab.KACHAT_STATS -> KaChatStatsScreen(onBack = null)
+            // K's own block explorer (iOS 961fc05a); it replaced KaChat Stats.
+            AppTab.EXPLORER -> com.kachat.app.ui.screens.explorer.ExplorerScreen()
             AppTab.APPS -> KaspaWebsitesScreen()
         }
     }
@@ -1176,12 +1215,6 @@ fun MainShell(
                     PortfolioValueChartScreen(navController, portfolioVm)
                 }
             }
-            composable(PortfolioRoutes.HASHRATE_CHART) {
-                val portfolioVm = sharedPortfolioViewModel(navController)
-                CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
-                    PortfolioHashrateChartScreen(navController, portfolioVm)
-                }
-            }
             // A public room, pushed inside Chats with the dock kept and its composer just above it.
             composable(PublicChatRoutes.ROOM) { entry ->
                 val channel = PublicChatRoutes.channelArgument(entry.arguments) ?: return@composable
@@ -1191,9 +1224,10 @@ fun MainShell(
                         onBack = { navController.popBackStack() },
                         navController = navController,
                         // A sender's View Profile: their KaPost profile.
+                        // Your own (View Profile, an @ of you): the Profile tab (iOS d089011f).
                         onOpenKaPostProfile = { address ->
-                            com.kachat.app.ui.screens.KaPostsDeepLink.pendingProfileAddress.value = address
-                            show(AppTab.KAPOSTS)
+                            com.kachat.app.ui.screens.KaPostsDeepLink.openProfile(address)
+                            if (com.kachat.app.ui.screens.KaPostsDeepLink.pendingProfileAddress.value == address) show(AppTab.KAPOSTS)
                         },
                     )
                 }

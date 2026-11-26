@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">این آدرس مقاوم در برابر کوانتوم نیست. آدرس KCC-3 را که KasSigner نشان می‌دهد اسکن کنید.</string>
+    <string name="coldq_error_already_added">این آدرس از قبل در این حساب هست.</string>
+    <string name="coldq_error_in_other_account">این آدرس از قبل در حساب Cold Storage «%1$s» شما هست.</string>
+    <string name="coldq_added_toast">آدرس مقاوم در برابر کوانتوم اضافه شد.</string>
+    <string name="coldq_add_action">افزودن آدرس مقاوم در برابر کوانتوم</string>
+    <string name="coldq_add_action_subtitle">یک آدرس KCC-3 را از صفحهٔ آدرس KasSigner اسکن کنید.</string>
+    <string name="coldq_stop_watching">توقف نظارت</string>
+    <string name="coldq_stop_watching_subtitle">این آدرس کوانتومی را از حساب حذف می‌کند. برای افزودن دوباره، آن را دوباره اسکن کنید.</string>
+    <string name="coldq_address_header">آدرس مقاوم در برابر کوانتوم</string>
+    <string name="coldq_address_footer">در KasSigner، آدرس KCC-3 مورد نظرتان را باز کنید و کد QR آن را اسکن کنید. کلیدش تا وقتی از این آدرس خرج نشود روی دستگاه می‌ماند.</string>
+    <string name="coldq_number_header">شمارهٔ آدرس در KasSigner</string>
+    <string name="coldq_add_title">افزودن آدرس کوانتومی</string>
+    <string name="coldq_number_not_whole">شمارهٔ آدرس باید یک عدد صحیح باشد.</string>
+    <string name="coldq_needs_v11">به KasSigner نسخهٔ 1.1 یا جدیدتر نیاز دارد که آدرس‌های مقاوم در برابر کوانتوم (KCC-3) را امضا می‌کند.</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner اسکریپت کلید این آدرس مقاوم در برابر کوانتوم را برنگرداند، پس منتشر نمی‌شود. بررسی کنید دستگاه KasSigner نسخهٔ 1.1 یا جدیدتر را اجرا می‌کند و این آدرس را دارد.</string>
+    <string name="coldq_error_unexpected_covenant">تراکنش امضاشده شرایط قراردادی اضافه می‌کند که این ارسال هرگز نخواسته بود، پس منتشر نمی‌شود.</string>
+    <string name="coldq_label_receive">آدرس کوانتومی</string>
+    <string name="coldq_label_change">آدرس باقی‌ماندهٔ کوانتومی</string>
+    <string name="coldq_label_receive_n">آدرس کوانتومی #%1$d</string>
+    <string name="coldq_label_change_n">آدرس باقی‌ماندهٔ کوانتومی #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">این ارسال کلید این آدرس را روی زنجیره می‌گذارد، پس باقی‌مانده‌اش نمی‌تواند به اینجا برگردد. اول یک آدرس مقاوم در برابر کوانتوم استفاده‌نشده از KasSigner اضافه کنید (بهتر است آدرس باقی‌مانده، #0 تا #4)، یا کل موجودی را بفرستید.</string>
+    <string name="coldq_error_compound_needs_fresh">ادغام کلید این آدرس را روی زنجیره می‌گذارد، پس سکه‌هایش به یک آدرس مقاوم در برابر کوانتوم استفاده‌نشده از این حساب می‌روند. اول یکی از KasSigner اضافه کنید (بهتر است آدرس باقی‌مانده، #0 تا #4).</string>
+    <string name="coldq_stop_watching_title">نظارت بر این آدرس متوقف شود؟</string>
+    <string name="coldq_stop_watching_message">%1$s KAS آن روی زنجیره در همین آدرس، روی KasSigner شما می‌ماند؛ K فقط دیگر آن را نشان نمی‌دهد. برای نظارت دوباره، آدرس را دوباره از KasSigner اسکن کنید.</string>
+    <string name="coldq_edit_number">ویرایش شمارهٔ آدرس</string>
+    <string name="coldq_edit_number_subtitle">شماره و زنجیره‌ای که KasSigner برای این آدرس نشان می‌دهد.</string>
+    <string name="coldq_chain">زنجیره</string>
+    <string name="coldq_number_footer">شماره‌ای که KasSigner برای این آدرس نشان می‌دهد، و اینکه آدرس دریافت است یا آدرس باقی‌مانده. با آن، دستگاه هنگام امضا کلید را فوراً پیدا می‌کند؛ بدون آن، دنبالش می‌گردد. KasSigner باقی‌مانده‌ای را که به آدرس‌های باقی‌ماندهٔ #0 تا #4 خودش می‌رود باقی‌مانده نشان می‌دهد و هر آدرس دیگری را پرداخت.</string>
+    <string name="coldq_number_too_large">این شماره خیلی بزرگ است: شماره‌های آدرس KasSigner کمتر از 2147483648 هستند.</string>
+    <string name="coldq_compound_note">همهٔ سکه‌های این آدرس را در یک سکه، در یک آدرس مقاوم در برابر کوانتوم استفاده‌نشده از این حساب جمع می‌کند: این تراکنش کلید این آدرس را روی زنجیره می‌گذارد.</string>
+    <string name="coldq_coins_left_behind">این آدرس بیش از آنچه یک تراکنش می‌تواند خرج کند سکه دارد: %1$d سکه پشت کلیدی می‌ماند که این ارسال روی زنجیره می‌گذارد. بلافاصله بعد، آن‌ها را در تراکنش دیگری بفرستید.</string>
+    <string name="coldq_coins_move_to">سکه‌ها به آدرس کوانتومی شما می‌روند:</string>
+    <string name="coldq_change_goes_to">باقی‌مانده به آدرس کوانتومی شما می‌رود:</string>
+    <string name="coldq_unit_marks_change">KasSigner این خروجی را باقی‌مانده نشان می‌دهد.</string>
+    <string name="coldq_unit_shows_payment">KasSigner این خروجی را پرداختی عادی نشان می‌دهد، نه باقی‌مانده: پیش از امضا مطمئن شوید همین آدرس است.</string>
+    <string name="coldq_sign_without_number">امضا بدون شمارهٔ آدرس</string>
+    <string name="coldq_sign_without_number_note">اگر KasSigner این درخواست را رد کند، ممکن است شمارهٔ آدرس اشتباه باشد. بدون آن، دستگاه خودش دنبال آدرس می‌گردد. «ویرایش شمارهٔ آدرس» آن را برای دفعهٔ بعد درست می‌کند.</string>
+    <string name="coldq_compound_footer">همهٔ UTXOهای این آدرس را در یکی، در یک آدرس مقاوم در برابر کوانتوم استفاده‌نشده از این حساب ادغام می‌کند، چون این کار کلید این آدرس را روی زنجیره می‌گذارد.</string>
+    <string name="coldq_visibility_quantum_header">آدرس‌های مقاوم در برابر کوانتوم</string>
+    <string name="coldq_receive_address">آدرس دریافت</string>
+    <string name="coldq_change_address">آدرس باقی‌مانده</string>
+    <string name="coldq_optional">اختیاری</string>
+</resources>

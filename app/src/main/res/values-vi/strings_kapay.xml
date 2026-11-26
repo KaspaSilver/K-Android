@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">Chưa có thay đổi 24 giờ</string>
     <string name="kp_about_amount">khoảng %1$s</string>
-    <string name="kp_about_hashrate_e7fb8">Giới thiệu về tỷ lệ băm</string>
     <string name="kp_add_61cc5">Thêm</string>
     <string name="kp_add_kaspa_address_5dd6b">Thêm địa chỉ Kaspa</string>
     <string name="kp_add_to_portfolio_9eb23">Thêm vào danh mục đầu tư</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">Đã nhập 1 giao dịch vào %1$s</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">Giá KAS</string>
-    <string name="kp_kaspa_network_fceee">Mạng Kaspa</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSigner hiển thị nội dung đang ký. Hãy kiểm tra khớp, ký, rồi quét giao dịch đã ký mà nó hiển thị.</string>
     <string name="kp_kept_in_the_position">Giữ trong vị thế</string>
     <string name="kp_kept_in_your_token">Giữ trong token của bạn</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">Mỗi ngày</string>
     <string name="kp_mining_per_month">Mỗi tháng</string>
     <string name="kp_mining_per_week">Mỗi tuần</string>
-    <string name="kp_network_hashrate_c3cc8">Tỷ lệ băm của mạng</string>
     <string name="kp_new_portfolio_5c1c7">Danh mục mới</string>
-    <string name="kp_next_block_reward">Phần thưởng khối tiếp theo</string>
-    <string name="kp_next_block_reward_reduction">Lần giảm phần thưởng khối tiếp theo</string>
     <string name="kp_no_addresses_discovered_yet_15738">Chưa khám phá được địa chỉ nào.</string>
     <string name="kp_no_used_addresses_yet">Chưa có địa chỉ nào đã dùng</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Chưa đủ lịch sử - hãy quay lại sau vài ngày hoạt động.</string>
@@ -235,7 +230,6 @@
     <string name="pf_add_transaction_sub">Ghi lại một giao dịch mua hoặc bán thủ công.</string>
     <string name="pf_export_csv_sub">Ghi các giao dịch của danh mục đầu tư này ra một tệp.</string>
     <string name="pf_import_csv_sub">Đọc các giao dịch từ một tệp.</string>
-    <string name="pnc_export_sub">Lưu tệp CSV vào thư mục KaChat trên Nextcloud của bạn.</string>
     <string name="pnc_import_sub">Chọn một tệp CSV từ Nextcloud của bạn.</string>
     <string name="portfolio">Danh mục đầu tư</string>
     <string name="portfolio_add_chatting_address">Thêm địa chỉ trò chuyện</string>

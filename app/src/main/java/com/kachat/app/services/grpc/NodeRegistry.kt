@@ -12,16 +12,36 @@ import java.util.concurrent.ConcurrentHashMap
  */
 data class NodeRecord(
     val address: String,
-    val type: String, // "Seed" | "Discovered" | "DNS" | "Manual" | "Trusted"
+    /** "Seed" | "Discovered" | "DNS" | "Manual" | "Trusted" | [NodeRegistry.TYPE_PUBLIC] */
+    val type: String,
     val lastProbe: NodeProbeResult?,
     val consecutiveFailures: Int = 0,
-    val lastSuccessAt: Long? = null
-)
+    val lastSuccessAt: Long? = null,
+    /** When the node last failed a probe or a request (epoch millis). */
+    val lastFailureAt: Long? = null,
+    /** When the registry first heard of the node this session. */
+    val firstSeenAt: Long = System.currentTimeMillis(),
+) {
+    /** Spoken to in wRPC over a WebSocket rather than gRPC. */
+    val isWebSocket: Boolean get() = isWebSocketNodeAddress(address)
+
+    /**
+     * The latency the node is ranked by (iOS 961fc05a `NodeRecord.rankingLatencyMs`, audit B10). A
+     * WebSocket node counts as half again slower plus 150 ms, so gRPC wins whenever it answers:
+     * wss blocks arrive as JSON (more CPU and bytes), and the public wss nodes learn your
+     * addresses. A wss node still wins when gRPC fails.
+     */
+    val rankingLatencyMs: Long
+        get() {
+            val latency = lastProbe?.latencyMs ?: return Long.MAX_VALUE
+            return if (isWebSocket) latency * 3 / 2 + 150 else latency
+        }
+}
 
 class NodeRegistry {
     private val records = ConcurrentHashMap<String, NodeRecord>()
 
-    fun update(address: String, type: String, probe: NodeProbeResult) {
+    fun update(address: String, type: String, probe: NodeProbeResult, nowMs: Long = System.currentTimeMillis()) {
         val prior = records[address]
         val result = withKnownNetworkName(probe, prior?.lastProbe)
         records[address] = NodeRecord(
@@ -29,8 +49,59 @@ class NodeRegistry {
             type = type,
             lastProbe = result,
             consecutiveFailures = if (result.reachable) 0 else (prior?.consecutiveFailures ?: 0) + 1,
-            lastSuccessAt = if (result.reachable) System.currentTimeMillis() else prior?.lastSuccessAt
+            lastSuccessAt = if (result.reachable) nowMs else prior?.lastSuccessAt,
+            lastFailureAt = if (result.reachable) prior?.lastFailureAt else nowMs,
+            firstSeenAt = prior?.firstSeenAt ?: nowMs,
         )
+    }
+
+    /** The node spoke on its own (a notification, a request answered) with nothing timed: a
+     *  success for the connectivity checks, without a new probe (iOS 961fc05a `recordAlive`). */
+    fun recordAlive(address: String, nowMs: Long = System.currentTimeMillis()) {
+        records.computeIfPresent(address) { _, r -> r.copy(lastSuccessAt = nowMs, consecutiveFailures = 0) }
+    }
+
+    // MARK: Public wss fallback (NodePoolManager.evaluatePublicFallback, iOS 961fc05a)
+
+    /** Adds a public wRPC node found through the Kaspa resolvers; false when it was already known
+     *  (audit 2026-11-25 C10). Allowed while a node is pinned: it's the pinned node that can't be
+     *  reached. */
+    fun addPublicFallback(address: String, nowMs: Long = System.currentTimeMillis()): Boolean =
+        records.putIfAbsent(address, NodeRecord(address = address, type = TYPE_PUBLIC, lastProbe = null, firstSeenAt = nowMs)) == null
+
+    fun publicFallbacks(): List<NodeRecord> = records.values.filter { it.type == TYPE_PUBLIC }
+
+    /** Public stand-ins that turned out dead: added over [graceMs] ago and never answered, or
+     *  failing since their last answer, which is over [graceMs] old. An idle stand-in that answered
+     *  and hasn't failed since is kept. Removed here; returned so their connections can be closed. */
+    fun removeDeadPublicFallbacks(graceMs: Long, nowMs: Long = System.currentTimeMillis()): List<String> {
+        val gone = publicFallbacks().filter { r ->
+            val success = r.lastSuccessAt
+            if (success != null) nowMs - success > graceMs && (r.lastFailureAt ?: Long.MIN_VALUE) > success
+            else nowMs - r.firstSeenAt > graceMs
+        }.map { it.address }
+        gone.forEach { records.remove(it) }
+        return gone
+    }
+
+    /** Removes every public stand-in; returns them so their connections can be closed. */
+    fun removePublicFallbacks(): List<String> {
+        val gone = publicFallbacks().map { it.address }
+        gone.forEach { records.remove(it) }
+        return gone
+    }
+
+    /** When a node the pool found itself (anything but a public stand-in) last answered, and how
+     *  many failed within [windowMs] (iOS `grpcConnectivity`). */
+    fun ownNodeConnectivity(windowMs: Long, nowMs: Long = System.currentTimeMillis()): Pair<Long?, Int> {
+        var lastSuccess: Long? = null
+        var failures = 0
+        for (r in records.values) {
+            if (r.type == TYPE_PUBLIC) continue
+            r.lastSuccessAt?.let { if (it > (lastSuccess ?: Long.MIN_VALUE)) lastSuccess = it }
+            r.lastFailureAt?.let { if (nowMs - it <= windowMs) failures++ }
+        }
+        return lastSuccess to failures
     }
 
     /**
@@ -89,11 +160,15 @@ class NodeRegistry {
         val reference = if (scores.isEmpty()) null else scores[scores.size / 2]
         return active.sortedWith(
             compareBy<NodeRecord>(
+                // A public stand-in serves only while no node of the pool's own can (iOS
+                // NodeSelector's -4).
+                { it.type == TYPE_PUBLIC },
                 { record ->
                     val daa = projectedDaaScore(record, nowMs)
                     reference != null && daa != null && reference - daa > DAA_DELTA_WINDOW
                 },
-                { it.lastProbe?.latencyMs ?: Long.MAX_VALUE },
+                // A WebSocket node ranks as slower than it is (B10).
+                { it.rankingLatencyMs },
             )
         )
     }
@@ -121,8 +196,9 @@ class NodeRegistry {
         return when {
             r.lastProbe?.reachable != true -> if (r.consecutiveFailures >= 3) "Quarantined" else "Suspect"
             r.lastProbe.isSynced == false -> "Suspect" // reachable but not synced — don't trust its data
-            // A node the user added keeps the plain rule (iOS `.userAdded`).
-            r.type == "Manual" -> "Active"
+            // A node the user added keeps the plain rule (iOS `.userAdded`), as does a public
+            // stand-in, checked by its probe.
+            r.type == "Manual" || r.type == TYPE_PUBLIC -> "Active"
             !fitsActive(r, nowMs) -> "Suspect"
             else -> "Active"
         }
@@ -141,7 +217,7 @@ class NodeRegistry {
      * node), rather than leaving the pool short.
      */
     private fun fitsActive(r: NodeRecord, nowMs: Long): Boolean {
-        val eligible = records.values.filter { it.type != "Trusted" && it.type != "Manual" && isEligible(it) }
+        val eligible = records.values.filter { it.type != "Trusted" && it.type != "Manual" && it.type != TYPE_PUBLIC && isEligible(it) }
         val named = eligible.filter { namedOnNetwork(it) }
         val scores = named.mapNotNull { projectedDaaScore(it, nowMs) }.sorted()
         val median = if (scores.size >= 3) scores[scores.size / 2] else null
@@ -170,22 +246,26 @@ class NodeRegistry {
         return port !in otherPorts
     }
 
-    private companion object {
+    companion object {
+        /** A public wss node standing in while no gRPC node answers (iOS `.publicFallback`, shown
+         *  as "Public"). Never persisted. */
+        const val TYPE_PUBLIC = "Public"
+
         /** Behind by more than this is lag: about ten seconds of blocks (iOS `daaDeltaWindow`). */
-        const val DAA_DELTA_WINDOW = 100L
+        private const val DAA_DELTA_WINDOW = 100L
         /** 10 blocks a second (iOS `daaPerSecond`). */
-        const val DAA_PER_SECOND = 10L
+        private const val DAA_PER_SECOND = 10L
         /** How long a node's reported score means anything: probes are 30-60 s apart. */
-        const val PROFILE_TTL_MS = 5 * 60 * 1000L
+        private const val PROFILE_TTL_MS = 5 * 60 * 1000L
         /** Far above any real score, so carrying one forward can't overflow. */
-        const val MAX_DAA_SCORE = Long.MAX_VALUE / 2
+        private const val MAX_DAA_SCORE = Long.MAX_VALUE / 2
         /** How far behind the median an Active node may be: about a minute of blocks (iOS
          *  `maxActiveDaaLag`). */
-        const val MAX_ACTIVE_DAA_LAG = 600L
+        private const val MAX_ACTIVE_DAA_LAG = 600L
         /** The stricter Active rule applies once this many nodes pass it (iOS `minActive`, the
          *  pool's targetActiveNodes). */
-        const val MIN_ACTIVE_NODES = 8
-        val MAINNET_PORTS = setOf(15110, 15111, 16110, 16111)
-        val TESTNET_PORTS = setOf(15210, 15211, 16210, 16211)
+        private const val MIN_ACTIVE_NODES = 8
+        private val MAINNET_PORTS = setOf(15110, 15111, 16110, 16111)
+        private val TESTNET_PORTS = setOf(15210, 15211, 16210, 16211)
     }
 }

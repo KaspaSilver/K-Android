@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
+<resources>
+    <string name="r55_search_public_chats">Search public chats</string>
+    <string name="r55_no_public_chats">No Public Chats</string>
+    <string name="r55_no_public_chats_hint">Tap + to join or create a public room.</string>
+    <string name="r55_page_cycle_hint">Switches between your chats and public chats</string>
+    <string name="r55_more_rooms">More Rooms</string>
+    <string name="r55_more_rooms_footer">Rooms added on the indexer K reads public chats from.</string>
+    <string name="r55_delete_one_public_chat">Delete 1 Public Chat?</string>
+    <string name="r55_delete_n_public_chats">Delete %1$d Public Chats?</string>
+    <string name="r55_delete_public_chats_message">Default public chats are switched off (turn them back on in Edit Default Public Chats). Rooms you added are deleted with their messages on this device.</string>
+    <string name="r55_delete_for_everyone">Delete for Everyone</string>
+    <string name="r55_delete_for_everyone_subtitle">Removes it from this room for everyone using K.</string>
+    <string name="r55_delete_for_everyone_q">Delete for Everyone?</string>
+    <string name="r55_delete_for_everyone_message">It goes from this room for everyone using K. It stays on the Kaspa network, where anyone reading the chain can still find it. Deleting costs a small network fee.</string>
+    <string name="r55_delete_failed">Couldn\'t delete the message. Try again.</string>
+</resources>

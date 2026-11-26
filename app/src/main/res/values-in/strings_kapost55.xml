@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPost and Kaspa Hub card links (iOS 961fc05a, 2026-11-25). -->
+<resources>
+    <string name="kp55_link_copied">Tautan disalin</string>
+    <string name="kp55_hub_link_subtitle">Tautan yang membuka kartu ini di K.</string>
+    <string name="kp55_open">Buka</string>
+    <string name="kp55_opens_this_card">Membuka kartu ini.</string>
+    <string name="kp55_kaspa_hub_card">Kaspa Hub: %1$s</string>
+    <string name="kp55_tap_to_open_in_k">Ketuk untuk membukanya di K.</string>
+    <string name="kp55_opens_it_in_k">Membukanya di K.</string>
+    <string name="kp55_hub_blurb_contacts">Alamat Kaspa yang kamu simpan.</string>
+    <string name="kp55_hub_blurb_portfolio">Pantau koin dan nilainya.</string>
+    <string name="kp55_hub_blurb_cold_storage">Pantau dompet dingin dan tanda tangani untuknya.</string>
+    <string name="kp55_hub_blurb_usernames">Klaim, beli, dan jual nama pengguna .kachat.</string>
+    <string name="kp55_hub_blurb_kapost">Postingan dan balasan di Kaspa.</string>
+    <string name="kp55_hub_blurb_kaplay">Catur, Snake, dan 2048, skor di chain.</string>
+    <string name="kp55_hub_blurb_websites">Situs web yang dibangun di Kaspa.</string>
+    <string name="kp55_hub_blurb_explorer">Blok, transaksi, dan alamat, langsung.</string>
+    <!-- Profile's bell: a room or group @mention of you (iOS d089011f). -->
+    <string name="kp55_mentioned_you_in">%1$s menyebut Anda di %2$s</string>
+</resources>

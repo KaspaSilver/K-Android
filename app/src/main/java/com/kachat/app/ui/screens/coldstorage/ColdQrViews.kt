@@ -335,7 +335,7 @@ private fun ColdCameraScannerSheet(
             when {
                 authorized -> {
                     val mainExecutor = remember(context) { ContextCompat.getMainExecutor(context) }
-                    ColdCameraQrScanner(modifier = Modifier.fillMaxSize()) { result ->
+                    CameraQrScanner(modifier = Modifier.fillMaxSize()) { result ->
                         mainExecutor.execute { latestResult(result, close) }
                     }
                     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -389,76 +389,4 @@ private fun ColdCameraScannerSheet(
             )
         }
     }
-}
-
-/**
- * CameraX preview bound to a ZXing decode analyzer (KaChat's `CameraQrScanner`): [onResult] fires
- * for every decoded frame. A higher analysis resolution than CameraX's default and pinch-to-zoom,
- * since a KasSigner screen's dense codes need the detail.
- */
-@Composable
-private fun ColdCameraQrScanner(modifier: Modifier = Modifier, onResult: (Result) -> Unit) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    var camera by remember { mutableStateOf<Camera?>(null) }
-    var zoomRatio by remember { mutableStateOf(1f) }
-    val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
-    val analysisRef = remember { arrayOfNulls<ImageAnalysis>(1) }
-    val disposed = remember { booleanArrayOf(false) }
-    DisposableEffect(Unit) {
-        onDispose {
-            disposed[0] = true
-            analysisRef[0]?.clearAnalyzer()
-            analysisExecutor.shutdown()
-        }
-    }
-
-    AndroidView(
-        modifier = modifier.pointerInput(Unit) {
-            detectTransformGestures { _, _, zoomChange, _ ->
-                val cam = camera ?: return@detectTransformGestures
-                val state = cam.cameraInfo.zoomState.value ?: return@detectTransformGestures
-                zoomRatio = (zoomRatio * zoomChange).coerceIn(state.minZoomRatio, state.maxZoomRatio)
-                cam.cameraControl.setZoomRatio(zoomRatio)
-            }
-        },
-        factory = { ctx ->
-            val previewView = PreviewView(ctx).apply {
-                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-            }
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-            cameraProviderFuture.addListener({
-                if (disposed[0]) return@addListener
-                val cameraProvider = cameraProviderFuture.get()
-                val preview = Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
-                }
-                val resolutionSelector = ResolutionSelector.Builder()
-                    .setResolutionStrategy(
-                        ResolutionStrategy(Size(1280, 720), ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER)
-                    )
-                    .build()
-                val analysis = ImageAnalysis.Builder()
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .setResolutionSelector(resolutionSelector)
-                    .build()
-                analysis.setAnalyzer(analysisExecutor) { imageProxy ->
-                    com.kachat.app.ui.screens.decodeQrCode(imageProxy, onResult)
-                }
-                analysisRef[0] = analysis
-                try {
-                    cameraProvider.unbindAll()
-                    camera = cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        CameraSelector.DEFAULT_BACK_CAMERA,
-                        preview,
-                        analysis
-                    )
-                } catch (e: Exception) {
-                    // Nothing to scan if the camera fails to bind - the sheet can be closed and opened again.
-                }
-            }, ContextCompat.getMainExecutor(ctx))
-            previewView
-        }
-    )
 }

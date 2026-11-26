@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPost and Kaspa Hub card links (iOS 961fc05a, 2026-11-25). -->
+<resources>
+    <string name="kp55_link_copied">链接已复制</string>
+    <string name="kp55_hub_link_subtitle">在 K 中打开此卡片的链接。</string>
+    <string name="kp55_open">打开</string>
+    <string name="kp55_opens_this_card">打开此卡片。</string>
+    <string name="kp55_kaspa_hub_card">Kaspa Hub：%1$s</string>
+    <string name="kp55_tap_to_open_in_k">轻点以在 K 中打开。</string>
+    <string name="kp55_opens_it_in_k">在 K 中打开。</string>
+    <string name="kp55_hub_blurb_contacts">你保存的 Kaspa 地址。</string>
+    <string name="kp55_hub_blurb_portfolio">追踪你的币及其价值。</string>
+    <string name="kp55_hub_blurb_cold_storage">查看冷钱包并为其签名。</string>
+    <string name="kp55_hub_blurb_usernames">领取、购买和出售 .kachat 用户名。</string>
+    <string name="kp55_hub_blurb_kapost">Kaspa 上的帖子和回复。</string>
+    <string name="kp55_hub_blurb_kaplay">国际象棋、贪吃蛇和 2048，分数上链。</string>
+    <string name="kp55_hub_blurb_websites">基于 Kaspa 的网站。</string>
+    <string name="kp55_hub_blurb_explorer">区块、交易和地址，实时更新。</string>
+    <!-- Profile's bell: a room or group @mention of you (iOS d089011f). -->
+    <string name="kp55_mentioned_you_in">%1$s 在 %2$s 中提到了你</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Node transport: wRPC over wss, the public wss fallback (iPhone 961fc05a). -->
+<resources>
+    <string name="nodes_public_fallback_note">当前无法连接 gRPC 节点，因此 K 正在通过 wss 使用公共节点。</string>
+    <string name="nodes_address_placeholder">host:port、grpcs:// 或 wss://</string>
+    <string name="nodes_enter_as_host_port_grpcs_or_wss">请输入 host:port、grpcs://host 或 wss://host 格式</string>
+    <string name="nodes_wss_secure">wss（安全）</string>
+    <string name="nodes_ws_plaintext">ws（明文）</string>
+</resources>

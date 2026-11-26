@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer (iOS 961fc05a): only the keys the iPhone translates; the rest are English there too. -->
+<resources>
+    <string name="ex_kind_payment">پرداخت</string>
+    <string name="ex_kind_handshake">درخواست ارتباط</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_username">نام کاربری</string>
+    <string name="ex_kind_swap">سوآپ</string>
+    <string name="ex_kind_other">تراکنش</string>
+    <string name="ex_kind_payments">پرداخت‌ها</string>
+    <string name="ex_kind_chesses">حرکت‌های شطرنج</string>
+    <string name="ex_kind_others">تراکنش‌ها</string>
+    <string name="ex_period_day">۲۴ ساعت</string>
+    <string name="ex_period_week">۷ روز</string>
+    <string name="ex_period_all">همه زمان‌ها</string>
+    <string name="ex_one_day">۱ روز</string>
+    <string name="ex_n_days">%1$d روز</string>
+    <string name="ex_share">اشتراک‌گذاری</string>
+    <string name="ex_your_chatting_address">آدرس گفتگوی شما</string>
+    <string name="ex_no_transactions">هنوز هیچ تراکنشی وجود ندارد.</string>
+</resources>

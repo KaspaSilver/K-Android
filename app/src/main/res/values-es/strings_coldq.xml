@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">Esa no es una dirección resistente a cuántica. Escanea la dirección KCC-3 que muestra KasSigner.</string>
+    <string name="coldq_error_already_added">Esa dirección ya está en esta cuenta.</string>
+    <string name="coldq_error_in_other_account">Esa dirección ya está en tu cuenta de Cold Storage «%1$s».</string>
+    <string name="coldq_added_toast">Dirección resistente a cuántica añadida.</string>
+    <string name="coldq_add_action">Añadir dirección resistente a cuántica</string>
+    <string name="coldq_add_action_subtitle">Escanea una dirección KCC-3 desde la pantalla de direcciones de KasSigner.</string>
+    <string name="coldq_stop_watching">Dejar de vigilar</string>
+    <string name="coldq_stop_watching_subtitle">Quita esta dirección cuántica de la cuenta. Escanéala de nuevo para volver a añadirla.</string>
+    <string name="coldq_address_header">Dirección resistente a cuántica</string>
+    <string name="coldq_address_footer">En KasSigner, abre la dirección KCC-3 que quieras y escanea su código QR. Su clave se queda en el dispositivo hasta que se gaste desde la dirección.</string>
+    <string name="coldq_number_header">Número de dirección en KasSigner</string>
+    <string name="coldq_add_title">Añadir dirección cuántica</string>
+    <string name="coldq_number_not_whole">El número de dirección debe ser un número entero.</string>
+    <string name="coldq_needs_v11">Requiere KasSigner v1.1 o posterior, que firma direcciones resistentes a cuántica (KCC-3).</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner no devolvió el script de clave de esta dirección resistente a cuántica, así que no se transmitirá. Comprueba que el dispositivo tenga KasSigner v1.1 o posterior y contenga esta dirección.</string>
+    <string name="coldq_error_unexpected_covenant">La transacción firmada añade condiciones de covenant que este envío nunca pidió, así que no se transmitirá.</string>
+    <string name="coldq_label_receive">Dirección cuántica</string>
+    <string name="coldq_label_change">Dirección de cambio cuántica</string>
+    <string name="coldq_label_receive_n">Dirección cuántica #%1$d</string>
+    <string name="coldq_label_change_n">Dirección de cambio cuántica #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">Este envío deja en la cadena la clave de esta dirección, así que su cambio no puede volver aquí. Añade primero una dirección resistente a cuántica sin usar desde KasSigner (mejor una dirección de cambio, de #0 a #4), o envía todo el saldo.</string>
+    <string name="coldq_error_compound_needs_fresh">Consolidar deja en la cadena la clave de esta dirección, así que sus monedas pasan a una dirección resistente a cuántica sin usar de esta cuenta. Añade una desde KasSigner primero (mejor una dirección de cambio, de #0 a #4).</string>
+    <string name="coldq_stop_watching_title">¿Dejar de vigilar esta dirección?</string>
+    <string name="coldq_stop_watching_message">Sus %1$s KAS siguen en la cadena en esta dirección, en tu KasSigner; K solo deja de mostrarlos. Escanea la dirección de nuevo desde KasSigner para volver a vigilarla.</string>
+    <string name="coldq_edit_number">Editar número de dirección</string>
+    <string name="coldq_edit_number_subtitle">El número y la cadena que KasSigner muestra para esta dirección.</string>
+    <string name="coldq_chain">Cadena</string>
+    <string name="coldq_number_footer">El número que KasSigner muestra para esta dirección, y si es una dirección de recepción o de cambio. Con él, el dispositivo encuentra la clave al instante al firmar; sin él, la busca. KasSigner marca como cambio lo enviado a sus direcciones de cambio #0 a #4; cualquier otra dirección la muestra como un pago.</string>
+    <string name="coldq_number_too_large">Ese número es demasiado grande: los números de dirección de KasSigner son menores que 2147483648.</string>
+    <string name="coldq_compound_note">Junta todas las monedas de esta dirección en una, en una dirección resistente a cuántica sin usar de esta cuenta: esta transacción deja en la cadena la clave de esta dirección.</string>
+    <string name="coldq_coins_left_behind">Esta dirección tiene más monedas de las que una transacción puede gastar: %1$d se quedan tras la clave que este envío deja en la cadena. Envíalas en otra transacción justo después.</string>
+    <string name="coldq_coins_move_to">Las monedas van a tu dirección cuántica:</string>
+    <string name="coldq_change_goes_to">El cambio va a tu dirección cuántica:</string>
+    <string name="coldq_unit_marks_change">KasSigner muestra esta salida como cambio.</string>
+    <string name="coldq_unit_shows_payment">KasSigner mostrará esta salida como un pago normal, no como cambio: comprueba que es esta dirección antes de firmar.</string>
+    <string name="coldq_sign_without_number">Firmar sin el número de dirección</string>
+    <string name="coldq_sign_without_number_note">Si KasSigner rechaza esta solicitud, puede que el número de dirección sea incorrecto. Sin él, el dispositivo busca la dirección por sí mismo. Editar número de dirección lo corrige para la próxima vez.</string>
+    <string name="coldq_compound_footer">Consolida todos los UTXOs de esta dirección en uno en una dirección resistente a cuántica sin usar de esta cuenta, ya que esto deja en la cadena la clave de esta dirección.</string>
+    <string name="coldq_visibility_quantum_header">Direcciones resistentes a cuántica</string>
+    <string name="coldq_receive_address">Dirección de recepción</string>
+    <string name="coldq_change_address">Dirección de cambio</string>
+    <string name="coldq_optional">Opcional</string>
+</resources>

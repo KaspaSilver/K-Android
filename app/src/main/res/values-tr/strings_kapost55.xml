@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPost and Kaspa Hub card links (iOS 961fc05a, 2026-11-25). -->
+<resources>
+    <string name="kp55_link_copied">Bağlantı kopyalandı</string>
+    <string name="kp55_hub_link_subtitle">Bu kartı K\'de açan bir bağlantı.</string>
+    <string name="kp55_open">Aç</string>
+    <string name="kp55_opens_this_card">Bu kartı açar.</string>
+    <string name="kp55_kaspa_hub_card">Kaspa Hub: %1$s</string>
+    <string name="kp55_tap_to_open_in_k">K\'de açmak için dokun.</string>
+    <string name="kp55_opens_it_in_k">K\'de açar.</string>
+    <string name="kp55_hub_blurb_contacts">Kayıtlı Kaspa adreslerin.</string>
+    <string name="kp55_hub_blurb_portfolio">Coinlerini ve değerlerini takip et.</string>
+    <string name="kp55_hub_blurb_cold_storage">Soğuk cüzdanlarını izle ve onlar için imzala.</string>
+    <string name="kp55_hub_blurb_usernames">.kachat kullanıcı adlarını al, satın al ve sat.</string>
+    <string name="kp55_hub_blurb_kapost">Kaspa\'da gönderiler ve yanıtlar.</string>
+    <string name="kp55_hub_blurb_kaplay">Satranç, Snake ve 2048, skorlar zincirde.</string>
+    <string name="kp55_hub_blurb_websites">Kaspa üzerine kurulu web siteleri.</string>
+    <string name="kp55_hub_blurb_explorer">Bloklar, işlemler ve adresler, canlı.</string>
+    <!-- Profile's bell: a room or group @mention of you (iOS d089011f). -->
+    <string name="kp55_mentioned_you_in">%1$s seni %2$s içinde andı</string>
+</resources>

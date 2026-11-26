@@ -176,7 +176,12 @@ class KusdtCore @Inject constructor(
                 withTimeoutOrNull(timeoutMs) { answer.await() }
             } catch (e: CoreError.Unavailable) {
                 throw noAnswer()
-            } ?: throw noAnswer()
+            } ?: run {
+                // The script may still be running in the page (an `execute` that may yet send its
+                // trade): the page isn't closed under it until it answers (iOS 961fc05a).
+                orphanedCalls[id] = System.currentTimeMillis()
+                throw noAnswer()
+            }
             got.error?.let { why ->
                 // iOS: callAsyncJavaScript throws when the page's code does
                 Log.w(TAG, "the builder page threw: ${why.take(200)}")
@@ -185,26 +190,36 @@ class KusdtCore @Inject constructor(
             return got.text
         } finally {
             calls.remove(id)
-            retireSoonIfKeyHeld()
+            scheduleIdleTeardown()
         }
     }
 
-    /** A key went into the page since it started: its JS heap may still hold the key as a string,
-     *  so the page goes once nothing has used it for [KEY_IDLE_RETIRE_MS], and the next call starts
-     *  a fresh one (audit L14). Calls in a row (a transfer's retries, a requote) keep it up. */
+    /**
+     * The page lives only while it's used: about two minutes after the last call it's closed (the
+     * 8 MB WebAssembly, the renderer and the pool code's node WebSocket with it), and the next call
+     * starts it again; it stayed up all session (iOS 961fc05a, audit 2026-11-25 B20). Sooner when a
+     * key went into the page since it started: its JS heap may still hold the key as a string, so
+     * it goes once nothing has used it for [KEY_IDLE_RETIRE_MS] (audit L14). Calls in a row (a
+     * transfer's retries, a requote) keep it up, and so does a call that gave no answer in time
+     * and may still be running there ([orphanedCalls]).
+     */
     private var keyHeld = false
     private var retireJob: kotlinx.coroutines.Job? = null
+    /** Calls that timed out, by id, with when: their script may still run in the page. */
+    private val orphanedCalls = HashMap<Long, Long>()
 
     /** Main thread. */
-    private fun retireSoonIfKeyHeld() {
-        if (!keyHeld) return
+    private fun scheduleIdleTeardown() {
         val view = webView ?: return
         retireJob?.cancel()
         retireJob = main.launch {
-            delay(KEY_IDLE_RETIRE_MS)
+            delay(if (keyHeld) KEY_IDLE_RETIRE_MS else IDLE_TEARDOWN_MS)
+            val now = System.currentTimeMillis()
+            orphanedCalls.entries.removeAll { now - it.value > ORPHANED_CALL_MAX_MS }
             // a call still running re-arms this when it ends
-            if (webView !== view || calls.isNotEmpty() || waiting.isNotEmpty() || walletWaiting.isNotEmpty()) return@launch
-            Log.i(TAG, "the builder page held a key: closed until the next use")
+            if (webView !== view || calls.isNotEmpty() || waiting.isNotEmpty() || walletWaiting.isNotEmpty() ||
+                starting || orphanedCalls.isNotEmpty()) return@launch
+            Log.i(TAG, if (keyHeld) "the builder page held a key: closed until the next use" else "builder page idle: closed until the next use")
             tearDown()
             walletReady = false
             walletError = null
@@ -447,6 +462,7 @@ class KusdtCore @Inject constructor(
         keyHeld = false
         retireJob?.cancel()
         retireJob = null
+        orphanedCalls.clear()
         val pending = calls.values.toList()
         calls.clear()
         pending.forEach { it.completeExceptionally(CoreError.Unavailable(context.getString(R.string.kusdt_builder_no_answer))) }
@@ -518,6 +534,8 @@ class KusdtCore @Inject constructor(
             "answer" -> {
                 val id = message.get("id")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asLong ?: return
                 calls[id]?.complete(CallAnswer(message.string("answer"), message.string("error")))
+                // a call that timed out has finished in the page after all: it may close now
+                if (orphanedCalls.remove(id) != null) scheduleIdleTeardown()
             }
             "relay" -> {
                 val id = message.get("id")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.asLong ?: return
@@ -667,6 +685,10 @@ class KusdtCore @Inject constructor(
         private const val RETRY_AFTER_MS = 10_000L
         /** How long a page that held a key stays up with nothing using it. */
         private const val KEY_IDLE_RETIRE_MS = 15_000L
+        /** How long the page stays up after its last call (iOS `idleTeardownAfter`). */
+        private const val IDLE_TEARDOWN_MS = 120_000L
+        /** A timed-out call that never answers stops holding the page up after this. */
+        private const val ORPHANED_CALL_MAX_MS = 10 * 60_000L
 
         internal fun callTimeoutMs(function: String): Long = when (function) {
             "execute" -> 240_000L

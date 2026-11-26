@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- iOS 961fc05a: the Nextcloud folder is "K" (agent F, misc 5.5) -->
+    <string name="ab_nc_export_sub_k">保存到 Nextcloud 的 K 文件夹，可在任何设备上导入。</string>
+    <string name="pnc_export_sub_k">将 CSV 保存到你 Nextcloud 中的 K 文件夹。</string>
+</resources>

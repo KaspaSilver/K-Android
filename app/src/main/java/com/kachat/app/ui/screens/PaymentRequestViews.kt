@@ -312,6 +312,8 @@ fun CreatePaymentRequestSheet(
     recipientContactId: String? = null,
     chatViewModel: ChatViewModel? = null,
     priceViewModel: com.kachat.app.viewmodels.KasPriceViewModel = hiltViewModel(),
+    /** A regular address picked here is watched for kUSDT like Receive's (iOS 961fc05a, M2). */
+    tokenViewModel: com.kachat.app.viewmodels.TokenViewModel = hiltViewModel(),
 ) {
     IosFullSheet(onDismissed = onDismissed, swipeToDismiss = true) { close ->
         val colors = LocalAppColors.current
@@ -509,7 +511,18 @@ fun CreatePaymentRequestSheet(
                                 OwnAddressList(
                                     selected = chosenAddress,
                                     walletViewModel = walletViewModel,
-                                    onPick = { picked -> chosenAddress = picked.address(chattingAddress) },
+                                    onPick = { picked ->
+                                        chosenAddress = picked.address(chattingAddress)
+                                        // A regular spending address handed out here can be sent
+                                        // kUSDT too: watched like Receive's (audit 2026-11-25 M2).
+                                        // Fresh Address and quantum picks are quantum, where
+                                        // tokens never live.
+                                        val index = picked.spendingIndex
+                                        val address = picked.address(chattingAddress)
+                                        if (index != null && !com.kachat.app.services.WalletManager.isQuantumIndex(index) && address != null) {
+                                            tokenViewModel.noteReceiveAddressShown(address)
+                                        }
+                                    },
                                 )
                             }
                         }

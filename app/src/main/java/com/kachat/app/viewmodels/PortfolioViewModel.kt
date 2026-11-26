@@ -15,7 +15,6 @@ import com.kachat.app.models.PortfolioTransactionEntity
 import com.kachat.app.repository.AddressImportResult
 import com.kachat.app.repository.AppSettingsRepository
 import com.kachat.app.repository.PortfolioRepository
-import com.kachat.app.services.KaspaNetworkStatsService
 import com.kachat.app.services.PortfolioManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ensureActive
@@ -69,7 +68,6 @@ class PortfolioViewModel @Inject constructor(
     /** Portfolio's chart pair and eye button (KaPay kept them in its AppSettingsRepository). */
     private val portfolioPreferences: com.kachat.app.services.PortfolioPreferences,
     private val portfolioManager: PortfolioManager,
-    private val networkStats: KaspaNetworkStatsService,
     private val marketPairs: com.kachat.app.services.MarketPairService,
     private val nameServices: com.kachat.app.services.NameServicesClient,
     /** Export to / Import from Nextcloud, offered while an account is connected (iOS aa5d783). */
@@ -187,23 +185,6 @@ class PortfolioViewModel @Inject constructor(
                 if (_priceRangeDays.value == days) _alternatePriceHistory.value = cutToRange(divided, days)
             }
         }
-    }
-
-    /** Network hashrate for the portfolio card and its chart screen - see [KaspaNetworkStatsService]. */
-    val hashrateHistory = networkStats.hashrateHistory
-    val currentHashrate = networkStats.currentHashrate
-    val blockRewardKas = networkStats.blockRewardKas
-    val nextBlockRewardKas = networkStats.nextBlockRewardKas
-    val nextHalvingTimestamp = networkStats.nextHalvingTimestamp
-
-    fun refreshHashrate(force: Boolean = false) {
-        viewModelScope.launch { networkStats.refreshIfNeeded(force) }
-    }
-
-    /** The hashrate screen's pull to refresh: returns once the fetch is done, so the indicator
-     *  stays up exactly as long as iOS's `.refreshable` does. */
-    suspend fun refreshHashrateNow() {
-        networkStats.refreshIfNeeded(true)
     }
 
     /** What a typed name points to on every service, .kachat first - the primary answer and the

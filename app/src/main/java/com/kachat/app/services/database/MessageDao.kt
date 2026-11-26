@@ -154,12 +154,20 @@ interface MessageDao {
     fun getPhotoUnlockTimes(contactId: String, walletAddress: String): Flow<PhotoUnlockTimes>
 
     /** Per contact: when its first message was and whether you ever sent anything - what
-     *  Message Requests decides from (ChatRequestStore.isMessageRequest). */
+     *  Message Requests decides from (ChatRequestStore.isMessageRequest).
+     *
+     *  Re-run on every write to `messages`. The grouping and MIN read only the
+     *  (walletAddress, contactId, blockTimestamp) index; `anySent` asks each chat once and stops
+     *  at its first sent row, where reading `direction` for every message of the wallet looked up
+     *  every row (audit 2026-11-25 S16). */
     @Query(
         """
-        SELECT contactId, MIN(blockTimestamp) AS firstAt,
-               MAX(CASE WHEN direction = 'sent' THEN 1 ELSE 0 END) AS anySent
-        FROM messages WHERE walletAddress = :walletAddress GROUP BY contactId
+        SELECT m.contactId AS contactId, MIN(m.blockTimestamp) AS firstAt,
+               EXISTS(
+                   SELECT 1 FROM messages s
+                   WHERE s.walletAddress = :walletAddress AND s.contactId = m.contactId AND s.direction = 'sent'
+               ) AS anySent
+        FROM messages m WHERE m.walletAddress = :walletAddress GROUP BY m.contactId
         """
     )
     fun getContactMessageStats(walletAddress: String): Flow<List<ContactMessageStats>>
@@ -281,14 +289,24 @@ interface MessageDao {
     suspend fun markAllAsRead(contactId: String, walletAddress: String)
 
     /** Received rows of [contactId] whose text matches [pattern] (a LIKE pattern), [excludeId]
-     *  aside - the other parts of a long voice note or multi-part photo, found by their tag id. */
+     *  aside - the other parts of a long voice note or multi-part photo, found by their tag id.
+     *  Only rows with a block time in [fromBlockTime]..[toBlockTime] (the index's range): the LIKE
+     *  otherwise read every earlier photo and voice note of the chat (audit 2026-11-25 S16). */
     @Query(
         """
         SELECT * FROM messages WHERE contactId = :contactId AND walletAddress = :walletAddress
+          AND blockTimestamp BETWEEN :fromBlockTime AND :toBlockTime
           AND direction = 'received' AND id != :excludeId AND plaintextBody LIKE :pattern LIMIT 24
         """
     )
-    suspend fun findReceivedMatching(contactId: String, walletAddress: String, excludeId: String, pattern: String): List<MessageEntity>
+    suspend fun findReceivedMatching(
+        contactId: String,
+        walletAddress: String,
+        excludeId: String,
+        pattern: String,
+        fromBlockTime: Long,
+        toBlockTime: Long,
+    ): List<MessageEntity>
 
     /** Chat-list "mark as unread" (swipe/bulk action) — flips just the single latest received
      * message back to unread, which is enough to make the contact reappear with a nonzero badge

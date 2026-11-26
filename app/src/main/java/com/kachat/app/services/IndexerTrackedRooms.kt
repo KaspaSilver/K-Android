@@ -84,6 +84,13 @@ object IndexerTrackedRooms {
         reported + served.filterValues { now - it < SERVED_WINDOW_MS }.keys
     }
 
+    /** The app-wide indexer's own list (not rooms learned from served rows), sorted (iOS
+     *  `reportedRooms`, 961fc05a): the indexer-listed default rooms. */
+    fun reportedRooms(): List<String> = synchronized(lock) {
+        loadIfNeeded()
+        reported.sorted()
+    }
+
     /** The app-wide indexer's list, as `/broadcast-channels` answered. */
     fun setReported(channels: List<String>) {
         val names = channels.map(MessageProtocol::normalizeChannelName).filter { it.isNotEmpty() }.toSet()

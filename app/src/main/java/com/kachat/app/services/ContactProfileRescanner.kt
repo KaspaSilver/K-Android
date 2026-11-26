@@ -21,7 +21,10 @@ import javax.inject.Singleton
 /**
  * While the app is open: everyone's profile looked up again once an hour, so a new name, avatar,
  * banner or bio shows without anyone asking for it (iOS d1844582, `ContactsManager
- * .startProfileRescans`). Started and stopped with the app's foreground (KaChatApplication).
+ * .startProfileRescans`). Started and stopped with the app's foreground (KaChatApplication), and
+ * only while an account is signed in: Log Out, Delete Account and a switch stop it, and the next
+ * account starts it again while the app is open (iOS 961fc05a, audit 2026-11-25 B19: it used to
+ * tick on the sign-in screen).
  */
 @Singleton
 class ContactProfileRescanner @Inject constructor(
@@ -35,14 +38,36 @@ class ContactProfileRescanner @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val prefs = context.getSharedPreferences("kachat_profile_rescan", Context.MODE_PRIVATE)
     private var job: Job? = null
+    /** The app is in front (KaChatApplication's [start] / [stop]). */
+    private var foreground = false
+
+    init {
+        // follows the signed-in account
+        scope.launch {
+            walletManager.signedInAddressFlow.collect { address ->
+                synchronized(this@ContactProfileRescanner) {
+                    job?.cancel()
+                    job = null
+                    if (address != null && foreground) launchLoop()
+                }
+            }
+        }
+    }
 
     @Synchronized
     fun start() {
-        if (job != null) return
+        foreground = true
+        launchLoop()
+    }
+
+    private fun launchLoop() {
+        if (job != null || activeWallet() == null) return
         job = scope.launch {
             // Launch and foregrounding have enough to do first.
             delay(START_DELAY_MS)
             while (isActive) {
+                // signed out meanwhile: nothing to rescan until the next account starts it again
+                if (activeWallet() == null) break
                 val wait = millisUntilRescan()
                 if (wait > 0) {
                     delay(wait)
@@ -61,6 +86,7 @@ class ContactProfileRescanner @Inject constructor(
 
     @Synchronized
     fun stop() {
+        foreground = false
         job?.cancel()
         job = null
     }
@@ -89,9 +115,11 @@ class ContactProfileRescanner @Inject constructor(
 
     /**
      * The on-chain profile (which links it uses) asked for again, each link's avatar, banner and
-     * bio looked up again, and both pictures downloaded again whatever the caches hold - so a
-     * change shows everywhere this person appears. What User Info > Rescan Profile does. iOS's
-     * other branch, a .kas profile, is for a build with .kachat names off, which Android isn't.
+     * bio looked up again, and both pictures checked - so a change shows everywhere this person
+     * appears. A picture is downloaded again only when it changed (a new link downloads when it
+     * next shows; the same link gets a conditional check), not every hour (iOS 961fc05a, audit
+     * 2026-11-25 B17). iOS's other branch, a .kas profile, is for a build with .kachat names off,
+     * which Android isn't.
      */
     private suspend fun rescanProfile(address: String) {
         if (!KachatNamesService.isEnabled) return
@@ -101,7 +129,7 @@ class ContactProfileRescanner @Inject constructor(
             links.avatar?.let { answers[it]?.avatar },
             links.banner?.let { answers[it]?.banner },
         )
-        com.kachat.app.ui.screens.ProfileImageRefetch.refetch(context, pictures)
+        com.kachat.app.ui.screens.ProfileImageRefetch.refreshIfChanged(context, pictures)
     }
 
     private companion object {

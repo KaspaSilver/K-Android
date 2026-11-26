@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">这不是抗量子地址。请扫描 KasSigner 显示的 KCC-3 地址。</string>
+    <string name="coldq_error_already_added">该地址已在此账户中。</string>
+    <string name="coldq_error_in_other_account">该地址已在你的冷存储账户“%1$s”中。</string>
+    <string name="coldq_added_toast">已添加抗量子地址。</string>
+    <string name="coldq_add_action">添加抗量子地址</string>
+    <string name="coldq_add_action_subtitle">从 KasSigner 的地址界面扫描一个 KCC-3 地址。</string>
+    <string name="coldq_stop_watching">停止监视</string>
+    <string name="coldq_stop_watching_subtitle">从账户中移除这个量子地址。再次扫描即可重新添加。</string>
+    <string name="coldq_address_header">抗量子地址</string>
+    <string name="coldq_address_footer">在 KasSigner 上打开你要的 KCC-3 地址并扫描其二维码。在该地址花费之前，其密钥一直留在设备上。</string>
+    <string name="coldq_number_header">KasSigner 上的地址编号</string>
+    <string name="coldq_add_title">添加量子地址</string>
+    <string name="coldq_number_not_whole">地址编号必须是整数。</string>
+    <string name="coldq_needs_v11">需要 KasSigner v1.1 或更高版本，它可以签署抗量子（KCC-3）地址。</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner 没有返回这个抗量子地址的密钥脚本，因此不会广播。请检查设备运行的是 KasSigner v1.1 或更高版本，并且持有这个地址。</string>
+    <string name="coldq_error_unexpected_covenant">签名后的交易添加了这次发送从未要求的契约条款，因此不会广播。</string>
+    <string name="coldq_label_receive">量子地址</string>
+    <string name="coldq_label_change">量子找零地址</string>
+    <string name="coldq_label_receive_n">量子地址 #%1$d</string>
+    <string name="coldq_label_change_n">量子找零地址 #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">这次发送会把这个地址的密钥公开到链上，所以找零不能回到这里。请先从 KasSigner 添加一个未使用的抗量子地址（最好是找零地址 #0 到 #4），或发送全部余额。</string>
+    <string name="coldq_error_compound_needs_fresh">合并会把这个地址的密钥公开到链上，所以它的币会转到此账户一个未使用的抗量子地址。请先从 KasSigner 添加一个（最好是找零地址 #0 到 #4）。</string>
+    <string name="coldq_stop_watching_title">停止监视这个地址？</string>
+    <string name="coldq_stop_watching_message">它的 %1$s KAS 仍在链上的这个地址里，在你的 KasSigner 上；K 只是不再显示。从 KasSigner 再次扫描该地址即可重新监视。</string>
+    <string name="coldq_edit_number">编辑地址编号</string>
+    <string name="coldq_edit_number_subtitle">KasSigner 为此地址显示的编号和链。</string>
+    <string name="coldq_chain">链</string>
+    <string name="coldq_number_footer">KasSigner 为此地址显示的编号，以及它是收款地址还是找零地址。有了它，设备签名时能立即找到密钥；没有它，设备会搜索密钥。KasSigner 把发往其找零地址 #0 到 #4 的找零标为找零；其他地址都显示为付款。</string>
+    <string name="coldq_number_too_large">这个编号太大：KasSigner 的地址编号小于 2147483648。</string>
+    <string name="coldq_compound_note">把这个地址的所有币合成一个，转到此账户一个未使用的抗量子地址：这笔交易会把这个地址的密钥公开到链上。</string>
+    <string name="coldq_coins_left_behind">这个地址的币超过一笔交易能花费的数量：%1$d 个会留在这次发送公开到链上的密钥后面。请紧接着用另一笔交易把它们转走。</string>
+    <string name="coldq_coins_move_to">币会转到你的量子地址：</string>
+    <string name="coldq_change_goes_to">找零会转到你的量子地址：</string>
+    <string name="coldq_unit_marks_change">KasSigner 将此输出显示为找零。</string>
+    <string name="coldq_unit_shows_payment">KasSigner 会把此输出显示为普通付款，而不是找零：签名前请确认是这个地址。</string>
+    <string name="coldq_sign_without_number">不带地址编号签名</string>
+    <string name="coldq_sign_without_number_note">如果 KasSigner 拒绝此请求，地址编号可能有误。没有编号时，设备会自行查找地址。“编辑地址编号”可为下次改正。</string>
+    <string name="coldq_compound_footer">把此地址的所有 UTXO 合并为一个，放到此账户一个未使用的抗量子地址，因为这会把这个地址的密钥公开到链上。</string>
+    <string name="coldq_visibility_quantum_header">抗量子地址</string>
+    <string name="coldq_receive_address">收款地址</string>
+    <string name="coldq_change_address">找零地址</string>
+    <string name="coldq_optional">可选</string>
+</resources>

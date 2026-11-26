@@ -227,6 +227,9 @@ class ChessTournamentService @Inject constructor(
                 if (notificationHelper.isAppInForeground) {
                     runCatching { arena.backfillFromIndexer(ChessTournamentCodec.ARENA_CHANNEL) }
                         .onFailure { Log.w(TAG, "Arena backfill failed", it) }
+                } else {
+                    // Asleep until the app is back, not waking every 8 s (audit 2026-11-25 B10).
+                    notificationHelper.appForegroundFlow.first { it }
                 }
                 delay(ARENA_BACKFILL_INTERVAL_MS)
             }
@@ -243,7 +246,10 @@ class ChessTournamentService @Inject constructor(
                 delay(FAST_POLL_INTERVAL_MS)
                 // Only while the app is up, like the room's own 8 s poll (iOS 32e6392). Back in
                 // front, [resumeAfterBackground] polls at once.
-                if (!notificationHelper.isAppInForeground) continue
+                if (!notificationHelper.isAppInForeground) {
+                    notificationHelper.appForegroundFlow.first { it }
+                    continue
+                }
                 fastPollOnce()
             }
         }
@@ -256,7 +262,10 @@ class ChessTournamentService @Inject constructor(
         clockJob = scope.launch {
             while (isActive) {
                 delay(1_000)
-                if (!notificationHelper.isAppInForeground) continue
+                if (!notificationHelper.isAppInForeground) {
+                    notificationHelper.appForegroundFlow.first { it }
+                    continue
+                }
                 tick()
             }
         }

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">Das ist keine quantenresistente Adresse. Scanne die KCC-3-Adresse, die KasSigner anzeigt.</string>
+    <string name="coldq_error_already_added">Diese Adresse ist schon in diesem Konto.</string>
+    <string name="coldq_error_in_other_account">Diese Adresse ist schon in deinem Cold-Storage-Konto „%1$s“.</string>
+    <string name="coldq_added_toast">Quantenresistente Adresse hinzugefügt.</string>
+    <string name="coldq_add_action">Quantenresistente Adresse hinzufügen</string>
+    <string name="coldq_add_action_subtitle">Scanne eine KCC-3-Adresse vom Adressbildschirm von KasSigner.</string>
+    <string name="coldq_stop_watching">Nicht mehr beobachten</string>
+    <string name="coldq_stop_watching_subtitle">Entfernt diese Quantenadresse aus dem Konto. Scanne sie erneut, um sie wieder hinzuzufügen.</string>
+    <string name="coldq_address_header">Quantenresistente Adresse</string>
+    <string name="coldq_address_footer">Öffne auf KasSigner die gewünschte KCC-3-Adresse und scanne ihren QR-Code. Ihr Schlüssel bleibt auf dem Gerät, bis von der Adresse gesendet wird.</string>
+    <string name="coldq_number_header">Adressnummer auf KasSigner</string>
+    <string name="coldq_add_title">Quantenadresse hinzufügen</string>
+    <string name="coldq_number_not_whole">Die Adressnummer muss eine ganze Zahl sein.</string>
+    <string name="coldq_needs_v11">Benötigt KasSigner v1.1 oder neuer, das quantenresistente (KCC-3) Adressen signiert.</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner hat das Schlüsselskript für diese quantenresistente Adresse nicht zurückgegeben, daher wird sie nicht gesendet. Prüfe, ob auf dem Gerät KasSigner v1.1 oder neuer läuft und es diese Adresse enthält.</string>
+    <string name="coldq_error_unexpected_covenant">Die signierte Transaktion fügt Covenant-Bedingungen hinzu, die dieser Versand nie verlangt hat, daher wird sie nicht gesendet.</string>
+    <string name="coldq_label_receive">Quantenadresse</string>
+    <string name="coldq_label_change">Quanten-Wechselgeldadresse</string>
+    <string name="coldq_label_receive_n">Quantenadresse #%1$d</string>
+    <string name="coldq_label_change_n">Quanten-Wechselgeldadresse #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">Dieser Versand legt den Schlüssel dieser Adresse on-chain offen, daher kann ihr Wechselgeld nicht hierher zurück. Füge zuerst eine unbenutzte quantenresistente Adresse von KasSigner hinzu (am besten eine Wechselgeldadresse, #0 bis #4), oder sende das ganze Guthaben.</string>
+    <string name="coldq_error_compound_needs_fresh">Das Zusammenführen legt den Schlüssel dieser Adresse on-chain offen, daher gehen ihre Coins an eine unbenutzte quantenresistente Adresse dieses Kontos. Füge zuerst eine von KasSigner hinzu (am besten eine Wechselgeldadresse, #0 bis #4).</string>
+    <string name="coldq_stop_watching_title">Diese Adresse nicht mehr beobachten?</string>
+    <string name="coldq_stop_watching_message">Ihre %1$s KAS bleiben on-chain an dieser Adresse, auf deinem KasSigner; K zeigt sie nur nicht mehr an. Scanne die Adresse erneut von KasSigner, um sie wieder zu beobachten.</string>
+    <string name="coldq_edit_number">Adressnummer bearbeiten</string>
+    <string name="coldq_edit_number_subtitle">Die Nummer und Kette, die KasSigner für diese Adresse anzeigt.</string>
+    <string name="coldq_chain">Kette</string>
+    <string name="coldq_number_footer">Die Nummer, die KasSigner für diese Adresse anzeigt, und ob es eine Empfangs- oder Wechselgeldadresse ist. Damit findet das Gerät den Schlüssel beim Signieren sofort, ohne sie sucht es danach. KasSigner zeigt Wechselgeld an seine Wechselgeldadressen #0 bis #4 als Wechselgeld an, jede andere Adresse als Zahlung.</string>
+    <string name="coldq_number_too_large">Diese Nummer ist zu groß: Die Adressnummern von KasSigner liegen unter 2147483648.</string>
+    <string name="coldq_compound_note">Führt alle Coins dieser Adresse zu einem zusammen, an einer unbenutzten quantenresistenten Adresse dieses Kontos: Diese Transaktion legt den Schlüssel dieser Adresse on-chain offen.</string>
+    <string name="coldq_coins_left_behind">Diese Adresse hat mehr Coins, als eine Transaktion ausgeben kann: %1$d bleiben hinter dem Schlüssel, den dieser Versand on-chain offenlegt. Sende sie gleich danach in einer weiteren Transaktion weiter.</string>
+    <string name="coldq_coins_move_to">Die Coins gehen an deine Quantenadresse:</string>
+    <string name="coldq_change_goes_to">Das Wechselgeld geht an deine Quantenadresse:</string>
+    <string name="coldq_unit_marks_change">KasSigner zeigt diese Ausgabe als Wechselgeld an.</string>
+    <string name="coldq_unit_shows_payment">KasSigner zeigt diese Ausgabe als normale Zahlung an, nicht als Wechselgeld: Prüfe vor dem Signieren, dass es diese Adresse ist.</string>
+    <string name="coldq_sign_without_number">Ohne Adressnummer signieren</string>
+    <string name="coldq_sign_without_number_note">Wenn KasSigner diese Anfrage ablehnt, ist die Adressnummer vielleicht falsch. Ohne sie sucht das Gerät die Adresse selbst. Mit „Adressnummer bearbeiten“ stimmt sie beim nächsten Mal.</string>
+    <string name="coldq_compound_footer">Führt alle UTXOs dieser Adresse zu einem an einer unbenutzten quantenresistenten Adresse dieses Kontos zusammen, da dies den Schlüssel dieser Adresse on-chain offenlegt.</string>
+    <string name="coldq_visibility_quantum_header">Quantenresistente Adressen</string>
+    <string name="coldq_receive_address">Empfangsadresse</string>
+    <string name="coldq_change_address">Wechselgeldadresse</string>
+    <string name="coldq_optional">Optional</string>
+</resources>

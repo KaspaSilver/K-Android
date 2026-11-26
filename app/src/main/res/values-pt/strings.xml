@@ -160,7 +160,6 @@
     <string name="valid_address">Endereco valido</string>
     <string name="waiting_on_opponent">Aguardando oponente</string>
     <string name="the_recipient_wont_see_your_messages">O destinatário não verá suas mensagens até mandar uma mensagem para você ou você enviar uma solicitação de comunicação. As solicitações custam 0,2 KAS e são devolvidas a você se a pessoa aceitar. Você perde privacidade ao enviar uma.</string>
-    <string name="host_port_or_grpcs_host">host:porta ou grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">Escolha seu idioma</string>
     <string name="select_the_language_youd_like_to">Selecione o idioma que voce gostaria de usar no K.</string>
     <string name="best">Melhor</string>
-    <string name="enter_as_host_port_or_grpcs_host">Insira como host:porta ou grpcs://host</string>
     <string name="receive_kaspa">Receber Kaspa</string>
     <string name="currency">Moeda</string>
     <string name="choose_your_currency">Escolha sua moeda</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">Adicione contatos de uma exportação de contatos.</string>
     <string name="ab_export_file_sub">Salve seus contatos, com as fotos, em um arquivo.</string>
     <string name="ab_nc_import_sub">Escolha uma exportação de contatos do seu Nextcloud.</string>
-    <string name="ab_nc_export_sub">Salve na pasta KaChat do seu Nextcloud para importar em qualquer dispositivo.</string>
     <string name="ab_nc_connect_hint">Conecte o Nextcloud em Ajustes &gt; Armazenamento para salvar lá também e importar em outro dispositivo.</string>
     <string name="ab_couldnt_read_file">Não foi possível ler esse arquivo.</string>
     <string name="ab_nothing_to_export">Nada para exportar ainda. Adicione um contato primeiro.</string>

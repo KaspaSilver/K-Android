@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer (iOS 961fc05a): only the keys the iPhone translates; the rest are English there too. -->
+<resources>
+    <string name="ex_kind_payment">תשלום</string>
+    <string name="ex_kind_handshake">בקשת תקשורת</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_username">שם משתמש</string>
+    <string name="ex_kind_swap">החלפה</string>
+    <string name="ex_kind_other">עסקה</string>
+    <string name="ex_kind_payments">תשלומים</string>
+    <string name="ex_kind_chesses">מהלכי שחמט</string>
+    <string name="ex_kind_others">עסקאות</string>
+    <string name="ex_period_day">24 שעות</string>
+    <string name="ex_period_week">7 ימים</string>
+    <string name="ex_period_all">כל הזמנים</string>
+    <string name="ex_one_day">יום אחד</string>
+    <string name="ex_n_days">%1$d ימים</string>
+    <string name="ex_share">שיתוף</string>
+    <string name="ex_your_chatting_address">כתובת הצ׳אט שלך</string>
+    <string name="ex_no_transactions">אין עדיין עסקאות.</string>
+</resources>

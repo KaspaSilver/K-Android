@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">Perubahan 24 jam belum tersedia</string>
     <string name="kp_about_amount">sekitar %1$s</string>
-    <string name="kp_about_hashrate_e7fb8">Tentang Hashrate</string>
     <string name="kp_add_61cc5">Tambah</string>
     <string name="kp_add_kaspa_address_5dd6b">Tambah Alamat Kaspa</string>
     <string name="kp_add_to_portfolio_9eb23">Tambah ke Portofolio</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">1 transaksi diimpor ke %1$s</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">Harga KAS</string>
-    <string name="kp_kaspa_network_fceee">Jaringan Kaspa</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSigner menampilkan apa yang ditandatanganinya. Pastikan cocok, tanda tangani, lalu pindai transaksi yang sudah ditandatangani yang ditampilkannya.</string>
     <string name="kp_kept_in_the_position">Disimpan di Posisi</string>
     <string name="kp_kept_in_your_token">Disimpan di Token Anda</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">Per hari</string>
     <string name="kp_mining_per_month">Per bulan</string>
     <string name="kp_mining_per_week">Per minggu</string>
-    <string name="kp_network_hashrate_c3cc8">Hashrate Jaringan</string>
     <string name="kp_new_portfolio_5c1c7">Portofolio Baru</string>
-    <string name="kp_next_block_reward">Imbalan Blok Berikutnya</string>
-    <string name="kp_next_block_reward_reduction">Penurunan Imbalan Blok Berikutnya</string>
     <string name="kp_no_addresses_discovered_yet_15738">Belum ada alamat yang ditemukan.</string>
     <string name="kp_no_used_addresses_yet">Belum ada alamat yang dipakai</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Riwayat belum cukup - periksa lagi setelah beberapa hari aktivitas.</string>
@@ -234,7 +229,6 @@
     <string name="pf_add_transaction_sub">Catat pembelian atau penjualan secara manual.</string>
     <string name="pf_export_csv_sub">Tulis transaksi portofolio ini ke sebuah file.</string>
     <string name="pf_import_csv_sub">Baca transaksi dari sebuah file.</string>
-    <string name="pnc_export_sub">Simpan CSV ke folder KaChat di Nextcloud-mu.</string>
     <string name="pnc_import_sub">Pilih file CSV dari Nextcloud-mu.</string>
     <string name="portfolio">Portofolio</string>
     <string name="portfolio_add_chatting_address">Tambah Alamat Obrolan</string>

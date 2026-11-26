@@ -19,18 +19,28 @@ import com.kachat.app.services.kachatnames.KachatNamesRegistry
  */
 object UsernameMention {
     /** `@alice` / `@alice.kachat` after a start of text, a space or an opening bracket or quote.
-     *  `(?U)`: a space is any Unicode space, as NSRegularExpression's `\s` is. */
+     *  `\s` plus `\p{Z}`: a space is any Unicode space, as NSRegularExpression's `\s` is. Not the
+     *  `(?U)` flag: Android's ICU regex rejects it, and building this pattern crashed every screen
+     *  that shows a room, group or KaPost message (K 5.4 b2; the JVM unit tests accept it). */
     private val TOKEN_REGEX = Regex(
-        """(?U)(^|[\s(\[{<"'])@([A-Za-z0-9-]{1,32})(\.(?i:kachat))?(?![A-Za-z0-9-])""",
+        """(^|[\s\p{Z}(\[{<"'])@([A-Za-z0-9-]{1,32})(\.(?i:kachat))?(?![A-Za-z0-9-])""",
     )
 
     /** One @token: where `@name` (with any ending) sits in the text, and the bare username,
      *  lowercased. */
     data class Token(val range: IntRange, val name: String)
 
+    /** Tokens per text: a room's bubble asks on every redraw (the mention outline, the styled
+     *  text), and the regex ran each time (iOS d089011f `tokenMemo`, 2026-11-25 smoothness sweep). */
+    private val tokenMemo = RenderMemo<String, List<Token>>(maxCount = 1_000)
+
     /** Every username-shaped @token in [text]. Cheap when there's no "@". */
     fun tokens(text: String): List<Token> {
         if (!text.contains('@')) return emptyList()
+        return tokenMemo.getOrPut(text) { scanTokens(text) }
+    }
+
+    private fun scanTokens(text: String): List<Token> {
         return TOKEN_REGEX.findAll(text).mapNotNull { match ->
             val nameGroup = match.groups[2] ?: return@mapNotNull null
             val name = nameGroup.value.lowercase()

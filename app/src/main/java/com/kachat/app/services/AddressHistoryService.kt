@@ -25,6 +25,10 @@ class AddressHistoryService @Inject constructor(
         /** Every output with an address, (address, sompi) in output order: a spending address's
          *  Sent row splits them into Sent and Change (iOS 2026-11-22, [com.kachat.app.ui.screens.OutgoingBreakdown]). */
         val outputs: List<Pair<String, Long>> = emptyList(),
+        /** Every input, (address or "", sompi or null when unresolved): a swap also spends the
+         *  pool's coins, so a Sent row counts only what left this wallet (iOS 961fc05a
+         *  `ownHistoryAmount`, [com.kachat.app.ui.screens.OutgoingBreakdown.ownHistoryAmount]). */
+        val inputs: List<Pair<String, Long?>> = emptyList(),
     )
 
     /**
@@ -88,6 +92,7 @@ class AddressHistoryService @Inject constructor(
             AddressTransaction(
                 tx.transactionId, sent, amount, tx.blockTime, tx.feeSompi,
                 outputs = tx.outputs.mapNotNull { output -> output.scriptPublicKeyAddress?.takeIf { it.isNotEmpty() }?.let { it to output.amount } },
+                inputs = tx.inputs.map { (it.previousOutpointAddress ?: "") to it.previousOutpointAmount },
             )
         }.sortedByDescending { it.blockTimeMillis ?: 0L }
     }

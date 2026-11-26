@@ -3,7 +3,10 @@ package com.kachat.app.services
 import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.kachat.app.R
+import com.kachat.app.util.KaspaAddress
 import com.kachat.app.util.KaspaExtendedPublicKey
+import com.kachat.app.util.tr
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.UUID
 import javax.inject.Inject
@@ -30,6 +33,24 @@ class ColdStorageManager @Inject constructor(
         private const val PREF_HIDDEN_ADDRESSES = "cold_hidden_addresses"
         private const val PREF_UTXO_LABELS = "cold_utxo_labels"
         private const val PREF_ADDRESS_SNAPSHOT = "cold_address_snapshot"
+
+        /** Where quantum addresses start in an account's index space (labels, hidden flags),
+         *  clear of any receive index a kpub could reach. The hot wallet uses the same base. */
+        const val QUANTUM_INDEX_BASE = 1_000_000
+
+        fun isQuantumIndex(index: Int): Boolean = index >= QUANTUM_INDEX_BASE
+
+        /** A pay-to-script-hash address: its script is `OP_BLAKE2B <32> OP_EQUAL`. */
+        fun isScriptHashAddress(address: String?): Boolean {
+            val text = address?.trim()?.takeIf { it.isNotEmpty() } ?: return false
+            val script = runCatching { KaspaAddress.getScriptPublicKey(text) }.getOrNull() ?: return false
+            return script.length == 70 && script.startsWith("aa20") && script.endsWith("87")
+        }
+
+        /** The text a scanned or pasted quantum address reads as: trimmed, a payment URI's query
+         *  dropped, lowercased. */
+        fun normalizedQuantumText(text: String): String =
+            text.trim().substringBefore('?').lowercase()
     }
 
     // Every field has a default so Kotlin emits a no-arg constructor: Gson then runs it and a
@@ -52,7 +73,61 @@ class ColdStorageManager @Inject constructor(
         // off is still ours for the self-send check, just silent (iOS ba352a2). Default on, so
         // accounts saved before this field keep the behaviour they had.
         val notifyOnReceive: Boolean = true,
-    )
+        /** The KasSigner's quantum-resistant (KCC-3, `m/22'`) addresses watched in this account,
+         *  in the order added (iOS 961fc05a `ColdStorageAccount.quantumAddresses`). A unit never
+         *  exports a `22'` kpub - it would show every key the addresses hide - so each is scanned
+         *  from the unit's address screen, one at a time. Records saved before decode as none. */
+        val quantumAddresses: List<ColdQuantumAddress> = emptyList(),
+    ) {
+        /** [quantumAddresses], never null: Gson leaves a list field it never saw null. */
+        val quantumList: List<ColdQuantumAddress> get() = quantumAddresses ?: emptyList()
+    }
+
+    /**
+     * One KasSigner quantum-resistant (KCC-3) address: P2SH of `<P> OP_CHECKSIG`, P at
+     * `m/22'/111111'/0'/<chain>/<unitIndex>` on the unit. Known only by its text: the key stays on
+     * the unit until the address spends, and the unit supplies the script when it signs (iOS
+     * 961fc05a `ColdQuantumAddress`). Every field defaults, so Gson runs the constructor and a
+     * record saved before [chain] existed decodes as receive, which is what it was sent as.
+     */
+    data class ColdQuantumAddress(
+        val address: String = "",
+        /** The address's number on the unit's KCC-3 chain, when the person gave it: sent as the
+         *  request's KCC-3 hint so the unit finds the key at once. Without it the unit searches. */
+        val unitIndex: Long? = null,
+        /** Which of the unit's two KCC-3 chains it is on: [CHAIN_RECEIVE] or [CHAIN_CHANGE]. It
+         *  matters for change: KasSigner marks a script-hash output as CHANGE only when it is one
+         *  of its KCC-3 change-chain keys #0-4 (firmware `Keyring::kcc3_change_index`); any other,
+         *  a receive address included, shows on the unit as an ordinary payment. */
+        val chain: Int = CHAIN_RECEIVE,
+        val addedAt: Long = 0L,
+    ) {
+        /** The unit will show change sent here as CHANGE, not as a payment to someone. */
+        val unitMarksAsChange: Boolean
+            get() = chain == CHAIN_CHANGE && unitIndex != null && unitIndex in UNIT_MARKED_CHANGE_RANGE
+
+        companion object {
+            const val CHAIN_RECEIVE = 0
+            const val CHAIN_CHANGE = 1
+
+            /** The change-chain numbers KasSigner recognises as its own change when reviewing
+             *  outputs (`CHANGE_DEPTH` keys of its bank). */
+            val UNIT_MARKED_CHANGE_RANGE = 0L..4L
+
+            /** The default name, by chain and number ("Quantum Address #3", "Quantum Change
+             *  Address #0"). */
+            fun defaultLabel(chain: Int, unitIndex: Long?): String = when {
+                chain == CHAIN_CHANGE && unitIndex == null -> tr(R.string.coldq_label_change)
+                chain == CHAIN_CHANGE -> tr(R.string.coldq_label_change_n, unitIndex)
+                unitIndex == null -> tr(R.string.coldq_label_receive)
+                else -> tr(R.string.coldq_label_receive_n, unitIndex)
+            }
+        }
+    }
+
+    /** Why a quantum address couldn't be added (iOS 961fc05a `ColdStorageError`); [message] is
+     *  the localized text. */
+    class QuantumAddressException(message: String) : IllegalArgumentException(message)
 
     /** A user-given label for one specific derived address — flat list keyed by (accountId, index) rather than nested in [ColdAccount], so labeling is independent of the gap-limit-scanned address list's own lifecycle. */
     private data class AddressLabel(val accountId: String, val index: Int, val label: String)
@@ -166,8 +241,17 @@ class ColdStorageManager @Inject constructor(
         val utxoLabels = getAllUtxoLabels()
         val labelled = utxoLabels.map { it.address }.toMutableSet()
         if (labelled.isEmpty()) return
-        val keptKpubs = getAllAccounts().map { it.kpub }.toSet()
+        val kept = getAllAccounts()
+        val keptKpubs = kept.map { it.kpub }.toSet()
         val dropped = HashSet<String>()
+        // A quantum address's coin labels go with the last account watching it (audit
+        // 2026-11-25 Q7, iOS 961fc05a).
+        val keptQuantum = kept.flatMap { account -> account.quantumList.map { it.address } }.toSet()
+        for (account in removed) {
+            for (quantum in account.quantumList) {
+                if (quantum.address !in keptQuantum && labelled.remove(quantum.address)) dropped.add(quantum.address)
+            }
+        }
         for (account in removed) {
             if (account.kpub in keptKpubs) continue
             val root = KaspaExtendedPublicKey.parse(account.kpub).getOrNull()
@@ -200,6 +284,133 @@ class ColdStorageManager @Inject constructor(
                 if (it.id == id && minIndex > it.maxDerivedIndex) it.copy(maxDerivedIndex = minIndex) else it
             }
         )
+    }
+
+    // --- Quantum-resistant (KCC-3) addresses (iOS 961fc05a)
+
+    /**
+     * Adds a KasSigner KCC-3 address scanned (or pasted) from the unit's address screen. Only a
+     * pay-to-script-hash address of this network reads: the text can't say what is behind the
+     * hash, so the unit is the one that checks it holds the key, when it signs. One address, one
+     * account: watched twice, its coins would count in both totals and a send from one could
+     * pick it as the other's change (audit 2026-11-25 Q7).
+     */
+    fun addQuantumAddress(text: String, unitIndex: Long?, chain: Int, accountId: String): Result<ColdQuantumAddress> {
+        val address = normalizedQuantumText(text)
+        if (!KaspaAddress.isValidOnActiveNetwork(address) || !isScriptHashAddress(address)) {
+            return Result.failure(QuantumAddressException(tr(R.string.coldq_error_not_quantum)))
+        }
+        val all = getAllAccounts()
+        val account = all.find { it.id == accountId }
+            ?: return Result.failure(QuantumAddressException(tr(R.string.coldq_error_not_quantum)))
+        if (account.quantumList.any { it.address == address }) {
+            return Result.failure(QuantumAddressException(tr(R.string.coldq_error_already_added)))
+        }
+        getAccounts().firstOrNull { it.id != accountId && it.quantumList.any { q -> q.address == address } }?.let { other ->
+            return Result.failure(QuantumAddressException(tr(R.string.coldq_error_in_other_account, other.name)))
+        }
+        val entry = ColdQuantumAddress(
+            address = address,
+            unitIndex = unitIndex,
+            chain = if (chain == ColdQuantumAddress.CHAIN_CHANGE) ColdQuantumAddress.CHAIN_CHANGE else ColdQuantumAddress.CHAIN_RECEIVE,
+            addedAt = System.currentTimeMillis(),
+        )
+        saveAccounts(all.map { if (it.id == accountId) it.copy(quantumAddresses = it.quantumList + entry) else it })
+        return Result.success(entry)
+    }
+
+    /** Stops watching a quantum address (its coins stay where they are on chain). Labels and
+     *  hidden flags are kept by index: the ones after it move up a place with their addresses. */
+    fun removeQuantumAddress(address: String, accountId: String) {
+        val lowered = address.trim().lowercase()
+        val all = getAllAccounts()
+        val account = all.find { it.id == accountId } ?: return
+        val position = account.quantumList.indexOfFirst { it.address == lowered }
+        if (position < 0) return
+        saveAccounts(all.map {
+            if (it.id == accountId) it.copy(quantumAddresses = it.quantumList.filterIndexed { i, _ -> i != position }) else it
+        })
+        val removedIndex = QUANTUM_INDEX_BASE + position
+        fun shifted(index: Int): Int? {
+            if (!isQuantumIndex(index) || index < removedIndex) return index
+            return if (index == removedIndex) null else index - 1
+        }
+        saveAddressLabels(getAllAddressLabels().mapNotNull { label ->
+            if (label.accountId != accountId) label else shifted(label.index)?.let { label.copy(index = it) }
+        })
+        saveHiddenAddresses(getAllHiddenAddresses().mapNotNull { hidden ->
+            if (hidden.accountId != accountId) hidden else shifted(hidden.index)?.let { hidden.copy(index = it) }
+        })
+    }
+
+    /** Sets or clears a quantum address's number and chain on the unit (Edit Address Number): a
+     *  wrong one makes the unit refuse the request, which only the person can put right (Q4). */
+    fun updateQuantumAddress(address: String, unitIndex: Long?, chain: Int, accountId: String) {
+        val lowered = address.trim().lowercase()
+        val all = getAllAccounts()
+        if (all.none { it.id == accountId && it.quantumList.any { q -> q.address == lowered } }) return
+        saveAccounts(all.map { account ->
+            if (account.id != accountId) account else account.copy(quantumAddresses = account.quantumList.map {
+                if (it.address == lowered) it.copy(unitIndex = unitIndex, chain = chain) else it
+            })
+        })
+    }
+
+    /** The account's quantum addresses as stored now. */
+    fun currentQuantumAddresses(accountId: String): List<ColdQuantumAddress> =
+        getAllAccounts().find { it.id == accountId }?.quantumList ?: emptyList()
+
+    /**
+     * Where a quantum address sits in its account's index space now, null once it's no longer
+     * watched. Labels and hidden flags of quantum entries are filed by this index, which moves
+     * when an earlier one is removed, so an edit made from a row loaded before that resolves its
+     * index here, by address, at the moment it saves (Q7).
+     */
+    fun currentQuantumIndex(address: String, accountId: String): Int? {
+        val position = currentQuantumAddresses(accountId).indexOfFirst { it.address == address.trim().lowercase() }
+        return if (position < 0) null else QUANTUM_INDEX_BASE + position
+    }
+
+    /** The account (of the current wallet) and record holding quantum address [address], if any. */
+    fun quantumAddressRecord(address: String): Pair<ColdAccount, ColdQuantumAddress>? {
+        val lowered = address.trim().lowercase()
+        for (account in getAccounts()) {
+            account.quantumList.firstOrNull { it.address == lowered }?.let { return account to it }
+        }
+        return null
+    }
+
+    /** Whether [address] is one of any account's quantum addresses. */
+    fun isQuantumAddress(address: String): Boolean = quantumAddressRecord(address) != null
+
+    /** The name a quantum address shows: the person's label, else its default by chain and number. */
+    fun quantumDisplayLabel(address: String): String? {
+        val (account, entry) = quantumAddressRecord(address) ?: return null
+        val index = currentQuantumIndex(address, account.id) ?: return null
+        getAddressLabels(account.id)[index]?.takeIf { it.isNotBlank() }?.let { return it }
+        return ColdQuantumAddress.defaultLabel(entry.chain, entry.unitIndex)
+    }
+
+    /**
+     * Every address of the Cold Storage account holding [address], lowercased: its derived
+     * receive addresses up to the highest shown, and its quantum ones. What a history row counts
+     * as the account's own, so change sent to another of them (a quantum source's change goes to
+     * a fresh quantum address) isn't shown as Sent (audit 2026-11-25 L3). Just [address] when no
+     * account holds it. Derives keys: call off the main thread.
+     */
+    fun accountAddresses(containing: String): Set<String> {
+        val lowered = containing.trim().lowercase()
+        for (account in getAccounts()) {
+            val quantum = account.quantumList.map { it.address }
+            val root = KaspaExtendedPublicKey.parse(account.kpub).getOrNull()
+                ?.let { runCatching { KaspaExtendedPublicKey.toDeterministicKey(it) }.getOrNull() }
+            val regular = if (root == null) emptyList() else (0..maxOf(account.maxDerivedIndex, 0)).mapNotNull { index ->
+                runCatching { KaspaExtendedPublicKey.deriveChildAddress(root, chain = 0, index = index) }.getOrNull()?.lowercase()
+            }
+            val all = (quantum + regular).toSet()
+            if (lowered in all) return all
+        }
+        return setOf(lowered)
     }
 
     private fun getAllAddressLabels(): List<AddressLabel> {

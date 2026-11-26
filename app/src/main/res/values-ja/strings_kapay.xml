@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">24時間の変動はまだ利用できません</string>
     <string name="kp_about_amount">約%1$s</string>
-    <string name="kp_about_hashrate_e7fb8">ハッシュレートについて</string>
     <string name="kp_add_61cc5">追加</string>
     <string name="kp_add_kaspa_address_5dd6b">Kaspaアドレスを追加</string>
     <string name="kp_add_to_portfolio_9eb23">ポートフォリオに追加</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">1件の取引を%1$sにインポートしました</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">KAS価格</string>
-    <string name="kp_kaspa_network_fceee">Kaspaネットワーク</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSignerに署名内容が表示されます。内容が一致することを確認して署名し、表示された署名済みトランザクションをスキャンしてください。</string>
     <string name="kp_kept_in_the_position">ポジションに保持</string>
     <string name="kp_kept_in_your_token">トークンに保持</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">1日あたり</string>
     <string name="kp_mining_per_month">1か月あたり</string>
     <string name="kp_mining_per_week">1週間あたり</string>
-    <string name="kp_network_hashrate_c3cc8">ネットワークハッシュレート</string>
     <string name="kp_new_portfolio_5c1c7">新しいポートフォリオ</string>
-    <string name="kp_next_block_reward">次のブロック報酬</string>
-    <string name="kp_next_block_reward_reduction">次のブロック報酬の減少</string>
     <string name="kp_no_addresses_discovered_yet_15738">まだアドレスが検出されていません。</string>
     <string name="kp_no_used_addresses_yet">使用済みのアドレスはまだありません</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">履歴がまだ足りません - 数日間の取引後にもう一度確認してください。</string>
@@ -235,7 +230,6 @@
     <string name="pf_add_transaction_sub">購入または売却を手動で記録します。</string>
     <string name="pf_export_csv_sub">このポートフォリオの取引をファイルに書き出します。</string>
     <string name="pf_import_csv_sub">ファイルから取引を読み込みます。</string>
-    <string name="pnc_export_sub">CSV を Nextcloud の KaChat フォルダに保存します。</string>
     <string name="pnc_import_sub">Nextcloud から CSV ファイルを選びます。</string>
     <string name="portfolio">ポートフォリオ</string>
     <string name="portfolio_add_chatting_address">チャットアドレスを追加</string>

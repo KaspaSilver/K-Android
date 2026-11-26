@@ -58,6 +58,10 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Numbers
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.RemoveCircleOutline
+import androidx.compose.material.icons.filled.RemoveModerator
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Security
@@ -102,6 +106,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.kachat.app.services.ColdStorageAddressDiscovery
 import com.kachat.app.services.ColdStorageManager
+import com.kachat.app.util.ColdQuantumNumber
 import com.kachat.app.services.ColdStorageSendEngine
 import com.kachat.app.services.UtxoEntry
 import com.kachat.app.ui.theme.KaspaTeal
@@ -496,6 +501,13 @@ fun ColdStorageDetailScreen(
     var labelInput by remember { mutableStateOf("") }
     var qrRow by remember { mutableStateOf<ColdStorageViewModel.AddressRow?>(null) }
     var showActionsSheet by remember { mutableStateOf(false) }
+    /** Add Quantum-Resistant Address's sheet (iOS 961fc05a `ColdQuantumAddressAddSheet`). */
+    var showAddQuantum by remember { mutableStateOf(false) }
+    /** The quantum row whose number and chain on the unit are being edited. */
+    var editNumberRow by remember { mutableStateOf<ColdStorageViewModel.AddressRow?>(null) }
+    /** A funded quantum row the person asked to stop watching, while the confirmation is up. */
+    var stopWatchingRow by remember { mutableStateOf<ColdStorageViewModel.AddressRow?>(null) }
+    val quantumSpent by viewModel.quantumSpentAddresses.collectAsState()
     /** Result line kept on screen after a scan finishes, until the sheet is dismissed. */
     var discoverySummary by remember { mutableStateOf<String?>(null) }
     val pullRefreshState = rememberPullToRefreshState()
@@ -535,12 +547,14 @@ fun ColdStorageDetailScreen(
     // then fresh addresses. Domain knowledge fills in asynchronously after the batched lookups.
     val domainOwningAddresses by viewModel.domainOwningAddresses.collectAsState()
     val visibleAddresses = remember(addresses, domainOwningAddresses) {
-        val visible = addresses.filterNot { it.hidden }
+        // The quantum addresses added by scan list after the regular ones, in the order added
+        // (iOS 961fc05a).
+        val (quantumRows, visible) = addresses.filterNot { it.hidden }.partition { it.isQuantum }
         val rest = visible
             .sortedWith(compareByDescending<ColdStorageViewModel.AddressRow> { it.balanceSompi > 0 }.thenByDescending { it.index })
         val active = rest.filter { it.balanceSompi > 0 || it.address in domainOwningAddresses }
         val fresh = rest.filter { it.balanceSompi == 0L && it.address !in domainOwningAddresses }
-        active + fresh
+        active + fresh + quantumRows.sortedBy { it.index }
     }
     // A hidden address is excluded on purpose (a "put this aside" gesture) — it shouldn't keep
     // inflating the balance you actually think of as available.
@@ -686,9 +700,16 @@ fun ColdStorageDetailScreen(
                         onShowQrClick = { qrRow = row },
                         // iOS: Hide is offered only for an unfunded address; the toast waits for
                         // the setter's live check, and a refusal says the address can't be hidden.
+                        quantumSpent = row.address.lowercase() in quantumSpent,
+                        onEditNumberClick = if (row.isQuantum) ({ editNumberRow = row }) else null,
+                        onStopWatchingClick = if (row.isQuantum) ({
+                            if (row.balanceSompi > 0) stopWatchingRow = row
+                            else viewModel.stopWatchingQuantumAddress(accountId, row.address)
+                        }) else null,
                         onHideClick = if (row.balanceSompi == 0L) {
                             {
-                                viewModel.setColdVisibilityHidden(accountId, row.index, true) { ok ->
+                                val index = viewModel.currentIndex(accountId, row) ?: row.index
+                                viewModel.setColdVisibilityHidden(accountId, index, true) { ok ->
                                     IosToasts.show(
                                         if (ok) tr(R.string.kp_address_hidden_reenable)
                                         else tr(R.string.kp_address_cant_be_hidden)
@@ -726,7 +747,7 @@ fun ColdStorageDetailScreen(
             QrPageSheet(onDismiss = { qrRow = null }, white = false) {
                 ColdStorageReceivePage(
                     address = row.address,
-                    label = row.label?.takeIf { it.isNotBlank() } ?: tr(R.string.kp_address_lld_64ab3, row.index),
+                    label = row.displayLabel,
                     balanceSompi = row.balanceSompi,
                     dismiss = QrPageDismiss.CLOSE,
                     onDismiss = { qrRow = null },
@@ -794,7 +815,7 @@ fun ColdStorageDetailScreen(
                 onValueChange = { labelInput = it },
                 onCancel = { labelingRow = null },
                 onSave = {
-                    viewModel.setAddressLabel(accountId, row.index, labelInput)
+                    viewModel.setAddressLabel(accountId, row, labelInput)
                     labelingRow = null
                 },
             )
@@ -845,6 +866,77 @@ fun ColdStorageDetailScreen(
                 showActionsSheet = false
                 discoverySummary = null
             },
+            onAddQuantum = {
+                showActionsSheet = false
+                discoverySummary = null
+                showAddQuantum = true
+            },
+        )
+    }
+
+    if (showAddQuantum) {
+        ColdQuantumAddressSheet(
+            title = stringResource(R.string.coldq_add_title),
+            confirmTitle = stringResource(R.string.add),
+            address = null,
+            initialNumber = null,
+            initialChain = ColdStorageManager.ColdQuantumAddress.CHAIN_RECEIVE,
+            onDismiss = { showAddQuantum = false },
+            onConfirm = { text, number, chain ->
+                viewModel.addQuantumAddress(accountId, text, number, chain).fold(
+                    onSuccess = {
+                        showAddQuantum = false
+                        IosToasts.show(tr(R.string.coldq_added_toast))
+                        null
+                    },
+                    onFailure = { it.message ?: tr(R.string.coldq_error_not_quantum) },
+                )
+            },
+        )
+    }
+
+    editNumberRow?.let { row ->
+        // the stored record, not the row, which may be from before an earlier edit
+        val stored = remember(row.address) { viewModel.quantumRecord(row.address) }
+        ColdQuantumAddressSheet(
+            title = stringResource(R.string.coldq_edit_number),
+            confirmTitle = stringResource(R.string.save),
+            address = row.address,
+            initialNumber = stored?.unitIndex ?: row.unitIndex,
+            initialChain = stored?.chain ?: row.quantumChain,
+            onDismiss = { editNumberRow = null },
+            onConfirm = { _, number, chain ->
+                viewModel.updateQuantumAddress(accountId, row.address, number, chain)
+                editNumberRow = null
+                null
+            },
+        )
+    }
+
+    stopWatchingRow?.let { row ->
+        com.kachat.app.ui.theme.IosAlertDialog(
+            onDismissRequest = { stopWatchingRow = null },
+            containerColor = LocalAppColors.current.surface,
+            title = { Text(stringResource(R.string.coldq_stop_watching_title), color = LocalAppColors.current.textPrimary) },
+            text = {
+                Text(
+                    KaspaUnit.label(stringResource(R.string.coldq_stop_watching_message, KaspaUnit.plain(row.balanceSompi))),
+                    color = LocalAppColors.current.textSecondary
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.stopWatchingQuantumAddress(accountId, row.address)
+                    stopWatchingRow = null
+                }) {
+                    Text(stringResource(R.string.coldq_stop_watching), color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { stopWatchingRow = null }) {
+                    Text(stringResource(R.string.cancel), color = LocalAppColors.current.textSecondary)
+                }
+            }
         )
     }
 }
@@ -869,8 +961,11 @@ fun ColdStorageAddressVisibilityScreen(
     val addresses by viewModel.addresses.collectAsState()
     var page by remember { mutableStateOf(0) }
     val pageSize = 50
-    val byIndex = remember(addresses) { addresses.associateBy { it.index } }
-    val listMax = remember(addresses) { addresses.maxOfOrNull { it.index } ?: -1 }
+    // The kpub's chain only: quantum entries sit at 1,000,000+ and have their own section on the
+    // first page (iOS 961fc05a, audit 2026-11-25 Q5).
+    val byIndex = remember(addresses) { addresses.filterNot { it.isQuantum }.associateBy { it.index } }
+    val listMax = remember(addresses) { addresses.filterNot { it.isQuantum }.maxOfOrNull { it.index } ?: -1 }
+    val quantumEntries = remember(addresses) { addresses.filter { it.isQuantum }.sortedBy { it.index } }
     // Lazily filled Used/Unused results for rows derived beyond the loaded list.
     val usedCache = remember { mutableStateMapOf<Int, Boolean>() }
 
@@ -954,6 +1049,77 @@ fun ColdStorageAddressVisibilityScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            if (page == 0 && quantumEntries.isNotEmpty()) {
+                item(key = "quantum-header") { ColdQuantumSectionHeader(stringResource(R.string.coldq_visibility_quantum_header)) }
+                items(quantumEntries, key = { "q-" + it.address }) { entry ->
+                    val funded = entry.balanceSompi > 0
+                    val toggle: () -> Unit = {
+                        if (!funded) {
+                            viewModel.currentIndex(accountId, entry)?.let { index ->
+                                viewModel.setColdVisibilityHidden(accountId, index, !entry.hidden)
+                            }
+                        }
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(LocalAppColors.current.surface)
+                            .clickable(onClick = toggle)
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                            .alpha(if (!entry.hidden) 1f else 0.55f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = toggle, modifier = Modifier.size(36.dp)) {
+                            Icon(
+                                if (!entry.hidden) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                if (!entry.hidden) "Visible" else "Hidden",
+                                tint = if (!entry.hidden) KaspaTeal else LocalAppColors.current.textSecondary,
+                                modifier = Modifier.alpha(if (funded) 0.45f else 1f),
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(Icons.Filled.Shield, contentDescription = null, tint = LocalAppColors.current.success, modifier = Modifier.size(11.dp))
+                                Text(
+                                    ColdStorageManager.ColdQuantumAddress.defaultLabel(entry.quantumChain, entry.unitIndex),
+                                    color = LocalAppColors.current.textSecondary,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                )
+                                entry.label?.takeIf { it.isNotBlank() }?.let { label ->
+                                    Text(label, color = LocalAppColors.current.textSecondary, fontSize = 12.sp, maxLines = 1)
+                                }
+                            }
+                            Text(
+                                "${entry.address.take(14)}...${entry.address.takeLast(6)}",
+                                color = LocalAppColors.current.textPrimary,
+                                fontSize = 13.sp,
+                                maxLines = 1
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        if (funded) {
+                            Text(
+                                "%.4f ${KaspaUnit.symbol}".format(java.util.Locale.US, entry.balanceSompi / 100_000_000.0),
+                                color = KaspaTeal,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        } else {
+                            Text(
+                                if (entry.hasHistory) tr(R.string.kp_used_02c0e) else tr(R.string.kp_unused_41369),
+                                color = if (entry.hasHistory) LocalAppColors.current.warning else LocalAppColors.current.success,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+                item(key = "regular-header") { ColdQuantumSectionHeader(stringResource(R.string.addresses)) }
+            }
             items(pageEntries, key = { it.index }) { entry ->
                 val visible = entry.index <= listMax && !entry.hidden
                 val funded = entry.balanceSompi > 0
@@ -1066,7 +1232,13 @@ private fun ColdAddressRow(
      *  checklist edits. Null hides the menu entry. */
     onHideClick: (() -> Unit)? = null,
     /** "Contains domain" tag — this address owns at least one KNS domain (batched lookup). */
-    showsDomainTag: Boolean = false
+    showsDomainTag: Boolean = false,
+    /** A quantum row whose key a spend has put on chain: the slashed shield (iOS 961fc05a). */
+    quantumSpent: Boolean = false,
+    /** Edit Address Number (quantum rows only). */
+    onEditNumberClick: (() -> Unit)? = null,
+    /** Stop Watching (quantum rows only). */
+    onStopWatchingClick: (() -> Unit)? = null,
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
@@ -1080,12 +1252,15 @@ private fun ColdAddressRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = row.label?.takeIf { it.isNotBlank() } ?: tr(R.string.kp_address_lld_64ab3, row.index),
-                    color = KaspaTeal,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(
+                        text = row.displayLabel,
+                        color = KaspaTeal,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (row.isQuantum) ColdQuantumShield(spent = quantumSpent, funded = row.balanceSompi > 0)
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "${row.address.take(14)}...${row.address.takeLast(6)}",
@@ -1131,7 +1306,7 @@ private fun ColdAddressRow(
 
     if (showMenu) {
         ActionSheetContainer(
-            title = row.label ?: tr(R.string.kp_address_lld_64ab3, row.index),
+            title = row.displayLabel,
             subtitle = com.kachat.app.services.AddressActivityNotifier.shortAddress(row.address),
             onDismiss = { showMenu = false },
         ) {
@@ -1172,8 +1347,292 @@ private fun ColdAddressRow(
                     onHideClick()
                 }
             }
+            // A wrong number (or a change address given as a receive one) makes the unit refuse
+            // the request: the person can put it right, or clear it to let the unit search (Q4).
+            if (onEditNumberClick != null) {
+                ActionSheetRow(
+                    icon = Icons.Default.Numbers,
+                    title = stringResource(R.string.coldq_edit_number),
+                    subtitle = stringResource(R.string.coldq_edit_number_subtitle),
+                ) {
+                    showMenu = false
+                    onEditNumberClick()
+                }
+            }
+            // A quantum address added by mistake (or no longer wanted) goes from the account; its
+            // coins stay on chain and it can be added again. With coins on it, only after saying so.
+            if (onStopWatchingClick != null) {
+                ActionSheetRow(
+                    icon = Icons.Default.RemoveCircleOutline,
+                    title = stringResource(R.string.coldq_stop_watching),
+                    subtitle = stringResource(R.string.coldq_stop_watching_subtitle),
+                    tint = Color.Red,
+                ) {
+                    showMenu = false
+                    onStopWatchingClick()
+                }
+            }
         }
     }
+}
+
+/**
+ * The quantum state of a Cold Storage row, as Manage Addresses tells it (iOS 961fc05a
+ * `quantumShield`): a shield while the key has never been on chain, slashed once the address has
+ * spent (orange while it holds Kaspa again).
+ */
+@Composable
+private fun ColdQuantumShield(spent: Boolean, funded: Boolean) {
+    if (spent) {
+        Icon(
+            Icons.Filled.RemoveModerator,
+            contentDescription = stringResource(R.string.key_revealed_by_a_spend),
+            tint = if (funded) LocalAppColors.current.warning else LocalAppColors.current.textSecondary,
+            modifier = Modifier.size(11.dp),
+        )
+    } else {
+        Icon(
+            Icons.Filled.Shield,
+            contentDescription = stringResource(R.string.quantum_safe),
+            tint = LocalAppColors.current.success,
+            modifier = Modifier.size(11.dp),
+        )
+    }
+}
+
+/**
+ * Adds one of a KasSigner's quantum-resistant (KCC-3) addresses to a Cold Storage account, or
+ * edits one's number ([address] given): scanned from the unit's address screen or pasted, with
+ * the address's number and chain on the unit when known (iOS 961fc05a `ColdQuantumAddressAddSheet`,
+ * `ColdQuantumAddressNumberSheet`, `ColdQuantumNumberFields`). [onConfirm] answers an error to
+ * show, or null when it is done.
+ */
+@Composable
+private fun ColdQuantumAddressSheet(
+    title: String,
+    confirmTitle: String,
+    address: String?,
+    initialNumber: Long?,
+    initialChain: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (text: String, number: Long?, chain: Int) -> String?,
+) {
+    val colors = LocalAppColors.current
+    val clipboard = LocalClipboardManager.current
+    val haptic = com.kachat.app.util.rememberHaptics()
+    var addressText by remember { mutableStateOf("") }
+    var numberText by remember { mutableStateOf(initialNumber?.toString() ?: "") }
+    var chain by remember { mutableStateOf(initialChain) }
+    var errorText by remember { mutableStateOf<String?>(null) }
+    var showScanner by remember { mutableStateOf(false) }
+    val notWhole = stringResource(R.string.coldq_number_not_whole)
+    val tooLarge = stringResource(R.string.coldq_number_too_large)
+
+    if (showScanner) {
+        QrScannerSheet(
+            onScanned = { scanned -> addressText = scanned; showScanner = false },
+            onDismiss = { showScanner = false }
+        )
+    }
+
+    val confirm: () -> Unit = {
+        when (val parsed = ColdQuantumNumber.parse(numberText)) {
+            is ColdQuantumNumber.Parsed.Invalid -> errorText = if (parsed.tooLarge) tooLarge else notWhole
+            is ColdQuantumNumber.Parsed.Value -> {
+                val error = onConfirm(addressText, parsed.number, chain)
+                if (error == null) haptic(com.kachat.app.util.IosHaptic.SUCCESS)
+                errorText = error
+            }
+        }
+    }
+
+    IosFullSheet(onDismissed = onDismiss, swipeToDismiss = true) { close ->
+        Column(Modifier.fillMaxSize().background(colors.background)) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SheetBarButton(stringResource(R.string.cancel), onClick = close)
+                Text(
+                    title,
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 17.sp,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f),
+                )
+                SheetBarButton(
+                    confirmTitle,
+                    onClick = confirm,
+                    emphasized = true,
+                    enabled = address != null || addressText.isNotBlank(),
+                )
+            }
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 8.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (address == null) {
+                    ColdQuantumSectionHeader(stringResource(R.string.coldq_address_header))
+                    Column(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(colors.surface).padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            androidx.compose.foundation.text.BasicTextField(
+                                value = addressText,
+                                onValueChange = { addressText = it; errorText = null },
+                                textStyle = androidx.compose.ui.text.TextStyle(
+                                    color = colors.textPrimary, fontSize = 13.sp, fontFamily = FontFamily.Monospace
+                                ),
+                                cursorBrush = androidx.compose.ui.graphics.SolidColor(KaspaTeal),
+                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                    autoCorrect = false,
+                                    capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.None,
+                                ),
+                                modifier = Modifier.weight(1f),
+                                decorationBox = { inner ->
+                                    if (addressText.isEmpty()) {
+                                        Text(stringResource(R.string.coldq_address_placeholder), color = colors.textSecondary, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+                                    }
+                                    inner()
+                                },
+                            )
+                            IconButton(onClick = { showScanner = true }, modifier = Modifier.size(36.dp)) {
+                                Icon(Icons.Default.QrCodeScanner, stringResource(R.string.scan_qr), tint = KaspaTeal)
+                            }
+                        }
+                        HorizontalDivider(color = colors.divider)
+                        Text(
+                            stringResource(R.string.paste),
+                            color = KaspaTeal,
+                            fontSize = 15.sp,
+                            modifier = Modifier.clickable {
+                                clipboard.getText()?.text?.let { addressText = it; errorText = null }
+                            },
+                        )
+                    }
+                    ColdQuantumSectionFooter(stringResource(R.string.coldq_address_footer))
+                } else {
+                    Text(
+                        address,
+                        color = colors.textSecondary,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(colors.surface).padding(14.dp),
+                    )
+                }
+
+                ColdQuantumSectionHeader(stringResource(R.string.coldq_number_header))
+                Column(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(colors.surface).padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.coldq_chain), color = colors.textPrimary, fontSize = 15.sp, modifier = Modifier.padding(end = 12.dp))
+                        ColdSegmentedPicker(
+                            titles = listOf(
+                                stringResource(R.string.coldq_receive_address),
+                                stringResource(R.string.coldq_change_address),
+                            ),
+                            selected = if (chain == ColdStorageManager.ColdQuantumAddress.CHAIN_CHANGE) 1 else 0,
+                            onSelect = {
+                                chain = if (it == 1) ColdStorageManager.ColdQuantumAddress.CHAIN_CHANGE
+                                else ColdStorageManager.ColdQuantumAddress.CHAIN_RECEIVE
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    HorizontalDivider(color = colors.divider)
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = numberText,
+                        onValueChange = { numberText = it; errorText = null },
+                        singleLine = true,
+                        textStyle = androidx.compose.ui.text.TextStyle(color = colors.textPrimary, fontSize = 15.sp),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(KaspaTeal),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                        decorationBox = { inner ->
+                            if (numberText.isEmpty()) Text(stringResource(R.string.coldq_optional), color = colors.textSecondary, fontSize = 15.sp)
+                            inner()
+                        },
+                    )
+                }
+                ColdQuantumSectionFooter(stringResource(R.string.coldq_number_footer))
+                errorText?.let {
+                    Text(
+                        it,
+                        color = colors.danger,
+                        fontSize = 13.sp,
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(colors.surface).padding(14.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** iOS's segmented Picker (as Portfolio draws it): the segments on a tinted track, the chosen one
+ *  on a raised thumb. */
+@Composable
+private fun ColdSegmentedPicker(titles: List<String>, selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalAppColors.current
+    val track = Color(0xFF767680).copy(alpha = if (colors.isDark) 0.24f else 0.12f)
+    val thumb = if (colors.isDark) Color(0xFF636366) else Color.White
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(9.dp))
+            .background(track)
+            .padding(2.dp)
+    ) {
+        titles.forEachIndexed { index, title ->
+            val active = index == selected
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(if (active) thumb else Color.Transparent)
+                    .clickable { onSelect(index) }
+                    .padding(vertical = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    title,
+                    color = colors.textPrimary,
+                    fontSize = 13.sp,
+                    fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColdQuantumSectionHeader(text: String) {
+    Text(
+        text.uppercase(java.util.Locale.getDefault()),
+        color = LocalAppColors.current.textSecondary,
+        fontSize = 12.sp,
+        modifier = Modifier.padding(start = 16.dp, top = 12.dp),
+    )
+}
+
+@Composable
+private fun ColdQuantumSectionFooter(text: String) {
+    Text(
+        text,
+        color = LocalAppColors.current.textSecondary,
+        fontSize = 12.sp,
+        modifier = Modifier.padding(horizontal = 16.dp),
+    )
 }
 
 /**
@@ -1257,11 +1716,27 @@ private fun ColdSendFlow(
     // the presenting sheet refuses a swipe down while the signed transaction goes out
     LaunchedEffect(isBroadcasting) { onSendingChange(isBroadcasting) }
     var sentTransaction by remember { mutableStateOf<SentTransaction?>(null) }
+    /** Sending from a KasSigner quantum-resistant (KCC-3) address: every coin goes, the change (or
+     *  a compound) goes to another quantum address, and the request is KSPT 0x06 (iOS 961fc05a). */
+    val isQuantumSource = remember(fromAddress) { ColdStorageManager.isScriptHashAddress(fromAddress) }
+    /** Compound into the address itself; a quantum address compounds into a fresh one instead. */
+    val compoundsIntoItself = isCompoundMode && !isQuantumSource
+    val sigScriptSize = remember(fromAddress) { ColdStorageSendEngine.signatureScriptSize(fromAddress) }
 
     LaunchedEffect(Unit) {
         liveFeeRateSompiPerGram = viewModel.fetchQuotedFeeRateSompiPerGram()
         if (isCompoundMode) {
-            toAddress = fromAddress
+            if (isQuantumSource) {
+                // Compounding reveals the key, so the merged coin must not stay here (Q6).
+                val fresh = viewModel.reserveQuantumCompoundDestination(fromAddress)
+                if (fresh == null) {
+                    screen = ColdSendScreen.Failed(viewModel.quantumCompoundNeedsFreshAddressMessage())
+                    return@LaunchedEffect
+                }
+                toAddress = fresh
+            } else {
+                toAddress = fromAddress
+            }
             // Fix the input set to the largest <=8 UTXOs — the most one KasSigner-signable
             // transaction can hold — then Max the amount for exactly that set. Without this cap,
             // Max spans every UTXO at the address and the build fails with "too many inputs" the
@@ -1281,7 +1756,7 @@ private fun ColdSendFlow(
             isEstimatingMax = true
             try {
                 // a compound pays itself: priced at its own script (iOS 5848fb0)
-                val maxSompi = viewModel.estimateMaxAmount(fromAddress, liveFeeRateSompiPerGram, compound.utxos, toAddress = fromAddress)
+                val maxSompi = viewModel.estimateMaxAmount(fromAddress, liveFeeRateSompiPerGram, compound.utxos, toAddress = toAddress)
                 fiatAmountState.setMaxKas(maxSompi / 100_000_000.0, fiatPriceInCurrency)
             } catch (e: Exception) {
                 // Leave the amount untouched on failure — same as the Max button itself.
@@ -1291,8 +1766,9 @@ private fun ColdSendFlow(
         }
     }
 
+    // Closed before the send went out: a change address it reserved goes back to the pool.
     DisposableEffect(Unit) {
-        onDispose { viewModel.resetColdSendState() }
+        onDispose { viewModel.closeColdSend() }
     }
 
     // The one exact parser for typed KAS (iOS 16b64bc): comma or dot, at most 8 decimals. Zero is
@@ -1324,11 +1800,15 @@ private fun ColdSendFlow(
     // Real input count when known (coin control, or a fresh automatic-selection preview) instead
     // of always guessing 1 — otherwise the fee shown here could understate what a multi-UTXO send
     // actually costs, only becoming visible after tapping Build.
+    // A quantum source's inputs carry the 101-byte script (iOS 961fc05a).
+    fun massFor(inputs: Int) = com.kachat.app.util.KaspaMass.calculateMass(
+        numInputs = inputs, outputScriptLens = listOf(34, 34), payloadSize = 0,
+        sigScriptLens = com.kachat.app.util.KaspaMass.sigScriptLensFor(inputs, sigScriptSize)
+    )
     val estimatedMass = when {
-        !manualUtxos.isNullOrEmpty() ->
-            com.kachat.app.util.KaspaMass.calculateMass(numInputs = manualUtxos!!.size, outputScriptLens = listOf(34, 34), payloadSize = 0)
-        previewSelection != null ->
-            com.kachat.app.util.KaspaMass.calculateMass(numInputs = previewSelection!!.utxos.size, outputScriptLens = listOf(34, 34), payloadSize = 0)
+        !manualUtxos.isNullOrEmpty() -> massFor(manualUtxos!!.size)
+        previewSelection != null -> massFor(previewSelection!!.utxos.size)
+        isQuantumSource -> massFor(1)
         else -> referenceMass1Input
     }
     // The live preview (when fresh and automatic selection is in play — coin control already
@@ -1354,7 +1834,7 @@ private fun ColdSendFlow(
     val manualFeeSompi = remember(manualUtxos, amountSompi, baseFeeRateSompiPerGram, extraFeeSompi) {
         val coins = manualUtxos?.takeIf { it.isNotEmpty() }
         if (coins != null && amountSompi != null && amountSompi > 0) {
-            com.kachat.app.util.ColdSendFeeModel.manualTotalFee(coins, amountSompi, baseFeeRateSompiPerGram, extraFeeSompi)
+            com.kachat.app.util.ColdSendFeeModel.manualTotalFee(coins, amountSompi, baseFeeRateSompiPerGram, extraFeeSompi, signatureScriptSize = sigScriptSize)
         } else null
     }
     val effectiveFeeSompi = manualFeeSompi
@@ -1448,7 +1928,7 @@ private fun ColdSendFlow(
         val state = sendState
         if (screen == ColdSendScreen.Form) {
             when (state.step) {
-                ColdStorageViewModel.ColdSendStep.SHOWING_QR -> screen = ColdSendScreen.Qr(state.qrFrames, state.feeSompi)
+                ColdStorageViewModel.ColdSendStep.SHOWING_QR -> screen = ColdSendScreen.Qr(state.qrFrames, state.feeSompi, state.quantum)
                 ColdStorageViewModel.ColdSendStep.FAILED -> screen = ColdSendScreen.Failed(state.errorMessage ?: somethingWentWrong)
                 else -> Unit
             }
@@ -1487,7 +1967,7 @@ private fun ColdSendFlow(
             val utxosForBuild = manualUtxos ?: previewSelection?.utxos
             // the preview's coins, not a pick: the build may lead with a "Not confirmed" coin (iOS 3d126db)
             val previewed = manualUtxos == null && previewSelection != null
-            viewModel.startColdSend(fromAddress, effectiveAddress.trim(), it, feeRateOverrideSompi, utxosForBuild, extraFeeSompi, previewed)
+            viewModel.startColdSend(fromAddress, effectiveAddress.trim(), it, feeRateOverrideSompi, utxosForBuild, extraFeeSompi, previewed, isCompound = isCompoundMode)
         }
     }
 
@@ -1550,7 +2030,7 @@ private fun ColdSendFlow(
                         onSuccess = {
                             broadcastError = null
                             sentTransaction = null
-                            screen = ColdSendScreen.Signed(qr.frames, qr.feeSompi, bytes)
+                            screen = ColdSendScreen.Signed(qr.frames, qr.feeSompi, bytes, qr.quantum)
                         },
                         onFailure = { e ->
                             screen = ColdSendScreen.Failed(
@@ -1584,7 +2064,7 @@ private fun ColdSendFlow(
     // The summary's To and From rows (iOS summaryCard / the review's card).
     val toRow: @Composable () -> Unit = {
         ColdReviewRow(stringResource(R.string.to)) {
-            if (isCompoundMode) {
+            if (compoundsIntoItself) {
                 Text(tr(R.string.kp_this_address_consolidating_d0ba3), color = colors.textPrimary, fontSize = 15.sp, textAlign = TextAlign.End)
             } else {
                 knsResolvedDomain?.let {
@@ -1794,7 +2274,9 @@ private fun ColdSendFlow(
 
                                 if (isCompoundMode) {
                                     Text(
-                                        if (compoundHasMoreRounds)
+                                        if (isQuantumSource)
+                                            stringResource(R.string.coldq_compound_note)
+                                        else if (compoundHasMoreRounds)
                                             stringResource(R.string.compound_more_rounds_note, KsptCodec.MAX_INPUTS)
                                         else
                                             stringResource(R.string.compound_single_round_note),
@@ -1821,7 +2303,9 @@ private fun ColdSendFlow(
                                     onCommit = {},
                                     isEstimatingFee = false,
                                     feeText = "~${KaspaUnit.plain(effectiveFeeSompi)} ${KaspaUnit.symbol}",
-                                    showsCoinControl = !isCompoundMode,
+                                    // A quantum source spends every coin (none may stay behind its
+                                    // revealed key), so there is nothing to pick there either.
+                                    showsCoinControl = !isCompoundMode && !isQuantumSource,
                                     coinControlSummary = coinControlSummary(manualUtxos),
                                     onCoinControl = { showCoinControl = true },
                                     onEditFee = {
@@ -1878,6 +2362,16 @@ private fun ColdSendFlow(
                         textAlign = TextAlign.Center,
                     )
                     summaryCard(shown.feeSompi)
+                    shown.quantum?.let { quantum ->
+                        ColdQuantumSendNote(quantum, isCompound = isCompoundMode)
+                        if (quantum.hasUnitIndex) {
+                            ColdSignWithoutNumberButton {
+                                viewModel.signWithoutAddressNumber()?.let { frames ->
+                                    screen = ColdSendScreen.Qr(frames, shown.feeSompi, quantum.copy(hasUnitIndex = false))
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -1899,7 +2393,7 @@ private fun ColdSendFlow(
                 explorer = kaspaExplorer,
                 onDone = onDone,
                 action = { broadcast(shown.signedKspt) },
-                onBack = { screen = ColdSendScreen.Qr(shown.frames, shown.feeSompi) },
+                onBack = { screen = ColdSendScreen.Qr(shown.frames, shown.feeSompi, shown.quantum) },
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(18.dp),
@@ -1974,11 +2468,98 @@ private fun ColdSendFlow(
 private sealed interface ColdSendScreen {
     /** To, Amount, Review (and the fee editor) - Build keeps it up with the button busy. */
     data object Form : ColdSendScreen
-    /** Built: the unsigned transaction's QR frames, and the fee it pays. */
-    class Qr(val frames: List<ByteArray>, val feeSompi: Long) : ColdSendScreen
+    /** Built: the unsigned transaction's QR frames, the fee it pays, and what a quantum source's
+     *  request says (null for any other). */
+    class Qr(val frames: List<ByteArray>, val feeSompi: Long, val quantum: ColdStorageViewModel.QuantumSendInfo? = null) : ColdSendScreen
     /** The signed transaction scanned back, ready for the swipe up. */
-    class Signed(val frames: List<ByteArray>, val feeSompi: Long, val signedKspt: ByteArray) : ColdSendScreen
+    class Signed(
+        val frames: List<ByteArray>,
+        val feeSompi: Long,
+        val signedKspt: ByteArray,
+        val quantum: ColdStorageViewModel.QuantumSendInfo? = null,
+    ) : ColdSendScreen
     data class Failed(val message: String) : ColdSendScreen
+}
+
+/**
+ * What is different about a send from a quantum-resistant address (iOS 961fc05a
+ * `quantumSendNote`): the unit must know KCC-3, every coin goes (this spend puts the address's key
+ * on chain), and where the change goes - named here, since KasSigner marks it as change only for
+ * its change addresses #0-4 (audit 2026-11-25 Q2).
+ */
+@Composable
+private fun ColdQuantumSendNote(info: ColdStorageViewModel.QuantumSendInfo, isCompound: Boolean) {
+    val colors = LocalAppColors.current
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(colors.surface)
+            .padding(14.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Outlined.Shield, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(16.dp))
+            Text(stringResource(R.string.coldq_needs_v11), color = colors.textSecondary, fontSize = 13.sp)
+        }
+        if (info.coinsLeftBehind > 0) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.Warning, contentDescription = null, tint = colors.warning, modifier = Modifier.size(16.dp))
+                Text(stringResource(R.string.coldq_coins_left_behind, info.coinsLeftBehind), color = colors.textSecondary, fontSize = 13.sp)
+            }
+        }
+        info.ownOutput?.let { own ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.AutoMirrored.Filled.CallReceived, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(16.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        stringResource(if (isCompound) R.string.coldq_coins_move_to else R.string.coldq_change_goes_to),
+                        color = colors.textSecondary,
+                        fontSize = 13.sp,
+                    )
+                    Text(
+                        info.ownOutputLabel ?: stringResource(R.string.coldq_label_receive),
+                        color = colors.textPrimary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text("${own.take(14)}...${own.takeLast(8)}", color = colors.textSecondary, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                    if (info.unitMarksAsChange) {
+                        Text(stringResource(R.string.coldq_unit_marks_change), color = colors.textSecondary, fontSize = 13.sp)
+                    } else {
+                        Text(stringResource(R.string.coldq_unit_shows_payment), color = colors.warning, fontSize = 13.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The request names the address's number on the unit. A wrong one (or the wrong chain) makes the
+ *  unit refuse it; this shows the same transaction again with no number, and the unit searches
+ *  its quantum addresses itself (iOS 961fc05a `signWithoutNumberButton`, Q4). */
+@Composable
+private fun ColdSignWithoutNumberButton(onClick: () -> Unit) {
+    val colors = LocalAppColors.current
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(colors.surface)
+                .clickable(onClick = onClick)
+                .padding(vertical = 12.dp),
+        ) {
+            Text(stringResource(R.string.coldq_sign_without_number), color = KaspaTeal, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        }
+        Text(
+            stringResource(R.string.coldq_sign_without_number_note),
+            color = colors.textSecondary,
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 /** A [ColdSendFlow] form's steps, in order (iOS `ColdSendFlowView.FormStep`). */
@@ -2365,7 +2946,9 @@ fun ColdStorageTxHistoryScreen(
                             contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp + barInset),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            if (utxos.size > 1) {
+                            // Compound on a quantum address moves its coins to another quantum
+                            // address of the account, so only when it has another (iOS 961fc05a).
+                            if (utxos.size > 1 && viewModel.canCompound(address)) {
                                 item {
                                     Column(
                                         modifier = Modifier
@@ -2386,7 +2969,8 @@ fun ColdStorageTxHistoryScreen(
                                         }
                                         Spacer(Modifier.height(4.dp))
                                         Text(
-                                            tr(R.string.kp_compound_utxos_description_kc),
+                                            if (ColdStorageManager.isScriptHashAddress(address)) stringResource(R.string.coldq_compound_footer)
+                                            else tr(R.string.kp_compound_utxos_description_kc),
                                             color = LocalAppColors.current.textSecondary,
                                             style = MaterialTheme.typography.bodySmall
                                         )
@@ -2559,7 +3143,12 @@ private fun ColdTxHistoryRow(tx: ColdStorageAddressDiscovery.AddressTransaction,
     val dateStr = tx.blockTimeMillis?.let {
         SimpleDateFormat("MMM d, yyyy, h:mm a", Locale.US).format(Date(it))
     } ?: "Pending"
-    val directionColor = if (tx.sent) LocalAppColors.current.danger else LocalAppColors.current.success
+    // Moved: all of it went to the account's own addresses (iOS 961fc05a, L3).
+    val directionColor = when {
+        tx.moved -> LocalAppColors.current.textSecondary
+        tx.sent -> LocalAppColors.current.danger
+        else -> LocalAppColors.current.success
+    }
 
     Row(
         modifier = Modifier
@@ -2578,7 +3167,11 @@ private fun ColdTxHistoryRow(tx: ColdStorageAddressDiscovery.AddressTransaction,
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                if (tx.sent) Icons.AutoMirrored.Filled.Send else Icons.AutoMirrored.Filled.CallReceived,
+                when {
+                    tx.moved -> Icons.Default.SwapHoriz
+                    tx.sent -> Icons.AutoMirrored.Filled.Send
+                    else -> Icons.AutoMirrored.Filled.CallReceived
+                },
                 null,
                 tint = directionColor,
                 modifier = Modifier.size(18.dp)
@@ -2586,7 +3179,15 @@ private fun ColdTxHistoryRow(tx: ColdStorageAddressDiscovery.AddressTransaction,
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(if (tx.sent) tr(R.string.kp_sent_35f49) else tr(R.string.kp_received_27548), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
+            Text(
+                when {
+                    tx.moved -> stringResource(R.string.history_moved)
+                    tx.sent -> tr(R.string.kp_sent_35f49)
+                    else -> tr(R.string.kp_received_27548)
+                },
+                color = LocalAppColors.current.textPrimary,
+                fontWeight = FontWeight.Bold
+            )
             Text(dateStr, color = LocalAppColors.current.textSecondary, style = MaterialTheme.typography.bodySmall)
             // What this transaction paid the network (iOS 9839906).
             coldTransactionFeeText(tx.feeSompi)?.let {
@@ -2602,7 +3203,7 @@ private fun ColdTxHistoryRow(tx: ColdStorageAddressDiscovery.AddressTransaction,
         }
         Spacer(Modifier.width(8.dp))
         Text(
-            "${if (tx.sent) "-" else "+"}${KaspaUnit.groupedExact(tx.amountSompi)} ${KaspaUnit.symbol}",
+            "${if (tx.moved) "" else if (tx.sent) "-" else "+"}${KaspaUnit.groupedExact(tx.amountSompi)} ${KaspaUnit.symbol}",
             color = directionColor,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.bodySmall
@@ -2630,6 +3231,9 @@ private fun ColdStorageAddressActionsSheet(
     onVisibility: () -> Unit,
     onCopyKpub: () -> Unit,
     onDismiss: () -> Unit,
+    /** Add Quantum-Resistant Address (iOS 961fc05a): KasSigner never exports its quantum (22')
+     *  kpub, so each is scanned from the unit, one at a time. */
+    onAddQuantum: () -> Unit = {},
 ) {
     val colors = LocalAppColors.current
     com.kachat.app.ui.theme.IosSheetColors {
@@ -2704,6 +3308,12 @@ private fun ColdStorageAddressActionsSheet(
                             title = stringResource(R.string.generate_more_addresses),
                             subtitle = tr(R.string.kp_reveals_next_unused_address_account_kc),
                             onClick = onGenerate,
+                        )
+                        ActionSheetRow(
+                            icon = Icons.Outlined.Shield,
+                            title = stringResource(R.string.coldq_add_action),
+                            subtitle = stringResource(R.string.coldq_add_action_subtitle),
+                            onClick = onAddQuantum,
                         )
                         ActionSheetRow(
                             icon = Icons.Default.Search,

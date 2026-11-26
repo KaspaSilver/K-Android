@@ -29,7 +29,8 @@ object PublicChatLink {
      * opened (iOS `normalizeAndValidateChannel`). Beyond the protocol's own rules (non-empty, at
      * most 36 characters, no whitespace, no colon) it rejects URL-structural characters, "..",
      * and control, bidi and zero-width characters - the way to make an invite render as a
-     * different room than the one it joins. A leading "#" is tolerated and stripped.
+     * different room than the one it joins. A leading "#" is tolerated and stripped. A retired
+     * default room's name comes back as its replacement.
      */
     fun normalizeAndValidateChannel(raw: String): String? {
         var trimmed = raw.trim()
@@ -43,7 +44,11 @@ object PublicChatLink {
                     it.code in 0x200B..0x200F || it.code in 0x202A..0x202E || it.code in 0x2066..0x2069 || it.code == 0xFEFF
             }
         ) return null
-        return name
+        // A retired room's name comes back as the room that replaced it ("kachat-bugs" is
+        // "report-bugs"), so an old link, a push or a typed name opens the live room on every path
+        // (iOS 961fc05a, audit 2026-11-25 C2). The move off the old room and leaving it use
+        // MessageProtocol.normalizeChannelName, which keeps the old name.
+        return com.kachat.app.models.FeaturedBroadcastChannels.replacingRetired(name)
     }
 
     /** The room a link names, or null when [raw] isn't a room link or its name fails the gate. */

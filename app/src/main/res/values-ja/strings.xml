@@ -160,7 +160,6 @@
     <string name="valid_address">有効なアドレス</string>
     <string name="waiting_on_opponent">相手を待っています</string>
     <string name="the_recipient_wont_see_your_messages">相手があなたにメッセージを送るか、あなたが通信リクエストを送るまで、相手にはあなたのメッセージが表示されません。通信リクエストには 0.2 KAS かかり、相手が承認すると返金されます。通信リクエストを送るとプライバシーが低下します。</string>
-    <string name="host_port_or_grpcs_host">host:port または grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">言語を選択してください</string>
     <string name="select_the_language_youd_like_to">Kで使用したい言語を選択してください。</string>
     <string name="best">最適</string>
-    <string name="enter_as_host_port_or_grpcs_host">host:port または grpcs://host の形式で入力してください</string>
     <string name="receive_kaspa">Kaspaを受け取る</string>
     <string name="currency">通貨</string>
     <string name="choose_your_currency">通貨を選択してください</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">連絡先のエクスポートから連絡先を追加します。</string>
     <string name="ab_export_file_sub">連絡先を写真ごとファイルに保存します。</string>
     <string name="ab_nc_import_sub">Nextcloud から連絡先のエクスポートを選んでください。</string>
-    <string name="ab_nc_export_sub">Nextcloud の KaChat フォルダに保存し、どのデバイスでもインポートできます。</string>
     <string name="ab_nc_connect_hint">設定 &gt; ストレージで Nextcloud を接続すると、そこにも保存して別のデバイスでインポートできます。</string>
     <string name="ab_couldnt_read_file">そのファイルを読み込めませんでした。</string>
     <string name="ab_nothing_to_export">まだ書き出すものがありません。先に連絡先を追加してください。</string>

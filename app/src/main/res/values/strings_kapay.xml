@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">24h change not available yet</string>
     <string name="kp_about_amount">about %1$s</string>
-    <string name="kp_about_hashrate_e7fb8">About Hashrate</string>
     <string name="kp_add_61cc5">Add</string>
     <string name="kp_add_kaspa_address_5dd6b">Add Kaspa Address</string>
     <string name="kp_add_to_portfolio_9eb23">Add to Portfolio</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">Imported 1 transaction into %1$s</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">KAS Price</string>
-    <string name="kp_kaspa_network_fceee">Kaspa Network</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSigner shows what it is signing. Check it matches, sign, then scan the signed transaction it shows.</string>
     <string name="kp_kept_in_the_position">Kept in the Position</string>
     <string name="kp_kept_in_your_token">Kept in Your Token</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">Per day</string>
     <string name="kp_mining_per_month">Per month</string>
     <string name="kp_mining_per_week">Per week</string>
-    <string name="kp_network_hashrate_c3cc8">Network Hashrate</string>
     <string name="kp_new_portfolio_5c1c7">New Portfolio</string>
-    <string name="kp_next_block_reward">Next Block Reward</string>
-    <string name="kp_next_block_reward_reduction">Next Block Reward Reduction</string>
     <string name="kp_no_addresses_discovered_yet_15738">No addresses discovered yet.</string>
     <string name="kp_no_used_addresses_yet">No used addresses yet</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Not enough history yet - check back after a few days of activity.</string>
@@ -235,7 +230,6 @@
     <string name="pf_add_transaction_sub">Record a buy or a sell by hand.</string>
     <string name="pf_export_csv_sub">Write this portfolio\'s transactions out to a file.</string>
     <string name="pf_import_csv_sub">Read transactions in from a file.</string>
-    <string name="pnc_export_sub">Save the CSV to the KaChat folder in your Nextcloud.</string>
     <string name="pnc_import_sub">Pick a CSV file from your Nextcloud.</string>
     <string name="portfolio">Portfolio</string>
     <string name="portfolio_add_chatting_address">Add Chatting Address</string>

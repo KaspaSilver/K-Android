@@ -40,11 +40,9 @@
     <string name="pc_keep">रखें</string>
     <string name="pc_keep_subtitle">रूम को जैसा है वैसा ही रहने दें।</string>
     <string name="pc_new_public_chat">नई सार्वजनिक चैट</string>
-    <string name="pc_new_public_chat_subtitle">किसी सार्वजनिक रूम से जुड़ें या नया बनाएँ।</string>
     <string name="pc_edit_default_public_chats">डिफ़ॉल्ट सार्वजनिक चैट बदलें</string>
     <string name="pc_new_public_chat_explainer">जो कोई भी उसी चैनल नाम से जुड़ता है वह वहाँ संदेश देख और पोस्ट कर सकता है - कोई मालिक नहीं है और कोई आमंत्रण नहीं।</string>
     <string name="pc_join">शामिल हों</string>
-    <string name="pc_back">वापस</string>
     <string name="pc_channel_name_rules">चैनल का नाम 1-%1$d अक्षरों का हो, बिना स्पेस या कोलन के।</string>
     <string name="pc_join_failed">उस चैनल से जुड़ते समय कुछ गलत हो गया।</string>
     <string name="pc_report">रिपोर्ट करें</string>

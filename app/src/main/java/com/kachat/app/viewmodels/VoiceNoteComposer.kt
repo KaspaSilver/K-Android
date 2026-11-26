@@ -29,6 +29,7 @@ import java.io.File
 class VoiceNoteComposer(
     private val scope: CoroutineScope,
     private val recorder: VoiceRecorderService,
+    private val context: android.content.Context,
     private val cacheDir: File,
     /** The on-chain path: [VoiceNotePolicy.ONE_TO_ONE] or [VoiceNotePolicy.GROUP]. */
     private val path: VoiceNotePolicy.Path,
@@ -194,12 +195,19 @@ class VoiceNoteComposer(
                 prepare()
             }.also { player = it }
             mediaPlayer.setOnCompletionListener { stopPreview() }
+            // One note at a time, and the audio goes back when the preview stops (iOS 961fc05a,
+            // audit 2026-11-25 B8); a call taking the audio stops it too (M5).
+            if (!com.kachat.app.util.VoicePlaybackCoordinator.willStart(context, this) { scope.launch(Dispatchers.Main) { stopPreview() } }) return
             mediaPlayer.start()
             state.value = state.value.copy(previewPlaying = true, previewPositionMs = 0)
             previewJob?.cancel()
             previewJob = scope.launch {
                 while (isActive && state.value.previewPlaying) {
-                    state.value = state.value.copy(previewPositionMs = runCatching { mediaPlayer.currentPosition.toLong() }.getOrDefault(0L))
+                    // Published only when the shown second changes: each publish redraws the
+                    // composer (iOS 961fc05a, audit 2026-11-25 B20).
+                    val position = runCatching { mediaPlayer.currentPosition.toLong() }.getOrDefault(0L)
+                    val shown = Math.round(position / 1_000.0) * 1_000 // as voiceNoteClock rounds
+                    if (shown != state.value.previewPositionMs) state.value = state.value.copy(previewPositionMs = shown)
                     delay(250)
                 }
             }
@@ -212,6 +220,7 @@ class VoiceNoteComposer(
     private fun stopPreview() {
         previewJob?.cancel()
         previewJob = null
+        com.kachat.app.util.VoicePlaybackCoordinator.didStop(this)
         player?.let { mediaPlayer ->
             runCatching { if (mediaPlayer.isPlaying) mediaPlayer.pause() }
             runCatching { mediaPlayer.seekTo(0) }

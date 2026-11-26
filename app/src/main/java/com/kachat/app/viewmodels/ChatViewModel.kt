@@ -1855,6 +1855,26 @@ class ChatViewModel @Inject constructor(
     val groupsUnreadCount: StateFlow<Int> = groupConversations.map { list -> list.sumOf { it.unreadCount.coerceAtLeast(0) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
+    /** The newest edit's text of each group's last message, by txid: the Chats list's group rows
+     *  preview an edited message with its newest text (iOS 961fc05a `GroupChatRow.previewText`). */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val groupPreviewEdits: StateFlow<Map<String, String>> = groupConversations
+        .map { list -> list.mapNotNull { it.lastMessage?.txId?.takeIf { id -> id.isNotEmpty() } }.sorted() }
+        .distinctUntilChanged()
+        .flatMapLatest { ids -> groupRepository.lastMessageEditTexts(ids) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    /** The newest edit's text of each 1:1 chat's last message, by txid: the Chats list's rows
+     *  preview an edited message with its newest text (iOS 961fc05a `previewEditsByTxId`). */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val chatPreviewEdits: StateFlow<Map<String, String>> = conversations
+        .map { list -> list.mapNotNull { it.lastMessage?.id?.takeIf { id -> id.isNotEmpty() } }.sorted() }
+        .distinctUntilChanged()
+        .flatMapLatest { ids -> chatRepository.lastMessageEditTexts(ids) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     /** The 1:1 chats one of whose messages matches the Chats search (iOS ChatListView). */
     suspend fun contactIdsWithMessageMatching(query: String): Set<String> {
         val q = query.trim()
@@ -3043,6 +3063,7 @@ class ChatViewModel @Inject constructor(
         VoiceNoteComposer(
             scope = viewModelScope,
             recorder = voiceRecorderService,
+            context = appContext,
             cacheDir = appContext.cacheDir,
             path = com.kachat.app.util.VoiceNotePolicy.ONE_TO_ONE,
             state = _voiceRecordingState,
@@ -3099,6 +3120,7 @@ class ChatViewModel @Inject constructor(
         VoiceNoteComposer(
             scope = viewModelScope,
             recorder = voiceRecorderService,
+            context = appContext,
             cacheDir = appContext.cacheDir,
             path = com.kachat.app.util.VoiceNotePolicy.GROUP,
             state = _groupVoiceRecordingState,

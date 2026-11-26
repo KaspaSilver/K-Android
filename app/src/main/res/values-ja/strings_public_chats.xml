@@ -40,11 +40,9 @@
     <string name="pc_keep">そのまま</string>
     <string name="pc_keep_subtitle">ルームはそのままにします。</string>
     <string name="pc_new_public_chat">新しい公開チャット</string>
-    <string name="pc_new_public_chat_subtitle">公開ルームに参加するか、新しく作成します。</string>
     <string name="pc_edit_default_public_chats">デフォルトの公開チャットを編集</string>
     <string name="pc_new_public_chat_explainer">同じチャンネル名に参加すれば、誰でもそこでメッセージを見たり投稿したりできます。オーナーも招待もありません。</string>
     <string name="pc_join">参加</string>
-    <string name="pc_back">戻る</string>
     <string name="pc_channel_name_rules">チャンネル名は 1〜%1$d 文字で、空白やコロンは使えません。</string>
     <string name="pc_join_failed">そのチャンネルへの参加中に問題が発生しました。</string>
     <string name="pc_report">報告</string>

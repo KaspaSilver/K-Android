@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,7 +72,7 @@ import com.kachat.app.ui.theme.LocalAppColors
  * goes back to the grid ([HubRouter.close]); so does the system Back, after the section's own.
  *
  * A section opened here stays alive, hidden, once left (iOS 428a797b `keptSections`, audit
- * 2026-11-21 #28): KaPost, Portfolio, KaPlay, .kachat, Stats and Cold Storage come back exactly
+ * 2026-11-21 #28): KaPost, Portfolio, KaPlay, .kachat, the Explorer and Cold Storage come back exactly
  * as they were - feed, scroll position, the page inside them - instead of loading again
  * ([KEPT_ALIVE]). The others (Chats, Wallet, Contacts, Settings, Kaspa Websites) still close when
  * left: an open chat marks itself read until it leaves, and a web page would keep playing. A
@@ -181,7 +182,7 @@ fun KaspaHubScreen(
  * pages are the shell's own routes, and the rest load once and refresh on a pull.
  */
 private val KEPT_ALIVE: Set<AppTab> = setOf(
-    AppTab.KAPOSTS, AppTab.PORTFOLIO, AppTab.GAMES, AppTab.KACHAT_NAMES, AppTab.KACHAT_STATS, AppTab.COLD_STORAGE,
+    AppTab.KAPOSTS, AppTab.PORTFOLIO, AppTab.GAMES, AppTab.KACHAT_NAMES, AppTab.COLD_STORAGE, AppTab.EXPLORER,
 )
 
 /**
@@ -252,6 +253,8 @@ private fun KaspaHubGrid(
     val colors = LocalAppColors.current
     val dockInset = LocalDockInset.current
     val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    // The card held down: its half sheet (Copy Link, Open; iOS 961fc05a).
+    var heldCard by remember { mutableStateOf<AppTab?>(null) }
     Scaffold(
         containerColor = colors.background,
         // The grid runs on under the dock; it pads its own end.
@@ -276,12 +279,31 @@ private fun KaspaHubGrid(
                     tab = tab,
                     badgeCount = badgeCount(tab),
                     onClick = {
+                        // A hold that opened the half sheet doesn't also open the card behind it
+                        // (iOS 961fc05a, audit 2026-11-25 L6, as the chat circles guard).
+                        if (heldCard != null) return@HubTile
                         haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                         onOpen(tab)
                     },
+                    // Hold: its half sheet, with the card's link to copy (iOS 961fc05a).
+                    onLongClick = if (HubCardLinks.slug(tab) != null) {
+                        {
+                            haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            heldCard = tab
+                        }
+                    } else null,
                 )
             }
         }
+    }
+    heldCard?.let { tab ->
+        val copied = stringResource(R.string.kp55_link_copied)
+        HubCardActionSheet(
+            tab = tab,
+            onDismiss = { heldCard = null },
+            onOpen = { onOpen(tab) },
+            onCopied = { IosToasts.show(copied) },
+        )
     }
 }
 
@@ -291,8 +313,9 @@ private fun KaspaHubGrid(
  * white hairline at 15%, the icon in a 30pt-tall slot, 10 above a caption-semibold label, and the
  * dock's badge on the top-right corner, 6 out each way.
  */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun HubTile(tab: AppTab, badgeCount: Int, onClick: () -> Unit) {
+private fun HubTile(tab: AppTab, badgeCount: Int, onClick: () -> Unit, onLongClick: (() -> Unit)? = null) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(18.dp)
     Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f)) {
@@ -302,7 +325,7 @@ private fun HubTile(tab: AppTab, badgeCount: Int, onClick: () -> Unit) {
                 .clip(shape)
                 .background(colors.surface)
                 .border(0.8.dp, Color.White.copy(alpha = 0.15f), shape)
-                .clickable(onClick = onClick)
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(horizontal = 8.dp),
             contentAlignment = Alignment.Center,
         ) {

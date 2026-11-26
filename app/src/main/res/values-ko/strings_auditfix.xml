@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channel names (audit 2026-11-25 P5) -->
+    <string name="notification_channel_no_vibration">메시지 - 진동 없음</string>
+    <string name="notification_channel_vibrate_only">메시지 - 진동만</string>
+    <string name="notification_channel_silent">메시지 - 무음</string>
+</resources>

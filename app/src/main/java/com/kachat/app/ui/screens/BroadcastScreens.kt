@@ -159,6 +159,10 @@ fun PublicChatsSettingsSheet(
     val hidden by broadcastViewModel.hiddenCuratedRooms.collectAsState()
     val joinedChannels by broadcastViewModel.joinedChannels.collectAsState()
     val joinedNames = remember(joinedChannels) { joinedChannels.map { it.channelName }.toSet() }
+    // The indexer's rooms (More Rooms) follow its list as it changes.
+    val trackedRoomsVersion by com.kachat.app.services.IndexerTrackedRooms.changes.collectAsState()
+    // A room just added on the indexer shows here within a minute (iOS 961fc05a).
+    LaunchedEffect(Unit) { broadcastViewModel.refreshIndexerRoomsSoon() }
     // iOS presents it as a full-height sheet holding a Form (PublicChatsSettingsView): an inline
     // bar with the title and Done on glass, each section's rooms on an inset-grouped card with
     // inset separators, the headers in the iOS 26 Form style and the footer under its card.
@@ -252,6 +256,23 @@ fun PublicChatsSettingsSheet(
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp),
                     )
                 }
+                // Rooms added on the indexer (iOS 961fc05a `indexerDefaultChannels`): they come
+                // and go with it.
+                val more = remember(trackedRoomsVersion) { com.kachat.app.models.FeaturedBroadcastChannels.indexerDefaultNames() }
+                if (more.isNotEmpty()) {
+                    Column {
+                        SettingsSection(title = stringResource(R.string.r55_more_rooms)) {
+                            more.forEachIndexed { i, name -> roomSwitch(name, showDivider = i < more.size - 1) }
+                        }
+                        Text(
+                            stringResource(R.string.r55_more_rooms_footer),
+                            color = colors.textSecondary,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp,
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp),
+                        )
+                    }
+                }
                 Spacer(Modifier.navigationBarsPadding().height(24.dp))
             }
         }
@@ -315,8 +336,9 @@ internal fun PublicChatRow(
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 if (notifyOff) {
-                    Spacer(Modifier.width(4.dp))
-                    Icon(Icons.Default.NotificationsOff, contentDescription = stringResource(R.string.kpui_notifications_off), tint = colors.textSecondary, modifier = Modifier.size(13.dp))
+                    // a gray "Silenced" pill, not a bell icon (iOS ef760cfa `SilencedPill`)
+                    Spacer(Modifier.width(6.dp))
+                    SilencedPill()
                 }
                 }
                 if (timeText != null) Text(timeText, color = colors.textSecondary, fontSize = 12.sp)
@@ -463,15 +485,17 @@ fun BroadcastChannelScreen(
     val messageWindowFlow = remember(channelName) { broadcastViewModel.getMessageWindow(channelName) }
     // Null until the store's first answer: drawn as nothing, so opening a room doesn't flash
     // "No messages yet" before its messages arrive.
+    // The room's queries stop with the app in the background (audit 2026-11-25 R6).
+    // Back from behind another tab within two minutes: the rows it showed, at once (iOS d089011f).
     val loadedWindow by messageWindowFlow
-        .collectAsState(initial = null as com.kachat.app.repository.BroadcastRepository.RoomWindow?)
+        .collectAsStateWhileStarted(initial = broadcastViewModel.cachedRoomWindow(channelName))
     val messageWindow = loadedWindow ?: com.kachat.app.repository.BroadcastRepository.RoomWindow(emptyList(), false)
     val messages = messageWindow.messages
     val loadingEarlierFlow = remember(channelName) { broadcastViewModel.isLoadingEarlier(channelName) }
     val isLoadingEarlier by loadingEarlierFlow.collectAsState(initial = false)
     // Reactions aggregated per message txId — same shape as GroupChatScreen's groupReactionsByTxId.
     val channelReactionsFlow = remember(channelName) { broadcastViewModel.getReactions(channelName) }
-    val channelReactions by channelReactionsFlow.collectAsState(initial = emptyList())
+    val channelReactions by channelReactionsFlow.collectAsStateWhileStarted(initial = emptyList())
     // Translate from the long-press menu (iOS 03e5128) - read once here, not per row.
     val translationStates by broadcastViewModel.translations.collectAsState()
     val translationOriginals by broadcastViewModel.showingOriginal.collectAsState()
@@ -521,7 +545,7 @@ fun BroadcastChannelScreen(
     // The newest edit per message (see MessageEdit), applied as each bubble is drawn - the
     // envelope itself is never a message row.
     val editsFlow = remember(channelName) { broadcastViewModel.getEdits(channelName) }
-    val editsByTxId by editsFlow.collectAsState(initial = emptyMap())
+    val editsByTxId by editsFlow.collectAsStateWhileStarted(initial = emptyMap())
     // Edits that never left the phone, waiting for Retry: their messages read as before (iOS ee5ec98).
     val failedEdits by broadcastViewModel.failedEdits.collectAsState()
     val editingMessage by broadcastViewModel.editingMessage.collectAsState()
@@ -530,6 +554,9 @@ fun BroadcastChannelScreen(
     val feeRateOverride by broadcastViewModel.feeRateOverride.collectAsState()
     var showFeeEditor by remember { mutableStateOf(false) }
     var feeEditorInput by remember { mutableStateOf("") }
+    /** Your own message picked for Delete for Everyone, waiting for the confirmation (iOS
+     *  2026-11-25 `deleteTarget`). */
+    var deleteTarget by remember { mutableStateOf<com.kachat.app.models.BroadcastMessageEntity?>(null) }
     // The sender whose avatar was tapped. One sheet serves every row - the parent presents it
     // for whichever sender was tapped, rather than a menu attached to each avatar in the list.
     var senderSheetTarget by remember { mutableStateOf<RoomSenderSheetTarget?>(null) }
@@ -625,6 +652,12 @@ fun BroadcastChannelScreen(
     // grew the count and ran this again, so a filling room animated to the bottom once per page
     // (iOS 9c9e3e0).
     var hasPositionedAtLatest by remember(channelName) { mutableStateOf(false) }
+    // Whether the list has been on screen before (iOS d089011f `listHasAppeared`): coming back
+    // from another tab (a profile opened from here) keeps the reader where they were (the list
+    // state is saved with the room), and only someone who was at the newest message is taken to
+    // the newest again. Saved with the room, as the list's own position is.
+    var listHasAppeared by androidx.compose.runtime.saveable.rememberSaveable(channelName) { mutableStateOf(false) }
+    var wasAtBottomWhenHidden by androidx.compose.runtime.saveable.rememberSaveable(channelName) { mutableStateOf(true) }
     // Older messages land above the one the reader was at the top of: put them back on it
     // (iOS `keepInPlaceAfterOlderLoad`), rather than at the start of the new batch. Declared here:
     // the scroll to the newest below stands aside while it is set.
@@ -632,8 +665,9 @@ fun BroadcastChannelScreen(
     LaunchedEffect(channelName, messages.lastOrNull()?.id) {
         if (messages.isEmpty()) return@LaunchedEffect
         if (!hasPositionedAtLatest) {
-            listState.scrollToItem(messages.size - 1 + listOffset)
+            if (!listHasAppeared || wasAtBottomWhenHidden) listState.scrollToItem(messages.size - 1 + listOffset)
             hasPositionedAtLatest = true
+            listHasAppeared = true
         } else {
             // Earlier messages are loading: a new one arriving meanwhile doesn't pull the reader
             // down (iOS PublicChatChannelView's `guard keepInPlaceAfterOlderLoad == nil`).
@@ -656,6 +690,18 @@ fun BroadcastChannelScreen(
         if (lastVisibleKey == messages.last().id && !listState.isScrollInProgress) {
             listState.scrollToItem(messages.size - 1 + listOffset)
         }
+    }
+    // A mention of you tapped in Profile's bell (iOS d089011f `takeJumpRoute`): once the room has
+    // laid out, to that message, also when this room is already open. Not in the loaded window
+    // (an older message): the room stays as it opened.
+    val pendingMentionJump by PublicChatJumpRoute.pending.collectAsState()
+    LaunchedEffect(channelName, pendingMentionJump, hasPositionedAtLatest, messages.isNotEmpty()) {
+        if (pendingMentionJump == null || !hasPositionedAtLatest || messages.isEmpty()) return@LaunchedEffect
+        val jump = PublicChatJumpRoute.take(channelName) ?: return@LaunchedEffect
+        val targetId = messageWindow.anchorIdByPartId[jump.txId] ?: jump.txId
+        if (messages.none { it.id == targetId }) return@LaunchedEffect
+        delay(300)
+        jumpToReply(jump.txId)
     }
 
     // Tapping into the composer scrolls to the newest message rather than letting the keyboard
@@ -743,6 +789,13 @@ fun BroadcastChannelScreen(
             lastVisibleIndex != null && lastVisibleIndex < latestLastIndex - 1
         }
     }
+    // Whether the reader is at the newest message, kept as they scroll (iOS d089011f reads it as
+    // the room disappears; a write while leaving would come after the room's state is saved).
+    // Only once this visit has placed the list, so the empty first frames don't count.
+    LaunchedEffect(channelName) {
+        snapshotFlow { if (hasPositionedAtLatest) !showScrollToBottom else null }
+            .collect { atBottom -> if (atBottom != null) wasAtBottomWhenHidden = atBottom }
+    }
 
     // Fee preview needs real UTXOs/fee-rate data, not just whatever was last fetched (which
     // could be empty/stale) — refresh once on entry, matching how 1:1 chats always have this
@@ -756,6 +809,10 @@ fun BroadcastChannelScreen(
     // additionally backfills from its broadcast indexer (once + every 8s) so history sent while
     // the app was closed shows up too.
     DisposableEffect(channelName) {
+        // Open (iOS `acquire`): its first indexer read removes what the indexer no longer has on
+        // one miss, and a trim waiting since it was last hidden is called off (iOS d089011f).
+        broadcastViewModel.acquireRoom(channelName)
+        broadcastViewModel.keepRoomWindow(channelName)
         broadcastViewModel.startLiveViewing(channelName)
         broadcastViewModel.startIndexerBackfill(channelName)
         // Opening a room is reading it. Marked again on the way out, so what arrived while it
@@ -769,8 +826,10 @@ fun BroadcastChannelScreen(
             // given back (iOS b78fdb0).
             broadcastViewModel.cancelVoiceRecordingOnLeave()
             // "Load earlier messages" starts over next time (iOS f954738): every room ever
-            // opened doesn't keep its widened window all session.
+            // opened doesn't keep its widened window all session. Two minutes from now, so a
+            // room only hidden behind another tab comes back as it was (iOS d089011f).
             broadcastViewModel.resetRoomWindow(channelName)
+            broadcastViewModel.releaseRoom(channelName)
         }
     }
     // Voice-note playback is owned per bubble; the room going away is what ends it.
@@ -1553,11 +1612,18 @@ fun BroadcastChannelScreen(
                                         onDoubleClick = { QuickReactionBarState.activeId = message.id },
                                     )
                                 } else if (voiceContent != null) {
-                                    AudioBubble(
-                                        voiceContent,
-                                        isSent = isMine,
+                                    // A one-part note plays as a long one with a single part: the
+                                    // same bubble, with the waveform and its scrubber, as in 1:1
+                                    // chats (iOS d089011f, owner 2026-11-25).
+                                    val singlePart = remember(message.id, displayContent) {
+                                        val part = message.copy(content = displayContent)
+                                        com.kachat.app.util.BroadcastVoiceNote(key = "one|${message.id}", count = 1, parts = listOf(part), anchor = part)
+                                    }
+                                    RoomVoiceNoteBubble(
+                                        note = singlePart,
+                                        isMine = isMine,
                                         onLongPress = { showMenu = true },
-                                        onDoubleClick = { QuickReactionBarState.activeId = message.id }
+                                        onDoubleClick = { QuickReactionBarState.activeId = message.id },
                                     )
                                 } else if (displayContent.length > MESSAGE_TEXT_TRUNCATION_THRESHOLD) {
                                     // See MESSAGE_TEXT_TRUNCATION_THRESHOLD's doc comment in Screens.kt -
@@ -1809,6 +1875,21 @@ fun BroadcastChannelScreen(
                                                 reportRoomMessage(message.id, message.senderAddress, displayContent)
                                             }
                                         }
+                                        // Delete for Everyone (iOS 2026-11-25): your own delivered
+                                        // message, not a voice note (a long one is several sends).
+                                        if (isMine && message.deliveryStatus == "sent" && voiceNote == null && voiceContent == null &&
+                                            com.kachat.app.repository.PushBannerFetch.isTxIdShaped(message.id) &&
+                                            channelName !in com.kachat.app.models.FeaturedBroadcastChannels.SERVICE_CHANNELS) {
+                                            ActionSheetRow(
+                                                icon = Icons.Default.Delete,
+                                                title = stringResource(R.string.r55_delete_for_everyone),
+                                                subtitle = stringResource(R.string.r55_delete_for_everyone_subtitle),
+                                                tint = LocalAppColors.current.danger,
+                                            ) {
+                                                showMenu = false
+                                                deleteTarget = message
+                                            }
+                                        }
                                         when (translationState) {
                                             is com.kachat.app.services.PostTranslationService.TranslationState.Translated ->
                                                 if (translationKey in translationOriginals) {
@@ -2043,6 +2124,33 @@ fun BroadcastChannelScreen(
         }
     }
 
+
+    // Delete for Everyone's confirmation (iOS 2026-11-25): it goes for everyone using K, stays on
+    // chain, and costs a small fee. A failed send leaves the message, and says so.
+    deleteTarget?.let { target ->
+        com.kachat.app.ui.theme.IosAlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            containerColor = LocalAppColors.current.surface,
+            title = { Text(stringResource(R.string.r55_delete_for_everyone_q), color = LocalAppColors.current.textPrimary) },
+            text = { Text(stringResource(R.string.r55_delete_for_everyone_message), color = LocalAppColors.current.textSecondary) },
+            confirmButton = {
+                TextButton(onClick = {
+                    deleteTarget = null
+                    val failed = com.kachat.app.util.tr(R.string.r55_delete_failed)
+                    broadcastViewModel.deleteForEveryone(target) {
+                        IosToasts.show(failed, durationMs = IosToastDuration.LONG)
+                    }
+                }) {
+                    Text(stringResource(R.string.delete), color = LocalAppColors.current.danger, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) {
+                    Text(stringResource(R.string.cancel), color = LocalAppColors.current.textSecondary)
+                }
+            },
+        )
+    }
 
     if (showFeeEditor) {
         com.kachat.app.ui.theme.IosAlertDialog(
@@ -2347,6 +2455,8 @@ private class RoomVoiceNotePlayer(private val context: android.content.Context) 
     var durationMs by mutableStateOf<Long?>(null)
     /** What the time under the scrubber says: where playback is, else the length. */
     var shownMs by mutableStateOf<Long?>(null)
+    /** The note's shape for the waveform, as 1:1 chats draw it (iOS d089011f `waveformSamples`). */
+    var waveform by mutableStateOf<List<Float>>(emptyList())
 
     var player: android.media.MediaPlayer? = null
     var file: java.io.File? = null
@@ -2374,6 +2484,14 @@ private class RoomVoiceNotePlayer(private val context: android.content.Context) 
         runCatching { player?.pause() }
         isPlaying = false
         com.kachat.app.util.VoicePlaybackCoordinator.didStop(this)
+    }
+
+    /** A length and waveform worked out (or cached): the length stands until a player has its own. */
+    fun applyInfo(info: com.kachat.app.util.VoiceNoteInfoCache.Info) {
+        waveform = info.waveform
+        if (player != null) return
+        durationMs = info.durationMs
+        if (!isPlaying) shownMs = info.durationMs
     }
 
     fun stop() {
@@ -2464,26 +2582,43 @@ private fun RoomVoiceNoteBubble(
         }
     }
 
-    // The length of the parts present, again whenever a part arrives (unless playing).
+    // The length and waveform of the parts present, again whenever a part arrives (unless
+    // playing). From VoiceNoteInfoCache when this note was read before; otherwise the parts are
+    // decoded once off the main thread, as a 1:1 voice note's are, and cached, so a bubble
+    // scrolling back in costs nothing (iOS d089011f `preload`).
+    val infoKey = remember(signature) { "room|" + com.kachat.app.util.VoiceNoteDurationCache.key(note.parts.map { it.content }) }
     LaunchedEffect(signature, parts) {
         val present = parts ?: return@LaunchedEffect
         if (player.loadedSignature == signature || player.isPlaying) return@LaunchedEffect
         player.loadedSignature = signature
-        player.isLoading = player.durationMs == null
-        // Kept by the audio, so a bubble scrolling back in costs nothing (iOS f954738).
-        val durationKey = com.kachat.app.util.VoiceNoteDurationCache.key(note.parts.map { it.content })
-        val length = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            com.kachat.app.util.VoiceNoteDurationCache.durationMs(durationKey) {
-                com.kachat.app.util.WebMOpusPartsDecoder.durationMs(present)
-            }
+        com.kachat.app.util.VoiceNoteInfoCache.info(infoKey)?.let { info ->
+            player.applyInfo(info)
+            player.isLoading = false
+            return@LaunchedEffect
         }
-        if (player.loadedSignature == signature) {
-            if (length > 0) {
+        player.isLoading = player.durationMs == null
+        val info = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            roomVoiceNoteInfo(context.cacheDir, present)?.also { com.kachat.app.util.VoiceNoteInfoCache.store(infoKey, it) }
+        }
+        if (player.loadedSignature != signature) return@LaunchedEffect
+        if (info != null) {
+            player.applyInfo(info)
+        } else {
+            // Didn't decode: the length from the packets, and the placeholder shape.
+            if (player.waveform.isEmpty()) {
+                player.waveform = List(com.kachat.app.util.VoiceWaveform.DEFAULT_BARS) { com.kachat.app.util.VoiceWaveform.PLACEHOLDER }
+            }
+            val length = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                com.kachat.app.util.VoiceNoteDurationCache.durationMs(infoKey) {
+                    com.kachat.app.util.WebMOpusPartsDecoder.durationMs(present)
+                }
+            }
+            if (player.loadedSignature == signature && length > 0) {
                 player.durationMs = length
                 if (player.player == null) player.shownMs = length
             }
-            player.isLoading = false
         }
+        player.isLoading = false
     }
 
     // Where playback is, ten times a second.
@@ -2524,7 +2659,14 @@ private fun RoomVoiceNoteBubble(
             val out = java.io.File(context.cacheDir, "voice_note_playback_${System.nanoTime()}.wav")
             val decoded = try {
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-                    com.kachat.app.util.WebMOpusPartsDecoder.decodePartsToWav(present, out)
+                    com.kachat.app.util.WebMOpusPartsDecoder.decodePartsToWav(present, out)?.also { parts ->
+                        // the shape too, unless this note's is known (iOS: `waveformSamples = decoded.waveform`)
+                        if (com.kachat.app.util.VoiceNoteInfoCache.info(infoKey) == null) {
+                            com.kachat.app.util.VoiceWaveform.ofWav(parts.file, ROOM_VOICE_SAMPLE_RATE)?.let { bars ->
+                                com.kachat.app.util.VoiceNoteInfoCache.store(infoKey, com.kachat.app.util.VoiceNoteInfoCache.Info(parts.durationMs, bars))
+                            }
+                        }
+                    }
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 out.delete()
@@ -2547,6 +2689,7 @@ private fun RoomVoiceNoteBubble(
                 player.file = decoded.file
                 player.playbackSignature = signature
                 player.durationMs = decoded.durationMs
+                com.kachat.app.util.VoiceNoteInfoCache.info(infoKey)?.let { player.waveform = it.waveform }
                 player.pendingSeekFraction?.let { fraction ->
                     media.seekTo((fraction * media.duration).toInt())
                     player.pendingSeekFraction = null
@@ -2561,45 +2704,43 @@ private fun RoomVoiceNoteBubble(
     }
 
     val foreground = if (isMine) LocalAppColors.current.onOutgoingBubble else LocalAppColors.current.textPrimary
+    val secondary = if (isMine) foreground.copy(alpha = 0.8f) else LocalAppColors.current.textSecondary
     Row(
         modifier = Modifier
             .widthIn(min = 180.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(roomBubbleColor(isMine))
             .combinedClickable(onClick = {}, onLongClick = onLongPress, onDoubleClick = onDoubleClick)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(30.dp)
+                .size(32.dp)
                 .clickable(enabled = !player.isLoading && parts != null, onClick = toggle),
         ) {
             if (player.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = foreground)
+                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = foreground)
             } else {
                 Icon(
                     if (player.isPlaying) Icons.Filled.PauseCircle else Icons.Filled.PlayCircle,
                     contentDescription = if (player.isPlaying) stringResource(R.string.kpui_pause) else stringResource(R.string.kpui_play),
                     tint = if (isMine) foreground else KaspaTeal,
-                    modifier = Modifier.size(30.dp),
+                    modifier = Modifier.size(32.dp),
                 )
             }
         }
-        Column(
-            modifier = Modifier.widthIn(min = 120.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            // One scrubber across every part: a tap or a drag seeks.
-            val trackColor = (if (isMine) foreground else LocalAppColors.current.textSecondary).copy(alpha = 0.3f)
-            val fillColor = if (isMine) foreground else KaspaTeal
-            Box(
-                contentAlignment = Alignment.CenterStart,
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            // As a 1:1 voice note draws it (iOS d089011f): the waveform, dragged to scrub across
+            // every part; a tap seeks too.
+            RoomVoiceWaveform(
+                samples = player.waveform,
+                progress = player.progress,
+                isMine = isMine,
                 modifier = Modifier
-                    .widthIn(min = 120.dp)
-                    .height(16.dp)
+                    .height(24.dp)
                     .pointerInput(Unit) {
                         awaitEachGesture {
                             val down = awaitFirstDown()
@@ -2615,37 +2756,71 @@ private fun RoomVoiceNoteBubble(
                             }
                         }
                     },
-            ) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(trackColor)
-                )
-                Box(
-                    Modifier
-                        .fillMaxWidth(player.progress.coerceIn(0f, 1f))
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(fillColor)
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            )
+            Text(
+                com.kachat.app.util.VoiceMessage.formatDuration((player.shownMs ?: player.durationMs ?: 0L).toInt()),
+                color = secondary,
+                fontSize = 12.sp,
+                style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum"),
+            )
+            if (!note.isComplete) {
                 Text(
-                    com.kachat.app.util.VoiceMessage.formatDuration((player.shownMs ?: player.durationMs ?: 0L).toInt()),
-                    color = foreground,
-                    fontSize = 12.sp,
-                    style = LocalTextStyle.current.copy(fontFeatureSettings = "tnum"),
+                    stringResource(R.string.pc_room_voice_receiving, note.parts.size, note.count),
+                    color = secondary,
+                    fontSize = 11.sp,
                 )
-                if (!note.isComplete) {
-                    Text(
-                        stringResource(R.string.pc_room_voice_receiving, note.parts.size, note.count),
-                        color = foreground,
-                        fontSize = 12.sp,
-                    )
-                }
             }
+        }
+    }
+}
+
+/** The room's sample rate for voice notes as [com.kachat.app.util.WebMOpusPartsDecoder] writes
+ *  them (24 kHz mono). */
+private const val ROOM_VOICE_SAMPLE_RATE = 24_000
+
+/** A voice note's length and waveform, its parts decoded once to a file that goes at once (iOS
+ *  d089011f `preload`). Null when nothing decodes. Heavy: off the main thread. */
+private fun roomVoiceNoteInfo(cacheDir: java.io.File, parts: List<ByteArray>): com.kachat.app.util.VoiceNoteInfoCache.Info? {
+    if (parts.isEmpty()) return null
+    val out = java.io.File(cacheDir, "voice_note_info_${System.nanoTime()}.wav")
+    return try {
+        val decoded = com.kachat.app.util.WebMOpusPartsDecoder.decodePartsToWav(parts, out) ?: return null
+        val bars = com.kachat.app.util.VoiceWaveform.ofWav(decoded.file, ROOM_VOICE_SAMPLE_RATE) ?: return null
+        com.kachat.app.util.VoiceNoteInfoCache.Info(decoded.durationMs, bars)
+    } catch (e: Exception) {
+        android.util.Log.w("RoomVoiceNoteBubble", "Could not read the voice note", e)
+        null
+    } finally {
+        out.delete()
+    }
+}
+
+/**
+ * The waveform 1:1 voice notes draw (iOS `WaveformView`): 3 dp bars 2 dp apart from the leading
+ * edge, each its sample's share of the height (4 dp at least), the played ones solid. A note
+ * whose shape isn't known yet draws 40 bars at 0.3.
+ */
+@Composable
+private fun RoomVoiceWaveform(samples: List<Float>, progress: Float, isMine: Boolean, modifier: Modifier = Modifier) {
+    val shown = samples.ifEmpty { List(com.kachat.app.util.VoiceWaveform.DEFAULT_BARS) { com.kachat.app.util.VoiceWaveform.PLACEHOLDER } }
+    val outgoing = LocalAppColors.current.onOutgoingBubble
+    val played = if (isMine) outgoing else KaspaTeal
+    val unplayed = if (isMine) outgoing.copy(alpha = 0.5f) else Color.Gray.copy(alpha = 0.4f)
+    val barWidth = 3.dp
+    val spacing = 2.dp
+    androidx.compose.foundation.Canvas(modifier.width(barWidth * shown.size + spacing * (shown.size - 1))) {
+        val bar = barWidth.toPx()
+        val gap = spacing.toPx()
+        val minHeight = 4.dp.toPx()
+        shown.forEachIndexed { index, amplitude ->
+            val height = maxOf(minHeight, amplitude * size.height)
+            val isPlayed = index.toFloat() / shown.size < progress
+            drawRoundRect(
+                color = if (isPlayed) played else unplayed,
+                topLeft = Offset(index * (bar + gap), (size.height - height) / 2),
+                size = androidx.compose.ui.geometry.Size(bar, height),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(bar / 2, bar / 2),
+            )
         }
     }
 }

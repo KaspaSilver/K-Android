@@ -309,6 +309,10 @@ class ColdStorageAddressDiscovery @Inject constructor(
         /** What this transaction paid the network, when the API resolved every input's amount.
          *  On a received transaction it is what the sender paid (iOS 9839906). */
         val feeSompi: Long? = null,
+        /** Everything that left went to the account's own addresses (a quantum source's change
+         *  to a fresh quantum address, a compound): "Moved", [amountSompi] what moved (iOS
+         *  961fc05a, audit 2026-11-25 L3). */
+        val moved: Boolean = false,
     )
 
     /**
@@ -336,7 +340,12 @@ class ColdStorageAddressDiscovery @Inject constructor(
      * whatever output pays change back to [address] itself, mirroring the same sent-vs-received
      * inference [com.kachat.app.repository.ChatRepository]'s payment sync already relies on.
      */
-    suspend fun getTransactionHistoryResult(address: String, limit: Int = HISTORY_PAGE_SIZE): HistoryResult {
+    suspend fun getTransactionHistoryResult(
+        address: String,
+        limit: Int = HISTORY_PAGE_SIZE,
+        /** The account's own addresses (lowercased), so change to another of them isn't Sent. */
+        ownAddresses: Set<String> = emptySet(),
+    ): HistoryResult {
         val api = networkService.kaspaRestApi.value ?: return HistoryResult(emptyList(), complete = false)
         var transactions: List<TransactionResponse>? = null
         for ((attempt, delay) in historyRetryDelaysMs.withIndex()) {
@@ -351,19 +360,55 @@ class ColdStorageAddressDiscovery @Inject constructor(
         val fetched = transactions
             ?: return HistoryResult(emptyList(), complete = false)
         // block rewards the chain never accepted paid nothing: not history
-        return HistoryResult(mapHistory(address, fetched.filter { it.belongsInHistory }), complete = true)
+        return HistoryResult(mapHistory(address, fetched.filter { it.belongsInHistory }, ownAddresses), complete = true)
     }
 
-    private fun mapHistory(address: String, transactions: List<TransactionResponse>): List<AddressTransaction> {
-        return transactions.map { tx ->
-            val sent = tx.inputs.any { it.previousOutpointAddress == address }
-            val amount = if (sent) {
-                tx.outputs.filter { it.scriptPublicKeyAddress != address }.sumOf { it.amount }
-            } else {
-                tx.outputs.filter { it.scriptPublicKeyAddress == address }.sumOf { it.amount }
+    private fun mapHistory(address: String, transactions: List<TransactionResponse>, ownAddresses: Set<String>): List<AddressTransaction> {
+        return transactions.map { tx -> HistoryRows.historyRow(address, tx, ownAddresses) }
+            .sortedByDescending { it.blockTimeMillis ?: 0L }
+    }
+
+    object HistoryRows {
+        /**
+         * One history row for [address] (iOS 961fc05a `ColdStorageAddressTransactionHistoryView
+         * .transactionRow`): what left the account, not every output to others. Change to another
+         * of the account's addresses ([ownAddresses], lowercased) is its own, and a swap also
+         * spends a pool's coins (`ownHistoryAmount`). All of it to the account's own addresses is
+         * Moved (audit 2026-11-25 L3).
+         */
+        fun historyRow(address: String, tx: TransactionResponse, ownAddresses: Set<String>): AddressTransaction {
+            val self = address.lowercase()
+            val sent = tx.inputs.any { it.previousOutpointAddress?.lowercase() == self }
+            if (!sent) {
+                val received = tx.outputs.filter { it.scriptPublicKeyAddress?.lowercase() == self }.sumOf { it.amount }
+                return AddressTransaction(tx.transactionId, false, received, tx.blockTime, tx.feeSompi)
             }
-            AddressTransaction(tx.transactionId, sent, amount, tx.blockTime, tx.feeSompi)
-        }.sortedByDescending { it.blockTimeMillis ?: 0L }
+            var toOthers = 0L
+            var ownChange = 0L
+            for (output in tx.outputs) {
+                val to = output.scriptPublicKeyAddress?.lowercase() ?: self
+                if (to == self) continue
+                if (to in ownAddresses) ownChange += output.amount else toOthers += output.amount
+            }
+            var outgoing = true
+            var amount = toOthers
+            com.kachat.app.ui.screens.OutgoingBreakdown.ownHistoryAmount(
+                thisAddress = self,
+                inputs = tx.inputs.map { (it.previousOutpointAddress ?: "") to it.previousOutpointAmount },
+                outputs = tx.outputs.map { (it.scriptPublicKeyAddress ?: "") to it.amount },
+                feeSompi = tx.feeSompi,
+                toOthers = toOthers,
+                ownChange = ownChange,
+                isOwnAddress = { it in ownAddresses },
+            )?.let { (isOutgoing, sompi) ->
+                outgoing = isOutgoing
+                amount = sompi
+            }
+            if (outgoing && toOthers == 0L && ownChange > 0L) {
+                return AddressTransaction(tx.transactionId, true, ownChange, tx.blockTime, tx.feeSompi, moved = true)
+            }
+            return AddressTransaction(tx.transactionId, outgoing, amount, tx.blockTime, tx.feeSompi)
+        }
     }
 
     /**

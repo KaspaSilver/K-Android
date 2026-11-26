@@ -168,11 +168,6 @@
     <string name="kpui_post_not_loaded">This post could not be loaded</string>
     <string name="kpui_post_not_loaded_body">It may have been removed, or the network may be unreachable.</string>
     <string name="kpui_replying_to_post_view">Replying to a post - view it</string>
-    <string name="kpui_thread_n_posts">Thread · %1$d posts</string>
-    <string name="kpui_conversation_n_posts">Conversation · %1$d posts</string>
-    <string name="kpui_comments_n">Comments (%1$d)</string>
-    <string name="kpui_no_comments_yet">No comments yet - be the first to reply.</string>
-    <string name="kpui_every_reply_above">Every reply is in the conversation above.</string>
     <string name="kpui_loading_replies">Loading replies...</string>
     <string name="kpui_chat">Chat</string>
     <string name="kpui_followers">Followers</string>

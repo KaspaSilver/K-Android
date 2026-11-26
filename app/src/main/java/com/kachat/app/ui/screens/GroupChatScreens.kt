@@ -236,6 +236,14 @@ object GroupMentionCodec {
         }
         return result
     }
+
+    /** Whether raw group [text] @mentions any of [members] (their `@address` token is in it; iOS
+     *  `GroupMessageBubbleRow.mentionedMembers` non-empty). Most messages have no "@kaspa" at all
+     *  and answer at once (iOS d089011f). */
+    fun mentionsAnyMember(text: String, members: List<GroupMember>): Boolean {
+        if (!text.contains("@kaspa")) return false
+        return members.any { text.contains("@${it.address}") }
+    }
 }
 
 /** More than this many "@" mention matches and the inline suggestion list scrolls instead of
@@ -272,7 +280,8 @@ fun GroupChatThreadScreen(
     // Each flow is remembered: built inline, a new instance on every recomposition restarted its
     // collection, re-reading and re-decrypting the whole group history for nothing.
     val groupMessagesFlow = remember(groupId) { chatViewModel.getGroupMessages(groupId) }
-    val allGroupMessages by groupMessagesFlow.collectAsState(initial = emptyList())
+    // The thread's queries stop with the app in the background (audit 2026-11-25 R6).
+    val allGroupMessages by groupMessagesFlow.collectAsStateWhileStarted(initial = emptyList())
     // Long voice notes' and multi-part photos' parts (iOS 7c5c22e3), keyed by (group, sender,
     // tag id): each shows as one row, its earliest part; the other parts are left out.
     val mediaPartGroups = remember(allGroupMessages) {
@@ -282,12 +291,12 @@ fun GroupChatThreadScreen(
         if (mediaPartGroups.hiddenTxIds.isEmpty()) allGroupMessages else allGroupMessages.filterNot { it.txId in mediaPartGroups.hiddenTxIds }
     }
     val groupReactionsFlow = remember(groupId) { chatViewModel.getGroupReactions(groupId) }
-    val groupReactions by groupReactionsFlow.collectAsState(initial = emptyList())
+    val groupReactions by groupReactionsFlow.collectAsStateWhileStarted(initial = emptyList())
     val groupReactionsByTxId = remember(groupReactions) { groupReactions.groupBy { it.targetTxId } }
     val groupReplyingTo by chatViewModel.groupReplyingTo.collectAsState()
     // The newest edit per message (see MessageEdit) - applied to the bubble as it is drawn.
     val groupEditsFlow = remember(groupId) { chatViewModel.getGroupEdits(groupId) }
-    val groupEdits by groupEditsFlow.collectAsState(initial = emptyList())
+    val groupEdits by groupEditsFlow.collectAsStateWhileStarted(initial = emptyList())
     val acceptedContacts by chatViewModel.acceptedContactAddresses.collectAsState()
     val groupEditsByTxId = remember(groupEdits) { groupEdits.associateBy { it.targetTxId } }
     val groupEditingMessage by chatViewModel.groupEditingMessage.collectAsState()
@@ -1695,11 +1704,17 @@ private fun GroupMessageBubble(
                     // The card is the WHOLE message wherever a KaChat link appears - see 1:1's
                     // identical rule. Copy keeps the full text.
                     val isEntirelyInternalLinkGroup = groupInternalLink != null
-                    val annotatedGroupBody = remember(displayContent, isSent, groupLinkColor, groupMembersForMentions, mentionDomains) {
+                    // Whether any member is @mentioned (their `@address` is in the raw text), as iOS
+                    // `mentionedMembers` decides: most messages have none, and skip the per-member
+                    // name lookups and searches below (iOS d089011f, 2026-11-25 smoothness sweep).
+                    val mentionsAnyMember = remember(replyContent, message.content, groupMembersForMentions) {
+                        GroupMentionCodec.mentionsAnyMember(replyContent?.text ?: message.content, groupMembersForMentions)
+                    }
+                    val annotatedGroupBody = remember(displayContent, isSent, groupLinkColor, groupMembersForMentions, mentionDomains, mentionsAnyMember) {
                         buildAnnotatedString {
                             append(displayContent)
                             // Clickable @mentions: link each member's @label run to their address (tap opens a 1:1).
-                            for (member in groupMembersForMentions) {
+                            if (mentionsAnyMember) for (member in groupMembersForMentions) {
                                 if (member.address == myAddress) continue
                                 val label = resolveMentionLabel(member.address)
                                 if (label.isBlank()) continue

@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">Añadir al hilo</string>
     <string name="kpui_post_not_loaded">No se pudo cargar esta publicación</string>
     <string name="kpui_post_not_loaded_body">Puede que se haya eliminado o que la red no esté disponible.</string>
-    <string name="kpui_no_comments_yet">Aún no hay comentarios: sé la primera persona en responder.</string>
-    <string name="kpui_every_reply_above">Todas las respuestas están en la conversación de arriba.</string>
     <string name="kpui_loading_replies">Cargando respuestas...</string>
     <string name="kpui_chat">Chat</string>
     <string name="kpui_followers">Seguidores</string>

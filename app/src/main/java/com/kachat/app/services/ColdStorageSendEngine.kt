@@ -27,7 +27,14 @@ import kotlin.math.ceil
 @Singleton
 class ColdStorageSendEngine @Inject constructor(
     private val networkService: NetworkService,
-    private val nodePoolManager: NodePoolManager
+    private val nodePoolManager: NodePoolManager,
+    /** The account's quantum addresses, for a quantum source's change (iOS 961fc05a). */
+    private val coldStorageManager: ColdStorageManager,
+    /** Fresh used / spent probes for a quantum change pick (audit 2026-11-25 Q3). Lazy: only a
+     *  quantum send asks. */
+    private val walletServiceLazy: dagger.Lazy<WalletService>,
+    /** Marks a quantum change address used once its send went out (Q3). */
+    private val walletManagerLazy: dagger.Lazy<WalletManager>,
 ) {
     // Same reasoning as KaspaWalletEngine.sendMutex — one build-then-broadcast sequence at a time.
     private val mutex = Mutex()
@@ -44,7 +51,21 @@ class ColdStorageSendEngine @Inject constructor(
         val feeSompi: Long,
         val changeSompi: Long,
         /** The address every input comes from - where [broadcastSigned] records them as spent. */
-        val fromAddress: String = ""
+        val fromAddress: String = "",
+        /** Spends from a KasSigner quantum-resistant (KCC-3) address: the request goes as KSPT
+         *  0x06 with a KCC-3 hint on every input and no redeem script, which the unit supplies
+         *  (iOS 961fc05a). */
+        val isQuantumSource: Boolean = false,
+        /** The unit's number for that address, sent as the hint; null lets the unit search. */
+        val quantumUnitIndex: Long? = null,
+        /** The KCC-3 chain of that number (0 receive, 1 change), sent with it in the hint. */
+        val quantumUnitChain: Int = 0,
+        /** Where the change went: a fresh quantum address of the account for a quantum source
+         *  (never the source), else the source. Null when there is no change. */
+        val changeAddress: String? = null,
+        /** A quantum source's spendable coins this transaction couldn't take (past
+         *  [KsptCodec.MAX_INPUTS]): they stay behind the key this spend reveals. */
+        val coinsLeftBehind: Int = 0,
     )
 
     /**
@@ -71,7 +92,13 @@ class ColdStorageSendEngine @Inject constructor(
         /** [manualUtxos] are [previewAutomaticSelection]'s, not the person's coin-control pick
          *  (iOS `previewed`): chosen again, leading with a "Not confirmed" send's coin, when the
          *  preview doesn't spend it (iOS 3d126db). */
-        previewed: Boolean = false
+        previewed: Boolean = false,
+        /** Where the change goes, when not back to [fromAddress]: a quantum source's fresh
+         *  quantum address ([freshQuantumChangeAddress]). */
+        changeAddress: String? = null,
+        /** A quantum source's number and chain on the unit, for the request's KCC-3 hint. */
+        quantumUnitIndex: Long? = null,
+        quantumUnitChain: Int = ColdStorageManager.ColdQuantumAddress.CHAIN_RECEIVE,
     ): Result<UnsignedColdTx> = mutex.withLock {
         try {
             require(amountSompi > 0) { "Amount must be greater than zero" }
@@ -93,7 +120,9 @@ class ColdStorageSendEngine @Inject constructor(
                 ?: fetchQuotedFeeRateSompiPerGram()
 
             val recipientScriptHex = KaspaAddress.getScriptPublicKey(toAddress)
-            val changeScriptHex = KaspaAddress.getScriptPublicKey(fromAddress)
+            val changeScriptHex = KaspaAddress.getScriptPublicKey(changeAddress ?: fromAddress)
+            val isQuantumSource = ColdStorageManager.isScriptHashAddress(fromAddress)
+            val sigScriptSize = signatureScriptSize(fromAddress)
 
             // After a "Not confirmed" send from this address, an automatic selection leads with
             // one of its coins, so at most one of the two can land (iOS 3d126db
@@ -104,7 +133,24 @@ class ColdStorageSendEngine @Inject constructor(
             // was shown) is chosen again here, leading with it.
             val previewMissesLead = previewed && leadingOutpoint != null &&
                 manualUtxos.orEmpty().none { KaspaWalletEngine.outpointKey(it.outpoint).lowercase() == leadingOutpoint.lowercase() }
-            val selection = if (!manualUtxos.isNullOrEmpty() && !previewMissesLead) {
+            var coinsLeftBehind = 0
+            val selection = if (isQuantumSource) {
+                // A quantum source spends every coin it can: this spend puts its key on chain, and
+                // any coin left at the address would sit behind that key. Coin control has no say;
+                // only past one transaction's input cap do coins stay, and the review says so
+                // (audit 2026-11-25 Q6).
+                val all = quantumSourceCoins(utxos, leadingOutpoint)
+                coinsLeftBehind = utxos.size - all.size
+                ColdUtxoSelector.selectManual(
+                    utxos = all,
+                    amountSompi = amountSompi,
+                    feeRateSompiPerGram = feeRateSompiPerGram,
+                    recipientScriptLen = recipientScriptHex.length / 2,
+                    changeScriptLen = changeScriptHex.length / 2,
+                    extraFeeSompi = extraFeeSompi,
+                    signatureScriptSize = sigScriptSize
+                )
+            } else if (!manualUtxos.isNullOrEmpty() && !previewMissesLead) {
                 val freshByOutpoint = utxos.associateBy { it.outpoint }
                 val picked = manualUtxos.distinctBy { it.outpoint }
                 val resolved = picked.mapNotNull { freshByOutpoint[it.outpoint] }
@@ -120,7 +166,8 @@ class ColdStorageSendEngine @Inject constructor(
                     feeRateSompiPerGram = feeRateSompiPerGram,
                     recipientScriptLen = recipientScriptHex.length / 2,
                     changeScriptLen = changeScriptHex.length / 2,
-                    extraFeeSompi = extraFeeSompi
+                    extraFeeSompi = extraFeeSompi,
+                    signatureScriptSize = sigScriptSize
                 )
             } else {
                 ColdUtxoSelector.select(
@@ -130,7 +177,8 @@ class ColdStorageSendEngine @Inject constructor(
                     recipientScriptLen = recipientScriptHex.length / 2,
                     changeScriptLen = changeScriptHex.length / 2,
                     extraFeeSompi = extraFeeSompi,
-                    leadingOutpoint = leadingOutpoint
+                    leadingOutpoint = leadingOutpoint,
+                    signatureScriptSize = sigScriptSize
                 )
             }
             if (selection.totalSelected < selection.requiredAmount) {
@@ -147,7 +195,10 @@ class ColdStorageSendEngine @Inject constructor(
                 )
             }
 
-            val built = coldOutputs(selection, recipientScriptHex, changeScriptHex)
+            // Never change back onto the key this spend reveals (IOS-104, as the hot wallet).
+            val changeToSource = isQuantumSource &&
+                (changeAddress ?: fromAddress).trim().lowercase() == fromAddress.trim().lowercase()
+            val built = coldOutputs(selection, recipientScriptHex, changeScriptHex, refuseChange = changeToSource)
             val outputs = built.outputs
 
             val rawTx = RawTransaction(
@@ -161,7 +212,12 @@ class ColdStorageSendEngine @Inject constructor(
                     inputUtxos = selection.selectedUtxos,
                     feeSompi = built.paidFeeSompi,
                     changeSompi = built.changeSompi,
-                    fromAddress = fromAddress
+                    fromAddress = fromAddress,
+                    isQuantumSource = isQuantumSource,
+                    quantumUnitIndex = quantumUnitIndex,
+                    quantumUnitChain = quantumUnitChain,
+                    changeAddress = if (built.changeSompi > 0) (changeAddress ?: fromAddress) else null,
+                    coinsLeftBehind = coinsLeftBehind,
                 )
             )
         } catch (e: Exception) {
@@ -199,7 +255,11 @@ class ColdStorageSendEngine @Inject constructor(
         val fetched = spendableCoins(fromAddress, api)
         if (fetched.isEmpty()) return 0L
 
-        val utxos = if (!manualUtxos.isNullOrEmpty()) {
+        val utxos = if (ColdStorageManager.isScriptHashAddress(fromAddress)) {
+            // A quantum source's build ignores coin control and spends exactly these, so Max
+            // prices exactly these (audit 2026-11-25 T1).
+            quantumSourceCoins(fetched, conflictingOutpoint(fetched))
+        } else if (!manualUtxos.isNullOrEmpty()) {
             val freshByOutpoint = fetched.associateBy { it.outpoint }
             manualUtxos.mapNotNull { freshByOutpoint[it.outpoint] }
         } else {
@@ -221,6 +281,7 @@ class ColdStorageSendEngine @Inject constructor(
         return ColdSendFeeModel.maxAfterFees(
             totalBalance, utxos.size, feeRateSompiPerGram, feeMultiplier, customExtraFeeSompi,
             recipientScriptLen = scriptLength(toAddress), changeScriptLen = scriptLength(fromAddress),
+            signatureScriptSize = signatureScriptSize(fromAddress),
         )
     }
 
@@ -256,8 +317,11 @@ class ColdStorageSendEngine @Inject constructor(
         } catch (e: Exception) {
             return null
         }
+        // A quantum source spends all its coins (see the build), so that is what's priced.
+        val quantum = ColdStorageManager.isScriptHashAddress(fromAddress)
+        val lead = conflictingOutpoint(utxos)
         return ColdSendFeeModel.previewAutomaticSelection(
-            utxos = utxos,
+            utxos = if (quantum) quantumSourceCoins(utxos, lead) else utxos,
             amountSompi = amountSompi,
             feeRateSompiPerGram = feeRateSompiPerGram,
             feeMultiplier = feeMultiplier,
@@ -265,7 +329,9 @@ class ColdStorageSendEngine @Inject constructor(
             recipientScriptLen = scriptLength(toAddress),
             changeScriptLen = scriptLength(fromAddress),
             // the same lead the build takes, so the review shows the coins it will spend (iOS 3d126db)
-            leadingOutpoint = conflictingOutpoint(utxos)
+            leadingOutpoint = lead,
+            signatureScriptSize = signatureScriptSize(fromAddress),
+            spendAll = quantum,
         )
     }
 
@@ -287,6 +353,73 @@ class ColdStorageSendEngine @Inject constructor(
         address?.trim()?.takeIf { it.isNotEmpty() }
             ?.let { runCatching { KaspaAddress.getScriptPublicKey(it).length / 2 }.getOrNull() }
             ?: SendFeeModel.STANDARD_SCRIPT_LEN
+
+
+    /** Change addresses handed to a request built this session and not released: a second send
+     *  built before the first one's change shows on chain must not pick the same address. */
+    private val reservedQuantumChange: MutableSet<String> = java.util.Collections.synchronizedSet(HashSet())
+
+    /**
+     * Where a send from a quantum address puts its change (and where Compound moves a quantum
+     * address's coins): another quantum address of the same account that holds nothing, has never
+     * been used and has never spent, as the hot wallet sends a quantum source's change to a fresh
+     * slot - the spend makes the source's key public (iOS 961fc05a, audit 2026-11-25 Q2/Q3).
+     * Change-chain #0-4 first, the ones KasSigner itself marks as CHANGE when it shows the
+     * outputs; then other change-chain addresses; receive addresses last. Used-ness is probed
+     * fresh (the session's "unused" cache can be stale), and the pick is reserved until
+     * [releaseQuantumChange], or for good once the send goes out ([noteQuantumChangeSent]). Null
+     * when there is none or [fromAddress] isn't a quantum address.
+     */
+    suspend fun freshQuantumChangeAddress(fromAddress: String): String? {
+        val (account, _) = coldStorageManager.quantumAddressRecord(fromAddress) ?: return null
+        val source = fromAddress.trim().lowercase()
+        val ranked = coldStorageManager.currentQuantumAddresses(account.id)
+            .withIndex()
+            .filter { it.value.address != source && it.value.address !in reservedQuantumChange }
+            .sortedWith(compareBy({ changeRank(it.value) }, { it.index }))
+            .map { it.value.address }
+        if (ranked.isEmpty()) return null
+        val funded = try {
+            nodePoolManager.getUtxosByAddressesFromNode(ranked).map { it.address.lowercase() }.toSet()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            return null
+        }
+        val walletService = walletServiceLazy.get()
+        for (candidate in ranked) {
+            if (candidate in funded) continue
+            // never used: no transaction in its history, read now; a read that failed counts as
+            // used. A spend would have shown as use, but a revealed key is never change.
+            if (walletService.spendingAddressUsedState(candidate, skipSessionCache = true) != false) continue
+            if (walletService.quantumAddressSpentState(candidate) == true) continue
+            // another build may have taken it while this one was reading
+            if (!reservedQuantumChange.add(candidate)) continue
+            return candidate
+        }
+        return null
+    }
+
+    /** Hands back a change address [freshQuantumChangeAddress] reserved, for a request that was
+     *  rebuilt, failed or abandoned before it went out. */
+    fun releaseQuantumChange(address: String?) {
+        address ?: return
+        reservedQuantumChange.remove(address.trim().lowercase())
+    }
+
+    /** The send went out: its change address is used from now on, whatever the history API says
+     *  until it indexes the transaction. */
+    fun noteQuantumChangeSent(address: String?) {
+        address ?: return
+        walletManagerLazy.get().markAddressUsed(address.trim().lowercase())
+    }
+
+    /** 0: change chain #0-4 (the unit marks them CHANGE), 1: other change-chain, 2: the rest. */
+    private fun changeRank(entry: ColdStorageManager.ColdQuantumAddress): Int = when {
+        entry.unitMarksAsChange -> 0
+        entry.chain == ColdStorageManager.ColdQuantumAddress.CHAIN_CHANGE -> 1
+        else -> 2
+    }
 
     /** Raw UTXOs at [fromAddress] for the coin-control picker — unlike
      *  [com.kachat.app.services.ColdStorageAddressDiscovery.getUtxos] (a simplified display
@@ -380,9 +513,15 @@ class ColdStorageSendEngine @Inject constructor(
      * left.
      */
     suspend fun compoundInputs(fromAddress: String): CompoundInputs {
-        val sorted = fetchUtxos(fromAddress).sortedByDescending { it.utxoEntry.amount }
-        val capped = sorted.take(KsptCodec.MAX_INPUTS)
-        return CompoundInputs(capped, sorted.size > KsptCodec.MAX_INPUTS)
+        val spendable = fetchUtxos(fromAddress)
+        // A quantum source's build spends quantumSourceCoins (a "Not confirmed" send's coin
+        // leading), so the compound is priced on that same set (audit 2026-11-25 T1).
+        val capped = if (ColdStorageManager.isScriptHashAddress(fromAddress)) {
+            quantumSourceCoins(spendable, conflictingOutpoint(spendable))
+        } else {
+            spendable.sortedByDescending { it.utxoEntry.amount }.take(KsptCodec.MAX_INPUTS)
+        }
+        return CompoundInputs(capped, spendable.size > KsptCodec.MAX_INPUTS)
     }
 
     /** Live quoted fee rate (sompi per mass-gram) — whichever is higher, the network's current
@@ -403,6 +542,42 @@ class ColdStorageSendEngine @Inject constructor(
 
     /** KSPT-encodes [tx] for display as an (animated) QR sequence — see [com.kachat.app.util.QrFrameChunker]. */
     fun toKspt(tx: UnsignedColdTx): ByteArray {
+        val inputs = tx.rawTx.inputs.mapIndexed { index, input ->
+            val utxo = tx.inputUtxos[index]
+            KsptCodec.UnsignedInput(
+                prevTxId = input.previousOutpoint.transactionId,
+                prevIndex = input.previousOutpoint.index,
+                amountSompi = utxo.utxoEntry.amount,
+                sequence = input.sequence,
+                sigOpCount = input.sigOpCount,
+                spkVersion = 0,
+                spkScriptHex = utxo.utxoEntry.scriptPublicKey.scriptPublicKey
+            )
+        }
+        val outputs = tx.rawTx.outputs.map { output ->
+            KsptCodec.UnsignedOutput(
+                valueSompi = output.amount,
+                spkVersion = output.scriptPublicKey.version,
+                spkScriptHex = output.scriptPublicKey.scriptPublicKey
+            )
+        }
+        // A quantum (KCC-3) source goes as KSPT 0x06 - only KasSigner v1.1 and later read it - with
+        // a KCC-3 hint per input when the address's number is known and no redeem script: the
+        // unit supplies `<P> OP_CHECKSIG` when it signs. Everything else stays 0x01, which every
+        // KasSigner reads (iOS 961fc05a).
+        if (tx.isQuantumSource) {
+            val hint = tx.quantumUnitIndex?.let { KsptCodec.InputHint.Kcc3(chain = tx.quantumUnitChain.toLong(), addrIndex = it) }
+            return KsptCodec.encodeUnsignedV6(
+                txVersion = tx.rawTx.version,
+                lockTime = tx.rawTx.lockTime,
+                subnetworkIdHex = tx.rawTx.subnetworkId,
+                gas = tx.rawTx.gas,
+                payloadHex = tx.rawTx.payload,
+                inputs = inputs,
+                inputHints = List(inputs.size) { hint },
+                outputs = outputs
+            )
+        }
         return KsptCodec.encodeUnsigned(
             txVersion = tx.rawTx.version,
             lockTime = tx.rawTx.lockTime,
@@ -441,6 +616,10 @@ class ColdStorageSendEngine @Inject constructor(
     suspend fun broadcastSigned(unsignedTx: UnsignedColdTx, decoded: KsptCodec.Decoded): Result<String> {
         return try {
             require(decoded.signed) { "Scanned transaction is not signed" }
+            // Nothing this app builds binds a covenant: a reply that does is not what was signed for.
+            if (decoded.records.any { it is KsptCodec.Record.Covenant || it is KsptCodec.Record.CoinCovenant }) {
+                throw IllegalStateException(tr(R.string.coldq_error_unexpected_covenant))
+            }
             require(decoded.inputs.size == unsignedTx.rawTx.inputs.size) { "Signed transaction has a different number of inputs" }
             require(decoded.outputs.size == unsignedTx.rawTx.outputs.size) { "Signed transaction has a different number of outputs" }
 
@@ -471,7 +650,26 @@ class ColdStorageSendEngine @Inject constructor(
                 sigScript[0] = 0x41
                 sigBytes.copyInto(sigScript, 1)
                 sigScript[65] = sighashType.toByte()
-                input.copy(signatureScript = sigScript.toHexStringLocal())
+                val redeemHex = decodedInput.redeemScriptHex
+                val fullScript = if (unsignedTx.isQuantumSource) {
+                    // A quantum (KCC-3) input: then the redeem the unit supplied, `<P> OP_CHECKSIG`,
+                    // pushed. It must be exactly the script this input's address is the hash of -
+                    // checked here, since a wrong one would only fail at the node, and the codec
+                    // doesn't hash (iOS 961fc05a).
+                    val redeem = redeemHex?.hexToBytesLocal()
+                    val lock = unsignedTx.inputUtxos[index].utxoEntry.scriptPublicKey.scriptPublicKey.lowercase()
+                    if (redeem == null || !KsptCodec.isKcc3Redeem(redeem) ||
+                        com.kachat.app.services.kachatnames.KachatNames.Codec.p2shScript(redeem).toHexStringLocal() != lock
+                    ) {
+                        throw IllegalStateException(tr(R.string.coldq_error_script_mismatch) + " (#$index)")
+                    }
+                    sigScript + byteArrayOf(redeem.size.toByte()) + redeem
+                } else {
+                    // a plain single-key input never carries one
+                    require(redeemHex == null) { "Signed transaction's input $index doesn't match what was sent for signing" }
+                    sigScript
+                }
+                input.copy(signatureScript = fullScript.toHexStringLocal())
             }
 
             val signedTx = unsignedTx.rawTx.copy(inputs = signedInputs)
@@ -512,8 +710,28 @@ class ColdStorageSendEngine @Inject constructor(
     )
 
     internal companion object {
+        /** The coins a quantum source's transaction takes: all of them up to the input cap, the
+         *  largest first, a coin a "Not confirmed" send spent leading (as the automatic selector).
+         *  The build, Max and Compound all price and spend exactly this set (audit 2026-11-25 T1). */
+        fun quantumSourceCoins(spendable: List<UtxoEntry>, leadingOutpoint: String?): List<UtxoEntry> {
+            val sorted = spendable.sortedByDescending { it.utxoEntry.amount }.toMutableList()
+            val lead = leadingOutpoint?.lowercase()
+            if (lead != null) {
+                val index = sorted.indexOfFirst { KaspaWalletEngine.outpointKey(it.outpoint).lowercase() == lead }
+                if (index > 0) sorted.add(0, sorted.removeAt(index))
+            }
+            return sorted.take(KsptCodec.MAX_INPUTS)
+        }
+
         /** SIGHASH_ALL - the only signature type a Cold Storage send broadcasts. */
         const val SIGHASH_ALL = 0x01
+
+        /** The signature script one input from [address] will carry, for pricing: a KCC-3
+         *  (quantum) input's is the 66-byte signature then the 34-byte redeem pushed, 101 bytes
+         *  (iOS 961fc05a `signatureScriptLength(spending:)`). */
+        fun signatureScriptSize(address: String?): Int =
+            if (ColdStorageManager.isScriptHashAddress(address)) KaspaMass.KIP22_SIGNATURE_SCRIPT_LEN
+            else KaspaMass.SCHNORR_SIGNATURE_SCRIPT_LEN
 
         /**
          * A server's quoted rate, floored at the network minimum. One server answering NaN, infinity
@@ -553,7 +771,10 @@ class ColdStorageSendEngine @Inject constructor(
         fun coldOutputs(
             selection: ColdUtxoSelector.ColdSelection,
             recipientScriptHex: String,
-            changeScriptHex: String
+            changeScriptHex: String,
+            /** The change would go back to a quantum source whose key this spend reveals: refused
+             *  when there is change to keep (iOS 961fc05a, IOS-104). */
+            refuseChange: Boolean = false,
         ): ColdOutputs {
             val outputs = mutableListOf(
                 RawOutputWithVersion(amount = selection.finalAmount, scriptPublicKey = ScriptPublicKeyWithVersion(recipientScriptHex, 0))
@@ -567,6 +788,9 @@ class ColdStorageSendEngine @Inject constructor(
             // A selection priced without a change output never gets one (its fee wouldn't cover it).
             val keepsChange = selection.changeAmount > 0 && selection.changeOutputPriced &&
                 KaspaMass.fitsStorageMass(inputAmounts, listOf(selection.finalAmount, selection.changeAmount))
+            if (keepsChange && refuseChange) {
+                throw IllegalStateException(tr(R.string.coldq_error_change_needs_fresh))
+            }
             if (keepsChange) {
                 outputs.add(
                     RawOutputWithVersion(amount = selection.changeAmount, scriptPublicKey = ScriptPublicKeyWithVersion(changeScriptHex, 0))

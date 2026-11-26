@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer (iOS 961fc05a): only the keys the iPhone translates; the rest are English there too. -->
+<resources>
+    <string name="ex_kind_payment">Ödeme</string>
+    <string name="ex_kind_handshake">İletişim isteği</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_username">Kullanıcı adı</string>
+    <string name="ex_kind_swap">Takas</string>
+    <string name="ex_kind_other">İşlem</string>
+    <string name="ex_kind_payments">Ödemeler</string>
+    <string name="ex_kind_chesses">Satranç Hamleleri</string>
+    <string name="ex_kind_others">Islemler</string>
+    <string name="ex_period_day">24 Saat</string>
+    <string name="ex_period_week">7 Gün</string>
+    <string name="ex_period_all">Tüm Zamanlar</string>
+    <string name="ex_one_day">1 gün</string>
+    <string name="ex_n_days">%1$d gün</string>
+    <string name="ex_share">Paylaş</string>
+    <string name="ex_your_chatting_address">Sohbet Adresiniz</string>
+    <string name="ex_no_transactions">Henuz islem yok.</string>
+</resources>

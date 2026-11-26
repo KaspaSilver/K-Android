@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">24 小时变化暂不可用</string>
     <string name="kp_about_amount">约 %1$s</string>
-    <string name="kp_about_hashrate_e7fb8">关于算力</string>
     <string name="kp_add_61cc5">添加</string>
     <string name="kp_add_kaspa_address_5dd6b">添加 Kaspa 地址</string>
     <string name="kp_add_to_portfolio_9eb23">添加到投资组合</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">已将 1 笔交易导入 %1$s</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">KAS 价格</string>
-    <string name="kp_kaspa_network_fceee">Kaspa 网络</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSigner 会显示正在签名的内容。请核对一致后签名，然后扫描它显示的已签名交易。</string>
     <string name="kp_kept_in_the_position">保留在仓位中</string>
     <string name="kp_kept_in_your_token">保留在你的代币中</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">每天</string>
     <string name="kp_mining_per_month">每月</string>
     <string name="kp_mining_per_week">每周</string>
-    <string name="kp_network_hashrate_c3cc8">网络算力</string>
     <string name="kp_new_portfolio_5c1c7">新建投资组合</string>
-    <string name="kp_next_block_reward">下一次区块奖励</string>
-    <string name="kp_next_block_reward_reduction">下一次区块奖励减少</string>
     <string name="kp_no_addresses_discovered_yet_15738">尚未发现任何地址。</string>
     <string name="kp_no_used_addresses_yet">暂无已使用的地址</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">历史记录还不够 - 活跃几天后再来查看。</string>
@@ -235,7 +230,6 @@
     <string name="pf_add_transaction_sub">手动记录一笔买入或卖出。</string>
     <string name="pf_export_csv_sub">将此投资组合的交易写入一个文件。</string>
     <string name="pf_import_csv_sub">从文件中读取交易。</string>
-    <string name="pnc_export_sub">将 CSV 保存到你 Nextcloud 中的 KaChat 文件夹。</string>
     <string name="pnc_import_sub">从你的 Nextcloud 选择一个 CSV 文件。</string>
     <string name="portfolio">投资组合</string>
     <string name="portfolio_add_chatting_address">添加聊天地址</string>

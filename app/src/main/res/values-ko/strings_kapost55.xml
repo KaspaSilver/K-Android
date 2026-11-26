@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPost and Kaspa Hub card links (iOS 961fc05a, 2026-11-25). -->
+<resources>
+    <string name="kp55_link_copied">링크를 복사했습니다</string>
+    <string name="kp55_hub_link_subtitle">이 카드를 K에서 여는 링크입니다.</string>
+    <string name="kp55_open">열기</string>
+    <string name="kp55_opens_this_card">이 카드를 엽니다.</string>
+    <string name="kp55_kaspa_hub_card">Kaspa Hub: %1$s</string>
+    <string name="kp55_tap_to_open_in_k">탭하여 K에서 엽니다.</string>
+    <string name="kp55_opens_it_in_k">K에서 엽니다.</string>
+    <string name="kp55_hub_blurb_contacts">저장한 Kaspa 주소.</string>
+    <string name="kp55_hub_blurb_portfolio">코인과 그 가치를 추적하세요.</string>
+    <string name="kp55_hub_blurb_cold_storage">콜드 월렛을 지켜보고 서명하세요.</string>
+    <string name="kp55_hub_blurb_usernames">.kachat 사용자 이름을 받고, 사고, 파세요.</string>
+    <string name="kp55_hub_blurb_kapost">Kaspa의 게시물과 답글.</string>
+    <string name="kp55_hub_blurb_kaplay">체스, 스네이크, 2048. 점수는 체인에 기록.</string>
+    <string name="kp55_hub_blurb_websites">Kaspa로 만든 웹사이트.</string>
+    <string name="kp55_hub_blurb_explorer">블록, 거래, 주소를 실시간으로.</string>
+    <!-- Profile's bell: a room or group @mention of you (iOS d089011f). -->
+    <string name="kp55_mentioned_you_in">%1$s님이 %2$s에서 회원님을 언급했습니다</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channel names (audit 2026-11-25 P5) -->
+    <string name="notification_channel_no_vibration">Messages - sans vibration</string>
+    <string name="notification_channel_vibrate_only">Messages - vibreur seul</string>
+    <string name="notification_channel_silent">Messages - silencieux</string>
+</resources>

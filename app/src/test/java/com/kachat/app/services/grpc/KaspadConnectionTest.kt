@@ -184,4 +184,72 @@ class KaspadConnectionTest {
         assertFalse(conn.hasMempoolEntry("aa".repeat(32), timeoutMs = 200))
         conn.close()
     }
+
+    /** A server that answers every request but the NOTIFY_STARTs [startsUnanswered] says to leave,
+     *  and records each block-added command it got. */
+    private fun startNotifyServer(commands: MutableList<protowire.Rpc.RpcNotifyCommand>, startsUnanswered: (Int) -> Boolean) {
+        var starts = 0
+        startServer(object : RPCGrpcKt.RPCCoroutineImplBase() {
+            override fun messageStream(requests: Flow<Messages.KaspadRequest>): Flow<Messages.KaspadResponse> = flow {
+                requests.collect { req ->
+                    if (req.hasNotifyBlockAddedRequest()) {
+                        val command = req.notifyBlockAddedRequest.command
+                        synchronized(commands) { commands += command }
+                        if (command == protowire.Rpc.RpcNotifyCommand.NOTIFY_START && startsUnanswered(starts++)) return@collect
+                        emit(kaspadResponse { id = req.id; notifyBlockAddedResponse = protowire.notifyBlockAddedResponseMessage {} })
+                    }
+                }
+            }
+        })
+    }
+
+    @Test
+    fun `a subscribe that times out takes its owner off and stops the node (audit 2026-11-25 N5)`() = runBlocking {
+        val commands = mutableListOf<protowire.Rpc.RpcNotifyCommand>()
+        startNotifyServer(commands) { true }
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val conn = newConnection(scope)
+        conn.connect()
+
+        try {
+            conn.subscribeToBlockAdded("rooms", timeoutMs = 200)
+            fail("Expected a timeout")
+        } catch (e: TimeoutCancellationException) {
+            // expected
+        }
+
+        assertFalse(conn.hasBlockSubscribers)
+        assertEquals(
+            listOf(protowire.Rpc.RpcNotifyCommand.NOTIFY_START, protowire.Rpc.RpcNotifyCommand.NOTIFY_STOP),
+            synchronized(commands) { commands.toList() },
+        )
+        // The caller's own stop afterwards sends nothing more.
+        conn.unsubscribeFromBlockAdded("rooms")
+        assertEquals(2, synchronized(commands) { commands.size })
+        conn.close()
+    }
+
+    @Test
+    fun `a failed subscribe beside a live one sends no stop`() = runBlocking {
+        val commands = mutableListOf<protowire.Rpc.RpcNotifyCommand>()
+        startNotifyServer(commands) { it == 1 }
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val conn = newConnection(scope)
+        conn.connect()
+
+        conn.subscribeToBlockAdded("groups", timeoutMs = 2_000)
+        try {
+            conn.subscribeToBlockAdded("rooms", timeoutMs = 200)
+            fail("Expected a timeout")
+        } catch (e: TimeoutCancellationException) {
+            // expected
+        }
+
+        assertTrue(conn.hasBlockSubscribers)
+        assertEquals(
+            listOf(protowire.Rpc.RpcNotifyCommand.NOTIFY_START, protowire.Rpc.RpcNotifyCommand.NOTIFY_START),
+            synchronized(commands) { commands.toList() },
+        )
+        conn.close()
+    }
 }

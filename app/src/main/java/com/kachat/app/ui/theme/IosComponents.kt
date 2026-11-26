@@ -187,18 +187,24 @@ fun IosActivityIndicator(
     @Suppress("UNUSED_PARAMETER") strokeWidth: androidx.compose.ui.unit.Dp = 0.dp,
     @Suppress("UNUSED_PARAMETER") trackColor: Color = Color.Unspecified,
 ) {
-    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "iosSpinner")
-    val step by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 8f,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            androidx.compose.animation.core.tween(durationMillis = 800, easing = androidx.compose.animation.core.LinearEasing)
-        ),
-        label = "iosSpinnerStep",
-    )
+    // One spoke per 100 ms, the only rate the picture changes at: a 10 Hz step instead of an
+    // infinite transition that asked for every frame (60-120 Hz). Each step waits for a frame, so
+    // it stops with the frame clock in the background, and it doesn't run at all inside a hidden
+    // Kaspa Hub section, whose frame clock keeps going (audit 2026-11-25 R4). The step is read
+    // only in the Canvas, so it redraws, never recomposes.
+    val leadSpoke = remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val hidden = com.kachat.app.ui.screens.LocalHubSectionHidden.current
+    androidx.compose.runtime.LaunchedEffect(hidden) {
+        if (hidden) return@LaunchedEffect
+        while (true) {
+            kotlinx.coroutines.delay(SPINNER_STEP_MS)
+            androidx.compose.runtime.withFrameNanos { }
+            leadSpoke.intValue = (leadSpoke.intValue + 1) % 8
+        }
+    }
     androidx.compose.foundation.Canvas(modifier.then(Modifier.size(24.dp))) {
         val spokes = 8
-        val lead = step.toInt() % spokes
+        val lead = leadSpoke.intValue % spokes
         val radius = size.minDimension / 2f
         val spokeWidth = radius * 0.24f
         for (i in 0 until spokes) {
@@ -217,6 +223,9 @@ fun IosActivityIndicator(
         }
     }
 }
+
+/** How long [IosActivityIndicator] shows each lead spoke: eight per 800 ms turn. */
+internal const val SPINNER_STEP_MS = 100L
 
 /** iOS's bare TextField in a Form row: no inset of its own, so it starts where its row does. */
 @Composable

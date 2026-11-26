@@ -160,7 +160,6 @@
     <string name="valid_address">मान्य पता</string>
     <string name="waiting_on_opponent">प्रतिद्वंद्वी की प्रतीक्षा है</string>
     <string name="the_recipient_wont_see_your_messages">जब तक प्राप्तकर्ता आपको संदेश नहीं भेजता या आप उसे संचार अनुरोध नहीं भेजते, उसे आपके संदेश नहीं दिखेंगे। संचार अनुरोध की लागत 0.2 KAS है, जो उसके स्वीकार करने पर आपको वापस मिल जाती है। संचार अनुरोध भेजने पर आपकी गोपनीयता कम होती है।</string>
-    <string name="host_port_or_grpcs_host">host:port या grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">अपनी भाषा चुनें</string>
     <string name="select_the_language_youd_like_to">वह भाषा चुनें जिसे आप K में उपयोग करना चाहते हैं।</string>
     <string name="best">सर्वश्रेष्ठ</string>
-    <string name="enter_as_host_port_or_grpcs_host">host:port या grpcs://host के रूप में दर्ज करें</string>
     <string name="receive_kaspa">Kaspa प्राप्त करें</string>
     <string name="currency">मुद्रा</string>
     <string name="choose_your_currency">अपनी मुद्रा चुनें</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">संपर्क एक्सपोर्ट फ़ाइल से संपर्क जोड़ें।</string>
     <string name="ab_export_file_sub">अपने संपर्क उनकी फ़ोटो के साथ एक फ़ाइल में सहेजें।</string>
     <string name="ab_nc_import_sub">अपने Nextcloud से एक संपर्क एक्सपोर्ट चुनें।</string>
-    <string name="ab_nc_export_sub">इसे अपने Nextcloud के KaChat फ़ोल्डर में सहेजें, ताकि किसी भी डिवाइस पर इंपोर्ट कर सकें।</string>
     <string name="ab_nc_connect_hint">सेटिंग्स &gt; स्टोरेज में Nextcloud जोड़ें, ताकि वहाँ भी सहेजकर दूसरे डिवाइस पर इंपोर्ट कर सकें।</string>
     <string name="ab_couldnt_read_file">वह फ़ाइल पढ़ी नहीं जा सकी।</string>
     <string name="ab_nothing_to_export">अभी एक्सपोर्ट करने को कुछ नहीं है। पहले एक संपर्क जोड़ें।</string>

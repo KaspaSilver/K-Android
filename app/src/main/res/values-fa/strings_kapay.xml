@@ -26,7 +26,6 @@
     <string name="kas_2">KAS</string>
     <string name="kp_24h_change_not_available_yet_d9a7b">تغییر ۲۴ ساعته هنوز در دسترس نیست</string>
     <string name="kp_about_amount">حدود %1$s</string>
-    <string name="kp_about_hashrate_e7fb8">درباره نرخ هش</string>
     <string name="kp_add_61cc5">افزودن</string>
     <string name="kp_add_kaspa_address_5dd6b">افزودن آدرس Kaspa</string>
     <string name="kp_add_to_portfolio_9eb23">افزودن به سبد دارایی</string>
@@ -99,7 +98,6 @@
     <string name="kp_imported_one_transaction_into">۱ تراکنش به %1$s وارد شد</string>
     <string name="kp_kas_b358b">KAS</string>
     <string name="kp_kas_price_bb9bb">قیمت KAS</string>
-    <string name="kp_kaspa_network_fceee">شبکه Kaspa</string>
     <string name="kp_kassigner_shows_what_it_is_signing_6617a">KasSigner نشان می‌دهد چه چیزی را امضا می‌کند. بررسی کنید که مطابق باشد، امضا کنید، سپس تراکنش امضاشده‌ای را که نشان می‌دهد اسکن کنید.</string>
     <string name="kp_kept_in_the_position">نگه‌داشته در موقعیت</string>
     <string name="kp_kept_in_your_token">نگه‌داشته در توکن شما</string>
@@ -128,10 +126,7 @@
     <string name="kp_mining_per_day">روزانه</string>
     <string name="kp_mining_per_month">ماهانه</string>
     <string name="kp_mining_per_week">هفتگی</string>
-    <string name="kp_network_hashrate_c3cc8">نرخ هش شبکه</string>
     <string name="kp_new_portfolio_5c1c7">سبد دارایی جدید</string>
-    <string name="kp_next_block_reward">پاداش بلاک بعدی</string>
-    <string name="kp_next_block_reward_reduction">کاهش بعدی پاداش بلاک</string>
     <string name="kp_no_addresses_discovered_yet_15738">هنوز هیچ آدرسی کشف نشده است.</string>
     <string name="kp_no_used_addresses_yet">هنوز آدرس استفاده‌شده‌ای نیست</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">هنوز سابقه کافی نیست - پس از چند روز فعالیت دوباره سر بزنید.</string>
@@ -235,7 +230,6 @@
     <string name="pf_add_transaction_sub">یک خرید یا فروش را دستی ثبت کنید.</string>
     <string name="pf_export_csv_sub">تراکنش‌های این سبد دارایی را در یک فایل بنویسید.</string>
     <string name="pf_import_csv_sub">تراکنش‌ها را از یک فایل بخوانید.</string>
-    <string name="pnc_export_sub">فایل CSV را در پوشه KaChat در Nextcloud شما ذخیره می‌کند.</string>
     <string name="pnc_import_sub">یک فایل CSV از Nextcloud خود انتخاب کنید.</string>
     <string name="portfolio">سبد دارایی</string>
     <string name="portfolio_add_chatting_address">افزودن نشانی گفتگو</string>

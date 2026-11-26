@@ -160,7 +160,6 @@
     <string name="valid_address">বৈধ ঠিকানা</string>
     <string name="waiting_on_opponent">প্রতিপক্ষের জন্য অপেক্ষা করা হচ্ছে</string>
     <string name="the_recipient_wont_see_your_messages">প্রাপক আপনাকে বার্তা না পাঠানো পর্যন্ত বা আপনি তাকে যোগাযোগের অনুরোধ না পাঠানো পর্যন্ত তিনি আপনার বার্তা দেখবেন না। যোগাযোগের অনুরোধে 0.2 KAS লাগে, যা তিনি গ্রহণ করলে আপনাকে ফেরত দেওয়া হয়। অনুরোধ পাঠালে আপনার গোপনীয়তা কমে যায়।</string>
-    <string name="host_port_or_grpcs_host">host:port বা grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">আপনার ভাষা নির্বাচন করুন</string>
     <string name="select_the_language_youd_like_to">K-এ আপনি যে ভাষা ব্যবহার করতে চান তা নির্বাচন করুন।</string>
     <string name="best">সেরা</string>
-    <string name="enter_as_host_port_or_grpcs_host">host:port অথবা grpcs://host হিসেবে লিখুন</string>
     <string name="receive_kaspa">Kaspa গ্রহণ করুন</string>
     <string name="currency">মুদ্রা</string>
     <string name="choose_your_currency">আপনার মুদ্রা নির্বাচন করুন</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">পরিচিতি এক্সপোর্ট থেকে পরিচিতি যোগ করুন।</string>
     <string name="ab_export_file_sub">আপনার পরিচিতি ছবিসহ একটি ফাইলে সংরক্ষণ করুন।</string>
     <string name="ab_nc_import_sub">আপনার Nextcloud থেকে একটি পরিচিতি এক্সপোর্ট বেছে নিন।</string>
-    <string name="ab_nc_export_sub">আপনার Nextcloud-এর KaChat ফোল্ডারে সংরক্ষণ করুন, যেকোনো ডিভাইসে ইমপোর্ট করতে।</string>
     <string name="ab_nc_connect_hint">সেটিংস &gt; স্টোরেজ-এ Nextcloud যুক্ত করুন, যাতে সেখানেও সংরক্ষণ করে অন্য ডিভাইসে ইমপোর্ট করা যায়।</string>
     <string name="ab_couldnt_read_file">ফাইলটি পড়া গেল না।</string>
     <string name="ab_nothing_to_export">এখনো এক্সপোর্ট করার কিছু নেই। আগে একটি কন্টাক্ট যোগ করুন।</string>

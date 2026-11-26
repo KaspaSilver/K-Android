@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer (iOS 961fc05a): only the keys the iPhone translates; the rest are English there too. -->
+<resources>
+    <string name="ex_kind_payment">Thanh toán</string>
+    <string name="ex_kind_handshake">Yêu cầu liên lạc</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_username">Tên người dùng</string>
+    <string name="ex_kind_swap">Hoán đổi</string>
+    <string name="ex_kind_other">Giao dịch</string>
+    <string name="ex_kind_payments">Thanh toán</string>
+    <string name="ex_kind_chesses">Nước cờ</string>
+    <string name="ex_kind_others">Giao dịch</string>
+    <string name="ex_period_day">24 giờ</string>
+    <string name="ex_period_week">7 ngày</string>
+    <string name="ex_period_all">Toàn thời gian</string>
+    <string name="ex_one_day">1 ngày</string>
+    <string name="ex_n_days">%1$d ngày</string>
+    <string name="ex_share">Chia sẻ</string>
+    <string name="ex_your_chatting_address">Địa chỉ trò chuyện của bạn</string>
+    <string name="ex_no_transactions">Chưa có giao dịch nào.</string>
+</resources>

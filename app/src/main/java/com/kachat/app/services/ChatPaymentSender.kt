@@ -427,6 +427,9 @@ class ChatPaymentSender @Inject constructor(
                 // Untagged, like iOS sendEnvelopeInternal: kchat:1:comm:, never a first-contact dm.
                 walletService.sendKasiaMessage(contactId, payload, firstContactTag = false)
                 Log.i(TAG, "Sent payment_notice for ${txId.take(12)}")
+            } catch (e: SendOutcomeUnknownException) {
+                // It may have landed: not kept, so it is never sent twice (audit 2026-11-25 P6).
+                Log.w(TAG, "payment_notice for ${txId.take(12)} not confirmed; not resent")
             } catch (e: Exception) {
                 // usually an empty chatting address: kept, and sent once it has KAS (IOS-086)
                 Log.w(TAG, "payment_notice send failed for ${txId.take(12)}, kept for later: ${e.message}")

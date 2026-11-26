@@ -37,14 +37,20 @@ fun AnimatedGifImage(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
+    /** Holds the frame it shows, and picks up from there once false again: the bubble behind
+     *  the full-screen viewer, which plays the same GIF (audit 2026-11-25 R7). */
+    paused: Boolean = false,
+    /** [data] already passed [GifPrep.isSafeToAnimate] ([SafeGifBytes]): not scanned again. */
+    alreadyChecked: Boolean = false,
 ) {
     var frame by remember(data) { mutableStateOf<ImageBitmap?>(null) }
+    val pausedState = androidx.compose.runtime.rememberUpdatedState(paused)
     // A chat left open behind the home screen keeps its composition: the loop waits for the app to
     // be seen again rather than decode frames nobody sees.
     val lifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(data, lifecycle) {
         withContext(Dispatchers.Default) {
-            if (!GifPrep.isSafeToAnimate(data)) return@withContext
+            if (!alreadyChecked && !GifPrep.isSafeToAnimate(data)) return@withContext
             val first = runCatching { GifDecoder(data) }.getOrNull() ?: return@withContext
             val buffers = arrayOf(
                 Bitmap.createBitmap(first.width, first.height, Bitmap.Config.ARGB_8888),
@@ -60,6 +66,9 @@ fun AnimatedGifImage(
                 while (isActive) {
                     if (!lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) {
                         lifecycle.currentStateFlow.first { it.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED) }
+                    }
+                    if (pausedState.value) {
+                        androidx.compose.runtime.snapshotFlow { pausedState.value }.first { !it }
                     }
                     val decoded = runCatching { current.nextFrame() }.getOrNull() ?: break
                     buffers[next].setPixels(decoded.pixels, 0, current.width, 0, 0, current.width, current.height)
@@ -79,4 +88,25 @@ fun AnimatedGifImage(
         modifier = modifier,
         contentScale = contentScale,
     )
+}
+
+/**
+ * A chat GIF's playable bytes per message content (its raw base64 string), so a bubble scrolled
+ * back into view doesn't decode the whole payload and scan every frame again (audit 2026-11-25
+ * R7), the way the stills have their bitmap cache. An entry with no bytes means "not a GIF that
+ * plays" (anything else, or over the play limits). 8 MB.
+ */
+internal object SafeGifBytes {
+    private val NOT_PLAYABLE = ByteArray(0)
+    private val cache = object : android.util.LruCache<String, ByteArray>(8 * 1024 * 1024) {
+        override fun sizeOf(key: String, value: ByteArray) = value.size.coerceAtLeast(1)
+    }
+
+    /** The bytes to play for [key], working them out with [load] (null: not playable) the first time. */
+    fun get(key: String, load: () -> ByteArray?): ByteArray? {
+        cache.get(key)?.let { return it.takeIf { bytes -> bytes !== NOT_PLAYABLE } }
+        val loaded = load()
+        cache.put(key, loaded ?: NOT_PLAYABLE)
+        return loaded
+    }
 }

@@ -6,8 +6,14 @@ import android.net.Network
 import android.util.Log
 import com.kachat.app.repository.AppSettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.kachat.app.services.grpc.BlockStreamRetry
 import com.kachat.app.services.grpc.KaspadConnection
 import com.kachat.app.services.grpc.NodeProbeResult
+import com.kachat.app.services.grpc.PublicNodeResolver
+import com.kachat.app.services.grpc.WssSeedStore
+import com.kachat.app.services.grpc.gossipedGrpcCandidate
+import com.kachat.app.services.grpc.isSameNode
+import com.kachat.app.services.grpc.isWebSocketNodeAddress
 import com.kachat.app.services.grpc.NodeRecord
 import com.kachat.app.services.grpc.NodeRegistry
 import com.kachat.app.services.grpc.probeExisting
@@ -25,6 +31,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -66,7 +76,10 @@ class NodePoolManager @Inject constructor(
     private val meteredNetwork: MeteredNetwork,
     // For the acceptance lookup after a node refused a send: the built-in REST server's client
     // ([builtInRestApi]), never a custom one set in Settings.
-    private val okHttpClient: okhttp3.OkHttpClient
+    private val okHttpClient: okhttp3.OkHttpClient,
+    // Signed out, the pool stops probing and closes its idle connections (audit 2026-11-25 N12,
+    // B6; iOS B19). WalletManager needs only a Context, so there is no cycle.
+    private val walletManager: WalletManager,
 ) {
     // A failure in a probe or a node's reply is logged, never the process's uncaught exception.
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.kachat.app.util.StartupSafety.logOnlyHandler("NodePoolManager"))
@@ -164,13 +177,9 @@ class NodePoolManager @Inject constructor(
     // shouldn't turn into a hot loop of lookups; matches iOS's periodic-not-per-cycle refresh.
     private val dnsResolveCooldownMillis = 60_000L
 
-    // Cycle cadence while the pool is below targetActiveNodes — see startProbing().
-    private val unhealthyRetryDelayMillis = 5_000L
-
-    // Steady-state cycle cadence on a METERED network (automatic mode, pool healthy) — twice
-    // the WiFi 30s. Combined with the primary-only probing in probeCycle() this is most of the
-    // node pool's cellular saving; WiFi cadence is unchanged.
-    private val meteredHealthyDelayMillis = 60_000L
+    // The probe loop's cadence (unhealthy, dead, healthy, pinned) is [NodeProbeCadence]: never
+    // under 10 s while the pool is short of nodes (iOS 961fc05a `probeIntervalMultiplier`, audit
+    // 2026-11-25 B7), and twice the Wi-Fi 30 s on a metered path once healthy.
 
     // Per-hostname bound for resolveDnsSeedsIfNeeded()'s parallel lookups.
     private val dnsLookupTimeoutMillis = 5_000L
@@ -187,6 +196,27 @@ class NodePoolManager @Inject constructor(
     // second such cycle on, the nodeConnectionsBlocked flag below.
     private var consecutiveDeadCycles = 0
 
+    /** Automatic Scan short of [targetActiveNodes]: consecutive cycles in which the Active count
+     *  didn't rise, which stretch the 10 s cadence to 20, 40 and then 60 s (audit 2026-11-25 N8). */
+    private var unhealthyStallCycles = 0
+
+    /** Discovered and DNS nodes pruned as dead, and when: gossip and DNS don't bring them back for
+     *  an hour, so they aren't dialed again every cycle (audit 2026-11-25 N8). Cleared on a new
+     *  network path, where the verdicts no longer hold. */
+    private val prunedAt = ConcurrentHashMap<String, Long>()
+
+    /** When the last keepalive probe of the pinned node finished: an answer after it was to
+     *  something else, so the node is alive and the next probe is spared (audit 2026-11-25 N9). */
+    @Volatile
+    private var lastTrustedProbeDoneAt = 0L
+
+    /** Whether an account is signed in ([WalletManager.signedInAddressFlow]). */
+    private val signedIn = MutableStateFlow(!walletManager.isLoggedOut && walletManager.activeAddressFlow.value != null)
+
+    /** In the background with push, and while signed out: closes connections nothing has used for
+     *  a while, for as long as any are open (audit 2026-11-25 N6). */
+    private var idleCloseJob: Job? = null
+
     /** Unmetered steady state (see probeCycle): how many Active nodes stay connected and probed
      *  between full waves, and how often (in cycles, ~30 s each) the full wave still runs. */
     private val wifiSteadyStateNodes = 4
@@ -195,7 +225,6 @@ class NodePoolManager @Inject constructor(
 
     /** Probe cadence while backgrounded with no push (see startProbing). */
     private val backgroundNoPushDelayMillis = 120_000L
-    private val maxDeadCycleBackoffMillis = 120_000L
 
     // True once probing has concluded that no Kaspa gRPC node is reachable at all on the
     // current network (every candidate dead for 2+ consecutive automatic-mode cycles, or the
@@ -220,8 +249,90 @@ class NodePoolManager @Inject constructor(
 
     private var probeJob: Job? = null
 
+    // ---- Online / offline (iOS 961fc05a `NetworkEpochMonitor.waitUntilOnline`, audit B7, N9) ----
+
+    /** Whether the device has a default network at all. Offline, the probe loop waits for the
+     *  network instead of failing every node, and dropped connections don't redial on their own;
+     *  coming back kicks one cycle at once. Any default network counts, validated or not (an
+     *  on-demand VPN or a portal that still has to be signed into is reached by trying). */
+    private val online = MutableStateFlow(true)
+
+    // ---- Automatic Scan's wss seeds (iOS 961fc05a `NodeProfiler.refreshWssSeeds`) ----
+
+    private val wssSeedStore = WssSeedStore(java.io.File(context.filesDir, "NodePool"), com.kachat.app.util.KaspaNetwork.isTestnet)
+    /** The live wss seeds in the pool (automatic mode only), at most [WssSeedStore.MAX_SEEDS]. */
+    private val wssSeedEndpoints: MutableSet<String> = ConcurrentHashMap.newKeySet()
+    private var lastWssSeedWalkAt = 0L
+    /** How long the next walk of the resolvers for wss seeds waits: 0, then 2 minutes doubling to
+     *  15 while walks find nothing new. */
+    private var wssSeedWalkCooldownMillis = 0L
+
+    // ---- Public wss fallback (iOS 961fc05a `NodePoolService.evaluatePublicFallback`) ----
+
+    /** The default node and Automatic Scan may fall back to public wss nodes; a node the user
+     *  pinned themselves ("Connected only to this node") may not. Compared as nodes, so
+     *  "node.kaspium.io" with or without its scheme or port is still the default (audit C10). */
+    @Volatile
+    private var publicFallbackAllowed = true
+
+    /** True while public wss nodes stand in for gRPC nodes that don't answer. */
+    private val _usingPublicFallback = MutableStateFlow(false)
+    val usingPublicFallback: StateFlow<Boolean> = _usingPublicFallback.asStateFlow()
+
+    /** The node the next request goes to (the trusted node, a stand-in, or the best Active one);
+     *  null before there is one. For Connection Status's protocol and node rows. */
+    private val _primaryAddress = MutableStateFlow<String?>(null)
+    val primaryAddress: StateFlow<String?> = _primaryAddress.asStateFlow()
+
+    private var publicFallbackSince: Long? = null
+    private var publicFallbackJob: Job? = null
+    private var lastPublicFallbackAttempt: Long? = null
+    /** How long after a walk of the resolvers the next may start: 60 s, doubling (to 15 minutes)
+     *  while walks find nothing new, back to 60 s once one does (audit 2026-11-25 C8). */
+    private var publicFallbackCooldownMillis = PUBLIC_FALLBACK_COOLDOWN_MS
+    /** Stand-ins dropped as dead this outage: not taken again from the resolvers. */
+    private val deadStandIns = mutableSetOf<String>()
+    /** Requests go to a stand-in rather than the pool's own nodes (iOS: the subscription is on a
+     *  stand-in). Set when stand-ins are adopted or when gRPC stops answering again; cleared by a
+     *  hand-back. */
+    @Volatile
+    private var preferStandIns = false
+    /** Since when gRPC has been serving while stand-ins are in the pool ([considerHandBack]). */
+    private var handBackSince: Long? = null
+    private var lastHandBackAttempt: Long? = null
+    /** Since when gRPC has answered at every look; null after a look with no recent answer. */
+    private var grpcSteadySince: Long? = null
+    /** How long after a hand-back the next may be tried: 60 s, doubling (to 30 minutes) each time
+     *  one doesn't hold (audit 2026-11-25 N5). */
+    private var handBackBackoffMillis = 60_000L
+    /** A hand-back was made and the stand-ins haven't left since: if requests go back to a
+     *  stand-in, it didn't hold. */
+    private var handBackUnproven = false
+    /** Boot, pin switches, path changes and returns from the background: no fallback in the first
+     *  seconds after one, while the gRPC nodes are still being dialed. */
+    @Volatile
+    private var publicFallbackAnchor = System.currentTimeMillis()
+    /** Looks at the public fallback every 20 s while the app is open, on any screen (audit
+     *  2026-11-25 N4). Stopped in the background, where nothing is served. */
+    private var publicFallbackWatchJob: Job? = null
+
+    // ---- Background (iOS 961fc05a `enterBackground` / `enterForeground`, audit B3, N2) ----
+
+    /** Bumped, synchronously, by every background / foreground change. A phase change's steps stop
+     *  after any suspension once it moved, so a late background step can't undo a quick return to
+     *  the foreground (audit 2026-11-25 N2). */
+    @Volatile
+    private var lifecycleGeneration = 0
+    private var lifecycleJob: Job? = null
+
+    /** When the known-good list was last written (it is written at most every 5 minutes, and on
+     *  background; audit 2026-11-25 N7). */
+    private var lastPersistedKnownGoodAt = 0L
+
     init {
         registry.resetTo(seeds, "Seed")
+        KaspadConnection.isNetworkOnline = { online.value }
+        ForegroundBeat.isExpensivePath = { meteredNetwork.isMeteredFlow.value }
         scope.launch {
             // Load the persisted trusted-node setting BEFORE probing ever starts, rather than
             // racing a `collect` against `startProbing()`'s own coroutine - without this, on a
@@ -232,6 +343,7 @@ class NodePoolManager @Inject constructor(
             // then show despite trusted mode being active.
             val initial = settings.trustedNodeAddress.first().trim().ifBlank { null }
             trustedNodeAddress.value = initial
+            publicFallbackAllowed = allowsPublicFallback(initial)
             probeEpoch++
             if (initial != null) {
                 registry.resetTo(listOf(initial), "Trusted")
@@ -250,6 +362,11 @@ class NodePoolManager @Inject constructor(
                 if (next == trustedNodeAddress.value) return@collect
                 trustedNodeAddress.value = next
                 probeEpoch++
+                // The new choice starts on its own nodes; a public stand-in comes back only if
+                // needed (iOS `setTrustedNodeAddress`).
+                publicFallbackAllowed = allowsPublicFallback(next)
+                dropPublicFallback("node selection changed")
+                publicFallbackAnchor = System.currentTimeMillis()
                 // Entering or leaving trusted-node mode invalidates every existing
                 // connection/registry entry - same reset shape as clearPool().
                 connections.values.forEach { it.close() }
@@ -260,6 +377,7 @@ class NodePoolManager @Inject constructor(
                     manualEndpoints.clear()
                     discoveredEndpoints.clear()
                     dnsResolvedEndpoints.clear()
+                    wssSeedEndpoints.clear()
                     lastDnsResolveAt = 0L
                     registry.resetTo(seeds, "Seed")
                     // Pinned -> automatic must connect near-instantly: race the persisted
@@ -275,6 +393,43 @@ class NodePoolManager @Inject constructor(
         }
 
         registerNetworkCallback()
+
+        // Signed out: probing pauses (see [probingPaused]) and the idle connections close, as in
+        // the background with push (audit 2026-11-25 N12, B6).
+        scope.launch {
+            walletManager.signedInAddressFlow.collect { address ->
+                val now = address != null
+                if (now == signedIn.value) return@collect
+                signedIn.value = now
+                if (!now) {
+                    closeIdleConnections(idleForMs = 0L, reason = "signed out")
+                    ensureIdleClose()
+                } else {
+                    consecutiveDeadCycles = 0
+                    unhealthyStallCycles = 0
+                }
+            }
+        }
+
+        // The app's front and back (iOS KaChatApp's scene phase calling enterBackground /
+        // enterForeground): read here rather than called from the Application.
+        scope.launch {
+            var first = true
+            notificationHelper.appForegroundFlow.collect { foreground ->
+                if (first) {
+                    first = false
+                    if (foreground) enterForeground()
+                    return@collect
+                }
+                if (foreground) enterForeground() else enterBackground()
+            }
+        }
+    }
+
+    private fun allowsPublicFallback(pinned: String?): Boolean {
+        val trimmed = pinned?.trim().orEmpty()
+        if (trimmed.isEmpty()) return true
+        return isSameNode(trimmed, AppSettingsRepository.DEFAULT_TRUSTED_NODE_ADDRESS)
     }
 
     /**
@@ -299,6 +454,11 @@ class NodePoolManager @Inject constructor(
         if (persisted.isNotEmpty()) {
             Log.i("NodePoolManager", "Seeded pool with ${persisted.size} persisted known-good node(s)")
         }
+        // Automatic Scan's saved wss seeds are raced with them, so a launch where gRPC is blocked
+        // connects through a known wss node in about a second (iOS 961fc05a).
+        val (pruned, live) = wssSeedStore.prune(WssSeedStore.STALE_AFTER_MS)
+        if (pruned.isNotEmpty()) Log.i("NodePoolManager", "Dropped ${pruned.size} wss seed(s) with no answer in 24 hours")
+        live.take(WssSeedStore.MAX_SEEDS).forEach { wssSeedEndpoints.add(it) }
     }
 
     /**
@@ -307,14 +467,21 @@ class NodePoolManager @Inject constructor(
      * [seedFromPersistedKnownGood]'s instant-reconnect path. Automatic mode only; the pinned
      * trusted node is its own persisted setting.
      */
-    private fun persistKnownGoodNodes() {
+    private fun persistKnownGoodNodes(force: Boolean = false) {
         if (trustedNodeAddress.value != null) return
+        // gRPC nodes only: the wss seeds keep their own list (WssSeedStore), and public
+        // stand-ins are for this outage only.
         val best = registry.snapshot()
-            .filter { registry.statusOf(it) == "Active" }
+            .filter { registry.statusOf(it) == "Active" && it.type != NodeRegistry.TYPE_PUBLIC && !it.isWebSocket }
             .sortedBy { it.lastProbe?.latencyMs ?: Long.MAX_VALUE }
             .take(maxPersistedKnownGood)
             .map { it.address }
         if (best.isEmpty() || best.toSet() == lastPersistedKnownGood) return
+        // At most every 5 minutes (and on background): latency jitter reorders the best few on
+        // most cycles, and each change used to be a write (iOS 961fc05a, audit N7).
+        val now = System.currentTimeMillis()
+        if (!force && lastPersistedKnownGood.isNotEmpty() && now - lastPersistedKnownGoodAt < KNOWN_GOOD_SAVE_INTERVAL_MS) return
+        lastPersistedKnownGoodAt = now
         lastPersistedKnownGood = best.toSet()
         scope.launch {
             try {
@@ -336,15 +503,29 @@ class NodePoolManager @Inject constructor(
     private fun registerNetworkCallback() {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
         try {
+            online.value = cm.activeNetwork != null
             cm.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     val handle = network.networkHandle
                     val prior = lastNetworkHandle
                     lastNetworkHandle = handle
+                    val wasOnline = online.value
+                    online.value = true
                     // First sighting after process start is not a change; same handle re-announced
                     // (capability churn on one network) is not a change either.
-                    if (prior == null || prior == handle) return
+                    if (prior == null || prior == handle) {
+                        // Back online on the same network: the connections that waited redial now
+                        // and one cycle runs at once (iOS `waitUntilOnline`, audit B7).
+                        if (!wasOnline && prior != null) onBackOnline()
+                        return
+                    }
                     onNetworkPathChanged()
+                }
+
+                override fun onLost(network: Network) {
+                    // The default network is gone; another may already be the default.
+                    online.value = try { cm.activeNetwork != null && cm.activeNetwork != network } catch (e: Exception) { false }
+                    if (!online.value) Log.i("NodePoolManager", "Offline - node probing waits for the network")
                 }
             })
         } catch (e: Exception) {
@@ -363,6 +544,56 @@ class NodePoolManager @Inject constructor(
         val now = System.currentTimeMillis()
         if (now - lastNetworkResetAt < 2_000L) return
         lastNetworkResetAt = now
+        publicFallbackAnchor = now
+        scope.launch {
+            // Many path changes leave the primary's socket working (a VPN coming up, a network
+            // appearing beside the one in use). Ask it first: if it answers, its connections are
+            // kept, with no teardown (iOS 961fc05a `handleEpochChange`, audit 2026-11-25 B6). A
+            // socket the change killed fails the ping.
+            val primary = runCatching { broadcastAddress() }.getOrNull()
+            val connection = primary?.let { connections[it] }
+            val stillAnswers = connection != null && connection.isConnected && try {
+                connection.getInfo(timeoutMs = 3_000L)
+                true
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                false
+            }
+            if (stillAnswers) {
+                Log.i("NodePoolManager", "Default network changed - primary $primary still answers, connections kept")
+                registry.forgiveFailures()
+                lastDnsResolveAt = 0L
+                consecutiveDeadCycles = 0
+                unhealthyStallCycles = 0
+                prunedAt.clear()
+                _nodeConnectionsBlocked.value = false
+                publish()
+                return@launch
+            }
+            resetForNewNetworkPath()
+        }
+    }
+
+    /** Back online on the network K was on: what waited for the network goes again. While
+     *  probing is paused (background with push, or signed out) nothing is dialed: the return to
+     *  the front reconnects (audit 2026-11-25 N4). */
+    private fun onBackOnline() {
+        publicFallbackAnchor = System.currentTimeMillis()
+        consecutiveDeadCycles = 0
+        unhealthyStallCycles = 0
+        // A channel that kept failing while offline would wait out its own backoff first.
+        connections.values.forEach { it.resetConnectBackoff() }
+        if (probingPaused()) {
+            Log.i("NodePoolManager", "Back online - nothing dialed while paused")
+            return
+        }
+        Log.i("NodePoolManager", "Back online - reconnecting")
+        reconnectStaleConnections()
+        refreshNow()
+    }
+
+    private fun resetForNewNetworkPath() {
         Log.i("NodePoolManager", "Default network changed - resetting node health and reconnecting")
         // In-flight probe results belong to the old path; discard them.
         probeEpoch++
@@ -376,10 +607,24 @@ class NodePoolManager @Inject constructor(
         // split-horizon answers can differ per network), and restart backoff from hot.
         lastDnsResolveAt = 0L
         consecutiveDeadCycles = 0
+        unhealthyStallCycles = 0
+        prunedAt.clear()
         _nodeConnectionsBlocked.value = false
         publish()
+        // In the background with push, or signed out, nothing is dialed on a network change: a new
+        // connection here was pinned and kept alive until the next foreground (audit 2026-11-25
+        // N4). The return to the front, or signing in, probes at once.
+        if (probingPaused()) return
         refreshNow()
     }
+
+    /** Probing pauses while signed out (audit 2026-11-25 N12), and in the background while push
+     *  delivers (audit B3) or nothing found could be shown (notifications off in K or Android,
+     *  N7: [PushState.backgroundQuiet]). */
+    private fun probingPaused(): Boolean =
+        !signedIn.value || (!notificationHelper.isAppInForeground && pushState.backgroundQuiet.value)
+
+    private fun activeCount(): Int = registry.snapshot().count { registry.statusOf(it) == "Active" }
 
     private fun startProbing() {
         probeJob?.cancel()
@@ -394,13 +639,19 @@ class NodePoolManager @Inject constructor(
                 // any connections the OS quietly killed during the pause. Without FCM
                 // (pushActive can never turn true) this gate never engages, so the loop
                 // behaves exactly as before.
-                if (!notificationHelper.isAppInForeground && pushState.isActive) {
-                    combine(notificationHelper.appForegroundFlow, pushState.pushActive) { foreground, pushActive ->
-                        foreground || !pushActive
+                // Signed out it waits too (audit 2026-11-25 N12): nothing on the sign-in screen needs
+                // the pool, and a request that does dials its node itself.
+                if (probingPaused()) {
+                    combine(notificationHelper.appForegroundFlow, pushState.backgroundQuiet, signedIn) { foreground, quiet, signed ->
+                        signed && (foreground || !quiet)
                     }.first { it }
                 }
+                // Offline every probe fails (and used to count against the node): wait for the
+                // network instead (iOS 961fc05a `waitUntilOnline`, audit B7).
+                if (!online.value) online.first { it }
                 // One bad cycle (a node's malformed reply, a channel that wouldn't build) is
                 // logged and the loop goes on, instead of probing stopping for good.
+                val activeBefore = activeCount()
                 val anyReachable = try {
                     probeCycle()
                 } catch (e: kotlinx.coroutines.CancellationException) {
@@ -410,48 +661,35 @@ class NodePoolManager @Inject constructor(
                     false
                 }
                 if (anyReachable) consecutiveDeadCycles = 0 else consecutiveDeadCycles++
-                val delayMillis = if (trustedNodeAddress.value != null) {
-                    // Trusted mode's registry only ever holds the one pinned node, so
-                    // activeCount below can never reach targetActiveNodes (8) - comparing
-                    // against it would permanently pin this to the aggressive cold-launch
-                    // retry rate for the node's entire lifetime, hammering it every 5s with
-                    // tight per-RPC timeouts and risking spurious failures. Just use the
-                    // normal steady-state cadence directly.
-                    30_000L
+                val activeAfter = activeCount()
+                unhealthyStallCycles = NodeProbeCadence.nextStallCycles(unhealthyStallCycles, activeBefore, activeAfter, targetActiveNodes)
+                val wait = if (trustedNodeAddress.value != null) {
+                    // Trusted mode's registry only ever holds the one pinned node, so it is never
+                    // compared with targetActiveNodes. This probe is the pinned node's keepalive, on
+                    // the foreground beat (30 s, 60 s on a metered path) so it wakes the radio with
+                    // the other polls (audit 2026-11-25 N9, B3). A pinned node that doesn't answer
+                    // backs off like a dead pool, to two minutes (audit N13).
+                    NodeProbeCadence.trusted(consecutiveDeadCycles, trustedKeepaliveMillis())
                 } else {
-                    // While the pool hasn't reached a healthy active count yet (e.g. right after a
-                    // fresh app launch, before any node has been confirmed reachable+synced), retry
-                    // much sooner than the normal steady-state cadence — a flat 30s here meant a cold
-                    // launch could sit on "Disconnected"/0 active for a full 30-90+ seconds even
-                    // though a retry a few seconds later would very likely succeed.
-                    //
-                    // BUT: if entire cycles are coming back with zero reachable nodes (gRPC blocked
-                    // outright on this network, airplane mode, dead uplink), that aggressive 5s
-                    // cadence must not run forever — dialing ~26 dead endpoints every 5s is pure
-                    // battery burn that cannot succeed. Back off exponentially (10s, 20s, 40s, 80s,
-                    // capped at 2 min) until something answers; a network-path change resets to hot
-                    // immediately (see onNetworkPathChanged), as does refreshNow() via the user.
-                    val activeCount = registry.snapshot().count { registry.statusOf(it) == "Active" }
-                    when {
-                        consecutiveDeadCycles > 0 -> {
-                            val shifts = minOf(consecutiveDeadCycles, 5)
-                            minOf(unhealthyRetryDelayMillis shl shifts, maxDeadCycleBackoffMillis)
-                        }
-                        activeCount < targetActiveNodes -> unhealthyRetryDelayMillis
-                        // Healthy pool on cellular: probe half as often (and probeCycle itself
-                        // shrinks to a primary-only probe — see the metered branch there).
-                        meteredNetwork.isMetered -> meteredHealthyDelayMillis
-                        else -> 30_000L
-                    }
+                    // Short of a healthy pool (a fresh launch, a network that blocks most nodes):
+                    // 10 s, stretching to 60 s while the Active count doesn't rise (audit N8). Every
+                    // node dead: 20 s doubling to two minutes, until something answers; a network
+                    // change resets both. Healthy: the foreground beat, and probeCycle itself shrinks
+                    // to the primary on a metered path.
+                    NodeProbeCadence.automatic(consecutiveDeadCycles, activeAfter, targetActiveNodes, unhealthyStallCycles, meteredNetwork.isMetered)
                 }
+                val delayMillis = wait.millis
                 if (!notificationHelper.isAppInForeground) {
                     // Backgrounded without push (the gate above lets only that through): the pool
-                    // stays up for what still needs it - a notification's Reply, the always-listen
-                    // rooms - but probes at a background pace, and probeCycle keeps only the
-                    // primary connected. The front of the app ends the wait at once.
+                    // stays up for what still needs it - a notification's Reply - but probes at a
+                    // background pace, and probeCycle keeps only the primary connected. No block
+                    // stream runs in the background (audit 2026-11-25 N1). The front of the app
+                    // ends the wait at once.
                     kotlinx.coroutines.withTimeoutOrNull(maxOf(delayMillis, backgroundNoPushDelayMillis)) {
                         notificationHelper.appForegroundFlow.first { it }
                     }
+                } else if (wait.onBeat) {
+                    ForegroundBeat.sleepUntilNextBeat(offsetMs = PROBE_BEAT_OFFSET_MS)
                 } else {
                     delay(delayMillis)
                 }
@@ -464,13 +702,18 @@ class NodePoolManager @Inject constructor(
      *  getOrPut could run its builder for both and leave one open for good). */
     private fun connectionFor(address: String): KaspadConnection {
         connections[address]?.let { return it }
-        val created = KaspadConnection(address, scope)
+        // On a metered path the HTTP/2 keepalive is 45 s, not 20 (iOS 961fc05a, audit B4).
+        val keepAlive = if (meteredNetwork.isMeteredFlow.value) KaspadConnection.METERED_KEEPALIVE_SECONDS else KaspadConnection.KEEPALIVE_SECONDS
+        val created = KaspadConnection(address, scope, keepAlive)
         val existing = connections.putIfAbsent(address, created)
         if (existing != null) {
             created.close()
             return existing
         }
         created.connect()
+        // Opened while the pool is idle (a send from a notification, a background wake): closed
+        // again once nothing uses it (audit 2026-11-25 N6).
+        ensureIdleClose()
         return created
     }
 
@@ -527,13 +770,52 @@ class NodePoolManager @Inject constructor(
         }.flatten()
         for (endpoint in resolved) {
             if (dnsResolvedEndpoints.size >= maxDnsResolvedEndpoints) break
+            if (recentlyPruned(endpoint)) continue
             dnsResolvedEndpoints.add(endpoint)
         }
     }
 
+    /**
+     * Automatic Scan keeps up to three public wRPC nodes (`wss://` on 443, from the Kaspa
+     * resolvers) among its seed candidates (iOS 961fc05a `refreshWssSeeds`, owner 2026-11-25), so a
+     * network that blocks gRPC still finds nodes: they're raced with the gRPC seeds, ranked by the
+     * same rules (below gRPC), and saved, so the next launch dials a known one at once. Run beside
+     * the DNS seed refresh; nothing while a node is pinned. A wss seed with no answer in 24 hours
+     * is dropped and only live ones count toward the three; a walk of the resolvers that finds
+     * nothing new waits longer before the next (2 minutes, doubling to 15; audit C8).
+     */
+    private suspend fun refreshWssSeedsIfNeeded() {
+        if (trustedNodeAddress.value != null) return
+        val (removed, live) = wssSeedStore.prune(WssSeedStore.STALE_AFTER_MS)
+        for (address in removed) {
+            wssSeedEndpoints.remove(address)
+            connections.remove(address)?.close()
+            registry.remove(address)
+        }
+        if (removed.isNotEmpty()) Log.i("NodePoolManager", "Dropped ${removed.size} wss seed(s) with no answer in 24 hours")
+        live.take(WssSeedStore.MAX_SEEDS).forEach { wssSeedEndpoints.add(it) }
+        val wanted = WssSeedStore.MAX_SEEDS - live.size
+        if (wanted <= 0) return
+        val now = System.currentTimeMillis()
+        if (lastWssSeedWalkAt != 0L && now - lastWssSeedWalkAt < wssSeedWalkCooldownMillis) return
+        lastWssSeedWalkAt = now
+        val found = PublicNodeResolver.resolve(com.kachat.app.util.KaspaNetwork.isTestnet, wanted, live.toSet())
+        if (trustedNodeAddress.value != null) return
+        val added = found.filter { wssSeedStore.add(it) }
+        if (added.isEmpty()) {
+            wssSeedWalkCooldownMillis = minOf(15 * 60_000L, maxOf(2 * 60_000L, wssSeedWalkCooldownMillis * 2))
+            return
+        }
+        wssSeedWalkCooldownMillis = 0L
+        // Dialed in this same cycle (its second wave) rather than left for the next.
+        added.forEach { wssSeedEndpoints.add(it) }
+        Log.i("NodePoolManager", "Added ${added.size} public wss node(s) as seed candidates")
+    }
+
     /** Classification for registry rows — depends on which tracked set the address lives in. */
     private fun typeOf(address: String): String = when {
-        seeds.contains(address) -> "Seed"
+        registry.snapshot().any { it.address == address && it.type == NodeRegistry.TYPE_PUBLIC } -> NodeRegistry.TYPE_PUBLIC
+        seeds.contains(address) || wssSeedEndpoints.contains(address) -> "Seed"
         manualEndpoints.contains(address) -> "Manual"
         dnsResolvedEndpoints.contains(address) -> "DNS"
         else -> "Discovered"
@@ -583,9 +865,22 @@ class NodePoolManager @Inject constructor(
             }
         }.awaitAll()
 
+    /** How often the pinned node is probed: its keepalive, the foreground beat (30 s, 60 s on a
+     *  metered path; 30 s / 45 s on its own timer before, audit 2026-11-25 N9). */
+    private fun trustedKeepaliveMillis(): Long = ForegroundBeat.intervalMs
+
+    /** Whether [address] was pruned as dead within the last hour (audit 2026-11-25 N8). */
+    private fun recentlyPruned(address: String, nowMs: Long = System.currentTimeMillis()): Boolean {
+        val at = prunedAt[address] ?: return false
+        if (nowMs - at < PRUNED_MEMORY_MS) return true
+        prunedAt.remove(address, at)
+        return false
+    }
+
     /** Returns true when at least one probed node was reachable this cycle (epoch-discarded
      *  cycles report true so they stay neutral for the dead-cycle backoff in startProbing). */
-    private suspend fun probeCycle(): Boolean {
+
+    private suspend fun probeCycle(force: Boolean = false): Boolean {
         // Captured up front so a mode switch (trusted <-> normal discovery) that happens
         // *while this cycle's own probes are in flight* can be detected below and the whole
         // cycle's results discarded instead of writing stale seed/discovered entries into the
@@ -596,21 +891,54 @@ class NodePoolManager @Inject constructor(
         // report its health. No seeds, no DNS, no peer-gossip, no latency-based selection.
         val trusted = trustedNodeAddress.value
         if (trusted != null) {
-            connections.keys.filter { it != trusted }.forEach { addr -> connections.remove(addr)?.close() }
-            val result = probeExisting(trusted, connectionFor(trusted))
+            // Public stand-ins stay up beside the pinned node while they serve.
+            val standIns = registry.publicFallbacks().map { it.address }.toSet()
+            connections.keys.filter { it != trusted && it !in standIns }.forEach { addr -> connections.remove(addr)?.close() }
+            // The pinned node pushed a notification, or answered a request other than the last
+            // probe, within the keepalive interval: it is alive and its connection isn't idle, so
+            // the probe is spared (iOS 961fc05a `checkPrimaryHealth`; audit 2026-11-25 N9). A
+            // Refresh always probes.
+            val existing = connections[trusted]
+            val answeredOther = existing?.lastResponseAtMs?.takeIf { it > lastTrustedProbeDoneAt }
+            val spokeAt = listOfNotNull(existing?.lastNotificationAtMs, answeredOther).maxOrNull()
+            if (!force && existing != null && existing.isConnected && standIns.isEmpty() &&
+                spokeAt != null && System.currentTimeMillis() - spokeAt < trustedKeepaliveMillis()
+            ) {
+                registry.recordAlive(trusted)
+                _nodeConnectionsBlocked.value = false
+                publish()
+                syncPinnedConnections()
+                return true
+            }
+            val trustedConnection = connectionFor(trusted)
+            val result = probeExisting(trusted, trustedConnection)
+            lastTrustedProbeDoneAt = System.currentTimeMillis()
             if (epoch != probeEpoch) return true
-            if (!result.reachable) {
-                connections.remove(trusted)?.close()
+            // A stream that died reconnects on its own channel, whose own backoff spaces the
+            // dials, so it is kept (a new channel and TLS handshake every cycle before, audit
+            // 2026-11-25 N13). One that still looks up but didn't answer may be a socket that died
+            // silently: that one is dialed fresh.
+            if (!result.reachable && trustedConnection.isConnected) {
+                if (connections.remove(trusted, trustedConnection)) trustedConnection.close()
             }
             registry.update(trusted, "Trusted", result)
+            // The stand-ins are probed too: dead ones are replaced, live ones ranked.
+            if (standIns.isNotEmpty()) {
+                val standInResults = probeWave(standIns.toList(), epoch)
+                if (epoch != probeEpoch) return true
+                val stillIn = registry.publicFallbacks().map { it.address }.toSet()
+                standInResults.filter { !it.reachable && it.address in stillIn }
+                    .forEach { registry.update(it.address, NodeRegistry.TYPE_PUBLIC, it) }
+            }
+            val standInServing = registry.publicFallbacks().any { registry.statusOf(it) == "Active" }
             // With discovery off, the pinned node is the only reachability signal there is:
             // 2+ consecutive failed probes is the honest "node connections look blocked or
             // down here" threshold for the connection screen (one failure could be a blip).
             val failures = registry.snapshot().firstOrNull { it.address == trusted }?.consecutiveFailures ?: 0
-            _nodeConnectionsBlocked.value = !result.reachable && failures >= 2
+            _nodeConnectionsBlocked.value = !result.reachable && failures >= 2 && !standInServing
             publish()
             syncPinnedConnections()
-            return result.reachable
+            return result.reachable || standInServing
         }
 
         // Gated on truly *Active* count, not just "not yet Quarantined" — a fresh/unprobed seed
@@ -628,6 +956,9 @@ class NodePoolManager @Inject constructor(
         // already have in hand — fresh DNS answers get their own probe wave later this cycle.
         val activeCount = registry.snapshot().count { registry.statusOf(it) == "Active" }
         val dnsJob = if (activeCount < targetActiveNodes) scope.async { resolveDnsSeedsIfNeeded() } else null
+        // The public wss seeds are looked up beside the DNS seeds (iOS `refreshWssSeeds`): where
+        // gRPC is blocked they are the nodes that answer.
+        val wssJob = if (activeCount < targetActiveNodes) scope.async { refreshWssSeedsIfNeeded() } else null
 
         // Metered steady state: with a healthy pool on cellular, probing all ~26 endpoints
         // every cycle — and keeping a persistent gRPC channel (20s HTTP/2 keepalive pings each)
@@ -650,7 +981,8 @@ class NodePoolManager @Inject constructor(
         // instead of ~26 channels each pinging every 20 s. The full wave still runs every
         // [wifiFullWaveEveryCycles]th cycle, so the rest of the pool's verdicts (and the node
         // list) stay fresh, and at once whenever the pool drops below target.
-        val fullWave = (seeds + manualEndpoints + discoveredEndpoints + dnsResolvedEndpoints).distinct()
+        val standIns = registry.publicFallbacks().map { it.address }
+        val fullWave = (seeds + manualEndpoints + discoveredEndpoints + dnsResolvedEndpoints + wssSeedEndpoints + standIns).distinct()
         val healthy = activeCount >= targetActiveNodes
         // Backgrounded (only reached without push, see startProbing) is treated as metered: the
         // primary alone.
@@ -665,14 +997,15 @@ class NodePoolManager @Inject constructor(
         } else {
             cyclesSinceFullWave = 0
             fullWave
-        }
+        }.let { wave -> (wave + standIns).distinct() }
         val firstResults = probeWave(firstWave, epoch)
 
         // Probe whatever the concurrent DNS resolution just added in this same cycle rather
         // than sitting on it until the next tick — on a cold start where the bundled seeds
         // have all gone stale, these fresh answers ARE the pool.
         dnsJob?.await()
-        val secondWave = dnsResolvedEndpoints.filter { it !in firstWave }
+        wssJob?.await()
+        val secondWave = (dnsResolvedEndpoints + wssSeedEndpoints).filter { it !in firstWave }
         val secondResults = if (secondWave.isNotEmpty()) probeWave(secondWave, epoch) else emptyList()
 
         // The user may have switched into trusted-node mode while these probes were still in
@@ -689,6 +1022,7 @@ class NodePoolManager @Inject constructor(
 
         results.forEach { result ->
             registry.update(result.address, typeOf(result.address), result)
+            if (result.reachable && result.address in wssSeedEndpoints) wssSeedStore.recordSuccess(result.address)
         }
 
         // Prune discovered/DNS-resolved nodes that have gone bad, freeing room for potentially
@@ -697,6 +1031,7 @@ class NodePoolManager @Inject constructor(
         registry.snapshot()
             .filter { (it.type == "Discovered" || it.type == "DNS") && registry.statusOf(it) == "Quarantined" }
             .forEach { record ->
+                prunedAt[record.address] = System.currentTimeMillis()
                 discoveredEndpoints.remove(record.address)
                 dnsResolvedEndpoints.remove(record.address)
                 connections.remove(record.address)?.close()
@@ -741,11 +1076,14 @@ class NodePoolManager @Inject constructor(
                 try {
                     conn.getPeerAddresses().addressesList.map { it.addr }.forEach { addr ->
                         // Only a well-formed host:port: any node can answer this, and a target
-                        // gRPC can't build throws in the next probe wave.
-                        if (com.kachat.app.services.grpc.isGossipedNodeAddress(addr) && !seeds.contains(addr) && !manualEndpoints.contains(addr) &&
+                        // gRPC can't build throws in the next probe wave. Peers gossip their P2P
+                        // port, which is tried on the gRPC port; other ports, and nodes pruned
+                        // within the hour, are skipped (audit 2026-11-25 N8).
+                        val candidate = gossipedGrpcCandidate(addr, dnsSeedPort) ?: return@forEach
+                        if (!seeds.contains(candidate) && !manualEndpoints.contains(candidate) && !recentlyPruned(candidate) &&
                             discoveredEndpoints.size < maxDiscoveredEndpoints
                         ) {
-                            discoveredEndpoints.add(addr)
+                            discoveredEndpoints.add(candidate)
                         }
                     }
                 } catch (e: Exception) {
@@ -787,6 +1125,8 @@ class NodePoolManager @Inject constructor(
             )
         _allNodes.value = allInfo
         _activeNodes.value = allInfo.filter { it.status == "Active" }
+        _primaryAddress.value = runCatching { broadcastAddress() }.getOrNull()
+            ?.takeIf { address -> registry.snapshot().any { it.address == address && registry.statusOf(it) == "Active" } }
     }
 
     private fun toNodeInfo(record: NodeRecord): NodeInfo {
@@ -819,10 +1159,27 @@ class NodePoolManager @Inject constructor(
      */
     fun getBroadcastConnection(): KaspadConnection = connectionFor(broadcastAddress())
 
-    /** The node [getBroadcastConnection] hands out: the trusted node, else the best Active node
-     *  that has a connection, else a DNS answer or the first seed. */
+    /** The best Active public stand-in with a connection, while requests go to stand-ins. */
+    private fun servingStandIn(): String? {
+        if (!preferStandIns) return null
+        return registry.activeBestFirst()
+            .firstOrNull { it.type == NodeRegistry.TYPE_PUBLIC && connections.containsKey(it.address) }
+            ?.address
+    }
+
+    /** The node that answers for a pinned node: the pinned node itself, or a public stand-in while
+     *  it can't be reached (the default node only); null in automatic mode. */
+    private fun pinnedServing(): String? {
+        val trusted = trustedNodeAddress.value ?: return null
+        return servingStandIn() ?: trusted
+    }
+
+    /** The node [getBroadcastConnection] hands out: the trusted node (or its public stand-in),
+     *  else a stand-in while gRPC fails, else the best Active node that has a connection, else a
+     *  DNS answer or the first seed. */
     private fun broadcastAddress(): String {
-        trustedNodeAddress.value?.let { return it }
+        pinnedServing()?.let { return it }
+        servingStandIn()?.let { return it }
         registry.activeBestFirst().firstOrNull()?.address?.takeIf { connections.containsKey(it) }?.let { return it }
         return dnsResolvedEndpoints.firstOrNull() ?: seeds.first()
     }
@@ -834,10 +1191,12 @@ class NodePoolManager @Inject constructor(
      * connection reconnects a few times while it was used lately, then waits for a request.
      */
     private fun syncPinnedConnections() {
-        val pinned = trustedNodeAddress.value?.let { setOf(it) } ?: run {
+        // Public stand-ins stay pinned while they're in the pool: they serve while gRPC fails.
+        val standIns = registry.publicFallbacks().map { it.address }.toSet()
+        val pinned = trustedNodeAddress.value?.let { setOf(it) + standIns } ?: run {
             val primary = runCatching { broadcastAddress() }.getOrNull()
             val standby = registry.activeBestFirst().map { it.address }.firstOrNull { it != primary }
-            setOfNotNull(primary, standby)
+            setOfNotNull(primary, standby) + standIns
         }
         connections.forEach { (address, connection) -> connection.isPinned = address in pinned }
     }
@@ -908,7 +1267,7 @@ class NodePoolManager @Inject constructor(
      */
     suspend fun getUtxosByAddressesAgreed(addresses: List<String>): List<UtxoEntry> {
         if (addresses.isEmpty()) return emptyList()
-        if (trustedNodeAddress.value != null) return getUtxosByAddressesFromNode(addresses)
+        if (pinnedServing() != null) return getUtxosByAddressesFromNode(addresses)
         val primary = broadcastAddress()
         val second = registry.activeBestFirst().map { it.address }.firstOrNull { it != primary }
             ?: throw IllegalStateException("no second node to cross-check with")
@@ -1032,7 +1391,7 @@ class NodePoolManager @Inject constructor(
      * cancelled; when all fail, the last error is thrown.
      */
     suspend fun feeEstimate(): Pair<NodeFeeBucket, NodeFeeBucket> {
-        val addresses = trustedNodeAddress.value?.let { listOf(it) }
+        val addresses = pinnedServing()?.let { listOf(it) }
             ?: registry.activeBestFirst()
                 .take(5)
                 .map { it.address }
@@ -1106,7 +1465,7 @@ class NodePoolManager @Inject constructor(
      * `verifiedMempoolHolders`). Asked in parallel, 2 s each.
      */
     private suspend fun verifiedMempoolHolders(txId: String, excluding: Set<String>): Int {
-        val addresses = trustedNodeAddress.value?.let { listOf(it) } ?: run {
+        val addresses = pinnedServing()?.let { listOf(it) } ?: run {
             val primary = runCatching { broadcastAddress() }.getOrNull()
             val others = registry.activeBestFirst()
                 .map { it.address }
@@ -1164,7 +1523,7 @@ class NodePoolManager @Inject constructor(
      *  when one is set) holds [txId] in its mempool, orphan pool included (iOS d23e6f7a
      *  `getMempoolEntry`). Asked in parallel, 2 s each. */
     private suspend fun isInAnyMempool(txId: String): Boolean {
-        val asked = trustedNodeAddress.value?.let { listOf(connectionFor(it)) } ?: run {
+        val asked = pinnedServing()?.let { listOf(connectionFor(it)) } ?: run {
             val primary = getBroadcastConnection()
             val others = registry.activeBestFirst()
                 .filter { connections[it.address] !== primary }
@@ -1193,7 +1552,8 @@ class NodePoolManager @Inject constructor(
      * readout is pinned Active). The send path uses this for its one-shot reconnect retry.
      */
     fun refreshBroadcastConnection() {
-        val address = trustedNodeAddress.value
+        val address = pinnedServing()
+            ?: servingStandIn()
             ?: registry.activeBestFirst().firstOrNull()?.address
             ?: dnsResolvedEndpoints.firstOrNull() ?: seeds.firstOrNull() ?: return
         connections.remove(address)?.let { runCatching { it.close() } }
@@ -1204,13 +1564,17 @@ class NodePoolManager @Inject constructor(
      *
      * The returned job ends when the probe pass does - Connection Status spins until then.
      */
-    fun refreshNow(): Job = scope.launch { probeCycle() }
+    fun refreshNow(): Job = scope.launch { probeCycle(force = true) }
 
     /** Drops discovered/DNS-resolved/manual nodes and all connections, resets to just the seed list — "Clear Connection Pool". */
     fun clearPool(): Job {
+        dropPublicFallback("connection pool cleared")
         manualEndpoints.clear()
         discoveredEndpoints.clear()
         dnsResolvedEndpoints.clear()
+        wssSeedEndpoints.clear()
+        prunedAt.clear()
+        unhealthyStallCycles = 0
         lastDnsResolveAt = 0L
         connections.values.forEach { it.close() }
         connections.clear()
@@ -1247,16 +1611,371 @@ class NodePoolManager @Inject constructor(
 
     /** Adds and immediately probes a user-supplied "host:port" endpoint — "Add Custom Endpoint". */
     fun addManualEndpoint(address: String) {
-        val trimmed = address.trim()
-        if (!trimmed.matches(Regex("^[^:\\s]+:\\d+$"))) return
-        manualEndpoints.add(trimmed)
+        val typed = address.trim()
+        val parsedWss = if (isWebSocketNodeAddress(typed)) com.kachat.app.services.grpc.parseNodeAddress(typed) else null
+        if (parsedWss == null && !typed.matches(Regex("^[^:\\s]+:\\d+$"))) return
+        // A wss node is kept by its node key, as the seeds and stand-ins are, so one node typed
+        // two ways is one entry and one socket (audit 2026-11-25 T7).
+        val key = parsedWss?.key ?: typed
+        manualEndpoints.add(key)
         scope.launch {
-            registry.update(trimmed, "Manual", probeExisting(trimmed, connectionFor(trimmed)))
+            registry.update(key, "Manual", probeExisting(key, connectionFor(key)))
             publish()
         }
     }
 
+    // MARK: - Live blocks
+
+    /**
+     * New blocks from the pool's primary node, for as long as this is collected (the Explorer's
+     * live list, iOS 961fc05a `ExplorerLive` on `NodePoolService.subscribeBlockAdded` +
+     * `addBlockHandler`). Subscribes under [owner] on the broadcast connection, moves to the
+     * pool's best connection when that one's stream dies, and pauses while the app is in the
+     * background. When the last client of a connection leaves, the node is told to stop sending
+     * blocks (NOTIFY_STOP, audit 2026-11-25 B1): cancelling the collector is enough.
+     *
+     * [fullBlocks]: every transaction with its outputs and the block's verbose data (hash, blue
+     * score, parents, children), as the Explorer lists them. A gRPC node sends that anyway; a wss
+     * node's JSON is then decoded in full rather than only its payload transactions. A slow
+     * collector misses blocks rather than holding the stream up (the newest 64 are kept).
+     */
+    fun liveBlocks(owner: String, fullBlocks: Boolean = true): Flow<protowire.Rpc.RpcBlock> = channelFlow {
+        if (fullBlocks) KaspadConnection.fullBlockClients.incrementAndGet()
+        try {
+            notificationHelper.appForegroundFlow.collectLatest { foreground ->
+                if (!foreground) return@collectLatest
+                // 2 s doubling to 30 s while it keeps failing, and offline it waits for the network
+                // (audit 2026-11-25 N1); the Explorer's list carries on as soon as a node answers.
+                val retry = blockStreamRetry(firstDelayMs = 2_000L, maxDelayMs = 30_000L)
+                while (true) {
+                    var subscribedOn: KaspadConnection? = null
+                    try {
+                        val connection = getBroadcastConnection()
+                        // Captured before subscribing: a death racing the NOTIFY_START reads as moved.
+                        val subscribedGeneration = connection.connectionGeneration.value
+                        val blocks = connection.subscribeToBlockAdded(owner)
+                        subscribedOn = connection
+                        coroutineScope {
+                            val collector = launch { blocks.collect { send(it) } }
+                            connection.connectionGeneration.first { it != subscribedGeneration }
+                            collector.cancel()
+                        }
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w("NodePoolManager", "Live blocks for $owner interrupted, retrying: ${e.javaClass.simpleName}: ${e.message}")
+                    } finally {
+                        val on = subscribedOn
+                        if (on != null) {
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                                try {
+                                    withTimeoutOrNull(5_000L) { on.unsubscribeFromBlockAdded(owner) }
+                                } catch (e: Exception) {
+                                    Log.d("NodePoolManager", "Live blocks stop for $owner failed: ${e.message}")
+                                }
+                            }
+                        }
+                    }
+                    retry.pause()
+                }
+            }
+        } finally {
+            if (fullBlocks) KaspadConnection.fullBlockClients.decrementAndGet()
+        }
+    }.buffer(64, kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST)
+
+    /** Suspends until the phone has a network (at once when it has). */
+    suspend fun awaitOnline() {
+        if (!online.value) online.first { it }
+    }
+
+    /** The wait between a block stream's tries, for one loop: doubling from [firstDelayMs] to
+     *  [maxDelayMs] while it keeps failing, then for the network (audit 2026-11-25 N1). */
+    fun blockStreamRetry(
+        firstDelayMs: Long = BlockStreamRetry.FIRST_DELAY_MS,
+        maxDelayMs: Long = BlockStreamRetry.MAX_DELAY_MS,
+    ): BlockStreamRetry = BlockStreamRetry(firstDelayMs, maxDelayMs, awaitOnline = { awaitOnline() })
+
+    // MARK: - Background (iOS 961fc05a `enterBackground` / `enterForeground`)
+
+    /**
+     * The app went to the background. The public fallback's watch stops; in push mode every
+     * connection that carries nothing (no request waiting, no block client) is closed, the former
+     * primary's included: an open one was kept alive with HTTP/2 pings and redialed after every
+     * drop for nothing (audit 2026-11-25 B3). The probe loop itself already sleeps in the
+     * background with push, and the block scanners stop themselves there. The known-good list is
+     * saved, since the app may not come back. Each step stops if the app came back meanwhile (N2).
+     */
+    private fun enterBackground() {
+        lifecycleGeneration++
+        val generation = lifecycleGeneration
+        stopPublicFallbackWatch()
+        val previous = lifecycleJob
+        lifecycleJob = scope.launch {
+            previous?.join()
+            if (lifecycleGeneration != generation) return@launch
+            persistKnownGoodNodes(force = true)
+            // Push mode, or nothing could be shown (N7): the background needs no connection.
+            if (!pushState.isBackgroundQuiet) return@launch
+            closeIdleConnections(idleForMs = 0L, reason = "the background") { lifecycleGeneration != generation }
+            // What is still open (a block client stopping, a request in flight), and anything
+            // opened later in the background, is closed once idle (audit 2026-11-25 N6).
+            if (lifecycleGeneration == generation) ensureIdleClose()
+        }
+    }
+
+    /**
+     * Closes every connection that carries nothing: no request waiting, no block client, and no
+     * request in the last [idleForMs]. Stops early once [stop] says so (back in the foreground).
+     */
+    private fun closeIdleConnections(idleForMs: Long, reason: String, stop: () -> Boolean = { false }) {
+        var closed = 0
+        val now = System.currentTimeMillis()
+        for ((address, connection) in connections.entries.toList()) {
+            if (stop()) return
+            if (connection.hasPendingRequests || connection.hasBlockSubscribers) continue
+            if (idleForMs > 0 && connection.usedWithin(idleForMs, now)) continue
+            if (connections.remove(address, connection)) {
+                connection.close()
+                closed++
+            }
+        }
+        if (closed > 0) Log.i("NodePoolManager", "Closed $closed idle connection(s) for $reason, ${connections.size} left")
+    }
+
+    /**
+     * While probing is paused (the background with push, or signed out), one small sweep closes
+     * any connection that has been idle for [IDLE_CLOSE_MS], for as long as connections are open:
+     * the close on going to the background ran once, so a connection a block client still held
+     * then, or one opened later (a network change, a send from a notification, a background
+     * wake), stayed open with its keepalive until the next foreground (audit 2026-11-25 N6).
+     */
+    @Synchronized
+    private fun ensureIdleClose() {
+        if (!probingPaused() || connections.isEmpty()) return
+        if (idleCloseJob?.isActive == true) return
+        idleCloseJob = scope.launch {
+            while (connections.isNotEmpty()) {
+                delay(IDLE_CLOSE_MS)
+                if (!probingPaused()) return@launch
+                closeIdleConnections(idleForMs = IDLE_CLOSE_MS, reason = "an idle pool")
+            }
+        }
+    }
+
+    /** Back in the foreground: the public fallback's watch runs again, with a fresh grace window
+     *  (the last gRPC answer is old because the app was asleep, not because gRPC is blocked).
+     *  Dead connections come back through [reconnectStaleConnections] and the probe loop. */
+    private fun enterForeground() {
+        lifecycleGeneration++
+        val generation = lifecycleGeneration
+        publicFallbackAnchor = System.currentTimeMillis()
+        if (signedIn.value) {
+            idleCloseJob?.cancel()
+            idleCloseJob = null
+        }
+        val previous = lifecycleJob
+        lifecycleJob = scope.launch {
+            previous?.join()
+            if (lifecycleGeneration != generation) return@launch
+            startPublicFallbackWatch()
+        }
+    }
+
+    // MARK: - Public wss fallback (iOS 961fc05a `NodePoolService.evaluatePublicFallback`)
+
+    private fun startPublicFallbackWatch() {
+        if (publicFallbackWatchJob?.isActive == true) return
+        publicFallbackWatchJob = scope.launch {
+            while (true) {
+                delay(PUBLIC_FALLBACK_WATCH_MS)
+                try {
+                    evaluatePublicFallback()
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w("NodePoolManager", "Public fallback check failed: ${e.javaClass.simpleName}: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun stopPublicFallbackWatch() {
+        publicFallbackWatchJob?.cancel()
+        publicFallbackWatchJob = null
+    }
+
+    /**
+     * When no node of the pool's own has answered for 30 s while one was being tried and the phone
+     * is online - gRPC blocked (DPI, a firewall that refuses HTTP/2), or the pinned default node
+     * down - up to two public nodes speaking wRPC over `wss://` join the pool
+     * ([PublicNodeResolver]), ranked below every gRPC node, and requests go to them. A stand-in
+     * that stops answering is replaced. They leave once gRPC has served for two minutes
+     * ([considerHandBack]). Never when the user pinned a node of their own. Your addresses are
+     * then known to the public node, as they are to the Kaspa REST API the app already falls back
+     * to.
+     */
+    @Synchronized
+    private fun evaluatePublicFallback(nowMs: Long = System.currentTimeMillis()) {
+        var standIns = registry.publicFallbacks()
+        if (!publicFallbackAllowed) {
+            if (standIns.isNotEmpty() || _usingPublicFallback.value) dropPublicFallback("a node of your own is pinned")
+            return
+        }
+        if (standIns.isNotEmpty()) {
+            // Dead stand-ins go, and new ones are asked for below (on the same cooldown).
+            val dead = registry.removeDeadPublicFallbacks(STAND_IN_GRACE_MS, nowMs)
+            if (dead.isNotEmpty()) {
+                deadStandIns += dead
+                dead.forEach { connections.remove(it)?.close() }
+                Log.i("NodePoolManager", "Public wss node(s) stopped answering, replacing: ${dead.joinToString()}")
+                standIns = registry.publicFallbacks()
+                publish()
+            }
+        }
+        if (standIns.isNotEmpty()) {
+            considerHandBack(nowMs)
+            return
+        }
+        if (_usingPublicFallback.value) {
+            // Nothing stands in now: every stand-in died.
+            resetPublicFallbackState()
+            publish()
+        }
+
+        if (publicFallbackJob?.isActive == true || !online.value || nowMs - publicFallbackAnchor < PUBLIC_FALLBACK_GRACE_MS) return
+        val (lastSuccess, recentFailures) = registry.ownNodeConnectivity(60_000L, nowMs)
+        if (lastSuccess != null && nowMs - lastSuccess < 30_000L) return
+        if (recentFailures == 0) return
+        lastPublicFallbackAttempt?.let { if (nowMs - it < publicFallbackCooldownMillis) return }
+        lastPublicFallbackAttempt = nowMs
+
+        val epoch = probeEpoch
+        val avoiding = deadStandIns.toSet()
+        Log.i("NodePoolManager", "No gRPC node has answered for 30s - asking for public wss nodes")
+        publicFallbackJob = scope.launch {
+            val found = PublicNodeResolver.resolve(com.kachat.app.util.KaspaNetwork.isTestnet, count = 2, avoiding = avoiding)
+            adoptPublicFallback(found, epoch)
+        }
+    }
+
+    private suspend fun adoptPublicFallback(found: List<String>, epoch: Int) {
+        // The node selection changed while the resolvers were asked, or the fallback was dropped.
+        if (epoch != probeEpoch || !publicFallbackAllowed) return
+        val (lastSuccess, _) = registry.ownNodeConnectivity(60_000L)
+        if (lastSuccess != null && System.currentTimeMillis() - lastSuccess < 30_000L) return
+        val added = found.filter { registry.addPublicFallback(it) }
+        if (added.isEmpty()) {
+            // Nothing new: the next walk waits longer.
+            publicFallbackCooldownMillis = minOf(15 * 60_000L, publicFallbackCooldownMillis * 2)
+            Log.i("NodePoolManager", "No new public wss node found - next try in ${publicFallbackCooldownMillis / 1000}s")
+            return
+        }
+        publicFallbackCooldownMillis = PUBLIC_FALLBACK_COOLDOWN_MS
+        if (!_usingPublicFallback.value) publicFallbackSince = System.currentTimeMillis()
+        _usingPublicFallback.value = true
+        preferStandIns = true
+        handBackSince = null
+        Log.i("NodePoolManager", "Using public wss node(s) while gRPC is unreachable: ${added.joinToString()}")
+        // Probed at once, so the first one that answers serves.
+        for (address in added) {
+            if (epoch != probeEpoch) return
+            val result = probeExisting(address, connectionFor(address), discoveryProbeTimeoutMillis)
+            if (registry.publicFallbacks().any { it.address == address }) registry.update(address, NodeRegistry.TYPE_PUBLIC, result)
+            if (!result.reachable) connections.remove(address)?.close()
+        }
+        syncPinnedConnections()
+        publish()
+    }
+
+    /**
+     * Stand-ins are in the pool. Once gRPC has answered steadily for [HAND_BACK_AFTER_MS] requests
+     * go back to it, and once it has served for that long too the stand-ins go. Steadily: an
+     * answer within the last 45 s at every look for two minutes; one answer used to be enough, so
+     * under partial DPI the pool could flap between a stand-in and gRPC every minute (audit
+     * 2026-11-25 N5). A hand-back that doesn't hold doubles the wait before the next.
+     */
+    private fun considerHandBack(nowMs: Long) {
+        val (lastSuccess, recentFailures) = registry.ownNodeConnectivity(60_000L, nowMs)
+        val grpcAnswers = lastSuccess != null && nowMs - lastSuccess < 45_000L && lastSuccess > (publicFallbackSince ?: Long.MIN_VALUE)
+        grpcSteadySince = if (grpcAnswers) grpcSteadySince ?: nowMs else null
+        val grpcSteady = grpcSteadySince?.let { nowMs - it >= HAND_BACK_AFTER_MS } ?: false
+
+        // gRPC stopped answering after a hand-back: requests go to the stand-ins again, and if that
+        // hand-back was the last one, the next waits twice as long.
+        if (!preferStandIns && (lastSuccess == null || nowMs - lastSuccess >= 30_000L) && recentFailures > 0) {
+            preferStandIns = true
+            if (handBackUnproven) {
+                handBackUnproven = false
+                handBackBackoffMillis = minOf(30 * 60_000L, handBackBackoffMillis * 2)
+                Log.i("NodePoolManager", "gRPC didn't hold - next hand-back in ${handBackBackoffMillis / 1000}s at the earliest")
+            }
+            syncPinnedConnections()
+            publish()
+        }
+        if (grpcSteady && preferStandIns && nowMs - (lastHandBackAttempt ?: Long.MIN_VALUE / 2) >= handBackBackoffMillis) {
+            lastHandBackAttempt = nowMs
+            handBackUnproven = true
+            preferStandIns = false
+            Log.i("NodePoolManager", "gRPC has answered for two minutes - requests go back to gRPC")
+            syncPinnedConnections()
+            publish()
+        }
+
+        val healthy = !preferStandIns && grpcAnswers
+        handBackSince = if (healthy) handBackSince ?: nowMs else null
+        if (handBackSince?.let { nowMs - it >= HAND_BACK_AFTER_MS } == true) {
+            dropPublicFallback("gRPC has served for two minutes")
+        }
+    }
+
+    private fun resetPublicFallbackState() {
+        publicFallbackSince = null
+        _usingPublicFallback.value = false
+        preferStandIns = false
+        handBackSince = null
+        grpcSteadySince = null
+        handBackBackoffMillis = 60_000L
+        handBackUnproven = false
+        publicFallbackCooldownMillis = PUBLIC_FALLBACK_COOLDOWN_MS
+        deadStandIns.clear()
+    }
+
+    /** Every public stand-in leaves: their connections close (a block client on one moves to the
+     *  pool's best node, its stream generation having moved). */
+    @Synchronized
+    private fun dropPublicFallback(reason: String) {
+        publicFallbackJob?.cancel()
+        publicFallbackJob = null
+        val wasUsing = _usingPublicFallback.value
+        val gone = registry.removePublicFallbacks()
+        resetPublicFallbackState()
+        gone.forEach { connections.remove(it)?.close() }
+        if (gone.isEmpty() && !wasUsing) return
+        Log.i("NodePoolManager", "Public wss nodes dropped ($reason)")
+        syncPinnedConnections()
+        publish()
+    }
+
     private companion object {
+        /** How often the public fallback is looked at while the app is open. */
+        const val PUBLIC_FALLBACK_WATCH_MS = 20_000L
+        /** No fallback this soon after boot, a pin switch, a path change or the foreground. */
+        const val PUBLIC_FALLBACK_GRACE_MS = 20_000L
+        const val PUBLIC_FALLBACK_COOLDOWN_MS = 60_000L
+        /** A stand-in that hasn't answered in this long is dead, and replaced. */
+        const val STAND_IN_GRACE_MS = 60_000L
+        /** How long gRPC must serve before the stand-ins go. */
+        const val HAND_BACK_AFTER_MS = 120_000L
+        /** The known-good list is written at most this often. */
+        const val KNOWN_GOOD_SAVE_INTERVAL_MS = 5 * 60_000L
+        /** Where the pinned node's probe sits in the foreground beat (the room sweep is at 0). */
+        const val PROBE_BEAT_OFFSET_MS = 1_200L
+        /** How long a pruned node stays out of gossip and DNS answers. */
+        const val PRUNED_MEMORY_MS = 60 * 60_000L
+        /** While the pool is idle, a connection unused this long is closed. */
+        const val IDLE_CLOSE_MS = 30_000L
+
         /**
          * iOS `NetworkEpochMonitor.effectiveHedgeDelayMs`: 3000 ms on unmetered WiFi or wired
          * (`.excellent`), and never under that on an expensive (metered / constrained) path - which
@@ -1264,4 +1983,43 @@ class NodePoolManager @Inject constructor(
          */
         const val FEE_HEDGE_DELAY_MS = 3_000L
     }
+}
+
+/**
+ * How long the node pool's probe loop waits before its next cycle; pure, for the tests.
+ */
+internal object NodeProbeCadence {
+    /** [millis] to wait, or [onBeat]: sleep to the next foreground beat ([ForegroundBeat]), whose
+     *  interval [millis] is, so the radio wakes once for every poll. */
+    data class Wait(val millis: Long, val onBeat: Boolean)
+
+    const val UNHEALTHY_MS = 10_000L
+    const val UNHEALTHY_MAX_MS = 60_000L
+    const val DEAD_MAX_MS = 120_000L
+    const val HEALTHY_MS = 30_000L
+    const val HEALTHY_METERED_MS = 60_000L
+
+    /** Every node dead for [deadCycles] cycles in a row: 20 s, 40 s, 80 s, then two minutes. */
+    fun deadBackoffMillis(deadCycles: Int): Long =
+        minOf(UNHEALTHY_MS shl deadCycles.coerceIn(0, 5), DEAD_MAX_MS)
+
+    /** The pinned node: its keepalive on the beat; when it doesn't answer, the dead-pool backoff
+     *  once that is longer than the beat (audit 2026-11-25 N13). */
+    fun trusted(deadCycles: Int, keepaliveMs: Long): Wait {
+        if (deadCycles <= 0) return Wait(keepaliveMs, onBeat = true)
+        val backoff = deadBackoffMillis(deadCycles)
+        return if (backoff <= keepaliveMs) Wait(keepaliveMs, onBeat = true) else Wait(backoff, onBeat = false)
+    }
+
+    /** Automatic Scan: dead pool backs off; short of [target] Active nodes, 10 s stretching with
+     *  [stallCycles] to 60 s (audit 2026-11-25 N8); healthy, the beat. */
+    fun automatic(deadCycles: Int, activeCount: Int, target: Int, stallCycles: Int, metered: Boolean): Wait = when {
+        deadCycles > 0 -> Wait(deadBackoffMillis(deadCycles), onBeat = false)
+        activeCount < target -> Wait(minOf(UNHEALTHY_MS shl stallCycles.coerceIn(0, 5), UNHEALTHY_MAX_MS), onBeat = false)
+        else -> Wait(if (metered) HEALTHY_METERED_MS else HEALTHY_MS, onBeat = true)
+    }
+
+    /** The stall count after a cycle: back to 0 when the pool is healthy or the Active count rose. */
+    fun nextStallCycles(previous: Int, activeBefore: Int, activeAfter: Int, target: Int): Int =
+        if (activeAfter >= target || activeAfter > activeBefore) 0 else previous + 1
 }

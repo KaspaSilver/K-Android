@@ -72,6 +72,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -300,6 +301,28 @@ object KaPostsDeepLink {
     /** Someone's KaPosts profile to open over the feed: a kachat://profile or kaposts://profile
      *  link, or View Profile on a public chat member (iOS KaPosts `pendingProfileAddress`). */
     val pendingProfileAddress = MutableStateFlow<String?>(null)
+
+    /** The signed-in account's chatting address, kept by the shell (MainShell), for
+     *  [openProfile]'s "is it you". */
+    @Volatile var signedInAddress: String? = null
+
+    /**
+     * Someone's KaPost profile, from anywhere (an @mention, a room member, the bell). Your own
+     * opens the dock's Profile tab instead (iOS d089011f `KaPostsDeepLink.openProfile`, owner
+     * 2026-11-25), not a visitor's copy over KaPost: every KaPost cover closes and the shell shows
+     * Profile.
+     */
+    fun openProfile(address: String, myAddress: String? = signedInAddress) {
+        if (isOwnAddress(address, myAddress)) {
+            KaPostsDock.select(com.kachat.app.ui.AppTab.PROFILE.route)
+            return
+        }
+        pendingProfileAddress.value = address
+    }
+
+    /** Whether [address] is [myAddress] (any case). Pure. */
+    fun isOwnAddress(address: String, myAddress: String?): Boolean =
+        !myAddress.isNullOrBlank() && address.isNotBlank() && myAddress.trim().equals(address.trim(), ignoreCase = true)
 }
 
 /**
@@ -365,6 +388,21 @@ private fun ForceFullScreenDialogWindow() {
         @Suppress("DEPRECATION")
         window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        // A dialog window is still fitted between the status and navigation bars by default
+        // (frame 132..2337 on a 2400 px screen) while its content is laid out for the whole
+        // screen, so everything sat a status bar lower and the dock copy at the bottom went half
+        // off the screen (Settings > KaPost, a poster's profile; 2026-11-25 emulator sweep). The
+        // window covers the bars, as the app's own window does, and the content pads itself
+        // with the real insets ([KaPostsOverlayInsets], the dock's navigationBarsPadding).
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            window.attributes = window.attributes.apply {
+                fitInsetsTypes = 0
+                layoutInDisplayCutoutMode =
+                    android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            }
+        } else {
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN)
+        }
     }
 }
 
@@ -499,6 +537,9 @@ private fun PagingFooterContent(
 /** What a post's text draws as cards, and the text left without them ([kaPostTextParts]). */
 private data class KaPostTextParts(
     val paymentRequestLink: KaChatLinkMatch?,
+    /** A Kaspa Hub card's link (`kachat.app/hub/<slug>`, iOS 961fc05a): drawn as a card
+     *  ([KaspaHubLinkCard]) under the text, and left out of the text itself. */
+    val hubLink: KaChatLinkMatch?,
     val botChallengeLink: KaPlayBotChallenge.Match?,
     /** An arcade score challenge (`kachatarcade://`, iOS 518fdc8c): drawn as a card
      *  (KaPostArcadeChallengeCard) under the text, and left out of the text itself. */
@@ -521,7 +562,10 @@ private fun kaPostTextParts(displayedText: String, posterHasKachatName: Boolean)
     val parts = kaPostTextPartsCache.get(key) ?: run {
         // A payment request link in the post: drawn as a card (KaPostPaymentRequestCard) under the
         // text, and left out of the text itself (iOS KaPosts 0b9fd28).
-        val paymentRequestLink = KaChatLink.findFirst(displayedText)?.takeIf { it.ref is KaChatLinkRef.PaymentRequest }
+        val internalLink = KaChatLink.findFirst(displayedText)
+        val paymentRequestLink = internalLink?.takeIf { it.ref is KaChatLinkRef.PaymentRequest }
+        // A Kaspa Hub card's link: drawn as a card with Open (iOS 961fc05a `hubLink`).
+        val hubLink = internalLink?.takeIf { it.ref is KaChatLinkRef.HubSection }
         // A KaPlay bot challenge link in the post: drawn as a card (KaPostBotChallengeCard) under the
         // text, and left out of the text itself (iOS 9e22075).
         val botChallengeLink = KaPlayBotChallenge.match(displayedText)
@@ -542,14 +586,15 @@ private fun kaPostTextParts(displayedText: String, posterHasKachatName: Boolean)
         // The text as drawn: the post without the links drawn as cards.
         var text = displayedText
         paymentRequestLink?.let { text = text.replace(it.raw, "") }
+        hubLink?.let { text = text.replace(it.raw, "") }
         botChallengeLink?.let { text = text.replace(it.matchedText, "") }
         arcadeChallengeLink?.let { text = text.replace(it.matchedText, "") }
         // Only this one: the same text can also be the start of a longer link to another page.
         siteLink?.let { text = text.replaceFirst(it.matchedText, "") }
         // the previewed link: its card stands in for it
         webLink?.let { text = text.replaceFirst(it.matchedText, "") }
-        val bodyText = if (paymentRequestLink != null || botChallengeLink != null || arcadeChallengeLink != null || siteLink != null || webLink != null) text.trim() else displayedText
-        KaPostTextParts(paymentRequestLink, botChallengeLink, arcadeChallengeLink, siteLink, webLink, bodyText).also { kaPostTextPartsCache.put(key, it) }
+        val bodyText = if (paymentRequestLink != null || hubLink != null || botChallengeLink != null || arcadeChallengeLink != null || siteLink != null || webLink != null) text.trim() else displayedText
+        KaPostTextParts(paymentRequestLink, hubLink, botChallengeLink, arcadeChallengeLink, siteLink, webLink, bodyText).also { kaPostTextPartsCache.put(key, it) }
     }
     // Its card's fetch, redirects and image are then held to the allow-lists (iOS); marked on
     // every use, as the marked set keeps only the newest links.
@@ -1416,12 +1461,20 @@ private fun KaPostsFeedScreen(
                     val pendingNew by viewModel.pendingNewPosts.collectAsState()
                     val newPostsScope = rememberCoroutineScope()
                     // Only while this feed is the one on screen: the effect is torn down when the
-                    // feed button moves on, so nothing polls for a feed nobody is looking at.
-                    if (tab == selectedFeed) {
+                    // feed button moves on, when KaPost is a hidden Hub section and while the app
+                    // is in the background, so nothing polls for a feed nobody is looking at. It
+                    // wakes on the shared beat (audit 2026-11-25 R3, B10).
+                    val feedRunning = com.kachat.app.ui.screens.rememberScreenRunning()
+                    if (tab == selectedFeed && feedRunning) {
                         LaunchedEffect(tab) {
+                            var lastCheck = System.currentTimeMillis()
                             while (true) {
-                                kotlinx.coroutines.delay(viewModel.newPostsCheckIntervalMs)
-                                viewModel.checkForNewPosts(tab)
+                                com.kachat.app.services.ForegroundBeat.sleepUntilNextBeat(offsetMs = 1_000L)
+                                val now = System.currentTimeMillis()
+                                if (com.kachat.app.ui.screens.dueOnBeat(lastCheck, now, viewModel.newPostsCheckIntervalMs)) {
+                                    lastCheck = now
+                                    viewModel.checkForNewPosts(tab)
+                                }
                             }
                         }
                     }
@@ -2593,6 +2646,9 @@ fun KaPostCell(
     onReply: (() -> Unit)? = null,
     /** "Tip": opens the 1:1 chat with the poster in KAS-send mode. Hidden on your own posts. */
     onTip: (() -> Unit)? = null,
+    /** A reply shown outside its conversation (a profile's Replies, Bookmarks) says who it
+     *  answers: "Replying to Alice" (iOS 961fc05a `replyingTo`). */
+    showsReplyingTo: Boolean = false,
 ) {
     val kaChatLinkContext = LocalContext.current
     val colors = LocalAppColors.current
@@ -2705,6 +2761,431 @@ fun KaPostCell(
     var textExpanded by remember(post.id) { mutableStateOf(false) }
     val foldText = truncatesLongText && isLongPost && !textExpanded
 
+    // The cell's parts, laid out as a feed row or, for the post a thread is focused on, as X
+    // draws the post you opened (iOS 961fc05a `rowLayout` / `focusedLayout`).
+    val avatarBlock: @Composable () -> Unit = {
+        Box(modifier = Modifier.clickable { onOpenProfile() }) {
+            ContactAvatar(
+                imageUrl = null,
+                fallbackText = name,
+                size = 40.dp,
+                // A saved contact's own photo overrides the .kachat avatar, as everywhere else.
+                backupPhotoBase64 = contactPhoto?.backupPhotoBase64,
+                address = post.posterAddress,
+            )
+        }
+    }
+    // The name line (Follow, the bell, the overflow menu) and the bell's note under it.
+    val headerBlock: @Composable () -> Unit = {
+        // iOS: name (subheadline bold), Follow (caption bold) and the bell (caption bold),
+        // 6pt apart, then a Spacer that puts the "..." at the line's far right.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // The name, Follow and the bell share what the "..." leaves, so a long name
+            // truncates instead of pushing the menu off the line.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(
+                    text = name,
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                // When the post was made, and whether it was edited, sit in their own row
+                // under the actions now - this line carries only Follow / Following (iOS).
+                if (!isMine) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    val isFollowing = isFollowingPoster
+                    Text(
+                        text = if (isFollowing) stringResource(R.string.l53_feed_tab_following) else stringResource(R.string.kpui_follow),
+                        color = if (isFollowing) colors.textSecondary else KaspaTeal,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        modifier = Modifier.clickable {
+                            lightHaptic()
+                            viewModel.toggleFollow(post.posterAddress, post.posterPubkey)
+                        },
+                    )
+                    // Notified when this person posts - its own switch, beside Follow. On says
+                    // "you'll be notified when they post", off says it won't, for a moment,
+                    // right under the name.
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        if (isWatchingPoster) Icons.Default.Notifications else Icons.Default.NotificationsNone,
+                        contentDescription = stringResource(
+                            if (isWatchingPoster) R.string.kaposts_bell_stop else R.string.kaposts_bell_notify
+                        ),
+                        tint = KaspaTeal,
+                        // iOS's caption-bold bell is ~12pt across; this glyph is 2/3 of its box.
+                        modifier = Modifier
+                            .size(17.dp)
+                            .clickable {
+                                lightHaptic()
+                                val on = viewModel.toggleWatch(post.posterAddress)
+                                bellNote = context.getString(
+                                    if (on) R.string.kaposts_bell_on_note else R.string.kaposts_bell_off_note,
+                                    name,
+                                )
+                            },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+            // iOS: the subheadline "ellipsis" in a 30 x 24pt tap frame at the line's end.
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(width = 30.dp, height = 24.dp)
+                    .clickable { showOverflow = true },
+            ) {
+                Icon(
+                    Icons.Default.MoreHoriz,
+                    contentDescription = stringResource(R.string.kpui_more),
+                    tint = colors.textSecondary,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            if (editing) {
+                // Edit mode: no threading and no draft prompt - this is a change to
+                // something already posted, not a new one being written.
+                KaPostComposerDialog(
+                    title = stringResource(R.string.kpui_edit_post),
+                    quoted = null,
+                    submitLabel = stringResource(R.string.save),
+                    onDismiss = { editing = false },
+                    onSubmit = { newText ->
+                        editing = false
+                        viewModel.editPost(post, newText)
+                    },
+                    viewModel = viewModel,
+                    initialText = post.text,
+                    // the text stays as posted (iOS `!editingPost`)
+                    attachesChallenge = false,
+                )
+            }
+            // The three-dots menu is a half sheet, like every other menu in the app,
+            // so each option can say what it does; the popup had room for a verb and
+            // nothing else. Share lives in the action row itself, next to bookmark,
+            // matching iOS - no duplicate entry here.
+            if (showOverflow) {
+                ActionSheetContainer(
+                    // iOS: "Your post", or the author's name.
+                    title = if (isMine) stringResource(R.string.kpui_your_post) else name,
+                    subtitle = null,
+                    onDismiss = { showOverflow = false },
+                ) {
+                    // Editable only while the window is open, and only our own: the
+                    // indexer enforces the same rules, so anything else would be
+                    // written to the chain and then ignored. Edit first, as iOS.
+                    val editLeftMs = if (isMine) post.editTimeRemainingMs else null
+                    if (editLeftMs != null) {
+                        ActionSheetRow(
+                            icon = Icons.Default.Edit,
+                            title = stringResource(R.string.ab_edit),
+                            subtitle = stringResource(R.string.kpui_edit_window_subtitle, editWindowLeftText(editLeftMs)),
+                        ) {
+                            showOverflow = false
+                            editing = true
+                        }
+                    }
+                    if (post.remoteId != null) {
+                        ActionSheetRow(
+                            icon = Icons.Outlined.BarChart,
+                            title = stringResource(R.string.kpui_post_activity),
+                            subtitle = stringResource(R.string.kpui_post_activity_subtitle),
+                        ) {
+                            showOverflow = false
+                            onViewEngagement()
+                        }
+                    }
+                    // Any age, unlike an edit: what you posted is yours to withdraw.
+                    if (isMine && post.remoteId != null && post.deliveryStatus == KaPostDraft.Delivery.SENT && !post.pendingDeletion) {
+                        ActionSheetRow(
+                            icon = Icons.Default.Delete,
+                            title = stringResource(R.string.delete),
+                            subtitle = stringResource(R.string.kaposts_delete_post_subtitle),
+                            tint = LocalAppColors.current.danger,
+                        ) {
+                            showOverflow = false
+                            viewModel.deletePost(post)
+                        }
+                    }
+                    if (!isMine) {
+                        // Reporting: the post's id, author and text go to KaChat by email,
+                        // where a person reads them. Posts are on a public chain and
+                        // nobody can take one down, so the remedies that act at once are
+                        // the two rows under this one - Mute and Block remove the author
+                        // from this reader's KaPosts on the spot (iOS dd58e26).
+                        ActionSheetRow(
+                            icon = Icons.Default.Flag,
+                            title = stringResource(R.string.pc_report),
+                            subtitle = stringResource(R.string.kpui_report_post_subtitle),
+                            tint = LocalAppColors.current.danger,
+                        ) {
+                            showOverflow = false
+                            unsentReport = !reportPost(post).send(context)
+                        }
+                        // Named, as on iOS: "Mute alice" says who this lands on.
+                        ActionSheetRow(
+                            icon = Icons.Default.VolumeOff,
+                            title = stringResource(R.string.kpui_mute_name, name),
+                            subtitle = stringResource(R.string.kpui_mute_subtitle),
+                        ) {
+                            showOverflow = false
+                            viewModel.mute(post.posterAddress)
+                        }
+                        ActionSheetRow(
+                            icon = Icons.Default.Block,
+                            title = stringResource(R.string.pc_block_name, name),
+                            subtitle = stringResource(R.string.pc_block_subtitle),
+                            tint = LocalAppColors.current.danger,
+                        ) {
+                            showOverflow = false
+                            viewModel.block(post.posterAddress)
+                        }
+                    }
+                }
+            }
+        }
+        AnimatedVisibility(visible = bellNote != null, enter = fadeIn(), exit = fadeOut()) {
+            Text(
+                bellNote.orEmpty(),
+                color = KaspaTeal,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+            )
+        }
+    }
+    // What the post says: text, link cards, poll, quote.
+    val contentBlock: @Composable () -> Unit = {
+        // ClickableText (not Text): tapping an @mention resolves the .kachat name and
+        // opens that user's profile, tapping a link opens the Copy/Open dialog (iOS
+        // parity - links never auto-open). ClickableText consumes EVERY tap on the
+        // body though, so plain-text taps must fall through to the row's open-thread
+        // action by hand - the body covers most of the cell, and without this
+        // "tap the post to open its thread" only worked on the padding around it.
+        // Root cells keep body taps inert, matching their disabled row clickable.
+        // What actually gets laid out. A folded cell shows eight lines at most, yet it
+        // was handed the whole post - up to twenty-five thousand characters, styled and
+        // measured per cell on every pass. Eight lines never need more than the first
+        // few hundred, so a folded cell renders a prefix and the full text only once it
+        // is expanded (iOS a3a7524).
+        val layoutText = remember(bodyText, foldText) { foldedLayoutText(bodyText, foldText) }
+        val postAnnotated = remember(layoutText) { annotatedPostText(layoutText) }
+        val postBody = @Composable {
+            androidx.compose.foundation.text.ClickableText(
+                text = postAnnotated,
+                // The post a thread is FOCUSED on reads larger than the posts around it,
+                // the way X sizes the one you opened against its ancestors and replies.
+                // iOS: body (17/22) in a feed, title3 (20/25) for the focused post.
+                style = TextStyle(
+                    color = colors.textPrimary,
+                    fontSize = if (isRoot) 20.sp else 17.sp,
+                    lineHeight = if (isRoot) 25.sp else 22.sp,
+                ),
+                maxLines = if (foldText) 8 else Int.MAX_VALUE,
+                overflow = if (foldText) TextOverflow.Ellipsis else TextOverflow.Clip,
+                onClick = { offset ->
+                    val mention = postAnnotated.getStringAnnotations(MENTION_ANNOTATION_TAG, offset, offset).firstOrNull()
+                    val link = postAnnotated.getStringAnnotations(LINK_ANNOTATION_TAG, offset, offset).firstOrNull()
+                    when {
+                        // the post's signed mentions ride along, so the tap opens who
+                        // the author meant (iOS e493c97, IOS-068)
+                        mention != null -> viewModel.openMentionProfile(mention.item, post.mentionedPubkeys)
+                        link != null -> tappedLinkUrl = link.item
+                        !isRoot -> onOpenThread()
+                    }
+                },
+            )
+        }
+        // Long-press selects text only in the post you OPENED. Making every cell
+        // selectable turned a long-press anywhere in a feed into a selection handle
+        // fight, and scrolling past a post is far more common than quoting one; the
+        // focused post is the one you came to read. Matches iOS's selectableText(isRoot).
+        // A post that is only a payment request link has no text left to draw.
+        if (layoutText.isNotEmpty()) {
+            if (isRoot) {
+                androidx.compose.foundation.text.selection.SelectionContainer { postBody() }
+            } else {
+                postBody()
+            }
+        }
+        // Half sheet rather than an alert dialog - see LinkActionsSheet.
+        tappedLinkUrl?.let { url ->
+            val linkHaptic = com.kachat.app.util.rememberHaptics()
+            LinkActionsSheet(
+                url = url,
+                onDismiss = { tappedLinkUrl = null },
+                onOpen = {
+                    // A KaChat link goes straight to the post or room it names, rather
+                    // than out to the browser and back - same as the chat screens.
+                    val internal = KaChatLink.parse(url)
+                    if (internal != null) openKaChatLink(kaChatLinkContext, internal) else uriHandler.openUri(url)
+                },
+                onCopy = {
+                    clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(url))
+                    // iOS's post link copy: a haptic, no toast.
+                    linkHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
+                },
+            )
+        }
+        if (truncatesLongText && isLongPost) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                if (textExpanded) stringResource(R.string.kpui_show_less) else stringResource(R.string.kpui_show_more),
+                color = KaspaTeal,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+                modifier = Modifier.clickable { textExpanded = !textExpanded },
+            )
+        }
+        // A payment request link: a card with a Pay button, not the link's text.
+        (paymentRequestLink?.ref as? KaChatLinkRef.PaymentRequest)?.let { link ->
+            Spacer(modifier = Modifier.height(10.dp))
+            KaPostPaymentRequestCard(request = link.request)
+        }
+        // A Kaspa Hub card's link: a card with Open, not the link's text (iOS 961fc05a).
+        (textParts.hubLink?.ref as? KaChatLinkRef.HubSection)?.let { link ->
+            Spacer(modifier = Modifier.height(10.dp))
+            KaspaHubLinkCard(tab = link.tab)
+        }
+        // A KaPlay bot challenge: a card with a Challenge button, not the link's text.
+        botChallengeLink?.let { link ->
+            Spacer(modifier = Modifier.height(10.dp))
+            KaPostBotChallengeCard(challenge = link.challenge)
+        }
+        // An arcade score to beat: a card with a Play button, not the link's text. The
+        // post's signer, so the card names `by` only when it's them (audit 2026-11-24 #21).
+        textParts.arcadeChallengeLink?.let { link ->
+            Spacer(modifier = Modifier.height(10.dp))
+            KaPostArcadeChallengeCard(challenge = link.challenge, author = post.posterAddress)
+        }
+        // A link to KaChat's site: its preview, or the link itself if that can't load.
+        siteLink?.let { link ->
+            Spacer(modifier = Modifier.height(10.dp))
+            LinkPreviewCard(url = link.url, txId = post.remoteId.orEmpty(), fallbackText = link.matchedText, fillsWidth = true)
+        }
+        // Another site's link from a poster with a .kachat name: its preview in place of
+        // the link, or the link itself if the preview can't load (iOS b78fdb0).
+        webLink?.let { link ->
+            Spacer(modifier = Modifier.height(10.dp))
+            LinkPreviewCard(url = link.url, txId = post.remoteId.orEmpty(), fallbackText = link.matchedText, fillsWidth = true)
+        }
+        TranslateAffordance(
+            state = translationState,
+            canTranslate = canTranslate,
+            showingOriginal = showingOriginal,
+            onTranslate = { viewModel.translatePost(post) },
+            onShowOriginal = { viewModel.showOriginal(post) },
+            onShowTranslation = { viewModel.showTranslation(post) },
+        )
+        post.poll?.let { poll ->
+            // The stack's 6pt plus the card's own 6pt top padding (iOS).
+            Spacer(modifier = Modifier.height(12.dp))
+            KaPostPollCard(
+                poll = poll,
+                // A poll of someone else's is votable; a closed one, or one still on its
+                // way to the chain, only shows its numbers.
+                onVote = if (post.remoteId != null && !poll.isClosed) {
+                    { index -> lightHaptic(); viewModel.votePoll(post, index) }
+                } else null,
+                votePending = cellPollVoteDeadline != null,
+            )
+        }
+        post.quoted?.let { quoted ->
+            Spacer(modifier = Modifier.height(6.dp))
+            // The feeds drop a hidden person's own posts, but someone else quoting them
+            // put their text and avatar back in front of you (iOS 369794e). Changes only
+            // on a mute or block.
+            val quotedMuted by viewModel.muted.collectSelectedAsState(quoted.posterAddress) { quoted.posterAddress in it }
+            val quotedBlocked by viewModel.blocked.collectSelectedAsState(quoted.posterAddress) { quoted.posterAddress in it }
+            if (quotedMuted || quotedBlocked) {
+                // Someone you muted or blocked: no text, name or avatar, and no way in.
+                Text(
+                    stringResource(R.string.kaposts_quoted_hidden),
+                    color = colors.textSecondary,
+                    fontSize = 15.sp,
+                    modifier = Modifier
+                        .padding(top = 2.dp)
+                        .fillMaxWidth()
+                        .border(1.dp, colors.textSecondary.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .padding(10.dp),
+                )
+            } else {
+                // Same per-address slices for the quoted author as for the cell's own.
+                val quotedName = posterDisplayNameState(viewModel, quoted.posterAddress)
+                Box(
+                    modifier = Modifier.clickable(enabled = quoted.remoteId != null) {
+                        quoted.remoteId?.let(onOpenQuoted)
+                    },
+                ) {
+                    QuotedEmbedCard(
+                        quoted = quoted,
+                        displayName = quotedName,
+                    )
+                }
+            }
+        }
+    }
+    // The action row, and the tippers' sheet it opens.
+    val actionsBlock: @Composable () -> Unit = {
+        EngagementRow(
+            post = post,
+            commentCount = viewModel.commentCount(post),
+            repostDeadline = cellDeadlines.first,
+            likeDeadline = cellDeadlines.second,
+            dislikeDeadline = cellDeadlines.third,
+            // The bubble replies (feed cells open the Reply composer; the card opens the
+            // thread). The focused post of a thread has no bubble at all - the box under
+            // it is its reply (iOS threadCell isRoot: onComment nil).
+            onComment = if (isRoot) null else (onReply ?: onOpenThread),
+            onRepost = onRepostTap,
+            onLike = { lightHaptic(); viewModel.toggleLike(post) },
+            onDislike = { lightHaptic(); viewModel.toggleDislike(post) },
+            onBookmark = { lightHaptic(); viewModel.toggleBookmark(post) },
+            onCancelCountdown = { lightHaptic(); viewModel.cancelUndoable(it) },
+            onShare = {
+                viewModel.shareText(post)?.let { link ->
+                    // Shared as a link and nothing else, which is what a paste target
+                    // wants: the link unfurls the post's preview by itself.
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, link)
+                        putExtra(Intent.EXTRA_TITLE, link)
+                    }
+                    context.startActivity(Intent.createChooser(intent, com.kachat.app.util.tr(R.string.kpui_share_post)))
+                }
+            },
+            onTip = if (!isMine) onTip?.let { tip -> { lightHaptic(); tip() } } else null,
+            // Your own post's tip count lists who tipped (Post Activity > Tips for any post).
+            onShowTippers = if (post.remoteId != null) {
+                { lightHaptic(); showTippers = true }
+            } else null,
+            // X-style repost sheet; quote routes through the VM's quoteRequest flow so
+            // the main screen's composer opens from any cell. "Undo Repost" submits the
+            // unquote counter-action rather than a second repost.
+            onRepostConfirm = {
+                if (post.repostedByMe) viewModel.scheduleUnrepost(post) else viewModel.scheduleRepost(post)
+            },
+            onQuote = { viewModel.requestQuote(post) },
+            onRetry = { lightHaptic(); viewModel.retryPost(post) },
+            onHaptic = { lightHaptic() },
+        )
+        if (showTippers) {
+            post.remoteId?.let { remoteId ->
+                KaPostTippersSheet(postId = remoteId, viewModel = viewModel, onDismiss = { showTippers = false })
+            }
+        }
+    }
+    // "Replying to Alice" above a reply shown outside its conversation (a profile's Replies, a
+    // bookmark), as X has it (iOS 961fc05a `replyingToLine`); inside a conversation the post it
+    // answers is right above it.
+    val replyingToAddress = if (showsReplyingTo && !isRoot) viewModel.replyingToAddress(post) else null
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -2716,428 +3197,76 @@ fun KaPostCell(
             // drawn behind ancestor cells depends on exactly these numbers.
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
-        Row(verticalAlignment = Alignment.Top) {
-            Box(modifier = Modifier.clickable { onOpenProfile() }) {
-                ContactAvatar(
-                    imageUrl = null,
-                    fallbackText = name,
-                    size = 40.dp,
-                    // A saved contact's own photo overrides the .kachat avatar, as everywhere else.
-                    backupPhotoBase64 = contactPhoto?.backupPhotoBase64,
-                    address = post.posterAddress,
-                )
+        if (isRoot) {
+            // The post you opened, as X draws it (iOS 961fc05a `focusedLayout`, owner 2026-11-25:
+            // "match X"): the avatar and name on one line, the text full width and larger under
+            // them, the full time ("12:00 PM · Nov 25, 2026"), then the actions between two rules.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                avatarBlock()
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) { headerBlock() }
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                // iOS: name (subheadline bold), Follow (caption bold) and the bell (caption bold),
-                // 6pt apart, then a Spacer that puts the "..." at the line's far right.
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // The name, Follow and the bell share what the "..." leaves, so a long name
-                    // truncates instead of pushing the menu off the line.
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f),
-                    ) {
+            Spacer(modifier = Modifier.height(10.dp))
+            contentBlock()
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = remember(post.timestamp) { focusedPostTimestampLabel(post.timestamp) } +
+                    if (post.editedAt != null) " " + stringResource(R.string.kpui_dot_edited) else "",
+                // iOS: subheadline (15pt), secondary.
+                color = colors.textSecondary,
+                fontSize = 15.sp,
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = colors.surfaceVariant)
+            actionsBlock()
+            HorizontalDivider(color = colors.surfaceVariant)
+        } else {
+            Row(verticalAlignment = Alignment.Top) {
+                avatarBlock()
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    replyingToAddress?.let { address ->
+                        val replyName = posterDisplayNameState(viewModel, address)
+                        val line = stringResource(R.string.replying_to, replyName)
                         Text(
-                            text = name,
-                            color = colors.textPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
+                            text = remember(line, replyName) {
+                                // the name in the accent colour
+                                androidx.compose.ui.text.buildAnnotatedString {
+                                    append(line)
+                                    val at = line.lastIndexOf(replyName)
+                                    if (at >= 0 && replyName.isNotEmpty()) {
+                                        addStyle(androidx.compose.ui.text.SpanStyle(color = KaspaTeal), at, at + replyName.length)
+                                    }
+                                }
+                            },
+                            color = colors.textSecondary,
+                            fontSize = 12.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
                         )
-                        // When the post was made, and whether it was edited, sit in their own row
-                        // under the actions now - this line carries only Follow / Following (iOS).
-                        if (!isMine) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            val isFollowing = isFollowingPoster
-                            Text(
-                                text = if (isFollowing) stringResource(R.string.l53_feed_tab_following) else stringResource(R.string.kpui_follow),
-                                color = if (isFollowing) colors.textSecondary else KaspaTeal,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                modifier = Modifier.clickable {
-                                    lightHaptic()
-                                    viewModel.toggleFollow(post.posterAddress, post.posterPubkey)
-                                },
-                            )
-                            // Notified when this person posts - its own switch, beside Follow. On says
-                            // "you'll be notified when they post", off says it won't, for a moment,
-                            // right under the name.
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(
-                                if (isWatchingPoster) Icons.Default.Notifications else Icons.Default.NotificationsNone,
-                                contentDescription = stringResource(
-                                    if (isWatchingPoster) R.string.kaposts_bell_stop else R.string.kaposts_bell_notify
-                                ),
-                                tint = KaspaTeal,
-                                // iOS's caption-bold bell is ~12pt across; this glyph is 2/3 of its box.
-                                modifier = Modifier
-                                    .size(17.dp)
-                                    .clickable {
-                                        lightHaptic()
-                                        val on = viewModel.toggleWatch(post.posterAddress)
-                                        bellNote = context.getString(
-                                            if (on) R.string.kaposts_bell_on_note else R.string.kaposts_bell_off_note,
-                                            name,
-                                        )
-                                    },
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(6.dp))
                     }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    // iOS: the subheadline "ellipsis" in a 30 x 24pt tap frame at the line's end.
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(width = 30.dp, height = 24.dp)
-                            .clickable { showOverflow = true },
-                    ) {
-                        Icon(
-                            Icons.Default.MoreHoriz,
-                            contentDescription = stringResource(R.string.kpui_more),
-                            tint = colors.textSecondary,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                    if (editing) {
-                        // Edit mode: no threading and no draft prompt - this is a change to
-                        // something already posted, not a new one being written.
-                        KaPostComposerDialog(
-                            title = stringResource(R.string.kpui_edit_post),
-                            quoted = null,
-                            submitLabel = stringResource(R.string.save),
-                            onDismiss = { editing = false },
-                            onSubmit = { newText ->
-                                editing = false
-                                viewModel.editPost(post, newText)
-                            },
-                            viewModel = viewModel,
-                            initialText = post.text,
-                            // the text stays as posted (iOS `!editingPost`)
-                            attachesChallenge = false,
-                        )
-                    }
-                    // The three-dots menu is a half sheet, like every other menu in the app,
-                    // so each option can say what it does; the popup had room for a verb and
-                    // nothing else. Share lives in the action row itself, next to bookmark,
-                    // matching iOS - no duplicate entry here.
-                    if (showOverflow) {
-                        ActionSheetContainer(
-                            // iOS: "Your post", or the author's name.
-                            title = if (isMine) stringResource(R.string.kpui_your_post) else name,
-                            subtitle = null,
-                            onDismiss = { showOverflow = false },
-                        ) {
-                            // Editable only while the window is open, and only our own: the
-                            // indexer enforces the same rules, so anything else would be
-                            // written to the chain and then ignored. Edit first, as iOS.
-                            val editLeftMs = if (isMine) post.editTimeRemainingMs else null
-                            if (editLeftMs != null) {
-                                ActionSheetRow(
-                                    icon = Icons.Default.Edit,
-                                    title = stringResource(R.string.ab_edit),
-                                    subtitle = stringResource(R.string.kpui_edit_window_subtitle, editWindowLeftText(editLeftMs)),
-                                ) {
-                                    showOverflow = false
-                                    editing = true
-                                }
-                            }
-                            if (post.remoteId != null) {
-                                ActionSheetRow(
-                                    icon = Icons.Outlined.BarChart,
-                                    title = stringResource(R.string.kpui_post_activity),
-                                    subtitle = stringResource(R.string.kpui_post_activity_subtitle),
-                                ) {
-                                    showOverflow = false
-                                    onViewEngagement()
-                                }
-                            }
-                            // Any age, unlike an edit: what you posted is yours to withdraw.
-                            if (isMine && post.remoteId != null && post.deliveryStatus == KaPostDraft.Delivery.SENT && !post.pendingDeletion) {
-                                ActionSheetRow(
-                                    icon = Icons.Default.Delete,
-                                    title = stringResource(R.string.delete),
-                                    subtitle = stringResource(R.string.kaposts_delete_post_subtitle),
-                                    tint = LocalAppColors.current.danger,
-                                ) {
-                                    showOverflow = false
-                                    viewModel.deletePost(post)
-                                }
-                            }
-                            if (!isMine) {
-                                // Reporting: the post's id, author and text go to KaChat by email,
-                                // where a person reads them. Posts are on a public chain and
-                                // nobody can take one down, so the remedies that act at once are
-                                // the two rows under this one - Mute and Block remove the author
-                                // from this reader's KaPosts on the spot (iOS dd58e26).
-                                ActionSheetRow(
-                                    icon = Icons.Default.Flag,
-                                    title = stringResource(R.string.pc_report),
-                                    subtitle = stringResource(R.string.kpui_report_post_subtitle),
-                                    tint = LocalAppColors.current.danger,
-                                ) {
-                                    showOverflow = false
-                                    unsentReport = !reportPost(post).send(context)
-                                }
-                                // Named, as on iOS: "Mute alice" says who this lands on.
-                                ActionSheetRow(
-                                    icon = Icons.Default.VolumeOff,
-                                    title = stringResource(R.string.kpui_mute_name, name),
-                                    subtitle = stringResource(R.string.kpui_mute_subtitle),
-                                ) {
-                                    showOverflow = false
-                                    viewModel.mute(post.posterAddress)
-                                }
-                                ActionSheetRow(
-                                    icon = Icons.Default.Block,
-                                    title = stringResource(R.string.pc_block_name, name),
-                                    subtitle = stringResource(R.string.pc_block_subtitle),
-                                    tint = LocalAppColors.current.danger,
-                                ) {
-                                    showOverflow = false
-                                    viewModel.block(post.posterAddress)
-                                }
-                            }
-                        }
-                    }
-                }
-                AnimatedVisibility(visible = bellNote != null, enter = fadeIn(), exit = fadeOut()) {
-                    Text(
-                        bellNote.orEmpty(),
-                        color = KaspaTeal,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 11.sp,
-                    )
-                }
-                // iOS stacks the cell's rows 6pt apart.
-                Spacer(modifier = Modifier.height(6.dp))
-                // ClickableText (not Text): tapping an @mention resolves the .kachat name and
-                // opens that user's profile, tapping a link opens the Copy/Open dialog (iOS
-                // parity - links never auto-open). ClickableText consumes EVERY tap on the
-                // body though, so plain-text taps must fall through to the row's open-thread
-                // action by hand - the body covers most of the cell, and without this
-                // "tap the post to open its thread" only worked on the padding around it.
-                // Root cells keep body taps inert, matching their disabled row clickable.
-                // What actually gets laid out. A folded cell shows eight lines at most, yet it
-                // was handed the whole post - up to twenty-five thousand characters, styled and
-                // measured per cell on every pass. Eight lines never need more than the first
-                // few hundred, so a folded cell renders a prefix and the full text only once it
-                // is expanded (iOS a3a7524).
-                val layoutText = remember(bodyText, foldText) { foldedLayoutText(bodyText, foldText) }
-                val postAnnotated = remember(layoutText) { annotatedPostText(layoutText) }
-                val postBody = @Composable {
-                    androidx.compose.foundation.text.ClickableText(
-                        text = postAnnotated,
-                        // The post a thread is FOCUSED on reads larger than the posts around it,
-                        // the way X sizes the one you opened against its ancestors and replies.
-                        // iOS: body (17/22) in a feed, title3 (20/25) for the focused post.
-                        style = TextStyle(
-                            color = colors.textPrimary,
-                            fontSize = if (isRoot) 20.sp else 17.sp,
-                            lineHeight = if (isRoot) 25.sp else 22.sp,
-                        ),
-                        maxLines = if (foldText) 8 else Int.MAX_VALUE,
-                        overflow = if (foldText) TextOverflow.Ellipsis else TextOverflow.Clip,
-                        onClick = { offset ->
-                            val mention = postAnnotated.getStringAnnotations(MENTION_ANNOTATION_TAG, offset, offset).firstOrNull()
-                            val link = postAnnotated.getStringAnnotations(LINK_ANNOTATION_TAG, offset, offset).firstOrNull()
-                            when {
-                                // the post's signed mentions ride along, so the tap opens who
-                                // the author meant (iOS e493c97, IOS-068)
-                                mention != null -> viewModel.openMentionProfile(mention.item, post.mentionedPubkeys)
-                                link != null -> tappedLinkUrl = link.item
-                                !isRoot -> onOpenThread()
-                            }
-                        },
-                    )
-                }
-                // Long-press selects text only in the post you OPENED. Making every cell
-                // selectable turned a long-press anywhere in a feed into a selection handle
-                // fight, and scrolling past a post is far more common than quoting one; the
-                // focused post is the one you came to read. Matches iOS's selectableText(isRoot).
-                // A post that is only a payment request link has no text left to draw.
-                if (layoutText.isNotEmpty()) {
-                    if (isRoot) {
-                        androidx.compose.foundation.text.selection.SelectionContainer { postBody() }
-                    } else {
-                        postBody()
-                    }
-                }
-                // Half sheet rather than an alert dialog - see LinkActionsSheet.
-                tappedLinkUrl?.let { url ->
-                    val linkHaptic = com.kachat.app.util.rememberHaptics()
-                    LinkActionsSheet(
-                        url = url,
-                        onDismiss = { tappedLinkUrl = null },
-                        onOpen = {
-                            // A KaChat link goes straight to the post or room it names, rather
-                            // than out to the browser and back - same as the chat screens.
-                            val internal = KaChatLink.parse(url)
-                            if (internal != null) openKaChatLink(kaChatLinkContext, internal) else uriHandler.openUri(url)
-                        },
-                        onCopy = {
-                            clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(url))
-                            // iOS's post link copy: a haptic, no toast.
-                            linkHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                        },
-                    )
-                }
-                if (truncatesLongText && isLongPost) {
+                    headerBlock()
+                    // iOS stacks the cell's rows 6pt apart.
+                    Spacer(modifier = Modifier.height(6.dp))
+                    contentBlock()
+                    // iOS: the stack's 6pt plus the row's 2pt top padding (applied inside the row) -
+                    // less the 4dp the actions here keep above their icons as touch padding.
+                    Spacer(modifier = Modifier.height(2.dp))
+                    actionsBlock()
+                    // When the post was made - the full date and time, in its own row under the
+                    // actions, with "· edited" after it when the text was changed (iOS b31ff59).
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        if (textExpanded) stringResource(R.string.kpui_show_less) else stringResource(R.string.kpui_show_more),
-                        color = KaspaTeal,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        modifier = Modifier.clickable { textExpanded = !textExpanded },
+                        // Remembered per timestamp: formatting allocates a SimpleDateFormat, which is
+                        // not something to redo on every cell recomposition mid-scroll.
+                        text = remember(post.timestamp) { postTimestampLabel(post.timestamp) } +
+                            if (post.editedAt != null) " " + stringResource(R.string.kpui_dot_edited) else "",
+                        // iOS: caption (12pt), secondary.
+                        color = colors.textSecondary,
+                        fontSize = 12.sp,
                     )
                 }
-                // A payment request link: a card with a Pay button, not the link's text.
-                (paymentRequestLink?.ref as? KaChatLinkRef.PaymentRequest)?.let { link ->
-                    Spacer(modifier = Modifier.height(10.dp))
-                    KaPostPaymentRequestCard(request = link.request)
-                }
-                // A KaPlay bot challenge: a card with a Challenge button, not the link's text.
-                botChallengeLink?.let { link ->
-                    Spacer(modifier = Modifier.height(10.dp))
-                    KaPostBotChallengeCard(challenge = link.challenge)
-                }
-                // An arcade score to beat: a card with a Play button, not the link's text. The
-                // post's signer, so the card names `by` only when it's them (audit 2026-11-24 #21).
-                textParts.arcadeChallengeLink?.let { link ->
-                    Spacer(modifier = Modifier.height(10.dp))
-                    KaPostArcadeChallengeCard(challenge = link.challenge, author = post.posterAddress)
-                }
-                // A link to KaChat's site: its preview, or the link itself if that can't load.
-                siteLink?.let { link ->
-                    Spacer(modifier = Modifier.height(10.dp))
-                    LinkPreviewCard(url = link.url, txId = post.remoteId.orEmpty(), fallbackText = link.matchedText)
-                }
-                // Another site's link from a poster with a .kachat name: its preview in place of
-                // the link, or the link itself if the preview can't load (iOS b78fdb0).
-                webLink?.let { link ->
-                    Spacer(modifier = Modifier.height(10.dp))
-                    LinkPreviewCard(url = link.url, txId = post.remoteId.orEmpty(), fallbackText = link.matchedText)
-                }
-                TranslateAffordance(
-                    state = translationState,
-                    canTranslate = canTranslate,
-                    showingOriginal = showingOriginal,
-                    onTranslate = { viewModel.translatePost(post) },
-                    onShowOriginal = { viewModel.showOriginal(post) },
-                    onShowTranslation = { viewModel.showTranslation(post) },
-                )
-                post.poll?.let { poll ->
-                    // The stack's 6pt plus the card's own 6pt top padding (iOS).
-                    Spacer(modifier = Modifier.height(12.dp))
-                    KaPostPollCard(
-                        poll = poll,
-                        // A poll of someone else's is votable; a closed one, or one still on its
-                        // way to the chain, only shows its numbers.
-                        onVote = if (post.remoteId != null && !poll.isClosed) {
-                            { index -> lightHaptic(); viewModel.votePoll(post, index) }
-                        } else null,
-                        votePending = cellPollVoteDeadline != null,
-                    )
-                }
-                post.quoted?.let { quoted ->
-                    Spacer(modifier = Modifier.height(6.dp))
-                    // The feeds drop a hidden person's own posts, but someone else quoting them
-                    // put their text and avatar back in front of you (iOS 369794e). Changes only
-                    // on a mute or block.
-                    val quotedMuted by viewModel.muted.collectSelectedAsState(quoted.posterAddress) { quoted.posterAddress in it }
-                    val quotedBlocked by viewModel.blocked.collectSelectedAsState(quoted.posterAddress) { quoted.posterAddress in it }
-                    if (quotedMuted || quotedBlocked) {
-                        // Someone you muted or blocked: no text, name or avatar, and no way in.
-                        Text(
-                            stringResource(R.string.kaposts_quoted_hidden),
-                            color = colors.textSecondary,
-                            fontSize = 15.sp,
-                            modifier = Modifier
-                                .padding(top = 2.dp)
-                                .fillMaxWidth()
-                                .border(1.dp, colors.textSecondary.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                                .padding(10.dp),
-                        )
-                    } else {
-                        // Same per-address slices for the quoted author as for the cell's own.
-                        val quotedName = posterDisplayNameState(viewModel, quoted.posterAddress)
-                        Box(
-                            modifier = Modifier.clickable(enabled = quoted.remoteId != null) {
-                                quoted.remoteId?.let(onOpenQuoted)
-                            },
-                        ) {
-                            QuotedEmbedCard(
-                                quoted = quoted,
-                                displayName = quotedName,
-                            )
-                        }
-                    }
-                }
-                // iOS: the stack's 6pt plus the row's 2pt top padding (applied inside the row) -
-                // less the 4dp the actions here keep above their icons as touch padding.
-                Spacer(modifier = Modifier.height(2.dp))
-                EngagementRow(
-                    post = post,
-                    commentCount = viewModel.commentCount(post),
-                    repostDeadline = cellDeadlines.first,
-                    likeDeadline = cellDeadlines.second,
-                    dislikeDeadline = cellDeadlines.third,
-                    // The bubble replies (feed cells open the Reply composer; the card opens the
-                    // thread). The focused post of a thread has no bubble at all - the box under
-                    // it is its reply (iOS threadCell isRoot: onComment nil).
-                    onComment = if (isRoot) null else (onReply ?: onOpenThread),
-                    onRepost = onRepostTap,
-                    onLike = { lightHaptic(); viewModel.toggleLike(post) },
-                    onDislike = { lightHaptic(); viewModel.toggleDislike(post) },
-                    onBookmark = { lightHaptic(); viewModel.toggleBookmark(post) },
-                    onCancelCountdown = { lightHaptic(); viewModel.cancelUndoable(it) },
-                    onShare = {
-                        viewModel.shareText(post)?.let { link ->
-                            // Shared as a link and nothing else, which is what a paste target
-                            // wants: the link unfurls the post's preview by itself.
-                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, link)
-                                putExtra(Intent.EXTRA_TITLE, link)
-                            }
-                            context.startActivity(Intent.createChooser(intent, com.kachat.app.util.tr(R.string.kpui_share_post)))
-                        }
-                    },
-                    onTip = if (!isMine) onTip?.let { tip -> { lightHaptic(); tip() } } else null,
-                    // Your own post's tip count lists who tipped (Post Activity > Tips for any post).
-                    onShowTippers = if (post.remoteId != null) {
-                        { lightHaptic(); showTippers = true }
-                    } else null,
-                    // X-style repost sheet; quote routes through the VM's quoteRequest flow so
-                    // the main screen's composer opens from any cell. "Undo Repost" submits the
-                    // unquote counter-action rather than a second repost.
-                    onRepostConfirm = {
-                        if (post.repostedByMe) viewModel.scheduleUnrepost(post) else viewModel.scheduleRepost(post)
-                    },
-                    onQuote = { viewModel.requestQuote(post) },
-                    onRetry = { lightHaptic(); viewModel.retryPost(post) },
-                    onHaptic = { lightHaptic() },
-                )
-                if (showTippers) {
-                    post.remoteId?.let { remoteId ->
-                        KaPostTippersSheet(postId = remoteId, viewModel = viewModel, onDismiss = { showTippers = false })
-                    }
-                }
-                // When the post was made - the full date and time, in its own row under the
-                // actions, with "· edited" after it when the text was changed (iOS b31ff59).
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    // Remembered per timestamp: formatting allocates a SimpleDateFormat, which is
-                    // not something to redo on every cell recomposition mid-scroll.
-                    text = remember(post.timestamp) { postTimestampLabel(post.timestamp) } +
-                        if (post.editedAt != null) " " + stringResource(R.string.kpui_dot_edited) else "",
-                    // iOS: caption (12pt), secondary.
-                    color = colors.textSecondary,
-                    fontSize = 12.sp,
-                )
             }
         }
     }
@@ -3580,6 +3709,16 @@ private fun postTimestampLabel(timestampMs: Long): String {
     val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, locale)
     val moment = java.util.Date(timestampMs)
     return date.format(moment) + com.kachat.app.util.IosDateStyle.dateTimeJoiner(locale) + time.format(moment)
+}
+
+/** X's time on the post you opened: "12:00 PM · Nov 25, 2026", in the reader's locale (iOS
+ *  961fc05a `focusedTimestamp`). */
+private fun focusedPostTimestampLabel(timestampMs: Long): String {
+    val locale = java.util.Locale.getDefault()
+    val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT, locale)
+    val date = java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, locale)
+    val moment = java.util.Date(timestampMs)
+    return time.format(moment) + " · " + date.format(moment)
 }
 
 @Composable
@@ -4215,6 +4354,34 @@ fun KaPostComposerDialog(
             attachedChallenge?.let { link ->
                 KaPostComposerChallengeCard(link, onRemove = { attachedChallenge = null })
             }
+            // A Kaspa Hub card's link in the text: the card the post will show, with an x that
+            // takes the link out (iOS 961fc05a). Drawn without Open, so a tap can't leave the
+            // post being written (audit 2026-11-25 L1).
+            val composerHubLink = remember(text.text) {
+                KaChatLink.findFirst(text.text)?.takeIf { it.ref is KaChatLinkRef.HubSection }
+            }
+            composerHubLink?.let { match ->
+                val removeLabel = stringResource(R.string.remove)
+                Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 10.dp)) {
+                    KaspaHubLinkCard(tab = (match.ref as KaChatLinkRef.HubSection).tab, interactive = false)
+                    Box(
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .clickable(role = androidx.compose.ui.semantics.Role.Button) {
+                                val rest = text.text.replaceFirst(match.raw, "").trim()
+                                text = TextFieldValue(rest, androidx.compose.ui.text.TextRange(rest.length))
+                            }
+                            .semantics { contentDescription = removeLabel },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Filled.Close, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    }
+                }
+            }
             // Poll and Schedule, as chips under the editor - only on a fresh post (iOS's extrasRow).
             if (pollAvailable || scheduleAvailable) {
                 Row(
@@ -4787,15 +4954,29 @@ fun KaPostThreadOverlay(
     // Sliced per post: another thread's chain landing no longer recomposes this overlay.
     val threadChain by viewModel.threadChains.collectSelectedAsState(post.id) { it[post.id].orEmpty() }
     val chainRemoteIds = remember(threadChain) { threadChain.mapNotNull { it.remoteId }.toSet() }
-    val visibleComments = remember(post, hidden, chainRemoteIds) {
-        post.comments.filter {
+    // Everyone else's replies in X's order (iOS 961fc05a `commentsExcludingThread`, owner
+    // 2026-11-25: "match X"): the poster's own first, then yours, then people you follow, then
+    // the rest, the most liked first within each. Ranked when they first show and then kept while
+    // this post is open ([CommentOrderMemo], audit 2026-11-25 L4), so rows don't move as pages and
+    // likes land; closed, the memo goes with this screen and the next opening ranks afresh.
+    val commentOrder = remember(postId) { com.kachat.app.viewmodels.CommentOrderMemo() }
+    val following by viewModel.following.collectAsState()
+    val me = remember(viewModel) { viewModel.myAddress().orEmpty() }
+    val visibleComments = remember(post, hidden, chainRemoteIds, following) {
+        val replies = post.comments.filter {
             it.posterAddress !in hidden && (it.remoteId == null || it.remoteId !in chainRemoteIds)
         }
+        // who you follow, looked up once here rather than inside the ranking
+        val followed = replies.mapTo(HashSet()) { it.posterAddress }.filterTo(HashSet()) { it in following }
+        val now = System.currentTimeMillis()
+        commentOrder.ordered(
+            replies,
+            post.id,
+            rank = { arrived -> com.kachat.app.viewmodels.KaPostsConversation.rankReplies(arrived, post.posterAddress, me, followed) },
+            goesUp = { com.kachat.app.viewmodels.KaPostsConversation.goesUp(it, me, now) },
+            isTopTier = { com.kachat.app.viewmodels.KaPostsConversation.isTopTier(it, post.posterAddress, me) },
+        )
     }
-    // "Thread" is what an author calls their OWN continuation. When the chain carries other
-    // people's replies it is a conversation, and calling that a thread would credit them to
-    // the root author (iOS isSelfThread).
-    val isSelfThread = remember(threadChain, post.posterAddress) { threadChain.all { it.posterAddress == post.posterAddress } }
 
     LaunchedEffect(post.remoteId) {
         viewModel.loadReplies(post)
@@ -4832,14 +5013,14 @@ fun KaPostThreadOverlay(
     // Scroll-to-the-reply for reply landings. Re-keys on the comment list until the focused
     // reply is actually among the loaded comments (page one may still be in flight), then
     // scrolls once and clears the focus so nothing re-scrolls later. Index math mirrors the
-    // LazyColumn below: ancestors, root-context, root, the optional chain section (header +
-    // segments + divider), the comments header, then the comments.
+    // LazyColumn below: ancestors, root-context, root, the optional chain section (segments +
+    // divider), then the comments.
     if (focusReplyRemoteId != null) {
         LaunchedEffect(visibleComments, threadChain, visibleAncestors.size, focusReplyRemoteId) {
             val commentIndex = visibleComments.indexOfFirst { it.remoteId == focusReplyRemoteId }
             if (commentIndex >= 0) {
-                val chainItems = if (threadChain.isEmpty()) 0 else threadChain.size + 2
-                val target = visibleAncestors.size + 2 + chainItems + 1 + commentIndex
+                val chainItems = if (threadChain.isEmpty()) 0 else threadChain.size + 1
+                val target = visibleAncestors.size + 2 + chainItems + commentIndex
                 delay(500)
                 runCatching { threadListState.animateScrollToItem(target) }
                 onFocusReplyHandled()
@@ -4895,8 +5076,11 @@ fun KaPostThreadOverlay(
                     // what makes the chain read as one conversation. Drawn over the cell rather
                     // than beside it, so the post keeps the same full width as every other cell.
                     // The geometry follows the cell's own: 16dp leading plus a 40dp avatar puts
-                    // its centre at 36, and 12dp top padding plus that avatar ends it at 52.
-                    Box {
+                    // its centre at 36, and 12dp top padding plus that avatar ends it at 52. It
+                    // runs 12dp past the cell's bottom, the next cell's top padding, so it meets
+                    // the next avatar instead of stopping short of it (iOS 961fc05a, audit L6;
+                    // cells are see-through, so it shows there).
+                    Box(Modifier.drawBehind { drawAvatarRail(colors.textSecondary.copy(alpha = 0.3f)) }) {
                         KaPostCell(
                             post = ancestor,
                             viewModel = viewModel,
@@ -4908,19 +5092,6 @@ fun KaPostThreadOverlay(
                             truncatesLongText = true,
                             onReply = { onReplyToComment(ancestor) },
                         )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .padding(start = 35.dp, top = 52.dp),
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .width(2.dp)
-                                    .fillMaxHeight()
-                                    .clip(RoundedCornerShape(1.dp))
-                                    .background(colors.textSecondary.copy(alpha = 0.3f)),
-                            )
-                        }
                     }
                 }
                 item(key = "root-context") {
@@ -4955,81 +5126,39 @@ fun KaPostThreadOverlay(
                     )
                     HorizontalDivider(color = colors.surfaceVariant)
                 }
-                // X-style thread reading: the author's own continuation, connected and ordered.
+                // The poster's own continuation, as X draws it (iOS 961fc05a, owner 2026-11-25):
+                // their posts one under another, joined by the line down the avatar column, no
+                // header. Everyone else's replies follow below.
                 if (threadChain.isNotEmpty()) {
-                    item(key = "thread-chain-header") {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.PlaylistAdd,
-                                contentDescription = null,
-                                tint = KaspaTeal,
-                                modifier = Modifier.size(14.dp),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                if (isSelfThread) stringResource(R.string.kpui_thread_n_posts, threadChain.size + 1) else stringResource(R.string.kpui_conversation_n_posts, threadChain.size + 1),
-                                color = KaspaTeal,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
-                            )
-                        }
-                    }
-                    items(threadChain, key = { "chain-${it.id}" }) { segment ->
-                        // The chain rule is drawn behind the segment, not sized with
-                        // IntrinsicSize.Min: the cell's SubcomposeLayouts throw on intrinsic
-                        // measurement (same crash as the nested replies below).
+                    itemsIndexed(threadChain, key = { _, segment -> "chain-${segment.id}" }) { index, segment ->
+                        val joinsNext = index < threadChain.size - 1
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .drawBehind { drawThreadConnector(KaspaTeal.copy(alpha = 0.35f), startX = 16.dp.toPx(), insetY = 2.dp.toPx()) }
-                                .padding(start = 18.dp),
+                                // down to the next segment's avatar, as above
+                                .then(
+                                    if (joinsNext) Modifier.drawBehind { drawAvatarRail(colors.textSecondary.copy(alpha = 0.3f)) }
+                                    else Modifier
+                                ),
                         ) {
-                            Box(modifier = Modifier.fillMaxWidth()) {
-                                KaPostCell(
-                                    post = segment,
-                                    viewModel = viewModel,
-                                    onOpenThread = { onOpenNested(segment) },
-                                    onRepostTap = { onRepostTap(segment) },
-                                    onOpenProfile = { onOpenProfile(segment.posterAddress, segment.posterPubkey) },
-                                    onOpenQuoted = onOpenShared,
-                                    onViewEngagement = { onViewEngagement(segment) },
-                                    onReply = { onReplyToComment(segment) },
-                                )
-                            }
+                            KaPostCell(
+                                post = segment,
+                                viewModel = viewModel,
+                                onOpenThread = { onOpenNested(segment) },
+                                onRepostTap = { onRepostTap(segment) },
+                                onOpenProfile = { onOpenProfile(segment.posterAddress, segment.posterPubkey) },
+                                onOpenQuoted = onOpenShared,
+                                onViewEngagement = { onViewEngagement(segment) },
+                                onReply = { onReplyToComment(segment) },
+                            )
                         }
                     }
                     item(key = "thread-chain-divider") {
                         HorizontalDivider(color = colors.surfaceVariant)
                     }
                 }
-                item(key = "comments-header") {
-                    Text(
-                        if (visibleComments.isEmpty()) stringResource(R.string.kpui_comments) else stringResource(R.string.kpui_comments_n, visibleComments.size),
-                        color = colors.textSecondary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                    )
-                }
-                if (visibleComments.isEmpty()) {
-                    // An unbranched exchange is rendered in full ABOVE, and its members are
-                    // filtered out of this list - so "no comments yet" would contradict the
-                    // replies the reader can already see (iOS).
-                    item(key = "no-comments") {
-                        Text(
-                            if (threadChain.isEmpty()) stringResource(R.string.kpui_no_comments_yet)
-                            else stringResource(R.string.kpui_every_reply_above),
-                            color = colors.textSecondary,
-                            fontSize = 15.sp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 20.dp),
-                        )
-                    }
-                }
+                // Replies follow straight on, as on X: no heading, and nothing at all while there
+                // are none (iOS 961fc05a).
                 items(visibleComments, key = { it.id }) { comment ->
                     ThreadCommentNode(
                         comment = comment,
@@ -5715,8 +5844,9 @@ fun KaPostsProfileOverlay(
                 viewModel = viewModel,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 84.dp),
             )
-            // The dock stays in reach over a profile, still while it slides (iOS KaPostsDockCopy).
-            KaPostsDockCopy()
+            // The dock stays in reach over a profile, still while it slides (iOS KaPostsDockCopy),
+            // with the fade under it coming and going with the screen.
+            KaPostsDockCopy(fadeAlpha = profileSlide.inPlace)
         }
     }
 }
@@ -6109,6 +6239,8 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
                     // only becomes visible after the user closes it themselves.
                     // Tips go through the tip sheet; with none (your own posts) there is nothing to tip.
                     onTip = onTip?.let { open -> { open(post) } } ?: {},
+                    // a reply here is out of its conversation: "Replying to <name>" (iOS 961fc05a)
+                    showsReplyingTo = true,
                 )
                 HorizontalDivider(
                     color = colors.surfaceVariant,
@@ -8077,6 +8209,8 @@ fun KaPostsBookmarksOverlay(
                         onViewEngagement = { onViewEngagement(post) },
                         onReply = { onReply(post) },
                         onTip = onTip?.let { tip -> { tip(post) } },
+                        // a bookmarked reply says who it answers (iOS 961fc05a)
+                        showsReplyingTo = true,
                     )
                     HorizontalDivider(color = colors.surfaceVariant, modifier = Modifier.padding(start = 68.dp))
                 }
@@ -8094,7 +8228,14 @@ fun KaPostsBookmarksOverlay(
 /** A cover's slide ([modifier]) and its [back]: the same slide-out the edge swipe plays, then
  *  [rememberKaPostsCoverSlideState]'s onClose - what the bar's back chevron runs (iOS
  *  `KaPostsSlideHandle.back`). */
-internal class KaPostsCoverSlideState(val modifier: Modifier, val back: () -> Unit)
+internal class KaPostsCoverSlideState(
+    val modifier: Modifier,
+    val back: () -> Unit,
+    /** How far the screen is in place: 1 at rest, 0 off to the right. The fade under the dock
+     *  copy follows it (iOS d089011f: it comes in with the screen and leaves with it). Read it
+     *  where it's drawn, not in composition. */
+    val inPlace: () -> Float = { 1f },
+)
 
 /**
  * A KaPosts cover, presented the way a pushed screen behaves: it slides in from the right, and a
@@ -8190,7 +8331,9 @@ internal fun rememberKaPostsCoverSlideState(onClose: () -> Unit, slidesIn: Boole
                 }
             }
         }
-    return KaPostsCoverSlideState(modifier, back)
+    return KaPostsCoverSlideState(modifier, back) {
+        if (widthPx <= 0f) 1f else (1f - offsetX.value / widthPx).coerceIn(0f, 1f)
+    }
 }
 
 /**
@@ -8308,8 +8451,9 @@ private fun KaPostsOverlayScaffold(
                     Box(modifier = Modifier.weight(1f).padding(bottom = dockPad)) { content() }
                 }
             }
-            // The dock stays in reach over this screen, still while it slides (iOS KaPostsDockCopy).
-            KaPostsDockCopy()
+            // The dock stays in reach over this screen, still while it slides (iOS KaPostsDockCopy),
+            // with the fade under it coming and going with the screen.
+            KaPostsDockCopy(fadeAlpha = slide.inPlace)
         }
     }
 }
@@ -8810,6 +8954,23 @@ private fun ExpandableBioText(bio: String) {
 }
 
 /** A thread connector: a 2dp rounded rule at [startX], the full height less [insetY] at each end. */
+/**
+ * X's thread line down the avatar column (iOS 961fc05a): from under a cell's 40dp avatar (centre
+ * 36dp in, its bottom 52dp down) to 12dp past the cell's bottom, the next cell's top padding, so it
+ * meets the next avatar.
+ */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawAvatarRail(color: androidx.compose.ui.graphics.Color) {
+    val top = 52.dp.toPx()
+    val height = size.height + 12.dp.toPx() - top
+    if (height <= 0f) return
+    drawRoundRect(
+        color = color,
+        topLeft = androidx.compose.ui.geometry.Offset(35.dp.toPx(), top),
+        size = Size(2.dp.toPx(), height),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(1.dp.toPx()),
+    )
+}
+
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawThreadConnector(
     color: androidx.compose.ui.graphics.Color,
     startX: Float,

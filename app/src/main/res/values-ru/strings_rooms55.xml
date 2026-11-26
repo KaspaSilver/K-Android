@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
+<resources>
+    <string name="r55_search_public_chats">Поиск публичных чатов</string>
+    <string name="r55_no_public_chats">Нет публичных чатов</string>
+    <string name="r55_no_public_chats_hint">Нажмите +, чтобы войти в публичную комнату или создать её.</string>
+    <string name="r55_page_cycle_hint">Переключает между вашими чатами и публичными</string>
+    <string name="r55_more_rooms">Другие комнаты</string>
+    <string name="r55_more_rooms_footer">Комнаты, добавленные на индексаторе, из которого K читает публичные чаты.</string>
+    <string name="r55_delete_one_public_chat">Удалить 1 публичный чат?</string>
+    <string name="r55_delete_n_public_chats">Удалить публичные чаты (%1$d)?</string>
+    <string name="r55_delete_public_chats_message">Публичные чаты по умолчанию выключаются (включить их снова можно в разделе «Изменить общие чаты по умолчанию»). Добавленные вами комнаты удаляются вместе с сообщениями с этого устройства.</string>
+    <string name="r55_delete_for_everyone">Удалить для всех</string>
+    <string name="r55_delete_for_everyone_subtitle">Удаляет сообщение из этой комнаты для всех, кто пользуется K.</string>
+    <string name="r55_delete_for_everyone_q">Удалить для всех?</string>
+    <string name="r55_delete_for_everyone_message">Сообщение исчезнет из этой комнаты для всех, кто пользуется K. Оно останется в сети Kaspa, где любой, кто читает блокчейн, всё ещё может его найти. Удаление стоит небольшой комиссии сети.</string>
+    <string name="r55_delete_failed">Не удалось удалить сообщение. Попробуйте ещё раз.</string>
+</resources>

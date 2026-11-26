@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channel names (audit 2026-11-25 P5) -->
+    <string name="notification_channel_no_vibration">Pesan - tanpa getar</string>
+    <string name="notification_channel_vibrate_only">Pesan - getar saja</string>
+    <string name="notification_channel_silent">Pesan - senyap</string>
+</resources>

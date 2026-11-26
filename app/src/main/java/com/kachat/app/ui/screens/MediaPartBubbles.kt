@@ -84,10 +84,35 @@ class MediaPartsInput(
     }
 }
 
+/**
+ * Joined multi-part photos per set of parts (iOS d089011f `PartsInputMemo` and `joinedCache`,
+ * 2026-11-25 smoothness sweep): a part's content never changes once it's on chain, and a row's
+ * `remember` goes when it scrolls out, so every return on screen parsed each part's envelope,
+ * decoded its bytes and base64-encoded the whole photo again during composition. The same joined
+ * string coming back also finds the decoded bitmap at once (ImageBubble's cache, first frame).
+ * Kept by the characters held: 48 photos, or about 32 at the 12-part limit (16 MB).
+ */
+private val joinedPhotoMemo = com.kachat.app.util.RenderMemo<String, VoiceMessageContent>(
+    maxCount = 48,
+    maxCost = 16L * 1024 * 1024,
+    costOf = { it.content.length.toLong() },
+)
+
+/** A multi-part photo's identity for [joinedPhotoMemo]: how many parts, and each part's index,
+ *  length and hash (the parts have no ids here, and the same parts always join the same). */
+internal fun joinedPhotoMemoKey(input: MediaPartsInput): String =
+    "${input.count}|" + input.parts.joinToString(",") { (index, content) -> "$index:${content.length}:${content.hashCode()}" }
+
 /** A multi-part photo's chunks joined in index order - only once every chunk is here - as the
  *  media-file JSON one photo would have been; null until then (iOS `PhotoPartsInput.joinedMedia`). */
 fun joinedPhotoContent(input: MediaPartsInput): VoiceMessageContent? {
     if (!input.isPhoto || !input.isComplete) return null
+    val key = joinedPhotoMemoKey(input)
+    joinedPhotoMemo.get(key)?.let { return it }
+    return joinPhotoParts(input)?.also { joinedPhotoMemo.put(key, it) }
+}
+
+private fun joinPhotoParts(input: MediaPartsInput): VoiceMessageContent? {
     val chunks = input.partBytes()
     if (chunks.size != input.count) return null
     val joined = java.io.ByteArrayOutputStream(chunks.sumOf { it.size })
@@ -144,6 +169,19 @@ fun MultipartAudioBubble(input: MediaPartsInput, isSent: Boolean, onLongPress: (
     var positionMs by remember { mutableStateOf(0L) }
     var seekFraction by remember { mutableFloatStateOf(0f) }
     var playRequested by remember { mutableStateOf(false) }
+    // Plays through VoicePlaybackCoordinator (iOS 961fc05a, audit 2026-11-25 B8): any other note
+    // stops, and the audio is given back when this one pauses, stops or ends.
+    val playbackOwner = remember { Any() }
+    fun startPlaying(mediaPlayer: android.media.MediaPlayer): Boolean {
+        val started = com.kachat.app.util.VoicePlaybackCoordinator.willStart(context, playbackOwner) {
+            runCatching { if (mediaPlayer.isPlaying) mediaPlayer.pause() }
+            isPlaying = false
+        }
+        if (!started) return false
+        mediaPlayer.start()
+        isPlaying = true
+        return true
+    }
 
     // The length, kept without the audio (iOS MessageBubbleView `preload`): worked out again
     // whenever a part arrives (unless playing: the next Play picks it up). Nothing is decoded to a
@@ -152,8 +190,13 @@ fun MultipartAudioBubble(input: MediaPartsInput, isSent: Boolean, onLongPress: (
     LaunchedEffect(input.signature) {
         if (isPlaying) return@LaunchedEffect
         isLoading = true
-        val total = withContext(Dispatchers.Default) { partsDurationMs(context.cacheDir, input) }
-        if (total != null && total > 0L) durationMs = total
+        // Kept by the audio, so a bubble scrolling back in reads nothing again (iOS 961fc05a
+        // `VoiceNoteInfoCache`, audit 2026-11-25 B9).
+        val durationKey = com.kachat.app.util.VoiceNoteDurationCache.key(input.parts.map { it.second })
+        val total = withContext(Dispatchers.Default) {
+            com.kachat.app.util.VoiceNoteDurationCache.durationMs(durationKey) { partsDurationMs(context.cacheDir, input) ?: 0L }
+        }
+        if (total > 0L) durationMs = total
         isLoading = false
     }
 
@@ -164,8 +207,7 @@ fun MultipartAudioBubble(input: MediaPartsInput, isSent: Boolean, onLongPress: (
         val signature = input.signature
         player?.takeIf { loadedSignature == signature }?.let {
             playRequested = false
-            it.start()
-            isPlaying = true
+            startPlaying(it)
             return@LaunchedEffect
         }
         isLoading = true
@@ -199,14 +241,14 @@ fun MultipartAudioBubble(input: MediaPartsInput, isSent: Boolean, onLongPress: (
                 positionMs = 0
                 seekFraction = 0f
                 runCatching { it.seekTo(0) }
+                com.kachat.app.util.VoicePlaybackCoordinator.didStop(playbackOwner)
             }
             player = mediaPlayer
             playerFile = decoded.file
             loadedSignature = signature
             durationMs = mediaPlayer.duration.toLong().takeIf { it > 0 } ?: decoded.durationMs
             if (seekFraction > 0f) mediaPlayer.seekTo((seekFraction * durationMs).toInt())
-            mediaPlayer.start()
-            isPlaying = true
+            startPlaying(mediaPlayer)
         } catch (e: Exception) {
             android.util.Log.e("MultipartAudioBubble", "Could not prepare the voice note for playback", e)
             runCatching { mediaPlayer.release() }
@@ -229,6 +271,7 @@ fun MultipartAudioBubble(input: MediaPartsInput, isSent: Boolean, onLongPress: (
         onDispose {
             player?.let { runCatching { if (it.isPlaying) it.stop() }; runCatching { it.release() } }
             playerFile?.delete()
+            com.kachat.app.util.VoicePlaybackCoordinator.didStop(playbackOwner)
         }
     }
 
@@ -253,9 +296,9 @@ fun MultipartAudioBubble(input: MediaPartsInput, isSent: Boolean, onLongPress: (
                         if (isPlaying) {
                             current?.pause()
                             isPlaying = false
+                            com.kachat.app.util.VoicePlaybackCoordinator.didStop(playbackOwner)
                         } else if (current != null && loadedSignature == input.signature) {
-                            current.start()
-                            isPlaying = true
+                            startPlaying(current)
                         } else {
                             playRequested = true
                         }

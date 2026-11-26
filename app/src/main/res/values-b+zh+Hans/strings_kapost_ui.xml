@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">添加到串</string>
     <string name="kpui_post_not_loaded">无法加载此帖子</string>
     <string name="kpui_post_not_loaded_body">可能已被移除，或网络无法连接。</string>
-    <string name="kpui_no_comments_yet">还没有评论，来做第一个回复的人吧。</string>
-    <string name="kpui_every_reply_above">所有回复都在上方的对话中。</string>
     <string name="kpui_loading_replies">正在加载回复...</string>
     <string name="kpui_chat">聊天</string>
     <string name="kpui_followers">粉丝</string>

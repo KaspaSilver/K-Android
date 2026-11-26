@@ -116,8 +116,6 @@
     <string name="kpui_add_to_thread">Adicionar ao thread</string>
     <string name="kpui_post_not_loaded">Não foi possível carregar este post</string>
     <string name="kpui_post_not_loaded_body">Ele pode ter sido removido, ou a rede pode estar inacessível.</string>
-    <string name="kpui_no_comments_yet">Ainda sem comentários - seja o primeiro a responder.</string>
-    <string name="kpui_every_reply_above">Todas as respostas estão na conversa acima.</string>
     <string name="kpui_loading_replies">Carregando respostas...</string>
     <string name="kpui_chat">Chat</string>
     <string name="kpui_followers">Seguidores</string>

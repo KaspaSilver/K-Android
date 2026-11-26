@@ -40,11 +40,9 @@
     <string name="pc_keep">Garder</string>
     <string name="pc_keep_subtitle">Laisser le salon tel quel.</string>
     <string name="pc_new_public_chat">Nouveau salon public</string>
-    <string name="pc_new_public_chat_subtitle">Rejoignez un salon public ou créez-en un.</string>
     <string name="pc_edit_default_public_chats">Modifier les chats publics par défaut</string>
     <string name="pc_new_public_chat_explainer">Toute personne qui rejoint le même nom de canal peut y voir et y publier des messages - il n\'y a ni propriétaire ni invitation.</string>
     <string name="pc_join">Rejoindre</string>
-    <string name="pc_back">Retour</string>
     <string name="pc_channel_name_rules">Les noms de canal doivent faire 1 à %1$d caractères, sans espaces ni deux-points.</string>
     <string name="pc_join_failed">Un problème est survenu en rejoignant ce canal.</string>
     <string name="pc_report">Signaler</string>

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Explorer in Kaspa Hub (iOS 961fc05a). The iPhone keeps these in English until the owner
+     settles the design (iOS CLAUDE.md "Explorer strings are English"), so they have no
+     translations yet: every language falls back to these. -->
+<resources>
+    <!-- what a transaction is -->
+    <string name="ex_kind_payment">Payment</string>
+    <string name="ex_kind_message">KaChat Message</string>
+    <string name="ex_kind_handshake">Handshake</string>
+    <string name="ex_kind_payment_notice">Payment Notice</string>
+    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_public_chat">Public Chat</string>
+    <string name="ex_kind_username">Username</string>
+    <string name="ex_kind_kusdt">kUSDT Transfer</string>
+    <string name="ex_kind_swap">Swap</string>
+    <string name="ex_kind_chess">Chess Move</string>
+    <string name="ex_kind_arcade">Arcade Score</string>
+    <string name="ex_kind_coinbase">Mining Reward</string>
+    <string name="ex_kind_other">Transaction</string>
+    <string name="ex_kind_payments">Payments</string>
+    <string name="ex_kind_messages">KaChat Messages</string>
+    <string name="ex_kind_handshakes">Handshakes</string>
+    <string name="ex_kind_payment_notices">Payment Notices</string>
+    <string name="ex_kind_kaposts">KaPosts</string>
+    <string name="ex_kind_public_chats">Public Chat Messages</string>
+    <string name="ex_kind_usernames">Username Actions</string>
+    <string name="ex_kind_kusdts">kUSDT Transfers</string>
+    <string name="ex_kind_swaps">Swaps</string>
+    <string name="ex_kind_chesses">Chess Moves</string>
+    <string name="ex_kind_arcades">Arcade Scores</string>
+    <string name="ex_kind_coinbases">Mining Rewards</string>
+    <string name="ex_kind_others">Transactions</string>
+    <string name="ex_kind_payment_about">Kaspa sent from one address to another.</string>
+    <string name="ex_kind_message_about">An end-to-end encrypted KaChat message. Only the two people in the chat can read it.</string>
+    <string name="ex_kind_handshake_about">Opens an encrypted KaChat chat between two addresses.</string>
+    <string name="ex_kind_payment_notice_about">Tells a chat about a payment made from another address.</string>
+    <string name="ex_kind_kapost_about">A public post on KaPost, signed by its author.</string>
+    <string name="ex_kind_public_chat_about">A message in a public chat room, readable by anyone.</string>
+    <string name="ex_kind_username_about">A .kachat username registered, renewed or traded on the registry.</string>
+    <string name="ex_kind_kusdt_about">kUSDT, a dollar token on Kaspa, moved between addresses.</string>
+    <string name="ex_kind_swap_about">KAS and kUSDT swapped through Trestly\'s pool.</string>
+    <string name="ex_kind_chess_about">A move in an online chess game, played in KaPlay.</string>
+    <string name="ex_kind_arcade_about">A KaPlay arcade score, stamped on chain so anyone can replay it.</string>
+    <string name="ex_kind_coinbase_about">New KAS paid to miners for the blocks they found.</string>
+    <string name="ex_kind_other_about">A Kaspa transaction.</string>
+
+    <!-- K Activity's windows -->
+    <string name="ex_period_day">24 Hours</string>
+    <string name="ex_period_week">7 Days</string>
+    <string name="ex_period_month">30 Days</string>
+    <string name="ex_period_all">All Time</string>
+    <string name="ex_vs_day">vs the day before</string>
+    <string name="ex_vs_week">vs the week before</string>
+    <string name="ex_vs_month">vs the 30 days before</string>
+    <string name="ex_bars_day_start">24h ago</string>
+    <string name="ex_bars_week_start">7 days ago</string>
+    <string name="ex_bars_month_start">30 days ago</string>
+    <string name="ex_bars_launch">Launch</string>
+    <string name="ex_bars_now">now</string>
+    <string name="ex_bars_today">today</string>
+    <string name="ex_bars_per_hour">Transactions per hour</string>
+    <string name="ex_bars_per_day">Transactions per day</string>
+    <string name="ex_bars_per_month">Transactions per month</string>
+
+    <!-- home -->
+    <string name="ex_search_kaspa">Search Kaspa</string>
+    <string name="ex_search_hint">Search for an address, a transaction or block ID, or a .kachat username.</string>
+    <string name="ex_unreachable">kaspa.stream can\'t be reached right now.</string>
+    <string name="ex_nothing_found">Nothing Found</string>
+    <string name="ex_recent">Recent</string>
+    <string name="ex_no_username">No username %1$s</string>
+    <string name="ex_not_an_address">That isn\'t a valid Kaspa address.</string>
+    <string name="ex_no_such_id">No transaction or block with that ID.</string>
+    <string name="ex_looking_up">Looking up %1$s…</string>
+    <string name="ex_live">Live</string>
+    <string name="ex_daa_score">DAA Score</string>
+    <string name="ex_blocks_per_second">blocks / second</string>
+    <string name="ex_hashrate">Hashrate</string>
+    <string name="ex_whole_network">whole network</string>
+    <string name="ex_mempool">Mempool</string>
+    <string name="ex_waiting">transactions waiting</string>
+    <string name="ex_fee_yesterday">average, yesterday</string>
+    <string name="ex_fee_demo">demo: not served yet</string>
+    <string name="ex_us_dollars">US dollars</string>
+    <string name="ex_reward_detail">per block, lower in %1$s</string>
+    <string name="ex_hours">hours</string>
+    <string name="ex_one_day">1 day</string>
+    <string name="ex_n_days">%1$d days</string>
+    <string name="ex_circulating_supply">Circulating Supply</string>
+    <string name="ex_of_supply">of %1$s</string>
+    <string name="ex_k_activity">K Activity</string>
+    <string name="ex_switches_period">Switches the time period</string>
+    <string name="ex_demo_numbers">Demo numbers until K\'s indexer answers</string>
+    <string name="ex_transactions_lower">transactions</string>
+    <string name="ex_active_addresses">active addresses</string>
+    <string name="ex_paid_in_fees">paid in fees</string>
+    <string name="ex_blocks">Blocks</string>
+    <string name="ex_no_k_yet">No K transactions in the newest blocks yet. They show here as they land.</string>
+    <string name="ex_footer">Live blocks from K\'s node · data from kaspa.stream</string>
+    <string name="ex_just_now">just now</string>
+
+    <!-- pages -->
+    <string name="ex_block">Block</string>
+    <string name="ex_share">Share</string>
+    <string name="ex_failure_not_found">Not found on the network.</string>
+    <string name="ex_failure_server">kaspa.stream answered with an error (%1$d).</string>
+    <string name="ex_failure_bad_answer">kaspa.stream sent something K couldn\'t read.</string>
+    <string name="ex_not_accepted">Not Accepted</string>
+    <string name="ex_in_mempool">In the Mempool</string>
+    <string name="ex_in_block">In a Block</string>
+    <string name="ex_confirmed_count">Confirmed · %1$s confirmations</string>
+    <string name="ex_not_accepted_reward">Not accepted, so it paid nothing. Every block that merges a found block carries a reward for it; only one of them is accepted.</string>
+    <string name="ex_not_accepted_moved">Not accepted by the network, so it moved nothing.</string>
+    <string name="ex_transaction_id">Transaction ID</string>
+    <string name="ex_mass">Mass</string>
+    <string name="ex_output_n">Output #%1$d</string>
+    <string name="ex_input_n">Input #%1$d</string>
+    <string name="ex_payload">Payload</string>
+    <string name="ex_bytes">%1$d bytes</string>
+    <string name="ex_copy_payload">Copy Payload</string>
+    <string name="ex_copies_it">Copies it</string>
+    <string name="ex_blue_score">Blue Score</string>
+    <string name="ex_chain_block">Chain Block</string>
+    <string name="ex_merged_block">Merged Block</string>
+    <string name="ex_block_hash">Block Hash</string>
+    <string name="ex_merge_set">Merge Set</string>
+    <string name="ex_merge_set_value">%1$d blue · %2$d red</string>
+    <string name="ex_difficulty">Difficulty</string>
+    <string name="ex_parents">Parents</string>
+    <string name="ex_children">Children</string>
+    <string name="ex_no_children">No children yet: newer blocks will point to this one.</string>
+    <string name="ex_no_parents">No parents.</string>
+    <string name="ex_your_chatting_address">Your Chatting Address</string>
+    <string name="ex_last_30_days">last 30 days</string>
+    <string name="ex_newest_n">newest %1$d transactions</string>
+    <string name="ex_assets">Assets</string>
+    <string name="ex_no_transactions">No transactions yet.</string>
+    <string name="ex_load_more">Load More</string>
+    <string name="ex_n_of_total">%1$d of %2$d transactions</string>
+    <string name="ex_kaspa_coin">Kaspa\'s own coin</string>
+    <string name="ex_kusdt_coin">A dollar token on Kaspa</string>
+    <string name="ex_one_transaction">1 transaction</string>
+    <string name="ex_n_transactions">%1$d transactions</string>
+
+    <!-- charts -->
+    <string name="ex_network_fees">Network Fees</string>
+    <string name="ex_chart_about_hashrate">How many hashes a second miners point at Kaspa. More hashrate makes the network harder to attack.</string>
+    <string name="ex_chart_about_price">The price of one KAS in US dollars.</string>
+    <string name="ex_chart_about_reward">New KAS a block pays its miner. It drops a little every month and halves every year. In May 2025 blocks went from one to ten a second, so each block\'s reward became a tenth.</string>
+    <string name="ex_chart_about_market_cap">The price of KAS times every KAS mined so far.</string>
+    <string name="ex_chart_about_fees">Everything paid to get transactions into blocks, added up per day or month. The home screen shows the average fee one transaction paid yesterday.</string>
+    <string name="ex_chart_failed">This chart couldn\'t load.</string>
+    <string name="ex_demo_data">Demo Data</string>
+    <string name="ex_fees_credit">Daily totals for all of Kaspa · Data: Kaspalytics</string>
+    <string name="ex_average">Average</string>
+    <string name="ex_per_hour">Per hour</string>
+</resources>

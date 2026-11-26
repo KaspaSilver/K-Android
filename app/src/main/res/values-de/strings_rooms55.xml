@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
+<resources>
+    <string name="r55_search_public_chats">Öffentliche Chats durchsuchen</string>
+    <string name="r55_no_public_chats">Keine öffentlichen Chats</string>
+    <string name="r55_no_public_chats_hint">Tippe auf +, um einem öffentlichen Raum beizutreten oder einen zu erstellen.</string>
+    <string name="r55_page_cycle_hint">Wechselt zwischen deinen Chats und öffentlichen Chats</string>
+    <string name="r55_more_rooms">Weitere Räume</string>
+    <string name="r55_more_rooms_footer">Räume, die auf dem Indexer hinzugefügt wurden, von dem K öffentliche Chats liest.</string>
+    <string name="r55_delete_one_public_chat">1 öffentlichen Chat löschen?</string>
+    <string name="r55_delete_n_public_chats">%1$d öffentliche Chats löschen?</string>
+    <string name="r55_delete_public_chats_message">Standard-Chats werden ausgeschaltet (in Standard-Chats bearbeiten wieder einschalten). Räume, die du hinzugefügt hast, werden samt ihren Nachrichten auf diesem Gerät gelöscht.</string>
+    <string name="r55_delete_for_everyone">Für alle löschen</string>
+    <string name="r55_delete_for_everyone_subtitle">Entfernt sie für alle, die K nutzen, aus diesem Raum.</string>
+    <string name="r55_delete_for_everyone_q">Für alle löschen?</string>
+    <string name="r55_delete_for_everyone_message">Sie verschwindet für alle, die K nutzen, aus diesem Raum. Im Kaspa-Netzwerk bleibt sie, wo jeder, der die Chain liest, sie noch finden kann. Das Löschen kostet eine kleine Netzwerkgebühr.</string>
+    <string name="r55_delete_failed">Die Nachricht konnte nicht gelöscht werden. Versuche es erneut.</string>
+</resources>

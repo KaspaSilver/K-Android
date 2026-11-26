@@ -662,6 +662,8 @@ private fun SendProgressScreen(
             BlockDagAnimation(
                 highlight = isSending && failure == null,
                 modifier = Modifier.fillMaxSize().alpha(dagAlpha),
+                // still once faded behind the outcome (audit 2026-11-25 R5)
+                paused = dagSettled(finished, dagAlpha),
             )
             androidx.compose.animation.AnimatedVisibility(visible = done, enter = scaleIn(initialScale = 0.4f) + fadeIn(), exit = fadeOut()) {
                 // iOS "checkmark.circle.fill" in black on the accent

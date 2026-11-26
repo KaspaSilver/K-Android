@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">Questo non è un indirizzo resistente ai quanti. Scansiona l\'indirizzo KCC-3 mostrato da KasSigner.</string>
+    <string name="coldq_error_already_added">Questo indirizzo è già in questo account.</string>
+    <string name="coldq_error_in_other_account">Questo indirizzo è già nel tuo account Cold Storage «%1$s».</string>
+    <string name="coldq_added_toast">Indirizzo resistente ai quanti aggiunto.</string>
+    <string name="coldq_add_action">Aggiungi indirizzo resistente ai quanti</string>
+    <string name="coldq_add_action_subtitle">Scansiona un indirizzo KCC-3 dalla schermata degli indirizzi di KasSigner.</string>
+    <string name="coldq_stop_watching">Smetti di monitorare</string>
+    <string name="coldq_stop_watching_subtitle">Rimuove questo indirizzo quantistico dall\'account. Scansionalo di nuovo per aggiungerlo ancora.</string>
+    <string name="coldq_address_header">Indirizzo resistente ai quanti</string>
+    <string name="coldq_address_footer">Su KasSigner, apri l\'indirizzo KCC-3 che vuoi e scansiona il suo codice QR. La sua chiave resta sul dispositivo finché l\'indirizzo non spende.</string>
+    <string name="coldq_number_header">Numero dell\'indirizzo su KasSigner</string>
+    <string name="coldq_add_title">Aggiungi indirizzo quantistico</string>
+    <string name="coldq_number_not_whole">Il numero dell\'indirizzo deve essere un numero intero.</string>
+    <string name="coldq_needs_v11">Richiede KasSigner v1.1 o successivo, che firma gli indirizzi resistenti ai quanti (KCC-3).</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner non ha restituito lo script della chiave per questo indirizzo resistente ai quanti, quindi non verrà trasmessa. Verifica che il dispositivo usi KasSigner v1.1 o successivo e contenga questo indirizzo.</string>
+    <string name="coldq_error_unexpected_covenant">La transazione firmata aggiunge condizioni di covenant che questo invio non ha mai chiesto, quindi non verrà trasmessa.</string>
+    <string name="coldq_label_receive">Indirizzo quantistico</string>
+    <string name="coldq_label_change">Indirizzo di resto quantistico</string>
+    <string name="coldq_label_receive_n">Indirizzo quantistico #%1$d</string>
+    <string name="coldq_label_change_n">Indirizzo di resto quantistico #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">Questo invio rende pubblica sulla catena la chiave di questo indirizzo, quindi il resto non può tornare qui. Aggiungi prima un indirizzo resistente ai quanti non usato da KasSigner (meglio un indirizzo di resto, da #0 a #4), oppure invia tutto il saldo.</string>
+    <string name="coldq_error_compound_needs_fresh">La consolidazione rende pubblica sulla catena la chiave di questo indirizzo, quindi le sue monete vanno a un indirizzo resistente ai quanti non usato di questo account. Aggiungine prima uno da KasSigner (meglio un indirizzo di resto, da #0 a #4).</string>
+    <string name="coldq_stop_watching_title">Smettere di monitorare questo indirizzo?</string>
+    <string name="coldq_stop_watching_message">I suoi %1$s KAS restano sulla catena a questo indirizzo, sul tuo KasSigner; K smette solo di mostrarli. Scansiona di nuovo l\'indirizzo da KasSigner per monitorarlo ancora.</string>
+    <string name="coldq_edit_number">Modifica numero dell\'indirizzo</string>
+    <string name="coldq_edit_number_subtitle">Il numero e la catena che KasSigner mostra per questo indirizzo.</string>
+    <string name="coldq_chain">Catena</string>
+    <string name="coldq_number_footer">Il numero che KasSigner mostra per questo indirizzo, e se è un indirizzo di ricezione o di resto. Con questo il dispositivo trova subito la chiave quando firma; senza, la cerca. KasSigner segna come resto ciò che va ai suoi indirizzi di resto da #0 a #4; ogni altro indirizzo lo mostra come pagamento.</string>
+    <string name="coldq_number_too_large">Numero troppo grande: i numeri degli indirizzi di KasSigner sono inferiori a 2147483648.</string>
+    <string name="coldq_compound_note">Sposta tutte le monete di questo indirizzo in una sola, a un indirizzo resistente ai quanti non usato di questo account: questa transazione rende pubblica sulla catena la chiave di questo indirizzo.</string>
+    <string name="coldq_coins_left_behind">Questo indirizzo ha più monete di quante una transazione possa spendere: %1$d restano dietro la chiave che questo invio rende pubblica sulla catena. Inviale con un\'altra transazione subito dopo.</string>
+    <string name="coldq_coins_move_to">Le monete vanno al tuo indirizzo quantistico:</string>
+    <string name="coldq_change_goes_to">Il resto va al tuo indirizzo quantistico:</string>
+    <string name="coldq_unit_marks_change">KasSigner mostra questo output come resto.</string>
+    <string name="coldq_unit_shows_payment">KasSigner mostrerà questo output come un pagamento normale, non come resto: verifica che sia questo indirizzo prima di firmare.</string>
+    <string name="coldq_sign_without_number">Firma senza il numero dell\'indirizzo</string>
+    <string name="coldq_sign_without_number_note">Se KasSigner rifiuta questa richiesta, il numero dell\'indirizzo potrebbe essere sbagliato. Senza, il dispositivo cerca l\'indirizzo da solo. Modifica numero dell\'indirizzo lo corregge per la prossima volta.</string>
+    <string name="coldq_compound_footer">Unisce tutti gli UTXO di questo indirizzo in uno solo a un indirizzo resistente ai quanti non usato di questo account, perché questo rende pubblica sulla catena la chiave di questo indirizzo.</string>
+    <string name="coldq_visibility_quantum_header">Indirizzi resistenti ai quanti</string>
+    <string name="coldq_receive_address">Indirizzo di ricezione</string>
+    <string name="coldq_change_address">Indirizzo di resto</string>
+    <string name="coldq_optional">Facoltativo</string>
+</resources>

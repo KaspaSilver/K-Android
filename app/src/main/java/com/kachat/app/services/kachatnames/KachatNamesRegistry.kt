@@ -96,6 +96,8 @@ class KachatNamesRegistry @Inject constructor(
     /** The .kachat news for this wallet's names and offers, run after every good refresh (iOS
      *  86471dd `KachatNamesNotifier.check`). Lazy: it reads the registry itself. */
     private val notifier: dagger.Lazy<KachatNamesNotifier>,
+    /** Whether the app is in front: the unnamed sweep sleeps until it is (audit 2026-11-25 S14). */
+    private val notificationHelper: dagger.Lazy<com.kachat.app.services.NotificationHelper>,
 ) {
     sealed class Source {
         data class Indexer(val base: String) : Source()
@@ -1208,31 +1210,59 @@ class KachatNamesRegistry @Inject constructor(
      * loading at launch): this pass. A "no name" answer backs off - asked again after 1, then 5,
      * 15 and 60 minutes - and sooner (after a minute) only once the registry has seen new
      * transactions ([revision]), since a name only appears through one (iOS cbb8a83, IOS-087).
-     * Started once, at launch.
+     * Started once, at launch; from then on it follows the signed-in account ([signedIn]): Log Out,
+     * Delete Account and a switch stop the loop, and the next account starts it again (iOS
+     * 961fc05a, audit 2026-11-25 B19: it used to run on the sign-in screen for ever).
      *
      * [isActive] says whether the app is on screen; [candidates] lists the contacts with no name
      * you gave them, the people you talk to most recently first, your own address left out.
      */
-    fun startUnnamedIdentitySweep(isActive: () -> Boolean, candidates: suspend () -> List<String>) {
+    fun startUnnamedIdentitySweep(
+        isActive: () -> Boolean,
+        candidates: suspend () -> List<String>,
+        signedIn: kotlinx.coroutines.flow.Flow<String?>,
+    ) {
         if (!unnamedSweepStarted.compareAndSet(false, true)) return
         scope.launch {
-            // the first pass once the app has settled after launch
-            delay(8_000)
-            while (true) {
-                if (isActive()) {
-                    try {
-                        // on the chain: keep up with it, and go back to the indexer once it
-                        // recovers (iOS 4f8e14bb)
-                        if (_source.value == Source.Chain) refreshIfStale(55_000)
-                        refreshUnnamedIdentities(isActive, candidates)
-                    } catch (e: kotlinx.coroutines.CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Log.w(TAG, "unnamed identity sweep failed", e)
-                    }
+            var loop: kotlinx.coroutines.Job? = null
+            signedIn.map { it != null }.distinctUntilChanged().collect { present ->
+                if (!present) {
+                    loop?.cancel()
+                    loop = null
+                } else if (loop == null) {
+                    loop = scope.launch { runUnnamedIdentitySweep(isActive, candidates) }
                 }
-                delay(60_000)
             }
+        }
+    }
+
+    private suspend fun runUnnamedIdentitySweep(isActive: () -> Boolean, candidates: suspend () -> List<String>) {
+        // the first pass once the app has settled after launch or sign-in
+        delay(8_000)
+        while (true) {
+            // In the background: no timer at all, it sleeps until the app is back in front
+            // (audit 2026-11-25 S14), as the 1:1 loop does.
+            if (!isActive()) {
+                val foreground = notificationHelper.get().appForegroundFlow
+                // (the two signals can disagree for a moment around a transition: the old minute)
+                if (foreground.value) delay(60_000) else foreground.first { it }
+                continue
+            }
+            run {
+                try {
+                    // on the chain: keep up with it, and go back to the indexer once it
+                    // recovers (iOS 4f8e14bb)
+                    if (_source.value == Source.Chain) refreshIfStale(55_000)
+                    refreshUnnamedIdentities(isActive, candidates)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w(TAG, "unnamed identity sweep failed", e)
+                }
+            }
+            // once a minute, on the shared beat's grid so it wakes with the other foreground polls
+            // (audit 2026-11-25 B3)
+            delay(com.kachat.app.services.ForegroundBeat.delayToNextBeat(60_000L, 1_200L, System.currentTimeMillis()))
         }
     }
 

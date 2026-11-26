@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notification channel names (audit 2026-11-25 P5) -->
+    <string name="notification_channel_no_vibration">消息 - 无振动</string>
+    <string name="notification_channel_vibrate_only">消息 - 仅振动</string>
+    <string name="notification_channel_silent">消息 - 静音</string>
+</resources>

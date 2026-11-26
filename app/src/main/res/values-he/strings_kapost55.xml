@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- KaPost and Kaspa Hub card links (iOS 961fc05a, 2026-11-25). -->
+<resources>
+    <string name="kp55_link_copied">הקישור הועתק</string>
+    <string name="kp55_hub_link_subtitle">קישור שפותח את הכרטיס הזה ב-K.</string>
+    <string name="kp55_open">פתיחה</string>
+    <string name="kp55_opens_this_card">פותח את הכרטיס הזה.</string>
+    <string name="kp55_kaspa_hub_card">Kaspa Hub: %1$s</string>
+    <string name="kp55_tap_to_open_in_k">הקישו כדי לפתוח ב-K.</string>
+    <string name="kp55_opens_it_in_k">פותח ב-K.</string>
+    <string name="kp55_hub_blurb_contacts">כתובות ה-Kaspa השמורות שלך.</string>
+    <string name="kp55_hub_blurb_portfolio">עקבו אחר המטבעות שלכם ואחר שוויים.</string>
+    <string name="kp55_hub_blurb_cold_storage">צפו בארנקים הקרים שלכם וחתמו עבורם.</string>
+    <string name="kp55_hub_blurb_usernames">תפסו, קנו ומכרו שמות משתמש ‎.kachat.</string>
+    <string name="kp55_hub_blurb_kapost">פוסטים ותגובות ב-Kaspa.</string>
+    <string name="kp55_hub_blurb_kaplay">שחמט, סנייק ו-2048, ניקוד על השרשרת.</string>
+    <string name="kp55_hub_blurb_websites">אתרים שנבנו על Kaspa.</string>
+    <string name="kp55_hub_blurb_explorer">בלוקים, עסקאות וכתובות, בשידור חי.</string>
+    <!-- Profile's bell: a room or group @mention of you (iOS d089011f). -->
+    <string name="kp55_mentioned_you_in">%1$s הזכיר/ה אותך ב-%2$s</string>
+</resources>

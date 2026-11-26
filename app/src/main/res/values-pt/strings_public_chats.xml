@@ -40,11 +40,9 @@
     <string name="pc_keep">Manter</string>
     <string name="pc_keep_subtitle">Deixe a sala como está.</string>
     <string name="pc_new_public_chat">Nova conversa pública</string>
-    <string name="pc_new_public_chat_subtitle">Entre em uma sala pública ou crie uma.</string>
     <string name="pc_edit_default_public_chats">Editar chats públicos padrão</string>
     <string name="pc_new_public_chat_explainer">Qualquer pessoa que entrar no mesmo nome de canal pode ver e enviar mensagens ali - não há dono nem convite.</string>
     <string name="pc_join">Entrar</string>
-    <string name="pc_back">Voltar</string>
     <string name="pc_channel_name_rules">Nomes de canal devem ter de 1 a %1$d caracteres, sem espaços ou dois-pontos.</string>
     <string name="pc_join_failed">Algo deu errado ao entrar nesse canal.</string>
     <string name="pc_report">Denunciar</string>

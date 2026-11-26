@@ -819,7 +819,15 @@ class WalletViewModel @Inject constructor(
             } catch (e: Throwable) {
                 // outcome unknown: revealing a slot is always safe, handing it out again is not
                 fresh?.let { walletManager.finishQuantumChangePick(it, reveal = true) }
-                if (e is kotlinx.coroutines.CancellationException || e !is Exception) throw e
+                if (e is kotlinx.coroutines.CancellationException) {
+                    // Cancelled mid-submit: it may have gone, as an unknown outcome - the source's
+                    // key may be on chain, and the send reads Not confirmed, not failed (audit
+                    // 2026-11-25 P3). Non-suspending writes only, then the cancellation goes on.
+                    if (isQuantumSource) walletManager.markQuantumAddressSpent(fromAddress, owner = owner)
+                    sends.finish(sendId, Result.failure(com.kachat.app.services.SendOutcomeUnknownException("", e)))
+                    throw e
+                }
+                if (e !is Exception) throw e
                 // e.g. the source's key couldn't be derived: the send failed, said on its screen
                 // rather than thrown into viewModelScope, which would crash the app and leave it
                 // in flight.
@@ -1741,6 +1749,15 @@ class WalletViewModel @Inject constructor(
             } finally {
                 _isRemovingAccount.value = false
             }
+        }
+        // Deleting the signed-in account leaves no account signed in (iOS `currentWallet = nil`):
+        // another saved account stays on the sign-in screen, signed out, so it gets no push, no
+        // banners and no loops, and a cold start doesn't open it past its biometric prompt. Set
+        // before the record goes, so the fallback account never reads as signed in (audit
+        // 2026-11-25 P1).
+        val activeBefore = walletManager.getActiveAccount()?.address
+        if (activeBefore != null && com.kachat.app.util.KaspaNetwork.isSameAccount(activeBefore, address)) {
+            walletManager.isLoggedOut = true
         }
         walletManager.deleteAccount(address)
         // nothing to sign back in to: a next account starts clean

@@ -277,8 +277,15 @@ class WalletService @Inject constructor(
      * = confirmed unused, null = the lookup failed, so used-ness is unknown right now - never
      * guessed as unused.
      */
-    suspend fun spendingAddressUsedState(address: String): Boolean? {
-        cachedSpendingAddressUsedState(address)?.let { return it }
+    suspend fun spendingAddressUsedState(
+        address: String,
+        /** Ask the network even when this session saw the address unused, for a decision that
+         *  must not rest on a stale "unused" (a quantum change address that may have been used
+         *  since, audit 2026-11-25 Q3). A persisted "used" still answers at once: used never goes
+         *  back. */
+        skipSessionCache: Boolean = false,
+    ): Boolean? {
+        cachedSpendingAddressUsedState(address)?.let { if (it || !skipSessionCache) return it }
         val api = readyApi() ?: return null
         return try {
             val used = api.getTransactions(address, limit = 1).isNotEmpty()

@@ -40,11 +40,9 @@
     <string name="pc_keep">Giữ lại</string>
     <string name="pc_keep_subtitle">Giữ nguyên phòng.</string>
     <string name="pc_new_public_chat">Phòng chat công khai mới</string>
-    <string name="pc_new_public_chat_subtitle">Tham gia một phòng công khai, hoặc tạo phòng mới.</string>
     <string name="pc_edit_default_public_chats">Sửa trò chuyện công khai mặc định</string>
     <string name="pc_new_public_chat_explainer">Bất kỳ ai tham gia cùng tên kênh đều có thể xem và nhắn ở đó - không có chủ sở hữu và không cần lời mời.</string>
     <string name="pc_join">Tham gia</string>
-    <string name="pc_back">Quay lại</string>
     <string name="pc_channel_name_rules">Tên kênh phải từ 1-%1$d ký tự, không có khoảng trắng hay dấu hai chấm.</string>
     <string name="pc_join_failed">Đã xảy ra lỗi khi tham gia kênh đó.</string>
     <string name="pc_report">Báo cáo</string>

@@ -40,9 +40,10 @@ private fun String.hexToBytesOrNull(): ByteArray? {
  * *its own* channel(s) to actually be cached, not every joined channel:
  *  1. Any channel marked "always listen" (see [BroadcastRepository.setAlwaysListen], toggled via
  *     the speaker icon next to a channel in the broadcast list) — per-channel opt-in, off by
- *     default, keeps scanning in the background for as long as at least one channel wants it and
- *     the app process stays alive. There's no separate global setting: the user picks exactly
- *     which channels stay live rather than an all-or-nothing toggle.
+ *     default. The stream runs only while the app is in front (audit 2026-11-25 N1): in the
+ *     background a bell-on room comes from push, or without push from a small indexer poll
+ *     ([startBackgroundPoll]). There's no separate global setting: the user picks exactly which
+ *     channels stay live rather than an all-or-nothing toggle.
  *  2. [startLiveViewing] — held open by a broadcast channel screen for as long as it's on
  *     screen, so messages appear live while actively viewing that specific room even if it isn't
  *     marked always-listen. Bounded to only while that specific screen is visible.
@@ -82,6 +83,14 @@ class BroadcastScanningService @Inject constructor(
     // Public-chat authorship (audit XP-012): a post is stored only once input 0's address is
     // known to equal output 0's - see BroadcastSenderVerifier.
     private val senderVerifier: BroadcastSenderVerifier,
+    // Signed out, no room streams or polls (audit 2026-11-25 B2, B6): the active address
+    // outlives Log Out, so the bell-on rooms it reads kept the stream going on the sign-in screen.
+    private val walletManager: WalletManager,
+    // The background poll without push runs only when its banner can show (audit 2026-11-25 N1).
+    private val settings: com.kachat.app.repository.AppSettingsRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context,
+    // A new message that @'s you: a row in Profile's bell (iOS d089011f `insertRoomMessages`).
+    private val roomMentionBell: dagger.Lazy<RoomMentionBell>,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.kachat.app.util.StartupSafety.logOnlyHandler("BroadcastScanningService"))
     private var scanJob: Job? = null
@@ -102,6 +111,14 @@ class BroadcastScanningService @Inject constructor(
         private var hiddenSenderRows: List<com.kachat.app.models.HiddenBroadcastSenderEntity> = emptyList()
     /** Which indexer each room reads from and which are down; null until the settings are read. */
     private var roomIndexerCoverage: RoomIndexerCoverage? = null
+
+    /** Whether an account is signed in ([WalletManager.signedInAddressFlow]). */
+    @Volatile
+    private var signedIn: Boolean = !walletManager.isLoggedOut && walletManager.activeAddressFlow.value != null
+
+    /** K's own Notifications switch (Settings), for the background poll's gate. */
+    @Volatile
+    private var appNotificationsOn: Boolean = true
 
     init {
         // Self-observing rather than wired externally per-screen: this needs to hold/release its
@@ -128,7 +145,24 @@ class BroadcastScanningService @Inject constructor(
         // The metered gate depends on foreground state and the network type — both can change
         // while demand (wantCount) is unchanged, so each change re-runs the start/stop decision.
         scope.launch {
-            notificationHelper.appForegroundFlow.collect { reevaluate() }
+            notificationHelper.appForegroundFlow.collect {
+                reevaluate()
+                updateBackgroundPoll()
+            }
+        }
+        // Signed in or out: the stream and the background poll follow (audit 2026-11-25 B6).
+        scope.launch {
+            walletManager.signedInAddressFlow.collect { address ->
+                signedIn = address != null
+                reevaluate()
+                updateBackgroundPoll()
+            }
+        }
+        scope.launch {
+            settings.notificationsEnabled.collect { on ->
+                appNotificationsOn = on
+                updateBackgroundPoll()
+            }
         }
         // The closed-room sweep, alive only while the app is on screen.
         scope.launch {
@@ -164,9 +198,9 @@ class BroadcastScanningService @Inject constructor(
         scope.launch {
             meteredNetwork.isMeteredFlow.collect { reevaluate() }
         }
-        // Push on or off: whether a bell-on room in the background needs the stream (reevaluate).
+        // Push on or off: whether a bell-on room in the background needs the poll.
         scope.launch {
-            pushState.pushActive.collect { reevaluate() }
+            pushState.pushActive.collect { updateBackgroundPoll() }
         }
         // The chess arena's indexer down, or back: with it down the block stream is the arena's
         // only live route, metered or not (iOS da59726). Its current value too: this service can
@@ -227,6 +261,15 @@ class BroadcastScanningService @Inject constructor(
         return base.isNotEmpty() && base !in coverage.unreachable
     }
 
+    /** Whether an indexer keeps this room's history, answering now or not: the background poll
+     *  asks it, so a down indexer is re-checked with that one request (audit 2026-11-25 N1). */
+    private fun indexerServesRoom(channelName: String): Boolean {
+        if (channelName in FeaturedBroadcastChannels.SERVICE_CHANNELS) return false
+        if (!FeaturedBroadcastChannels.isIndexerTracked(channelName)) return false
+        val coverage = roomIndexerCoverage ?: return true
+        return BroadcastRepository.indexerBaseUrl(channelName, coverage.appWideBase, coverage.overrides).isNotEmpty()
+    }
+
     @Synchronized
     private fun setHiddenSenderRows(rows: List<com.kachat.app.models.HiddenBroadcastSenderEntity>) {
         hiddenSenderRows = rows
@@ -250,9 +293,12 @@ class BroadcastScanningService @Inject constructor(
      * While the app is on screen, a room the user is NOT looking at used to be refreshed only by
      * the live block scan - which misses blocks whenever the stream reconnects, and is off
      * altogether on metered networks for the indexed rooms. So a message in #kaspa showed up only
-     * once the room was opened. Every 20s each joined room with its bell on that is not open asks
-     * the indexer for its newest rows instead (one small request per room, sequential); the open
-     * room keeps its own 8s poll and the block scan stays the fast path (iOS 3c14b46).
+     * once the room was opened. On every foreground beat ([ForegroundBeat]: 30 s on Wi-Fi, 60 s on
+     * a metered path, shared with KaPost's and kUSDT's polls so the radio wakes once per beat; iOS
+     * 961fc05a, audit 2026-11-25 B4; 20 s of its own before) each joined room with its bell on
+     * that is not open asks the indexer for its newest rows instead (one small request per room,
+     * sequential); the open room keeps its own 8s poll and the block scan stays the fast path
+     * (iOS 3c14b46).
      */
     @Synchronized
     private fun startForegroundSweep() {
@@ -260,7 +306,7 @@ class BroadcastScanningService @Inject constructor(
         sweepJob = scope.launch {
             while (true) {
                 if (notificationHelper.isAppInForeground) sweepClosedRooms()
-                kotlinx.coroutines.delay(SWEEP_INTERVAL_MS)
+                ForegroundBeat.sleepUntilNextBeat(offsetMs = 0L)
             }
         }
     }
@@ -277,13 +323,67 @@ class BroadcastScanningService @Inject constructor(
 
     private fun myAddressOrNull(): String? = runCatching { broadcastRepository.myAddress() }.getOrNull()
 
-    private suspend fun sweepClosedRooms() {
+    // MARK: - Background poll of bell-on rooms without push
+
+    private var backgroundPollJob: Job? = null
+
+    /**
+     * Without push, nothing else can banner a bell-on room while the app is in the background, and
+     * the block stream no longer runs there (audit 2026-11-25 N1: on Wi-Fi it kept the radio and
+     * CPU awake all night, ≈10 blocks a second). Instead, every [BACKGROUND_POLL_MS] each bell-on
+     * room an indexer keeps asks it for its newest rows, as the foreground sweep does: one small
+     * request per room. Only while signed in, without push, and with notifications on in K and in
+     * Android: otherwise nothing found could be shown, and the front catches up on opening. A
+     * room whose indexer was marked down is asked too, so the mark clears when it answers.
+     */
+    @Synchronized
+    private fun updateBackgroundPoll() {
+        val wanted = !notificationHelper.isAppInForeground && signedIn && !pushState.isActive && appNotificationsOn
+        if (!wanted) {
+            backgroundPollJob?.cancel()
+            backgroundPollJob = null
+            return
+        }
+        startBackgroundPoll()
+    }
+
+    @Synchronized
+    private fun startBackgroundPoll() {
+        if (backgroundPollJob?.isActive == true) return
+        backgroundPollJob = scope.launch {
+            while (true) {
+                // The foreground sweep has just run: the first background look is one interval on.
+                delay(BACKGROUND_POLL_MS)
+                if (!systemNotificationsOn()) continue
+                try {
+                    sweepClosedRooms(background = true)
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w("BroadcastScanningService", "Background room poll failed: ${e.javaClass.simpleName}")
+                }
+            }
+        }
+    }
+
+    private fun systemNotificationsOn(): Boolean =
+        runCatching { androidx.core.app.NotificationManagerCompat.from(appContext).areNotificationsEnabled() }.getOrDefault(true)
+
+    /** One pass over the bell-on rooms: in front, those not open (on the beat); in the background
+     *  without push, those an indexer keeps ([updateBackgroundPoll]). */
+    private suspend fun sweepClosedRooms(background: Boolean = false) {
         // Signed out: no rooms to sweep (iOS b78fdb0 `startForegroundSweep`).
         if (!broadcastRepository.isSignedIn()) return
         val targets = synchronized(this) { notifyEnabledChannelNames.toList() }
-            .filter { it !in FeaturedBroadcastChannels.SERVICE_CHANNELS && !broadcastNotifier.isViewingChannel(it) }
+            .filter { it !in FeaturedBroadcastChannels.SERVICE_CHANNELS }
+            .filter { if (background) indexerServesRoom(it) else !broadcastNotifier.isViewingChannel(it) }
         for (channel in targets) {
-            if (!notificationHelper.isAppInForeground || !broadcastRepository.isSignedIn()) return
+            val stillWanted = if (background) {
+                !notificationHelper.isAppInForeground && !pushState.isActive
+            } else {
+                notificationHelper.isAppInForeground
+            }
+            if (!stillWanted || !broadcastRepository.isSignedIn()) return
             val fresh = runCatching { broadcastRepository.fetchNewestFromIndexer(channel) }.getOrDefault(emptyList())
             val firstPass = sweptChannels.add(channel)
             // Rows older than a few minutes are backlog, not a message that just arrived - and
@@ -297,9 +397,8 @@ class BroadcastScanningService @Inject constructor(
                     if (!notificationHelper.mayBannerLocally(pushState.isActive, row.blockTimestamp)) continue
                     if (broadcastRepository.isLocalAccountAddress(row.senderAddress)) continue
                     if (isSenderHidden(row.senderAddress, channel)) continue
-                    if (MessageReaction.parseOrNull(row.content) != null ||
-                        com.kachat.app.util.MessageEdit.parseOrNull(row.content) != null
-                    ) continue
+                    // never a reaction, an edit or a delete for everyone (iOS isControlEnvelope)
+                    if (com.kachat.app.util.isRoomControlEnvelope(row.content)) continue
                     broadcastNotifier.showBroadcast(
                         channelName = channel,
                         title = "#$channel",
@@ -371,16 +470,17 @@ class BroadcastScanningService @Inject constructor(
     }
 
     /**
-     * One start/stop decision for every input change (demand, foreground, network type,
-     * channel mix). On WiFi the stream runs for the rooms listed in the body (no longer whenever
-     * anything wants it). On METERED networks the full-block stream
-     * (roughly 1-4 GB/day if left running) is only justified for a wanted channel with NO
-     * other delivery path — the indexer-tracked rooms (curated, or added on the indexer)
-     * already get an 8s indexer poll while open (BroadcastViewModel.startIndexerBackfill) plus a 30-day history backfill on
-     * open, and their bell notifications ride remote push, so only non-indexed always-listen /
-     * live-viewed channels (and those whose indexer is confirmed down, iOS ee5ec98) need the stream — and even then only while the app is foregrounded
-     * (backgrounded metered streaming trades the whole data budget for messages nobody is
-     * watching; the retention cache just has a gap for that window, same as an app restart).
+     * One start/stop decision for every input change (demand, foreground, sign-in, network type,
+     * channel mix). The full-block stream (roughly 1-4 GB/day if left running, every block
+     * decoded) runs only while the app is in front and an account is signed in (audit 2026-11-25
+     * N1, B2, B6): in the background, on Wi-Fi too, it kept the radio and the CPU awake all night
+     * for bell-on rooms. There a bell-on room comes from push, or without push from the indexer
+     * poll ([updateBackgroundPoll]); a room with no indexer waits for the app to open, as on iOS,
+     * which is suspended. In front, the indexer-tracked rooms (curated, or added on the indexer)
+     * already get an 8s indexer poll while open (BroadcastViewModel.startIndexerBackfill) plus a
+     * 30-day history backfill on open, and the closed-room sweep on the beat, so on a metered
+     * network only non-indexed always-listen / live-viewed channels (and those whose indexer is
+     * confirmed down, iOS ee5ec98) need the stream.
      */
     @Synchronized
     private fun reevaluate() {
@@ -390,29 +490,23 @@ class BroadcastScanningService @Inject constructor(
         // - a room the indexer doesn't cover (none keeps its history, or it isn't answering, or
         //   the arena with its indexer down): the stream is its only live route;
         // - a room open on screen, on Wi-Fi: the fast path on top of its 8 s indexer poll (the
-        //   chess arena counts as open while a chess screen is up);
-        // - Android only, a bell-on room in the background on Wi-Fi when there is no push: then
-        //   nothing else can banner it (iOS is suspended in the background instead).
+        //   chess arena counts as open while a chess screen is up).
         // A covered bell-on room otherwise gets its messages from the closed-room sweep (in front,
-        // every 20 s) and remote push. A room on screen wants the stream only while the app is in
-        // front: left open behind the home button it would stream every block until the process
-        // dies. On metered networks only in front, for a room with no other route, as before.
+        // on the beat) and remote push. Never in the background or signed out (see above).
         val foreground = notificationHelper.isAppInForeground
         val metered = meteredNetwork.isMetered
-        val rooms = alwaysListenChannelNames + (if (foreground) liveViewedChannelNames else emptySet())
+        val rooms = alwaysListenChannelNames + liveViewedChannelNames
         // Per room, so the block handler only checks authors for the rooms the stream is on for
         // (iOS `streamChannels`): a covered bell-on room riding along with an uncovered one used
         // to cost an author lookup per post too.
-        val stream = if (metered && !foreground) emptySet() else rooms.filterTo(HashSet()) { room ->
-            !hasIndexerDelivery(room) ||
-                (!metered && foreground && room in liveViewedChannelNames) ||
-                (!metered && !foreground && !pushState.isActive && room in alwaysListenChannelNames)
+        val stream = if (!foreground || !signedIn) emptySet() else rooms.filterTo(HashSet()) { room ->
+            !hasIndexerDelivery(room) || (!metered && room in liveViewedChannelNames)
         }
         streamChannelNames = stream
         val shouldRun = wantCount > 0 && stream.isNotEmpty()
         if (shouldRun != isRunning) {
             Log.i("BroadcastScanningService", if (shouldRun) "Block stream on for ${stream.size} room(s)"
-                else "Block stream off: the indexer covers every room")
+                else "Block stream off")
         }
         // Off, the collector goes with the subscription: no room's scan parses blocks (iOS
         // removes its block handler with no such room).
@@ -432,6 +526,9 @@ class BroadcastScanningService @Inject constructor(
     private fun startInternal() {
         if (isRunning) return
         scanJob = scope.launch {
+            // A node that keeps failing is tried less and less often, and offline the loop waits
+            // for the network (5 s every time before, audit 2026-11-25 N1).
+            val retry = nodePoolManager.blockStreamRetry()
             while (true) {
                 var conn: KaspadConnection? = null
                 try {
@@ -458,7 +555,7 @@ class BroadcastScanningService @Inject constructor(
                 } finally {
                     if (subscribedConnection === conn) subscribedConnection = null
                 }
-                delay(RETRY_DELAY_MS)
+                retry.pause()
             }
         }
     }
@@ -556,6 +653,16 @@ class BroadcastScanningService @Inject constructor(
         val hiddenHere = isSenderHidden(senderAddress, parsed.channel)
         if (hiddenHere && parsed.channel in FeaturedBroadcastChannels.SERVICE_CHANNELS) return
 
+        // A delete for everyone (iOS 2026-11-25): applied, never a row, a banner or a push, hidden
+        // senders' too (removing their own message only hides more).
+        com.kachat.app.util.MessageDelete.parseOrNull(parsed.content)?.let { delete ->
+            notificationHelper.claimWithoutNotifying(txId)
+            broadcastRepository.applyIncomingDeletes(listOf(delete.targetTxId to senderAddress), parsed.channel)
+            return
+        }
+        // Never a message its sender deleted for everyone.
+        if (broadcastRepository.isDeletedRow(parsed.channel, txId, senderAddress)) return
+
         val stored = database.broadcastDao().insertMessageIfAbsent(
             BroadcastMessageEntity(
                 id = txId,
@@ -568,6 +675,14 @@ class BroadcastScanningService @Inject constructor(
         // Already stored: if it was our send whose outcome was unknown, this is its delivered
         // copy, so it is sent now (iOS 33095ac `insertMessages`).
         if (stored == -1L) database.broadcastDao().settleUnconfirmed(txId, blockTimestampMillis)
+        // A new message that @'s you, hidden senders aside: a row in Profile's bell, whatever the
+        // room's bell (iOS d089011f).
+        if (stored != -1L && !hiddenHere) {
+            roomMentionBell.get().recordMentions(listOf(
+                BroadcastMessageEntity(id = txId, channelName = parsed.channel, senderAddress = senderAddress,
+                    content = parsed.content, blockTimestamp = blockTimestampMillis)
+            ))
+        }
         if (parsed.channel in FeaturedBroadcastChannels.SERVICE_CHANNELS) {
             val onOwnClock = broadcastRepository.isLocallyStamped(txId)
             broadcastRepository.confirmLocalStamp(txId)
@@ -681,14 +796,14 @@ class BroadcastScanningService @Inject constructor(
     )
 
     companion object {
-        /** How often a room nobody is looking at is refreshed from the indexer - see the sweep. */
-        private const val SWEEP_INTERVAL_MS = 20_000L
         /** A breath between rooms, so a sweep is a drizzle rather than a burst. */
         private const val SWEEP_SPACING_MS = 150L
         /** Rows older than this are backlog, not news, and never banner. */
         private const val SWEEP_BANNER_WINDOW_MS = 3 * 60 * 1000L
 
-        private const val RETRY_DELAY_MS = 5_000L
+        /** Without push, how often the background asks the indexer about bell-on rooms: the 1:1
+         *  background pace without push. */
+        private const val BACKGROUND_POLL_MS = 60_000L
         /** The cached-row sender re-check waits for startup to settle, then for the REST client. */
         private const val REVERIFY_START_DELAY_MS = 10_000L
         private const val REVERIFY_REST_WAIT_MS = 60_000L

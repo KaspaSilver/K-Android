@@ -1,11 +1,5 @@
 package com.kachat.app.ui.screens
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
@@ -74,17 +68,24 @@ fun ComposerFeePill(
 
 /**
  * iOS's `FeeShimmerOverlay`: a band of light (clear - 22% white - clear, corner to corner) tilted
- * 20 degrees, sweeping left to right across the pill every 1.2 s.
+ * 20 degrees, sweeping left to right across the pill every 1.2 s. Drawn at about 30 fps rather
+ * than every frame, and not at all inside a hidden Kaspa Hub section; each step waits for a frame,
+ * so it stops with the frame clock in the background (audit 2026-11-25 R4).
  */
 @Composable
 private fun Modifier.feeShimmer(): Modifier {
-    val transition = rememberInfiniteTransition(label = "feeShimmer")
-    val phase = transition.animateFloat(
-        initialValue = -1f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(durationMillis = 1200, easing = LinearEasing), RepeatMode.Restart),
-        label = "feeShimmerPhase",
-    )
+    val phase = remember { androidx.compose.runtime.mutableFloatStateOf(-1f) }
+    val hidden = LocalHubSectionHidden.current
+    androidx.compose.runtime.LaunchedEffect(hidden) {
+        if (hidden) return@LaunchedEffect
+        val start = androidx.compose.runtime.withFrameMillis { it }
+        while (true) {
+            kotlinx.coroutines.delay(FEE_SHIMMER_FRAME_MS)
+            androidx.compose.runtime.withFrameMillis { now ->
+                phase.floatValue = feeShimmerPhase(now - start)
+            }
+        }
+    }
     return drawWithContent {
         drawContent()
         val brush = Brush.linearGradient(
@@ -92,10 +93,18 @@ private fun Modifier.feeShimmer(): Modifier {
             start = Offset.Zero,
             end = Offset(size.width, size.height),
         )
-        translate(left = phase.value * size.width * 1.5f) {
+        translate(left = phase.floatValue * size.width * 1.5f) {
             rotate(degrees = 20f) {
                 drawRect(brush = brush)
             }
         }
     }
 }
+
+/** About 30 fps for [feeShimmer]. */
+internal const val FEE_SHIMMER_FRAME_MS = 33L
+private const val FEE_SHIMMER_PERIOD_MS = 1_200L
+
+/** The shimmer band's place, -1 (left) to 1 (right), [elapsedMs] into the sweep; restarts each 1.2 s. */
+internal fun feeShimmerPhase(elapsedMs: Long): Float =
+    -1f + 2f * (Math.floorMod(elapsedMs, FEE_SHIMMER_PERIOD_MS).toFloat() / FEE_SHIMMER_PERIOD_MS)

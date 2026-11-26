@@ -40,11 +40,9 @@
     <string name="pc_keep">Behalten</string>
     <string name="pc_keep_subtitle">Den Raum so lassen, wie er ist.</string>
     <string name="pc_new_public_chat">Neuer öffentlicher Chat</string>
-    <string name="pc_new_public_chat_subtitle">Tritt einem öffentlichen Raum bei oder erstelle einen.</string>
     <string name="pc_edit_default_public_chats">Standard-Chats bearbeiten</string>
     <string name="pc_new_public_chat_explainer">Jeder, der demselben Kanalnamen beitritt, kann dort Nachrichten sehen und posten - es gibt keinen Besitzer und keine Einladung.</string>
     <string name="pc_join">Beitreten</string>
-    <string name="pc_back">Zurück</string>
     <string name="pc_channel_name_rules">Kanalnamen müssen 1-%1$d Zeichen lang sein, ohne Leerzeichen oder Doppelpunkte.</string>
     <string name="pc_join_failed">Beim Beitreten zu diesem Kanal ist etwas schiefgelaufen.</string>
     <string name="pc_report">Melden</string>

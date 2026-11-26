@@ -29,6 +29,16 @@ interface MessageEditDao {
     @Query("SELECT * FROM message_edits WHERE walletAddress = :walletAddress AND groupId = :groupId")
     fun getEditsForGroup(groupId: String, walletAddress: String): Flow<List<MessageEditEntity>>
 
+    /** The group edits of just these messages: each group row's last message previews with its
+     *  newest edit (iOS 961fc05a `GroupChatRow.previewText`). Keep [targetTxIds] under 999. */
+    @Query("SELECT * FROM message_edits WHERE walletAddress = :walletAddress AND groupId IS NOT NULL AND targetTxId IN (:targetTxIds)")
+    fun getGroupEditsForTargets(targetTxIds: List<String>, walletAddress: String): Flow<List<MessageEditEntity>>
+
+    /** The 1:1 edits of just these messages: each chat row's last message previews with its
+     *  newest edit (iOS 961fc05a `previewEditsByTxId`). Keep [targetTxIds] under 999. */
+    @Query("SELECT * FROM message_edits WHERE walletAddress = :walletAddress AND contactId IS NOT NULL AND targetTxId IN (:targetTxIds)")
+    fun getContactEditsForTargets(targetTxIds: List<String>, walletAddress: String): Flow<List<MessageEditEntity>>
+
     @Query("DELETE FROM message_edits WHERE walletAddress = :walletAddress AND contactId = :contactId")
     suspend fun deleteAllForContact(contactId: String, walletAddress: String)
 

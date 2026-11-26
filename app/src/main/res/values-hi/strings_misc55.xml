@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- iOS 961fc05a: the Nextcloud folder is "K" (agent F, misc 5.5) -->
+    <string name="ab_nc_export_sub_k">इसे अपने Nextcloud के K फ़ोल्डर में सहेजें, ताकि किसी भी डिवाइस पर इंपोर्ट कर सकें।</string>
+    <string name="pnc_export_sub_k">CSV को आपके Nextcloud के K फ़ोल्डर में सहेजता है।</string>
+</resources>

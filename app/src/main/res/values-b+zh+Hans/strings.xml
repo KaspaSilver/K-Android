@@ -160,7 +160,6 @@
     <string name="valid_address">有效地址</string>
     <string name="waiting_on_opponent">等待对手</string>
     <string name="the_recipient_wont_see_your_messages">在对方给你发消息或你向对方发送通信请求之前，对方看不到你的消息。通信请求需要 0.2 KAS，对方接受后会退还给你。发送通信请求会降低你的隐私。</string>
-    <string name="host_port_or_grpcs_host">host:port 或 grpcs://host</string>
     <string name="str">–</string>
     <string name="str_2">♟️</string>
     <string name="str_3">👋</string>
@@ -246,7 +245,6 @@
     <string name="choose_your_language">选择您的语言</string>
     <string name="select_the_language_youd_like_to">选择您想在 K 中使用的语言。</string>
     <string name="best">最佳</string>
-    <string name="enter_as_host_port_or_grpcs_host">请输入 host:port 或 grpcs://host 格式</string>
     <string name="receive_kaspa">接收 Kaspa</string>
     <string name="currency">货币</string>
     <string name="choose_your_currency">选择您的货币</string>
@@ -643,7 +641,6 @@
     <string name="ab_import_file_sub">从联系人导出文件中添加联系人。</string>
     <string name="ab_export_file_sub">将你的联系人连同照片保存到文件。</string>
     <string name="ab_nc_import_sub">从你的 Nextcloud 中选择一个联系人导出文件。</string>
-    <string name="ab_nc_export_sub">保存到 Nextcloud 的 KaChat 文件夹，可在任何设备上导入。</string>
     <string name="ab_nc_connect_hint">在 设置 &gt; 存储 中连接 Nextcloud，即可同时保存到那里并在其他设备上导入。</string>
     <string name="ab_couldnt_read_file">无法读取该文件。</string>
     <string name="ab_nothing_to_export">还没有可导出的内容。请先添加一个联系人。</string>

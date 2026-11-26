@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage quantum-resistant (KCC-3) addresses: iOS 961fc05a, 2026-11-25 -->
+<resources>
+    <string name="coldq_error_not_quantum">耐量子アドレスではありません。KasSigner に表示される KCC-3 アドレスをスキャンしてください。</string>
+    <string name="coldq_error_already_added">このアドレスはすでにこのアカウントにあります。</string>
+    <string name="coldq_error_in_other_account">このアドレスはすでに Cold Storage アカウント「%1$s」にあります。</string>
+    <string name="coldq_added_toast">耐量子アドレスを追加しました。</string>
+    <string name="coldq_add_action">耐量子アドレスを追加</string>
+    <string name="coldq_add_action_subtitle">KasSigner のアドレス画面から KCC-3 アドレスをスキャンしてください。</string>
+    <string name="coldq_stop_watching">ウォッチを停止</string>
+    <string name="coldq_stop_watching_subtitle">この量子アドレスをアカウントから削除します。もう一度スキャンすると追加し直せます。</string>
+    <string name="coldq_address_header">耐量子アドレス</string>
+    <string name="coldq_address_footer">KasSigner で使いたい KCC-3 アドレスを開き、その QR コードをスキャンしてください。このアドレスから送金するまで、鍵はデバイスに残ります。</string>
+    <string name="coldq_number_header">KasSigner のアドレス番号</string>
+    <string name="coldq_add_title">量子アドレスを追加</string>
+    <string name="coldq_number_not_whole">アドレス番号は整数で入力してください。</string>
+    <string name="coldq_needs_v11">耐量子（KCC-3）アドレスに署名できる KasSigner v1.1 以降が必要です。</string>
+    <string name="coldq_address_placeholder">kaspa:pq...</string>
+    <string name="coldq_error_script_mismatch">KasSigner がこの耐量子アドレスの鍵スクリプトを返さなかったため、ブロードキャストしません。デバイスで KasSigner v1.1 以降が動作し、このアドレスを保持しているか確認してください。</string>
+    <string name="coldq_error_unexpected_covenant">署名済みトランザクションに、この送金が求めていないコベナント条件が追加されているため、ブロードキャストしません。</string>
+    <string name="coldq_label_receive">量子アドレス</string>
+    <string name="coldq_label_change">量子お釣りアドレス</string>
+    <string name="coldq_label_receive_n">量子アドレス #%1$d</string>
+    <string name="coldq_label_change_n">量子お釣りアドレス #%1$d</string>
+    <string name="coldq_error_change_needs_fresh">この送金でこのアドレスの鍵がチェーン上に公開されるため、お釣りをここに戻せません。先に KasSigner から未使用の耐量子アドレスを追加する（お釣りアドレス #0〜#4 が最適）か、残高をすべて送ってください。</string>
+    <string name="coldq_error_compound_needs_fresh">統合するとこのアドレスの鍵がチェーン上に公開されるため、コインはこのアカウントの未使用の耐量子アドレスに移ります。先に KasSigner から追加してください（お釣りアドレス #0〜#4 が最適）。</string>
+    <string name="coldq_stop_watching_title">このアドレスのウォッチを停止しますか？</string>
+    <string name="coldq_stop_watching_message">%1$s KAS はこのアドレスのチェーン上、あなたの KasSigner にそのまま残ります。K が表示をやめるだけです。もう一度ウォッチするには、KasSigner からアドレスを再スキャンしてください。</string>
+    <string name="coldq_edit_number">アドレス番号を編集</string>
+    <string name="coldq_edit_number_subtitle">KasSigner がこのアドレスに表示する番号とチェーン。</string>
+    <string name="coldq_chain">チェーン</string>
+    <string name="coldq_number_footer">KasSigner がこのアドレスに表示する番号と、受取アドレスかお釣りアドレスか。あれば署名時にデバイスがすぐ鍵を見つけ、なければデバイスが鍵を探します。KasSigner は自身のお釣りアドレス #0〜#4 への送金をお釣りとして表示し、それ以外のアドレスは支払いとして表示します。</string>
+    <string name="coldq_number_too_large">番号が大きすぎます。KasSigner のアドレス番号は 2147483648 未満です。</string>
+    <string name="coldq_compound_note">このアドレスのコインをすべて 1 つにまとめ、このアカウントの未使用の耐量子アドレスに移します。このトランザクションでこのアドレスの鍵がチェーン上に公開されます。</string>
+    <string name="coldq_coins_left_behind">このアドレスには 1 回のトランザクションで使える以上のコインがあります。%1$d 個は、この送金でチェーン上に公開される鍵の後ろに残ります。すぐ後に別のトランザクションで送ってください。</string>
+    <string name="coldq_coins_move_to">コインの移動先の量子アドレス：</string>
+    <string name="coldq_change_goes_to">お釣りの送り先の量子アドレス：</string>
+    <string name="coldq_unit_marks_change">KasSigner はこの出力をお釣りとして表示します。</string>
+    <string name="coldq_unit_shows_payment">KasSigner はこの出力をお釣りではなく通常の支払いとして表示します。署名する前にこのアドレスであることを確認してください。</string>
+    <string name="coldq_sign_without_number">アドレス番号なしで署名</string>
+    <string name="coldq_sign_without_number_note">KasSigner がこのリクエストを拒否した場合、アドレス番号が間違っている可能性があります。番号なしでは、デバイスが自分でアドレスを探します。「アドレス番号を編集」で次回のために修正できます。</string>
+    <string name="coldq_compound_footer">この操作でこのアドレスの鍵がチェーン上に公開されるため、このアドレスの UTXO をすべて、このアカウントの未使用の耐量子アドレスで 1 つにまとめます。</string>
+    <string name="coldq_visibility_quantum_header">耐量子アドレス</string>
+    <string name="coldq_receive_address">受取アドレス</string>
+    <string name="coldq_change_address">お釣りアドレス</string>
+    <string name="coldq_optional">任意</string>
+</resources>

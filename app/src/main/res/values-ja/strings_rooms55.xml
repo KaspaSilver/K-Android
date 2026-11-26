@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
+<resources>
+    <string name="r55_search_public_chats">パブリックチャットを検索</string>
+    <string name="r55_no_public_chats">パブリックチャットはありません</string>
+    <string name="r55_no_public_chats_hint">+ をタップして公開ルームに参加するか作成します。</string>
+    <string name="r55_page_cycle_hint">チャットとパブリックチャットを切り替えます</string>
+    <string name="r55_more_rooms">その他のルーム</string>
+    <string name="r55_more_rooms_footer">K がパブリックチャットを読み込むインデクサーに追加されたルームです。</string>
+    <string name="r55_delete_one_public_chat">パブリックチャットを1件削除しますか？</string>
+    <string name="r55_delete_n_public_chats">パブリックチャットを%1$d件削除しますか？</string>
+    <string name="r55_delete_public_chats_message">デフォルトのパブリックチャットはオフになります（「デフォルトの公開チャットを編集」で再びオンにできます）。自分で追加したルームは、メッセージごとこのデバイスから削除されます。</string>
+    <string name="r55_delete_for_everyone">全員から削除</string>
+    <string name="r55_delete_for_everyone_subtitle">K を使う全員について、このルームから削除します。</string>
+    <string name="r55_delete_for_everyone_q">全員から削除しますか？</string>
+    <string name="r55_delete_for_everyone_message">K を使う全員について、このルームから消えます。Kaspa ネットワーク上には残り、チェーンを読む人は誰でも見つけられます。削除には少額のネットワーク手数料がかかります。</string>
+    <string name="r55_delete_failed">メッセージを削除できませんでした。もう一度お試しください。</string>
+</resources>

@@ -40,11 +40,9 @@
     <string name="pc_keep">إبقاء</string>
     <string name="pc_keep_subtitle">سيب الأوضة زي ما هي.</string>
     <string name="pc_new_public_chat">شات عام جديد</string>
-    <string name="pc_new_public_chat_subtitle">ادخل أوضة عامة أو اعمل واحدة.</string>
     <string name="pc_edit_default_public_chats">تعديل الشاتات العامة الافتراضية</string>
     <string name="pc_new_public_chat_explainer">أي حد ينضم لنفس اسم القناة يقدر يشوف الرسايل وينشر فيها - مفيش مالك ولا دعوة.</string>
     <string name="pc_join">انضمام</string>
-    <string name="pc_back">رجوع</string>
     <string name="pc_channel_name_rules">اسم القناة لازم يكون من 1 لـ %1$d حرف من غير مسافات أو نقطتين.</string>
     <string name="pc_join_failed">حصلت مشكلة وإحنا بندخل القناة دي.</string>
     <string name="pc_report">إبلاغ</string>
