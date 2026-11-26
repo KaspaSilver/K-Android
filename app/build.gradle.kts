@@ -104,8 +104,8 @@ android {
         // permanent and per app, and unlike iOS it does NOT reset when versionName changes
         // (4.1's builds ran 35..47). A device will not treat a rebuild as an update unless it
         // moves, so it goes up with every handed-out build too, alongside the build number.
-        val kachatBuildNumber = 4
-        versionCode = 146
+        val kachatBuildNumber = 5
+        versionCode = 147
         versionName = "5.4"
         buildConfigField("int", "KACHAT_BUILD_NUMBER", kachatBuildNumber.toString())
         buildConfigField("String", "CHANGENOW_API_KEY", "\"${changeNowApiKey.replace("\\", "").replace("\"", "")}\"")

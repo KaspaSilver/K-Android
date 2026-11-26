@@ -154,7 +154,7 @@ fun AllNotificationsBell(onClick: () -> Unit, viewModel: AllNotificationsViewMod
  * group), in a
  * sheet with a large "Notifications" title and Done - no tabs, no settings gear, no back arrow
  * (owner's calls). Opening it is seeing it: both unseen counts clear. A KaPost row closes the
- * sheet, then its post (or, for a follow, the follower's profile) opens on the KaPost tab; a wallet
+ * sheet, then its post opens on the KaPost tab, and a follow's profile over Profile (iOS 2251f15c); a wallet
  * row opens what the Wallet's own list opened.
  */
 @Composable
@@ -164,6 +164,10 @@ fun AllNotificationsSheet(
     viewModel: KaPostsViewModel = hiltViewModel(),
     walletViewModel: WalletViewModel = hiltViewModel(),
     allViewModel: AllNotificationsViewModel = hiltViewModel(),
+    /** A follower's profile, opened right where the bell is (Profile), sliding in over it,
+     *  instead of switching to the Posts feed first (iOS 2251f15c `onOpenProfile`, owner
+     *  2026-11-26). Null: the KaPost tab opens it. */
+    onOpenProfile: ((String) -> Unit)? = null,
 ) {
     val colors = LocalAppColors.current
     val walletEntries by allViewModel.walletCenter.entries.collectAsState()
@@ -215,8 +219,19 @@ fun AllNotificationsSheet(
                             KaPostsDeepLink.pendingPostTxId.value = txId
                         }
                     },
-                    // A follow has no post: the follower's KaPost profile, on the KaPost tab.
-                    onOpenProfile = { address -> closeThen { KaPostsDeepLink.openProfile(address, viewModel.myAddress()) } },
+                    // A follow has no post: the follower's KaPost profile, over Profile itself when
+                    // the bell is Profile's (iOS 2251f15c), otherwise on the KaPost tab; yours is
+                    // the Profile tab.
+                    onOpenProfile = { address ->
+                        closeThen {
+                            val open = onOpenProfile
+                            if (open != null && !KaPostsDeepLink.isOwnAddress(address, viewModel.myAddress())) {
+                                open(address)
+                            } else {
+                                KaPostsDeepLink.openProfile(address, viewModel.myAddress())
+                            }
+                        }
+                    },
                     bottomInset = 0.dp,
                     walletEntries = walletEntries,
                     onOpenWalletEntry = { entry ->

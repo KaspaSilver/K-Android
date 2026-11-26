@@ -746,7 +746,6 @@
     <!-- Payment notice push (iOS 927322b) -->
     <string name="dm_notif_received_payment">Ödeme alındı</string>
     <string name="dm_notif_payment_request">Ödeme istendi</string>
-    <string name="photo_hidden_until_unlocked">İkiniz de mesaj gönderdikten 10 dakika sonra görünür.</string>
     <!-- Profile save: not enough funds popup (iOS 2b45d6e) -->
     <string name="kn_not_enough_funds_send_1_kas">Yeterli bakiyeniz yok. Lütfen sohbet adresinize en az 1 KAS gönderin.</string>
     <!-- .kachat marketplace: Buy From (iOS eb9b027) -->

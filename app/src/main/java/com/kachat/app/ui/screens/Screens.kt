@@ -3031,6 +3031,7 @@ fun MessageBubble(
                     onDoubleClick = { QuickReactionBarState.activeId = message.id },
                     photosBlocked = !isSent && photosBlocked,
                     senderDisplayName = contactDisplayName.ifBlank { contactAvatarFallback },
+                    txId = message.id,
                 )
             } else {
                 // Above this, render a truncated tap-to-expand preview instead of laying out the
@@ -3229,8 +3230,9 @@ fun MessageBubble(
                             showReactions = true
                         }
                     }
-                    // A hidden photo can't be had early by saving it.
-                    if (imageContent != null && (isSent || !photosBlocked)) {
+                    // A held photo can't be had early by saving it, only once tapped open (iOS
+                    // 2251f15c: the save is the opened photo's).
+                    if (imageContent != null && (isSent || !photosBlocked || HeldPhotoReveals.isRevealed(message.id))) {
                         ActionSheetRow(
                             icon = Icons.Default.Download,
                             title = stringResource(R.string.save_photo),
@@ -4067,34 +4069,14 @@ fun ImageBubble(
     onDoubleClick: () -> Unit = {},
     photosBlocked: Boolean = false,
     senderDisplayName: String = "",
+    /** The message's txId: a held photo tapped open stays open while K runs ([HeldPhotoReveals]). */
+    txId: String = "",
 ) {
-    // Hidden, with no way to reveal one early - iOS's LazyImageBubble.hiddenBubble, a fixed 220 x
-    // 160. Skips decoding the bitmap entirely, matching the "don't auto-render" intent, not just
-    // "don't show" - see ChatRepository.photosUnlockAt.
-    if (photosBlocked) {
-        Column(
-            modifier = Modifier
-                .size(width = 220.dp, height = 160.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(LocalAppColors.current.surface)
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-        ) {
-            Icon(Icons.Default.VisibilityOff, null, tint = LocalAppColors.current.textSecondary, modifier = Modifier.size(24.dp))
-            Text(
-                stringResource(R.string.sent_a_photo, senderDisplayName),
-                color = LocalAppColors.current.textSecondary,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                stringResource(R.string.photo_hidden_until_unlocked),
-                color = LocalAppColors.current.textSecondary,
-                fontSize = 11.sp,
-                textAlign = TextAlign.Center
-            )
-        }
+    // Held behind Tap to View (iOS 2251f15c `HeldPhotoTile`, a fixed 220 x 160): until tapped it
+    // skips decoding the bitmap entirely, matching the "don't auto-render" intent, not just "don't
+    // show" - see ChatRepository.photosUnlockAt.
+    if (photosBlocked && !HeldPhotoReveals.isRevealed(txId)) {
+        HeldPhotoTile(senderDisplayName, 220.dp, 160.dp) { HeldPhotoReveals.reveal(txId) }
         return
     }
 
@@ -12493,6 +12475,9 @@ fun ChatInfoScreen(
     /** Straight into this person's 1:1 thread - see the "Open Chat" row. */
     onOpenChat: (String) -> Unit = {},
     onNavigateToNotificationSettings: (String) -> Unit = {},
+    /** The follow lists and their Follow buttons (iOS 2251f15c: `KaPostsFollowListView`, follows
+     *  through `KaPostsView.toggleFollow`). */
+    kaPostsViewModel: com.kachat.app.viewmodels.KaPostsViewModel = hiltViewModel(),
 ) {
     val conversationFlow = remember(contactId) { chatViewModel.conversationFlow(contactId) }
     val conversation by conversationFlow.collectAsState(initial = chatViewModel.getConversation(contactId))
@@ -12574,6 +12559,24 @@ fun ChatInfoScreen(
     // The Address Book entry of this address (iOS 00767a4: "System Contact" became it).
     val addressBookEntries = rememberAddressBookEntries()
     val addressBookEntry = remember(addressBookEntries, contactId) { com.kachat.app.services.AddressBookManager.shared?.entry(contactId) }
+
+    // Their KaPost key (null until found, or when they've never posted) and follow counts, for
+    // the Profile-style header (iOS 2251f15c `loadFollowCounts`). Your own Following is the
+    // follow list on this phone.
+    var kaPostsPubkey by remember(contactId) { mutableStateOf<String?>(null) }
+    var kaPostsFollowing by remember(contactId) { mutableStateOf<Int?>(null) }
+    var kaPostsFollowers by remember(contactId) { mutableStateOf<Int?>(null) }
+    /** The open follow list: true = Followers, false = Following. */
+    var followListKind by remember(contactId) { mutableStateOf<Boolean?>(null) }
+    val myKaPostsFollowing by kaPostsViewModel.following.collectAsState()
+    val kaPostsContext = LocalContext.current
+    LaunchedEffect(contactId, isSelf) {
+        if (isBot) return@LaunchedEffect
+        val counts = UserInfoKaPosts.load(kaPostsContext, contactId, isSelf)
+        kaPostsPubkey = counts.pubkey
+        kaPostsFollowers = counts.followers
+        if (!isSelf) kaPostsFollowing = counts.following
+    }
 
     var contactName by remember { mutableStateOf("") }
 
@@ -12702,198 +12705,53 @@ fun ChatInfoScreen(
         ) {
             Spacer(Modifier.height(29.dp))
 
-            // This person's kachat.app profile link, the same link-only share your own Profile
-            // uses: it previews with their name and avatar, opens a chat with them in KaChat, and
-            // offers the download to anyone without the app. iOS d1844582: a 58pt material circle
-            // holding a 22pt semibold share glyph in the accent, in a section of its own at the top.
-            if (!isBot) {
-                val shareContext = LocalContext.current
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    // The words are part of the button: tapping them shares too (iOS 413f6d6d).
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier.clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) {
-                            val send = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, KaChatLink.profileWebUrl(contactId))
-                                // Titles the share sheet only, as iOS's SharePreview does; not pasted.
-                                putExtra(Intent.EXTRA_TITLE, conversation?.contact?.displayName ?: com.kachat.app.models.addressDisplayName(contactId))
-                            }
-                            runCatching { shareContext.startActivity(Intent.createChooser(send, null)) }
-                        },
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(58.dp)
-                                .iosGlass(cornerRadius = 29.dp)
-                                // a whole point, inside the edge (iOS 413f6d6d)
-                                .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape),
-                        ) {
-                            Icon(Icons.Default.IosShare, contentDescription = stringResource(R.string.share_this_profile), tint = KaspaTeal, modifier = Modifier.size(26.dp))
-                        }
-                        Text(
-                            stringResource(R.string.profile_share_profile),
-                            color = KaspaTeal,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                }
-                Spacer(Modifier.height(35.dp))
+            // Laid out as Profile's header (owner, iOS 2251f15c): banner, avatar with See All Posts
+            // beside it, the name (still editable, pencil and Save), follow counts that open the
+            // lists, the bio, then Add as Contact and Share. The old big Share Profile button and
+            // the Add to Contacts row are gone.
+            val shareContext = LocalContext.current
+            val headerDisplayName = if (isSelf) {
+                // Your own chatting address is who you are on chain - your .kachat name, else the
+                // short address - never your alias or its Address Book name (iOS displayName(for:)).
+                kachatLabel?.let(com.kachat.app.models.KachatNameLabel::display) ?: com.kachat.app.models.addressDisplayName(contactId)
+            } else {
+                conversation?.contact?.displayName ?: com.kachat.app.models.addressDisplayName(contactId)
             }
-
-            // ONE profile card, always - matching iOS. It used to be two mutually exclusive
-            // shapes: a plain avatar+name card when the contact owned no KNS domain, and this
-            // richer one when they did. So a broadcast sender or group member whose domains had
-            // not loaded (or who owns none) got the stripped card with no banner, no bio and no
-            // address - which is why User Info looked like it was missing its info card.
-            run {
-                // Testnet: no "KNS" header - the card is the .kachat profile (iOS shows none).
-                SettingsSection(title = null) {
-                    Column {
-                        val bannerUrl = kachatBanner
-                        if (bannerUrl != null) {
-                            // Whole, at its own proportions (iOS c66bfc7).
-                            WholeBanner(
-                                model = bannerUrl,
-                                placeholderHeight = 90.dp,
-                                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                            ) {
-                                Box(Modifier.fillMaxSize().background(LocalAppColors.current.surfaceVariant))
-                            }
-                        }
-                        // iOS: a 60pt avatar (the photo, or a filled person on the accent at
-                        // 20%), then 16 in the name in headline over the address caption, 4
-                        // apart - 16 in from the card's edge, 23 above and below.
-                        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 23.dp), verticalAlignment = Alignment.CenterVertically) {
-                            ContactAvatar(
-                                imageUrl = kachatAvatar,
-                                fallbackText = contactId.takeLast(8),
-                                size = 60.dp,
-                                address = contactId,
-                            )
-                            Spacer(Modifier.width(16.dp))
-                            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                // A borderless field styled like a heading reads as a label, not
-                                // something you can change - the pencil is what says otherwise.
-                                // It focuses the field too, so it works as the affordance it
-                                // looks like rather than being decoration next to the real target.
-                                val nameFocus = remember { androidx.compose.ui.focus.FocusRequester() }
-                                // Your own chatting address is who you are on chain - your
-                                // .kachat name, else the short address - never your alias or its
-                                // Address Book name (iOS displayName(for:)), as the chat header.
-                                if (isSelf) Text(
-                                    text = kachatLabel?.let(com.kachat.app.models.KachatNameLabel::display) ?: com.kachat.app.models.addressDisplayName(contactId),
-                                    color = LocalAppColors.current.textPrimary,
-                                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                ) else Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    // iOS TextField("Name") in headline: no box, no inner padding.
-                                    val nameStyle = MaterialTheme.typography.bodyLarge.copy(
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = LocalAppColors.current.textPrimary,
-                                    )
-                                    androidx.compose.foundation.text.BasicTextField(
-                                        value = contactName,
-                                        onValueChange = { contactName = it },
-                                        singleLine = true,
-                                        textStyle = nameStyle,
-                                        cursorBrush = androidx.compose.ui.graphics.SolidColor(KaspaTeal),
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .focusRequester(nameFocus),
-                                        decorationBox = { inner ->
-                                            Box(contentAlignment = Alignment.CenterStart) {
-                                                if (contactName.isEmpty()) {
-                                                    Text(stringResource(R.string.name), style = nameStyle, color = LocalAppColors.current.textTertiary, maxLines = 1)
-                                                }
-                                                inner()
-                                            }
-                                        },
-                                    )
-                                    // iOS: a 13pt semibold pencil in the accent colour, 26 x 26.
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .size(26.dp)
-                                            .clickable(
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                indication = null,
-                                            ) { runCatching { nameFocus.requestFocus() } },
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Edit,
-                                            contentDescription = stringResource(R.string.edit_name),
-                                            tint = KaspaTeal,
-                                            modifier = Modifier.size(15.dp),
-                                        )
-                                    }
-                                }
-                                // iOS: the bio shows five lines and a tap opens the rest; a long
-                                // press copies it ("Bio copied to clipboard.").
-                                var isBioExpanded by remember(contactId) { mutableStateOf(false) }
-                                val bioInteraction = remember { MutableInteractionSource() }
-                                val bioModifier: (String) -> Modifier = { text ->
-                                    Modifier.combinedClickable(
-                                        interactionSource = bioInteraction,
-                                        indication = null,
-                                        onClick = { isBioExpanded = !isBioExpanded },
-                                        onLongClick = {
-                                            clipboardManager.setText(AnnotatedString(text))
-                                            infoHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                                            IosToasts.show(context.getString(R.string.field_copied_to_clipboard, context.getString(R.string.bio)))
-                                        },
-                                    )
-                                }
-                                when {
-                                    // Testnet: the .kachat bio, and its Linktree link under it.
-                                    kachatBio != null -> Column {
-                                        Text(
-                                            text = kachatBio,
-                                            color = LocalAppColors.current.textPrimary,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            maxLines = if (isBioExpanded) Int.MAX_VALUE else 5,
-                                            modifier = bioModifier(kachatBio)
-                                        )
-                                        kachatProfile?.linktree?.let { linktree ->
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.padding(top = 4.dp).clickable { runCatching { uriHandler.openUri(linktree) } }
-                                            ) {
-                                                Icon(Icons.Default.Link, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(14.dp))
-                                                Spacer(Modifier.width(4.dp))
-                                                Text(
-                                                    linktree.removePrefix("https://"),
-                                                    color = KaspaTeal,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                )
-                                            }
-                                        }
-                                    }
-                                    // No profile to describe, so the address is the useful
-                                    // caption - same fallback order as iOS.
-                                    else -> Text(
-                                        // iOS ChatInfoView.formatAddress: the first 12 and last 8.
-                                        text = if (contactId.length > 20) "${contactId.take(12)}...${contactId.takeLast(8)}" else contactId,
-                                        color = LocalAppColors.current.textSecondary,
-                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                                        maxLines = 1,
-                                    )
-                                }
-                            }
-                        }
-
+            UserInfoProfileHeader(
+                contactId = contactId,
+                isSelf = isSelf,
+                isBot = isBot,
+                bannerUrl = kachatBanner,
+                avatarUrl = kachatAvatar,
+                bio = kachatBio,
+                linktree = kachatProfile?.linktree,
+                displayName = headerDisplayName,
+                contactName = contactName,
+                onContactNameChange = { contactName = it },
+                followingCount = if (isSelf) myKaPostsFollowing.size else kaPostsFollowing,
+                followersCount = kaPostsFollowers,
+                followListsEnabled = isSelf || kaPostsPubkey != null,
+                onOpenFollowList = { followListKind = it },
+                // Their KaPost profile (posts and replies); yours is the Profile tab.
+                onSeeAllPosts = {
+                    onBack()
+                    KaPostsDeepLink.openProfile(contactId, myAddress)
+                },
+                savedContact = addressBookEntry != null,
+                onEditContact = { infoSheet = "addressBook" },
+                // This person's kachat.app profile link, the same link-only share your own Profile
+                // uses: it previews with their name and avatar, opens a chat with them in KaChat,
+                // and offers the download to anyone without the app.
+                onShare = {
+                    val send = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, KaChatLink.profileWebUrl(contactId))
+                        // Titles the share sheet only, as iOS's SharePreview does; not pasted.
+                        putExtra(Intent.EXTRA_TITLE, conversation?.contact?.displayName ?: com.kachat.app.models.addressDisplayName(contactId))
                     }
-                }
-            }
+                    runCatching { shareContext.startActivity(Intent.createChooser(send, null)) }
+                },
+            )
 
             Spacer(Modifier.height(35.dp))
             if (isBot) {
@@ -12927,27 +12785,22 @@ fun ChatInfoScreen(
                         showDivider = true,
                     ) { infoSheet = "address" }
 
-                    // The address's .kachat names (its identity).
+                    // The address's .kachat names (its identity): "Usernames" (iOS 2251f15c).
                     InfoSectionCard(
-                        title = stringResource(R.string.kn_kachat_names),
+                        title = stringResource(R.string.shell54_usernames),
                         icon = Icons.Default.AlternateEmail,
                         enabled = kachatNames.isNotEmpty(),
                         showDivider = !isSelf,
                     ) { infoSheet = "kachatNames" }
 
-                    // Per-contact settings: the chat's aliases, the Address Book entry and the
-                    // notification choice. None of them has anything to act on in your own User
-                    // Info.
+                    // Per-contact settings: the chat's aliases and the notification choice (the
+                    // Address Book entry is the header's Add as Contact now, iOS 2251f15c). None of
+                    // them has anything to act on in your own User Info.
                     if (!isSelf) {
                         InfoSectionCard(
                             title = stringResource(R.string.aliases),
                             icon = Icons.Default.Tag,
                         ) { infoSheet = "aliases" }
-
-                        InfoSectionCard(
-                            title = stringResource(if (addressBookEntry == null) R.string.ab_add_to_address_book else R.string.ab_address_book),
-                            icon = if (addressBookEntry == null) ContactsIcon else ContactsFilledIcon,
-                        ) { infoSheet = "addressBook" }
 
                         InfoSectionCard(
                             title = stringResource(R.string.notifications),
@@ -13052,10 +12905,10 @@ fun ChatInfoScreen(
             }
 
             // The address's .kachat names (testnet), its primary one marked (iOS e52357d): iOS's
-            // List under the inline title ".kachat Names"; a long press copies a name.
+            // List under the inline title "Usernames" (iOS 2251f15c); a long press copies a name.
             if (infoSheet == "kachatNames") {
                 IosInlineListSheet(
-                    title = stringResource(R.string.kn_kachat_names),
+                    title = stringResource(R.string.shell54_usernames),
                     onDismiss = { infoSheet = null },
                 ) {
                     kachatNames.forEachIndexed { index, name ->
@@ -13203,6 +13056,18 @@ fun ChatInfoScreen(
                         }
                     }
                 }
+            }
+
+            // The header's Following / Followers (iOS 2251f15c `KaPostsFollowListView`): your own
+            // list when this is you (null = the signed-in account's), else theirs by their key.
+            // Follow buttons on it go through KaPostsViewModel.toggleFollow.
+            followListKind?.let { followers ->
+                KaPostsFollowListOverlay(
+                    followers = followers,
+                    viewModel = kaPostsViewModel,
+                    onClose = { followListKind = null },
+                    targetPubkey = if (isSelf) null else kaPostsPubkey,
+                )
             }
 
 }

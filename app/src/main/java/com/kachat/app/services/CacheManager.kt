@@ -43,14 +43,18 @@ class CacheManager @Inject constructor(
 
     /** Coil owns its own directory; the rest are ours by name. */
     private fun directories(category: Category): List<File> = when (category) {
-        // The avatar and banner images (Coil's image cache - Android has one for every picture,
-        // so it is counted here, where most of it belongs), and the profile records and lookups
-        // (KachatProfileCache).
-        Category.PROFILES -> listOfNotNull(
-            context.imageLoader.diskCache?.directory?.toFile(),
+        // The avatar and banner images (their own store since 2026-11-26, ProfileImageStore; iOS
+        // KNSProfileImages) and the profile records and lookups (KachatProfileCache).
+        Category.PROFILES -> listOf(
+            ProfileImageStore.directory(context),
             KachatProfileCache.directory(context),
         )
-        Category.WEB_RESPONSES -> listOf(File(context.cacheDir, "nextcloud_previews"))
+        // Link previews and the other pictures in chats and posts (Coil's shared image cache,
+        // where avatars were too until they got their own), as iOS counts URLCache here.
+        Category.WEB_RESPONSES -> listOfNotNull(
+            File(context.cacheDir, "nextcloud_previews"),
+            context.imageLoader.diskCache?.directory?.toFile(),
+        )
         Category.TEMPORARY_FILES -> listOf(
             File(context.cacheDir, "shared_images"),
             File(context.cacheDir, "camera_captures"),
@@ -101,7 +105,11 @@ class CacheManager @Inject constructor(
 
     suspend fun clear(category: Category) = withContext(Dispatchers.IO) {
         val cutoff = System.currentTimeMillis() - minimumAgeMs(category)
-        directories(category).forEach { emptyDirectory(it, cutoff) }
+        // Coil's stores are emptied through Coil, which holds their journals open (the profile
+        // pictures' folder by ProfileImageStore.clearAll, below).
+        val coilOwned = coilDirectories() + ProfileImageStore.directory(context)
+        directories(category).filter { it !in coilOwned }.forEach { emptyDirectory(it, cutoff) }
+        if (category == Category.WEB_RESPONSES) clearCoilDiskCache()
         if (category == Category.TEMPORARY_FILES) {
             looseTempFiles().filter { it.lastModified() <= cutoff }.forEach { runCatching { it.delete() } }
         }
@@ -120,10 +128,23 @@ class CacheManager @Inject constructor(
      *  `resetProfilesInMemory`). This device's own saved profile record is not cache and stays. */
     private fun resetProfilesInMemory() {
         context.imageLoader.memoryCache?.clear()
+        // the pictures on disk and what was known about them
+        ProfileImageStore.clearAll(context)
         // the .kas profile records an older version kept (K reads no .kas names since 2026-11-23)
         context.deleteSharedPreferences("kns_profile_cache")
         kachatSocialImages.get().clearAll()
         kachatRegistry.get().clearProfileCache()
+    }
+
+    /** The folders Coil owns: the shared image cache and the profile pictures' store. */
+    private fun coilDirectories(): Set<File> = setOfNotNull(
+        context.imageLoader.diskCache?.directory?.toFile(),
+        ProfileImageStore.imagesDirectory(context),
+    )
+
+    @OptIn(coil.annotation.ExperimentalCoilApi::class)
+    private fun clearCoilDiskCache() {
+        runCatching { context.imageLoader.diskCache?.clear() }
     }
 
     /** The temporary folders are shared with whatever the app is doing right now: a voice note

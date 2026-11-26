@@ -739,7 +739,6 @@
     <!-- Payment notice push (iOS 927322b) -->
     <string name="dm_notif_received_payment">Menerima pembayaran</string>
     <string name="dm_notif_payment_request">Meminta pembayaran</string>
-    <string name="photo_hidden_until_unlocked">Muncul 10 menit setelah Anda berdua mengirim pesan.</string>
     <!-- Profile save: not enough funds popup (iOS 2b45d6e) -->
     <string name="kn_not_enough_funds_send_1_kas">Dana Anda tidak cukup. Kirim setidaknya 1 KAS ke alamat chat Anda.</string>
     <!-- .kachat marketplace: Buy From (iOS eb9b027) -->

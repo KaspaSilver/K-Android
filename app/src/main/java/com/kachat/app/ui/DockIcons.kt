@@ -154,14 +154,20 @@ private fun DockProfilePicture(walletViewModel: WalletViewModel, label: String, 
         }
         !avatarUrl.isNullOrBlank() -> {
             var loaded by remember(avatarUrl) { mutableStateOf(false) }
+            val context = LocalContext.current
             Box(Modifier.size(DOCK_SYMBOL_SIZE), contentAlignment = Alignment.Center) {
                 coil.compose.AsyncImage(
                     model = com.kachat.app.ui.screens.rememberProfileImageModel(avatarUrl),
                     contentDescription = if (loaded) label else null,
-                    imageLoader = com.kachat.app.services.LinkPreviewService.profileImageLoader(LocalContext.current),
+                    imageLoader = com.kachat.app.services.LinkPreviewService.profileImageLoader(context),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.size(DOCK_AVATAR_SIZE).clip(CircleShape).alpha(if (loaded) 1f else 0f),
-                    onSuccess = { loaded = true },
+                    onSuccess = { state ->
+                        loaded = true
+                        if (state.result.dataSource != coil.decode.DataSource.NETWORK) {
+                            com.kachat.app.services.ProfileImageStore.revalidateIfDue(context, avatarUrl)
+                        }
+                    },
                     onError = { loaded = false },
                 )
                 if (!loaded) glyph()

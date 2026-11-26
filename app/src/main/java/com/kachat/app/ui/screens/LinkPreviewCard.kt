@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -115,7 +116,8 @@ fun LinkPreviewCard(
     autoFetch: Boolean = true,
     /** The 1:1 photos rule ([com.kachat.app.repository.ChatRepository.photosUnlockAt]): a card can
      *  show the linked site's picture, or the shared photo itself, so until that unlocks nothing
-     *  is fetched and the card is the same tile a hidden photo gets (iOS 4f8e14bb). */
+     *  is fetched and the card is the same Tap to View tile a held photo gets (iOS 4f8e14bb,
+     *  2251f15c). */
     photosBlocked: Boolean = false,
     blockedSenderName: String = "",
     /** KaPost: the card fills the post's column, as on X, instead of a chat bubble's 260 dp (iOS
@@ -139,9 +141,10 @@ fun LinkPreviewCard(
         return
     }
 
-    // Blocked photos fetch nothing, tap or no tap; lifting the block runs the fetch below.
-    if (photosBlocked) {
-        HiddenPhotoTile(blockedSenderName)
+    // Held photos fetch nothing until tapped open (iOS 2251f15c); that, or the rule lifting,
+    // runs the fetch below.
+    if (photosBlocked && !HeldPhotoReveals.isRevealed(txId)) {
+        HeldPhotoTile(blockedSenderName, 220.dp, 160.dp) { HeldPhotoReveals.reveal(txId) }
         return
     }
 
@@ -268,14 +271,26 @@ private fun NextcloudAudioBubble(
     }
 }
 
-/** [ImageBubble]'s hidden tile: no URL, no tap target. Mirrors iOS's `hiddenPhotoTile`. */
+/**
+ * A photo from someone you only just started talking to (the 1:1 photos rule,
+ * [com.kachat.app.repository.ChatRepository.photosUnlockAt]): until 10 minutes after you have
+ * both sent a message, each photo waits behind this tile and shows once tapped (iOS 2251f15c
+ * `HeldPhotoTile`, owner 2026-11-26; before, it stayed hidden with no way to see it early).
+ * Nothing about the photo is loaded until the tap.
+ */
 @Composable
-private fun HiddenPhotoTile(senderName: String) {
+internal fun HeldPhotoTile(senderName: String, width: androidx.compose.ui.unit.Dp, height: androidx.compose.ui.unit.Dp, onReveal: () -> Unit) {
+    val view = androidx.compose.ui.platform.LocalView.current
+    val tapToView = stringResource(R.string.tap_to_view)
     Column(
         modifier = Modifier
-            .size(width = 220.dp, height = 160.dp)
+            .size(width = width, height = height)
             .clip(RoundedCornerShape(12.dp))
             .background(LocalAppColors.current.surface)
+            .clickable(onClickLabel = tapToView, role = androidx.compose.ui.semantics.Role.Button) {
+                com.kachat.app.util.Haptics.perform(view, com.kachat.app.util.IosHaptic.SELECTION)
+                onReveal()
+            }
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
@@ -288,11 +303,28 @@ private fun HiddenPhotoTile(senderName: String) {
             textAlign = TextAlign.Center,
         )
         Text(
-            stringResource(R.string.photo_hidden_until_unlocked),
-            color = LocalAppColors.current.textSecondary,
-            fontSize = 11.sp,
-            textAlign = TextAlign.Center,
+            tapToView,
+            color = KaspaTeal,
+            fontSize = 12.sp,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(KaspaTeal.copy(alpha = 0.16f))
+                .padding(horizontal = 12.dp, vertical = 6.dp),
         )
+    }
+}
+
+/**
+ * Held photos ([HeldPhotoTile]) tapped open, by txId, for as long as K runs (iOS 2251f15c
+ * `HeldPhotoReveals`). Once the 10 minutes are up every photo shows anyway, so nothing is saved.
+ * Snapshot state: a bubble redraws as its photo is tapped open.
+ */
+object HeldPhotoReveals {
+    private val revealed = androidx.compose.runtime.mutableStateMapOf<String, Boolean>()
+    fun isRevealed(txId: String): Boolean = txId.isNotEmpty() && revealed[txId] == true
+    fun reveal(txId: String) {
+        if (txId.isNotEmpty()) revealed[txId] = true
     }
 }
 

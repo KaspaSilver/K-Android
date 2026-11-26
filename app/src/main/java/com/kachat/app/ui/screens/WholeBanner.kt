@@ -75,6 +75,11 @@ fun WholeBanner(
             onSuccess = { state: AsyncImagePainter.State.Success ->
                 val size = state.painter.intrinsicSize
                 bannerAspect(size.width, size.height)?.let { aspect = it }
+                // shown from this phone's copy: checked for a newer picture behind it when due
+                // (iOS KNSProfileImageCache, as avatars)
+                if (model is String && state.result.dataSource != coil.decode.DataSource.NETWORK) {
+                    com.kachat.app.services.ProfileImageStore.revalidateIfDue(context, model)
+                }
             },
         )
     }

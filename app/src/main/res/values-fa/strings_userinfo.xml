@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- iOS 2251f15c ChatInfoView profile header -->
+    <string name="userinfo_add_as_contact">افزودن به مخاطبین</string>
+    <string name="userinfo_opens_posts_and_replies">پست‌ها و پاسخ‌هایش را باز می‌کند.</string>
+</resources>

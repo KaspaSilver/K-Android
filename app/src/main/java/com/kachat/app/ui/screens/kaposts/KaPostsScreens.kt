@@ -2076,7 +2076,15 @@ private fun KaPostsFeedScreen(
     }
     if (showAllNotifications) {
         // a sheet, so it has no back arrow (owner's call, iOS 148a5331)
-        AllNotificationsSheet(navController = navController, onDismiss = { showAllNotifications = false })
+        AllNotificationsSheet(
+            navController = navController,
+            onDismiss = { showAllNotifications = false },
+            // a follower opens over Profile itself, not on the Posts feed (iOS 2251f15c)
+            onOpenProfile = { address ->
+                threadStack = emptyList()
+                viewModel.openPosterProfile(address, null)
+            },
+        )
     }
 
     if (showBookmarks) {

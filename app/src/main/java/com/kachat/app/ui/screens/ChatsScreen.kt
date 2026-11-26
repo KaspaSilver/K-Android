@@ -2133,8 +2133,22 @@ private fun decodeBase64Avatar(base64: String?): ImageBitmap? {
  */
 @Composable
 private fun AvatarImageChain(candidates: List<String>, fallbackText: String, fontSize: TextUnit, backupBitmap: ImageBitmap? = null) {
-    var failedCount by remember(candidates) { mutableIntStateOf(0) }
+    val store = com.kachat.app.services.ProfileImageStore
+    // A picture that failed within the last minute isn't asked for again on every scroll (iOS
+    // `downloadFailureCooldown`): the row starts past it.
+    var failedCount by remember(candidates) {
+        mutableIntStateOf(candidates.takeWhile { store.failedRecently(it) }.size)
+    }
     val current = candidates.getOrNull(failedCount)
+    // Every picture failed: tried again once the cooldown is over, while the row is still on
+    // screen - it used to keep the glyph until the screen was opened again.
+    if (current == null && candidates.isNotEmpty()) {
+        LaunchedEffect(candidates, failedCount) {
+            kotlinx.coroutines.delay(candidates.maxOf { store.cooldownLeftMs(it) }.coerceAtLeast(1_000L))
+            failedCount = 0
+        }
+    }
+    val context = androidx.compose.ui.platform.LocalContext.current
     // A new request once User Info > Rescan Profile downloaded this picture again (iOS bc95d17).
     val model = rememberProfileImageModel(current)
     if (current == null) {
@@ -2157,11 +2171,19 @@ private fun AvatarImageChain(candidates: List<String>, fallbackText: String, fon
         coil.compose.AsyncImage(
             model = model,
             contentDescription = null,
-            imageLoader = com.kachat.app.services.LinkPreviewService.profileImageLoader(androidx.compose.ui.platform.LocalContext.current),
+            imageLoader = com.kachat.app.services.LinkPreviewService.profileImageLoader(context),
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
-            onSuccess = { loaded = true },
-            onError = { failedCount++ }
+            onSuccess = { state ->
+                loaded = true
+                store.noteLoaded(current)
+                // shown from this phone's copy: checked for a newer picture behind it when due
+                if (state.result.dataSource != coil.decode.DataSource.NETWORK) store.revalidateIfDue(context, current)
+            },
+            onError = {
+                store.noteFailure(current)
+                failedCount++
+            }
         )
     }
 }

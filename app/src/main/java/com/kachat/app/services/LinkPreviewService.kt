@@ -198,14 +198,39 @@ object LinkPreviewService {
             .also { fullLoader = it }
     }
 
-    /** [previewImageLoader] for profile pictures and banners. The URL is whatever the profile's
-     *  owner set, so the size is theirs too (iOS 4f8e14bb). Shares the app's caches. */
+    /**
+     * [previewImageLoader] for profile pictures and banners. The URL is whatever the profile's
+     * owner set, so the size is theirs too (iOS 4f8e14bb). Shares the app's memory cache; the
+     * pictures have their own disk store, and the copy there always shows at once whatever the
+     * host's cache headers say ([ProfileImageStore], iOS `KNSProfileImageCache`): a stale header
+     * made every avatar wait for the network after a relaunch.
+     */
     fun profileImageLoader(context: Context): ImageLoader = profileLoader ?: synchronized(this) {
+        ProfileImageStore.init(context)
         profileLoader ?: context.applicationContext.imageLoader.newBuilder()
-            .okHttpClient(downloadClient.newBuilder().withRedirectRules().addInterceptor(CappedBodyInterceptor(MAX_PROFILE_IMAGE_BYTES)).build())
+            .okHttpClient(profileHttpClient())
+            .diskCache {
+                coil.disk.DiskCache.Builder()
+                    .directory(ProfileImageStore.imagesDirectory(context))
+                    .maxSizeBytes(ProfileImageStore.MAX_DISK_BYTES)
+                    .build()
+            }
+            .respectCacheHeaders(false)
             .components { add(PixelCapDecoderFactory()) }
             .build()
             .also { profileLoader = it }
+    }
+
+    @Volatile private var profileClient: OkHttpClient? = null
+
+    /** The profile pictures' client: each download records what the host said about it
+     *  ([ProfileImageStore.ValidatorRecorder]), then the redirect rules and the size cap. */
+    fun profileHttpClient(): OkHttpClient = profileClient ?: synchronized(this) {
+        profileClient ?: ProfileImageStore.withRecorder(downloadClient.newBuilder())
+            .withRedirectRules()
+            .addInterceptor(CappedBodyInterceptor(MAX_PROFILE_IMAGE_BYTES))
+            .build()
+            .also { profileClient = it }
     }
 
     /** One site: the same host, or one a subdomain of the other (www.x.com and x.com, cdn.x.com

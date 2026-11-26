@@ -50,70 +50,47 @@ object ProfileImageRefetch {
                 false
             }
             if (!ok) continue
+            com.kachat.app.services.ProfileImageStore.noteLoaded(url)
             fetched++
             _generations.update { it + (url to ((it[url] ?: 0) + 1)) }
         }
         return fetched
     }
 
-    /** When the hourly rescan last checked each picture, this run. */
-    private val lastChecked = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    /** A picture's copy on this phone was replaced by a different one
+     *  ([com.kachat.app.services.ProfileImageStore.revalidate]): every avatar and banner showing
+     *  it redraws. */
+    fun noteChanged(url: String) {
+        _generations.update { it + (url to ((it[url] ?: 0) + 1)) }
+    }
 
     /**
      * The hourly profile rescan's look at these pictures (iOS 961fc05a
      * `KNSProfileImageCacheControl.refreshIfChanged`, audit 2026-11-25 B17: it used to download
      * every contact's avatar and banner again each hour). A picture this phone doesn't hold is
-     * left alone: a new link downloads by itself the next time it shows. One it holds is loaded
-     * through Coil's disk cache, which checks it with its stored validators (a conditional GET)
-     * when its cache headers say so, and only a changed picture comes down again and redraws. Not
-     * sooner than [RESCAN_REVALIDATE_MIN_AGE_MS] after the last check. Returns how many changed.
+     * left alone: a new link downloads by itself the next time it shows. One it holds is checked
+     * against the host ([com.kachat.app.services.ProfileImageStore.revalidate]: a conditional HEAD,
+     * or a download when the host gave no validators), and only a changed picture redraws. Not
+     * sooner than [RESCAN_REVALIDATE_MIN_AGE_MS] after its last check. Returns how many changed.
      */
-    @OptIn(coil.annotation.ExperimentalCoilApi::class)
     suspend fun refreshIfChanged(context: Context, urls: List<String>): Int {
         val app = context.applicationContext
-        val loader = com.kachat.app.services.LinkPreviewService.profileImageLoader(app)
-        val disk = loader.diskCache ?: return 0
+        val store = com.kachat.app.services.ProfileImageStore
+        store.init(app)
         var changed = 0
         for (url in urls.filter { it.isNotBlank() }.toSet()) {
-            val before = diskFingerprint(disk, url) ?: continue
-            val now = System.currentTimeMillis()
-            if (now - (lastChecked[url] ?: 0L) < RESCAN_REVALIDATE_MIN_AGE_MS) continue
-            lastChecked[url] = now
-            val request = ImageRequest.Builder(app)
-                .data(url)
-                // past the memory cache, so the disk entry is checked; it keeps the answer
-                .memoryCachePolicy(CachePolicy.WRITE_ONLY)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .size(REFETCH_MAX_PX)
-                .build()
-            val ok = runCatching { loader.execute(request) is SuccessResult }.getOrElse { e ->
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                false
-            }
-            if (!ok || diskFingerprint(disk, url) == before) continue
-            changed++
-            _generations.update { it + (url to ((it[url] ?: 0) + 1)) }
+            if (!store.isDue(store.check(url), System.currentTimeMillis(), RESCAN_REVALIDATE_MIN_AGE_MS)) continue
+            if (store.revalidate(app, url)) changed++
         }
         return changed
     }
-
-    /** The cached picture's bytes, checksummed; null when the disk cache doesn't hold [url]. */
-    @OptIn(coil.annotation.ExperimentalCoilApi::class)
-    private fun diskFingerprint(disk: coil.disk.DiskCache, url: String): Long? =
-        runCatching {
-            disk.openSnapshot(url)?.use { snapshot ->
-                val crc = java.util.zip.CRC32()
-                crc.update(snapshot.data.toFile().readBytes())
-                crc.value
-            }
-        }.getOrNull()
 
     /** The hourly rescan doesn't check a picture again sooner than this. */
     private const val RESCAN_REVALIDATE_MIN_AGE_MS = 50L * 60 * 1000
 
     /** Biggest side the fresh copy is decoded at for the memory cache; a view that needs more
      *  reads the new file from the disk cache. */
-    private const val REFETCH_MAX_PX = 1024
+    internal const val REFETCH_MAX_PX = 1024
 
     /** Coil parameter carrying the generation: it changes the request (so the image reloads) but
      *  not its memory cache key (so it finds the fresh copy). */

@@ -746,7 +746,6 @@
     <!-- Payment notice push (iOS 927322b) -->
     <string name="dm_notif_received_payment">Pagamento ricevuto</string>
     <string name="dm_notif_payment_request">Pagamento richiesto</string>
-    <string name="photo_hidden_until_unlocked">Compare 10 minuti dopo che entrambi avete inviato un messaggio.</string>
     <!-- Profile save: not enough funds popup (iOS 2b45d6e) -->
     <string name="kn_not_enough_funds_send_1_kas">Non hai fondi sufficienti. Invia almeno 1 KAS al tuo indirizzo di chat.</string>
     <!-- .kachat marketplace: Buy From (iOS eb9b027) -->

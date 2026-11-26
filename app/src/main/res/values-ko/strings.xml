@@ -746,7 +746,6 @@
     <!-- Payment notice push (iOS 927322b) -->
     <string name="dm_notif_received_payment">결제를 받았습니다</string>
     <string name="dm_notif_payment_request">결제를 요청했습니다</string>
-    <string name="photo_hidden_until_unlocked">서로 메시지를 보낸 지 10분 후에 표시됩니다.</string>
     <!-- Profile save: not enough funds popup (iOS 2b45d6e) -->
     <string name="kn_not_enough_funds_send_1_kas">잔액이 부족합니다. 채팅 주소로 최소 1 KAS를 보내 주세요.</string>
     <!-- .kachat marketplace: Buy From (iOS eb9b027) -->

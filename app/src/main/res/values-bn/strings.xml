@@ -746,7 +746,6 @@
     <!-- Payment notice push (iOS 927322b) -->
     <string name="dm_notif_received_payment">পেমেন্ট পাওয়া গেছে</string>
     <string name="dm_notif_payment_request">পেমেন্টের অনুরোধ করেছেন</string>
-    <string name="photo_hidden_until_unlocked">আপনারা দুজনেই বার্তা পাঠানোর ১০ মিনিট পর এটি দেখা যায়।</string>
     <!-- Profile save: not enough funds popup (iOS 2b45d6e) -->
     <string name="kn_not_enough_funds_send_1_kas">আপনার পর্যাপ্ত তহবিল নেই। অনুগ্রহ করে আপনার চ্যাটিং ঠিকানায় অন্তত 1 KAS পাঠান।</string>
     <!-- .kachat marketplace: Buy From (iOS eb9b027) -->
