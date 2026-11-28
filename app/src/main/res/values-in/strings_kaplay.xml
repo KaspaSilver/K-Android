@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">Perempat final</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Hasil tidak terkirim.</string>
     <string name="kaplay_leaderboard_all_time">Sepanjang waktu</string>
-    <string name="kaplay_leaderboard_counted_from">Dihitung sejak %1$s.</string>
-    <string name="kaplay_leaderboard_period">Periode papan peringkat</string>
-    <string name="kaplay_leaderboard_resets_monthly">Diatur ulang setiap tanggal 1 (UTC).</string>
     <string name="kaplay_leaderboard_this_month">Bulan ini</string>
-    <string name="kaplay_no_finished_duels">Belum ada game 1v1 yang selesai.</string>
-    <string name="kaplay_no_finished_duels_this_month">Belum ada game 1v1 yang selesai bulan ini.</string>
-    <string name="kaplay_no_finished_tournaments">Belum ada turnamen yang selesai.</string>
-    <string name="kaplay_no_finished_tournaments_this_month">Belum ada turnamen yang selesai bulan ini.</string>
     <string name="kaplay_tab_leaderboard">Papan Peringkat</string>
     <string name="kp_640de0cb0b2c" formatted="false">Rekormu: %s menang, %s kalah</string>
     <string name="kp_5d12bd53552c" formatted="false">Main</string>

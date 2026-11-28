@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">8강</string>
     <string name="kp_3ce0ac6e9413" formatted="false">결과가 전송되지 않았습니다.</string>
     <string name="kaplay_leaderboard_all_time">전체 기간</string>
-    <string name="kaplay_leaderboard_counted_from">%1$s부터 집계됩니다.</string>
-    <string name="kaplay_leaderboard_period">리더보드 기간</string>
-    <string name="kaplay_leaderboard_resets_monthly">매월 1일(UTC)에 초기화됩니다.</string>
     <string name="kaplay_leaderboard_this_month">이번 달</string>
-    <string name="kaplay_no_finished_duels">끝난 1v1 게임이 아직 없습니다.</string>
-    <string name="kaplay_no_finished_duels_this_month">이번 달에 끝난 1v1 게임이 아직 없습니다.</string>
-    <string name="kaplay_no_finished_tournaments">끝난 토너먼트가 아직 없습니다.</string>
-    <string name="kaplay_no_finished_tournaments_this_month">이번 달에 끝난 토너먼트가 아직 없습니다.</string>
     <string name="kaplay_tab_leaderboard">순위표</string>
     <string name="kp_640de0cb0b2c" formatted="false">내 전적: %s승 %s패</string>
     <string name="kp_5d12bd53552c" formatted="false">플레이</string>

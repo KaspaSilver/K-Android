@@ -113,7 +113,6 @@
     <string name="qr_code">קוד QR</string>
     <string name="read">נקרא</string>
     <string name="receive">קבלה</string>
-    <string name="recipient_address">כתובת הנמען</string>
     <string name="remove">הסר</string>
     <string name="rename">שנה שם</string>
     <string name="rename_account">שנה שם חשבון</string>
@@ -230,7 +229,6 @@
     <string name="welcome_to_kachat">ברוכים הבאים ל-K</string>
     <string name="lets_walk_through_the_basics_so">בואו נעבור על היסודות כדי שתהיו מוכנים לשלוח את ההודעה הראשונה שלכם.</string>
     <string name="how_kachat_uses_kaspa">כיצד K משתמש ב-Kaspa</string>
-    <string name="kachat_lets_you_send_and_receive">K מאפשר לך לשלוח ולקבל הודעות ישירות ברשת Kaspa עצמה. נדרש Kaspa כדי לשלם עמלות בעת שליחת ההודעות שלך. העמלה שאתה משלם הולכת לכורים המאבטחים את הרשת.</string>
     <string name="finish">סיום</string>
     <string name="choose_your_language">בחר את שפתך</string>
     <string name="select_the_language_youd_like_to">בחר את השפה שבה תרצה להשתמש ב-K.</string>
@@ -270,7 +268,6 @@
     <string name="connection_tab_explorer">סייר</string>
     <string name="message_indexer">אינדקסר הודעות</string>
     <string name="coming_soon">בקרוב</string>
-    <string name="not_available_on_this_network">לא זמין ברשת זו</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">הסיור המלא להתחלה: ארנק, צ\'אטים, תשלומים ועוד.</string>
@@ -710,7 +707,7 @@
     <string name="pr_send_request">שליחת בקשת תשלום</string>
     <!-- Chat list: delete one chat (iOS ChatListView rowDeleteContact) -->
     <string name="delete_chat_q">Delete Chat?</string>
-    <string name="delete_chat_alert_message">This permanently deletes every message in this chat from this device. This cannot be undone.</string>
+    <string name="delete_chat_alert_message">פעולה זו מוחקת לצמיתות את כל ההודעות בצ\'אט הזה מהמכשיר הזה. אי אפשר לבטל את זה.</string>
     <!-- .kachat transaction sheet: coins are combined only after the slide (iOS 778a8fc, IOS-075) -->
     <!-- An address's Domains tab: one card per name service (iOS fe52376) -->
     <!-- Request Payment: Fresh Address / Choose an Address, Used / Unused (iOS 86dfd2d, 6dee531, 338d9f5) -->
@@ -1122,7 +1119,6 @@
     <string name="write_down_your_12_or_24_words">רשמו את 12 או 24 המילים לפני המחיקה.</string>
     <string name="view_12_or_24_words_and_passphrase">הצגת 12 או 24 המילים וביטוי הסיסמה</string>
     <string name="the_passphrase_shows_too_if_this_account">גם ביטוי הסיסמה יוצג, אם יש כזה לחשבון.</string>
-    <string name="transaction_id_tap_to_view_in">מזהה עסקה · הקישו לצפייה ב-%1$s</string>
     <string name="transaction_id">מזהה עסקה</string>
     <string name="unsilence">ביטול השתקה</string>
     <string name="silence">השתקה</string>
@@ -1159,7 +1155,6 @@
     <string name="adding_of">מוסיף %1$d מתוך %2$d</string>
     <string name="adding_member">מוסיף חבר</string>
     <string name="each_member_re_keys_the_group_on">כל חבר מחליף את מפתח הקבוצה על השרשרת, ולכן זה עשוי לקחת דקה. השאירו את האפליקציה פתוחה.</string>
-    <string name="member_s_could_not_be_added_added">לא ניתן היה להוסיף חברים: %1$d (נוספו: %2$d). נסו שוב.</string>
     <string name="clears_the_unread_badge_on_this_group">מנקה את סימון הלא נקראו בקבוצה הזו.</string>
     <string name="notifications_from_this_group_resume_including_menti">ההתראות מהקבוצה הזו יחזרו, כולל אזכורים.</string>
     <string name="no_notification_from_this_group_mentions_included">ללא התראות מהקבוצה הזו, כולל אזכורים.</string>
@@ -1242,7 +1237,6 @@
     <string name="couldnt_load_the_coins">לא ניתן היה לטעון את המטבעות.</string>
     <string name="these_words_are_invalid_double_check_the">המילים האלה אינן תקינות. בדקו אותן שוב - המילה האחרונה מכילה סכום ביקורת, ולכן מילה שגויה אחת מכשילה את האימות.</string>
     <string name="invalid_words_please_enter_12_or_24">מילים לא תקינות. הזינו 12 או 24 מילים.</string>
-    <string name="retry_failed">הניסיון החוזר נכשל</string>
     <string name="saving_keep_the_card_still">שומר. החזיקו את הכרטיס ללא תזוזה.</string>
     <string name="reading_keep_the_card_still">קורא. החזיקו את הכרטיס ללא תזוזה.</string>
     <string name="ready_to_scan">מוכן לסריקה</string>
@@ -1269,8 +1263,6 @@
     <string name="recovered_n_messages">שוחזרו %1$d הודעות שהמכשיר הזה לא הצליח לקרוא.</string>
     <string name="estimated_network_fee_one">\n\nעמלת רשת משוערת ≈ %1$s %2$s בעסקה אחת.</string>
     <string name="estimated_network_fee_n">\n\nעמלת רשת משוערת ≈ %1$s %2$s ב-%3$d עסקאות.</string>
-    <string name="add_one_member_to_group">להוסיף חבר אחד לקבוצה?%1$s</string>
-    <string name="add_n_members_to_group">להוסיף %1$d חברים לקבוצה?%2$s</string>
     <string name="this_group">הקבוצה הזו</string>
     <string name="one_member">חבר אחד</string>
     <string name="video_emoji">🎬 סרטון</string>
@@ -1396,7 +1388,6 @@
     <string name="chess_tc_no_timer">ללא שעון.</string>
     <string name="recents">אחרונים</string>
     <string name="initial_sync_starting">מתחיל</string>
-    <string name="initial_sync_finished">הסתיים</string>
     <string name="wiping_incoming_messages">מוחק הודעות נכנסות...</string>
     <string name="finishing_up">מסיים...</string>
     <string name="re_syncing_chats_progress">מסנכרן מחדש... %1$d מתוך %2$d צ\'אטים</string>
@@ -1447,7 +1438,6 @@
     <string name="notification_mode_default">ברירת מחדל (%1$s)</string>
     <string name="checking_address_n">בודק כתובת #%1$d</string>
     <string name="n_found_so_far">%1$d נמצאו עד כה</string>
-    <string name="first_sync_all_set">הכול מוכן</string>
     <string name="nc_use_all_files">שימוש בכל הקבצים</string>
     <string name="nc_use_this_folder">שימוש בתיקייה הזו</string>
     <string name="nc_no_subfolders">אין תיקיות משנה.</string>
@@ -1470,7 +1460,6 @@
     <string name="chess_notif_move">♟️ שיחק %1$s → %2$s</string>
     <string name="chess_notif_lost_on_time">♟️ הפסיד בזמן</string>
     <string name="chess_notif_resigned">♟️ נכנע במשחק השחמט</string>
-    <string name="fee_label">תַשְׁלוּם</string>
     <plurals name="create_group_and_invite">
         <item quantity="one">ליצור את \"%1$s\" ולהזמין חבר אחד?</item>
         <item quantity="two">ליצור את \"%1$s\" ולהזמין %2$d חברים?</item>
@@ -1520,8 +1509,6 @@
     <string name="kusdt_build_failed">לא ניתן היה לבנות את העסקה. לא נשלח דבר.</string>
     <string name="token_held_on_addresses">%1$d כתובות</string>
     <string name="token_received_title">התקבלו %1$s</string>
-    <string name="token_received_on_one">ב%1$s שלכם</string>
-    <string name="token_received_on_many">ב-%1$d מהכתובות שלכם</string>
     <string name="connection_not_set">לא הוגדר</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">העתק קישור לשיתוף</string>
@@ -1628,4 +1615,5 @@
     <string name="history_change_to_address">עודף %1$s אל %2$s</string>
     <string name="cycle_hint_next_page">עובר לעמוד הבא</string>
     <string name="cycle_hint_next_feed">עובר לפיד הבא</string>
+    <string name="gif">GIF</string>
 </resources>

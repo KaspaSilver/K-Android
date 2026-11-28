@@ -17,6 +17,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -130,6 +134,7 @@ import com.kachat.app.services.arcade.ArcadeMessages
 import com.kachat.app.services.arcade.ArcadeService
 import com.kachat.app.services.arcade.ArcadeStampJob
 import com.kachat.app.services.chess.ChessTournamentService
+import com.kachat.app.ui.components.CycleButtons
 import com.kachat.app.ui.components.CycleCapsuleButton
 import com.kachat.app.ui.components.CycleFade
 import com.kachat.app.ui.screens.ContactAvatar
@@ -470,72 +475,87 @@ fun ArcadeGameHomeScreen(
         topBar = { ArcadeBar(title, onBack) },
     ) { padding ->
         ArcadeRefreshBox(onRefresh = { service.boards.refreshNow(game) }, modifier = Modifier.padding(padding)) {
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
-                    .padding(bottom = LocalDockInset.current),
+            // A lazy list, so the board's 100 rows and their avatars compose only as they scroll
+            // in, not all in the opening frame (audit 2026-11-27 Smoothness S7, iOS L12).
+            val boardRows = revision.let { _ -> service.boards.rows(game, period, boards) }.take(100)
+            // The board fades in on a period change, as CycleFade did for the whole column.
+            val boardAlpha = remember { Animatable(1f) }
+            var shownPeriod by remember { mutableStateOf(period) }
+            LaunchedEffect(period) {
+                if (period == shownPeriod) return@LaunchedEffect
+                shownPeriod = period
+                boardAlpha.snapTo(0f)
+                boardAlpha.animateTo(1f, tween(CycleButtons.FADE_MILLIS, easing = FastOutSlowInEasing))
+            }
+            LazyColumn(
+                Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp + LocalDockInset.current),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                challenge?.let { challengeText(context, it, game, contacts) }?.let { banner ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(colors.warning.copy(alpha = 0.14f))
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Icon(Icons.Filled.Flag, contentDescription = null, tint = colors.warning, modifier = Modifier.size(22.dp))
-                        Text(banner, color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                val challengeBanner = challenge?.let { challengeText(context, it, game, contacts) }
+                if (challengeBanner != null) {
+                    item(key = "challenge") {
+                        challengeBanner.let { banner ->
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(colors.warning.copy(alpha = 0.14f))
+                                    .padding(14.dp),
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Icon(Icons.Filled.Flag, contentDescription = null, tint = colors.warning, modifier = Modifier.size(22.dp))
+                                Text(banner, color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
-
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(colors.surface)
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    Box(
-                        Modifier.size(84.dp).clip(RoundedCornerShape(22.dp)).background(KaspaTeal),
-                        contentAlignment = Alignment.Center,
-                    ) { ArcadeGameIcon(game, 40.dp, Color.White) }
-                    Text(ArcadeText.detail(game), color = colors.textSecondary, fontSize = 15.sp, textAlign = TextAlign.Center)
-                    // read so a new stamp shows at once
-                    revision.let { _ -> service.progress.best(game) }?.let { best ->
-                        Text(
-                            stringResource(R.string.arcade_your_best, ArcadeText.number(best.score)),
-                            color = colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                    Box(
+                item(key = "hero") {
+                    Column(
                         Modifier
                             .fillMaxWidth()
-                            .height(52.dp)
-                            .clip(CircleShape)
-                            .background(KaspaTeal)
-                            .clickable {
-                                haptic(IosHaptic.IMPACT_MEDIUM)
-                                playing = true
-                            },
-                        contentAlignment = Alignment.Center,
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(colors.surface)
+                            .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        Text(stringResource(R.string.kpui_play), color = Color.Black, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                        Box(
+                            Modifier.size(84.dp).clip(RoundedCornerShape(22.dp)).background(KaspaTeal),
+                            contentAlignment = Alignment.Center,
+                        ) { ArcadeGameIcon(game, 40.dp, Color.White) }
+                        Text(ArcadeText.detail(game), color = colors.textSecondary, fontSize = 15.sp, textAlign = TextAlign.Center)
+                        // read so a new stamp shows at once
+                        revision.let { _ -> service.progress.best(game) }?.let { best ->
+                            Text(
+                                stringResource(R.string.arcade_your_best, ArcadeText.number(best.score)),
+                                color = colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .clip(CircleShape)
+                                .background(KaspaTeal)
+                                .clickable {
+                                    haptic(IosHaptic.IMPACT_MEDIUM)
+                                    playing = true
+                                },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(stringResource(R.string.kpui_play), color = Color.Black, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Text(
+                            stringResource(R.string.arcade_fee_note),
+                            color = colors.textSecondary, fontSize = 12.sp, textAlign = TextAlign.Center,
+                        )
                     }
-                    Text(
-                        stringResource(R.string.arcade_fee_note),
-                        color = colors.textSecondary, fontSize = 12.sp, textAlign = TextAlign.Center,
-                    )
                 }
 
                 // Leaderboard
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                item(key = "board-header") {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             stringResource(R.string.kaplay_tab_leaderboard),
@@ -550,21 +570,20 @@ fun ArcadeGameHomeScreen(
                             hint = stringResource(R.string.arcade_hint_period),
                         )
                     }
-                    CycleFade(period) { shownPeriod ->
-                        val rows = revision.let { _ -> service.boards.rows(game, shownPeriod, boards) }
-                        if (rows.isEmpty()) {
-                            Text(
-                                stringResource(
-                                    if (service.boards.serverUnreachable(game, unreachable)) R.string.arcade_board_unreachable
-                                    else R.string.arcade_board_empty,
-                                ),
-                                color = colors.textSecondary, fontSize = 15.sp, textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
-                            )
-                        } else {
-                            ArcadeBoard(rows, contacts, me)
-                        }
+                }
+                if (boardRows.isEmpty()) {
+                    item(key = "board-empty") {
+                        Text(
+                            stringResource(
+                                if (service.boards.serverUnreachable(game, unreachable)) R.string.arcade_board_unreachable
+                                else R.string.arcade_board_empty,
+                            ),
+                            color = colors.textSecondary, fontSize = 15.sp, textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp).graphicsLayer { alpha = boardAlpha.value },
+                        )
                     }
+                } else {
+                    arcadeBoardRows(boardRows, period, contacts, me) { boardAlpha.value }
                 }
             }
         }
@@ -601,47 +620,67 @@ private fun challengeText(
     }
 }
 
-@Composable
-private fun ArcadeBoard(
+/**
+ * The leaderboard's rows, each its own list item of one card (audit 2026-11-27 S7): the first
+ * carries the card's top corners, the last its bottom ones. The list's 16 dp item spacing is taken
+ * back off every row after the first, and the header's 10 dp to the board kept.
+ */
+private fun androidx.compose.foundation.lazy.LazyListScope.arcadeBoardRows(
     rows: List<com.kachat.app.services.arcade.ArcadeBoardRow>,
+    period: ChessLeaderboardPeriod,
     contacts: Map<String, ContactEntity>,
     me: String?,
+    alpha: () -> Float,
 ) {
-    val colors = LocalAppColors.current
-    val shown = rows.take(100)
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(colors.surface)) {
-        shown.forEachIndexed { index, row ->
-            key(row.address) {
-                val name = arcadeName(row.address, contacts)
-                val mine = me != null && row.address.equals(me, ignoreCase = true)
-                Row(
-                    Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        "${index + 1}",
-                        color = if (index < 3) KaspaTeal else colors.textSecondary,
-                        fontSize = 15.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.width(28.dp),
-                    )
-                    ContactAvatar(imageUrl = null, fallbackText = name, size = 32.dp, address = row.address)
-                    Text(
-                        name,
-                        color = colors.textPrimary, fontSize = 15.sp,
-                        fontWeight = if (mine) FontWeight.Bold else FontWeight.Normal,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(
-                        ArcadeText.number(row.score),
-                        color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
-                        fontFamily = FontFamily.Monospace,
-                    )
+    itemsIndexed(rows, key = { index, row -> "board|${period.name}|$index|${row.address}" }) { index, row ->
+        val colors = LocalAppColors.current
+        val first = index == 0
+        val last = index == rows.lastIndex
+        val top = if (first) 16.dp else 0.dp
+        val bottom = if (last) 16.dp else 0.dp
+        val name = arcadeName(row.address, contacts)
+        val mine = me != null && row.address.equals(me, ignoreCase = true)
+        Column(
+            Modifier
+                .layout { measurable, constraints ->
+                    // Rows of one card touch: the list's spacing comes back off (and the header
+                    // sits 10 dp above the board, not 16).
+                    val pull = (if (first) 6.dp else 16.dp).roundToPx()
+                    val placeable = measurable.measure(constraints)
+                    layout(placeable.width, (placeable.height - pull).coerceAtLeast(0)) { placeable.place(0, -pull) }
                 }
-                if (index < shown.size - 1) {
-                    HorizontalDivider(thickness = 0.5.dp, color = colors.divider, modifier = Modifier.padding(start = 98.dp))
-                }
+                .graphicsLayer { this.alpha = alpha() }
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom))
+                .background(colors.surface),
+        ) {
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    "${index + 1}",
+                    color = if (index < 3) KaspaTeal else colors.textSecondary,
+                    fontSize = 15.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.width(28.dp),
+                )
+                ContactAvatar(imageUrl = null, fallbackText = name, size = 32.dp, address = row.address)
+                Text(
+                    name,
+                    color = colors.textPrimary, fontSize = 15.sp,
+                    fontWeight = if (mine) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    ArcadeText.number(row.score),
+                    color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
+            if (!last) {
+                HorizontalDivider(thickness = 0.5.dp, color = colors.divider, modifier = Modifier.padding(start = 98.dp))
             }
         }
     }

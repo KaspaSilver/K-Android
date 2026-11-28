@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">Jaringan masih mengonfirmasi pengiriman Anda sebelumnya. Silakan coba lagi dalam beberapa detik.</string>
     <string name="pc_l53_room_kept_for">Disimpan selama</string>
     <string name="pc_l53_room_on_this_device">Di perangkat ini</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">Muat pesan sebelumnya</string>
     <string name="pc_no_testnet_indexer_yet">Belum ada pengindeks testnet</string>
     <string name="pc_room_no_spendable_funds_yet">Belum ada dana yang dapat dibelanjakan. Tunggu konfirmasi dan coba lagi.</string>
     <string name="pc_room_not_enough_kas">KAS di alamat chat Anda tidak cukup. Tambahkan dan coba lagi.</string>

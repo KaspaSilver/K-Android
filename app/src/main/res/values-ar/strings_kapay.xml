@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">إجراءات الحساب</string>
     <string name="add_kaspa_address">إضافة عنوان Kaspa</string>
     <string name="add_transaction">إضافة معاملة</string>
     <string name="addresses">العناوين</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">نسخ kpub</string>
     <string name="current_value">القيمة الحالية</string>
     <string name="delete_transaction">حذف المعاملة</string>
-    <string name="enter_kpub">إدخال kpub</string>
     <string name="export_csv">تصدير CSV</string>
     <string name="fee_usd_optional">الرسوم (اختياري)</string>
     <string name="holdings">الممتلكات</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">ستتلقى</string>
     <string name="kp_you_receive_about">ستتلقى نحو</string>
     <string name="kp_you_saw">ما رأيته</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">تسمية هذا العنوان</string>
     <string name="no_app_to_open_link">لا يوجد تطبيق على هذا الهاتف يمكنه فتح الرابط</string>
     <string name="notes_optional">ملاحظات (اختياري)</string>
     <string name="paste_from_clipboard">لصق من الحافظة</string>
     <string name="paste_kpub">لصق kpub</string>
-    <string name="paste_the_kpub_exported_from_your">الصق الـ kpub المُصدَّر من جهاز KasSigner الخاص بك. لا يحتوي على أي مواد مفتاح خاص.</string>
     <string name="pf_actions_add">إضافة</string>
     <string name="pf_actions_import_export">الاستيراد والتصدير</string>
     <string name="pf_add_kaspa_address_sub">تتبّع رصيد عنوان كجزء من هذه المحفظة.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">وجّه الكاميرا نحو شاشة KasSigner</string>
     <string name="quantity">الكمية</string>
     <string name="remove_cold_storage_account">إزالة حساب التخزين البارد</string>
-    <string name="rename_cold_storage_account">إعادة تسمية حساب التخزين البارد</string>
     <string name="scan">مسح</string>
     <string name="scan_kpub_from_kassigner">مسح kpub من KasSigner</string>
     <string name="scan_signed_transaction">مسح المعاملة الموقّعة</string>

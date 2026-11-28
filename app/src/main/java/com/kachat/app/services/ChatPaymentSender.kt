@@ -45,6 +45,8 @@ class ChatPaymentSender @Inject constructor(
     private val addressActivityNotifier: AddressActivityNotifier,
     /** Payment notices the empty chatting address could not send yet (iOS 710fdc0, IOS-086). */
     private val paymentNoticeOutbox: PaymentNoticeOutbox,
+    /** The REST API that says whether an owed notice's payment has landed (audit A1). */
+    private val networkService: NetworkService,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + StartupSafety.logOnlyHandler("ChatPaymentSender"))
 
@@ -56,10 +58,31 @@ class ChatPaymentSender @Inject constructor(
 
     /** Spending-address chat payments whose send got no answer, by txid: the notice each owes
      *  (iOS `owedSpendingNotices`, audit 2026-11-27 C5). Kept across an account switch; each
-     *  names its owner. */
-    private val owedSpendingNotices = OwedSpendingNotices()
+     *  names its owner. On disk (audit A1): Android ends a process often, and a notice lost
+     *  with it left the payee with the KAS and no bubble or memo. */
+    private val owedSpendingNotices = OwedSpendingNotices(OwedSpendingNotices.prefsStorage(context))
+
+    /** The owed notices whose payment is being looked up right now ([watchOwedPayment]). */
+    private val watchingOwed = ConcurrentHashMap.newKeySet<String>()
 
     init {
+        // Kept from an earlier run: each payment is looked up again (audit A1).
+        scope.launch { owedSpendingNotices.txIds().forEach { watchOwedPayment(it) } }
+        // An account back in use: a notice it owes for a payment that landed meanwhile goes now,
+        // and one still waiting is looked up again.
+        scope.launch {
+            walletManager.signedInAddressFlow.collect { address ->
+                if (address == null) return@collect
+                for (txId in owedSpendingNotices.txIdsOwnedBy(address)) {
+                    val owed = owedSpendingNotices.get(txId) ?: continue
+                    if (owed.landed) {
+                        runCatching { sendOwedSpendingNoticeIfAny(ChatRepository.SettledSend(txId, owed.contactAddress, owed.owner)) }
+                    } else {
+                        watchOwedPayment(txId)
+                    }
+                }
+            }
+        }
         // A Not confirmed payment turned out Sent: the notice it owes goes now, from the account
         // that made it only (iOS `sendOwedSpendingNoticeIfAny`).
         scope.launch {
@@ -76,14 +99,64 @@ class ChatPaymentSender @Inject constructor(
     }
 
     private suspend fun sendOwedSpendingNoticeIfAny(settled: ChatRepository.SettledSend) {
+        // Landed, whoever is signed in: sent once its owner is (the account flow above).
+        owedSpendingNotices.markLanded(settled.txId)
+        if (walletManager.isLoggedOut) return
         val current = runCatching { walletManager.getAddress() }.getOrNull() ?: return
         if (!settled.walletAddress.equals(current, ignoreCase = true)) return
         val owed = owedSpendingNotices.due(settled.txId, settled.contactId, current, System.currentTimeMillis()) ?: return
         // a contact not loaded keeps it for a later settle
-        if (chatRepository.getContact(owed.contactAddress) == null) return
+        if (chatRepository.getContact(owed.contactAddress, walletAddress = owed.owner) == null) return
         owedSpendingNotices.remove(settled.txId)
         Log.i(TAG, "Not confirmed payment ${settled.txId.take(12)} landed: sending its owed payment_notice")
         sendSpendingPaymentNotice(owed.contactAddress, settled.txId, owed.amountSompi, owed.memo, owed.owner)
+    }
+
+    /**
+     * Looks up an owed notice's payment until the network has it accepted (audit A1): every
+     * [OWED_CHECK_INTERVAL_MS] for [OWED_CHECK_WINDOW_MS] after the payment, and once more on
+     * each start or sign-in after that. Nothing else settles it on Android: its inputs are on
+     * the spending address, its change on a fresh slot and it carries no payload, so the chatting
+     * address's history and the indexer never see it (iOS settles it from UTXO events). Landed,
+     * its bubble turns Sent under its own account and its notice goes.
+     */
+    private fun watchOwedPayment(txId: String) {
+        val key = txId.trim().lowercase()
+        if (!watchingOwed.add(key)) return
+        scope.launch {
+            try {
+                var first = true
+                while (true) {
+                    val owed = owedSpendingNotices.get(key) ?: return@launch
+                    if (owed.landed) return@launch
+                    val now = System.currentTimeMillis()
+                    if (!OwedSpendingNotices.keepsChecking(owed.atMs, now, first)) return@launch
+                    if (!first || now - owed.atMs < OWED_CHECK_INTERVAL_MS) delay(OWED_CHECK_INTERVAL_MS)
+                    first = false
+                    if (!isAccepted(key)) continue
+                    Log.i(TAG, "Not confirmed payment ${key.take(12)} is accepted: settling it")
+                    val settled = chatRepository.settleUnconfirmedSend(key, owed.owner)
+                    // Its row went already (settled by its copy, or deleted): the notice is still owed.
+                    if (!settled) sendOwedSpendingNoticeIfAny(ChatRepository.SettledSend(key, owed.contactAddress, owed.owner))
+                    return@launch
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "Looking up an owed notice's payment failed: ${e.message}")
+            } finally {
+                watchingOwed.remove(key)
+            }
+        }
+    }
+
+    private suspend fun isAccepted(txId: String): Boolean = try {
+        val rest = networkService.kaspaRestApi.value
+        rest != null && kotlinx.coroutines.withTimeoutOrNull(8_000L) { rest.getTransactionAcceptance(txId).isAccepted == true } == true
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        false
     }
 
     data class Request(
@@ -233,8 +306,18 @@ class ChatPaymentSender @Inject constructor(
             if (myAddress != owner) {
                 Log.i(TAG, "Refused a queued payment: the account changed")
                 clearNoInputRetryState(pendingId)
+                // Its bubble, under its own account, says so (audit A3): it stayed Sending for
+                // the rest of the process. Nothing went out; payments never offer Retry.
+                runCatching { chatRepository.updateMessageStatus(pendingId, "failed", walletAddress = owner) }
                 return Outcome.Failed(context.getString(com.kachat.app.R.string.not_sent_you_switched_accounts))
             }
+            // The owner's key, read once for the memo seal and the signature (audit A4/C5): a
+            // switch from here on can't make another account sign or pay for it.
+            val ownerKey = if (request.sourceSpendingIndex == null) {
+                walletManager.getPrivateKeyBytes().also {
+                    if (!com.kachat.app.util.AccountKey.belongsTo(it, owner)) throw SendAccountChangedException()
+                }
+            } else null
             val fromChattingAddress = request.sourceSpendingIndex == null
             // From the chatting address it is a chat payment, which always carries its
             // `kchat:1:pay:` payload - an empty memo too (iOS buildPaymentTx): that payload is
@@ -251,7 +334,7 @@ class ChatPaymentSender @Inject constructor(
                         note = request.memo.trim(),
                         amountSompi = request.amountSompi,
                         recipientXOnlyPubKey = KaspaAddress.decode(request.contactId).second,
-                        senderPrivateKey = walletManager.getPrivateKeyBytes()
+                        senderPrivateKey = ownerKey!!
                     )
                 )
             } else MessageProtocol.paymentMemoPayload(
@@ -259,7 +342,7 @@ class ChatPaymentSender @Inject constructor(
                 amountSompi = request.amountSompi,
                 recipientXOnlyPubKey = KaspaAddress.decode(request.contactId).second,
                 // the seed reads the memo back on another device (iOS bfe9f022)
-                senderPrivateKey = walletManager.getPrivateKeyBytes()
+                senderPrivateKey = ownerKey!!
             )
             // Paid to the contact's chatting address, the memo sealed to its key (iOS 6333dd3: no
             // payment-pool destinations any more). FUNDING SOURCE - the From the person chose (iOS
@@ -282,10 +365,13 @@ class ChatPaymentSender @Inject constructor(
                 )
             } else {
                 // [WalletService.sendKaspa]'s chat-payment call, with the Review's fee held to.
+                if (walletManager.getAddress() != owner) throw SendAccountChangedException()
                 walletEngine.sendKaspa(
                     toAddress = request.contactId,
                     amountSompi = request.amountSompi,
                     payloadBytes = payload,
+                    fromAddress = owner,
+                    signingPrivateKey = ownerKey!!,
                     feeRateOverride = request.feeRateOverride,
                     manualUtxos = request.manualUtxos,
                     extraFeeSompi = request.extraFeeSompi,
@@ -319,7 +405,7 @@ class ChatPaymentSender @Inject constructor(
                 MessageEntity(
                     id = txId,
                     contactId = request.contactId,
-                    walletAddress = myAddress,
+                    walletAddress = owner,
                     type = "pay",
                     direction = "sent",
                     plaintextBody = bubbleText(request),
@@ -353,7 +439,8 @@ class ChatPaymentSender @Inject constructor(
                     ),
                 )
             }
-            finalizeUnconfirmed(request, pendingId, unknown.txId)
+            finalizeUnconfirmed(request, pendingId, unknown.txId, owner)
+            if (request.sourceSpendingIndex != null) watchOwedPayment(unknown.txId)
             clearNoInputRetryState(pendingId)
             return Outcome.Failed(context.getString(com.kachat.app.R.string.send_outcome_unknown), unknownTxId = unknown.txId)
         } catch (changed: SendFeeChangedException) {
@@ -361,14 +448,14 @@ class ChatPaymentSender @Inject constructor(
                 // A deferred retry: no Review is on screen to show the new fee, so the bubble
                 // stays as a Failed payment rather than vanishing; nothing went out (iOS 83806b3d).
                 Log.i(TAG, "Deferred payment not sent: the fee is now above the Review's")
-                chatRepository.updateMessageStatus(pendingId, "failed")
+                chatRepository.updateMessageStatus(pendingId, "failed", walletAddress = owner)
                 clearNoInputRetryState(pendingId)
                 return Outcome.Failed(KaspaUnit.label(context.getString(com.kachat.app.R.string.send_fee_changed, KaspaUnit.plain(changed.feeSompi))))
             }
             // Nothing went out and the Review shows the new fee: the next swipe makes its own
             // bubble, so this one goes rather than staying behind as a Failed payment (iOS 4f8e14bb).
             Log.i(TAG, "Payment not sent: the fee changed since the Review")
-            chatRepository.deleteMessage(pendingId)
+            chatRepository.deleteMessage(pendingId, walletAddress = owner)
             clearNoInputRetryState(pendingId)
             return Outcome.Failed(KaspaUnit.label(context.getString(com.kachat.app.R.string.send_fee_changed, KaspaUnit.plain(changed.feeSompi))))
         } catch (e: Exception) {
@@ -383,7 +470,7 @@ class ChatPaymentSender @Inject constructor(
             Log.e(TAG, "Error sending payment", e)
             // Past the balance check a payment that fails stays in the chat, marked failed (iOS
             // markPendingMessageFailed); the caller surfaces the reason on a first try.
-            chatRepository.updateMessageStatus(pendingId, "failed")
+            runCatching { chatRepository.updateMessageStatus(pendingId, "failed", walletAddress = owner) }
             clearNoInputRetryState(pendingId)
             return Outcome.Failed(e.message)
         }
@@ -391,9 +478,9 @@ class ChatPaymentSender @Inject constructor(
 
     /** The payment bubble [pendingId] of a send whose outcome is unknown takes [txId] and
      *  "warning". A row already gone (deleted meanwhile) stays gone. */
-    private suspend fun finalizeUnconfirmed(request: Request, pendingId: String, txId: String) {
+    private suspend fun finalizeUnconfirmed(request: Request, pendingId: String, txId: String, owner: String) {
         try {
-            val row = chatRepository.getMessage(pendingId) ?: return
+            val row = chatRepository.getMessage(pendingId, walletAddress = owner) ?: return
             chatRepository.finalizeProvisionalMessage(
                 pendingId,
                 row.copy(
@@ -407,7 +494,7 @@ class ChatPaymentSender @Inject constructor(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "Couldn't mark a payment not confirmed", e)
-            chatRepository.updateMessageStatus(pendingId, "warning")
+            runCatching { chatRepository.updateMessageStatus(pendingId, "warning", walletAddress = owner) }
         }
     }
 
@@ -418,13 +505,16 @@ class ChatPaymentSender @Inject constructor(
         scope.launch {
             delay((delaySeconds * 1_000).toLong())
             scheduledSendRetries.remove(pendingId)
-            val row = chatRepository.getMessage(pendingId)
+            // Read under its own account (audit A3): after a switch the active account has no
+            // such row, and the retry used to drop it, leaving the bubble on Sending for good.
+            // The attempt below refuses a switched account and marks it failed.
+            val row = chatRepository.getMessage(pendingId, walletAddress = owner)
             // Sent, or Not confirmed (it may have landed): never sent again from here.
             if (row == null || row.deliveryStatus == "sent" || row.deliveryStatus == "warning") {
                 clearNoInputRetryState(pendingId)
                 return@launch
             }
-            chatRepository.updateMessageStatus(pendingId, "pending")
+            chatRepository.updateMessageStatus(pendingId, "pending", walletAddress = owner)
             // Individual attempts decide whether to reschedule or fail. Held to the Review's fee,
             // as the swipe was (iOS 83806b3d).
             attempt(request, pendingId, owner, deferredRetry = true)
@@ -472,7 +562,7 @@ class ChatPaymentSender @Inject constructor(
                     return@launch
                 }
                 // Untagged, like iOS sendEnvelopeInternal: kchat:1:comm:, never a first-contact dm.
-                walletService.sendKasiaMessage(contactId, payload, firstContactTag = false)
+                walletService.sendKasiaMessage(contactId, payload, firstContactTag = false, owner = owner)
                 Log.i(TAG, "Sent payment_notice for ${txId.take(12)}")
             } catch (e: SendOutcomeUnknownException) {
                 // It may have landed: not kept, so it is never sent twice (audit 2026-11-25 P6).
@@ -491,30 +581,88 @@ class ChatPaymentSender @Inject constructor(
     }
 
     /** A payment From a spending address whose send got no answer: the notice it owes until the
-     *  payment shows up (iOS `OwedSpendingNotice`, audit 2026-11-27 C5). */
+     *  payment shows up (iOS `OwedSpendingNotice`, audit 2026-11-27 C5). [landed]: the payment
+     *  is known to have landed, the notice waits only for [owner] to be signed in (audit A1). */
     internal data class OwedSpendingNotice(
         val contactAddress: String,
         val amountSompi: Long,
         val memo: String,
         val owner: String,
         val atMs: Long,
+        val landed: Boolean = false,
     )
 
-    /** The owed notices by txid, in memory, a week at most (iOS `owedSpendingNotices`). */
-    internal class OwedSpendingNotices {
-        private val byTxId = HashMap<String, OwedSpendingNotice>()
+    /** The owed notices by txid, a week at most (iOS `owedSpendingNotices`), kept in [storage]
+     *  so they survive the process (audit A1); none = memory only. */
+    internal class OwedSpendingNotices(private val storage: Storage? = null) {
+        /** Where the list lives between runs. */
+        interface Storage {
+            fun load(): String?
+            fun save(json: String?)
+        }
+
+        private val gson = com.google.gson.Gson()
+
+        /** Memory only, without [storage]. */
+        private val memory = LinkedHashMap<String, OwedSpendingNotice>()
+
+        /** The list as stored now: read again each time, so a Delete Account wipe
+         *  ([removeAllData]) from elsewhere is never written back. */
+        private fun load(): LinkedHashMap<String, OwedSpendingNotice> {
+            val storage = storage ?: return memory
+            val json = storage.load() ?: return LinkedHashMap()
+            val parsed = runCatching {
+                gson.fromJson<Map<String, OwedSpendingNotice?>>(json, object : com.google.gson.reflect.TypeToken<Map<String, OwedSpendingNotice?>>() {}.type)
+            }.getOrNull().orEmpty()
+            val out = LinkedHashMap<String, OwedSpendingNotice>()
+            for ((txId, notice) in parsed) {
+                // an entry missing a field (Gson leaves it null) is dropped, not kept broken
+                @Suppress("SENSELESS_COMPARISON")
+                if (notice != null && notice.contactAddress != null && notice.owner != null && notice.memo != null) out[txId] = notice
+            }
+            return out
+        }
+
+        private fun save(map: LinkedHashMap<String, OwedSpendingNotice>) {
+            val storage = storage ?: return
+            storage.save(if (map.isEmpty()) null else gson.toJson(map))
+        }
 
         @Synchronized
         fun put(txId: String, notice: OwedSpendingNotice) {
-            byTxId[txId.trim().lowercase()] = notice
+            val map = load()
+            map[txId.trim().lowercase()] = notice
+            save(map)
+        }
+
+        @Synchronized
+        fun get(txId: String): OwedSpendingNotice? = load()[txId.trim().lowercase()]
+
+        @Synchronized
+        fun txIds(): List<String> = load().keys.toList()
+
+        @Synchronized
+        fun txIdsOwnedBy(owner: String): List<String> =
+            load().filterValues { it.owner.equals(owner, ignoreCase = true) }.keys.toList()
+
+        /** Its payment landed: the notice now waits only for its owner. */
+        @Synchronized
+        fun markLanded(txId: String) {
+            val map = load()
+            val key = txId.trim().lowercase()
+            val owed = map[key] ?: return
+            if (owed.landed) return
+            map[key] = owed.copy(landed = true)
+            save(map)
         }
 
         /** The notice [txId] owes, when it is for [contactAddress] and [current] is the account
          *  that made it; null otherwise (it stays). Ones older than a week go first. */
         @Synchronized
         fun due(txId: String, contactAddress: String, current: String, nowMs: Long): OwedSpendingNotice? {
-            byTxId.entries.removeAll { nowMs - it.value.atMs >= OWED_NOTICE_LIFETIME_MS }
-            val owed = byTxId[txId.trim().lowercase()] ?: return null
+            val map = load()
+            if (map.entries.removeAll { nowMs - it.value.atMs >= OWED_NOTICE_LIFETIME_MS }) save(map)
+            val owed = map[txId.trim().lowercase()] ?: return null
             if (!owed.contactAddress.equals(contactAddress, ignoreCase = true)) return null
             if (!owed.owner.equals(current, ignoreCase = true)) return null
             return owed
@@ -522,7 +670,41 @@ class ChatPaymentSender @Inject constructor(
 
         @Synchronized
         fun remove(txId: String) {
-            byTxId.remove(txId.trim().lowercase())
+            val map = load()
+            if (map.remove(txId.trim().lowercase()) != null) save(map)
+        }
+
+        /** Everything [owner] owes: the account is going off this device. */
+        @Synchronized
+        fun removeOwner(owner: String) {
+            val map = load()
+            if (map.entries.removeAll { it.value.owner.equals(owner, ignoreCase = true) }) save(map)
+        }
+
+        companion object {
+            private const val PREFS_NAME = "kachat_owed_spending_notices"
+            private const val KEY = "owed"
+
+            fun prefsStorage(context: android.content.Context): Storage {
+                val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE)
+                return object : Storage {
+                    override fun load(): String? = prefs.getString(KEY, null)
+                    override fun save(json: String?) {
+                        if (json == null) prefs.edit().remove(KEY).apply() else prefs.edit().putString(KEY, json).apply()
+                    }
+                }
+            }
+
+            /** Delete Account: [owner]'s owed notices (memos included) leave this device. */
+            fun removeAllData(context: android.content.Context, owner: String) {
+                OwedSpendingNotices(prefsStorage(context)).removeOwner(owner)
+            }
+
+            /** Whether the payment of a notice owed since [atMs] is looked up again at [nowMs]:
+             *  within [OWED_CHECK_WINDOW_MS] of the payment, or once ([firstCheck]) on a start or
+             *  sign-in after that, while the notice is still kept. */
+            fun keepsChecking(atMs: Long, nowMs: Long, firstCheck: Boolean): Boolean =
+                nowMs - atMs < OWED_NOTICE_LIFETIME_MS && (firstCheck || nowMs - atMs < OWED_CHECK_WINDOW_MS)
         }
     }
 
@@ -531,6 +713,12 @@ class ChatPaymentSender @Inject constructor(
 
         /** How long an owed notice waits for its payment to show up (iOS: a week). */
         internal const val OWED_NOTICE_LIFETIME_MS = 7 * 24 * 3600 * 1000L
+
+        /** An owed notice's payment is looked up this often... */
+        internal const val OWED_CHECK_INTERVAL_MS = 30_000L
+
+        /** ...for this long after the payment (audit A1). */
+        internal const val OWED_CHECK_WINDOW_MS = 15 * 60_000L
         private const val JITTER_MIN = 0.10
         private const val JITTER_MAX = 0.35
         private const val MAX_BASE_DELAY_SECONDS = 60.0

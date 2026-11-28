@@ -49,7 +49,6 @@
     <string name="kl_message">Mensaje</string>
     <string name="kl_name">Nombre</string>
     <string name="kl_note_buy">Al comprar se paga al vendedor y el nombre pasa a ti en una sola transacción.</string>
-    <string name="kl_note_message">Los mensajes llegan al vendedor como cualquier chat de KaChat.</string>
     <string name="kl_note_offer">Una oferta bloquea tus KAS en la cadena hasta que el vendedor la acepte, la retires o caduque.</string>
     <string name="kl_offer">Oferta</string>
     <string name="kl_offer_detail">Pon tu propio precio. Tus KAS esperan en la cadena hasta que el vendedor acepte, retires la oferta o caduque.</string>

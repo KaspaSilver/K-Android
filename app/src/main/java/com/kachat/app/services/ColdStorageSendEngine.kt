@@ -673,7 +673,15 @@ class ColdStorageSendEngine @Inject constructor(
             val signedTx = unsignedTx.rawTx.copy(inputs = signedInputs)
             // A submit error is checked against the network before it counts: a signed Cold
             // Storage send reported failed would be signed and sent again (audit IOS-014).
-            val txId = nodePoolManager.submitConfirmingKnown(signedTx, networkService.kaspaRestApi.value) {
+            // Its coins are remembered when the outcome is unknown (audit 2026-11-27 A6), so the
+            // next Cold Storage send leads with one of them ([conflictingOutpoint]) and at most one
+            // of the two can land: the transaction-only overload never marked them.
+            val txId = nodePoolManager.submitConfirmingKnown(
+                expectedTxId = runCatching { com.kachat.app.util.KaspaTransactionId.compute(signedTx) }.getOrDefault(""),
+                rest = networkService.kaspaRestApi.value,
+                spent = signedTx.inputs.map { it.previousOutpoint },
+                rememberUnknownOutcome = true,
+            ) {
                 // a send that moves money isn't left in a node's orphan pool (iOS 5848fb0)
                 nodePoolManager.submitWaitingForParent(signedTx, escalateOrphan = false)
             }

@@ -20,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.HelpOutline
-import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.Verified
@@ -994,7 +993,7 @@ private fun KachatListingScreen(onBack: () -> Unit, onBuy: () -> Unit, onOffer: 
             ListingPlaceholderList(stringResource(R.string.kl_offers), stringResource(R.string.kl_offers_on_name), List(3) { Icons.Outlined.PanTool })
             ListingPlaceholderList(stringResource(R.string.kl_history), null, listOf(Icons.Outlined.Sell, Icons.Default.SwapHoriz, KachatSymbols.AtBadgePlus))
             Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(Icons.Outlined.ShoppingCart to R.string.kl_note_buy, Icons.Outlined.Lock to R.string.kl_note_offer, Icons.Outlined.Forum to R.string.kl_note_message).forEach { (icon, text) ->
+                listOf(Icons.Outlined.ShoppingCart to R.string.kl_note_buy, Icons.Outlined.Lock to R.string.kl_note_offer).forEach { (icon, text) ->
                     Row(verticalAlignment = Alignment.Top) {
                         Icon(icon, null, tint = colors.textSecondary, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(8.dp))

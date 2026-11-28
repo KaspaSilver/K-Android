@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">Четвертьфиналы</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Результат не отправлен.</string>
     <string name="kaplay_leaderboard_all_time">За всё время</string>
-    <string name="kaplay_leaderboard_counted_from">Считается с %1$s.</string>
-    <string name="kaplay_leaderboard_period">Период таблицы лидеров</string>
-    <string name="kaplay_leaderboard_resets_monthly">Обнуляется 1-го числа каждого месяца (UTC).</string>
     <string name="kaplay_leaderboard_this_month">Этот месяц</string>
-    <string name="kaplay_no_finished_duels">Ещё нет завершённых партий 1v1.</string>
-    <string name="kaplay_no_finished_duels_this_month">В этом месяце ещё нет завершённых партий 1v1.</string>
-    <string name="kaplay_no_finished_tournaments">Ещё нет завершённых турниров.</string>
-    <string name="kaplay_no_finished_tournaments_this_month">В этом месяце ещё нет завершённых турниров.</string>
     <string name="kaplay_tab_leaderboard">Рейтинг</string>
     <string name="kp_640de0cb0b2c" formatted="false">Ваш счёт: %s побед, %s поражений</string>
     <string name="kp_5d12bd53552c" formatted="false">Играть</string>

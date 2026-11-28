@@ -438,9 +438,6 @@ class KaPostsChainPosts @Inject constructor(
             .sortedByDescending { it.timestamp }
     }
 
-    private fun verifiedAmendment(payload: String, timestampMs: Long, ofPubkey: String): Amendment? =
-        signedAmendment(payload, timestampMs, onlyBy = ofPubkey)?.amendment
-
     companion object {
         private const val PAGES_PER_PERSON = 2
         private const val PAGE_SIZE = 100

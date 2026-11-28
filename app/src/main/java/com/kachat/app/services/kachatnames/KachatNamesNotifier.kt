@@ -16,6 +16,7 @@ import com.kachat.app.R
 import com.kachat.app.services.GlobalNotificationCenterStore
 import com.kachat.app.services.NotificationHelper
 import com.kachat.app.util.KaspaUnit
+import com.kachat.app.util.stringOrFormat
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -172,7 +173,7 @@ class KachatNamesNotifier @Inject constructor(
 
     // in the app's language (iOS audit 2026-11-27 M10)
     private fun s(res: Int, vararg args: Any): String =
-        KaspaUnit.label(runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { context.getString(res, *args) })
+        KaspaUnit.label(runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { context.stringOrFormat(res, *args) })
 
     private fun day(ms: Long): String = com.kachat.app.ui.screens.KachatLive.day(ms)
 
@@ -461,7 +462,7 @@ class KachatNameReminders @Inject constructor(
 
     // in the app's language (iOS audit 2026-11-27 M10)
     private fun s(res: Int, vararg args: Any): String =
-        KaspaUnit.label(runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { context.getString(res, *args) })
+        KaspaUnit.label(runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { context.stringOrFormat(res, *args) })
 
     private fun day(ms: Long): String = com.kachat.app.ui.screens.KachatLive.day(ms)
 

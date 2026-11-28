@@ -104,8 +104,8 @@ android {
         // permanent and per app, and unlike iOS it does NOT reset when versionName changes
         // (4.1's builds ran 35..47). A device will not treat a rebuild as an update unless it
         // moves, so it goes up with every handed-out build too, alongside the build number.
-        val kachatBuildNumber = 7
-        versionCode = 149
+        val kachatBuildNumber = 8
+        versionCode = 150
         versionName = "5.4"
         buildConfigField("int", "KACHAT_BUILD_NUMBER", kachatBuildNumber.toString())
         buildConfigField("String", "CHANGENOW_API_KEY", "\"${changeNowApiKey.replace("\\", "").replace("\"", "")}\"")
@@ -163,10 +163,12 @@ android {
         }
     }
 
-    // Where a build is handed out from. Same package, same signing key, same code - the one
-    // thing that differs is the launcher name: the GitHub APK calls itself "K APK" (see
-    // src/github/res) so a person can tell it from the Play Store's "K" at a glance.
-    // Installing one over the other still updates in place, since Android sees one package.
+    // Where a build is handed out from. Same package and same code; the launcher name differs:
+    // the GitHub APK calls itself "K APK" (see src/github/res) so a person can tell it from the
+    // Play Store's "K" at a glance. The signing keys differ too: Play re-signs the store build
+    // with Play App Signing's key, the GitHub APK is signed with kachat-release.keystore. So one
+    // can't be installed over the other: moving between them means uninstalling first, which
+    // deletes K's local data (back up first), and assetlinks.json must list both fingerprints.
     // Play builds: bundlePlayRelease. GitHub APK: assembleGithubRelease.
     flavorDimensions += "distribution"
     productFlavors {

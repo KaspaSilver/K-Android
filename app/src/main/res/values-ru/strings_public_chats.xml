@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">Сеть ещё подтверждает вашу предыдущую отправку. Попробуйте снова через несколько секунд.</string>
     <string name="pc_l53_room_kept_for">Хранится</string>
     <string name="pc_l53_room_on_this_device">На этом устройстве</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">Загрузить более ранние сообщения</string>
     <string name="pc_no_testnet_indexer_yet">Индексатора для testnet пока нет</string>
     <string name="pc_room_no_spendable_funds_yet">Пока нет доступных для траты средств. Дождитесь подтверждений и попробуйте снова.</string>
     <string name="pc_room_not_enough_kas">На вашем адресе для чатов недостаточно KAS. Пополните его и попробуйте снова.</string>

@@ -440,6 +440,39 @@ private fun KaPostsViewModel.FeedTab.label(): String = when (this) {
  * Re-fires after an append too (the total grows, the check runs again), which is what fills a tall
  * screen when the KaChat-marker filter leaves a page with only a couple of visible rows.
  */
+/**
+ * Whether a pull-to-refresh indicator is in use: a pull under way or a refresh running. Read
+ * through [derivedStateOf], so the scope calling it recomposes only when that flips, not on every
+ * frame of a drag: the offset read in composition recomposed the whole feed Box, its LazyColumn
+ * call included, each frame of a pull (audit 2026-11-27 S10).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun pullIndicatorShown(state: androidx.compose.material3.pulltorefresh.PullToRefreshState): Boolean {
+    val shown by remember(state) { derivedStateOf { state.verticalOffset > 0f || state.isRefreshing } }
+    return shown
+}
+
+/** The feed list's first row: one pixel, never drawn, with a key of its own (iOS
+ *  `feedTopAnchor`). See [FEED_TOP_ANCHOR_INDEX]. */
+private const val FEED_TOP_ANCHOR_KEY = "feed-top-anchor"
+
+/**
+ * Index of the first post in a feed list, below its top anchor.
+ *
+ * A LazyColumn keeps its place by the key of its first visible row. While page one loads, that
+ * row is the "Loading more" footer, and Popular's sweep shows the footer again the moment page one
+ * is in (Feed on Wi-Fi): the list then arrived as posts + footer, followed the footer's key down
+ * past every post, and opened partway down with Back to Top up and no pill (audit 2026-11-27 E1).
+ * A fresh page with newer posts on top did the same from the old first post. With an anchor row
+ * that never moves, a reader at the top stays at the newest post whatever arrives above; one who
+ * has scrolled keeps their post, and newer ones wait in the pill, as before.
+ */
+internal const val FEED_TOP_ANCHOR_INDEX = 0
+
+/** Back to Top shows once the first post has scrolled away, as before the anchor row. */
+internal fun feedAwayFromTop(firstVisibleItemIndex: Int): Boolean = firstVisibleItemIndex > FEED_TOP_ANCHOR_INDEX + 1
+
 @Composable
 private fun EndlessScroll(
     listState: LazyListState,
@@ -1290,7 +1323,7 @@ private fun KaPostsFeedScreen(
                 // feed's top has scrolled away.
                 if (rootMode == KaPostsRootMode.FEED) {
                     val feedState = feedListStates[KaPostsFeedTabs.indexOf(selectedFeed).coerceAtLeast(0)]
-                    val awayFromTop by remember(feedState) { derivedStateOf { feedState.firstVisibleItemIndex > 0 } }
+                    val awayFromTop by remember(feedState) { derivedStateOf { feedAwayFromTop(feedState.firstVisibleItemIndex) } }
                     val backToTopScope = rememberCoroutineScope()
                     val backToTopHaptic = com.kachat.app.util.rememberHaptics()
                     androidx.compose.animation.AnimatedVisibility(
@@ -1612,7 +1645,11 @@ private fun KaPostsFeedScreen(
                             // The last post scrolls clear of the dock the feed runs under.
                             contentPadding = PaddingValues(bottom = dockInset),
                         ) {
-                            items(pageFeed, key = { it.id }) { post ->
+                            // Holds a reader at the top on the newest post (E1, see FEED_TOP_ANCHOR_INDEX).
+                            item(key = FEED_TOP_ANCHOR_KEY, contentType = FEED_TOP_ANCHOR_KEY) {
+                                Spacer(Modifier.fillMaxWidth().height(with(LocalDensity.current) { 1.toDp() }))
+                            }
+                            items(pageFeed, key = { it.id }, contentType = { "feed-post" }) { post ->
                                 // Thread-root probe: once per commented post, so "View thread"
                                 // can appear on other people's threads too. Only in the feed being
                                 // read: the pages beside it are drawn too (iOS e5a9b11). The tab is
@@ -1684,7 +1721,7 @@ private fun KaPostsFeedScreen(
                     // Hard guarantee on top of the clipToBounds above: the indicator only
                     // composes while a pull is in progress or a refresh runs, so no layout
                     // change can ever park the resting circle over the feed.
-                    if (pullRefreshState.verticalOffset > 0f || pullRefreshState.isRefreshing) {
+                    if (pullIndicatorShown(pullRefreshState)) {
                         PullToRefreshContainer(
                             state = pullRefreshState,
                             modifier = Modifier.align(Alignment.TopCenter),
@@ -2375,7 +2412,7 @@ private fun KaPostsScheduledOverlay(viewModel: KaPostsViewModel, onClose: () -> 
                 HorizontalDivider(color = colors.surfaceVariant)
             }
         }
-        if (pullRefreshState.verticalOffset > 0f || pullRefreshState.isRefreshing) {
+        if (pullIndicatorShown(pullRefreshState)) {
             PullToRefreshContainer(state = pullRefreshState, modifier = Modifier.align(Alignment.TopCenter))
         }
         }
@@ -5409,11 +5446,23 @@ private fun KaPostTipFlow(
             onTipped = onTipped,
             onDismiss = onDismiss,
         )
-        com.kachat.app.repository.KaPostsTipAsset.KUSDT -> com.kachat.app.ui.screens.tokens.KusdtTipSend(
-            recipient = address,
-            name = displayName,
-            onDismiss = onDismiss,
-        )
+        com.kachat.app.repository.KaPostsTipAsset.KUSDT -> {
+            // A tip on a post goes to its author only once the chain agrees who that is, as a KAS
+            // tip does (audit B1): a lying indexer could name itself the author of a popular post.
+            var authorChecked by remember(address, tip) { mutableStateOf(tip == null) }
+            if (tip != null && !authorChecked) {
+                LaunchedEffect(address, tip) {
+                    viewModel.verifyTipAuthor(address, tip) { ok -> if (ok) authorChecked = true else onDismiss() }
+                }
+            }
+            if (authorChecked) {
+                com.kachat.app.ui.screens.tokens.KusdtTipSend(
+                    recipient = address,
+                    name = displayName,
+                    onDismiss = onDismiss,
+                )
+            }
+        }
         com.kachat.app.repository.KaPostsTipAsset.ASK -> KaPostTipAssetChooser(
             viewModel = viewModel,
             onPick = { choice = it },
@@ -6364,7 +6413,7 @@ private fun androidx.compose.foundation.layout.ColumnScope.KaPostsProfilePage(
             }
         }
     }
-    if (pullRefreshState.verticalOffset > 0f || pullRefreshState.isRefreshing) {
+    if (pullIndicatorShown(pullRefreshState)) {
         PullToRefreshContainer(
             state = pullRefreshState,
             modifier = Modifier.align(Alignment.TopCenter),
@@ -6799,7 +6848,7 @@ internal fun KaPostsNotificationsList(
                 pagingFooter(paging, keySuffix = "notifications") { viewModel.loadMoreNotifications(manual = true) }
             }
         }
-        if (pullRefreshState.verticalOffset > 0f || pullRefreshState.isRefreshing) {
+        if (pullIndicatorShown(pullRefreshState)) {
             PullToRefreshContainer(state = pullRefreshState, modifier = Modifier.align(Alignment.TopCenter))
         }
         }
@@ -7273,7 +7322,7 @@ fun KaPostsFollowListOverlay(
                 pagingFooter(paging, keySuffix = "follows") { viewModel.loadMoreFollowList(followers, targetPubkey, manual = true) }
             }
         }
-        if (pullRefreshState.verticalOffset > 0f || pullRefreshState.isRefreshing) {
+        if (pullIndicatorShown(pullRefreshState)) {
             PullToRefreshContainer(state = pullRefreshState, modifier = Modifier.align(Alignment.TopCenter))
         }
         }

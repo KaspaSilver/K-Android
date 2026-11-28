@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">নেটওয়ার্ক এখনও আপনার আগের পাঠানোটি নিশ্চিত করছে। কয়েক সেকেন্ড পরে আবার চেষ্টা করুন।</string>
     <string name="pc_l53_room_kept_for">সংরক্ষিত থাকে</string>
     <string name="pc_l53_room_on_this_device">এই ডিভাইসে</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">আগের বার্তা লোড করুন</string>
     <string name="pc_no_testnet_indexer_yet">এখনো কোনো টেস্টনেট ইনডেক্সার নেই</string>
     <string name="pc_room_no_spendable_funds_yet">এখনও খরচযোগ্য ফান্ড উপলব্ধ নয়। কনফার্মেশন হওয়া পর্যন্ত অপেক্ষা করুন এবং আবার চেষ্টা করুন।</string>
     <string name="pc_room_not_enough_kas">আপনার চ্যাটিং ঠিকানায় যথেষ্ট KAS নেই। কিছু যোগ করে আবার চেষ্টা করুন।</string>

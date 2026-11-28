@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">四分之一决赛</string>
     <string name="kp_3ce0ac6e9413" formatted="false">结果未发送。</string>
     <string name="kaplay_leaderboard_all_time">总榜</string>
-    <string name="kaplay_leaderboard_counted_from">自 %1$s 起计算。</string>
-    <string name="kaplay_leaderboard_period">排行榜周期</string>
-    <string name="kaplay_leaderboard_resets_monthly">每月 1 日（UTC）重置。</string>
     <string name="kaplay_leaderboard_this_month">本月</string>
-    <string name="kaplay_no_finished_duels">还没有已结束的 1v1 对局。</string>
-    <string name="kaplay_no_finished_duels_this_month">本月还没有已结束的 1v1 对局。</string>
-    <string name="kaplay_no_finished_tournaments">还没有已结束的锦标赛。</string>
-    <string name="kaplay_no_finished_tournaments_this_month">本月还没有已结束的锦标赛。</string>
     <string name="kaplay_tab_leaderboard">排行榜</string>
     <string name="kp_640de0cb0b2c" formatted="false">你的战绩：胜 %s，负 %s</string>
     <string name="kp_5d12bd53552c" formatted="false">开始游戏</string>

@@ -579,6 +579,11 @@ class KaspaWalletEngine @Inject constructor(
                     dropPendingChange(fromAddress, attemptInputs.filter { it.utxoEntry.blockDaaScore == 0L })
                 }
                 if (!(isTransientNodeRejection(e) || signatureRejected) || !manualUtxos.isNullOrEmpty()) throw e
+                // Not for a send that moves money (audit 2026-11-27 A7): after a Not confirmed
+                // payment its inputs are given back so a resend conflicts with it, and "already
+                // spent" is that conflict - rebuilding from other coins let both land and paid
+                // twice. The person sees the error and can try again once the coins settle.
+                if (!SendRetryRule.mayRebuildAfterRejection(amountSompi, signatureRejected)) throw e
                 val refetched = nodePoolManager.getUtxosByAddress(fromAddress) ?: api.getUtxos(fromAddress)
                 val confirmedCoins = spendable(filterSpendableCoinbase(reconcileUtxos(fromAddress, refetched)))
                     .filter { it.utxoEntry.blockDaaScore > 0L }
@@ -980,3 +985,12 @@ class KaspaWalletEngine @Inject constructor(
         }
     }
 }
+
+/** When a rejected send may be rebuilt from fresh confirmed coins (audit 2026-11-27 A7). */
+internal object SendRetryRule {
+    /** A message or other zero-amount self-send may; a payment only after a signature rejection,
+     *  never after "already spent" / "orphan", which can be its own Not confirmed twin. */
+    fun mayRebuildAfterRejection(amountSompi: Long, signatureRejected: Boolean): Boolean =
+        amountSompi <= 0L || signatureRejected
+}
+

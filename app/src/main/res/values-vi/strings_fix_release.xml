@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">Không có ứng dụng nào để chia sẻ tệp CSV</string>
+    <string name="rel5_saves_photo_to_gallery">Lưu ảnh vào thư viện của bạn.</string>
+    <string name="rel5_chess_time_control">Cờ vua - %1$s</string>
+    <string name="rel5_backed_up_just_now">Vừa sao lưu xong</string>
+    <string name="rel5_audio_file_empty">Tệp âm thanh trống</string>
+    <string name="rel5_enter_valid_amount">Nhập số tiền hợp lệ.</string>
+    <string name="rel5_server_error_code">Máy chủ trả về lỗi (%1$d). Hãy thử lại sau giây lát.</string>
+    <string name="rel5_fb_could_not_load_folder">Không thể tải thư mục này.</string>
+    <string name="rel5_fb_failed_build_tx">Không thể tạo giao dịch</string>
+    <string name="rel5_fb_edit_failed">Chỉnh sửa thất bại</string>
+    <string name="rel5_fb_cant_read_signed_tx">Không thể đọc giao dịch đã ký</string>
+    <string name="rel5_fb_reaction_failed">Bày tỏ cảm xúc thất bại</string>
+    <string name="rel5_fb_update_group_photo">Không thể cập nhật ảnh nhóm</string>
+    <string name="rel5_fb_resend_invites">Không thể gửi lại lời mời</string>
+    <string name="rel5_fb_resend_invite">Không thể gửi lại lời mời</string>
+    <string name="rel5_fb_rename_group">Không thể đổi tên nhóm</string>
+    <string name="rel5_fb_create_group">Không thể tạo nhóm</string>
+    <string name="rel5_fb_schedule_post">Không thể lên lịch bài đăng này</string>
+    <string name="rel5_fb_load_more">Không thể tải thêm</string>
+    <string name="rel5_fb_share_link">Không thể tạo liên kết chia sẻ.</string>
+    <string name="rel5_fb_connect">Không thể kết nối</string>
+    <string name="rel5_fb_broadcast_failed">Phát giao dịch thất bại</string>
+    <string name="rel5_fb_backup_failed">Sao lưu thất bại</string>
+    <string name="rel5_restored_messages">Đã khôi phục %1$d tin nhắn từ %2$d cuộc trò chuyện.</string>
+    <string name="rel5_enter_group_name">Nhập tên nhóm.</string>
+    <string name="rel5_add_one_member">Thêm ít nhất một thành viên.</string>
+    <string name="rel5_invalid_address_format">Định dạng địa chỉ Kaspa không hợp lệ.</string>
+</resources>

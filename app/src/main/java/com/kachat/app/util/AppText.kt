@@ -47,5 +47,10 @@ object AppText {
         }
 }
 
-/** See [AppText]. */
-fun tr(@StringRes id: Int, vararg args: Any?): String = AppText.context().getString(id, *args)
+/** See [AppText]. With no [args] the string is read as-is, never run through `String.format`, so a
+ *  literal "99%" in a sentence can't throw (`getString(id, *emptyArray())` still formats). */
+fun tr(@StringRes id: Int, vararg args: Any?): String = AppText.context().stringOrFormat(id, *args)
+
+/** [Context.getString] that only formats when there is something to fill in. */
+fun Context.stringOrFormat(@StringRes id: Int, vararg args: Any?): String =
+    if (args.isEmpty()) getString(id) else getString(id, *args)

@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">Mạng vẫn đang xác nhận lần gửi trước của bạn. Vui lòng thử lại sau vài giây.</string>
     <string name="pc_l53_room_kept_for">Lưu giữ trong</string>
     <string name="pc_l53_room_on_this_device">Trên thiết bị này</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">Tải tin nhắn cũ hơn</string>
     <string name="pc_no_testnet_indexer_yet">Chưa có trình lập chỉ mục testnet</string>
     <string name="pc_room_no_spendable_funds_yet">Hiện chưa có số dư có thể chi tiêu. Hãy đợi xác nhận rồi thử lại.</string>
     <string name="pc_room_not_enough_kas">Không đủ KAS trên địa chỉ trò chuyện. Hãy thêm và thử lại.</string>

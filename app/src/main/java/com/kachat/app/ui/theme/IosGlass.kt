@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -16,17 +18,27 @@ import androidx.compose.ui.unit.dp
 
 /**
  * SwiftUI's `.shadow(color:radius:x:y:)` under a rounded card: [color] blurred by [radius] and
- * dropped by [y], drawn behind the card. Drawn with the platform's shadow layer, which hardware
- * rendering supports on shapes from Android 9; on 8 the card simply has none.
+ * dropped by [y], drawn behind the card with the platform's shadow layer. Its Paint is made once
+ * per size, not on every draw (audit 2026-11-27 Smoothness S9: about 44 glass cards each
+ * allocated one per frame while a screen scrolled). Hardware rendering draws a shadow layer on
+ * shapes only from Android 9; on 8 the card gets an elevation shadow of about the same reach
+ * instead of none.
  */
-fun Modifier.iosShadow(cornerRadius: Dp, color: Color, radius: Dp, y: Dp): Modifier = drawBehind {
-    val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-        this.color = android.graphics.Color.TRANSPARENT
-        setShadowLayer(radius.toPx(), 0f, y.toPx(), color.toArgb())
+fun Modifier.iosShadow(cornerRadius: Dp, color: Color, radius: Dp, y: Dp): Modifier =
+    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P) {
+        this.shadow(elevation = radius / 2, shape = RoundedCornerShape(cornerRadius), clip = false)
+    } else {
+        this.drawWithCache {
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                this.color = android.graphics.Color.TRANSPARENT
+                setShadowLayer(radius.toPx(), 0f, y.toPx(), color.toArgb())
+            }
+            val r = cornerRadius.toPx()
+            onDrawBehind {
+                drawIntoCanvas { it.nativeCanvas.drawRoundRect(0f, 0f, size.width, size.height, r, r, paint) }
+            }
+        }
     }
-    val r = cornerRadius.toPx()
-    drawIntoCanvas { it.nativeCanvas.drawRoundRect(0f, 0f, size.width, size.height, r, r, paint) }
-}
 
 /**
  * The app's frosted card as iOS draws it with `glassBackground` (the action sheet rows and tiles,

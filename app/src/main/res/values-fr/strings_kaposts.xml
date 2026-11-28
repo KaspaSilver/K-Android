@@ -127,4 +127,8 @@
     <string name="pr_card_view">Voir</string>
     <string name="kaposts_scheduled_reminder_body">Votre publication est prête à partir. Ouvrez K pour l\'envoyer.</string>
     <string name="kaposts_see_all_posts">Voir toutes les publications</string>
+    <string name="kaposts_couldnt_schedule_toast">Impossible de programmer : %1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">Programmé pour %1$s - envoyé depuis ce téléphone</string>
+    <string name="kaposts_tip_didnt_send">Le pourboire n\'est pas parti : %1$s</string>
+    <string name="pr_card_pay">Payer</string>
 </resources>

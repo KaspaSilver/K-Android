@@ -23,12 +23,25 @@ object ImageMessage {
         )
     }
 
+    /** Parsed photos by message text: a bubble scrolling back into view asked again, and each
+     *  uncached call was a full parse of the whole photo (audit 2026-11-27 Smoothness S3). */
+    private val parsedCache = object : LinkedHashMap<String, VoiceMessageContent>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, VoiceMessageContent>?) = size > 64
+    }
+
     /** Parses [text] as an image message if it looks like one, else null — same broad-catch shape as [VoiceMessage.parseOrNull]. */
     fun parseOrNull(text: String?): VoiceMessageContent? {
         if (text.isNullOrBlank() || text.trimStart().firstOrNull() != '{') return null
+        // Cheap rejections first, as VoiceMessage: a voice note, reply, chess move or any other
+        // JSON is answered from the head of the string, not a full parse (audit 2026-11-27 S3).
+        if (InlineMediaSniff.mimeType(text)?.lowercase()?.startsWith("image/") != true) return null
+        synchronized(parsedCache) { parsedCache[text] }?.let { return it }
         return try {
             val parsed = gson.fromJson(text, VoiceMessageContent::class.java) ?: return null
-            if (parsed.mimeType.startsWith("image/") && parsed.content.startsWith("data:")) parsed else null
+            if (parsed.mimeType.startsWith("image/") && parsed.content.startsWith("data:")) {
+                synchronized(parsedCache) { parsedCache[text] = parsed }
+                parsed
+            } else null
         } catch (e: Exception) {
             // Same reflection/non-null-default caveat as VoiceMessage.parseOrNull. Logs the real
             // exception + a shape summary (never the full payload — could be tens of KB) so a

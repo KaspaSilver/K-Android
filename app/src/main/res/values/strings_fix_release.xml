@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">No app available to share the CSV</string>
+    <string name="rel5_saves_photo_to_gallery">Saves the photo to your gallery.</string>
+    <string name="rel5_chess_time_control">Chess - %1$s</string>
+    <string name="rel5_backed_up_just_now">Backed up just now</string>
+    <string name="rel5_audio_file_empty">Audio file is empty</string>
+    <string name="rel5_enter_valid_amount">Enter a valid amount.</string>
+    <string name="rel5_server_error_code">The server returned an error (%1$d). Try again in a moment.</string>
+    <string name="rel5_fb_could_not_load_folder">Could not load this folder.</string>
+    <string name="rel5_fb_failed_build_tx">Failed to build transaction</string>
+    <string name="rel5_fb_edit_failed">Edit failed</string>
+    <string name="rel5_fb_cant_read_signed_tx">Couldn\'t read the signed transaction</string>
+    <string name="rel5_fb_reaction_failed">Reaction failed</string>
+    <string name="rel5_fb_update_group_photo">Failed to update group photo</string>
+    <string name="rel5_fb_resend_invites">Failed to resend invites</string>
+    <string name="rel5_fb_resend_invite">Failed to resend invite</string>
+    <string name="rel5_fb_rename_group">Failed to rename group</string>
+    <string name="rel5_fb_create_group">Failed to create group</string>
+    <string name="rel5_fb_schedule_post">Could not schedule this post</string>
+    <string name="rel5_fb_load_more">Could not load more</string>
+    <string name="rel5_fb_share_link">Could not create a share link.</string>
+    <string name="rel5_fb_connect">Could not connect</string>
+    <string name="rel5_fb_broadcast_failed">Broadcast failed</string>
+    <string name="rel5_fb_backup_failed">Backup failed</string>
+    <string name="rel5_restored_messages">Restored %1$d messages from %2$d chats.</string>
+    <string name="rel5_enter_group_name">Enter a group name.</string>
+    <string name="rel5_add_one_member">Add at least one member.</string>
+    <string name="rel5_invalid_address_format">Invalid Kaspa address format.</string>
+</resources>

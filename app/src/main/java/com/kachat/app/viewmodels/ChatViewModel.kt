@@ -245,7 +245,7 @@ class ChatViewModel @Inject constructor(
                 val result = withContext(Dispatchers.IO) { chatHistoryExportImportService.importChatHistory(uri) }
                 _importState.value = ChatHistoryOpState(
                     status = ChatHistoryOpStatus.SUCCESS,
-                    message = "Imported ${result.importedMessageCount} messages from ${result.conversationCount} chats."
+                    message = com.kachat.app.util.tr(R.string.rel5_restored_messages, result.importedMessageCount, result.conversationCount)
                 )
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Chat history import failed", e)
@@ -333,7 +333,7 @@ class ChatViewModel @Inject constructor(
                 // Merge-on-upload: reads the server's copy first, so a manual backup can never undo
                 // another device's newer change, and it brings those changes in here.
                 nextcloudSyncService.backUpContactsNow()
-                _nextcloudBackupState.value = ChatHistoryOpState(status = ChatHistoryOpStatus.SUCCESS, message = "Backed up just now")
+                _nextcloudBackupState.value = ChatHistoryOpState(status = ChatHistoryOpStatus.SUCCESS, message = com.kachat.app.util.tr(R.string.rel5_backed_up_just_now))
                 refreshNextcloudBackupInfo()
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Nextcloud backup failed", e)
@@ -1857,7 +1857,7 @@ class ChatViewModel @Inject constructor(
             // A deliberate add is of the network the app runs on: a chat with the other network's
             // address is never read and is dropped on the next launch (iOS 218dc42, IOS-063).
             if (deliberate && !com.kachat.app.util.KaspaAddress.isValidOnActiveNetwork(address.trim())) {
-                onResult(com.kachat.app.util.KaspaAddress.otherNetworkReason(address) ?: "Invalid Kaspa address format.")
+                onResult(com.kachat.app.util.KaspaAddress.otherNetworkReason(address) ?: com.kachat.app.util.tr(R.string.rel5_invalid_address_format))
                 return@launch
             }
             val existing = chatRepository.getContact(address)
@@ -1997,17 +1997,17 @@ class ChatViewModel @Inject constructor(
         // An all-caps address (a compact QR code's) is the lowercase address (iOS 83806b3d).
         val trimmedAddresses = addresses.map { it.trim().let { a -> if (com.kachat.app.util.KaspaAddress.hasAddressPrefix(a)) com.kachat.app.util.KaspaAddress.normalizedCase(a) else a } }.filter { it.isNotEmpty() }
         if (trimmedName.isEmpty()) {
-            _createGroupError.value = "Enter a group name."
+            _createGroupError.value = com.kachat.app.util.tr(R.string.rel5_enter_group_name)
             return
         }
         if (trimmedAddresses.isEmpty()) {
-            _createGroupError.value = "Add at least one address."
+            _createGroupError.value = com.kachat.app.util.tr(R.string.rel5_add_one_member)
             return
         }
         val invalid = trimmedAddresses.firstOrNull { !com.kachat.app.util.KaspaAddress.isValid(it) }
         if (invalid != null) {
             // iOS AddContactView.createGroupChat: KasiaError.invalidAddress's text.
-            _createGroupError.value = "Invalid Kaspa address format."
+            _createGroupError.value = com.kachat.app.util.tr(R.string.rel5_invalid_address_format)
             return
         }
         // A member is added deliberately, and a deliberate add is of the network the app runs on:
@@ -2016,7 +2016,7 @@ class ChatViewModel @Inject constructor(
         // the group fails there).
         trimmedAddresses.firstOrNull { !com.kachat.app.util.KaspaAddress.isValidOnActiveNetwork(it) }?.let { other ->
             _createGroupError.value = com.kachat.app.util.KaspaAddress.otherNetworkMessageRes(other)
-                ?.let { appContext.getString(it) } ?: "Invalid Kaspa address format."
+                ?.let { appContext.getString(it) } ?: com.kachat.app.util.tr(R.string.rel5_invalid_address_format)
             return
         }
 
@@ -2100,6 +2100,11 @@ class ChatViewModel @Inject constructor(
             // Membership/rename/photo lines are news only while they are recent.
             messages.filterNot { it.isExpiredSystemMessage(now) }
         }
+        // The filters walk the whole group history on every change and every minute: off the
+        // main thread, and the minute tick's unchanged list never reaches it (audit 2026-11-27
+        // Smoothness S1).
+        .distinctUntilChanged()
+        .flowOn(Dispatchers.Default)
 
     /** Drops expired system lines from the database for one group - called when it is opened. */
     fun pruneExpiredGroupSystemMessages(groupId: String) {
@@ -2728,7 +2733,7 @@ class ChatViewModel @Inject constructor(
             chatRepository.upsertOwnEdit(target.id, contactId, clean, null, now, deliveryStatus = "pending")
             try {
                 val payload = com.kachat.app.util.MessageEdit.encode(target.id, clean)
-                val result = walletService.sendKasiaMessage(contactId, payload)
+                val result = walletService.sendKasiaMessage(contactId, payload, owner = owner)
                 // The send can outlast the account; its results don't go in the next one (iOS 4f8e14bb).
                 if (walletManager.getAddress() != owner) return@launch
                 chatRepository.upsertOwnEdit(target.id, contactId, clean, result.txId, now, deliveryStatus = "sent")
@@ -2779,8 +2784,11 @@ class ChatViewModel @Inject constructor(
         val feeRate = if (plain || mediaSend) null else takeFeeRateOverride(ConversationOwnership.contact(contactId))
         run {
             val pendingId = "pending_${java.util.UUID.randomUUID()}"
+            // The account this send belongs to, for its row's every later write (audit C4).
+            var owner: String? = null
             try {
                 val myAddress = walletManager.getAddress()
+                owner = myAddress
                 val payload = if (reply != null) {
                     // iOS MessageReplyCodec.previewText: never raw JSON or a share URL in the quote
                     val preview = MessageReply.previewText(reply.plaintextBody)
@@ -2807,7 +2815,7 @@ class ChatViewModel @Inject constructor(
                 // Encrypt + self-stash the message. Sending a message NEVER sends a handshake —
                 // handshakes are only ever sent by an explicit user tap (sendHandshakeToNewContact).
                 refuseIfAccountChanged(myAddress)
-                val result = walletService.sendKasiaMessage(contactId, payload, feeRateOverride = feeRate)
+                val result = walletService.sendKasiaMessage(contactId, payload, feeRateOverride = feeRate, owner = myAddress)
 
                 // Merge-aware finalize: if a backup mirror import inserted the txId row first,
                 // this merges into it (never a second copy) and always removes the placeholder.
@@ -2833,12 +2841,12 @@ class ChatViewModel @Inject constructor(
                 // transaction's own id and shows Not confirmed until its delivered copy arrives
                 // (iOS d23e6f7a markSendUnconfirmed).
                 Log.w("ChatViewModel", "Message send outcome unknown: marked not confirmed")
-                finalizeUnconfirmedSend(pendingId, unknown.txId)
+                finalizeUnconfirmedSend(pendingId, unknown.txId, owner)
                 onError?.invoke(UserFacingError.message(unknown, "Failed to send"))
                 return false
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Error sending message", e)
-                chatRepository.updateMessageStatus(pendingId, "failed")
+                owner?.let { runCatching { chatRepository.updateMessageStatus(pendingId, "failed", walletAddress = it) } }
                 onError?.invoke(UserFacingError.message(e, "Failed to send"))
                 return false
             }
@@ -2900,7 +2908,7 @@ class ChatViewModel @Inject constructor(
             }
             try {
                 val payload = MessageReaction.encode(targetTxId, emoji, action)
-                val result = walletService.sendKasiaMessage(contactId, payload)
+                val result = walletService.sendKasiaMessage(contactId, payload, owner = myAddress)
                 // The send can outlast the account; its results don't go in the next one (iOS 4f8e14bb).
                 if (walletManager.getAddress() != myAddress) return@launch
                 if (action == "add") {
@@ -3040,11 +3048,11 @@ class ChatViewModel @Inject constructor(
         var rowId: String? = null
         return try {
             // The row a previous try left, unless it has gone since (deleted, or sent by Retry).
-            val previous = timeoutResignRows[gameId]?.takeIf { chatRepository.getMessage(it) != null }
+            val previous = timeoutResignRows[gameId]?.takeIf { chatRepository.getMessage(it, walletAddress = account) != null }
             val id = previous ?: "pending_${java.util.UUID.randomUUID()}"
             rowId = id
             if (previous != null) {
-                chatRepository.updateMessageStatus(id, "pending")
+                chatRepository.updateMessageStatus(id, "pending", walletAddress = account)
             } else {
                 chatRepository.insertMessage(
                     MessageEntity(
@@ -3064,7 +3072,7 @@ class ChatViewModel @Inject constructor(
             }
             var outcomeUnknown = false
             val (txId, payloadHex) = try {
-                walletService.sendKasiaMessage(contactId, payload).let { it.txId to it.payloadHex }
+                walletService.sendKasiaMessage(contactId, payload, owner = account).let { it.txId to it.payloadHex }
             } catch (unknown: com.kachat.app.services.SendOutcomeUnknownException) {
                 // It may have landed (audit IOS-014): counted as sent, so no second resign goes
                 // after it, but its row says Not confirmed rather than Sent (iOS d23e6f7a).
@@ -3090,7 +3098,7 @@ class ChatViewModel @Inject constructor(
             true
         } catch (e: Exception) {
             Log.e("ChatViewModel", "[Chess] Error sending timeout resign", e)
-            rowId?.let { chatRepository.updateMessageStatus(it, "failed") }
+            rowId?.let { runCatching { chatRepository.updateMessageStatus(it, "failed", walletAddress = account) } }
             false
         }
     }
@@ -3551,7 +3559,7 @@ class ChatViewModel @Inject constructor(
      */
     suspend fun sendMediaPartsAwait(contactId: String, parts: List<ByteArray>, mimeType: String, onError: ((String) -> Unit)?): Boolean {
         if (parts.size !in 2..com.kachat.app.util.VoicePartTag.MAX_PARTS || parts.any { it.isEmpty() }) {
-            onError?.invoke("Audio file is empty")
+            onError?.invoke(com.kachat.app.util.tr(R.string.rel5_audio_file_empty))
             return false
         }
         val owner = runCatching { walletManager.getAddress() }.getOrNull() ?: return false
@@ -3608,7 +3616,7 @@ class ChatViewModel @Inject constructor(
             val pendingId = pendingIds[offset]
             try {
                 refuseIfAccountChanged(owner)
-                val result = walletService.sendKasiaMessage(contactId, content, feeRateOverride = feeRate)
+                val result = walletService.sendKasiaMessage(contactId, content, feeRateOverride = feeRate, owner = owner)
                 chatRepository.finalizeProvisionalMessage(
                     pendingId,
                     MessageEntity(
@@ -3627,13 +3635,13 @@ class ChatViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is com.kachat.app.services.SendOutcomeUnknownException) {
                     Log.w("ChatViewModel", "Media part send outcome unknown: marked not confirmed")
-                    finalizeUnconfirmedSend(pendingId, e.txId)
+                    finalizeUnconfirmedSend(pendingId, e.txId, owner)
                 } else {
                     Log.e("ChatViewModel", "Error sending media part ${offset + 1} of ${contents.size}", e)
-                    chatRepository.updateMessageStatus(pendingId, "failed")
+                    chatRepository.updateMessageStatus(pendingId, "failed", walletAddress = owner)
                 }
                 // The rest never went: failed too, so one Retry resends them in order.
-                for (rest in pendingIds.drop(offset + 1)) chatRepository.updateMessageStatus(rest, "failed")
+                for (rest in pendingIds.drop(offset + 1)) chatRepository.updateMessageStatus(rest, "failed", walletAddress = owner)
                 // The note is in the chat now, its unsent parts with Retry: the composer is
                 // already clear, so the alert points to Retry rather than sending (and paying
                 // for) the whole note again (iOS 83806b3d `MediaPartsSendError`).
@@ -3697,19 +3705,19 @@ class ChatViewModel @Inject constructor(
             if (part.deliveryStatus != "failed" || part.direction != "sent") continue
             val text = part.plaintextBody ?: continue
             try {
-                if (!chatRepository.claimFailedSendForRetry(part.id)) continue
+                if (!chatRepository.claimFailedSendForRetry(part.id, walletAddress = owner)) continue
                 refuseIfAccountChanged(owner)
-                val result = walletService.sendKasiaMessage(part.contactId, text)
+                val result = walletService.sendKasiaMessage(part.contactId, text, owner = owner)
                 chatRepository.finalizeProvisionalMessage(
                     part.id,
                     part.copy(id = result.txId, walletAddress = owner, encryptedPayload = result.payloadHex, deliveryStatus = "sent")
                 )
             } catch (e: Exception) {
                 if (e is com.kachat.app.services.SendOutcomeUnknownException) {
-                    finalizeUnconfirmedSend(part.id, e.txId)
+                    finalizeUnconfirmedSend(part.id, e.txId, owner)
                 } else {
                     Log.e("ChatViewModel", "Error retrying a media part", e)
-                    chatRepository.updateMessageStatus(part.id, "failed")
+                    chatRepository.updateMessageStatus(part.id, "failed", walletAddress = owner)
                 }
                 onError?.invoke(UserFacingError.message(e, "Failed to send"))
                 return
@@ -3728,9 +3736,9 @@ class ChatViewModel @Inject constructor(
             try {
                 // Pending from this moment: a second tap finds nothing left to retry, where the
                 // row used to stay Failed and post twice (iOS 4f8e14bb).
-                if (!chatRepository.claimFailedSendForRetry(message.id)) return@launch
+                if (!chatRepository.claimFailedSendForRetry(message.id, walletAddress = owner)) return@launch
                 refuseIfAccountChanged(owner)
-                val result = walletService.sendKasiaMessage(message.contactId, text)
+                val result = walletService.sendKasiaMessage(message.contactId, text, owner = owner)
                 chatRepository.finalizeProvisionalMessage(
                     message.id,
                     MessageEntity(
@@ -3749,11 +3757,11 @@ class ChatViewModel @Inject constructor(
             } catch (unknown: com.kachat.app.services.SendOutcomeUnknownException) {
                 // It may have landed: Not confirmed under its own id, never Failed with Retry.
                 Log.w("ChatViewModel", "Retried message outcome unknown: marked not confirmed")
-                finalizeUnconfirmedSend(message.id, unknown.txId)
+                finalizeUnconfirmedSend(message.id, unknown.txId, owner)
                 onError?.invoke(UserFacingError.message(unknown, "Failed to send"))
             } catch (e: Exception) {
                 Log.e("ChatViewModel", "Error retrying message", e)
-                chatRepository.updateMessageStatus(message.id, "failed")
+                chatRepository.updateMessageStatus(message.id, "failed", walletAddress = owner)
                 onError?.invoke(UserFacingError.message(e, "Failed to send"))
             }
         }
@@ -3773,16 +3781,18 @@ class ChatViewModel @Inject constructor(
      * with no Retry - until the delivered copy is read back and settles it to sent (iOS d23e6f7a
      * `markSendUnconfirmed`). A row already gone (deleted meanwhile) stays gone.
      */
-    private suspend fun finalizeUnconfirmedSend(provisionalId: String, txId: String) {
+    private suspend fun finalizeUnconfirmedSend(provisionalId: String, txId: String, owner: String?) {
+        // The send's own account (audit C4): after a switch the active one holds no such row,
+        // and the send was left pending - with a Retry after the next start that could post it twice.
         try {
-            val row = chatRepository.getMessage(provisionalId) ?: return
+            val row = chatRepository.getMessage(provisionalId, walletAddress = owner) ?: return
             chatRepository.finalizeProvisionalMessage(
                 provisionalId,
                 row.copy(id = txId, blockTimestamp = System.currentTimeMillis(), deliveryStatus = "warning")
             )
         } catch (e: Exception) {
             Log.e("ChatViewModel", "Couldn't mark a send not confirmed", e)
-            chatRepository.updateMessageStatus(provisionalId, "warning")
+            runCatching { chatRepository.updateMessageStatus(provisionalId, "warning", walletAddress = owner) }
         }
     }
 
@@ -3824,7 +3834,7 @@ class ChatViewModel @Inject constructor(
         // Exact (iOS 16b64bc, AND-013): "2.3" pays 230,000,000 sompi - a Double multiply and
         // toLong() paid 229,999,999. Comma or dot, at most 8 decimals, nothing above the supply.
         val sompi = KaspaUnit.sompiFromUserText(amount)?.takeIf { it > 0 }
-            ?: run { onResult?.invoke(false, "Enter a valid amount.", null); return }
+            ?: run { onResult?.invoke(false, com.kachat.app.util.tr(R.string.rel5_enter_valid_amount), null); return }
         // The other network's address is the same key on another chain: never paid (iOS ce20e87).
         com.kachat.app.util.KaspaAddress.otherNetworkMessageRes(contactId)?.let {
             onResult?.invoke(false, appContext.getString(it), null)
@@ -3913,7 +3923,7 @@ class ChatViewModel @Inject constructor(
     private val olderPageJobs = mutableMapOf<String, kotlinx.coroutines.Deferred<Int>>()
     /** The newest window per contact as last emitted, so a page cursor can be taken without a
      *  round trip to the flow. */
-    private val latestThreadWindows = mutableMapOf<String, List<MessageEntity>>()
+    private val latestThreadWindows = java.util.concurrent.ConcurrentHashMap<String, List<MessageEntity>>()
 
     /** Whether the thread for [contactId] is fetching older history right now. */
     fun isLoadingOlderMessages(contactId: String): Flow<Boolean> =
@@ -3939,6 +3949,24 @@ class ChatViewModel @Inject constructor(
             .filter { seen.add(it.id) }
             .sortedWith(compareBy<MessageEntity> { it.blockTimestamp }.thenBy { it.id })
     }
+        // The merge and sort run over the whole loaded history: never on the collector's (main)
+        // thread (audit 2026-11-27 Smoothness S1).
+        .flowOn(Dispatchers.Default)
+
+    /**
+     * [threadMessages] made ready to draw - placeholders hidden, voice note and photo parts
+     * grouped, chess rows picked out - all on [Dispatchers.Default], and only when the rows
+     * actually changed (a read flag or another chat's write re-runs the query with the same
+     * result). Audit 2026-11-27 Smoothness S1.
+     */
+    fun threadModel(contactId: String): Flow<com.kachat.app.ui.screens.ChatThreadModel> = flow {
+        var previous: com.kachat.app.ui.screens.ChatThreadModel? = null
+        threadMessages(contactId).distinctUntilChanged().collect { rows ->
+            val model = com.kachat.app.ui.screens.ChatThreadModel.build(rows, previous)
+            previous = model
+            emit(model)
+        }
+    }.flowOn(Dispatchers.Default)
 
     /** The oldest row the thread currently holds, which is where the next page starts. */
     private fun oldestLoadedMessage(contactId: String): MessageEntity? {
@@ -3989,10 +4017,11 @@ class ChatViewModel @Inject constructor(
     private val historyPreloadJobs = mutableMapOf<String, kotlinx.coroutines.Job>()
 
     /**
-     * The chat was entered: its whole stored history comes into memory in the background, 500
-     * rows at a time with a beat between, so scrolling up only ever moves over messages already
-     * loaded instead of waiting on a store read at each trigger and visibly filling in as it
-     * goes (iOS d30cc0a). Scrolling's own page loads join an in-flight page, never double it.
+     * The chat was entered: its stored history comes into memory in the background, 500 rows at
+     * a time with a beat between, up to [com.kachat.app.ui.screens.ThreadHistoryPreload]'s cap,
+     * so scrolling up moves over messages already loaded instead of waiting on a store read at
+     * each trigger and visibly filling in as it goes (iOS d30cc0a). Scrolling's own page loads
+     * join an in-flight page, never double it.
      */
     fun preloadThreadHistory(contactId: String) {
         if (historyPreloadJobs[contactId]?.isActive == true) return
@@ -4001,6 +4030,13 @@ class ChatViewModel @Inject constructor(
             delay(HISTORY_PRELOAD_START_DELAY_MS)
             while (true) {
                 if (loadOlderMessages(contactId, pageSize = HISTORY_PRELOAD_PAGE_SIZE) == 0) break
+                // Bounded (audit 2026-11-27 Battery R3): a long photo or voice chat stops at the
+                // newest few thousand rows / ~16 MB; older rows still page in on scroll.
+                val held = _olderThreadPages.value[contactId].orEmpty()
+                val stop = withContext(Dispatchers.Default) {
+                    !com.kachat.app.ui.screens.ThreadHistoryPreload.mayContinue(held)
+                }
+                if (stop) break
                 delay(HISTORY_PRELOAD_PAGE_GAP_MS)
             }
         }
@@ -4080,6 +4116,23 @@ class ChatViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             walletManager.activeAddressFlow.drop(1).collect { resetThreadHistoryForAccountSwitch() }
+        }
+    }
+
+    init {
+        // Back in front with a chat still open (audit C1): what came in while K was behind Home
+        // arrived unread and rang (the hold counts only in the foreground); the person now sees it
+        // on screen, so it is read, as on opening the chat.
+        viewModelScope.launch {
+            notificationHelper.appForegroundFlow.drop(1).collect { foreground ->
+                if (!foreground || walletManager.isLoggedOut) return@collect
+                notificationHelper.currentContactId?.let { contactId ->
+                    runCatching { chatRepository.markAsRead(contactId) }
+                }
+                notificationHelper.viewingGroupId?.let { groupId ->
+                    runCatching { groupRepository.markGroupRead(groupId) }
+                }
+            }
         }
     }
 

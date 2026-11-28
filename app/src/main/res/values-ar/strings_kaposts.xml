@@ -127,4 +127,8 @@
     <string name="pr_card_view">عرض</string>
     <string name="kaposts_scheduled_reminder_body">منشورك جاهز للإرسال. افتح K لإرساله.</string>
     <string name="kaposts_see_all_posts">عرض كل المنشورات</string>
+    <string name="kaposts_couldnt_schedule_toast">تعذّرت الجدولة: %1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">مجدول في %1$s - يُرسَل من هذا الهاتف</string>
+    <string name="kaposts_tip_didnt_send">لم تُرسل الإكرامية: %1$s</string>
+    <string name="pr_card_pay">ادفع</string>
 </resources>

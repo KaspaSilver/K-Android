@@ -127,4 +127,8 @@
     <string name="pr_card_view">দেখুন</string>
     <string name="kaposts_scheduled_reminder_body">আপনার পোস্ট পাঠানোর জন্য প্রস্তুত। পাঠাতে K খুলুন।</string>
     <string name="kaposts_see_all_posts">সব পোস্ট দেখুন</string>
+    <string name="kaposts_couldnt_schedule_toast">শিডিউল করা যায়নি: %1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">%1$s-এর জন্য শিডিউল করা হয়েছে - এই ফোন থেকে পাঠানো হবে</string>
+    <string name="kaposts_tip_didnt_send">টিপ পাঠানো যায়নি: %1$s</string>
+    <string name="pr_card_pay">পে করুন</string>
 </resources>

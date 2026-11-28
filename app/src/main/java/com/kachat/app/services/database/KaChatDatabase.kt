@@ -610,6 +610,33 @@ abstract class KaChatDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * v42 -> v45 in one step (release audit 2026-11-27 M1). A phone still on 5.2.x (v42) that
+         * skipped 5.3 would otherwise go 42 -> 43 -> 44 -> 45, which drops Public Chats' and
+         * Portfolio's tables only for 44 -> 45 to bring them back empty: the person's portfolios,
+         * ledger rows, joined rooms and hidden senders were lost for nothing. Schemas 42 and 45
+         * have those five tables exactly alike, so only the swap history (gone since 5.3) is
+         * dropped. Room takes the longest registered jump, so a v42 database comes this way.
+         */
+        val MIGRATION_42_45 = object : Migration(42, 45) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `swap_transactions`")
+            }
+        }
+
+        /**
+         * v43 -> v45 in one step (release audit 2026-11-27 M1): a v43 phone had Public Chats
+         * removed already but still had its portfolios, so they are kept and only Public Chats'
+         * tables come back (empty, as there is nothing to restore) and the swap history goes.
+         */
+        val MIGRATION_43_45 = object : Migration(43, 45) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `swap_transactions`")
+                // Every CREATE in 44 -> 45 is IF NOT EXISTS: the portfolio tables stay as they are.
+                MIGRATION_44_45.migrate(db)
+            }
+        }
+
         /** v45 -> v46: an index for the unread badges' query (audit 2026-11-25 S16). `IF NOT
          *  EXISTS` keeps a replay safe. */
         val MIGRATION_45_46 = object : Migration(45, 46) {
@@ -649,5 +676,19 @@ abstract class KaChatDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_broadcast_messages_channelName_blockTimestamp` ON `broadcast_messages` (`channelName`, `blockTimestamp`)")
             }
         }
+
+        /** Every migration, for the database builder (AppModule) and the path test. */
+        val ALL_MIGRATIONS: Array<Migration>
+            get() = arrayOf(
+                MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20,
+                MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25,
+                MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30,
+                MIGRATION_30_31, MIGRATION_31_32, MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35,
+                MIGRATION_35_36, MIGRATION_36_37, MIGRATION_37_38, MIGRATION_38_39, MIGRATION_39_40,
+                MIGRATION_40_41, MIGRATION_41_42, MIGRATION_42_43, MIGRATION_43_44, MIGRATION_44_45,
+                MIGRATION_45_46,
+                // Direct jumps that keep Portfolio and Public Chats for phones that skipped 5.3.
+                MIGRATION_42_45, MIGRATION_43_45,
+            )
     }
 }

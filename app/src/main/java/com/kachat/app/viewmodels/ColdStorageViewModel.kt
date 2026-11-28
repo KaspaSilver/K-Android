@@ -1313,7 +1313,9 @@ class ColdStorageViewModel @Inject constructor(
                     // It may have landed: its change address counts as used and is never handed
                     // back to the pool (audit 2026-11-25 T2).
                     if (unknown && unsigned.isQuantumSource) noteOwnQuantumOutputSent(ownQuantumOutput, generation)
-                    if (unknown && generation == sendGeneration) pendingUnsignedTx = null
+                    // The unsigned transaction is kept, as on iPhone: scanning the same signature
+                    // again re-broadcasts the very same transaction, which can never pay twice
+                    // (release audit 2026-11-27 A6).
                     publishSendState(generation) {
                         it.copy(step = ColdSendStep.FAILED, errorMessage = UserFacingError.message(e, "Broadcast failed"), outcomeUnknown = unknown)
                     }

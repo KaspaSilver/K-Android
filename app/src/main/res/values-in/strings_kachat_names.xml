@@ -49,7 +49,6 @@
     <string name="kl_message">Pesan</string>
     <string name="kl_name">Nama</string>
     <string name="kl_note_buy">Membeli membayar penjual dan memindahkan nama kepadamu dalam satu transaksi.</string>
-    <string name="kl_note_message">Pesan sampai ke penjual seperti obrolan KaChat biasa.</string>
     <string name="kl_note_offer">Penawaran mengunci KAS-mu di chain sampai penjual menerimanya, kamu menariknya, atau kedaluwarsa.</string>
     <string name="kl_offer">Penawaran</string>
     <string name="kl_offer_detail">Tentukan harga Anda sendiri. KAS Anda menunggu di chain sampai penjual menerima, Anda menarik penawaran, atau penawaran kedaluwarsa.</string>

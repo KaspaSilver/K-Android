@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">Ações da conta</string>
     <string name="add_kaspa_address">Adicionar endereço Kaspa</string>
     <string name="add_transaction">Adicionar transacao</string>
     <string name="addresses">Enderecos</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">Copiar kpub</string>
     <string name="current_value">Valor atual</string>
     <string name="delete_transaction">Excluir transacao</string>
-    <string name="enter_kpub">Digitar kpub</string>
     <string name="export_csv">Exportar CSV</string>
     <string name="fee_usd_optional">Taxa (opcional)</string>
     <string name="holdings">Posicoes</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">Você recebe</string>
     <string name="kp_you_receive_about">Você recebe cerca de</string>
     <string name="kp_you_saw">Você viu</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">Nomear este endereco</string>
     <string name="no_app_to_open_link">Nenhum app neste telefone pode abrir o link</string>
     <string name="notes_optional">Notas (opcional)</string>
     <string name="paste_from_clipboard">Colar da area de transferencia</string>
     <string name="paste_kpub">Colar kpub</string>
-    <string name="paste_the_kpub_exported_from_your">Cole a kpub exportada do seu dispositivo KasSigner. Ela não contém material de chave privada.</string>
     <string name="pf_actions_add">Adicionar</string>
     <string name="pf_actions_import_export">Importar e exportar</string>
     <string name="pf_add_kaspa_address_sub">Acompanhe o saldo de um endereço como parte deste portfolio.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">Aponte a camera para a tela do KasSigner</string>
     <string name="quantity">Quantidade</string>
     <string name="remove_cold_storage_account">Remover conta de armazenamento a frio</string>
-    <string name="rename_cold_storage_account">Renomear conta de armazenamento a frio</string>
     <string name="scan">Escanear</string>
     <string name="scan_kpub_from_kassigner">Escanear kpub do KasSigner</string>
     <string name="scan_signed_transaction">Escanear transacao assinada</string>

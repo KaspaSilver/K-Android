@@ -2,7 +2,6 @@
 <!-- Swap (iPhone 5.4 518fdc8c: SwapView, SwapService, TrestlyTrade), from the iPhone's
      Localizable.strings for the same keys. -->
 <resources>
-    <string name="swap_title">החלפה</string>
     <string name="swap_failed">ההחלפה נכשלה</string>
     <string name="swap_couldnt_read_amounts">לא ניתן לקרוא את הסכומים של ההחלפה הזו</string>
     <string name="swap_already_holds">ההחלפה הזו כבר כלולה - הוספה חוזרת תספור אותה פעמיים.</string>
@@ -14,7 +13,6 @@
     <string name="swap_destination_tag_optional">תג יעד (אופציונלי)</string>
     <string name="swap_destination_tag_hint">רק אם כתובת הקבלה דורשת תג, כמו ברוב הבורסות. בלעדיו הבורסה לא תוכל לזכות את המטבעות שלכם.</string>
     <string name="swap_from_kusdt_lands">החלפה מכתובת (ה-kUSDT יגיעו לכאן)</string>
-    <string name="swap_from_kas_lands">החלפה מכתובת (ה-KAS יגיעו לכאן)</string>
     <string name="swap_change">שינוי</string>
     <string name="swap_powered_by_trestly">מופעל על ידי Trestly</string>
     <string name="swap_powered_by_changenow">מופעל על ידי ChangeNOW</string>
@@ -48,8 +46,6 @@
     <string name="swap_deposit_address">כתובת הפקדה</string>
     <string name="swap_couldnt_reach_changenow">לא ניתן להגיע ל-ChangeNOW - נסו שוב</string>
     <string name="swap_details">פרטי ההחלפה</string>
-    <string name="swap_used">בשימוש</string>
-    <string name="swap_unused">לא בשימוש</string>
     <string name="swap_search_coins">חיפוש מטבעות</string>
     <string name="swap_agreements_intro">ההחלפה משתמשת בשני שירותים ש-K לא מפעילה. קראו והסכימו לשניהם לפני שתמשיכו.</string>
     <string name="swap_coins_on_other_networks">מטבעות ברשתות אחרות</string>

@@ -132,7 +132,6 @@
     <string name="qr_code">کد QR</string>
     <string name="read">خوانده‌شده</string>
     <string name="receive">دریافت</string>
-    <string name="recipient_address">آدرس گیرنده</string>
     <string name="remove">حذف</string>
     <string name="rename">تغییر نام</string>
     <string name="rename_account">تغییر نام حساب</string>
@@ -249,7 +248,6 @@
     <string name="welcome_to_kachat">به K خوش آمدید</string>
     <string name="lets_walk_through_the_basics_so">بیایید اصول اولیه را مرور کنیم تا برای ارسال اولین پیام خود آماده باشید.</string>
     <string name="how_kachat_uses_kaspa">K چگونه از Kaspa استفاده می‌کند</string>
-    <string name="kachat_lets_you_send_and_receive">K به شما امکان می‌دهد پیام‌ها را مستقیماً در شبکه Kaspa ارسال و دریافت کنید. برای پرداخت کارمزد هنگام ارسال پیام‌هایتان به Kaspa نیاز است. کارمزدی که می‌پردازید به استخراج‌کنندگانی می‌رسد که شبکه را ایمن نگه می‌دارند.</string>
     <string name="finish">پایان</string>
     <string name="choose_your_language">زبان خود را انتخاب کنید</string>
     <string name="select_the_language_youd_like_to">زبانی که می‌خواهید در K استفاده کنید را انتخاب کنید.</string>
@@ -289,7 +287,6 @@
     <string name="connection_tab_explorer">کاوشگر</string>
     <string name="message_indexer">نمایه‌ساز پیام</string>
     <string name="coming_soon">به‌زودی</string>
-    <string name="not_available_on_this_network">در این شبکه در دسترس نیست</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">معرفی کامل شروع کار: کیف پول، گفتگوها، پرداخت‌ها و بیشتر.</string>
@@ -718,7 +715,7 @@
     <string name="pr_send_request">ارسال درخواست پرداخت</string>
     <!-- Chat list: delete one chat (iOS ChatListView rowDeleteContact) -->
     <string name="delete_chat_q">Delete Chat?</string>
-    <string name="delete_chat_alert_message">This permanently deletes every message in this chat from this device. This cannot be undone.</string>
+    <string name="delete_chat_alert_message">این کار همه پیام‌های این گفتگو را برای همیشه از این دستگاه حذف می‌کند. این کار قابل بازگشت نیست.</string>
     <!-- .kachat transaction sheet: coins are combined only after the slide (iOS 778a8fc, IOS-075) -->
     <!-- An address's Domains tab: one card per name service (iOS fe52376) -->
     <!-- Request Payment: Fresh Address / Choose an Address, Used / Unused (iOS 86dfd2d, 6dee531, 338d9f5) -->
@@ -1128,7 +1125,6 @@
     <string name="write_down_your_12_or_24_words">پیش از حذف، ۱۲ یا ۲۴ کلمه خود را یادداشت کنید.</string>
     <string name="view_12_or_24_words_and_passphrase">مشاهده ۱۲ یا ۲۴ کلمه و عبارت عبور</string>
     <string name="the_passphrase_shows_too_if_this_account">اگر این حساب عبارت عبور داشته باشد، آن هم نمایش داده می‌شود.</string>
-    <string name="transaction_id_tap_to_view_in">شناسه تراکنش · برای مشاهده در %1$s بزنید</string>
     <string name="transaction_id">شناسه تراکنش</string>
     <string name="unsilence">لغو بی‌صدا</string>
     <string name="silence">بی‌صدا</string>
@@ -1165,7 +1161,6 @@
     <string name="adding_of">در حال افزودن %1$d از %2$d</string>
     <string name="adding_member">در حال افزودن عضو</string>
     <string name="each_member_re_keys_the_group_on">هر عضو کلیدهای گروه را روی زنجیره تازه می‌کند، پس این کار ممکن است یک دقیقه طول بکشد. برنامه را باز نگه دارید.</string>
-    <string name="member_s_could_not_be_added_added">%1$d عضو اضافه نشد (%2$d عضو اضافه شد). لطفاً دوباره تلاش کنید.</string>
     <string name="clears_the_unread_badge_on_this_group">نشان خوانده‌نشده این گروه را پاک می‌کند.</string>
     <string name="notifications_from_this_group_resume_including_menti">اعلان‌های این گروه، از جمله اشاره‌ها، از سر گرفته می‌شوند.</string>
     <string name="no_notification_from_this_group_mentions_included">هیچ اعلانی از این گروه نمی‌آید، حتی برای اشاره‌ها.</string>
@@ -1248,7 +1243,6 @@
     <string name="couldnt_load_the_coins">بارگیری کوین‌ها ممکن نشد.</string>
     <string name="these_words_are_invalid_double_check_the">این کلمات نامعتبر هستند. کلمات را دوباره بررسی کنید - کلمه آخر شامل کد بررسی است، پس یک کلمه اشتباه باعث رد شدن اعتبارسنجی می‌شود.</string>
     <string name="invalid_words_please_enter_12_or_24">کلمات نامعتبر. لطفاً ۱۲ یا ۲۴ کلمه وارد کنید.</string>
-    <string name="retry_failed">تلاش مجدد ناموفق بود</string>
     <string name="saving_keep_the_card_still">در حال ذخیره. کارت را ثابت نگه دارید.</string>
     <string name="reading_keep_the_card_still">در حال خواندن. کارت را ثابت نگه دارید.</string>
     <string name="ready_to_scan">آماده اسکن</string>
@@ -1275,8 +1269,6 @@
     <string name="recovered_n_messages">%1$d پیام که این دستگاه نتوانسته بود بخواند بازیابی شد.</string>
     <string name="estimated_network_fee_one">\n\nکارمزد تخمینی شبکه ≈ %1$s %2$s در ۱ تراکنش.</string>
     <string name="estimated_network_fee_n">\n\nکارمزد تخمینی شبکه ≈ %1$s %2$s در %3$d تراکنش.</string>
-    <string name="add_one_member_to_group">۱ عضو به گروه اضافه شود؟%1$s</string>
-    <string name="add_n_members_to_group">%1$d عضو به گروه اضافه شود؟%2$s</string>
     <string name="this_group">این گروه</string>
     <string name="one_member">۱ عضو</string>
     <string name="video_emoji">🎬 ویدیو</string>
@@ -1399,7 +1391,6 @@
     <string name="chess_tc_no_timer">بدون زمان‌سنج.</string>
     <string name="recents">اخیر</string>
     <string name="initial_sync_starting">در حال شروع</string>
-    <string name="initial_sync_finished">تمام شد</string>
     <string name="wiping_incoming_messages">در حال پاک کردن پیام‌های ورودی...</string>
     <string name="finishing_up">در حال اتمام...</string>
     <string name="re_syncing_chats_progress">در حال همگام‌سازی مجدد... %1$d از %2$d گفتگو</string>
@@ -1450,7 +1441,6 @@
     <string name="notification_mode_default">پیش‌فرض (%1$s)</string>
     <string name="checking_address_n">در حال بررسی آدرس شماره %1$d</string>
     <string name="n_found_so_far">تا اینجا %1$d مورد پیدا شد</string>
-    <string name="first_sync_all_set">آماده‌اید</string>
     <string name="nc_use_all_files">استفاده از همه فایل‌ها</string>
     <string name="nc_use_this_folder">استفاده از این پوشه</string>
     <string name="nc_no_subfolders">زیرپوشه‌ای نیست.</string>
@@ -1473,7 +1463,6 @@
     <string name="chess_notif_move">♟️ حرکت %1$s → %2$s را انجام داد</string>
     <string name="chess_notif_lost_on_time">♟️ با تمام شدن زمان باخت</string>
     <string name="chess_notif_resigned">♟️ در بازی شطرنج تسلیم شد</string>
-    <string name="fee_label">هزینه</string>
     <plurals name="create_group_and_invite">
         <item quantity="one">«%1$s» ساخته شود و %2$d عضو دعوت شود؟</item>
         <item quantity="other">«%1$s» ساخته شود و %2$d عضو دعوت شوند؟</item>
@@ -1521,8 +1510,6 @@
     <string name="kusdt_build_failed">تراکنش ساخته نشد. چیزی فرستاده نشد.</string>
     <string name="token_held_on_addresses">%1$d آدرس</string>
     <string name="token_received_title">%1$s دریافت شد</string>
-    <string name="token_received_on_one">روی %1$s شما</string>
-    <string name="token_received_on_many">روی %1$d آدرس شما</string>
     <string name="connection_not_set">تنظیم نشده</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">کپی پیوند اشتراک‌گذاری</string>
@@ -1629,4 +1616,5 @@
     <string name="history_change_to_address">باقیمانده %1$s به %2$s</string>
     <string name="cycle_hint_next_page">به صفحه‌ی بعد می‌رود</string>
     <string name="cycle_hint_next_feed">به فید بعدی می‌رود</string>
+    <string name="gif">GIF</string>
 </resources>

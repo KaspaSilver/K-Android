@@ -6,6 +6,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import com.kachat.app.models.PortfolioFeeRecord
 import com.kachat.app.models.PortfolioTransactionEntity
 import com.kachat.app.services.CoinGeckoApi
@@ -479,8 +480,12 @@ class PortfolioRepository @Inject constructor(
     // PortfolioViewModel's fetchPriceHistory.
 
     /** Gson payload persisted per (currency, days) — [t] = timestampMillis, [p] = price, kept short since a 365-day history is thousands of points. */
-    private data class StoredPricePoint(val t: Long, val p: Double)
-    private data class StoredPriceHistory(val fetchedAt: Long, val points: List<StoredPricePoint>)
+    // Field names kept by proguard-rules.pro (audit 2026-11-27 L1); @SerializedName pins them too.
+    private data class StoredPricePoint(@SerializedName("t") val t: Long, @SerializedName("p") val p: Double)
+    private data class StoredPriceHistory(
+        @SerializedName("fetchedAt") val fetchedAt: Long,
+        @SerializedName("points") val points: List<StoredPricePoint>?,
+    )
 
     /** A previously fetched history plus when it was fetched, so callers can apply their own freshness policy (see [PRICE_HISTORY_CACHE_TTL_MILLIS]). */
     data class PersistedPriceHistory(val fetchedAtMillis: Long, val points: List<Pair<Long, Double>>)
@@ -568,9 +573,6 @@ class PortfolioRepository @Inject constructor(
     // lives with the caller (see PortfolioViewModel.refreshPrice), same split as the history
     // cache above.
 
-    /** Gson payload persisted per currency — fetchedAt lets callers decide whether a network refresh is even needed. */
-    private data class StoredCurrentPrice(val fetchedAt: Long, val price: Double, val change: Double?)
-
     /** The last successfully fetched price plus when it was fetched, so callers can apply their own freshness policy (see [CURRENT_PRICE_FRESH_MILLIS]). */
     data class PersistedPrice(val fetchedAtMillis: Long, val price: Double, val change24hPercent: Double?)
 
@@ -580,7 +582,8 @@ class PortfolioRepository @Inject constructor(
     fun readPersistedPrice(currency: String): PersistedPrice? {
         val json = priceHistoryPrefs.getString(currentPriceCacheKey(currency), null) ?: return null
         return try {
-            val stored = gson.fromJson(json, StoredCurrentPrice::class.java) ?: return null
+            // Shared with the Send screens' KasPriceRepository, by field name (audit L1).
+            val stored = StoredKasPrice.fromJson(json) ?: return null
             PersistedPrice(stored.fetchedAt, stored.price, stored.change)
         } catch (e: Exception) {
             null
@@ -588,8 +591,8 @@ class PortfolioRepository @Inject constructor(
     }
 
     private fun persistCurrentPrice(price: PriceWithChange, currency: String) {
-        val stored = StoredCurrentPrice(System.currentTimeMillis(), price.price, price.change24hPercent)
-        priceHistoryPrefs.edit().putString(currentPriceCacheKey(currency), gson.toJson(stored)).apply()
+        val stored = StoredKasPrice(System.currentTimeMillis(), price.price, price.change24hPercent)
+        priceHistoryPrefs.edit().putString(currentPriceCacheKey(currency), stored.toJson()).apply()
     }
 
     private val historyDateFormat = java.text.SimpleDateFormat("dd-MM-yyyy", java.util.Locale.US).apply {

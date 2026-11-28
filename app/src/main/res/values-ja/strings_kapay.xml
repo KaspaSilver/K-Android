@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">アカウントの操作</string>
     <string name="add_kaspa_address">Kaspaアドレスを追加</string>
     <string name="add_transaction">取引を追加</string>
     <string name="addresses">アドレス</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">kpubをコピー</string>
     <string name="current_value">現在の値</string>
     <string name="delete_transaction">取引を削除</string>
-    <string name="enter_kpub">kpubを入力</string>
     <string name="export_csv">CSVをエクスポート</string>
     <string name="fee_usd_optional">手数料 (任意)</string>
     <string name="holdings">保有資産</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">受け取る額</string>
     <string name="kp_you_receive_about">受け取る額（約）</string>
     <string name="kp_you_saw">前回の表示</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">このアドレスに名前を付ける</string>
     <string name="no_app_to_open_link">このスマートフォンにはリンクを開けるアプリがありません</string>
     <string name="notes_optional">メモ (任意)</string>
     <string name="paste_from_clipboard">クリップボードから貼り付け</string>
     <string name="paste_kpub">kpubを貼り付け</string>
-    <string name="paste_the_kpub_exported_from_your">KasSignerデバイスからエクスポートしたkpubを貼り付けてください。秘密鍵の情報は含まれていません。</string>
     <string name="pf_actions_add">追加</string>
     <string name="pf_actions_import_export">インポートとエクスポート</string>
     <string name="pf_add_kaspa_address_sub">アドレスの残高をこのポートフォリオの一部として追跡します。</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">カメラをKasSignerの画面に向けてください</string>
     <string name="quantity">数量</string>
     <string name="remove_cold_storage_account">コールドストレージアカウントを削除</string>
-    <string name="rename_cold_storage_account">コールドストレージアカウント名を変更</string>
     <string name="scan">スキャン</string>
     <string name="scan_kpub_from_kassigner">KasSignerからkpubをスキャン</string>
     <string name="scan_signed_transaction">署名済み取引をスキャン</string>

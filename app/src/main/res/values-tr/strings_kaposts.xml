@@ -127,4 +127,8 @@
     <string name="pr_card_view">Görüntüle</string>
     <string name="kaposts_scheduled_reminder_body">Gönderiniz gönderilmeye hazır. Göndermek için K\'u açın.</string>
     <string name="kaposts_see_all_posts">Tüm Gönderileri Gör</string>
+    <string name="kaposts_couldnt_schedule_toast">Zamanlanamadı: %1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">%1$s için zamanlandı - bu telefondan gönderilecek</string>
+    <string name="kaposts_tip_didnt_send">Bahşiş gönderilmedi: %1$s</string>
+    <string name="pr_card_pay">Öde</string>
 </resources>

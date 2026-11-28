@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">Ağ önceki gönderiminizi hâlâ onaylıyor. Lütfen birkaç saniye sonra tekrar deneyin.</string>
     <string name="pc_l53_room_kept_for">Saklama süresi</string>
     <string name="pc_l53_room_on_this_device">Bu cihazda</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">Önceki mesajları yükle</string>
     <string name="pc_no_testnet_indexer_yet">Henüz testnet dizinleyici yok</string>
     <string name="pc_room_no_spendable_funds_yet">Henüz harcanabilir bakiye yok. Onayları bekleyip tekrar deneyin.</string>
     <string name="pc_room_not_enough_kas">Sohbet adresinizde yeterli KAS yok. Biraz ekleyip tekrar deneyin.</string>

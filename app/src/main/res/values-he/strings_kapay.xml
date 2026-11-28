@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">פעולות חשבון</string>
     <string name="add_kaspa_address">הוספת כתובת Kaspa</string>
     <string name="add_transaction">הוסף עסקה</string>
     <string name="addresses">כתובות</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">העתק kpub</string>
     <string name="current_value">ערך נוכחי</string>
     <string name="delete_transaction">מחק עסקה</string>
-    <string name="enter_kpub">הזן kpub</string>
     <string name="export_csv">ייצא CSV</string>
     <string name="fee_usd_optional">עמלה (אופציונלי)</string>
     <string name="holdings">אחזקות</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">אתם מקבלים</string>
     <string name="kp_you_receive_about">תקבלו בערך</string>
     <string name="kp_you_saw">ראיתם</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">תן שם לכתובת זו</string>
     <string name="no_app_to_open_link">אין בטלפון הזה אפליקציה שיכולה לפתוח את הקישור</string>
     <string name="notes_optional">הערות (אופציונלי)</string>
     <string name="paste_from_clipboard">הדבק מהלוח</string>
     <string name="paste_kpub">הדבק kpub</string>
-    <string name="paste_the_kpub_exported_from_your">הדביקו את ה-kpub שיוצא ממכשיר ה-KasSigner שלכם. הוא לא מכיל חומר מפתח פרטי.</string>
     <string name="pf_actions_add">הוסף</string>
     <string name="pf_actions_import_export">ייבוא וייצוא</string>
     <string name="pf_add_kaspa_address_sub">עקבו אחר היתרה של כתובת כחלק מתיק ההשקעות הזה.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">כוון את המצלמה למסך KasSigner</string>
     <string name="quantity">כמות</string>
     <string name="remove_cold_storage_account">הסר חשבון אחסון קר</string>
-    <string name="rename_cold_storage_account">שנה שם חשבון אחסון קר</string>
     <string name="scan">סרוק</string>
     <string name="scan_kpub_from_kassigner">סרוק kpub מ-KasSigner</string>
     <string name="scan_signed_transaction">סרוק עסקה חתומה</string>

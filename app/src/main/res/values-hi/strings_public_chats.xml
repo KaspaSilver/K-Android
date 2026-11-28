@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">नेटवर्क अभी भी आपके पिछले भेजे गए लेन-देन की पुष्टि कर रहा है। कृपया कुछ सेकंड बाद फिर से कोशिश करें।</string>
     <string name="pc_l53_room_kept_for">रखा जाता है</string>
     <string name="pc_l53_room_on_this_device">इस डिवाइस पर</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">पुराने संदेश लोड करें</string>
     <string name="pc_no_testnet_indexer_yet">अभी कोई टेस्टनेट इंडेक्सर नहीं</string>
     <string name="pc_room_no_spendable_funds_yet">अभी खर्च करने योग्य फंड उपलब्ध नहीं हैं। पुष्टि होने तक प्रतीक्षा करें और फिर से प्रयास करें।</string>
     <string name="pc_room_not_enough_kas">आपके चैटिंग पते पर पर्याप्त KAS नहीं है। कुछ जोड़ें और फिर से कोशिश करें।</string>

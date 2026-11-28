@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">ربع النهائي</string>
     <string name="kp_3ce0ac6e9413" formatted="false">النتيجة ما اتبعتتش.</string>
     <string name="kaplay_leaderboard_all_time">كل الأوقات</string>
-    <string name="kaplay_leaderboard_counted_from">محسوبة منذ %1$s.</string>
-    <string name="kaplay_leaderboard_period">فترة لوحة المتصدرين</string>
-    <string name="kaplay_leaderboard_resets_monthly">يُعاد ضبطها في اليوم الأول من كل شهر (UTC).</string>
     <string name="kaplay_leaderboard_this_month">هذا الشهر</string>
-    <string name="kaplay_no_finished_duels">لا توجد مباريات 1v1 منتهية بعد.</string>
-    <string name="kaplay_no_finished_duels_this_month">لا توجد مباريات 1v1 منتهية هذا الشهر بعد.</string>
-    <string name="kaplay_no_finished_tournaments">لا توجد بطولات منتهية بعد.</string>
-    <string name="kaplay_no_finished_tournaments_this_month">لا توجد بطولات منتهية هذا الشهر بعد.</string>
     <string name="kaplay_tab_leaderboard">لوحة المتصدرين</string>
     <string name="kp_640de0cb0b2c" formatted="false">سجلّك: %s فوز، %s خسارة</string>
     <string name="kp_5d12bd53552c" formatted="false">العب</string>

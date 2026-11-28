@@ -2,7 +2,6 @@
 <!-- Swap (iPhone 5.4 518fdc8c: SwapView, SwapService, TrestlyTrade), from the iPhone's
      Localizable.strings for the same keys. -->
 <resources>
-    <string name="swap_title">Tauschen</string>
     <string name="swap_failed">Tausch fehlgeschlagen</string>
     <string name="swap_couldnt_read_amounts">Die Beträge dieses Tauschs konnten nicht gelesen werden</string>
     <string name="swap_already_holds">Enthält diesen Tausch bereits – ein erneutes Hinzufügen zählt ihn doppelt.</string>
@@ -14,7 +13,6 @@
     <string name="swap_destination_tag_optional">Destination Tag (optional)</string>
     <string name="swap_destination_tag_hint">Nur wenn die Empfangsadresse einen braucht, wie bei den meisten Börsen. Ohne ihn kann die Börse deine Coins nicht gutschreiben.</string>
     <string name="swap_from_kusdt_lands">Tauschen von (kUSDT kommt hier an)</string>
-    <string name="swap_from_kas_lands">Tauschen von (KAS kommt hier an)</string>
     <string name="swap_change">Ändern</string>
     <string name="swap_powered_by_trestly">Bereitgestellt von Trestly</string>
     <string name="swap_powered_by_changenow">Bereitgestellt von ChangeNOW</string>
@@ -48,8 +46,6 @@
     <string name="swap_deposit_address">Einzahlungsadresse</string>
     <string name="swap_couldnt_reach_changenow">ChangeNOW nicht erreichbar – versuche es erneut</string>
     <string name="swap_details">Tauschdetails</string>
-    <string name="swap_used">Benutzt</string>
-    <string name="swap_unused">Unbenutzt</string>
     <string name="swap_search_coins">Coins suchen</string>
     <string name="swap_agreements_intro">Tauschen nutzt zwei Dienste, die K nicht betreibt. Lies beide und stimme ihnen zu, bevor du fortfährst.</string>
     <string name="swap_coins_on_other_networks">Coins in anderen Netzwerken</string>

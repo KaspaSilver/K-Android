@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">Keine App zum Teilen der CSV-Datei verfügbar</string>
+    <string name="rel5_saves_photo_to_gallery">Speichert das Foto in deiner Galerie.</string>
+    <string name="rel5_chess_time_control">Schach - %1$s</string>
+    <string name="rel5_backed_up_just_now">Gerade gesichert</string>
+    <string name="rel5_audio_file_empty">Audiodatei ist leer</string>
+    <string name="rel5_enter_valid_amount">Gib einen gültigen Betrag ein.</string>
+    <string name="rel5_server_error_code">Der Server hat einen Fehler gemeldet (%1$d). Versuch es gleich noch einmal.</string>
+    <string name="rel5_fb_could_not_load_folder">Dieser Ordner konnte nicht geladen werden.</string>
+    <string name="rel5_fb_failed_build_tx">Transaktion konnte nicht erstellt werden</string>
+    <string name="rel5_fb_edit_failed">Bearbeiten fehlgeschlagen</string>
+    <string name="rel5_fb_cant_read_signed_tx">Die signierte Transaktion konnte nicht gelesen werden</string>
+    <string name="rel5_fb_reaction_failed">Reaktion fehlgeschlagen</string>
+    <string name="rel5_fb_update_group_photo">Gruppenfoto konnte nicht aktualisiert werden</string>
+    <string name="rel5_fb_resend_invites">Einladungen konnten nicht erneut gesendet werden</string>
+    <string name="rel5_fb_resend_invite">Einladung konnte nicht erneut gesendet werden</string>
+    <string name="rel5_fb_rename_group">Gruppe konnte nicht umbenannt werden</string>
+    <string name="rel5_fb_create_group">Gruppe konnte nicht erstellt werden</string>
+    <string name="rel5_fb_schedule_post">Dieser Beitrag konnte nicht geplant werden</string>
+    <string name="rel5_fb_load_more">Mehr konnte nicht geladen werden</string>
+    <string name="rel5_fb_share_link">Freigabelink konnte nicht erstellt werden.</string>
+    <string name="rel5_fb_connect">Verbindung nicht möglich</string>
+    <string name="rel5_fb_broadcast_failed">Senden an das Netzwerk fehlgeschlagen</string>
+    <string name="rel5_fb_backup_failed">Sicherung fehlgeschlagen</string>
+    <string name="rel5_restored_messages">%1$d Nachrichten aus %2$d Chats wiederhergestellt.</string>
+    <string name="rel5_enter_group_name">Gib einen Gruppennamen ein.</string>
+    <string name="rel5_add_one_member">Füge mindestens ein Mitglied hinzu.</string>
+    <string name="rel5_invalid_address_format">Ungültiges Kaspa-Adressformat.</string>
+</resources>

@@ -127,4 +127,8 @@
     <string name="pr_card_view">보기</string>
     <string name="kaposts_scheduled_reminder_body">게시물을 보낼 준비가 되었습니다. K를 열어 보내세요.</string>
     <string name="kaposts_see_all_posts">모든 게시물 보기</string>
+    <string name="kaposts_couldnt_schedule_toast">예약할 수 없습니다: %1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">%1$s에 예약되었습니다 - 이 휴대폰에서 보냅니다</string>
+    <string name="kaposts_tip_didnt_send">팁을 보내지 못했습니다: %1$s</string>
+    <string name="pr_card_pay">결제</string>
 </resources>

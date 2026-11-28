@@ -2,7 +2,6 @@
 <!-- Swap (iPhone 5.4 518fdc8c: SwapView, SwapService, TrestlyTrade), from the iPhone's
      Localizable.strings for the same keys. -->
 <resources>
-    <string name="swap_title">Swap</string>
     <string name="swap_failed">Swap failed</string>
     <string name="swap_couldnt_read_amounts">Couldn\'t read this swap\'s amounts</string>
     <string name="swap_already_holds">Already holds this swap - adding it again double-counts it.</string>
@@ -14,7 +13,6 @@
     <string name="swap_destination_tag_optional">Destination tag (optional)</string>
     <string name="swap_destination_tag_hint">Only if the receiving address needs one, as most exchanges do. Without it, the exchange can\'t credit your coins.</string>
     <string name="swap_from_kusdt_lands">Swap From (kUSDT Lands Here)</string>
-    <string name="swap_from_kas_lands">Swap From (KAS Lands Here)</string>
     <string name="swap_change">Change</string>
     <string name="swap_powered_by_trestly">Powered by Trestly</string>
     <string name="swap_powered_by_changenow">Powered by ChangeNOW</string>
@@ -48,8 +46,6 @@
     <string name="swap_deposit_address">Deposit Address</string>
     <string name="swap_couldnt_reach_changenow">Couldn\'t reach ChangeNOW - try again</string>
     <string name="swap_details">Swap Details</string>
-    <string name="swap_used">Used</string>
-    <string name="swap_unused">Unused</string>
     <string name="swap_search_coins">Search coins</string>
     <string name="swap_agreements_intro">Swap uses two services K doesn\'t run. Read and agree to both before you continue.</string>
     <string name="swap_coins_on_other_networks">Coins on other networks</string>

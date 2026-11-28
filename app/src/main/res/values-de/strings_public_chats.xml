@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">Das Netzwerk bestätigt noch deine vorherige Sendung. Bitte versuche es in ein paar Sekunden erneut.</string>
     <string name="pc_l53_room_kept_for">Aufbewahrt für</string>
     <string name="pc_l53_room_on_this_device">Auf diesem Gerät</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">Ältere Nachrichten laden</string>
     <string name="pc_no_testnet_indexer_yet">Noch kein Testnet-Indexer</string>
     <string name="pc_room_no_spendable_funds_yet">Noch keine ausgabefähigen Mittel verfügbar. Bitte auf Bestätigungen warten und erneut versuchen.</string>
     <string name="pc_room_not_enough_kas">Nicht genug KAS auf deiner Chat-Adresse. Füge welche hinzu und versuche es erneut.</string>

@@ -134,6 +134,7 @@ fun TrestlyBrowserScreen(target: TrestlyTarget, onDone: () -> Unit) {
 
     var isLoading by remember { mutableStateOf(true) }
     var webView by remember { mutableStateOf<WebView?>(null) }
+    PauseTrestlyPageInBackground(webView)
     var unavailable by remember { mutableStateOf(false) }
     /** The header's refresh button (iOS 896e8194 `WebPageReloader`). */
     val reloader = remember { WebPageReloader() }
@@ -287,6 +288,28 @@ internal fun trestlyCameraOriginAllowed(scheme: String?, host: String?, port: In
 }
 
 private val STRIPE_CAMERA_DOMAINS = listOf("stripe.com", "stripe.network")
+
+/**
+ * A Trestly page stops drawing, animating and playing while K is in the background, and picks up
+ * again when K is back (release audit 2026-11-27 R4). JavaScript timers are the process's and stay
+ * with [com.kachat.app.services.InAppBrowserData].
+ */
+@androidx.compose.runtime.Composable
+internal fun PauseTrestlyPageInBackground(view: WebView?) {
+    val lifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current.lifecycle
+    androidx.compose.runtime.DisposableEffect(lifecycle, view) {
+        val page = view ?: return@DisposableEffect onDispose {}
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            when (event) {
+                androidx.lifecycle.Lifecycle.Event.ON_STOP -> runCatching { page.onPause() }
+                androidx.lifecycle.Lifecycle.Event.ON_START -> runCatching { page.onResume() }
+                else -> Unit
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
+}
 
 @SuppressLint("SetJavaScriptEnabled", "RequiresFeature")
 internal fun makeTrestlyWebView(

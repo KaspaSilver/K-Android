@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">אין אפליקציה זמינה לשיתוף קובץ ה-CSV</string>
+    <string name="rel5_saves_photo_to_gallery">שומר את התמונה בגלריה שלך.</string>
+    <string name="rel5_chess_time_control">שחמט - %1$s</string>
+    <string name="rel5_backed_up_just_now">גובה זה עתה</string>
+    <string name="rel5_audio_file_empty">קובץ השמע ריק</string>
+    <string name="rel5_enter_valid_amount">הזן סכום תקין.</string>
+    <string name="rel5_server_error_code">השרת החזיר שגיאה (%1$d). נסה שוב בעוד רגע.</string>
+    <string name="rel5_fb_could_not_load_folder">לא ניתן היה לטעון את התיקייה הזו.</string>
+    <string name="rel5_fb_failed_build_tx">לא ניתן היה לבנות את העסקה</string>
+    <string name="rel5_fb_edit_failed">העריכה נכשלה</string>
+    <string name="rel5_fb_cant_read_signed_tx">לא ניתן היה לקרוא את העסקה החתומה</string>
+    <string name="rel5_fb_reaction_failed">התגובה נכשלה</string>
+    <string name="rel5_fb_update_group_photo">לא ניתן היה לעדכן את תמונת הקבוצה</string>
+    <string name="rel5_fb_resend_invites">לא ניתן היה לשלוח שוב את ההזמנות</string>
+    <string name="rel5_fb_resend_invite">לא ניתן היה לשלוח שוב את ההזמנה</string>
+    <string name="rel5_fb_rename_group">לא ניתן היה לשנות את שם הקבוצה</string>
+    <string name="rel5_fb_create_group">לא ניתן היה ליצור את הקבוצה</string>
+    <string name="rel5_fb_schedule_post">לא ניתן היה לתזמן את הפוסט הזה</string>
+    <string name="rel5_fb_load_more">לא ניתן היה לטעון עוד</string>
+    <string name="rel5_fb_share_link">לא ניתן היה ליצור קישור שיתוף.</string>
+    <string name="rel5_fb_connect">לא ניתן היה להתחבר</string>
+    <string name="rel5_fb_broadcast_failed">השידור לרשת נכשל</string>
+    <string name="rel5_fb_backup_failed">הגיבוי נכשל</string>
+    <string name="rel5_restored_messages">שוחזרו %1$d הודעות מ-%2$d צ\'אטים.</string>
+    <string name="rel5_enter_group_name">הזן שם לקבוצה.</string>
+    <string name="rel5_add_one_member">הוסף לפחות חבר אחד.</string>
+    <string name="rel5_invalid_address_format">פורמט כתובת Kaspa לא תקין.</string>
+</resources>

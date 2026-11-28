@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">কোয়ার্টার ফাইনাল</string>
     <string name="kp_3ce0ac6e9413" formatted="false">ফলাফল পাঠানো হয়নি।</string>
     <string name="kaplay_leaderboard_all_time">সর্বকালের</string>
-    <string name="kaplay_leaderboard_counted_from">%1$s থেকে গণনা করা হচ্ছে।</string>
-    <string name="kaplay_leaderboard_period">লিডারবোর্ডের সময়কাল</string>
-    <string name="kaplay_leaderboard_resets_monthly">প্রতি মাসের ১ তারিখে রিসেট হয় (UTC)।</string>
     <string name="kaplay_leaderboard_this_month">এই মাস</string>
-    <string name="kaplay_no_finished_duels">এখনো কোনো 1v1 খেলা শেষ হয়নি।</string>
-    <string name="kaplay_no_finished_duels_this_month">এই মাসে এখনো কোনো 1v1 খেলা শেষ হয়নি।</string>
-    <string name="kaplay_no_finished_tournaments">এখনো কোনো টুর্নামেন্ট শেষ হয়নি।</string>
-    <string name="kaplay_no_finished_tournaments_this_month">এই মাসে এখনো কোনো টুর্নামেন্ট শেষ হয়নি।</string>
     <string name="kaplay_tab_leaderboard">লিডারবোর্ড</string>
     <string name="kp_640de0cb0b2c" formatted="false">আপনার রেকর্ড: %s জয়, %s হার</string>
     <string name="kp_5d12bd53552c" formatted="false">খেলুন</string>

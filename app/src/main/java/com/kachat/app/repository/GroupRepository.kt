@@ -788,7 +788,7 @@ class GroupRepository @Inject constructor(
 
     /** Send the current group photo to every member (admin). Best-effort per member. */
     private suspend fun distributeGroupPhoto(entity: GroupEntity, roster: List<GroupMember>, photoHex: String, adminPrivateKey: ByteArray) {
-        val walletAddress = walletManager.getAddress()
+        val walletAddress = entity.walletAddress
         val payload = GroupCipher.buildSignedPhotoPayload(
             entity.groupId.hexToByteArray(), photoHex, entity.adminXOnlyPubKeyHex.hexToByteArray(), adminPrivateKey
         )
@@ -796,11 +796,13 @@ class GroupRepository @Inject constructor(
         for (member in roster) {
             if (member.address == walletAddress) continue
             val recipientXOnlyPub = xOnlyPubKeyOrNull(member.address) ?: continue
-            try { sendControlPayload(json, recipientXOnlyPub, adminPrivateKey) } catch (e: Exception) {}
+            try { sendControlPayload(json, recipientXOnlyPub, adminPrivateKey, walletAddress) } catch (e: Exception) {
+                if (e is GroupSendAccountChangedException) return
+            }
         }
         // Also send a self-addressed copy so the SAME account's OTHER devices sync the photo change.
         xOnlyPubKeyOrNull(walletAddress)?.let { selfPub ->
-            try { sendControlPayload(json, selfPub, adminPrivateKey) } catch (e: Exception) {}
+            try { sendControlPayload(json, selfPub, adminPrivateKey, walletAddress) } catch (e: Exception) {}
         }
     }
 
@@ -823,6 +825,9 @@ class GroupRepository @Inject constructor(
         mutateRoster: (MutableList<GroupMember>) -> Unit,
     ) {
         val walletAddress = walletManager.getAddress()
+        // The key with the address, before the sync below: read after it, a switch during that
+        // paged read signed and paid the group's new keys with the other account (audit 2026-11-27 D2).
+        val privateKey = keyOf(walletAddress)
         // Catch up on our OWN control stream before reading the roster.
         //
         // The same account can be admin on two devices. Each holds its own copy of the roster,
@@ -837,12 +842,13 @@ class GroupRepository @Inject constructor(
         runCatching {
             networkService.indexerApi.value?.let { syncGroupControlByRecipient(it, walletAddress) }
         }
+        // Nothing rotated, saved or sent once another account is signed in.
+        refuseIfAccountChanged(walletAddress)
         val entity = database.groupDao().getGroup(groupId, walletAddress) ?: throw IllegalStateException("Unknown group.")
         if (!entity.isAdmin) throw IllegalStateException("Only the group admin can change membership.")
         val bag = groupSecretStore.loadBag(walletAddress, groupId) ?: throw IllegalStateException("Missing admin group secrets.")
         val groupSeed = bag.groupSeed?.hexToByteArray() ?: throw IllegalStateException("Missing admin group secrets.")
         val groupIdBytes = groupId.hexToByteArray()
-        val privateKey = walletManager.getPrivateKeyBytes()
 
         val previousRoster = membersOf(entity)
         val roster = previousRoster.toMutableList()
@@ -882,14 +888,16 @@ class GroupRepository @Inject constructor(
             if (member.address == walletAddress) continue
             report?.invoke(member.address, com.kachat.app.models.GroupActionPhase.Started)
             try {
-                sendEpochControlMessage(groupIdBytes, newEpoch, reason, member.address, privateKey)
+                sendEpochControlMessage(groupIdBytes, newEpoch, reason, member.address, privateKey, walletAddress)
                 sendRootControlMessage(updatedEntity, roster, newBag, member.address, privateKey)
                 report?.invoke(member.address, com.kachat.app.models.GroupActionPhase.Finished)
             } catch (e: Exception) {
                 // Best effort, same as createGroup - one member's failed delivery doesn't block the rest.
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                sendFailures++
                 report?.invoke(member.address, com.kachat.app.models.GroupActionPhase.Failed(e))
+                // Another account is signed in now: nothing more goes out for this one (D2).
+                if (e is GroupSendAccountChangedException) throw e
+                sendFailures++
             }
         }
         // A newly-added member should also receive the current group photo (root doesn't carry it).
@@ -943,12 +951,12 @@ class GroupRepository @Inject constructor(
     /** Self-addressed, self-signed delete marker — only our key can produce one, only our key
      *  can read it (see the signing_pub == self + verify check in handleIncomingControlMessage). */
     private suspend fun publishGroupTombstone(walletAddress: String, groupId: String, adminSigningPub: String?) {
-        val privateKey = walletManager.getPrivateKeyBytes()
+        val privateKey = keyOf(walletAddress)
         val signingPub = Schnorr.publicKeyXOnly(privateKey)
         val selfXOnlyPub = xOnlyPubKeyOrNull(walletAddress) ?: return
         val payload = GroupCipher.buildSignedTombstonePayload(groupId.hexToByteArray(), adminSigningPub?.hexToByteArray(), signingPub, privateKey)
         val json = GroupCipher.tombstonePayloadToJson(payload)
-        sendControlPayload(json, selfXOnlyPub, privateKey)
+        sendControlPayload(json, selfXOnlyPub, privateKey, walletAddress)
         groupSecretStore.markTombstonePublished(walletAddress, adminSigningPub?.let { PendingGroupInvite.key(groupId, it) } ?: groupId)
     }
 
@@ -1369,6 +1377,22 @@ class GroupRepository @Inject constructor(
         if (runCatching { walletManager.getAddress() }.getOrNull() != owner) throw accountChanged()
     }
 
+    /** [owner] is still the account signed in: no Log Out, switch or Delete Account since. */
+    private fun signedInAs(owner: String): Boolean =
+        groupWorkStillFor(owner, walletManager.isLoggedOut, runCatching { walletManager.getAddress() }.getOrNull())
+
+    /**
+     * [owner]'s identity key, read between two checks that [owner] is still the one signed in, so
+     * it can never be the key of the account switched to (audit 2026-11-27 D1/D2). Throws
+     * [GroupSendAccountChangedException] otherwise.
+     */
+    private fun keyOf(owner: String): ByteArray {
+        if (!signedInAs(owner)) throw accountChanged()
+        val key = walletManager.getPrivateKeyBytes()
+        if (!signedInAs(owner)) throw accountChanged()
+        return key
+    }
+
     private fun accountChanged(): GroupSendAccountChangedException {
         Log.i("GroupRepository", "Refused a queued group send: the account changed")
         return GroupSendAccountChangedException(context.getString(com.kachat.app.R.string.not_sent_you_switched_accounts))
@@ -1388,7 +1412,7 @@ class GroupRepository @Inject constructor(
             rosterVersion = nextRosterVersion(entity.walletAddress, entity.groupId), adminPrivateKey = adminPrivateKey
         )
         val json = GroupCipher.rootPayloadToJson(rootPayload)
-        sendControlPayload(json, recipientXOnlyPub, adminPrivateKey)
+        sendControlPayload(json, recipientXOnlyPub, adminPrivateKey, owner = entity.walletAddress)
     }
 
     /**
@@ -1413,7 +1437,9 @@ class GroupRepository @Inject constructor(
      *  never see it). A seedless re-import rediscovers the group via the by-recipient scan and
      *  rebuilds it as admin. Marks selfInviteEpoch on the bag. */
     private suspend fun sendSelfRootControlMessage(entity: GroupEntity, roster: List<GroupMember>, bag: GroupBag, adminPrivateKey: ByteArray) {
-        val walletAddress = walletManager.getAddress()
+        // The group's own account, not whoever is signed in by now: re-read, the self root went to
+        // the other account's key carrying this group's seed (audit 2026-11-27 D2).
+        val walletAddress = entity.walletAddress
         val seedHex = bag.groupSeed ?: return
         val selfXOnlyPub = xOnlyPubKeyOrNull(walletAddress) ?: return
         val rosterVersion = nextRosterVersion(walletAddress, entity.groupId)
@@ -1424,7 +1450,7 @@ class GroupRepository @Inject constructor(
             adminPrivateKey = adminPrivateKey, groupSeed = seedHex.hexToByteArray()
         )
         val json = GroupCipher.rootPayloadToJson(rootPayload)
-        sendControlPayload(json, selfXOnlyPub, adminPrivateKey)
+        sendControlPayload(json, selfXOnlyPub, adminPrivateKey, owner = walletAddress)
         // Onto the bag as stored now, not [bag]: the send above suspended, and a message sent
         // meanwhile has moved the counter on (or a rotation the epoch).
         groupSecretStore.updateBag(walletAddress, entity.groupId) { current ->
@@ -1437,11 +1463,11 @@ class GroupRepository @Inject constructor(
         }
     }
 
-    private suspend fun sendEpochControlMessage(groupIdBytes: ByteArray, epoch: Long, reason: String, recipientAddress: String, adminPrivateKey: ByteArray) {
+    private suspend fun sendEpochControlMessage(groupIdBytes: ByteArray, epoch: Long, reason: String, recipientAddress: String, adminPrivateKey: ByteArray, owner: String) {
         val recipientXOnlyPub = xOnlyPubKeyOrNull(recipientAddress) ?: throw IllegalArgumentException("Invalid address")
         val epochPayload = GroupCipher.buildSignedEpochPayload(groupIdBytes, epoch, reason, adminPrivateKey)
         val json = GroupCipher.epochPayloadToJson(epochPayload)
-        sendControlPayload(json, recipientXOnlyPub, adminPrivateKey)
+        sendControlPayload(json, recipientXOnlyPub, adminPrivateKey, owner)
     }
 
     /**
@@ -1451,11 +1477,13 @@ class GroupRepository @Inject constructor(
      * the admin's address at all, and lets push route it to their device even with zero
      * locally-known groups (no more indexer-side fan-out-to-everyone fallback).
      */
-    private suspend fun sendControlPayload(json: String, recipientXOnlyPub: ByteArray, privateKey: ByteArray) {
-        val walletAddress = walletManager.getAddress()
+    private suspend fun sendControlPayload(json: String, recipientXOnlyPub: ByteArray, privateKey: ByteArray, owner: String) {
+        val walletAddress = owner
         // Signed with the key of the account this began in: never sent once another is signed in
-        // (iOS 83806b3d), nor between retries below (sendSelfStash).
-        if (!walletManager.getPrivateKeyBytes().contentEquals(privateKey)) throw accountChanged()
+        // (iOS 83806b3d), nor between retries below (sendSelfStash). Checked against [owner]'s
+        // own key, not just whichever is signed in now: a key read after a switch matched itself
+        // and went out from the other account (audit 2026-11-27 D2).
+        if (!keyOf(walletAddress).contentEquals(privateKey)) throw accountChanged()
         val encrypted = KasiaCipher.encrypt(json, recipientXOnlyPub)
         val payloadString = "kchat:1:gctl:" + recipientXOnlyPub.toHexString() + ":" + encrypted.toBytes().toHexString()
         // Retry to ride out UTXO contention: each member's invite is its own tx, and a
@@ -1467,9 +1495,11 @@ class GroupRepository @Inject constructor(
             try {
                 sendSelfStash(walletAddress, payloadString)
                 return
-            } catch (e: GroupSendAccountChangedException) {
-                throw e
             } catch (e: Exception) {
+                // An account change, a cancel, or an outcome not known: it may have gone, and
+                // another copy is another fee (a photo control is large). Every other send path
+                // stops there too (audit 2026-11-27 D5).
+                if (!controlSendMayRetry(e)) throw e
                 lastError = e
                 if (i < attempts - 1) kotlinx.coroutines.delay(1800)
             }
@@ -1481,8 +1511,12 @@ class GroupRepository @Inject constructor(
     // Incoming payload handlers - called from GroupScanningService
     // -------------------------------------------------------------------------
 
-    suspend fun handleIncomingGroupMessage(parsed: GroupCipher.ParsedGroupMessage, txId: String, blockTimestamp: Long) {
-        val walletAddress = walletManager.getAddress()
+    /** [owner]: the account a catch-up began for. Handled as that account, and refused once
+     *  another is signed in, so a row is never filed under the account switched to (audit
+     *  2026-11-27 D1). Null: the account signed in now (the live block scan). */
+    suspend fun handleIncomingGroupMessage(parsed: GroupCipher.ParsedGroupMessage, txId: String, blockTimestamp: Long, owner: String? = null) {
+        val walletAddress = owner ?: walletManager.getAddress()
+        if (owner != null && !signedInAs(owner)) throw accountChanged()
         if ("$walletAddress|$txId" in completedGroupTxIds) return
         val hrp = walletAddress.substringBefore(":")
         val groups = database.groupDao().getGroupsOnce(walletAddress)
@@ -1607,7 +1641,8 @@ class GroupRepository @Inject constructor(
                     // this one with readGroupMessagePush. Only a device with no push banners here.
                     // NotificationHelper's txId dedupe additionally collapses a racing FCM push
                     // for the same reaction.
-                    if (!alreadyApplied && senderAddress != walletAddress && !isBackfill(blockTimestamp, walletAddress) && !pushState.isActive) {
+                    if (!alreadyApplied && senderAddress != walletAddress && !isBackfill(blockTimestamp, walletAddress) && !pushState.isActive &&
+                        signedInAs(walletAddress)) {
                         val bannerText = groupReactionBannerText(group, reaction, senderAddress, walletAddress)
                         if (bannerText != null) {
                             notificationHelper.showGroup(
@@ -1687,6 +1722,8 @@ class GroupRepository @Inject constructor(
                 // A message that @'s you: a row in Profile's bell, whatever the group's
                 // notification setting (iOS d089011f `recordMentionIfAny`).
                 recordMentionIfAny(group, senderAddress, walletAddress, plaintext, txId, blockTimestamp)
+                // Stored for its own account; no banner once another is signed in.
+                if (!signedInAs(walletAddress)) return
                 if (notificationHelper.isViewingGroup(group.groupId)) {
                     // Already looking at this group's thread right now - keep it marked read
                     // instead of letting the badge tick up for a message arriving live.
@@ -1950,13 +1987,18 @@ class GroupRepository @Inject constructor(
     }
 
     /** [fromBlockScan]: [senderAddress] is only what the transaction's first output claims. */
-    suspend fun handleIncomingControlMessage(payloadString: String, senderAddress: String, blockTime: Long? = null, txId: String? = null, fromBlockScan: Boolean = false) {
-        val walletAddress = walletManager.getAddress()
+    /** [owner]: as [handleIncomingGroupMessage]'s. Its key decrypts, never the key of the account
+     *  signed in by now (audit 2026-11-27 D1). */
+    suspend fun handleIncomingControlMessage(
+        payloadString: String, senderAddress: String, blockTime: Long? = null, txId: String? = null,
+        fromBlockScan: Boolean = false, owner: String? = null,
+    ) {
+        val walletAddress = owner ?: walletManager.getAddress()
         // Normally ignore our own echoed controls — EXCEPT the self-addressed recovery root
         // (sender == us, carries group_seed), which is how a seedless import rebuilds an admin
         // group. A non-recovery self-echo is dropped in completeJoin below.
         val isSelfSent = senderAddress == walletAddress
-        val privateKey = walletManager.getPrivateKeyBytes()
+        val privateKey = keyOf(walletAddress)
         // Dual-read: strip whichever gctl root the payload carries (new kchat: or legacy).
         val prefix = when {
             payloadString.startsWith("kchat:1:gctl:") -> "kchat:1:gctl:"
@@ -2055,8 +2097,8 @@ class GroupRepository @Inject constructor(
                 if (fromBlockScan && !isSelfSent && txId != null) {
                     senderProofScope.launch {
                         if (networkService.chainHistory.provenSender(txId, senderAddress, walletAddress) != SenderProof.PROVEN) return@launch
-                        if (walletManager.getActiveAccount()?.address != walletAddress) return@launch
-                        ingestRow("gctl", txId) { handleIncomingControlMessage(payloadString, senderAddress, blockTime, txId) }
+                        if (!signedInAs(walletAddress)) return@launch
+                        ingestRow("gctl", txId) { handleIncomingControlMessage(payloadString, senderAddress, blockTime, txId, owner = walletAddress) }
                     }
                     return
                 }
@@ -2071,10 +2113,10 @@ class GroupRepository @Inject constructor(
             if (isNewGroup && rootPayload.adminSigningPub != myPub &&
                 inviteKey !in groupSecretStore.loadInviteAnswers(walletAddress).accepted
             ) {
-                holdGroupInvite(rootPayload, blockTime, txId)
+                holdGroupInvite(walletAddress, rootPayload, blockTime, txId)
                 return
             }
-            completeJoin(rootPayload, blockTime)
+            completeJoin(walletAddress, rootPayload, blockTime)
         }
         // gctl_epoch is an advance-notice heads-up only (state updates on gctl_root arrival,
         // not on gctl_epoch) - no local state change needed here in the data layer.
@@ -2126,8 +2168,7 @@ class GroupRepository @Inject constructor(
         }
     }
 
-    private suspend fun holdGroupInvite(payload: GroupCipher.GroupRootPayload, blockTime: Long?, txId: String?) {
-        val walletAddress = walletManager.getAddress()
+    private suspend fun holdGroupInvite(walletAddress: String, payload: GroupCipher.GroupRootPayload, blockTime: Long?, txId: String?) {
         if (groupSecretStore.isTombstoned(walletAddress, payload.groupId, payload.adminSigningPub)) return
         val me = walletAddress.lowercase()
         val includesMe = payload.members.any { it.lowercase() == me }
@@ -2218,7 +2259,7 @@ class GroupRepository @Inject constructor(
      *  say you declined. */
     private suspend fun joinGroupInvite(walletAddress: String, invite: PendingGroupInvite) {
         for (root in invite.roots.sortedByDescending { it.epoch }) {
-            completeJoin(root, invite.invitedAt)
+            completeJoin(walletAddress, root, invite.invitedAt)
         }
         groupSecretStore.updateInvites(walletAddress) { invites ->
             invites.filterNot { it.groupId == invite.groupId && (it.rejected != true || it.id == invite.id) }
@@ -2251,7 +2292,7 @@ class GroupRepository @Inject constructor(
         if (!groupAnswersMutex.tryLock()) return
         try {
             val walletAddress = walletManager.getActiveAccount()?.address ?: return
-            val privateKey = try { walletManager.getPrivateKeyBytes() } catch (e: Exception) { return }
+            val privateKey = try { keyOf(walletAddress) } catch (e: Exception) { return }
             val selfXOnlyPub = xOnlyPubKeyOrNull(walletAddress) ?: return
             val signingPub = Schnorr.publicKeyXOnly(privateKey)
 
@@ -2262,9 +2303,11 @@ class GroupRepository @Inject constructor(
                 if (parts.size != 2) continue
                 try {
                     val payload = GroupCipher.buildSignedInviteAcceptPayload(parts[0].hexToByteArray(), parts[1].hexToByteArray(), signingPub, privateKey)
-                    sendControlPayload(GroupCipher.inviteAcceptPayloadToJson(payload), selfXOnlyPub, privateKey)
+                    sendControlPayload(GroupCipher.inviteAcceptPayloadToJson(payload), selfXOnlyPub, privateKey, walletAddress)
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
+                    // Signed out or switched: the rest stay owed to this account.
+                    if (e is GroupSendAccountChangedException) return
                     Log.w("GroupRepository", "Group invite accept failed for ${key.take(12)}", e)
                     continue
                 }
@@ -2278,11 +2321,14 @@ class GroupRepository @Inject constructor(
                     val (bag, counter) = reserved
                     try {
                         sendMemberStatus(
+                            walletAddress, privateKey,
                             GroupMemberStatus.JOINED, groupId, bag.groupRootEpoch, bag.blindingKey, bag.currentEpoch,
                             GroupCipher.buildMsgId(bag.deviceId.hexToByteArray(), counter),
                         )
                     } catch (e: Exception) {
                         if (e is kotlinx.coroutines.CancellationException) throw e
+                    // Signed out or switched: the rest stay owed to this account.
+                    if (e is GroupSendAccountChangedException) return
                         Log.w("GroupRepository", "Group joined status failed for ${groupId.take(12)}", e)
                         continue
                     }
@@ -2295,11 +2341,14 @@ class GroupRepository @Inject constructor(
                 val root = invite.latest
                 try {
                     sendMemberStatus(
+                        walletAddress, privateKey,
                         GroupMemberStatus.DECLINED, invite.groupId, root.groupRootEpoch, root.blindingKey, root.epoch,
                         GroupCipher.buildMsgId(GroupCipher.generateDeviceId(), 1),
                     )
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
+                    // Signed out or switched: the rest stay owed to this account.
+                    if (e is GroupSendAccountChangedException) return
                     Log.w("GroupRepository", "Group declined status failed for ${invite.groupId.take(12)}", e)
                     continue
                 }
@@ -2313,13 +2362,16 @@ class GroupRepository @Inject constructor(
 
     /** One group message saying you joined or declined. Encrypted to the group like any message,
      *  and signed by you, so only members can read it and nobody can say it for you. The same
-     *  sealing as [sendGroupMessage], with the keys passed in: a declined invite has no bag. */
+     *  sealing as [sendGroupMessage], with the keys passed in: a declined invite has no bag.
+     *  [walletAddress] and [privateKey] are the ones [publishGroupAnswers] began with: read here,
+     *  a switch mid-loop sealed this group's answer as the other account and sent it from there
+     *  (audit 2026-11-27 D3). */
     private suspend fun sendMemberStatus(
+        walletAddress: String, privateKey: ByteArray,
         status: String, groupId: String, rootHex: String, blindingKeyHex: String, epoch: Long, msgId: ByteArray,
     ) {
-        val walletAddress = walletManager.getAddress()
+        if (!keyOf(walletAddress).contentEquals(privateKey)) throw accountChanged()
         val groupIdBytes = groupId.hexToByteArray()
-        val privateKey = walletManager.getPrivateKeyBytes()
         val senderXOnlyPub = Schnorr.publicKeyXOnly(privateKey)
         val senderId = GroupCipher.deriveSenderId(walletAddress)
         val ciphertext = GroupCipher.encryptMessage(GroupMemberStatus.encode(status), rootHex.hexToByteArray(), groupIdBytes, epoch, senderId, msgId)
@@ -2359,8 +2411,7 @@ class GroupRepository @Inject constructor(
     }
 
     /** Applies a verified gctl_root payload: creates or updates the local group secrets + roster. Refuses to downgrade to an older epoch than what's already stored (replay protection). */
-    private suspend fun completeJoin(payload: GroupCipher.GroupRootPayload, blockTime: Long? = null) {
-        val walletAddress = walletManager.getAddress()
+    private suspend fun completeJoin(walletAddress: String, payload: GroupCipher.GroupRootPayload, blockTime: Long? = null) {
         // A tombstoned group must never be re-added — this makes a delete survive a seedless
         // re-import against the recovery invite.
         if (groupSecretStore.isTombstoned(walletAddress, payload.groupId, payload.adminSigningPub)) return
@@ -2405,24 +2456,27 @@ class GroupRepository @Inject constructor(
                 return
             }
             applyRootPayload(
+                walletAddress,
                 payload.copy(members = membersOf(held).map { it.address }, name = held.name, rosterVersion = null, rosterSig = null),
                 blockTime,
             )
             return
         }
-        applyRootPayload(payload, blockTime)
+        applyRootPayload(walletAddress, payload, blockTime)
     }
 
     /** Stores a root [completeJoin] has let through: the group's secrets, roster and name. */
-    private suspend fun applyRootPayload(payload: GroupCipher.GroupRootPayload, blockTime: Long?) {
-        val walletAddress = walletManager.getAddress()
+    private suspend fun applyRootPayload(walletAddress: String, payload: GroupCipher.GroupRootPayload, blockTime: Long?) {
+        // The account this root is filed under, still signed in: a switch between the decrypt and
+        // here filed one account's group under the other (audit 2026-11-27 D1).
+        val myKey = keyOf(walletAddress)
 
         // Admin self-recovery: a self-addressed root carries the group seed. Trust it ONLY if it
         // re-derives the SIGNED group_id + blinding_key (that binding authenticates the otherwise
         // unsigned seed). When valid, this is our own group and we hold admin secrets again.
         var recoveredSeedHex: String? = null
         val seedHex = payload.groupSeed
-        val myXOnlyPubHex = try { Schnorr.publicKeyXOnly(walletManager.getPrivateKeyBytes()).toHexString() } catch (e: Exception) { null }
+        val myXOnlyPubHex = try { Schnorr.publicKeyXOnly(myKey).toHexString() } catch (e: Exception) { null }
         if (seedHex != null && myXOnlyPubHex != null && payload.adminSigningPub == myXOnlyPubHex) {
             try {
                 val seed = seedHex.hexToByteArray()
@@ -2678,7 +2732,7 @@ class GroupRepository @Inject constructor(
                     for (msg in rows) {
                         val payloadString = reconstructPayloadString("kchat:1:gcomm:", msg.messagePayload) ?: continue
                         val parsed = GroupCipher.parseGroupMessagePayload(payloadString) ?: continue
-                        ingestRow("gcomm", msg.txId) { handleIncomingGroupMessage(parsed, msg.txId, msg.blockTime) }
+                        ingestRow("gcomm", msg.txId) { handleIncomingGroupMessage(parsed, msg.txId, msg.blockTime, owner = walletAddress) }
                         chunkNewest = maxOf(chunkNewest, msg.blockTime)
                     }
                     val latest = response.latestBlockTime ?: rows.maxOfOrNull { it.blockTime } ?: page
@@ -2697,9 +2751,11 @@ class GroupRepository @Inject constructor(
                 )
                 for (msg in response.controls.orEmpty()) {
                     val payloadString = reconstructPayloadString("kchat:1:gctl:", msg.messagePayload) ?: continue
-                    ingestRow("gctl", msg.txId) { handleIncomingControlMessage(payloadString, msg.sender, msg.blockTime, msg.txId) }
+                    ingestRow("gctl", msg.txId) { handleIncomingControlMessage(payloadString, msg.sender, msg.blockTime, msg.txId, owner = walletAddress) }
                 }
             }
+            // Read across a switch: its rows weren't applied, so the cursor stays (D1).
+            if (!signedInAs(walletAddress)) return LiveGroupPoll.Failed
             val newest = liveCursorAfterChunks(cursor, chunkReached)
             if (onlyGroupId == null) allGroupsCursors[walletAddress] = newest
             LiveGroupPoll.Answered(newest)
@@ -2729,9 +2785,10 @@ class GroupRepository @Inject constructor(
         // Backfill recovery invites for any admin group lacking one for its current epoch — i.e.
         // every group created before this feature existed. One-time per group per epoch; once on
         // chain, a seedless import of this wallet rediscovers the group with no cloud backup.
-        val privateKeyForBackfill = try { walletManager.getPrivateKeyBytes() } catch (e: Exception) { null }
+        val privateKeyForBackfill = try { keyOf(walletAddress) } catch (e: Exception) { null }
         if (privateKeyForBackfill != null) {
             for (group in database.groupDao().getGroupsOnce(walletAddress)) {
+                if (!signedInAs(walletAddress)) return null
                 if (!group.isAdmin) continue
                 val bag = groupSecretStore.loadBag(walletAddress, group.groupId) ?: continue
                 if (bag.groupSeed == null || bag.selfInviteEpoch == bag.currentEpoch) continue
@@ -2752,6 +2809,9 @@ class GroupRepository @Inject constructor(
         // Invite answers that couldn't go when they were given.
         publishGroupAnswers()
 
+        // Every step from here reads or writes this account's streams: none of it once another
+        // account is signed in, or none (audit 2026-11-27 D1).
+        if (!signedInAs(walletAddress)) return null
         applyGroupRetentionOnce(walletAddress)
 
         // Not while the indexer is down: what's missed is read from the chain instead (iOS 4f8e14bb).
@@ -2773,6 +2833,7 @@ class GroupRepository @Inject constructor(
 
         val groups = database.groupDao().getGroupsOnce(walletAddress)
         for (group in groups) {
+            if (!signedInAs(walletAddress)) return null
             val bag = groupSecretStore.loadBag(walletAddress, group.groupId) ?: continue
             val blindingKey = try { bag.blindingKey.hexToByteArray() } catch (e: Exception) { continue }
 
@@ -2793,6 +2854,7 @@ class GroupRepository @Inject constructor(
             return walletAddress
         }
 
+        if (!signedInAs(walletAddress)) return null
         settlePendingSendsFromBeforeThisRun(walletAddress)
 
         // A restored group went off the push watch list while its keys were missing.
@@ -2863,19 +2925,20 @@ class GroupRepository @Inject constructor(
                             if (proof == SenderProof.UNKNOWN) break
                             if (proof == SenderProof.PROVEN) {
                                 ingestRow("gctl", tx.txId) {
-                                    handleIncomingControlMessage(GroupCipher.normalizeControlPayload(payload), address, tx.blockTime, tx.txId)
+                                    handleIncomingControlMessage(GroupCipher.normalizeControlPayload(payload), address, tx.blockTime, tx.txId, owner = walletAddress)
                                 }
                             }
                         } else if (payload != null) {
                             val parsed = GroupCipher.parseGroupMessagePayload(payload)
                             if (parsed != null) {
-                                ingestRow("gcomm", tx.txId) { handleIncomingGroupMessage(parsed, tx.txId, tx.blockTime) }
+                                ingestRow("gcomm", tx.txId) { handleIncomingGroupMessage(parsed, tx.txId, tx.blockTime, owner = walletAddress) }
                             }
                         }
                     }
                     // Capped at now: one row claiming a far-future time would freeze the cursor.
                     newestSeen = maxOf(newestSeen, minOf(tx.blockTime, nowMs))
                 }
+                if (!signedInAs(walletAddress)) return
                 chainCatchUpCursors[cursorKey] = newestSeen
             }
         } finally {
@@ -3023,7 +3086,7 @@ class GroupRepository @Inject constructor(
     private suspend fun resendSignedRootsToLegacyGroups(walletAddress: String) {
         if (!isResendingSignedRoots.compareAndSet(false, true)) return
         try {
-            val privateKey = try { walletManager.getPrivateKeyBytes() } catch (e: Exception) { return }
+            val privateKey = try { keyOf(walletAddress) } catch (e: Exception) { return }
             val groups = database.groupDao().getGroupsOnce(walletAddress)
             for (group in groups) {
                 if (!group.isAdmin) continue
@@ -3080,8 +3143,11 @@ class GroupRepository @Inject constructor(
     /**
      * A send still pending from before this run started stays on Sending for good, with nothing left
      * working on it. Once per account, after its first catch-up has brought in any copy that did get
-     * delivered: that copy replaces it, and anything else is marked failed so Retry appears (iOS
-     * `settlePendingSendsFromBeforeThisRun`).
+     * delivered: that copy replaces it, and anything else is marked Not confirmed ("warning"),
+     * with no Retry: the last run may have been killed after the broadcast, with the copy not in
+     * the indexer yet, and a Retry re-seals it under a new id, so the group gets it twice and the
+     * fee is paid twice (audit 2026-11-27 D6). Rooms and 1:1 settle it the same way; the copy
+     * still replaces it when it comes in ([GroupDao.deletePlaceholders]).
      */
     private suspend fun settlePendingSendsFromBeforeThisRun(walletAddress: String) {
         if (!pendingSendsSettled.add(walletAddress)) return
@@ -3091,8 +3157,8 @@ class GroupRepository @Inject constructor(
             if (database.groupDao().hasDeliveredCopy(walletAddress, row.groupId, row.msgIdHex)) {
                 database.groupDao().deleteMessage(row.txId, walletAddress)
             } else {
-                database.groupDao().updateMessageStatus(row.txId, walletAddress, "failed")
-                Log.i("GroupRepository", "Marked ${row.txId.take(24)} failed: the last run ended before it was sent")
+                database.groupDao().updateMessageStatus(row.txId, walletAddress, settledLeftoverGroupSendStatus())
+                Log.i("GroupRepository", "Marked ${row.txId.take(24)} not confirmed: the last run ended while it was sending")
             }
         }
     }
@@ -3252,6 +3318,8 @@ class GroupRepository @Inject constructor(
         var pagesLeft = 40
         while (pagesLeft > 0) {
             pagesLeft -= 1
+            // Log Out, a switch or Delete Account since this began: stop, and move nothing (D1).
+            if (!signedInAs(walletAddress)) return
             val messages: List<GroupMessageIndexerResponse> = try {
                 api.getGroupMessagesByBlindedGroupId(blindedGroupIdHex, cursor = cursor)
             } catch (e: Exception) {
@@ -3259,24 +3327,25 @@ class GroupRepository @Inject constructor(
                 return
             }
             if (messages.isEmpty()) {
-                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
+                markDeepBackfilled(walletAddress, syncKey)
                 return
             }
             cursor = messages.lastOrNull()?.cursor
             for (msg in messages) {
+                if (!signedInAs(walletAddress)) return
                 val payloadString = reconstructPayloadString("kchat:1:gcomm:", msg.messagePayload) ?: continue
                 val parsed = GroupCipher.parseGroupMessagePayload(payloadString) ?: continue
-                ingestRow("gcomm", msg.txId) { handleIncomingGroupMessage(parsed, msg.txId, msg.blockTime) }
+                ingestRow("gcomm", msg.txId) { handleIncomingGroupMessage(parsed, msg.txId, msg.blockTime, owner = walletAddress) }
             }
             // Cursor AFTER the page is ingested, never before. Written first, an interruption
             // between the write and the ingest left the cursor sitting past messages that were
             // never stored, and ordinary sync only ever walks forward, so that page was gone for
             // good.
-            advanceGroupSyncCursor(syncKey, walletAddress, cursor)
+            if (!advanceGroupSyncCursor(syncKey, walletAddress, cursor)) return
             // A short page is the last page. A FAILED fetch returns without marking, so a run
             // the indexer cut short retries from the beginning rather than leaving a hole behind.
             if (messages.size < 50) {
-                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
+                markDeepBackfilled(walletAddress, syncKey)
                 return
             }
         }
@@ -3284,7 +3353,7 @@ class GroupRepository @Inject constructor(
         // so resuming from it next run loses nothing - and marking the key is the only thing that
         // makes that resume happen. Without this, a stream longer than 2000 items restarted from
         // nothing every run and could never reach its own newest end.
-        deepBackfilledGroupKeys.mark(walletAddress, syncKey)
+        markDeepBackfilled(walletAddress, syncKey)
     }
 
     /**
@@ -3302,6 +3371,8 @@ class GroupRepository @Inject constructor(
         var pagesLeft = 40
         while (pagesLeft > 0) {
             pagesLeft -= 1
+            // Log Out, a switch or Delete Account since this began: stop, and move nothing (D1).
+            if (!signedInAs(walletAddress)) return
             val messages: List<GroupControlIndexerResponse> = try {
                 api.getGroupControlBySender(adminAddress, cursor = cursor)
             } catch (e: Exception) {
@@ -3309,21 +3380,22 @@ class GroupRepository @Inject constructor(
                 return
             }
             if (messages.isEmpty()) {
-                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
+                markDeepBackfilled(walletAddress, syncKey)
                 return
             }
             cursor = messages.lastOrNull()?.cursor
             for (msg in messages) {
+                if (!signedInAs(walletAddress)) return
                 val payloadString = reconstructPayloadString("kchat:1:gctl:", msg.messagePayload) ?: continue
-                ingestRow("gctl", msg.txId) { handleIncomingControlMessage(payloadString, msg.sender, msg.blockTime, msg.txId) }
+                ingestRow("gctl", msg.txId) { handleIncomingControlMessage(payloadString, msg.sender, msg.blockTime, msg.txId, owner = walletAddress) }
             }
             // Cursor AFTER the page is ingested, never before. Written first, an interruption
             // between the write and the ingest left the cursor sitting past messages that were
             // never stored, and ordinary sync only ever walks forward, so that page was gone for
             // good.
-            advanceGroupSyncCursor(syncKey, walletAddress, cursor)
+            if (!advanceGroupSyncCursor(syncKey, walletAddress, cursor)) return
             if (messages.size < 50) {
-                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
+                markDeepBackfilled(walletAddress, syncKey)
                 return
             }
         }
@@ -3331,7 +3403,7 @@ class GroupRepository @Inject constructor(
         // so resuming from it next run loses nothing - and marking the key is the only thing that
         // makes that resume happen. Without this, a stream longer than 2000 items restarted from
         // nothing every run and could never reach its own newest end.
-        deepBackfilledGroupKeys.mark(walletAddress, syncKey)
+        markDeepBackfilled(walletAddress, syncKey)
     }
 
     /**
@@ -3347,6 +3419,8 @@ class GroupRepository @Inject constructor(
         var pagesLeft = 40
         while (pagesLeft > 0) {
             pagesLeft -= 1
+            // Log Out, a switch or Delete Account since this began: stop, and move nothing (D1).
+            if (!signedInAs(walletAddress)) return
             val messages: List<GroupControlIndexerResponse> = try {
                 api.getGroupControlByRecipient(walletAddress, cursor = cursor)
             } catch (e: Exception) {
@@ -3354,21 +3428,22 @@ class GroupRepository @Inject constructor(
                 return
             }
             if (messages.isEmpty()) {
-                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
+                markDeepBackfilled(walletAddress, syncKey)
                 return
             }
             cursor = messages.lastOrNull()?.cursor
             for (msg in messages) {
+                if (!signedInAs(walletAddress)) return
                 val payloadString = reconstructPayloadString("kchat:1:gctl:", msg.messagePayload) ?: continue
-                ingestRow("gctl", msg.txId) { handleIncomingControlMessage(payloadString, msg.sender, msg.blockTime, msg.txId) }
+                ingestRow("gctl", msg.txId) { handleIncomingControlMessage(payloadString, msg.sender, msg.blockTime, msg.txId, owner = walletAddress) }
             }
             // Cursor AFTER the page is ingested, never before. Written first, an interruption
             // between the write and the ingest left the cursor sitting past messages that were
             // never stored, and ordinary sync only ever walks forward, so that page was gone for
             // good.
-            advanceGroupSyncCursor(syncKey, walletAddress, cursor)
+            if (!advanceGroupSyncCursor(syncKey, walletAddress, cursor)) return
             if (messages.size < 50) {
-                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
+                markDeepBackfilled(walletAddress, syncKey)
                 return
             }
         }
@@ -3376,7 +3451,7 @@ class GroupRepository @Inject constructor(
         // so resuming from it next run loses nothing - and marking the key is the only thing that
         // makes that resume happen. Without this, a stream longer than 2000 items restarted from
         // nothing every run and could never reach its own newest end.
-        deepBackfilledGroupKeys.mark(walletAddress, syncKey)
+        markDeepBackfilled(walletAddress, syncKey)
     }
 
     /**
@@ -3416,9 +3491,21 @@ class GroupRepository @Inject constructor(
         }
     }
 
-    private suspend fun advanceGroupSyncCursor(syncKey: String, walletAddress: String, cursor: String?) {
-        if (cursor == null) return
+    /** False, and nothing written, once [walletAddress] is no longer the account signed in: a
+     *  page read across Log Out, a switch or Delete Account may hold rows that couldn't be applied
+     *  (no key, or the other account's), and a cursor past them never comes back for them (audit
+     *  2026-11-27 D1). Delete Account's wipe would also be undone by it. */
+    private suspend fun advanceGroupSyncCursor(syncKey: String, walletAddress: String, cursor: String?): Boolean {
+        if (!signedInAs(walletAddress)) return false
+        if (cursor == null) return true
         database.groupDao().setGroupSyncCursor(GroupSyncCursorEntity(syncKey = syncKey, walletAddress = walletAddress, cursor = cursor))
+        return true
+    }
+
+    /** [deepBackfilledGroupKeys]' mark, only while [walletAddress] is still signed in (see
+     *  [advanceGroupSyncCursor]). */
+    private fun markDeepBackfilled(walletAddress: String, syncKey: String) {
+        if (signedInAs(walletAddress)) deepBackfilledGroupKeys.mark(walletAddress, syncKey)
     }
 
     /**
@@ -3600,6 +3687,17 @@ class GroupRepository @Inject constructor(
         allGroupsCursors.remove(walletAddress)
         inviteStateChanged()
         withContext(Dispatchers.IO) { KaChatDatabase.emptyWriteAheadLog(database) }
+        // A catch-up already past its account check when this ran can still write one cursor or
+        // mark back. Once it has stopped (it does at its next check), those go again, or a later
+        // import of the same words starts past this account's invites (audit 2026-11-27 D1).
+        // Not waited for: Delete Account doesn't wait on an indexer read.
+        senderProofScope.launch {
+            catchUpMutex.withLock {
+                if (signedInAs(walletAddress)) return@withLock
+                database.groupDao().deleteGroupSyncCursorsForWallet(walletAddress)
+                deepBackfilledGroupKeys.clearWallet(walletAddress)
+            }
+        }
     }
 }
 
@@ -3610,6 +3708,23 @@ internal const val GROUP_DECRYPT_CACHE_MAX_CONTENT = 16 * 1024
 
 /** The decrypt cache's key: the same transaction is a row under each account holding the group. */
 internal fun groupDecryptCacheKey(walletAddress: String, txId: String): String = "$walletAddress|$txId"
+
+/** Group work begun for [owner] may go on: signed in, and [owner] is the active account
+ *  ([active]). Audit 2026-11-27 D1-D3. */
+internal fun groupWorkStillFor(owner: String, loggedOut: Boolean, active: String?): Boolean =
+    !loggedOut && active != null && active == owner
+
+/** Whether a group control send that threw [e] is tried again: only a plain failure (UTXO
+ *  contention, no connection). Never an account change, a cancel, or an outcome not known, which
+ *  may have landed (audit 2026-11-27 D5). */
+internal fun controlSendMayRetry(e: Exception): Boolean =
+    e !is GroupSendAccountChangedException &&
+        e !is com.kachat.app.services.SendOutcomeUnknownException &&
+        e !is kotlinx.coroutines.CancellationException
+
+/** What a send still pending from a run that ended becomes: Not confirmed, never Failed with a
+ *  Retry, since it may have landed (audit 2026-11-27 D6). */
+internal fun settledLeftoverGroupSendStatus(): String = "warning"
 
 /** A cached decrypt with [row]'s own plaintext columns - its sender, direction, status and time,
  *  which are the account's and can change - over the cached ones. */

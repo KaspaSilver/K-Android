@@ -30,6 +30,20 @@ object ForegroundBeat {
         delay(delayToNextBeat(intervalMs, offsetMs, System.currentTimeMillis()))
     }
 
+    /** Sleeps until the first beat (plus [offsetMs]) at least [minMs] from now: a backoff longer
+     *  than the beat still lands on it (audit 2026-11-27 R6). */
+    suspend fun sleepUntilBeatAtLeast(minMs: Long, offsetMs: Long = 0L) {
+        delay(delayToBeatAtLeast(intervalMs, offsetMs, System.currentTimeMillis(), minMs))
+    }
+
+    /** The wait until the first beat at least [minMs] (and never under one second) after [nowMs];
+     *  pure. */
+    fun delayToBeatAtLeast(intervalMs: Long, offsetMs: Long, nowMs: Long, minMs: Long): Long {
+        val earliest = nowMs + maxOf(minMs, 1_000L)
+        val k = -Math.floorDiv(-(earliest - offsetMs), intervalMs)
+        return k * intervalMs + offsetMs - nowMs
+    }
+
     /** The wait until the next beat; pure, for the loops that need the number. */
     fun delayToNextBeat(intervalMs: Long, offsetMs: Long, nowMs: Long): Long {
         var next = (Math.floorDiv(nowMs, intervalMs) + 1) * intervalMs + offsetMs

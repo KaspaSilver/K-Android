@@ -364,7 +364,9 @@ class ColdStorageAddressDiscovery @Inject constructor(
     }
 
     private fun mapHistory(address: String, transactions: List<TransactionResponse>, ownAddresses: Set<String>): List<AddressTransaction> {
-        return transactions.filter { tx -> com.kachat.app.util.UtxoMath.restAmountsFit(tx.outputs.map { it.amount }, tx.inputs.map { it.previousOutpointAmount ?: 0L }) }
+        // One row per transaction id: the list is keyed by it (release audit 2026-11-27 L4).
+        return transactions.distinctBy { it.transactionId }
+            .filter { tx -> com.kachat.app.util.UtxoMath.restAmountsFit(tx.outputs.map { it.amount }, tx.inputs.map { it.previousOutpointAmount ?: 0L }) }
             .map { tx -> HistoryRows.historyRow(address, tx, ownAddresses) }
             .sortedByDescending { it.blockTimeMillis ?: 0L }
     }

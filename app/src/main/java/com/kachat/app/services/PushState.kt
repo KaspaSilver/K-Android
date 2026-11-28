@@ -163,19 +163,44 @@ class PushState @Inject constructor(
     private val _diagnostics = MutableStateFlow(PushDiagnostics())
     val diagnostics: StateFlow<PushDiagnostics> = _diagnostics
 
+    /** Registration attempts that failed in a row, and since when: across processes, cleared by
+     *  the next one that succeeds (audit 2026-11-27 R7). One failure (offline that moment, a
+     *  timeout, a 5xx) no longer counts as push being unavailable. */
+    data class RegisterFailures(val count: Int = 0, val sinceMs: Long = 0L)
+
+    private val _registerFailures = MutableStateFlow(
+        RegisterFailures(prefs.getInt(KEY_REGISTER_FAILURES, 0), prefs.getLong(KEY_REGISTER_FAILING_SINCE, 0L))
+    )
+    val registerFailures: StateFlow<RegisterFailures> = _registerFailures.asStateFlow()
+
     internal fun recordAttempt(
         action: String,
         succeeded: Boolean,
         error: String?,
         fcmTokenPresent: Boolean,
     ) {
+        val now = System.currentTimeMillis()
         _diagnostics.value = PushDiagnostics(
-            lastAttemptAtMs = System.currentTimeMillis(),
+            lastAttemptAtMs = now,
             lastAttemptSucceeded = succeeded,
             lastError = error,
             fcmTokenPresent = fcmTokenPresent,
             lastAction = action,
         )
+        if (action.startsWith("register")) {
+            val next = nextRegisterFailures(_registerFailures.value, succeeded, now)
+            if (next != _registerFailures.value) {
+                _registerFailures.value = next
+                prefs.edit().putInt(KEY_REGISTER_FAILURES, next.count).putLong(KEY_REGISTER_FAILING_SINCE, next.sinceMs).apply()
+            }
+        }
+    }
+
+    /** [pushUnavailable] with what this holder knows now; [noPushService] from
+     *  [PushRegistrationManager.canRegister]. Read again just before the battery sheet shows. */
+    fun pushUnavailableNow(noPushService: Boolean, nowMs: Long = System.currentTimeMillis()): Boolean {
+        val failures = _registerFailures.value
+        return pushUnavailable(_pushActive.value, noPushService, failures.count, failures.sinceMs, nowMs)
     }
 
     companion object {
@@ -183,19 +208,38 @@ class PushState @Inject constructor(
         internal const val PREFS_NAME = "kachat_push_registration"
         internal const val KEY_PUSH_ACTIVE = "push_active"
         private const val KEY_LOCAL_BANNERS_WANTED = "local_banners_wanted"
+        private const val KEY_REGISTER_FAILURES = "register_failures"
+        private const val KEY_REGISTER_FAILING_SINCE = "register_failing_since"
+
+        /** Failed registrations in a row before push counts as unavailable (audit 2026-11-27 R7). */
+        internal const val UNAVAILABLE_AFTER_FAILURES = 3
+        /** ...and how long they must have been failing. */
+        internal const val UNAVAILABLE_AFTER_MS = 60 * 60_000L
 
         /**
          * Whether push can't deliver on this device (MainActivity's battery exemption): not
          * active, and either there is no push service to register with (testnet, no Play
-         * services) or the last registration attempt failed. Unknown (nothing tried yet) is not
-         * unavailable, and neither is notifications switched off (an unregister).
+         * services) or registration has failed [UNAVAILABLE_AFTER_FAILURES] times in a row over
+         * at least [UNAVAILABLE_AFTER_MS] (audit 2026-11-27 R7: a single failure, offline at that
+         * moment or a 5xx, used to be enough, and the exemption then stayed after push worked).
+         * Unknown (nothing tried yet) is not unavailable, and neither is notifications switched
+         * off (an unregister).
          */
         internal fun pushUnavailable(
             pushActive: Boolean,
             noPushService: Boolean,
-            lastAction: String?,
-            lastAttemptSucceeded: Boolean?,
-        ): Boolean = !pushActive && (noPushService || (lastAction == "register" && lastAttemptSucceeded == false))
+            failedRegistrations: Int,
+            failingSinceMs: Long,
+            nowMs: Long,
+        ): Boolean = !pushActive && (
+            noPushService ||
+                (failedRegistrations >= UNAVAILABLE_AFTER_FAILURES && failingSinceMs > 0L && nowMs - failingSinceMs >= UNAVAILABLE_AFTER_MS)
+            )
+
+        /** The failure streak after one registration attempt: a success clears it. */
+        internal fun nextRegisterFailures(previous: RegisterFailures, succeeded: Boolean, nowMs: Long): RegisterFailures =
+            if (succeeded) RegisterFailures()
+            else RegisterFailures(previous.count + 1, if (previous.count == 0 || previous.sinceMs == 0L) nowMs else previous.sinceMs)
 
         /** The [backgroundQuiet] rule: quiet with push, or when nothing could be shown. */
         internal fun backgroundQuiet(pushActive: Boolean, localBannersWanted: Boolean, systemNotificationsOn: Boolean): Boolean =

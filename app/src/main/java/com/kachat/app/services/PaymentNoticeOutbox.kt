@@ -147,7 +147,10 @@ class PaymentNoticeOutbox @Inject constructor(
     suspend fun sendUnsentPaymentNotices() {
         if (!sending.tryLock()) return
         try {
-            val key = currentKey() ?: return
+            // One account for the whole run, its address passed into every send (audit A4): the
+            // send itself refuses once another account is signed in, right before it is signed.
+            val owner = runCatching { walletManager.getAddress() }.getOrNull()?.takeIf { it.isNotBlank() } ?: return
+            val key = keyFor(owner)
             val pending = synchronized(listLock) { read(key) }
             if (pending.isEmpty()) return
             val done = mutableSetOf<String>()
@@ -155,10 +158,10 @@ class PaymentNoticeOutbox @Inject constructor(
                 // a switch mid-run: what was sent so far still leaves the list below
                 if (currentKey() != key) break
                 // a contact not loaded yet keeps its notice for a later try
-                if (chatRepository.getContact(notice.contactAddress) == null) continue
+                if (chatRepository.getContact(notice.contactAddress, walletAddress = owner) == null) continue
                 try {
                     // Untagged, like iOS sendEnvelopeInternal: kchat:1:comm:, never a first-contact dm.
-                    walletServiceLazy.get().sendKasiaMessage(notice.contactAddress, notice.payload, firstContactTag = false)
+                    walletServiceLazy.get().sendKasiaMessage(notice.contactAddress, notice.payload, firstContactTag = false, owner = owner)
                     done += notice.txId
                     Log.i(TAG, "Sent a kept payment_notice for ${notice.txId.take(12)}")
                 } catch (e: com.kachat.app.services.SendOutcomeUnknownException) {

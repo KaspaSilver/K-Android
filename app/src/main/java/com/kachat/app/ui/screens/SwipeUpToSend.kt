@@ -143,6 +143,8 @@ fun SwipeUpToSendScreen(
     val haptic = com.kachat.app.util.rememberHaptics()
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
+    // no other app's overlay over the swipe that sends (security audit 2026-11-27 S3)
+    OverlayTouchGuard()
 
     /** How far the screen has been pushed up, in px. */
     var lift by remember { mutableFloatStateOf(0f) }

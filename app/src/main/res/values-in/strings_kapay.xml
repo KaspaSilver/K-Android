@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">Tindakan Akun</string>
     <string name="add_kaspa_address">Tambah Alamat Kaspa</string>
     <string name="add_transaction">Tambah Transaksi</string>
     <string name="addresses">Alamat</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">Salin kpub</string>
     <string name="current_value">Nilai Saat Ini</string>
     <string name="delete_transaction">Hapus Transaksi</string>
-    <string name="enter_kpub">Masukkan kpub</string>
     <string name="export_csv">Ekspor CSV</string>
     <string name="fee_usd_optional">Biaya (opsional)</string>
     <string name="holdings">Kepemilikan</string>
@@ -208,12 +206,10 @@
     <string name="kp_you_receive">Anda Terima</string>
     <string name="kp_you_receive_about">Anda Menerima Sekitar</string>
     <string name="kp_you_saw">Yang Anda Lihat</string>
-    <string name="name_this_address">Beri Nama Alamat Ini</string>
     <string name="no_app_to_open_link">Tidak ada aplikasi di ponsel ini yang dapat membuka tautan</string>
     <string name="notes_optional">Catatan (opsional)</string>
     <string name="paste_from_clipboard">Tempel dari Papan Klip</string>
     <string name="paste_kpub">Tempel kpub</string>
-    <string name="paste_the_kpub_exported_from_your">Tempel kpub yang diekspor dari perangkat KasSigner Anda. Ini tidak berisi materi kunci privat apa pun.</string>
     <string name="pf_actions_add">Tambah</string>
     <string name="pf_actions_import_export">Impor &amp; Ekspor</string>
     <string name="pf_add_kaspa_address_sub">Lacak saldo sebuah alamat sebagai bagian dari portofolio ini.</string>
@@ -252,7 +248,6 @@
     <string name="qr_point_camera_kassigner">Arahkan kamera ke layar KasSigner</string>
     <string name="quantity">Kuantitas</string>
     <string name="remove_cold_storage_account">Hapus Akun Penyimpanan Dingin</string>
-    <string name="rename_cold_storage_account">Ubah Nama Akun Penyimpanan Dingin</string>
     <string name="scan">Pindai</string>
     <string name="scan_kpub_from_kassigner">Pindai kpub dari KasSigner</string>
     <string name="scan_signed_transaction">Pindai Transaksi Tertanda</string>

@@ -881,9 +881,11 @@ class WalletViewModel @Inject constructor(
      *  yet in a block, the filter its send builds with (`confirmedOnly`, iOS
      *  `withdrawalSpendableUtxos`), so the estimate and the send agree. Throws, in iOS's words,
      *  when there are none, and when the node could not be asked. */
-    private suspend fun spendableForEstimate(address: String, sourceIndex: Int?): List<UtxoEntry> {
+    private suspend fun spendableForEstimate(address: String, sourceIndex: Int?, chatPayment: Boolean = false): List<UtxoEntry> {
         val fetched = walletEngine.fetchUtxosOrThrow(address)
-        val spendable = if (sourceIndex == null) {
+        // A chat payment spends confirmed, non-coinbase coins from any From (audit A5,
+        // KaspaWalletEngine.sendSpendingPayment), so it is priced on those.
+        val spendable = if (sourceIndex == null || chatPayment) {
             fetched.filter { !it.utxoEntry.isCoinbase && it.utxoEntry.blockDaaScore > 0 }
         } else {
             fetched
@@ -919,15 +921,20 @@ class WalletViewModel @Inject constructor(
         toAddress: String? = null,
         /** A chat payment's sealed payload, when that is what this send goes out as. */
         payloadSize: Int = 0,
+        /** It goes out as a chat payment (a `chat=1` request): priced as ChatPaymentSender sends
+         *  it (audit A5) - the payload only from the chatting address, confirmed non-coinbase
+         *  coins, and from a spending address its change on a fresh quantum-safe (P2SH) slot. */
+        chatPayment: Boolean = false,
     ): SendFeeModel.SendFeeEstimate {
-        val spendable = spendableForEstimate(address, sourceIndex)
+        val spendable = spendableForEstimate(address, sourceIndex, chatPayment)
         return SendFeeModel.estimate(
             utxos = spendable,
             manual = resolveReviewSelection(manualUtxos, spendable),
             amountSompi = amountSompi,
-            payloadSize = payloadSize,
+            payloadSize = ChatPaymentPricing.payloadSize(chatPayment, sourceIndex, payloadSize),
             recipientScriptLen = recipientScriptLen,
-            changeScriptLen = sendChangeScriptLen(address, sourceIndex, toAddress),
+            changeScriptLen = if (chatPayment && sourceIndex != null) SendFeeModel.P2SH_SCRIPT_LEN
+                else sendChangeScriptLen(address, sourceIndex, toAddress),
             signatureScriptSize = WalletManager.signatureScriptSize(sourceIndex),
             extraFeeSompi = extraFeeSompi,
         )
@@ -957,13 +964,20 @@ class WalletViewModel @Inject constructor(
         feeMultiplier: Long = 1L,
         customExtraFeeSompi: Long? = null,
         recipientScriptLen: Int = SendFeeModel.STANDARD_SCRIPT_LEN,
+        /** See [estimateSendFee]: a chat payment's Max is priced with its payload (audit A5). */
+        payloadSize: Int = 0,
+        chatPayment: Boolean = false,
     ): MaxSendable {
-        val spendable = spendableForEstimate(address, sourceIndex)
+        val spendable = spendableForEstimate(address, sourceIndex, chatPayment)
         val picked = resolveReviewSelection(manualUtxos, spendable)
         val chunk = if (picked == null) oneTransactionChunk(spendable) else null
         val coins = picked ?: chunk ?: spendable
         return MaxSendable(
-            maxOrThrow(coins, address, sourceIndex, feeMultiplier, customExtraFeeSompi, recipientScriptLen),
+            maxOrThrow(
+                coins, address, sourceIndex, feeMultiplier, customExtraFeeSompi, recipientScriptLen,
+                payloadSize = ChatPaymentPricing.payloadSize(chatPayment, sourceIndex, payloadSize),
+                changeScriptLen = if (chatPayment && sourceIndex != null) SendFeeModel.P2SH_SCRIPT_LEN else null,
+            ),
             cappedAtInputLimit = chunk != null,
         )
     }
@@ -986,13 +1000,16 @@ class WalletViewModel @Inject constructor(
         feeMultiplier: Long,
         customExtraFeeSompi: Long?,
         recipientScriptLen: Int,
+        payloadSize: Int = 0,
+        changeScriptLen: Int? = null,
     ): Long {
         val totalBalance = UtxoMath.total(coins.map { it.utxoEntry.amount })
         val max = SendFeeModel.maxAfterFees(
             totalBalance, coins.size, KaspaMass.MINIMUM_FEE_RATE_SOMPI_PER_GRAM, feeMultiplier, customExtraFeeSompi,
+            payloadSize = payloadSize,
             signatureScriptSize = WalletManager.signatureScriptSize(sourceIndex),
             recipientScriptLen = recipientScriptLen,
-            changeScriptLen = scriptLen(address),
+            changeScriptLen = changeScriptLen ?: scriptLen(address),
         )
         if (max <= 0L) throw IllegalStateException(appContext.getString(R.string.balance_too_low_to_cover_fee))
         return max
@@ -1450,6 +1467,9 @@ class WalletViewModel @Inject constructor(
         walletManager.getActiveAccount()?.address?.let { active ->
             com.kachat.app.util.KaspaNetwork.accountAddressVariants(active).forEach { chatRepository.discardDrafts(it) }
         }
+        // The in-app browser's cookies and site storage (Kasshi's session among them): none
+        // carries to the next account (iOS `.nonPersistent()`, security audit 2026-11-27 S1).
+        com.kachat.app.services.InAppBrowserData.clearAll()
         _isLoggedIn.value = false
     }
 
@@ -1748,6 +1768,8 @@ class WalletViewModel @Inject constructor(
             tokenWallet.get().forgetLocalData(variant)
         }
         accountBackupStatus.forget(address)
+        // its site sessions and storage in the in-app browser (security audit 2026-11-27 S1)
+        com.kachat.app.services.InAppBrowserData.clearAll()
         // Marked before the record goes: if the process dies before the wipe below is done, the
         // next launch finishes it (resumePendingAccountWipes) - otherwise the deleted account's
         // messages stayed on the device and came back with the seed.
@@ -2102,15 +2124,22 @@ class WalletViewModel @Inject constructor(
         expectedFeeSompi: Long? = null,
     ) {
         sends.start(sendId)
+        // The account this send is made from, taken at the tap (audit A2): it pays, signs and
+        // files the send, whichever account is active when the submit returns.
+        val owner = runCatching { walletManager.getAddress() }.getOrNull()
         // Off the main thread: the key derivation and signing would freeze the screen.
         viewModelScope.launch(Dispatchers.Default) {
             // No coinbase and no unconfirmed coins from the chatting address (iOS sendWithdrawal).
-            // The key is read for sendKaspa's default arguments, before its own try: a failure
-            // there ends the send as failed instead of crashing the app with it left in flight.
+            // The key is read inside the try: a failure there ends the send as failed instead of
+            // crashing the app with it left in flight.
             val result = try {
+                if (owner == null) throw IllegalStateException("No active account")
+                val key = walletManager.getPrivateKeyBytes()
+                if (!com.kachat.app.util.AccountKey.belongsTo(key, owner)) throw com.kachat.app.services.SendAccountChangedException()
                 walletEngine.sendKaspa(
                     address, amountSompi, feeRateOverride = feeRateOverride, manualUtxos = manualUtxos, extraFeeSompi = extraFeeSompi,
                     excludeCoinbase = true, confirmedOnly = true, expectedFeeSompi = expectedFeeSompi,
+                    fromAddress = owner, signingPrivateKey = key,
                 )
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
@@ -2122,7 +2151,7 @@ class WalletViewModel @Inject constructor(
             // NO_HANDSHAKE_MESSAGING.md section 4). Before the send is reported done, so the
             // chat is there when the sheet closes.
             result.getOrNull()?.let { txId ->
-                runCatching { chatRepository.recordPlainSendFromChattingAddress(address, txId, amountSompi) }
+                runCatching { chatRepository.recordPlainSendFromChattingAddress(address, txId, amountSompi, owner = owner) }
                     .onFailure { android.util.Log.w("WalletViewModel", "Could not record the send in a chat", it) }
             }
             sends.finish(sendId, result)
@@ -2295,3 +2324,12 @@ class WalletViewModel @Inject constructor(
  *  at most four times a second. */
 internal fun discoveryProgressShows(foundCount: Int, shownFoundCount: Int?, nowMs: Long, lastShownMs: Long): Boolean =
     foundCount != shownFoundCount || nowMs - lastShownMs >= 250L
+
+/** How a `chat=1` request's send is priced (audit 2026-11-27 A5), as ChatPaymentSender sends it. */
+internal object ChatPaymentPricing {
+    /** The sealed payload goes only on a payment from the chatting address ([sourceIndex] null):
+     *  one From a spending address is a plain transfer, its memo in a separate notice. */
+    fun payloadSize(chatPayment: Boolean, sourceIndex: Int?, payloadSize: Int): Int =
+        if (chatPayment && sourceIndex != null) 0 else payloadSize
+}
+

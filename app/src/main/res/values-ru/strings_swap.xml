@@ -2,7 +2,6 @@
 <!-- Swap (iPhone 5.4 518fdc8c: SwapView, SwapService, TrestlyTrade), from the iPhone's
      Localizable.strings for the same keys. -->
 <resources>
-    <string name="swap_title">Обмен</string>
     <string name="swap_failed">Обмен не удался</string>
     <string name="swap_couldnt_read_amounts">Не удалось прочитать суммы этого обмена</string>
     <string name="swap_already_holds">Уже содержит этот обмен – повторное добавление учтёт его дважды.</string>
@@ -14,7 +13,6 @@
     <string name="swap_destination_tag_optional">Тег назначения (необязательно)</string>
     <string name="swap_destination_tag_hint">Только если он нужен адресу получения, как на большинстве бирж. Без него биржа не сможет зачислить ваши монеты.</string>
     <string name="swap_from_kusdt_lands">Обменять с адреса (сюда придут kUSDT)</string>
-    <string name="swap_from_kas_lands">Обменять с адреса (сюда придут KAS)</string>
     <string name="swap_change">Изменить</string>
     <string name="swap_powered_by_trestly">Работает на Trestly</string>
     <string name="swap_powered_by_changenow">Работает на ChangeNOW</string>
@@ -48,8 +46,6 @@
     <string name="swap_deposit_address">Адрес для депозита</string>
     <string name="swap_couldnt_reach_changenow">Не удалось связаться с ChangeNOW – попробуйте ещё раз</string>
     <string name="swap_details">Детали обмена</string>
-    <string name="swap_used">Использован</string>
-    <string name="swap_unused">Не использован</string>
     <string name="swap_search_coins">Поиск монет</string>
     <string name="swap_agreements_intro">Обмен использует два сервиса, которыми K не управляет. Прочитайте и примите условия обоих, прежде чем продолжить.</string>
     <string name="swap_coins_on_other_networks">Монеты в других сетях</string>

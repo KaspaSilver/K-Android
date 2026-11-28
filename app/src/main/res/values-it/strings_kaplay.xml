@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">Quarti di finale</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Il risultato non è stato inviato.</string>
     <string name="kaplay_leaderboard_all_time">Di sempre</string>
-    <string name="kaplay_leaderboard_counted_from">Conteggiato dal %1$s.</string>
-    <string name="kaplay_leaderboard_period">Periodo della classifica</string>
-    <string name="kaplay_leaderboard_resets_monthly">Si azzera il 1° di ogni mese (UTC).</string>
     <string name="kaplay_leaderboard_this_month">Questo mese</string>
-    <string name="kaplay_no_finished_duels">Ancora nessuna partita 1v1 conclusa.</string>
-    <string name="kaplay_no_finished_duels_this_month">Ancora nessuna partita 1v1 conclusa questo mese.</string>
-    <string name="kaplay_no_finished_tournaments">Ancora nessun torneo concluso.</string>
-    <string name="kaplay_no_finished_tournaments_this_month">Ancora nessun torneo concluso questo mese.</string>
     <string name="kaplay_tab_leaderboard">Classifica</string>
     <string name="kp_640de0cb0b2c" formatted="false">Il tuo record: %s vinte, %s perse</string>
     <string name="kp_5d12bd53552c" formatted="false">Gioca</string>

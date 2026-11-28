@@ -49,7 +49,6 @@
     <string name="kl_message">संदेश</string>
     <string name="kl_name">नाम</string>
     <string name="kl_note_buy">खरीदने पर एक ही लेन-देन में विक्रेता को भुगतान होता है और नाम आपको मिल जाता है।</string>
-    <string name="kl_note_message">मैसेज विक्रेता तक किसी भी KaChat चैट की तरह पहुँचते हैं।</string>
     <string name="kl_note_offer">ऑफ़र आपके KAS को चेन पर लॉक करता है जब तक विक्रेता उसे स्वीकार न करे, आप उसे वापस न लें या वह समाप्त न हो।</string>
     <string name="kl_offer">ऑफ़र</string>
     <string name="kl_offer_detail">अपनी कीमत खुद तय करें। आपके KAS चेन पर तब तक रहते हैं जब तक विक्रेता स्वीकार न करे, आप ऑफ़र वापस न लें, या वह समाप्त न हो जाए।</string>

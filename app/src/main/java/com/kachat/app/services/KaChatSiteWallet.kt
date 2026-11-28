@@ -685,17 +685,39 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
         private val KAPOST_ACTION_PREFIXES = listOf(
             "edit:", "delete:", "poll:", "pollvote:", "tip:", "schedule:",
             "cancel-schedule:", "follow:", "unfollow:",
+            // the indexer's block list, signed as "<block|unblock>:<pubkey>" (security audit
+            // 2026-11-27 S2)
+            "block:", "unblock:",
         )
+
+        /** Strict base64 (standard alphabet, padded), as the indexer decodes it; empty counts. */
+        private fun isStrictBase64OrEmpty(field: String): Boolean {
+            if (field.isEmpty()) return true
+            if (field.length % 4 != 0) return false
+            val body = field.trimEnd('=')
+            if (field.length - body.length > 2) return false
+            return body.all { it in 'A'..'Z' || it in 'a'..'z' || it in '0'..'9' || it == '+' || it == '/' }
+        }
+
+        /** The K profile ("broadcast") signing string, `<b64 nickname>:<b64 image or empty>:<b64
+         *  bio>`: exactly three fields, each empty or strict base64 (indexer `k_protocol.rs`
+         *  `save_k_broadcast_to_database`; security audit 2026-11-27 S2). */
+        fun looksLikeProfileBroadcast(text: String): Boolean {
+            val fields = text.split(':')
+            return fields.size == 3 && fields.all(::isStrictBase64OrEmpty)
+        }
 
         private fun isHexDigit(c: Char): Boolean = c in '0'..'9' || c in 'a'..'f' || c in 'A'..'F'
 
         /** The strings K signs for KaPost (iOS 01f71184 `looksLikeKaPostAction`): the action
          *  prefixes; a post, `<base64>:<mentions JSON>`; a reply, vote or quote, `<64-hex id>:...`;
-         *  an unquote, a bare 64-hex id. Checked as sent and trimmed, any case. */
+         *  an unquote, a bare 64-hex id; a profile ([looksLikeProfileBroadcast]). Checked as sent
+         *  and trimmed, any case. */
         fun looksLikeKaPostAction(text: String): Boolean {
             for (candidate in linkedSetOf(text, text.trim())) {
                 val lower = candidate.lowercase()
                 if (KAPOST_ACTION_PREFIXES.any { lower.startsWith(it) }) return true
+                if (looksLikeProfileBroadcast(candidate)) return true
                 val head = lower.substringBefore(':')
                 // a post id (a txid) alone or first
                 if (head.length == 64 && head.all(::isHexDigit)) return true

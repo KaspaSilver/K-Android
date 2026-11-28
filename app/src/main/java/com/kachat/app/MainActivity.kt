@@ -71,6 +71,9 @@ class MainActivity : AppCompatActivity() {
     /** Push can't deliver here (no push service, no Play services, its registration failing):
      *  the only case the battery exemption helps (audit 2026-11-25). False until known. */
     @Volatile private var pushUnavailable = false
+    /** No push service to register with ([com.kachat.app.services.PushRegistrationManager.canRegister]
+     *  false); null until known. */
+    @Volatile private var noPushService: Boolean? = null
 
     // The KaChat sheet that explains the battery exemption before Android's own dialog. Re-derived
     // on every resume (see refreshBatteryRationale), so it follows the notification answer.
@@ -130,6 +133,9 @@ class MainActivity : AppCompatActivity() {
     private fun batteryExemptionDue(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
         if (!pushUnavailable) return false
+        // Checked again as the sheet would show: push may have recovered since (audit 2026-11-27 R7).
+        val noPush = noPushService ?: return false
+        if (!pushStateLazy.get().pushUnavailableNow(noPush)) return false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
@@ -230,13 +236,16 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             runCatching {
                 val push = pushStateLazy.get()
-                val noPushService = withContext(Dispatchers.IO) { !pushRegistrationManagerLazy.get().canRegister() }
-                kotlinx.coroutines.flow.combine(push.pushActive, push.diagnostics) { active, diagnostics ->
+                val noPush = withContext(Dispatchers.IO) { !pushRegistrationManagerLazy.get().canRegister() }
+                noPushService = noPush
+                // A registration failing repeatedly over an hour, not a single failure (R7).
+                kotlinx.coroutines.flow.combine(push.pushActive, push.registerFailures) { active, failures ->
                     com.kachat.app.services.PushState.pushUnavailable(
                         pushActive = active,
-                        noPushService = noPushService,
-                        lastAction = diagnostics.lastAction,
-                        lastAttemptSucceeded = diagnostics.lastAttemptSucceeded,
+                        noPushService = noPush,
+                        failedRegistrations = failures.count,
+                        failingSinceMs = failures.sinceMs,
+                        nowMs = System.currentTimeMillis(),
                     )
                 }.collect { unavailable ->
                     pushUnavailable = unavailable

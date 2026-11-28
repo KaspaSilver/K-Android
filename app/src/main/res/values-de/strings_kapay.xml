@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">Kontoaktionen</string>
     <string name="add_kaspa_address">Kaspa-Adresse hinzufügen</string>
     <string name="add_transaction">Transaktion hinzufügen</string>
     <string name="addresses">Adressen</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">kpub kopieren</string>
     <string name="current_value">Aktueller Wert</string>
     <string name="delete_transaction">Transaktion löschen</string>
-    <string name="enter_kpub">kpub eingeben</string>
     <string name="export_csv">CSV exportieren</string>
     <string name="fee_usd_optional">Gebühr (optional)</string>
     <string name="holdings">Bestände</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">Du erhältst</string>
     <string name="kp_you_receive_about">Du erhältst etwa</string>
     <string name="kp_you_saw">Du hast gesehen</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">Diese Adresse benennen</string>
     <string name="no_app_to_open_link">Keine App auf diesem Telefon kann den Link öffnen</string>
     <string name="notes_optional">Notizen (optional)</string>
     <string name="paste_from_clipboard">Aus Zwischenablage einfügen</string>
     <string name="paste_kpub">kpub einfügen</string>
-    <string name="paste_the_kpub_exported_from_your">Füge die von deinem KasSigner-Gerät exportierte kpub ein. Sie enthält kein privates Schlüsselmaterial.</string>
     <string name="pf_actions_add">Hinzufügen</string>
     <string name="pf_actions_import_export">Import &amp; Export</string>
     <string name="pf_add_kaspa_address_sub">Verfolge das Guthaben einer Adresse als Teil dieses Portfolios.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">Richte die Kamera auf den KasSigner-Bildschirm</string>
     <string name="quantity">Menge</string>
     <string name="remove_cold_storage_account">Kaltlagerungskonto entfernen</string>
-    <string name="rename_cold_storage_account">Kaltlagerungskonto umbenennen</string>
     <string name="scan">Scannen</string>
     <string name="scan_kpub_from_kassigner">kpub von KasSigner scannen</string>
     <string name="scan_signed_transaction">Signierte Transaktion scannen</string>

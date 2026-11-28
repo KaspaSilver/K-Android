@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">CSV를 공유할 앱이 없습니다</string>
+    <string name="rel5_saves_photo_to_gallery">사진을 갤러리에 저장합니다.</string>
+    <string name="rel5_chess_time_control">체스 - %1$s</string>
+    <string name="rel5_backed_up_just_now">방금 백업됨</string>
+    <string name="rel5_audio_file_empty">오디오 파일이 비어 있습니다</string>
+    <string name="rel5_enter_valid_amount">올바른 금액을 입력하세요.</string>
+    <string name="rel5_server_error_code">서버가 오류를 반환했습니다(%1$d). 잠시 후 다시 시도하세요.</string>
+    <string name="rel5_fb_could_not_load_folder">이 폴더를 불러올 수 없습니다.</string>
+    <string name="rel5_fb_failed_build_tx">트랜잭션을 만들 수 없습니다</string>
+    <string name="rel5_fb_edit_failed">수정하지 못했습니다</string>
+    <string name="rel5_fb_cant_read_signed_tx">서명된 트랜잭션을 읽을 수 없습니다</string>
+    <string name="rel5_fb_reaction_failed">반응을 남기지 못했습니다</string>
+    <string name="rel5_fb_update_group_photo">그룹 사진을 업데이트하지 못했습니다</string>
+    <string name="rel5_fb_resend_invites">초대를 다시 보내지 못했습니다</string>
+    <string name="rel5_fb_resend_invite">초대를 다시 보내지 못했습니다</string>
+    <string name="rel5_fb_rename_group">그룹 이름을 바꾸지 못했습니다</string>
+    <string name="rel5_fb_create_group">그룹을 만들지 못했습니다</string>
+    <string name="rel5_fb_schedule_post">이 게시물을 예약할 수 없습니다</string>
+    <string name="rel5_fb_load_more">더 불러올 수 없습니다</string>
+    <string name="rel5_fb_share_link">공유 링크를 만들 수 없습니다.</string>
+    <string name="rel5_fb_connect">연결할 수 없습니다</string>
+    <string name="rel5_fb_broadcast_failed">브로드캐스트하지 못했습니다</string>
+    <string name="rel5_fb_backup_failed">백업하지 못했습니다</string>
+    <string name="rel5_restored_messages">메시지 %1$d개를 채팅 %2$d개에서 복원했습니다.</string>
+    <string name="rel5_enter_group_name">그룹 이름을 입력하세요.</string>
+    <string name="rel5_add_one_member">멤버를 한 명 이상 추가하세요.</string>
+    <string name="rel5_invalid_address_format">잘못된 Kaspa 주소 형식입니다.</string>
+</resources>

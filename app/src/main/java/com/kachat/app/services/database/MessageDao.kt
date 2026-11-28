@@ -59,7 +59,7 @@ interface MessageDao {
      */
     @Query(
         """
-        SELECT ${MessageRowCap.COLUMNS} FROM messages
+        SELECT ${MessageRowCap.PAGE_COLUMNS} FROM messages
         WHERE contactId = :contactId AND walletAddress = :walletAddress
           AND (blockTimestamp < :beforeTimestamp OR (blockTimestamp = :beforeTimestamp AND id < :beforeId))
         ORDER BY blockTimestamp DESC, id DESC
@@ -313,12 +313,14 @@ interface MessageDao {
      * in [getUnreadCounts] (a derived COUNT), without needing a separate stored unread flag. */
     @Query(
         """
-        UPDATE messages SET isRead = 0 WHERE id = (
+        UPDATE messages SET isRead = 0 WHERE walletAddress = :walletAddress AND id = (
             SELECT id FROM messages WHERE contactId = :contactId AND walletAddress = :walletAddress AND direction = 'received'
             ORDER BY blockTimestamp DESC LIMIT 1
         )
         """
     )
+    // walletAddress on the outer UPDATE too (audit 2026-11-27 C7): the key is (id, walletAddress),
+    // so another local account's row with the same txid turned unread as well.
     suspend fun markLatestAsUnread(contactId: String, walletAddress: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -483,6 +485,19 @@ object MessageRowCap {
         "id, contactId, walletAddress, type, direction, " +
             "CASE WHEN length(plaintextBody) > $MAX_CHARS THEN NULL ELSE plaintextBody END AS plaintextBody, " +
             "CASE WHEN length(encryptedPayload) > $MAX_CHARS THEN '' ELSE encryptedPayload END AS encryptedPayload, " +
+            "amountSompi, blockTimestamp, isRead, syncedAt, deliveryStatus"
+
+    /**
+     * [COLUMNS] for the thread's older-history pages, which only draw: a row that decrypted
+     * leaves its encrypted payload in the database (read as ''), so a page of photo or voice
+     * parts doesn't carry each part twice - base64 and hex - into memory (audit 2026-11-27
+     * Battery R3). Rows still encrypted keep it.
+     */
+    const val PAGE_COLUMNS =
+        "id, contactId, walletAddress, type, direction, " +
+            "CASE WHEN length(plaintextBody) > $MAX_CHARS THEN NULL ELSE plaintextBody END AS plaintextBody, " +
+            "CASE WHEN plaintextBody IS NOT NULL AND length(plaintextBody) <= $MAX_CHARS THEN '' " +
+            "WHEN length(encryptedPayload) > $MAX_CHARS THEN '' ELSE encryptedPayload END AS encryptedPayload, " +
             "amountSompi, blockTimestamp, isRead, syncedAt, deliveryStatus"
 }
 

@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">Hesap İşlemleri</string>
     <string name="add_kaspa_address">Kaspa Adresi Ekle</string>
     <string name="add_transaction">Islem Ekle</string>
     <string name="addresses">Adresler</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">kpub Kopyala</string>
     <string name="current_value">Guncel Deger</string>
     <string name="delete_transaction">Islemi Sil</string>
-    <string name="enter_kpub">kpub Gir</string>
     <string name="export_csv">CSV Disa Aktar</string>
     <string name="fee_usd_optional">Ucret (istege bagli)</string>
     <string name="holdings">Varliklar</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">Alacağınız</string>
     <string name="kp_you_receive_about">Yaklaşık Alacağınız</string>
     <string name="kp_you_saw">Gördüğünüz</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">Bu Adresi Adlandir</string>
     <string name="no_app_to_open_link">Bu telefonda bağlantıyı açabilecek bir uygulama yok</string>
     <string name="notes_optional">Notlar (istege bagli)</string>
     <string name="paste_from_clipboard">Panodan Yapıştır</string>
     <string name="paste_kpub">kpub Yapistir</string>
-    <string name="paste_the_kpub_exported_from_your">KasSigner cihazından dışa aktarılan kpub\'i yapıştır. Özel anahtar materyali içermez.</string>
     <string name="pf_actions_add">Ekle</string>
     <string name="pf_actions_import_export">İçe ve Dışa Aktar</string>
     <string name="pf_add_kaspa_address_sub">Bir adresin bakiyesini bu portföyün parçası olarak takip et.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">Kamerayi KasSigner ekranina dogrultun</string>
     <string name="quantity">Miktar</string>
     <string name="remove_cold_storage_account">Soguk Depolama Hesabini Kaldir</string>
-    <string name="rename_cold_storage_account">Soguk Depolama Hesabini Yeniden Adlandir</string>
     <string name="scan">Tara</string>
     <string name="scan_kpub_from_kassigner">KasSigner\'dan kpub tara</string>
     <string name="scan_signed_transaction">Imzali Islemi Tara</string>

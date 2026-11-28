@@ -725,7 +725,7 @@ private fun PortfolioTransactionsContent(
                         try {
                             context.startActivity(Intent.createChooser(intent, context.getString(R.string.shell54_export_csv)))
                         } catch (e: ActivityNotFoundException) {
-                            IosToasts.error("No app available to share the CSV")
+                            IosToasts.error(tr(R.string.rel5_no_app_share_csv))
                         }
                     },
                     onUnavailable = { message -> IosToasts.error(message) }

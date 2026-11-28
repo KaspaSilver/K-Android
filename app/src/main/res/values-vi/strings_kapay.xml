@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">Thao tác tài khoản</string>
     <string name="add_kaspa_address">Thêm địa chỉ Kaspa</string>
     <string name="add_transaction">Thêm giao dịch</string>
     <string name="addresses">Địa chỉ</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">Sao chép kpub</string>
     <string name="current_value">Giá trị hiện tại</string>
     <string name="delete_transaction">Xóa giao dịch</string>
-    <string name="enter_kpub">Nhập kpub</string>
     <string name="export_csv">Xuất CSV</string>
     <string name="fee_usd_optional">Phí (tùy chọn)</string>
     <string name="holdings">Tài sản nắm giữ</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">Bạn nhận</string>
     <string name="kp_you_receive_about">Bạn nhận khoảng</string>
     <string name="kp_you_saw">Bạn đã thấy</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">Đặt tên cho địa chỉ này</string>
     <string name="no_app_to_open_link">Không có ứng dụng nào trên điện thoại này mở được liên kết</string>
     <string name="notes_optional">Ghi chú (tùy chọn)</string>
     <string name="paste_from_clipboard">Dán từ bộ nhớ tạm</string>
     <string name="paste_kpub">Dán kpub</string>
-    <string name="paste_the_kpub_exported_from_your">Dán kpub được xuất từ thiết bị KasSigner của bạn. Nó không chứa dữ liệu khóa riêng tư.</string>
     <string name="pf_actions_add">Thêm</string>
     <string name="pf_actions_import_export">Nhập và xuất</string>
     <string name="pf_add_kaspa_address_sub">Theo dõi số dư của một địa chỉ như một phần của danh mục đầu tư này.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">Hướng máy ảnh vào màn hình KasSigner</string>
     <string name="quantity">Số lượng</string>
     <string name="remove_cold_storage_account">Xóa tài khoản lưu trữ lạnh</string>
-    <string name="rename_cold_storage_account">Đổi tên tài khoản lưu trữ lạnh</string>
     <string name="scan">Quét</string>
     <string name="scan_kpub_from_kassigner">Quét kpub từ KasSigner</string>
     <string name="scan_signed_transaction">Quét giao dịch đã ký</string>

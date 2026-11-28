@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">برنامه‌ای برای اشتراک‌گذاری CSV وجود ندارد</string>
+    <string name="rel5_saves_photo_to_gallery">عکس را در گالری شما ذخیره می‌کند.</string>
+    <string name="rel5_chess_time_control">شطرنج - %1$s</string>
+    <string name="rel5_backed_up_just_now">همین الان پشتیبان‌گیری شد</string>
+    <string name="rel5_audio_file_empty">فایل صوتی خالی است</string>
+    <string name="rel5_enter_valid_amount">یک مبلغ معتبر وارد کن.</string>
+    <string name="rel5_server_error_code">سرور خطا برگرداند (%1$d). کمی بعد دوباره امتحان کن.</string>
+    <string name="rel5_fb_could_not_load_folder">این پوشه بارگذاری نشد.</string>
+    <string name="rel5_fb_failed_build_tx">تراکنش ساخته نشد</string>
+    <string name="rel5_fb_edit_failed">ویرایش ناموفق بود</string>
+    <string name="rel5_fb_cant_read_signed_tx">تراکنش امضاشده خوانده نشد</string>
+    <string name="rel5_fb_reaction_failed">واکنش ناموفق بود</string>
+    <string name="rel5_fb_update_group_photo">عکس گروه به‌روز نشد</string>
+    <string name="rel5_fb_resend_invites">دعوت‌ها دوباره ارسال نشدند</string>
+    <string name="rel5_fb_resend_invite">دعوت دوباره ارسال نشد</string>
+    <string name="rel5_fb_rename_group">نام گروه تغییر نکرد</string>
+    <string name="rel5_fb_create_group">گروه ساخته نشد</string>
+    <string name="rel5_fb_schedule_post">این پست زمان‌بندی نشد</string>
+    <string name="rel5_fb_load_more">موارد بیشتر بارگذاری نشد</string>
+    <string name="rel5_fb_share_link">پیوند اشتراک‌گذاری ساخته نشد.</string>
+    <string name="rel5_fb_connect">اتصال برقرار نشد</string>
+    <string name="rel5_fb_broadcast_failed">ارسال به شبکه ناموفق بود</string>
+    <string name="rel5_fb_backup_failed">پشتیبان‌گیری ناموفق بود</string>
+    <string name="rel5_restored_messages">%1$d پیام از %2$d گفتگو بازیابی شد.</string>
+    <string name="rel5_enter_group_name">یک نام برای گروه وارد کنید.</string>
+    <string name="rel5_add_one_member">دست‌کم یک عضو اضافه کنید.</string>
+    <string name="rel5_invalid_address_format">قالب آدرس Kaspa نامعتبر است.</string>
+</resources>

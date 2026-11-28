@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">Tidak ada aplikasi untuk membagikan CSV</string>
+    <string name="rel5_saves_photo_to_gallery">Menyimpan foto ke galeri Anda.</string>
+    <string name="rel5_chess_time_control">Catur - %1$s</string>
+    <string name="rel5_backed_up_just_now">Baru saja dicadangkan</string>
+    <string name="rel5_audio_file_empty">File audio kosong</string>
+    <string name="rel5_enter_valid_amount">Masukkan jumlah yang valid.</string>
+    <string name="rel5_server_error_code">Server mengembalikan galat (%1$d). Coba lagi sebentar lagi.</string>
+    <string name="rel5_fb_could_not_load_folder">Tidak dapat memuat folder ini.</string>
+    <string name="rel5_fb_failed_build_tx">Gagal membuat transaksi</string>
+    <string name="rel5_fb_edit_failed">Gagal mengedit</string>
+    <string name="rel5_fb_cant_read_signed_tx">Tidak dapat membaca transaksi yang ditandatangani</string>
+    <string name="rel5_fb_reaction_failed">Reaksi gagal</string>
+    <string name="rel5_fb_update_group_photo">Gagal memperbarui foto grup</string>
+    <string name="rel5_fb_resend_invites">Gagal mengirim ulang undangan</string>
+    <string name="rel5_fb_resend_invite">Gagal mengirim ulang undangan</string>
+    <string name="rel5_fb_rename_group">Gagal mengganti nama grup</string>
+    <string name="rel5_fb_create_group">Gagal membuat grup</string>
+    <string name="rel5_fb_schedule_post">Tidak dapat menjadwalkan postingan ini</string>
+    <string name="rel5_fb_load_more">Tidak dapat memuat lebih banyak</string>
+    <string name="rel5_fb_share_link">Tidak dapat membuat tautan berbagi.</string>
+    <string name="rel5_fb_connect">Tidak dapat terhubung</string>
+    <string name="rel5_fb_broadcast_failed">Gagal menyiarkan</string>
+    <string name="rel5_fb_backup_failed">Pencadangan gagal</string>
+    <string name="rel5_restored_messages">Memulihkan %1$d pesan dari %2$d obrolan.</string>
+    <string name="rel5_enter_group_name">Masukkan nama grup.</string>
+    <string name="rel5_add_one_member">Tambahkan setidaknya satu anggota.</string>
+    <string name="rel5_invalid_address_format">Format alamat Kaspa tidak valid.</string>
+</resources>

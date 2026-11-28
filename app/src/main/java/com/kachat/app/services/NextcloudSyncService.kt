@@ -114,6 +114,8 @@ class NextcloudSyncService @Inject constructor(
          *  60s, reset on the first success. */
         private const val WATCHER_BACKOFF_MULTIPLIER = 3L
         private const val WATCHER_BACKOFF_CAP_MS = 60_000L
+        /** Where in the foreground beat the watcher's PROPFIND lands, after the other polls. */
+        private const val WATCHER_BEAT_OFFSET_MS = 2_000L
 
         /** Periodic WorkManager fallback cadence for syncs the in-process paths missed. */
         const val PERIODIC_INTERVAL_HOURS = 6L
@@ -453,7 +455,14 @@ class NextcloudSyncService @Inject constructor(
             repeat(minOf(consecutiveFailures, 3)) {
                 delayMs = minOf(delayMs * WATCHER_BACKOFF_MULTIPLIER, WATCHER_BACKOFF_CAP_MS)
             }
-            delay(delayMs)
+            // On the shared foreground beat (30 s, 60 s metered), so the PROPFIND wakes the radio
+            // with the other polls; a backoff lands on the first beat at least that far away
+            // (audit 2026-11-27 R6).
+            if (consecutiveFailures == 0) {
+                ForegroundBeat.sleepUntilNextBeat(WATCHER_BEAT_OFFSET_MS)
+            } else {
+                ForegroundBeat.sleepUntilBeatAtLeast(delayMs, WATCHER_BEAT_OFFSET_MS)
+            }
             try {
                 if (!isAutoSyncActive(address)) continue
 

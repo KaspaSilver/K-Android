@@ -28,6 +28,11 @@ object IndexerHealth {
     /** Failures further apart than this aren't a run. */
     private const val FAILURE_WINDOW_MS = 120_000L
     private const val RETRY_INTERVAL_MS = 60_000L
+    /** A run of only timeouts and dropped connections on a metered path: how long it must last,
+     *  with no answer between, before it counts as an outage (audit 2026-11-27 R8). A weak
+     *  cellular signal times out now and then; an outage there starts the node's block stream,
+     *  tens of MB an hour over the same bad link. */
+    internal const val SLOW_LINK_RUN_MS = 120_000L
 
     private val _isDown = MutableStateFlow(false)
     /** True while the indexer has stopped answering. */
@@ -46,6 +51,10 @@ object IndexerHealth {
     private var failuresInARow = 0
     private var lastFailureAtMs = 0L
     private var retryAtMs = 0L
+    /** When the current run of failures began, and whether any of it was more than a slow link
+     *  (a refusal, a 5xx, a 429, a timeout on Wi-Fi). */
+    private var runStartedAtMs = 0L
+    private var runHasHardFailure = false
 
     /** Called once at app start, for an outage the app was killed during. */
     @Synchronized
@@ -56,9 +65,10 @@ object IndexerHealth {
         unfinishedOutageMs = store.getLong(KEY_OUTAGE_SINCE, 0L).takeIf { it > 0L }
     }
 
-    /** Counts toward an outage: 3 in a row at least 5 seconds apart. */
-    fun reportFailure() {
-        recordFailure(System.currentTimeMillis())
+    /** Counts toward an outage: 3 in a row at least 5 seconds apart. [slowLink]: a timeout or a
+     *  dropped connection on a metered path, which needs a run of [SLOW_LINK_RUN_MS] too. */
+    fun reportFailure(slowLink: Boolean = false) {
+        recordFailure(System.currentTimeMillis(), slowLink)
     }
 
     fun reportSuccess() {
@@ -67,14 +77,21 @@ object IndexerHealth {
     }
 
     @Synchronized
-    internal fun recordFailure(nowMs: Long): Boolean {
+    internal fun recordFailure(nowMs: Long, slowLink: Boolean = false): Boolean {
         val sinceLast = nowMs - lastFailureAtMs
         if (sinceLast > FAILURE_WINDOW_MS) failuresInARow = 0
+        if (failuresInARow == 0) {
+            runStartedAtMs = nowMs
+            runHasHardFailure = false
+        }
+        if (!slowLink) runHasHardFailure = true
         if (failuresInARow == 0 || sinceLast >= FAILURE_SPACING_MS) {
             lastFailureAtMs = nowMs
             failuresInARow += 1
         }
         if (downSinceMs != null || failuresInARow < FAILURES_TO_GO_DOWN) return false
+        // Only a slow link so far: an outage once it has lasted (R8).
+        if (!runHasHardFailure && nowMs - runStartedAtMs < SLOW_LINK_RUN_MS) return false
         // still the outage the app was killed during: it began back then
         val started = unfinishedOutageMs ?: nowMs
         downSinceMs = started
@@ -151,6 +168,8 @@ object IndexerHealth {
         failuresInARow = 0
         lastFailureAtMs = 0L
         retryAtMs = 0L
+        runStartedAtMs = 0L
+        runHasHardFailure = false
         _isDown.value = false
     }
 }

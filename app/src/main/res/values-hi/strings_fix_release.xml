@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">CSV शेयर करने के लिए कोई ऐप उपलब्ध नहीं है</string>
+    <string name="rel5_saves_photo_to_gallery">फ़ोटो को आपकी गैलरी में सेव करता है।</string>
+    <string name="rel5_chess_time_control">शतरंज - %1$s</string>
+    <string name="rel5_backed_up_just_now">अभी-अभी बैकअप हुआ</string>
+    <string name="rel5_audio_file_empty">ऑडियो फ़ाइल खाली है</string>
+    <string name="rel5_enter_valid_amount">एक मान्य राशि दर्ज करें।</string>
+    <string name="rel5_server_error_code">सर्वर ने एक त्रुटि लौटाई (%1$d)। थोड़ी देर में फिर कोशिश करें।</string>
+    <string name="rel5_fb_could_not_load_folder">यह फ़ोल्डर लोड नहीं हो सका।</string>
+    <string name="rel5_fb_failed_build_tx">लेन-देन नहीं बन सका</string>
+    <string name="rel5_fb_edit_failed">संपादन विफल रहा</string>
+    <string name="rel5_fb_cant_read_signed_tx">हस्ताक्षरित लेन-देन पढ़ा नहीं जा सका</string>
+    <string name="rel5_fb_reaction_failed">प्रतिक्रिया विफल रही</string>
+    <string name="rel5_fb_update_group_photo">ग्रुप फ़ोटो अपडेट नहीं हो सकी</string>
+    <string name="rel5_fb_resend_invites">आमंत्रण दोबारा नहीं भेजे जा सके</string>
+    <string name="rel5_fb_resend_invite">आमंत्रण दोबारा नहीं भेजा जा सका</string>
+    <string name="rel5_fb_rename_group">ग्रुप का नाम नहीं बदला जा सका</string>
+    <string name="rel5_fb_create_group">ग्रुप नहीं बन सका</string>
+    <string name="rel5_fb_schedule_post">यह पोस्ट शेड्यूल नहीं हो सकी</string>
+    <string name="rel5_fb_load_more">और लोड नहीं हो सका</string>
+    <string name="rel5_fb_share_link">शेयर लिंक नहीं बन सका।</string>
+    <string name="rel5_fb_connect">कनेक्ट नहीं हो सका</string>
+    <string name="rel5_fb_broadcast_failed">ब्रॉडकास्ट विफल रहा</string>
+    <string name="rel5_fb_backup_failed">बैकअप विफल रहा</string>
+    <string name="rel5_restored_messages">%1$d संदेश %2$d चैट से बहाल किए गए।</string>
+    <string name="rel5_enter_group_name">समूह का नाम दर्ज करें।</string>
+    <string name="rel5_add_one_member">कम से कम एक सदस्य जोड़ें।</string>
+    <string name="rel5_invalid_address_format">Kaspa पते का फ़ॉर्मेट अमान्य है।</string>
+</resources>

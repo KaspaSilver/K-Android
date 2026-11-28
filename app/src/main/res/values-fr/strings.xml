@@ -113,7 +113,6 @@
     <string name="qr_code">Code QR</string>
     <string name="read">Lu</string>
     <string name="receive">Recevoir</string>
-    <string name="recipient_address">Adresse du destinataire</string>
     <string name="remove">Retirer</string>
     <string name="rename">Renommer</string>
     <string name="rename_account">Renommer le compte</string>
@@ -230,7 +229,6 @@
     <string name="welcome_to_kachat">Bienvenue sur K</string>
     <string name="lets_walk_through_the_basics_so">Passons en revue les bases pour que vous soyez pret a envoyer votre premier message.</string>
     <string name="how_kachat_uses_kaspa">Comment K utilise Kaspa</string>
-    <string name="kachat_lets_you_send_and_receive">K vous permet d\'envoyer et de recevoir des messages sur le reseau Kaspa lui-meme. Kaspa est necessaire pour payer les frais lors de l\'envoi de vos messages. Les frais que vous payez vont aux mineurs qui securisent le reseau.</string>
     <string name="finish">Terminer</string>
     <string name="choose_your_language">Choisissez votre langue</string>
     <string name="select_the_language_youd_like_to">Selectionnez la langue que vous souhaitez utiliser dans K.</string>
@@ -270,7 +268,6 @@
     <string name="connection_tab_explorer">Explorateur</string>
     <string name="message_indexer">Indexeur de messages</string>
     <string name="coming_soon">Bientôt</string>
-    <string name="not_available_on_this_network">Indisponible sur ce réseau</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">La visite complète de démarrage : portefeuille, discussions, paiements et plus.</string>
@@ -710,7 +707,7 @@
     <string name="pr_send_request">Envoyer la demande de paiement</string>
     <!-- Chat list: delete one chat (iOS ChatListView rowDeleteContact) -->
     <string name="delete_chat_q">Delete Chat?</string>
-    <string name="delete_chat_alert_message">This permanently deletes every message in this chat from this device. This cannot be undone.</string>
+    <string name="delete_chat_alert_message">Cela supprime définitivement tous les messages de cette discussion sur cet appareil. Cette action est irréversible.</string>
     <!-- .kachat transaction sheet: coins are combined only after the slide (iOS 778a8fc, IOS-075) -->
     <!-- An address's Domains tab: one card per name service (iOS fe52376) -->
     <!-- Request Payment: Fresh Address / Choose an Address, Used / Unused (iOS 86dfd2d, 6dee531, 338d9f5) -->
@@ -1121,7 +1118,6 @@
     <string name="write_down_your_12_or_24_words">Notez vos 12 ou 24 mots avant de supprimer.</string>
     <string name="view_12_or_24_words_and_passphrase">Voir les 12 ou 24 mots et la phrase secrète</string>
     <string name="the_passphrase_shows_too_if_this_account">La phrase secrète s\'affiche aussi, si ce compte en a une.</string>
-    <string name="transaction_id_tap_to_view_in">ID de transaction · touchez pour voir dans %1$s</string>
     <string name="transaction_id">ID de transaction</string>
     <string name="unsilence">Retirer la sourdine</string>
     <string name="silence">Mettre en sourdine</string>
@@ -1158,7 +1154,6 @@
     <string name="adding_of">Ajout de %1$d sur %2$d</string>
     <string name="adding_member">Ajout du membre</string>
     <string name="each_member_re_keys_the_group_on">Chaque membre renouvelle les clés du groupe sur la chaîne, cela peut donc prendre une minute. Laissez l\'application ouverte.</string>
-    <string name="member_s_could_not_be_added_added">%1$d membre(s) n\'ont pas pu être ajoutés (%2$d ajoutés). Veuillez réessayer.</string>
     <string name="clears_the_unread_badge_on_this_group">Retire le badge non lu de ce groupe.</string>
     <string name="notifications_from_this_group_resume_including_menti">Les notifications de ce groupe reprennent, y compris les mentions.</string>
     <string name="no_notification_from_this_group_mentions_included">Aucune notification de ce groupe, mentions comprises.</string>
@@ -1242,7 +1237,6 @@
     <string name="couldnt_load_the_coins">Impossible de charger les pièces.</string>
     <string name="these_words_are_invalid_double_check_the">Ces mots ne sont pas valides. Vérifiez-les bien - le dernier mot contient une somme de contrôle, donc un seul mot erroné fait échouer la validation.</string>
     <string name="invalid_words_please_enter_12_or_24">Mots non valides. Veuillez saisir 12 ou 24 mots.</string>
-    <string name="retry_failed">Échec de la nouvelle tentative</string>
     <string name="saving_keep_the_card_still">Enregistrement. Ne bougez pas la carte.</string>
     <string name="reading_keep_the_card_still">Lecture. Ne bougez pas la carte.</string>
     <string name="ready_to_scan">Prêt à scanner</string>
@@ -1269,8 +1263,6 @@
     <string name="recovered_n_messages">%1$d messages que cet appareil n\'avait pas pu lire ont été récupérés.</string>
     <string name="estimated_network_fee_one">\n\nFrais de réseau estimés ≈ %1$s %2$s sur 1 transaction.</string>
     <string name="estimated_network_fee_n">\n\nFrais de réseau estimés ≈ %1$s %2$s sur %3$d transactions.</string>
-    <string name="add_one_member_to_group">Ajouter 1 membre au groupe ?%1$s</string>
-    <string name="add_n_members_to_group">Ajouter %1$d membres au groupe ?%2$s</string>
     <string name="this_group">ce groupe</string>
     <string name="one_member">1 membre</string>
     <string name="video_emoji">🎬 Vidéo</string>
@@ -1395,7 +1387,6 @@
     <string name="chess_tc_no_timer">Sans pendule.</string>
     <string name="recents">Récents</string>
     <string name="initial_sync_starting">Démarrage</string>
-    <string name="initial_sync_finished">Terminé</string>
     <string name="wiping_incoming_messages">Effacement des messages entrants...</string>
     <string name="finishing_up">Finalisation...</string>
     <string name="re_syncing_chats_progress">Resynchronisation... %1$d sur %2$d discussions</string>
@@ -1446,7 +1437,6 @@
     <string name="notification_mode_default">Par défaut (%1$s)</string>
     <string name="checking_address_n">Vérification de l\'adresse n° %1$d</string>
     <string name="n_found_so_far">%1$d trouvé(s) jusqu\'ici</string>
-    <string name="first_sync_all_set">Tout est prêt</string>
     <string name="nc_use_all_files">Utiliser tous les fichiers</string>
     <string name="nc_use_this_folder">Utiliser ce dossier</string>
     <string name="nc_no_subfolders">Aucun sous-dossier.</string>
@@ -1469,7 +1459,6 @@
     <string name="chess_notif_move">♟️ A joué %1$s → %2$s</string>
     <string name="chess_notif_lost_on_time">♟️ A perdu au temps</string>
     <string name="chess_notif_resigned">♟️ A abandonné la partie d\'échecs</string>
-    <string name="fee_label">Frais</string>
     <plurals name="create_group_and_invite">
         <item quantity="one">Créer « %1$s » et inviter %2$d membre ?</item>
         <item quantity="many">Créer « %1$s » et inviter %2$d membres ?</item>
@@ -1518,8 +1507,6 @@
     <string name="kusdt_build_failed">La transaction n’a pas pu être créée. Rien n’a été envoyé.</string>
     <string name="token_held_on_addresses">%1$d adresses</string>
     <string name="token_received_title">%1$s reçus</string>
-    <string name="token_received_on_one">Sur votre %1$s</string>
-    <string name="token_received_on_many">Sur %1$d de vos adresses</string>
     <string name="connection_not_set">Non défini</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">Copier le lien de partage</string>
@@ -1626,4 +1613,5 @@
     <string name="history_change_to_address">Monnaie %1$s vers %2$s</string>
     <string name="cycle_hint_next_page">Passe à la page suivante</string>
     <string name="cycle_hint_next_feed">Passe au fil suivant</string>
+    <string name="gif">GIF</string>
 </resources>

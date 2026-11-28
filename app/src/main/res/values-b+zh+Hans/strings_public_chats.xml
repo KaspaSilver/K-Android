@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">网络仍在确认你上一次的发送。请几秒钟后重试。</string>
     <string name="pc_l53_room_kept_for">保留时长</string>
     <string name="pc_l53_room_on_this_device">在此设备上</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">加载更早的消息</string>
     <string name="pc_no_testnet_indexer_yet">尚无测试网索引器</string>
     <string name="pc_room_no_spendable_funds_yet">当前还没有可用可花费资金。请等待确认后再试。</string>
     <string name="pc_room_not_enough_kas">你的聊天地址上 KAS 不足。请添加一些后重试。</string>

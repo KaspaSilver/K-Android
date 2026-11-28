@@ -2,7 +2,6 @@
 <!-- Swap (iPhone 5.4 518fdc8c: SwapView, SwapService, TrestlyTrade), from the iPhone's
      Localizable.strings for the same keys. -->
 <resources>
-    <string name="swap_title">سوآپ</string>
     <string name="swap_failed">سوآپ ناموفق بود</string>
     <string name="swap_couldnt_read_amounts">مبالغ این سوآپ خوانده نشد</string>
     <string name="swap_already_holds">این سوآپ از قبل در آن هست - افزودن دوباره آن را دو بار حساب می‌کند.</string>
@@ -14,7 +13,6 @@
     <string name="swap_destination_tag_optional">تگ مقصد (اختیاری)</string>
     <string name="swap_destination_tag_hint">فقط اگر آدرس دریافت به آن نیاز دارد، مثل بیشتر صرافی‌ها. بدون آن، صرافی نمی‌تواند کوین‌های شما را واریز کند.</string>
     <string name="swap_from_kusdt_lands">سوآپ از (kUSDT اینجا می‌رسد)</string>
-    <string name="swap_from_kas_lands">سوآپ از (KAS اینجا می‌رسد)</string>
     <string name="swap_change">تغییر</string>
     <string name="swap_powered_by_trestly">با قدرت Trestly</string>
     <string name="swap_powered_by_changenow">با قدرت ChangeNOW</string>
@@ -48,8 +46,6 @@
     <string name="swap_deposit_address">آدرس واریز</string>
     <string name="swap_couldnt_reach_changenow">دسترسی به ChangeNOW ممکن نشد - دوباره تلاش کنید</string>
     <string name="swap_details">جزئیات سوآپ</string>
-    <string name="swap_used">استفاده‌شده</string>
-    <string name="swap_unused">استفاده‌نشده</string>
     <string name="swap_search_coins">جستجوی کوین‌ها</string>
     <string name="swap_agreements_intro">سوآپ از دو سرویس استفاده می‌کند که K آن‌ها را اداره نمی‌کند. پیش از ادامه، هر دو را بخوانید و بپذیرید.</string>
     <string name="swap_coins_on_other_networks">کوین‌ها در شبکه‌های دیگر</string>

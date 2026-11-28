@@ -488,8 +488,9 @@ class ChatRepository @Inject constructor(
      * all, so an untagged reply would never reach them. Tagging costs nothing there: the payment
      * already links the two addresses on chain.
      */
-    suspend fun firstContactInboxTag(address: String): String? {
-        val me = runCatching { walletManager.getAddress() }.getOrNull() ?: return null
+    suspend fun firstContactInboxTag(address: String, me: String? = null): String? {
+        @Suppress("NAME_SHADOWING")
+        val me = me ?: runCatching { walletManager.getAddress() }.getOrNull() ?: return null
         return firstContactInboxTagFor(
             address = address,
             me = me,
@@ -512,6 +513,9 @@ class ChatRepository @Inject constructor(
         api: KasiaIndexerApi? = networkService.indexerApi.value,
     ) {
         if (myAddress.isEmpty() || api == null) return
+        // Called straight from a handshake push too (a process the poll loop never synced in):
+        // the baseline must be this account's before anything is filed (audit C2).
+        if (liveBaselineMs == Long.MAX_VALUE) liveBaselineMs = settingsRepository.liveNotificationBaseline(myAddress)
         // Only the indexer can look a tag up: while it's down the block stream finds them instead
         // ([runInboxBlockScan]), and that isn't a failed read.
         if (com.kachat.app.services.IndexerHealth.isDown.value) return
@@ -740,11 +744,16 @@ class ChatRepository @Inject constructor(
      * a spending address does not come here: iOS's payment sync only sees the chatting address's
      * transfers, so a plain send from a spending address opens no chat and watches no one.
      */
-    suspend fun recordPlainSendFromChattingAddress(toAddress: String, txId: String, amountSompi: Long) {
+    suspend fun recordPlainSendFromChattingAddress(toAddress: String, txId: String, amountSompi: Long, owner: String? = null) {
         val myAddress = runCatching { walletManager.getAddress() }.getOrNull()?.takeIf { it.isNotBlank() } ?: return
+        // Made by another account than the one now signed in (audit A2): not filed here, where it
+        // would add that account's payee as a contact and show a payment this one never made.
+        // The owner's payment sync reads it from its own history once it is back.
+        if (owner != null && !owner.equals(myAddress, ignoreCase = true)) return
         val destination = toAddress.trim()
         if (destination.isBlank() || txId.isBlank()) return
         if (isOwnAccountAddress(destination) || isOwnSpendingAddress(destination)) return
+        if (!isActiveWalletAddress(myAddress)) return
         watchPaymentDestination(destination)
         // Refused (or not added) - no chat to file the send in.
         if (database.contactDao().getContact(destination, myAddress) == null) return
@@ -1113,8 +1122,9 @@ class ChatRepository @Inject constructor(
     /** See ContactDao.clearKnsAvatars. */
     suspend fun clearStoredKnsAvatars(): Int = database.contactDao().clearKnsAvatars()
 
-    suspend fun getContact(id: String): ContactEntity? {
-        return database.contactDao().getContact(id, walletManager.getAddress())
+    /** [walletAddress]: the account a send or sync captured (audit C4/C5); null = the active one. */
+    suspend fun getContact(id: String, walletAddress: String? = null): ContactEntity? {
+        return database.contactDao().getContact(id, walletAddress ?: walletManager.getAddress())
     }
 
     suspend fun insertMessage(message: MessageEntity) {
@@ -1199,9 +1209,14 @@ class ChatRepository @Inject constructor(
         deferredPaymentIds.remove(pendingId)
     }
 
-    /** One message row by id for the active account, or null. */
-    suspend fun getMessage(id: String): MessageEntity? =
-        database.messageDao().getById(id, walletManager.getAddress())
+    /** One message row by id, or null. [walletAddress]: the account a send captured at its start
+     *  (audit C4), so a send that outlasted an account switch still finds its own row; null =
+     *  the active account. */
+    suspend fun getMessage(id: String, walletAddress: String? = null): MessageEntity? =
+        database.messageDao().getById(id, walletAddress ?: walletManager.getAddress())
+
+    /** See [DefiniteSendFailures] (audit C3). */
+    private val definiteSendFailures by lazy { DefiniteSendFailures(appContext) }
 
     /** Outcome of matching an incoming outgoing-direction archive row against local in-flight placeholders. */
     sealed class ProvisionalMatch {
@@ -1238,14 +1253,16 @@ class ChatRepository @Inject constructor(
             // `updateOutgoingPendingMessageIfMatch`), never taken by another message's.
             .filter { it.deliveryStatus != "warning" }
             .filter { nearTimestamp <= 0L || kotlin.math.abs(it.blockTimestamp - nearTimestamp) <= PROVISIONAL_MATCH_WINDOW_MS }
-        return matchProvisionalCandidates(candidates, plaintextBody, nearTimestamp)
+        return matchProvisionalCandidates(candidates, plaintextBody, nearTimestamp, definiteSendFailures.ids())
     }
 
     /** A Failed send goes back to pending for its Retry, or false when there is nothing left to
      *  retry: a second tap finds it already taken, where it used to stay Failed and post twice
      *  (iOS 4f8e14bb). */
-    suspend fun claimFailedSendForRetry(id: String): Boolean =
-        database.messageDao().claimFailedForRetry(id, walletManager.getAddress()) > 0
+    suspend fun claimFailedSendForRetry(id: String, walletAddress: String? = null): Boolean =
+        (database.messageDao().claimFailedForRetry(id, walletAddress ?: walletManager.getAddress()) > 0)
+            // Being sent again: a copy of it may now land (audit C3).
+            .also { claimed -> if (claimed) definiteSendFailures.remove(id) }
 
     /**
      * Import-side collapse: the archive carries the confirmed copy ([imported], id = real txId)
@@ -1357,12 +1374,15 @@ class ChatRepository @Inject constructor(
     private suspend fun repairStuckProvisionalMessages(myAddress: String) {
         try {
             val now = System.currentTimeMillis()
-            for (row in database.messageDao().getProvisionalOutgoingForWallet(myAddress)) {
+            val placeholders = database.messageDao().getProvisionalOutgoingForWallet(myAddress)
+            val definite = definiteSendFailures.ids()
+            for (row in placeholders) {
                 if (row.id in deferredPaymentIds) continue
                 if (now - row.syncedAt < PROVISIONAL_REPAIR_MIN_AGE_MS) continue
+                if (!mayLookForOwnCopy(row, placeholders, definite)) continue
                 val body = row.plaintextBody?.trim().takeUnless { it.isNullOrEmpty() }
                 val hasDelivered = body != null && database.messageDao().hasDeliveredDuplicate(
-                    row.contactId, myAddress, body, row.blockTimestamp, PROVISIONAL_MATCH_WINDOW_MS
+                    row.contactId, myAddress, body, row.blockTimestamp, PROVISIONAL_OWN_COPY_WINDOW_MS
                 )
                 if (hasDelivered) {
                     database.messageDao().deleteById(row.id, myAddress)
@@ -1389,13 +1409,18 @@ class ChatRepository @Inject constructor(
     private suspend fun failPendingSendsFromBeforeThisRun(myAddress: String) {
         if (!lastRunPendingsChecked.add(myAddress)) return
         try {
-            for (row in database.messageDao().getProvisionalOutgoingForWallet(myAddress)) {
+            val placeholders = database.messageDao().getProvisionalOutgoingForWallet(myAddress)
+            val definite = definiteSendFailures.ids()
+            for (row in placeholders) {
                 if (row.deliveryStatus != "pending" || row.blockTimestamp >= processStartedAtMs) continue
                 if (row.id in deferredPaymentIds) continue
                 val body = row.plaintextBody?.trim().takeUnless { it.isNullOrEmpty() }
-                val hasDelivered = body != null && database.messageDao().hasDeliveredDuplicate(
-                    row.contactId, myAddress, body, row.blockTimestamp, PROVISIONAL_MATCH_WINDOW_MS
-                )
+                // Only its own copy, sent within minutes of it, collapses it - never an earlier
+                // message with the same text (audit C3); otherwise it is marked failed, as on iOS.
+                val hasDelivered = body != null && mayLookForOwnCopy(row, placeholders, definite) &&
+                    database.messageDao().hasDeliveredDuplicate(
+                        row.contactId, myAddress, body, row.blockTimestamp, PROVISIONAL_OWN_COPY_WINDOW_MS
+                    )
                 if (hasDelivered) {
                     database.messageDao().deleteById(row.id, myAddress)
                     Log.i("ChatRepository", "Collapsed leftover provisional ${row.id.take(24)} (delivered sibling with same content exists)")
@@ -1412,8 +1437,15 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun updateMessageStatus(id: String, status: String) {
-        database.messageDao().updateStatus(id, walletManager.getAddress(), status)
+    /** [walletAddress]: the account the send was started under (audit C4) - a send refused or
+     *  failing after an account switch still marks its own row; null = the active account.
+     *  "failed" here is always a definite failure (an unknown outcome becomes "warning"), which
+     *  keeps the row from ever being collapsed into another message ([DefiniteSendFailures]). */
+    suspend fun updateMessageStatus(id: String, status: String, walletAddress: String? = null) {
+        database.messageDao().updateStatus(id, walletAddress ?: walletManager.getAddress(), status)
+        if (id.startsWith("pending_")) {
+            if (status == "failed") definiteSendFailures.add(id) else definiteSendFailures.remove(id)
+        }
         // A failed send may have landed after all: the stuck-pair repair runs again once the row
         // is old enough for it to touch (audit 2026-11-25 S5, [runSync]).
         if (status == "failed") {
@@ -1421,8 +1453,9 @@ class ChatRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteMessage(id: String) {
-        database.messageDao().deleteById(id, walletManager.getAddress())
+    /** [walletAddress]: the account the row belongs to; null = the active one. */
+    suspend fun deleteMessage(id: String, walletAddress: String? = null) {
+        database.messageDao().deleteById(id, walletAddress ?: walletManager.getAddress())
     }
 
     /**
@@ -1691,6 +1724,8 @@ class ChatRepository @Inject constructor(
         pushedMessageQueue.removeAllData(address)
         noticeBubbleStore.removeAllData(address)
         photoUnlockStore.removeAllData(address)
+        // Notices owed for its spending-address payments, memos included (audit A1).
+        com.kachat.app.services.ChatPaymentSender.OwedSpendingNotices.removeAllData(appContext, address)
         // The messages deleted on this device, 1:1 and group (iOS d7c56280 DeletedMessageLog.forget).
         kotlinx.coroutines.withContext(Dispatchers.IO) { com.kachat.app.services.DeletedMessageLog.forget(appContext, address) }
         contactNotesLazy.get().removeAllData(address)
@@ -2008,6 +2043,14 @@ class ChatRepository @Inject constructor(
         if (pushedMessageQueue.entries(myAddress).isEmpty()) return
         if (!pushedIngestMutex.tryLock()) return
         try {
+            // Queued under another account than the one now signed in: it waits in that account's
+            // queue for its next sign-in (the baseline below is process-wide, the active account's).
+            val active = runCatching { walletManager.getAddress() }.getOrNull()
+            if (active == null || !active.equals(myAddress, ignoreCase = true)) return
+            // A process FCM started in the background never ran the poll loop's sync, so the
+            // baseline was still "unknown" (Long.MAX_VALUE) and every pushed message was filed as
+            // read backfill: no unread badge (audit C2). Load it as every sync entry point does.
+            liveBaselineMs = settingsRepository.liveNotificationBaseline(myAddress)
             val now = System.currentTimeMillis()
             val pending = pushedMessageQueue.entries(myAddress)
             val done = mutableSetOf<String>()
@@ -2438,6 +2481,9 @@ class ChatRepository @Inject constructor(
         pollPass: PollPass? = null,
         onContactDone: (suspend (done: Int, total: Int) -> Unit)? = null
     ): Int {
+        // Safety net for an entry point that didn't load it (audit C2): "unknown" would file
+        // every live message as read backfill.
+        if (liveBaselineMs == Long.MAX_VALUE) liveBaselineMs = settingsRepository.liveNotificationBaseline(myAddress)
         val pollShaped = pollPass != null
         // In the background without push: incoming only - no own sends, no alias discovery (A3).
         val incomingOnly = pollPass == PollPass.BACKGROUND
@@ -4603,12 +4649,21 @@ class ChatRepository @Inject constructor(
             candidates: List<MessageEntity>,
             plaintextBody: String?,
             nearTimestamp: Long,
+            /** Placeholders whose send failed with a definite error ([DefiniteSendFailures]). */
+            definitelyFailed: Set<String> = emptySet(),
         ): ProvisionalMatch {
             if (candidates.isEmpty()) return ProvisionalMatch.None
             val body = plaintextBody?.trim()
             if (!body.isNullOrEmpty()) {
                 val sameText = candidates.filter { it.plaintextBody?.trim() == body }
-                (sameText.firstOrNull { it.deliveryStatus == "pending" } ?: sameText.firstOrNull())
+                // A Failed row is taken over only by what can be its own copy (audit C3): never
+                // one that failed for sure, and only a copy sent within minutes of it - not an
+                // own send of the same text from another device hours later.
+                (sameText.firstOrNull { it.deliveryStatus == "pending" }
+                    ?: sameText.firstOrNull {
+                        it.deliveryStatus == "failed" && it.id !in definitelyFailed &&
+                            nearTimestamp > 0L && isOwnCopyTime(it.blockTimestamp, nearTimestamp)
+                    })
                     ?.let { return ProvisionalMatch.Exact(it) }
             }
             val pending = candidates.filter { it.deliveryStatus == "pending" }
@@ -5018,6 +5073,32 @@ class ChatRepository @Inject constructor(
         /** Minimum placeholder age before the repair sweep may touch it — anything younger could
          *  be a live in-flight send whose finalize is about to run. */
         internal const val PROVISIONAL_REPAIR_MIN_AGE_MS = 2L * 60 * 1000
+
+        /**
+         * How far from a placeholder a delivered message with the same text may sit and still be
+         * that send's own copy, for the repair sweep and a Failed row (audit 2026-11-27 C3). The
+         * real pair is seconds apart; 48 hours let an earlier "ok" delete a later Failed "ok".
+         */
+        internal const val PROVISIONAL_OWN_COPY_WINDOW_MS = PROVISIONAL_CLOCK_SKEW_MS
+
+        /** Whether a copy at [copyTimestamp] can belong to a send placed at [placeholderTimestamp]. */
+        internal fun isOwnCopyTime(placeholderTimestamp: Long, copyTimestamp: Long): Boolean =
+            kotlin.math.abs(copyTimestamp - placeholderTimestamp) <= PROVISIONAL_OWN_COPY_WINDOW_MS
+
+        /**
+         * Whether the repair may look for [row]'s delivered copy at all (audit C3): never for a send
+         * that failed for sure (it never went out), and not while another placeholder with the
+         * same text sits near it - one delivered copy can't tell the two apart, so neither goes.
+         */
+        internal fun mayLookForOwnCopy(row: MessageEntity, placeholders: List<MessageEntity>, definitelyFailed: Set<String>): Boolean {
+            if (row.id in definitelyFailed) return false
+            val body = row.plaintextBody?.trim().takeUnless { it.isNullOrEmpty() } ?: return false
+            return placeholders.none { other ->
+                other.id != row.id && other.contactId == row.contactId && other.walletAddress == row.walletAddress &&
+                    other.plaintextBody?.trim() == body &&
+                    kotlin.math.abs(other.blockTimestamp - row.blockTimestamp) <= 2 * PROVISIONAL_OWN_COPY_WINDOW_MS
+            }
+        }
     }
 }
 

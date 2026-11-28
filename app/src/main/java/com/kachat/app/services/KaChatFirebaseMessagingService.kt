@@ -358,6 +358,12 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
                     // "Started a conversation") — no decryption needed.
                     "payment", "handshake" -> {
                         val sender = data["sender"] ?: return@runBlocking
+                        // Possibly for the account signed in before this one (audit C6): silent.
+                        if (notificationHelper.pushMayBeForPreviousAccount(data["receiver"] ?: data["recipient"], ownAddress)) {
+                            data["tx_id"]?.takeIf { it.isNotBlank() }?.let { notificationHelper.claimWithoutNotifying(it) }
+                            Log.i(TAG, "Silenced a $type push that may be for the previous account")
+                            return@runBlocking
+                        }
                         // A blocked address rings nothing, payments included: the request rule
                         // below skips payments (iOS 8cb4c88e, audit 2026-11-24 notifications).
                         if (type == "payment" && chatRepository.isChatBlocked(sender)) {

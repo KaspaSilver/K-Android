@@ -64,15 +64,39 @@ class PushBackgroundAuditFixTest {
     // Battery exemption: only where push can't deliver
 
     @Test
-    fun `push counts as unavailable with no service or a failed registration, not while unknown`() {
-        assertTrue(PushState.pushUnavailable(pushActive = false, noPushService = true, lastAction = null, lastAttemptSucceeded = null))
-        assertTrue(PushState.pushUnavailable(pushActive = false, noPushService = false, lastAction = "register", lastAttemptSucceeded = false))
-        assertFalse(PushState.pushUnavailable(pushActive = false, noPushService = false, lastAction = null, lastAttemptSucceeded = null))
-        assertFalse(PushState.pushUnavailable(pushActive = true, noPushService = false, lastAction = "register", lastAttemptSucceeded = true))
-        // Notifications switched off: an unregister, nothing for the exemption to deliver.
-        assertFalse(PushState.pushUnavailable(pushActive = false, noPushService = false, lastAction = "unregister", lastAttemptSucceeded = true))
+    fun `push counts as unavailable with no service or repeated failed registrations, not while unknown`() {
+        val hour = PushState.UNAVAILABLE_AFTER_MS
+        val now = 10 * hour
+        assertTrue(PushState.pushUnavailable(pushActive = false, noPushService = true, failedRegistrations = 0, failingSinceMs = 0L, nowMs = now))
+        assertTrue(PushState.pushUnavailable(pushActive = false, noPushService = false, failedRegistrations = 3, failingSinceMs = now - hour, nowMs = now))
+        assertFalse(PushState.pushUnavailable(pushActive = false, noPushService = false, failedRegistrations = 0, failingSinceMs = 0L, nowMs = now))
+        // Notifications switched off (an unregister) or a success: no streak.
+        assertFalse(PushState.pushUnavailable(pushActive = true, noPushService = false, failedRegistrations = 0, failingSinceMs = 0L, nowMs = now))
         // A push working before, failing now.
-        assertFalse(PushState.pushUnavailable(pushActive = true, noPushService = false, lastAction = "register", lastAttemptSucceeded = false))
+        assertFalse(PushState.pushUnavailable(pushActive = true, noPushService = false, failedRegistrations = 5, failingSinceMs = now - 2 * hour, nowMs = now))
+    }
+
+    // Audit 2026-11-27 R7: one failure is not enough
+
+    @Test
+    fun `a single failed registration does not count as push unavailable`() {
+        val now = 10 * PushState.UNAVAILABLE_AFTER_MS
+        assertFalse(PushState.pushUnavailable(pushActive = false, noPushService = false, failedRegistrations = 1, failingSinceMs = now - 2 * PushState.UNAVAILABLE_AFTER_MS, nowMs = now))
+        // Three quick failures within the hour: still not.
+        assertFalse(PushState.pushUnavailable(pushActive = false, noPushService = false, failedRegistrations = 3, failingSinceMs = now - 60_000L, nowMs = now))
+        // Failing since never recorded: not.
+        assertFalse(PushState.pushUnavailable(pushActive = false, noPushService = false, failedRegistrations = 3, failingSinceMs = 0L, nowMs = now))
+    }
+
+    @Test
+    fun `the failure streak counts in a row from its first failure and a success clears it`() {
+        var streak = PushState.RegisterFailures()
+        streak = PushState.nextRegisterFailures(streak, succeeded = false, nowMs = 1_000L)
+        assertEquals(PushState.RegisterFailures(1, 1_000L), streak)
+        streak = PushState.nextRegisterFailures(streak, succeeded = false, nowMs = 5_000L)
+        streak = PushState.nextRegisterFailures(streak, succeeded = false, nowMs = 9_000L)
+        assertEquals(PushState.RegisterFailures(3, 1_000L), streak)
+        assertEquals(PushState.RegisterFailures(), PushState.nextRegisterFailures(streak, succeeded = true, nowMs = 10_000L))
     }
 
     // P4: a queued push's clock starts at its arrival

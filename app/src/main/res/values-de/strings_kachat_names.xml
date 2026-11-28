@@ -49,7 +49,6 @@
     <string name="kl_message">Nachricht</string>
     <string name="kl_name">Name</string>
     <string name="kl_note_buy">Beim Kauf wird der Verkäufer bezahlt und der Name in einer einzigen Transaktion an dich übertragen.</string>
-    <string name="kl_note_message">Nachrichten gehen an den Verkäufer wie jeder KaChat-Chat.</string>
     <string name="kl_note_offer">Ein Angebot sperrt deine KAS on-chain, bis der Verkäufer es annimmt, du es zurückziehst oder es abläuft.</string>
     <string name="kl_offer">Angebot</string>
     <string name="kl_offer_detail">Nenne deinen eigenen Preis. Deine KAS warten on-chain, bis der Verkäufer annimmt, du das Angebot zurückziehst oder es abläuft.</string>

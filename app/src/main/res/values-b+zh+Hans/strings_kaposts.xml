@@ -127,4 +127,8 @@
     <string name="pr_card_view">查看</string>
     <string name="kaposts_scheduled_reminder_body">你的帖子已准备好发送。打开 K 即可发送。</string>
     <string name="kaposts_see_all_posts">查看所有帖子</string>
+    <string name="kaposts_couldnt_schedule_toast">无法定时：%1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">已定时于 %1$s - 将从此手机发送</string>
+    <string name="kaposts_tip_didnt_send">打赏未发送：%1$s</string>
+    <string name="pr_card_pay">支付</string>
 </resources>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The app shell (iOS 148a5331): dock, Kaspa Hub, Customize Dock, KaChat Stats, Kaspa Websites, Settings rows. Generated from iOS Localizable.strings. -->
 <resources>
-    <string name="shell_tab_kachat" translatable="false">.kachat</string>
     <string name="shell_kaspa_hub">Kaspa Hub</string>
     <string name="shell_tab_websites">Websites</string>
     <string name="shell_kaspa_websites">Kaspa Websites</string>

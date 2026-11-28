@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">CSV dosyasını paylaşacak uygulama yok</string>
+    <string name="rel5_saves_photo_to_gallery">Fotoğrafı galerine kaydeder.</string>
+    <string name="rel5_chess_time_control">Satranç - %1$s</string>
+    <string name="rel5_backed_up_just_now">Az önce yedeklendi</string>
+    <string name="rel5_audio_file_empty">Ses dosyası boş</string>
+    <string name="rel5_enter_valid_amount">Geçerli bir tutar gir.</string>
+    <string name="rel5_server_error_code">Sunucu bir hata döndürdü (%1$d). Birazdan tekrar dene.</string>
+    <string name="rel5_fb_could_not_load_folder">Bu klasör yüklenemedi.</string>
+    <string name="rel5_fb_failed_build_tx">İşlem oluşturulamadı</string>
+    <string name="rel5_fb_edit_failed">Düzenleme başarısız</string>
+    <string name="rel5_fb_cant_read_signed_tx">İmzalı işlem okunamadı</string>
+    <string name="rel5_fb_reaction_failed">Tepki gönderilemedi</string>
+    <string name="rel5_fb_update_group_photo">Grup fotoğrafı güncellenemedi</string>
+    <string name="rel5_fb_resend_invites">Davetler yeniden gönderilemedi</string>
+    <string name="rel5_fb_resend_invite">Davet yeniden gönderilemedi</string>
+    <string name="rel5_fb_rename_group">Grup yeniden adlandırılamadı</string>
+    <string name="rel5_fb_create_group">Grup oluşturulamadı</string>
+    <string name="rel5_fb_schedule_post">Bu gönderi zamanlanamadı</string>
+    <string name="rel5_fb_load_more">Daha fazlası yüklenemedi</string>
+    <string name="rel5_fb_share_link">Paylaşım bağlantısı oluşturulamadı.</string>
+    <string name="rel5_fb_connect">Bağlanılamadı</string>
+    <string name="rel5_fb_broadcast_failed">Ağa gönderilemedi</string>
+    <string name="rel5_fb_backup_failed">Yedekleme başarısız</string>
+    <string name="rel5_restored_messages">%1$d mesaj, %2$d sohbetten geri yüklendi.</string>
+    <string name="rel5_enter_group_name">Bir grup adı gir.</string>
+    <string name="rel5_add_one_member">En az bir üye ekle.</string>
+    <string name="rel5_invalid_address_format">Geçersiz Kaspa adresi biçimi.</string>
+</resources>

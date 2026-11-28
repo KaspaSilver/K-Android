@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -64,7 +65,22 @@ class NotificationHelper @Inject constructor(
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?) = size > 200
     }
 
+    /** When an account was last signed in to in this process (audit C6), for [pushMayBeForPreviousAccount]. */
+    @Volatile private var accountSignedInAtMs = 0L
+
     init {
+        // A sign-in to another account than the one signed in before: an account switch is Log
+        // Out, then a sign-in. Signing back in to the same account is no switch.
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default).launch {
+            var lastSignedIn: String? = null
+            walletManager.signedInAddressFlow.collect { address ->
+                if (address == null) return@collect
+                if (lastSignedIn != null && !lastSignedIn.equals(address, ignoreCase = true)) {
+                    accountSignedInAtMs = System.currentTimeMillis()
+                }
+                lastSignedIn = address
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // A channel's sound/vibration is fixed by the OS once created — the app can't
             // flip it later, only the user can (in system notification settings). The only
@@ -90,6 +106,17 @@ class NotificationHelper @Inject constructor(
             manager?.deleteNotificationChannel("kachat_sync_service")
         }
     }
+
+    /**
+     * Whether a payment or handshake push may be meant for the account signed in before this one
+     * (audit C6). Those pushes don't say whom they are for, and moving the push registration from
+     * the old account to the new one takes network calls, so one for the old account can still
+     * arrive: shown, it rang "<sender> - Sent you X KAS" under the new account. One naming its
+     * [recipient] is checked against [activeAddress]; one that doesn't is held back for
+     * [AccountPushGuard.SWITCH_GRACE_MS] after a sign-in. The sync still files whatever is real.
+     */
+    fun pushMayBeForPreviousAccount(recipient: String?, activeAddress: String?): Boolean =
+        AccountPushGuard.mayBeForPreviousAccount(recipient, activeAddress, accountSignedInAtMs, System.currentTimeMillis())
 
     /** See [appForeground] — driven by KaChatApplication's ProcessLifecycleOwner observer. */
     fun setAppForeground(foreground: Boolean) {
@@ -306,7 +333,7 @@ class NotificationHelper @Inject constructor(
 
     /** Lets `GroupRepository` check this without needing its own copy of the state - used to keep
      *  a group marked read in real time while its thread is on screen, not just once on open. */
-    fun isViewingGroup(groupId: String): Boolean = activeGroupId.value == groupId
+    fun isViewingGroup(groupId: String): Boolean = OpenChatHold.isViewing(activeGroupId.value, groupId, appForeground.value)
 
     /** The group whose thread is on screen, if any - the live group poll reads it every few
      *  seconds (see GroupScanningService). */
@@ -317,7 +344,7 @@ class NotificationHelper @Inject constructor(
 
     /** Same for 1:1 threads: a message that lands WHILE its conversation is on screen inserts as
      *  already-read, so leaving the chat doesn't show an unread badge for messages you watched arrive. */
-    fun isViewingContact(contactId: String): Boolean = activeContactId.value == contactId
+    fun isViewingContact(contactId: String): Boolean = OpenChatHold.isViewing(activeContactId.value, contactId, appForeground.value)
 
     /** The contact whose 1:1 thread is on screen right now (null when none) — lets
      *  ChatRepository's poll loop keep just the open conversation on the fast tick while the
@@ -366,7 +393,9 @@ class NotificationHelper @Inject constructor(
         fromPush: Boolean = false,
     ) {
         if (walletManager.isLoggedOut) return // signed out: no message text on this phone (iOS bfe9f022)
-        if (activeContactId.value == contactId) return // already looking at this conversation
+        // already looking at this conversation - only while K is on screen: a chat left open behind
+        // Home or the lock screen is not being looked at, so its messages ring (audit C1)
+        if (isViewingContact(contactId)) return
         if (!settings.notificationsEnabled.first()) return
         if (notificationOverride == ContactNotificationMode.OFF) return
         if (!fromPush && pushArrived(dedupeTxId)) return // its push came already (iOS `InAppBanner.pushArrived`)
@@ -545,7 +574,7 @@ class NotificationHelper @Inject constructor(
         fromPush: Boolean = false,
     ) {
         if (walletManager.isLoggedOut) return
-        if (activeGroupId.value == groupId) return // already looking at this group's thread
+        if (isViewingGroup(groupId)) return // already looking at this group's thread, K on screen (audit C1)
         if (!settings.notificationsEnabled.first()) return
         // its push came already (iOS `InAppBanner.pushArrived`) - unless that push left it to us (P2)
         if (!fromPush && pushArrived(dedupeTxId) && !isDeferredToApp(dedupeTxId)) return
@@ -794,3 +823,24 @@ class NotificationHelper @Inject constructor(
         }
     }
 }
+
+/** Whether a conversation counts as looked at (audit C1): it is the one open on screen AND K is in
+ *  the foreground. A chat left open behind Home or the lock screen keeps its hold (the activity is
+ *  only stopped), but nobody is looking at it: its messages must ring and stay unread. */
+internal object OpenChatHold {
+    fun isViewing(openId: String?, id: String, appForeground: Boolean): Boolean =
+        appForeground && openId != null && openId == id
+}
+
+/** See [NotificationHelper.pushMayBeForPreviousAccount] (audit C6). */
+internal object AccountPushGuard {
+    /** How long after a sign-in a payment or handshake push that names no recipient is held back. */
+    const val SWITCH_GRACE_MS = 30_000L
+
+    fun mayBeForPreviousAccount(recipient: String?, activeAddress: String?, signedInAtMs: Long, nowMs: Long): Boolean {
+        val named = recipient?.trim()?.takeIf { it.isNotEmpty() }
+        if (named != null) return activeAddress == null || !named.equals(activeAddress.trim(), ignoreCase = true)
+        return signedInAtMs > 0L && nowMs - signedInAtMs in 0 until SWITCH_GRACE_MS
+    }
+}
+

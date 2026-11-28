@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">مفيش تطبيق يشارك ملف الـCSV</string>
+    <string name="rel5_saves_photo_to_gallery">بيحفظ الصورة في الجاليري.</string>
+    <string name="rel5_chess_time_control">شطرنج - %1$s</string>
+    <string name="rel5_backed_up_just_now">اتعمل نسخة احتياطية دلوقتي</string>
+    <string name="rel5_audio_file_empty">ملف الصوت فاضي</string>
+    <string name="rel5_enter_valid_amount">اكتب مبلغ صحيح.</string>
+    <string name="rel5_server_error_code">السيرفر رجّع خطأ (%1$d). جرّب تاني كمان شوية.</string>
+    <string name="rel5_fb_could_not_load_folder">مقدرناش نحمّل الفولدر ده.</string>
+    <string name="rel5_fb_failed_build_tx">مقدرناش نجهّز المعاملة</string>
+    <string name="rel5_fb_edit_failed">التعديل فشل</string>
+    <string name="rel5_fb_cant_read_signed_tx">مقدرناش نقرا المعاملة الموقّعة</string>
+    <string name="rel5_fb_reaction_failed">الرياكشن فشل</string>
+    <string name="rel5_fb_update_group_photo">مقدرناش نغيّر صورة الجروب</string>
+    <string name="rel5_fb_resend_invites">مقدرناش نبعت الدعوات تاني</string>
+    <string name="rel5_fb_resend_invite">مقدرناش نبعت الدعوة تاني</string>
+    <string name="rel5_fb_rename_group">مقدرناش نغيّر اسم الجروب</string>
+    <string name="rel5_fb_create_group">مقدرناش نعمل الجروب</string>
+    <string name="rel5_fb_schedule_post">مقدرناش نجدول البوست ده</string>
+    <string name="rel5_fb_load_more">مقدرناش نحمّل أكتر</string>
+    <string name="rel5_fb_share_link">مقدرناش نعمل رابط مشاركة.</string>
+    <string name="rel5_fb_connect">مقدرناش نتصل</string>
+    <string name="rel5_fb_broadcast_failed">البث فشل</string>
+    <string name="rel5_fb_backup_failed">النسخة الاحتياطية فشلت</string>
+    <string name="rel5_restored_messages">رجّعنا %1$d رسالة من %2$d محادثة.</string>
+    <string name="rel5_enter_group_name">اكتب اسم للجروب.</string>
+    <string name="rel5_add_one_member">ضيف عضو واحد على الأقل.</string>
+    <string name="rel5_invalid_address_format">شكل عنوان Kaspa مش صحيح.</string>
+</resources>

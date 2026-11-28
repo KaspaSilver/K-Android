@@ -113,7 +113,6 @@
     <string name="qr_code">QRコード</string>
     <string name="read">既読</string>
     <string name="receive">受け取る</string>
-    <string name="recipient_address">受取人アドレス</string>
     <string name="remove">削除</string>
     <string name="rename">名前を変更</string>
     <string name="rename_account">アカウント名を変更</string>
@@ -230,7 +229,6 @@
     <string name="welcome_to_kachat">Kへようこそ</string>
     <string name="lets_walk_through_the_basics_so">最初のメッセージを送信する準備ができるよう、基本を確認しましょう。</string>
     <string name="how_kachat_uses_kaspa">KがKaspaを利用する仕組み</string>
-    <string name="kachat_lets_you_send_and_receive">Kでは、Kaspaネットワーク上で直接メッセージを送受信できます。メッセージを送信する際の手数料を支払うためにKaspaが必要です。支払った手数料は、ネットワークを保護するマイナーに渡ります。</string>
     <string name="finish">完了</string>
     <string name="choose_your_language">言語を選択してください</string>
     <string name="select_the_language_youd_like_to">Kで使用したい言語を選択してください。</string>
@@ -270,7 +268,6 @@
     <string name="connection_tab_explorer">エクスプローラー</string>
     <string name="message_indexer">メッセージインデクサ</string>
     <string name="coming_soon">近日公開</string>
-    <string name="not_available_on_this_network">このネットワークでは利用できません</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">はじめてのツアー：ウォレット、チャット、支払いなど。</string>
@@ -710,7 +707,7 @@
     <string name="pr_send_request">支払いリクエストを送信</string>
     <!-- Chat list: delete one chat (iOS ChatListView rowDeleteContact) -->
     <string name="delete_chat_q">Delete Chat?</string>
-    <string name="delete_chat_alert_message">This permanently deletes every message in this chat from this device. This cannot be undone.</string>
+    <string name="delete_chat_alert_message">このチャットのすべてのメッセージを、この端末から完全に削除します。この操作は取り消せません。</string>
     <!-- .kachat transaction sheet: coins are combined only after the slide (iOS 778a8fc, IOS-075) -->
     <!-- An address's Domains tab: one card per name service (iOS fe52376) -->
     <!-- Request Payment: Fresh Address / Choose an Address, Used / Unused (iOS 86dfd2d, 6dee531, 338d9f5) -->
@@ -1119,7 +1116,6 @@
     <string name="write_down_your_12_or_24_words">削除する前に12語または24語を書き留めてください。</string>
     <string name="view_12_or_24_words_and_passphrase">12語または24語とパスフレーズを表示</string>
     <string name="the_passphrase_shows_too_if_this_account">このアカウントにパスフレーズがある場合は、それも表示されます。</string>
-    <string name="transaction_id_tap_to_view_in">取引ID · タップして%1$sで表示</string>
     <string name="transaction_id">取引ID</string>
     <string name="unsilence">通知をオン</string>
     <string name="silence">通知をオフ</string>
@@ -1156,7 +1152,6 @@
     <string name="adding_of">%2$d人中%1$d人目を追加中</string>
     <string name="adding_member">メンバーを追加中</string>
     <string name="each_member_re_keys_the_group_on">メンバーごとにオンチェーンでグループの鍵を更新するため、1分ほどかかることがあります。アプリは開いたままにしてください。</string>
-    <string name="member_s_could_not_be_added_added">%1$d人のメンバーを追加できませんでした（%2$d人は追加済み）。もう一度お試しください。</string>
     <string name="clears_the_unread_badge_on_this_group">このグループの未読バッジを消します。</string>
     <string name="notifications_from_this_group_resume_including_menti">メンションを含め、このグループの通知を再開します。</string>
     <string name="no_notification_from_this_group_mentions_included">メンションを含め、このグループの通知は届きません。</string>
@@ -1242,7 +1237,6 @@
     <string name="couldnt_load_the_coins">コインを読み込めませんでした。</string>
     <string name="these_words_are_invalid_double_check_the">これらの単語は無効です。もう一度確認してください。最後の単語にはチェックサムが含まれているため、1語でも間違っていると検証に失敗します。</string>
     <string name="invalid_words_please_enter_12_or_24">単語が無効です。12語または24語を入力してください。</string>
-    <string name="retry_failed">再試行に失敗しました</string>
     <string name="saving_keep_the_card_still">保存中です。カードを動かさないでください。</string>
     <string name="reading_keep_the_card_still">読み取り中です。カードを動かさないでください。</string>
     <string name="ready_to_scan">スキャンの準備完了</string>
@@ -1269,8 +1263,6 @@
     <string name="recovered_n_messages">このデバイスで読めなかったメッセージを%1$d件復元しました。</string>
     <string name="estimated_network_fee_one">\n\n推定ネットワーク手数料 ≈ %1$s %2$s（1件の取引）。</string>
     <string name="estimated_network_fee_n">\n\n推定ネットワーク手数料 ≈ %1$s %2$s（%3$d件の取引）。</string>
-    <string name="add_one_member_to_group">1人のメンバーをグループに追加しますか？%1$s</string>
-    <string name="add_n_members_to_group">%1$d人のメンバーをグループに追加しますか？%2$s</string>
     <string name="this_group">このグループ</string>
     <string name="one_member">1人のメンバー</string>
     <string name="video_emoji">🎬 動画</string>
@@ -1393,7 +1385,6 @@
     <string name="chess_tc_no_timer">持ち時間なし。</string>
     <string name="recents">最近使用したもの</string>
     <string name="initial_sync_starting">開始中</string>
-    <string name="initial_sync_finished">完了</string>
     <string name="wiping_incoming_messages">受信メッセージを消去中...</string>
     <string name="finishing_up">仕上げ中...</string>
     <string name="re_syncing_chats_progress">再同期中... %1$d / %2$d チャット</string>
@@ -1444,7 +1435,6 @@
     <string name="notification_mode_default">デフォルト（%1$s）</string>
     <string name="checking_address_n">アドレス #%1$d を確認中</string>
     <string name="n_found_so_far">これまでに%1$d件見つかりました</string>
-    <string name="first_sync_all_set">準備完了</string>
     <string name="nc_use_all_files">すべてのファイルを使う</string>
     <string name="nc_use_this_folder">このフォルダを使う</string>
     <string name="nc_no_subfolders">サブフォルダはありません。</string>
@@ -1467,7 +1457,6 @@
     <string name="chess_notif_move">♟️ %1$s → %2$s を指しました</string>
     <string name="chess_notif_lost_on_time">♟️ 時間切れで負けました</string>
     <string name="chess_notif_resigned">♟️ チェスの対局を投了しました</string>
-    <string name="fee_label">手数料</string>
     <plurals name="create_group_and_invite">
         <item quantity="other">「%1$s」を作成して、メンバー %2$d 人を招待しますか？</item>
     </plurals>
@@ -1514,8 +1503,6 @@
     <string name="kusdt_build_failed">トランザクションを作成できませんでした。何も送られていません。</string>
     <string name="token_held_on_addresses">%1$d 件のアドレス</string>
     <string name="token_received_title">%1$s を受け取りました</string>
-    <string name="token_received_on_one">あなたの %1$s に</string>
-    <string name="token_received_on_many">あなたの %1$d 件のアドレスに</string>
     <string name="connection_not_set">未設定</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">共有リンクをコピー</string>
@@ -1622,4 +1609,5 @@
     <string name="history_change_to_address">おつり %1$s → %2$s</string>
     <string name="cycle_hint_next_page">次のページに切り替えます</string>
     <string name="cycle_hint_next_feed">次のフィードに切り替えます</string>
+    <string name="gif">GIF</string>
 </resources>

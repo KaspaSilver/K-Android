@@ -78,7 +78,9 @@ class TokenChatPayments @Inject constructor(
                 // (kept below, for when it's back)
                 if (walletManager.getAddress() != owner) throw IllegalStateException("another account is active")
                 // Untagged, like iOS sendEnvelopeInternal: kchat:1:comm:, never a first-contact dm.
-                walletServiceLazy.get().sendKasiaMessage(contactAddress, payload, firstContactTag = false)
+                // The owner is bound into the send itself (audit A4): a switch after the check
+                // above refuses it rather than sealing or paying for it as the other account.
+                walletServiceLazy.get().sendKasiaMessage(contactAddress, payload, firstContactTag = false, owner = owner)
                 Log.i(TAG, "Sent token_payment_notice for ${id.take(12)}")
             } catch (e: Exception) {
                 Log.w(TAG, "token_payment_notice send failed for ${id.take(12)}, kept for later: ${e.message}")

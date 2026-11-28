@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">खाता क्रियाएं</string>
     <string name="add_kaspa_address">Kaspa पता जोड़ें</string>
     <string name="add_transaction">लेन-देन जोड़ें</string>
     <string name="addresses">पते</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">kpub कॉपी करें</string>
     <string name="current_value">वर्तमान मूल्य</string>
     <string name="delete_transaction">लेन-देन हटाएं</string>
-    <string name="enter_kpub">kpub दर्ज करें</string>
     <string name="export_csv">CSV निर्यात करें</string>
     <string name="fee_usd_optional">शुल्क (वैकल्पिक)</string>
     <string name="holdings">होल्डिंग्स</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">आपको मिलेगा</string>
     <string name="kp_you_receive_about">आपको लगभग मिलेगा</string>
     <string name="kp_you_saw">आपने देखा था</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">इस पते को नाम दें</string>
     <string name="no_app_to_open_link">इस फ़ोन पर कोई ऐप यह लिंक नहीं खोल सकता</string>
     <string name="notes_optional">नोट्स (वैकल्पिक)</string>
     <string name="paste_from_clipboard">क्लिपबोर्ड से पेस्ट करें</string>
     <string name="paste_kpub">kpub पेस्ट करें</string>
-    <string name="paste_the_kpub_exported_from_your">अपने KasSigner डिवाइस से निर्यात किया गया kpub पेस्ट करें। इसमें कोई निजी कुंजी सामग्री नहीं है।</string>
     <string name="pf_actions_add">जोड़ें</string>
     <string name="pf_actions_import_export">इंपोर्ट और एक्सपोर्ट</string>
     <string name="pf_add_kaspa_address_sub">इस पोर्टफोलियो के हिस्से के रूप में किसी पते का बैलेंस ट्रैक करें।</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">कैमरे को KasSigner स्क्रीन की ओर इंगित करें</string>
     <string name="quantity">मात्रा</string>
     <string name="remove_cold_storage_account">कोल्ड स्टोरेज खाता हटाएं</string>
-    <string name="rename_cold_storage_account">कोल्ड स्टोरेज खाते का नाम बदलें</string>
     <string name="scan">स्कैन करें</string>
     <string name="scan_kpub_from_kassigner">KasSigner से kpub स्कैन करें</string>
     <string name="scan_signed_transaction">हस्ताक्षरित लेन-देन स्कैन करें</string>

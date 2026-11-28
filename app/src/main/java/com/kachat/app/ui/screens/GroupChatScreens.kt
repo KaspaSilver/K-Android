@@ -726,7 +726,8 @@ fun GroupChatThreadScreen(
             val dockInset = LocalDockInset.current
             Column(
                 modifier = Modifier
-                    .padding(bottom = dockInset)
+                    // the dock less the keyboard, worked out in layout (audit 2026-11-27 S8)
+                    .threadDockPadding(dockInset)
                     // iOS's composer floats over the thread: the messages show through, fading
                     // under it, as on the public room (not an opaque band).
                     .background(
@@ -1185,7 +1186,14 @@ fun GroupChatThreadScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding()),
             ) {
-                itemsIndexed(messages, key = { _, msg -> msg.txId }) { index, message ->
+                // Rows of one shape share a reuse pool (audit 2026-11-27 Smoothness S4).
+                itemsIndexed(
+                    messages,
+                    key = { _, msg -> msg.txId },
+                    contentType = { _, msg ->
+                        ThreadRowKind.of(msg.content, isSystem = msg.senderAddress == com.kachat.app.repository.GROUP_SYSTEM_SENDER)
+                    },
+                ) { index, message ->
                     // An edited message reads with its newest text; the stored row is untouched.
                     // The editor-sent-it check happens at ingest; whether the original was text at
                     // all can only be judged here, where the content is decrypted.

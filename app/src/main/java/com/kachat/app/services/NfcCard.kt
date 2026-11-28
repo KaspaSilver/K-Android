@@ -7,6 +7,7 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import com.google.gson.Gson
 import com.kachat.app.models.WalletSourceFamily
+import com.kachat.app.util.stringOrFormat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -84,7 +85,7 @@ sealed class NfcCardException(
     private vararg val formatArgs: Any,
 ) : Exception() {
     /** The sentence shown to the person, in the phone's language. */
-    fun userMessage(context: android.content.Context): String = context.getString(messageRes, *formatArgs)
+    fun userMessage(context: android.content.Context): String = context.stringOrFormat(messageRes, *formatArgs)
 
     class Unavailable : NfcCardException(com.kachat.app.R.string.nfc_err_unavailable)
     class NfcOff : NfcCardException(com.kachat.app.R.string.nfc_err_nfc_off)

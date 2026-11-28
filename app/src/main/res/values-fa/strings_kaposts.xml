@@ -127,4 +127,8 @@
     <string name="pr_card_view">مشاهده</string>
     <string name="kaposts_scheduled_reminder_body">پست شما آماده ارسال است. برای ارسال، K را باز کنید.</string>
     <string name="kaposts_see_all_posts">دیدن همه پست‌ها</string>
+    <string name="kaposts_couldnt_schedule_toast">زمان‌بندی نشد: %1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">زمان‌بندی شد برای %1$s - از همین گوشی ارسال می‌شود</string>
+    <string name="kaposts_tip_didnt_send">انعام ارسال نشد: %1$s</string>
+    <string name="pr_card_pay">پرداخت</string>
 </resources>

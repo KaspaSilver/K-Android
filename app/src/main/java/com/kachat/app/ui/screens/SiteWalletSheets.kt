@@ -115,6 +115,8 @@ fun SiteWalletSheetHost(
  */
 @Composable
 private fun SiteWalletSheet(wallet: KaChatSiteWallet, request: KaChatSiteWallet.Request, close: () -> Unit) {
+    // no other app's overlay over Connect, Sign or Send (security audit 2026-11-27 S3)
+    OverlayTouchGuard()
     val walletViewModel = rememberActivityWalletViewModel()
     if (walletViewModel == null) {
         LaunchedEffect(Unit) { close() }
@@ -188,6 +190,7 @@ fun SiteSignInSheet(
     onFailed: () -> Unit = {},
 ) {
     IosFullSheet(onDismissed = onDone, swipeToDismiss = true) { close ->
+        OverlayTouchGuard()
         val walletViewModel = rememberActivityWalletViewModel()
         if (walletViewModel == null) {
             LaunchedEffect(Unit) { close() }

@@ -113,7 +113,6 @@
     <string name="qr_code">QR-код</string>
     <string name="read">Прочитано</string>
     <string name="receive">Получить</string>
-    <string name="recipient_address">Адрес получателя</string>
     <string name="remove">Удалить</string>
     <string name="rename">Переименовать</string>
     <string name="rename_account">Переименовать аккаунт</string>
@@ -230,7 +229,6 @@
     <string name="welcome_to_kachat">Добро пожаловать в K</string>
     <string name="lets_walk_through_the_basics_so">Давайте пройдёмся по основам, чтобы вы были готовы отправить своё первое сообщение.</string>
     <string name="how_kachat_uses_kaspa">Как K использует Kaspa</string>
-    <string name="kachat_lets_you_send_and_receive">K позволяет отправлять и получать сообщения прямо в сети Kaspa. Kaspa требуется для оплаты комиссий при отправке сообщений. Комиссия, которую вы платите, идёт майнерам, защищающим сеть.</string>
     <string name="finish">Готово</string>
     <string name="choose_your_language">Выберите язык</string>
     <string name="select_the_language_youd_like_to">Выберите язык, который вы хотите использовать в K.</string>
@@ -270,7 +268,6 @@
     <string name="connection_tab_explorer">Обозреватель</string>
     <string name="message_indexer">Индексатор сообщений</string>
     <string name="coming_soon">Скоро</string>
-    <string name="not_available_on_this_network">Недоступно в этой сети</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">Полный вводный тур: кошелёк, чаты, платежи и другое.</string>
@@ -710,7 +707,7 @@
     <string name="pr_send_request">Отправить запрос на оплату</string>
     <!-- Chat list: delete one chat (iOS ChatListView rowDeleteContact) -->
     <string name="delete_chat_q">Delete Chat?</string>
-    <string name="delete_chat_alert_message">This permanently deletes every message in this chat from this device. This cannot be undone.</string>
+    <string name="delete_chat_alert_message">Это навсегда удалит с этого устройства все сообщения в этом чате. Это нельзя отменить.</string>
     <!-- .kachat transaction sheet: coins are combined only after the slide (iOS 778a8fc, IOS-075) -->
     <!-- An address's Domains tab: one card per name service (iOS fe52376) -->
     <!-- Request Payment: Fresh Address / Choose an Address, Used / Unused (iOS 86dfd2d, 6dee531, 338d9f5) -->
@@ -1121,7 +1118,6 @@
     <string name="write_down_your_12_or_24_words">Запишите свои 12 или 24 слова перед удалением.</string>
     <string name="view_12_or_24_words_and_passphrase">Показать 12 или 24 слова и парольную фразу</string>
     <string name="the_passphrase_shows_too_if_this_account">Парольная фраза тоже будет показана, если она есть у этого аккаунта.</string>
-    <string name="transaction_id_tap_to_view_in">ID транзакции · нажмите, чтобы открыть в %1$s</string>
     <string name="transaction_id">ID транзакции</string>
     <string name="unsilence">Включить звук</string>
     <string name="silence">Без звука</string>
@@ -1158,7 +1154,6 @@
     <string name="adding_of">Добавление: %1$d из %2$d</string>
     <string name="adding_member">Добавление участника</string>
     <string name="each_member_re_keys_the_group_on">Каждый участник заново создаёт ключи группы в блокчейне, поэтому это может занять минуту. Не закрывайте приложение.</string>
-    <string name="member_s_could_not_be_added_added">Не удалось добавить участников: %1$d (добавлено: %2$d). Попробуйте ещё раз.</string>
     <string name="clears_the_unread_badge_on_this_group">Убирает значок непрочитанного у этой группы.</string>
     <string name="notifications_from_this_group_resume_including_menti">Уведомления из этой группы возобновятся, включая упоминания.</string>
     <string name="no_notification_from_this_group_mentions_included">Никаких уведомлений из этой группы, включая упоминания.</string>
@@ -1242,7 +1237,6 @@
     <string name="couldnt_load_the_coins">Не удалось загрузить монеты.</string>
     <string name="these_words_are_invalid_double_check_the">Эти слова недействительны. Проверьте их ещё раз - последнее слово содержит контрольную сумму, поэтому одно неверное слово не проходит проверку.</string>
     <string name="invalid_words_please_enter_12_or_24">Недействительные слова. Введите 12 или 24 слова.</string>
-    <string name="retry_failed">Повторная попытка не удалась</string>
     <string name="saving_keep_the_card_still">Сохранение. Не двигайте карту.</string>
     <string name="reading_keep_the_card_still">Чтение. Не двигайте карту.</string>
     <string name="ready_to_scan">Готово к сканированию</string>
@@ -1269,8 +1263,6 @@
     <string name="recovered_n_messages">Восстановлено сообщений, которые это устройство не могло прочитать: %1$d.</string>
     <string name="estimated_network_fee_one">\n\nОриентировочная комиссия сети ≈ %1$s %2$s за 1 транзакцию.</string>
     <string name="estimated_network_fee_n">\n\nОриентировочная комиссия сети ≈ %1$s %2$s, транзакций: %3$d.</string>
-    <string name="add_one_member_to_group">Добавить 1 участника в группу?%1$s</string>
-    <string name="add_n_members_to_group">Добавить участников в группу (%1$d)?%2$s</string>
     <string name="this_group">эту группу</string>
     <string name="one_member">1 участник</string>
     <string name="video_emoji">🎬 Видео</string>
@@ -1396,7 +1388,6 @@
     <string name="chess_tc_no_timer">Без часов.</string>
     <string name="recents">Недавние</string>
     <string name="initial_sync_starting">Запуск</string>
-    <string name="initial_sync_finished">Готово</string>
     <string name="wiping_incoming_messages">Очистка входящих сообщений...</string>
     <string name="finishing_up">Завершение...</string>
     <string name="re_syncing_chats_progress">Повторная синхронизация... %1$d из %2$d чатов</string>
@@ -1447,7 +1438,6 @@
     <string name="notification_mode_default">По умолчанию (%1$s)</string>
     <string name="checking_address_n">Проверка адреса #%1$d</string>
     <string name="n_found_so_far">Найдено пока: %1$d</string>
-    <string name="first_sync_all_set">Всё готово</string>
     <string name="nc_use_all_files">Использовать все файлы</string>
     <string name="nc_use_this_folder">Использовать эту папку</string>
     <string name="nc_no_subfolders">Вложенных папок нет.</string>
@@ -1470,7 +1460,6 @@
     <string name="chess_notif_move">♟️ Ход %1$s → %2$s</string>
     <string name="chess_notif_lost_on_time">♟️ Время соперника истекло</string>
     <string name="chess_notif_resigned">♟️ Соперник сдался</string>
-    <string name="fee_label">Платеж</string>
     <plurals name="create_group_and_invite">
         <item quantity="one">Создать «%1$s» и пригласить %2$d участника?</item>
         <item quantity="few">Создать «%1$s» и пригласить %2$d участников?</item>
@@ -1520,8 +1509,6 @@
     <string name="kusdt_build_failed">Не удалось создать транзакцию. Ничего не отправлено.</string>
     <string name="token_held_on_addresses">Адресов: %1$d</string>
     <string name="token_received_title">Получено: %1$s</string>
-    <string name="token_received_on_one">На ваш %1$s</string>
-    <string name="token_received_on_many">На %1$d ваших адресов</string>
     <string name="connection_not_set">Не задано</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">Скопировать ссылку</string>
@@ -1628,4 +1615,5 @@
     <string name="history_change_to_address">Сдача %1$s на %2$s</string>
     <string name="cycle_hint_next_page">Переключает на следующую страницу</string>
     <string name="cycle_hint_next_feed">Переключает на следующую ленту</string>
+    <string name="gif">GIF</string>
 </resources>

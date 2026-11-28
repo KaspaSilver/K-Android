@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">ネットワークが前回の送信をまだ承認中です。数秒後にもう一度お試しください。</string>
     <string name="pc_l53_room_kept_for">保存期間</string>
     <string name="pc_l53_room_on_this_device">このデバイス上</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">以前のメッセージを読み込む</string>
     <string name="pc_no_testnet_indexer_yet">テストネット用インデクサはまだありません</string>
     <string name="pc_room_no_spendable_funds_yet">まだ利用可能な資金がありません。承認を待ってからもう一度お試しください。</string>
     <string name="pc_room_not_enough_kas">チャットアドレスのKASが足りません。追加してからもう一度お試しください。</string>

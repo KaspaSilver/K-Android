@@ -127,4 +127,8 @@
     <string name="pr_card_view">表示</string>
     <string name="kaposts_scheduled_reminder_body">投稿の準備ができました。Kを開いて送信してください。</string>
     <string name="kaposts_see_all_posts">すべての投稿を見る</string>
+    <string name="kaposts_couldnt_schedule_toast">予約できませんでした：%1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">%1$sに予約しました - この端末から送信します</string>
+    <string name="kaposts_tip_didnt_send">チップを送れませんでした: %1$s</string>
+    <string name="pr_card_pay">支払う</string>
 </resources>

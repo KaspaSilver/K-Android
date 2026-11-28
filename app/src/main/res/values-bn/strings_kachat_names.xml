@@ -49,7 +49,6 @@
     <string name="kl_message">বার্তা</string>
     <string name="kl_name">নাম</string>
     <string name="kl_note_buy">কিনলে একটি লেনদেনেই বিক্রেতা টাকা পান এবং নামটি আপনার কাছে আসে।</string>
-    <string name="kl_note_message">মেসেজ বিক্রেতার কাছে যেকোনো KaChat চ্যাটের মতোই যায়।</string>
     <string name="kl_note_offer">অফার আপনার KAS চেইনে লক করে রাখে, যতক্ষণ না বিক্রেতা গ্রহণ করেন, আপনি তুলে নেন বা মেয়াদ শেষ হয়।</string>
     <string name="kl_offer">অফার</string>
     <string name="kl_offer_detail">নিজের দাম ঠিক করুন। বিক্রেতা গ্রহণ না করা পর্যন্ত, আপনি অফার প্রত্যাহার না করা পর্যন্ত, বা মেয়াদ শেষ না হওয়া পর্যন্ত আপনার KAS চেইনে অপেক্ষা করে।</string>

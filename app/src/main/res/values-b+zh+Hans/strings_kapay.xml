@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">账户操作</string>
     <string name="add_kaspa_address">添加 Kaspa 地址</string>
     <string name="add_transaction">添加交易</string>
     <string name="addresses">地址</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">复制 kpub</string>
     <string name="current_value">当前价值</string>
     <string name="delete_transaction">删除交易</string>
-    <string name="enter_kpub">输入 kpub</string>
     <string name="export_csv">导出 CSV</string>
     <string name="fee_usd_optional">手续费(可选)</string>
     <string name="holdings">持仓</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">你将收到</string>
     <string name="kp_you_receive_about">你将收到约</string>
     <string name="kp_you_saw">你之前看到</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">为此地址命名</string>
     <string name="no_app_to_open_link">此手机上没有可以打开该链接的 App</string>
     <string name="notes_optional">备注(可选)</string>
     <string name="paste_from_clipboard">从剪贴板粘贴</string>
     <string name="paste_kpub">粘贴 kpub</string>
-    <string name="paste_the_kpub_exported_from_your">粘贴从你的 KasSigner 设备导出的 kpub。它不包含任何私钥材料。</string>
     <string name="pf_actions_add">添加</string>
     <string name="pf_actions_import_export">导入和导出</string>
     <string name="pf_add_kaspa_address_sub">将某个地址的余额作为此投资组合的一部分进行追踪。</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">将相机对准 KasSigner 屏幕</string>
     <string name="quantity">数量</string>
     <string name="remove_cold_storage_account">移除冷存储账户</string>
-    <string name="rename_cold_storage_account">重命名冷存储账户</string>
     <string name="scan">扫描</string>
     <string name="scan_kpub_from_kassigner">从 KasSigner 扫描 kpub</string>
     <string name="scan_signed_transaction">扫描已签名的交易</string>

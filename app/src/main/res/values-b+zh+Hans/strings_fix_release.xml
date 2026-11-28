@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">没有可用于分享 CSV 的应用</string>
+    <string name="rel5_saves_photo_to_gallery">将照片保存到相册。</string>
+    <string name="rel5_chess_time_control">国际象棋 - %1$s</string>
+    <string name="rel5_backed_up_just_now">刚刚已备份</string>
+    <string name="rel5_audio_file_empty">音频文件为空</string>
+    <string name="rel5_enter_valid_amount">请输入有效的金额。</string>
+    <string name="rel5_server_error_code">服务器返回了错误（%1$d）。请稍后再试。</string>
+    <string name="rel5_fb_could_not_load_folder">无法加载此文件夹。</string>
+    <string name="rel5_fb_failed_build_tx">无法创建交易</string>
+    <string name="rel5_fb_edit_failed">编辑失败</string>
+    <string name="rel5_fb_cant_read_signed_tx">无法读取已签名的交易</string>
+    <string name="rel5_fb_reaction_failed">回应失败</string>
+    <string name="rel5_fb_update_group_photo">无法更新群组照片</string>
+    <string name="rel5_fb_resend_invites">无法重新发送邀请</string>
+    <string name="rel5_fb_resend_invite">无法重新发送邀请</string>
+    <string name="rel5_fb_rename_group">无法重命名群组</string>
+    <string name="rel5_fb_create_group">无法创建群组</string>
+    <string name="rel5_fb_schedule_post">无法定时发布此帖子</string>
+    <string name="rel5_fb_load_more">无法加载更多</string>
+    <string name="rel5_fb_share_link">无法创建分享链接。</string>
+    <string name="rel5_fb_connect">无法连接</string>
+    <string name="rel5_fb_broadcast_failed">广播失败</string>
+    <string name="rel5_fb_backup_failed">备份失败</string>
+    <string name="rel5_restored_messages">已恢复 %1$d 条消息，来自 %2$d 个聊天。</string>
+    <string name="rel5_enter_group_name">请输入群组名称。</string>
+    <string name="rel5_add_one_member">请至少添加一名成员。</string>
+    <string name="rel5_invalid_address_format">Kaspa 地址格式无效。</string>
+</resources>

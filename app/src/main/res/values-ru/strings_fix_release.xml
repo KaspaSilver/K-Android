@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">Нет приложения, чтобы поделиться CSV</string>
+    <string name="rel5_saves_photo_to_gallery">Сохраняет фото в галерею.</string>
+    <string name="rel5_chess_time_control">Шахматы - %1$s</string>
+    <string name="rel5_backed_up_just_now">Резервная копия только что создана</string>
+    <string name="rel5_audio_file_empty">Аудиофайл пуст</string>
+    <string name="rel5_enter_valid_amount">Введите правильную сумму.</string>
+    <string name="rel5_server_error_code">Сервер вернул ошибку (%1$d). Попробуйте ещё раз чуть позже.</string>
+    <string name="rel5_fb_could_not_load_folder">Не удалось загрузить эту папку.</string>
+    <string name="rel5_fb_failed_build_tx">Не удалось создать транзакцию</string>
+    <string name="rel5_fb_edit_failed">Не удалось изменить</string>
+    <string name="rel5_fb_cant_read_signed_tx">Не удалось прочитать подписанную транзакцию</string>
+    <string name="rel5_fb_reaction_failed">Не удалось отправить реакцию</string>
+    <string name="rel5_fb_update_group_photo">Не удалось обновить фото группы</string>
+    <string name="rel5_fb_resend_invites">Не удалось повторно отправить приглашения</string>
+    <string name="rel5_fb_resend_invite">Не удалось повторно отправить приглашение</string>
+    <string name="rel5_fb_rename_group">Не удалось переименовать группу</string>
+    <string name="rel5_fb_create_group">Не удалось создать группу</string>
+    <string name="rel5_fb_schedule_post">Не удалось запланировать этот пост</string>
+    <string name="rel5_fb_load_more">Не удалось загрузить ещё</string>
+    <string name="rel5_fb_share_link">Не удалось создать ссылку для отправки.</string>
+    <string name="rel5_fb_connect">Не удалось подключиться</string>
+    <string name="rel5_fb_broadcast_failed">Не удалось отправить в сеть</string>
+    <string name="rel5_fb_backup_failed">Не удалось создать резервную копию</string>
+    <string name="rel5_restored_messages">Восстановлено сообщений: %1$d из чатов: %2$d.</string>
+    <string name="rel5_enter_group_name">Введите название группы.</string>
+    <string name="rel5_add_one_member">Добавьте хотя бы одного участника.</string>
+    <string name="rel5_invalid_address_format">Неверный формат адреса Kaspa.</string>
+</resources>

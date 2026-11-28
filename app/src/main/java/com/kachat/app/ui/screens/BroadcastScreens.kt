@@ -358,10 +358,12 @@ fun BroadcastChannelScreen(
     // Reactions aggregated per message txId — same shape as GroupChatScreen's groupReactionsByTxId.
     val channelReactionsFlow = remember(channelName) { broadcastViewModel.getReactions(channelName) }
     val channelReactions by channelReactionsFlow.collectAsStateWhileStarted(initial = emptyList())
-    // Translate from the long-press menu (iOS 03e5128) - read once here, not per row.
-    val translationStates by broadcastViewModel.translations.collectAsState()
-    val translationOriginals by broadcastViewModel.showingOriginal.collectAsState()
-    val translatableKeys by broadcastViewModel.translatable.collectAsState()
+    // Translate from the long-press menu (iOS 03e5128) - collected once here, not per row. Kept as
+    // State: each row reads only its own entry through roomEntry / roomHolds, so one message
+    // turning translatable no longer recomposes every row on screen (audit 2026-11-27 Smoothness S5).
+    val translationStatesState = broadcastViewModel.translations.collectAsState()
+    val translationOriginalsState = broadcastViewModel.showingOriginal.collectAsState()
+    val translatableKeysState = broadcastViewModel.translatable.collectAsState()
     LaunchedEffect(Unit) { broadcastViewModel.refreshTranslationLanguages() }
     // Reactions on a long voice note's hidden parts (sent by a client that shows parts one by one)
     // are shown on the note's bubble, keyed by its anchor (iOS 369794e `reactions(forChannel:)`).
@@ -381,6 +383,8 @@ fun BroadcastChannelScreen(
         }
         merged
     }
+    // Read per row through roomEntry (S5), not captured as a map by every row.
+    val reactionsByTxIdState = rememberUpdatedState(reactionsByTxId)
     val quickReactionEmojis by settingsViewModel.quickReactionEmojis.collectAsState()
     val myAddress by walletViewModel.address.collectAsState()
     // Zero-balance funding gate — same behavior as the 1:1/group chat threads (confirmed 0 KAS
@@ -407,9 +411,9 @@ fun BroadcastChannelScreen(
     // The newest edit per message (see MessageEdit), applied as each bubble is drawn - the
     // envelope itself is never a message row.
     val editsFlow = remember(channelName) { broadcastViewModel.getEdits(channelName) }
-    val editsByTxId by editsFlow.collectAsStateWhileStarted(initial = emptyMap())
+    val editsByTxIdState = editsFlow.collectAsStateWhileStarted(initial = emptyMap())
     // Edits that never left the phone, waiting for Retry: their messages read as before (iOS ee5ec98).
-    val failedEdits by broadcastViewModel.failedEdits.collectAsState()
+    val failedEditsState = broadcastViewModel.failedEdits.collectAsState()
     val editingMessage by broadcastViewModel.editingMessage.collectAsState()
     val kaspaExplorer by broadcastViewModel.kaspaExplorer.collectAsState()
     val networkFeeRate by broadcastViewModel.networkFeeRate.collectAsState()
@@ -846,7 +850,8 @@ fun BroadcastChannelScreen(
                             1f to composerBackground.copy(alpha = 0.85f),
                         )
                     )
-                    .padding(bottom = dockInset)
+                    // the dock less the keyboard, worked out in layout (audit 2026-11-27 S8)
+                    .threadDockPadding(dockInset)
                     .imePadding()
                     .padding(bottom = 2.dp)
             ) {
@@ -895,7 +900,7 @@ fun BroadcastChannelScreen(
                         title = stringResource(R.string.editing_message),
                         // iOS editBanner: previewText of the current text.
                         preview = BroadcastViewModel.replyPreviewText(
-                            editsByTxId[editing.id]?.text
+                            editsByTxIdState.value[editing.id]?.text
                                 ?: com.kachat.app.util.MessageEdit.unwrappedText(editing.content)
                         ),
                         cancelDescription = stringResource(R.string.cancel_editing),
@@ -1241,7 +1246,8 @@ fun BroadcastChannelScreen(
                         }
                     }
                 }
-                itemsIndexed(messages, key = { _, message -> message.id }) { index, message ->
+                // Rows of one shape share a reuse pool (audit 2026-11-27 Smoothness S4).
+                itemsIndexed(messages, key = { _, message -> message.id }, contentType = { _, message -> ThreadRowKind.of(message.content) }) { index, message ->
                     val showDateDivider = index == 0 || !ChatTimeFormat.isSameDay(messages[index - 1].blockTimestamp, message.blockTimestamp)
                     if (showDateDivider) {
                         // iOS dateDivider: caption2 semibold in secondary, padded 12 by 4 on
@@ -1263,7 +1269,7 @@ fun BroadcastChannelScreen(
                         Spacer(Modifier.height(8.dp))
                     }
                     // An edited message reads with its newest text; the stored row is untouched.
-                    val editForRow = editsByTxId[message.id]
+                    val editForRow = editsByTxIdState.roomEntry(message.id)
                     @Suppress("NAME_SHADOWING")
                     val message = remember(message, editForRow) {
                         if (editForRow == null) message
@@ -1276,7 +1282,9 @@ fun BroadcastChannelScreen(
                     // The status under the bubble carries the edit's send state, or a long voice
                     // note's one status for all its parts; `message` keeps the row's own for the
                     // actions (iOS ee5ec98, 1b15521 `shownStatusMessage`).
-                    val failedEditText = failedEdits[channelName]?.get(message.id)
+                    val failedEditText by remember(failedEditsState, channelName, message.id) {
+                        derivedStateOf { failedEditsState.value[channelName]?.get(message.id) }
+                    }
                     val shownDeliveryStatus = when {
                         voiceNote != null -> voiceNote.deliveryStatus
                         failedEditText != null -> "failed"
@@ -1337,18 +1345,20 @@ fun BroadcastChannelScreen(
                     LaunchedEffect(translationKey, considersTranslation) {
                         if (considersTranslation) broadcastViewModel.considerTranslation(translationKey, displayContent)
                     }
-                    val translationState = translationStates[translationKey]
+                    val translationState = translationStatesState.roomEntry(translationKey)
+                    val showsOriginal = translationOriginalsState.roomHolds(translationKey)
+                    val isTranslatable = translatableKeysState.roomHolds(translationKey)
                     // The text the bubble draws: the translation while one is showing, otherwise the
                     // message. Everything that decides WHAT the message is still reads displayContent.
                     val shownText = strippingRoomBidiControls(
                         (translationState as? com.kachat.app.services.PostTranslationService.TranslationState.Translated)
-                            ?.takeIf { translationKey !in translationOriginals }?.text ?: displayContent
+                            ?.takeIf { !showsOriginal }?.text ?: displayContent
                     )
                     val isEntirelyInternalLinkMessage =
                         // The card is the WHOLE message wherever a KaChat link appears - see
                         // 1:1's identical rule. Copy and the full-text dialog keep everything.
                         internalLinkMatch != null
-                    val messageReactions = reactionsByTxId[message.id] ?: emptyList()
+                    val messageReactions = reactionsByTxIdState.roomEntry(message.id) ?: emptyList()
                     var showMenu by remember { mutableStateOf(false) }
                     // The link a long-press landed on, for its own Open / Copy sheet.
                     var linkMenuUrl by remember { mutableStateOf<String?>(null) }
@@ -1441,11 +1451,12 @@ fun BroadcastChannelScreen(
                                     if (it.senderAddress == myAddress) youText
                                     else addressDisplayName(it.senderAddress, contactAliases[it.senderAddress], senderKnsNames[it.senderAddress])
                                 }
-                                val quotePreview = remember(original, editsByTxId[original?.id], replyContent.replyToPreview) {
+                                val originalEdit = editsByTxIdState.roomEntry(original?.id)
+                                val quotePreview = remember(original, originalEdit, replyContent.replyToPreview) {
                                     if (original == null) {
                                         strippingRoomBidiControls(replyContent.replyToPreview)
                                     } else {
-                                        val edited = editsByTxId[original.id]?.let {
+                                        val edited = originalEdit?.let {
                                             com.kachat.app.util.MessageEdit.apply(it.text, original.content)
                                         }
                                         strippingRoomBidiControls(MessageReply.previewText(edited ?: original.content).take(160))
@@ -1788,7 +1799,7 @@ fun BroadcastChannelScreen(
                                         }
                                         when (translationState) {
                                             is com.kachat.app.services.PostTranslationService.TranslationState.Translated ->
-                                                if (translationKey in translationOriginals) {
+                                                if (showsOriginal) {
                                                     ActionSheetRow(
                                                         icon = Icons.Default.Translate,
                                                         title = stringResource(R.string.pc_show_translation),
@@ -1810,7 +1821,7 @@ fun BroadcastChannelScreen(
                                             com.kachat.app.services.PostTranslationService.TranslationState.Translating,
                                             is com.kachat.app.services.PostTranslationService.TranslationState.Unavailable -> Unit
                                             null, com.kachat.app.services.PostTranslationService.TranslationState.Failed ->
-                                                if (considersTranslation && translationKey in translatableKeys) {
+                                                if (considersTranslation && isTranslatable) {
                                                     ActionSheetRow(
                                                         icon = Icons.Default.Translate,
                                                         title = stringResource(R.string.pc_translate),
@@ -1921,7 +1932,7 @@ fun BroadcastChannelScreen(
                             // another language (iOS 8cb4c88e, owner 2026-11-24: as KaPost's
                             // "Translate post", not only in the long-press menu).
                             if (translationState == null) {
-                                if (considersTranslation && translationKey in translatableKeys) {
+                                if (considersTranslation && isTranslatable) {
                                     TranslateLink(stringResource(R.string.pc_translate)) {
                                         broadcastViewModel.translateMessage(translationKey, displayContent)
                                     }
@@ -1930,7 +1941,7 @@ fun BroadcastChannelScreen(
                                 TranslateAffordance(
                                     state = translationState,
                                     canTranslate = false,
-                                    showingOriginal = translationKey in translationOriginals,
+                                    showingOriginal = showsOriginal,
                                     onTranslate = { broadcastViewModel.translateMessage(translationKey, displayContent) },
                                     onShowOriginal = { broadcastViewModel.showOriginal(translationKey) },
                                     onShowTranslation = { broadcastViewModel.showTranslation(translationKey) },
@@ -2803,4 +2814,19 @@ private fun RoomSenderActionsSheet(
             ) { onDismiss(); onBlock() }
         }
     }
+}
+
+/** One row's entry of a room-wide map, read so the row recomposes only when ITS entry changes,
+ *  not on every change to the map (audit 2026-11-27 Smoothness S5). */
+@Composable
+private fun <K, V> State<Map<K, V>>.roomEntry(key: K?): V? {
+    val entry by remember(this, key) { derivedStateOf { key?.let { value[it] } } }
+    return entry
+}
+
+/** Whether a room-wide set holds [key], read as [roomEntry] is. */
+@Composable
+private fun <K> State<Set<K>>.roomHolds(key: K): Boolean {
+    val held by remember(this, key) { derivedStateOf { key in value } }
+    return held
 }

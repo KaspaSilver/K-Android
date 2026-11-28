@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">הרשת עדיין מאשרת את השליחה הקודמת שלך. נסה שוב בעוד כמה שניות.</string>
     <string name="pc_l53_room_kept_for">נשמר למשך</string>
     <string name="pc_l53_room_on_this_device">במכשיר הזה</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">טען הודעות קודמות</string>
     <string name="pc_no_testnet_indexer_yet">עדיין אין אינדקסר לטסטנט</string>
     <string name="pc_room_no_spendable_funds_yet">עדיין אין יתרה זמינה להוצאה. המתן לאישורים ונסה שוב.</string>
     <string name="pc_room_not_enough_kas">אין מספיק KAS בכתובת הצ׳אט שלך. הוסיפו קצת ונסו שוב.</string>

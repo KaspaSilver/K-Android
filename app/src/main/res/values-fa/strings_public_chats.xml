@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">شبکه هنوز در حال تأیید ارسال قبلی شماست. لطفاً چند ثانیه دیگر دوباره امتحان کنید.</string>
     <string name="pc_l53_room_kept_for">مدت نگهداری</string>
     <string name="pc_l53_room_on_this_device">روی این دستگاه</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">بارگذاری پیام‌های قبلی</string>
     <string name="pc_no_testnet_indexer_yet">هنوز نمایه‌ساز تست‌نت وجود ندارد</string>
     <string name="pc_room_no_spendable_funds_yet">هنوز موجودی قابل خرج در دسترس نیست. منتظر تاییدها بمانید و دوباره تلاش کنید.</string>
     <string name="pc_room_not_enough_kas">KAS کافی در نشانی گفتگوی شما نیست. مقداری اضافه کنید و دوباره امتحان کنید.</string>

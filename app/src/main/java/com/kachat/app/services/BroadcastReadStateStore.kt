@@ -73,13 +73,6 @@ class BroadcastReadStateStore @Inject constructor(
         save(current.copy(manuallyUnread = current.manuallyUnread + channel))
     }
 
-    /** Shows or hides one of the default rooms in Public Chats. */
-    fun setCuratedShown(channel: String, shown: Boolean) = synchronized(lock) {
-        if (wallet == null) return@synchronized
-        val current = _state.value
-        save(current.copy(hiddenCurated = if (shown) current.hiddenCurated - channel else current.hiddenCurated + channel))
-    }
-
     /** The account this store is pointed at (lowercased), or null. */
     val currentWallet: String? get() = synchronized(lock) { wallet }
 

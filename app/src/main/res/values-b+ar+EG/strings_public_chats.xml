@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">الشبكة لسه بتأكد اللي بعته قبل كده. جرّب تاني بعد كام ثانية.</string>
     <string name="pc_l53_room_kept_for">بيتحفظ لمدة</string>
     <string name="pc_l53_room_on_this_device">على الجهاز ده</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">حمّل الرسائل القديمة</string>
     <string name="pc_no_testnet_indexer_yet">لا يوجد مفهرس للشبكة التجريبية بعد</string>
     <string name="pc_room_no_spendable_funds_yet">لا توجد أموال قابلة للإنفاق حتى الآن. انتظر التأكيدات وحاول مرة أخرى.</string>
     <string name="pc_room_not_enough_kas">مفيش KAS كفاية في عنوان الدردشة. ضيف شوية وجرب تاني.</string>

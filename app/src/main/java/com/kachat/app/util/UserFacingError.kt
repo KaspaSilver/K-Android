@@ -22,6 +22,9 @@ import com.kachat.app.R
 object UserFacingError {
 
     fun message(error: Throwable?, fallback: String): String {
+        // The caller's fallback is English at the call site; show it in the app's language when
+        // it's one of the known sentences (release audit 2026-11-27 L2).
+        val fallback = translated(fallback)
         if (error == null) return fallback
         return when (error) {
             is kotlinx.coroutines.CancellationException -> text(R.string.rel_wallet_cancelled, "Cancelled.")
@@ -46,7 +49,9 @@ object UserFacingError {
                 text(R.string.rel_wallet_err_unreadable, "The server sent something the app couldn't read. Try again; if it keeps happening, update the app.")
 
             is retrofit2.HttpException ->
-                "The server returned an error (${error.code()}). Try again in a moment."
+                try { tr(R.string.rel5_server_error_code, error.code()) } catch (e: Exception) {
+                    "The server returned an error (${error.code()}). Try again in a moment."
+                }
 
             is io.grpc.StatusRuntimeException, is io.grpc.StatusException ->
                 text(R.string.rel_wallet_err_node, "The Kaspa node returned an error. The app will try another node; try again in a moment.")
@@ -72,7 +77,7 @@ object UserFacingError {
 
     /** The same treatment for a reason that is already a string. */
     fun message(text: String?, fallback: String): String =
-        text?.trim()?.stripKnownPrefixes()?.takeIf { it.isNotEmpty() }?.let(::translated) ?: fallback
+        text?.trim()?.stripKnownPrefixes()?.takeIf { it.isNotEmpty() }?.let(::translated) ?: translated(fallback)
 
     /** The app's own common error sentences, in English as the send paths throw them (they match
      *  on that text), and their translations (iOS 01f71184 `UserFacingError`: "the app's own
@@ -100,6 +105,35 @@ object UserFacingError {
         "Missing admin group secrets." to R.string.rel_wallet_err_admin_secrets,
         "No spendable UTXOs at this address" to R.string.rel_wallet_no_spendable_at_address,
         "Insufficient funds to cover that amount plus the network fee" to R.string.rel_wallet_insufficient_plus_fee,
+        // The fallbacks the call sites pass (release audit 2026-11-27 L2), and sentences the app
+        // throws that the reader sees as they are.
+        "Recording failed. Please try again." to R.string.recording_failed_please_try_again,
+        "Audio file is empty" to R.string.rel5_audio_file_empty,
+        "Failed to send" to R.string.failed_to_send,
+        "Something went wrong" to R.string.something_went_wrong,
+        "Couldn't load the coins." to R.string.couldnt_load_the_coins,
+        "Please try again" to R.string.please_try_again,
+        "Export failed" to R.string.export_failed,
+        "Import failed" to R.string.import_failed,
+        "Not a valid kpub" to R.string.cold_not_a_valid_kpub,
+        "Could not load this folder." to R.string.rel5_fb_could_not_load_folder,
+        "Failed to build transaction" to R.string.rel5_fb_failed_build_tx,
+        "Edit failed" to R.string.rel5_fb_edit_failed,
+        "Couldn't read the signed transaction" to R.string.rel5_fb_cant_read_signed_tx,
+        "Reaction failed" to R.string.rel5_fb_reaction_failed,
+        "Failed to update group photo" to R.string.rel5_fb_update_group_photo,
+        "Failed to resend invites" to R.string.rel5_fb_resend_invites,
+        "Failed to resend invite" to R.string.rel5_fb_resend_invite,
+        "Failed to rename group" to R.string.rel5_fb_rename_group,
+        "Failed to create group" to R.string.rel5_fb_create_group,
+        "Could not schedule this post" to R.string.rel5_fb_schedule_post,
+        "Could not load more" to R.string.rel5_fb_load_more,
+        "Could not create a share link." to R.string.rel5_fb_share_link,
+        "Could not connect" to R.string.rel5_fb_connect,
+        "Broadcast failed" to R.string.rel5_fb_broadcast_failed,
+        "Backup failed" to R.string.rel5_fb_backup_failed,
+        "Invalid Kaspa address format." to R.string.rel5_invalid_address_format,
+        "Enter a valid amount." to R.string.rel5_enter_valid_amount,
     )
 
     /** [sentence] in the app's language when it's one of [KNOWN_SENTENCES]; any other text as is. */

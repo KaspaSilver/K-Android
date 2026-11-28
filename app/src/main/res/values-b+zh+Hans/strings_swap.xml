@@ -2,7 +2,6 @@
 <!-- Swap (iPhone 5.4 518fdc8c: SwapView, SwapService, TrestlyTrade), from the iPhone's
      Localizable.strings for the same keys. -->
 <resources>
-    <string name="swap_title">兑换</string>
     <string name="swap_failed">兑换失败</string>
     <string name="swap_couldnt_read_amounts">无法读取此次兑换的金额</string>
     <string name="swap_already_holds">已包含此兑换——再次添加会重复计算。</string>
@@ -14,7 +13,6 @@
     <string name="swap_destination_tag_optional">目标标签（可选）</string>
     <string name="swap_destination_tag_hint">仅当接收地址需要时填写，大多数交易所都需要。没有它，交易所无法将币记入您的账户。</string>
     <string name="swap_from_kusdt_lands">兑换来源（kUSDT 到账于此）</string>
-    <string name="swap_from_kas_lands">兑换来源（KAS 到账于此）</string>
     <string name="swap_change">更换</string>
     <string name="swap_powered_by_trestly">由 Trestly 提供支持</string>
     <string name="swap_powered_by_changenow">由 ChangeNOW 提供支持</string>
@@ -48,8 +46,6 @@
     <string name="swap_deposit_address">充值地址</string>
     <string name="swap_couldnt_reach_changenow">无法连接 ChangeNOW，请重试</string>
     <string name="swap_details">兑换详情</string>
-    <string name="swap_used">已使用</string>
-    <string name="swap_unused">未使用</string>
     <string name="swap_search_coins">搜索币种</string>
     <string name="swap_agreements_intro">兑换使用两项并非由 K 运营的服务。继续之前，请阅读并同意两者。</string>
     <string name="swap_coins_on_other_networks">其他网络上的币</string>

@@ -24,6 +24,19 @@ import java.io.IOException
 
 internal enum class IndexerOutcome { ANSWERED, DOWN }
 
+internal enum class IndexerFailureKind { IGNORED, SLOW_LINK, FAILURE }
+
+/** How a request that never got an answer counts (audit 2026-11-27 R8): a timeout or dropped
+ *  connection just after a network change not at all, one on a metered path as a slow link. */
+internal fun indexerFailureKind(error: IOException, metered: Boolean, nowMs: Long, lastNetworkChangeMs: Long): IndexerFailureKind {
+    val handoff = KaPostsIndexerHealth.isHandoffError(error)
+    return when {
+        handoff && KaPostsIndexerHealth.inNetworkChangeGrace(nowMs, lastNetworkChangeMs) -> IndexerFailureKind.IGNORED
+        handoff && metered -> IndexerFailureKind.SLOW_LINK
+        else -> IndexerFailureKind.FAILURE
+    }
+}
+
 /** One HTTP answer from the indexer. A body it couldn't decode is still the indexer answering: one
  *  odd row isn't an outage. Anything but JSON on a success is something else answering for it. */
 internal fun classifyIndexerAnswer(code: Int, contentType: String?): IndexerOutcome {
@@ -36,14 +49,28 @@ internal fun classifyIndexerAnswer(code: Int, contentType: String?): IndexerOutc
 
 /**
  * Every indexer request reports here (iOS `noteIndexerResult`). A cancelled call says nothing, and
- * a weak signal looks like a dead server, so only an online phone's failures count.
+ * a weak signal looks like a dead server, so only an online phone's failures count. A timeout or
+ * dropped connection within [KaPostsIndexerHealth.NETWORK_CHANGE_GRACE_MS]
+ * of a network change is the handoff's and says nothing either, and on a metered path one counts
+ * only toward a run that has lasted (audit 2026-11-27 R8, as KaPost's indexer health already does
+ * for the handoff).
  */
-class IndexerHealthInterceptor(private val isOnline: () -> Boolean) : Interceptor {
+class IndexerHealthInterceptor(
+    private val isOnline: () -> Boolean,
+    private val isMetered: () -> Boolean = { false },
+    private val lastNetworkChangeAtMs: () -> Long = { 0L },
+) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val response = try {
             chain.proceed(chain.request())
         } catch (e: IOException) {
-            if (!chain.call().isCanceled() && isOnline()) IndexerHealth.reportFailure()
+            if (!chain.call().isCanceled() && isOnline()) {
+                when (indexerFailureKind(e, isMetered(), System.currentTimeMillis(), lastNetworkChangeAtMs())) {
+                    IndexerFailureKind.IGNORED -> Unit
+                    IndexerFailureKind.SLOW_LINK -> IndexerHealth.reportFailure(slowLink = true)
+                    IndexerFailureKind.FAILURE -> IndexerHealth.reportFailure()
+                }
+            }
             throw e
         }
         val contentType = response.header("Content-Type")

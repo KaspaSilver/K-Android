@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <issues format="6" by="lint 8.13.2" type="baseline" client="gradle" dependencies="false" name="AGP (8.13.2)" variant="all" version="8.13.2">
 
-    <issue
-        id="MissingPermission"
-        message="Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with `checkPermission`) or explicitly handle a potential `SecurityException`"
-        errorLine1="        runCatching { manager.notify(NOTIFICATION_ID, builder.build()) }"
-        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/IncomingCallNotifier.kt"
-            line="107"
-            column="23"/>
-    </issue>
 
     <issue
         id="ApplySharedPref"
@@ -239,280 +229,30 @@
             column="6"/>
     </issue>
 
-    <issue
-        id="AndroidGradlePluginVersion"
-        message="A newer version of com.android.application than 8.13.2 is available: 9.4.1"
-        errorLine1="agp = &quot;8.13.2&quot;"
-        errorLine2="      ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="3"
-            column="7"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.core:core-ktx than 1.13.1 is available: 1.19.1"
-        errorLine1="coreKtx = &quot;1.13.1&quot;"
-        errorLine2="          ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="5"
-            column="11"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.lifecycle:lifecycle-process than 2.8.3 is available: 2.11.0"
-        errorLine1="lifecycleRuntimeKtx = &quot;2.8.3&quot;"
-        errorLine2="                      ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="6"
-            column="23"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.lifecycle:lifecycle-runtime-ktx than 2.8.3 is available: 2.11.0"
-        errorLine1="lifecycleRuntimeKtx = &quot;2.8.3&quot;"
-        errorLine2="                      ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="6"
-            column="23"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.8.3 is available: 2.11.0"
-        errorLine1="lifecycleRuntimeKtx = &quot;2.8.3&quot;"
-        errorLine2="                      ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="6"
-            column="23"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.activity:activity-compose than 1.9.0 is available: 1.13.0"
-        errorLine1="activityCompose = &quot;1.9.0&quot;"
-        errorLine2="                  ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="7"
-            column="19"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.compose:compose-bom than 2024.06.00 is available: 2026.09.00"
-        errorLine1="composeBom = &quot;2024.06.00&quot;"
-        errorLine2="             ~~~~~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="8"
-            column="14"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.navigation:navigation-compose than 2.7.7 is available: 2.10.2"
-        errorLine1="navigationCompose = &quot;2.7.7&quot;"
-        errorLine2="                    ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="9"
-            column="21"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.hilt:hilt-navigation-compose than 1.2.0 is available: 1.4.0"
-        errorLine1="hiltNavigationCompose = &quot;1.2.0&quot;"
-        errorLine2="                        ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="11"
-            column="25"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.work:work-runtime-ktx than 2.9.1 is available: 2.12.0"
-        errorLine1="work = &quot;2.9.1&quot;"
-        errorLine2="       ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="12"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.hilt:hilt-compiler than 1.2.0 is available: 1.4.0"
-        errorLine1="hiltWork = &quot;1.2.0&quot;"
-        errorLine2="           ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="13"
-            column="12"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.hilt:hilt-work than 1.2.0 is available: 1.4.0"
-        errorLine1="hiltWork = &quot;1.2.0&quot;"
-        errorLine2="           ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="13"
-            column="12"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.5"
-        errorLine1="room = &quot;2.6.1&quot;"
-        errorLine2="       ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="16"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.5"
-        errorLine1="room = &quot;2.6.1&quot;"
-        errorLine2="       ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="16"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.5"
-        errorLine1="room = &quot;2.6.1&quot;"
-        errorLine2="       ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="16"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.datastore:datastore-preferences than 1.1.1 is available: 1.2.1"
-        errorLine1="datastore = &quot;1.1.1&quot;"
-        errorLine2="            ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="20"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.test.ext:junit than 1.2.1 is available: 1.3.0"
-        errorLine1="junitExt = &quot;1.2.1&quot;"
-        errorLine2="           ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="26"
-            column="12"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.test.espresso:espresso-core than 3.6.1 is available: 3.7.0"
-        errorLine1="espresso = &quot;3.6.1&quot;"
-        errorLine2="           ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="27"
-            column="12"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.camera:camera-camera2 than 1.5.3 is available: 1.6.2"
-        errorLine1="camerax = &quot;1.5.3&quot;"
-        errorLine2="          ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="31"
-            column="11"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.camera:camera-core than 1.5.3 is available: 1.6.2"
-        errorLine1="camerax = &quot;1.5.3&quot;"
-        errorLine2="          ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="31"
-            column="11"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.camera:camera-lifecycle than 1.5.3 is available: 1.6.2"
-        errorLine1="camerax = &quot;1.5.3&quot;"
-        errorLine2="          ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="31"
-            column="11"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.camera:camera-view than 1.5.3 is available: 1.6.2"
-        errorLine1="camerax = &quot;1.5.3&quot;"
-        errorLine2="          ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="31"
-            column="11"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of androidx.appcompat:appcompat than 1.7.0 is available: 1.8.0"
-        errorLine1="appcompat = &quot;1.7.0&quot;"
-        errorLine2="            ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="35"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of com.google.firebase:firebase-bom than 33.7.0 is available: 34.19.0"
-        errorLine1="firebaseBom = &quot;33.7.0&quot;"
-        errorLine2="              ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="36"
-            column="15"/>
-    </issue>
 
-    <issue
-        id="GradleDependency"
-        message="A newer version of com.google.gms.google-services than 4.4.2 is available: 4.5.0"
-        errorLine1="googleServices = &quot;4.4.2&quot;"
-        errorLine2="                 ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="37"
-            column="18"/>
-    </issue>
 
     <issue
         id="LockedOrientationActivity"
@@ -525,214 +265,24 @@
             column="13"/>
     </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of io.github.webrtc-sdk:android than 125.6422.07 is available: 150.7871.01"
-        errorLine1="webrtc = &quot;125.6422.07&quot;"
-        errorLine2="         ~~~~~~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="2"
-            column="10"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.jetbrains.kotlin.android than 2.0.21 is available: 2.4.20"
-        errorLine1="kotlin = &quot;2.0.21&quot;"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="4"
-            column="10"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.jetbrains.kotlin.plugin.compose than 2.0.21 is available: 2.4.20"
-        errorLine1="kotlin = &quot;2.0.21&quot;"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="4"
-            column="10"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.google.dagger.hilt.android than 2.51.1 is available: 2.60.1"
-        errorLine1="hilt = &quot;2.51.1&quot;"
-        errorLine2="       ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="10"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.google.dagger:hilt-android than 2.51.1 is available: 2.60.1"
-        errorLine1="hilt = &quot;2.51.1&quot;"
-        errorLine2="       ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="10"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.google.dagger:hilt-android-compiler than 2.51.1 is available: 2.60.1"
-        errorLine1="hilt = &quot;2.51.1&quot;"
-        errorLine2="       ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="10"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.squareup.retrofit2:converter-gson than 2.11.0 is available: 3.0.0"
-        errorLine1="retrofit = &quot;2.11.0&quot;"
-        errorLine2="           ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="17"
-            column="12"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.squareup.retrofit2:retrofit than 2.11.0 is available: 3.0.0"
-        errorLine1="retrofit = &quot;2.11.0&quot;"
-        errorLine2="           ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="17"
-            column="12"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.squareup.okhttp3:logging-interceptor than 4.12.0 is available: 5.5.0"
-        errorLine1="okhttp = &quot;4.12.0&quot;"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="18"
-            column="10"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.squareup.okhttp3:okhttp than 4.12.0 is available: 5.5.0"
-        errorLine1="okhttp = &quot;4.12.0&quot;"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="18"
-            column="10"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-android than 1.8.1 is available: 1.11.0"
-        errorLine1="coroutines = &quot;1.8.1&quot;"
-        errorLine2="             ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="19"
-            column="14"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-play-services than 1.8.1 is available: 1.11.0"
-        errorLine1="coroutines = &quot;1.8.1&quot;"
-        errorLine2="             ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="19"
-            column="14"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of io.grpc:grpc-inprocess than 1.64.0 is available: 1.84.0"
-        errorLine1="grpc = &quot;1.64.0&quot;"
-        errorLine2="       ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="22"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of io.grpc:grpc-okhttp than 1.64.0 is available: 1.84.0"
-        errorLine1="grpc = &quot;1.64.0&quot;"
-        errorLine2="       ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="22"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of io.grpc:grpc-protobuf-lite than 1.64.0 is available: 1.84.0"
-        errorLine1="grpc = &quot;1.64.0&quot;"
-        errorLine2="       ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="22"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of io.grpc:grpc-stub than 1.64.0 is available: 1.84.0"
-        errorLine1="grpc = &quot;1.64.0&quot;"
-        errorLine2="       ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="22"
-            column="8"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of io.grpc:grpc-kotlin-stub than 1.4.1 is available: 1.5.0"
-        errorLine1="grpcKotlin = &quot;1.4.1&quot;"
-        errorLine2="             ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="23"
-            column="14"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of com.google.protobuf:protobuf-kotlin-lite than 3.25.3 is available: 4.36.2"
-        errorLine1="protobuf = &quot;3.25.3&quot;"
-        errorLine2="           ~~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="24"
-            column="12"/>
-    </issue>
 
-    <issue
-        id="NewerVersionAvailable"
-        message="A newer version of dev.chrisbanes.haze:haze than 0.7.3 is available: 2.0.0"
-        errorLine1="haze = &quot;0.7.3&quot;"
-        errorLine2="       ~~~~~~~">
-        <location
-            file="$HOME/KaChatForAndroid/gradle/libs.versions.toml"
-            line="39"
-            column="8"/>
-    </issue>
 
     <issue
         id="ComposableNaming"
@@ -778,49 +328,9 @@
             column="13"/>
     </issue>
 
-    <issue
-        id="ModifierFactoryExtensionFunction"
-        message="Modifier factory functions should be extensions on Modifier"
-        errorLine1="internal fun rememberKaPostsCoverSlide(onClose: () -> Unit, slidesIn: Boolean = true): Modifier {"
-        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="6439"
-            column="14"/>
-    </issue>
 
-    <issue
-        id="ModifierParameter"
-        message="Modifier parameter should be the first optional parameter"
-        errorLine1="    modifier: Modifier = Modifier,"
-        errorLine2="    ~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KnsCreateProfileWizardScreen.kt"
-            line="1108"
-            column="5"/>
-    </issue>
 
-    <issue
-        id="ModifierParameter"
-        message="Modifier parameter should be the first optional parameter"
-        errorLine1="    modifier: Modifier = Modifier"
-        errorLine2="    ~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/PortfolioScreen.kt"
-            line="391"
-            column="5"/>
-    </issue>
 
-    <issue
-        id="ModifierParameter"
-        message="Optional Modifier parameter should have a default value of `Modifier`"
-        errorLine1="    modifier: Modifier = Modifier.fillMaxWidth(),"
-        errorLine2="    ~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/RevealableSecureField.kt"
-            line="42"
-            column="5"/>
-    </issue>
 
     <issue
         id="ModifierParameter"
@@ -910,60 +420,10 @@
             column="19"/>
     </issue>
 
-    <issue
-        id="ReturnFromAwaitPointerEventScope"
-        message="Returning from awaitPointerEventScope may cause some input events to be dropped"
-        errorLine1="                awaitPointerEventScope {"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/GiftClaimUi.kt"
-            line="295"
-            column="17"/>
-    </issue>
 
-    <issue
-        id="StateFlowValueCalledInComposition"
-        message="StateFlow.value should not be called within composition"
-        errorLine1="    return sliced.collectAsState(initial = selector(value))"
-        errorLine2="                                                    ~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="466"
-            column="53"/>
-    </issue>
 
-    <issue
-        id="StateFlowValueCalledInComposition"
-        message="StateFlow.value should not be called within composition"
-        errorLine1="            state = viewModel.translations.value[translationKey],"
-        errorLine2="                                           ~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="2128"
-            column="44"/>
-    </issue>
 
-    <issue
-        id="StateFlowValueCalledInComposition"
-        message="StateFlow.value should not be called within composition"
-        errorLine1="            showingOriginal = translationKey in viewModel.showingOriginal.value,"
-        errorLine2="                                                                          ~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="2129"
-            column="75"/>
-    </issue>
 
-    <issue
-        id="StateFlowValueCalledInComposition"
-        message="StateFlow.value should not be called within composition"
-        errorLine1="            canTranslate = translationKey in viewModel.translatable.value,"
-        errorLine2="                                                                    ~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="2130"
-            column="69"/>
-    </issue>
 
     <issue
         id="UnrememberedGetBackStackEntry"
@@ -5244,38 +4704,8 @@
             column="30"/>
     </issue>
 
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 26"
-        errorLine1="                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent) else context.startService(intent)"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/CallForegroundService.kt"
-            line="37"
-            column="21"/>
-    </issue>
 
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 26"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/CallForegroundService.kt"
-            line="52"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 26"
-        errorLine1="                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) vibrator?.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 500, 300, 500), -1))"
-        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/CallService.kt"
-            line="1116"
-            column="25"/>
-    </issue>
 
     <issue
         id="ObsoleteSdkInt"
@@ -5288,16 +4718,6 @@
             column="28"/>
     </issue>
 
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 26"
-        errorLine1="        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/IncomingCallNotifier.kt"
-            line="46"
-            column="13"/>
-    </issue>
 
     <issue
         id="ObsoleteSdkInt"
@@ -5339,16 +4759,6 @@
             file="src/main/res/mipmap-anydpi-v26"/>
     </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
-        errorLine1="    var timestamp by remember { mutableStateOf(tx.blockTimeMillis ?: System.currentTimeMillis()) }"
-        errorLine2="                                ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/AddToPortfolioSheet.kt"
-            line="96"
-            column="33"/>
-    </issue>
 
     <issue
         id="AutoboxingStateCreation"
@@ -5383,27 +4793,7 @@
             column="32"/>
     </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
-        errorLine1="    var page by remember { mutableStateOf(0) }"
-        errorLine2="                           ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/ColdStorageScreens.kt"
-            line="847"
-            column="28"/>
-    </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
-        errorLine1="    var selectedTab by remember { mutableStateOf(0) }"
-        errorLine2="                                  ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/ColdStorageScreens.kt"
-            line="2101"
-            column="35"/>
-    </issue>
 
     <issue
         id="AutoboxingStateCreation"
@@ -5449,49 +4839,9 @@
             column="36"/>
     </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
-        errorLine1="    var selectedTab by remember { mutableStateOf(0) } // 0 = Posts, 1 = Replies"
-        errorLine2="                                  ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="4561"
-            column="35"/>
-    </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
-        errorLine1="    var feeTier by remember { mutableStateOf(1L) }"
-        errorLine2="                              ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="5426"
-            column="31"/>
-    </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
-        errorLine1="    var selectedTab by remember { mutableStateOf(0) }"
-        errorLine2="                                  ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="6019"
-            column="35"/>
-    </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableDoubleStateOf` instead of `mutableStateOf`"
-        errorLine1="    var currentBalanceKas by remember { mutableStateOf(0.0) }"
-        errorLine2="                                        ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KnsCreateProfileWizardScreen.kt"
-            line="128"
-            column="41"/>
-    </issue>
 
     <issue
         id="AutoboxingStateCreation"
@@ -5515,60 +4865,10 @@
             column="33"/>
     </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
-        errorLine1="    var canvasWidthPx by remember { mutableStateOf(0) }"
-        errorLine2="                                    ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/PortfolioScreen.kt"
-            line="999"
-            column="37"/>
-    </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
-        errorLine1="    var timestampMillis by remember { mutableStateOf(existing?.timestampMillis ?: prefillTimestampMillis ?: System.currentTimeMillis()) }"
-        errorLine2="                                      ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/PortfolioScreen.kt"
-            line="2266"
-            column="39"/>
-    </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
-        errorLine1="    var pickedDateMillis by remember { mutableStateOf(initialMillis) }"
-        errorLine2="                                       ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/PortfolioScreen.kt"
-            line="2450"
-            column="40"/>
-    </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
-        errorLine1="    var rangeDays by remember { mutableStateOf(90) }"
-        errorLine2="                                ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/PortfolioScreen.kt"
-            line="2776"
-            column="33"/>
-    </issue>
 
-    <issue
-        id="AutoboxingStateCreation"
-        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
-        errorLine1="    var unitIndex by remember { mutableStateOf(1) }"
-        errorLine2="                                ~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/PortfolioScreen.kt"
-            line="2944"
-            column="33"/>
-    </issue>
 
     <issue
         id="AutoboxingStateCreation"
@@ -9559,16 +8859,6 @@
             column="9"/>
     </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        handledCalls.edit().putString(&quot;handled&quot;, (ids + callId).takeLast(200).joinToString(&quot;,&quot;)).apply()"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/CallService.kt"
-            line="249"
-            column="9"/>
-    </issue>
 
     <issue
         id="UseKtx"
@@ -9647,38 +8937,8 @@
             column="13"/>
     </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX function `createBitmap` instead?"
-        errorLine1="    val bitmap = Bitmap.createBitmap(width, side, Bitmap.Config.ARGB_8888)"
-        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/ChessTabIcon.kt"
-            line="23"
-            column="18"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        sharedPrefs.edit().putString(PREF_RECORD, gson.toJson(record)).apply()"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/ChildModeService.kt"
-            line="75"
-            column="9"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        sharedPrefs.edit().remove(PREF_RECORD).apply()"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/ChildModeService.kt"
-            line="117"
-            column="9"/>
-    </issue>
 
     <issue
         id="UseKtx"
@@ -9812,38 +9072,8 @@
             column="9"/>
     </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                        Uri.parse("
-        errorLine2="                        ^">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/GiftClaimUi.kt"
-            line="226"
-            column="25"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        if (!BuildConfig.DEBUG) prefs.edit().putBoolean(REQUEST_SENT_KEY, true).apply()"
-        errorLine2="                                ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/GiftManager.kt"
-            line="71"
-            column="33"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        prefs.edit().remove(LEGACY_CLAIMED_KEY).remove(LEGACY_LAST_ATTEMPT_KEY).apply()"
-        errorLine2="        ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/GiftManager.kt"
-            line="94"
-            column="9"/>
-    </issue>
 
     <issue
         id="UseKtx"
@@ -9933,137 +9163,17 @@
             column="26"/>
     </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)"
-        errorLine2="        ^">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostDraftStore.kt"
-            line="109"
-            column="9"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        prefs.edit().putString(key(wallet), gson.toJson(sorted)).apply()"
-        errorLine2="        ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/KaPostsScheduledStore.kt"
-            line="107"
-            column="9"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="        data = android.net.Uri.parse(&quot;mailto:&quot;)"
-        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="5367"
-            column="16"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="        data = android.net.Uri.parse(&quot;mailto:&quot;)"
-        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/KaPostsScreens.kt"
-            line="5367"
-            column="16"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="            prefs.edit()"
-        errorLine2="            ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/KaPostsThreadProbeStore.kt"
-            line="100"
-            column="13"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        prefs.edit().putInt(key(wallet), _unseenCount.value).apply()"
-        errorLine2="        ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/KaPostsUnseenStore.kt"
-            line="66"
-            column="9"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        prefs.edit().putInt(key(wallet), 0).apply()"
-        errorLine2="        ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/KaPostsUnseenStore.kt"
-            line="76"
-            column="9"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        prefs.edit().remove(KEY).remove(REVERSE_KEY).apply()"
-        errorLine2="        ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/KnsProfileCacheStore.kt"
-            line="185"
-            column="9"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="                prefs.edit().putString(KEY, gson.toJson(snapshot, entryMapType)).apply()"
-        errorLine2="                ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/KnsProfileCacheStore.kt"
-            line="208"
-            column="17"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="                prefs.edit().putString(REVERSE_KEY, gson.toJson(snapshot, reverseMapType)).apply()"
-        errorLine2="                ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/KnsProfileCacheStore.kt"
-            line="230"
-            column="17"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="                prefs.edit().putString(REVERSE_KEY, gson.toJson(reverse, reverseMapType)).apply()"
-        errorLine2="                ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/KnsProfileCacheStore.kt"
-            line="250"
-            column="17"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        prefs.edit().putBoolean(NEGATIVE_HEAL_KEY, true).apply()"
-        errorLine2="        ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/KnsProfileCacheStore.kt"
-            line="256"
-            column="9"/>
-    </issue>
 
     <issue
         id="UseKtx"
@@ -10197,16 +9307,6 @@
             column="9"/>
     </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        prefs.edit().putString(key(walletAddress), gson.toJson(state)).apply()"
-        errorLine2="        ~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/services/PaymentPoolStore.kt"
-            line="146"
-            column="9"/>
-    </issue>
 
     <issue
         id="UseKtx"
@@ -10362,38 +9462,8 @@
             column="22"/>
     </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                                            android.net.Uri.parse(&quot;https://changenow.io/exchange/txs/${result.id}&quot;)"
-        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/SwapScreen.kt"
-            line="442"
-            column="45"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                                android.net.Uri.parse(&quot;https://changenow.io/terms-of-use/changenow-terms&quot;)"
-        errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/SwapScreen.kt"
-            line="465"
-            column="33"/>
-    </issue>
 
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                                    android.net.Uri.parse(&quot;https://changenow.io/exchange/txs/${swap.id}&quot;)"
-        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/kachat/app/ui/screens/SwapScreen.kt"
-            line="755"
-            column="37"/>
-    </issue>
 
     <issue
         id="UseKtx"

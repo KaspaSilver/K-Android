@@ -12,46 +12,6 @@ import java.io.ByteArrayOutputStream
 
 /** Prepares a picked image for KNS profile upload — matches iOS's client-side prep exactly (downscale to a 1400px longest edge, always re-encode as PNG regardless of source format). */
 object ImagePrep {
-    private const val MAX_DIMENSION = 1400
-
-    fun prepareForUpload(context: Context, uri: Uri): ByteArray {
-        val resolver = context.contentResolver
-
-        // Downsample during decode rather than decoding at full resolution first — a modern 12MP+
-        // camera photo decoded straight to ARGB_8888 can be 40-50MB and OOM before any scaling
-        // happens (same reasoning as prepareForChatMessage below). Read just the bounds, pick an
-        // inSampleSize that lands at or just above MAX_DIMENSION, then decode that.
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        (resolver.openInputStream(uri) ?: throw IllegalStateException("Could not read image"))
-            .use { BitmapFactory.decodeStream(it, null, bounds) }
-
-        var sampleSize = 1
-        while (bounds.outWidth / (sampleSize * 2) >= MAX_DIMENSION || bounds.outHeight / (sampleSize * 2) >= MAX_DIMENSION) {
-            sampleSize *= 2
-        }
-
-        val original = resolver.openInputStream(uri)?.use {
-            BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sampleSize })
-        }?.let { applyExifOrientation(context, uri, it) } ?: throw IllegalStateException("Could not read image")
-
-        // inSampleSize only halves, so the result can still overshoot — clamp exactly to 1400px.
-        val scale = MAX_DIMENSION.toFloat() / maxOf(original.width, original.height)
-        val resized = if (scale < 1f) {
-            Bitmap.createScaledBitmap(
-                original,
-                (original.width * scale).toInt().coerceAtLeast(1),
-                (original.height * scale).toInt().coerceAtLeast(1),
-                true
-            )
-        } else {
-            original
-        }
-
-        val out = ByteArrayOutputStream()
-        resized.compress(Bitmap.CompressFormat.PNG, 100, out)
-        return out.toByteArray()
-    }
-
     /** The default budget of [prepareForChatMessage] (small images only; chat photos go by
      *  [PhotoTier], iOS 7c5c22e3 `defaultChatTargetBytes`). */
     const val DEFAULT_CHAT_TARGET_BYTES = 20_000

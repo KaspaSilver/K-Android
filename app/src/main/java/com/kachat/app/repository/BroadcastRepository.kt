@@ -205,6 +205,12 @@ class BroadcastRepository @Inject constructor(
         if (com.kachat.app.services.publicchats.AutoAddedRooms.bellOnJoin(name, alreadyJoined, notify)) {
             setNotifyEnabled(name, true)
         }
+        // A room just added shows its last message in the Chats list at once, not "No messages
+        // yet" until it is opened or the next sweep reaches it (release audit 2026-11-27 E3): its
+        // newest page, fetched as the room row's sweep fetches it. Quiet - nothing is bannered.
+        if (shouldFetchNewestOnJoin(name, alreadyJoined, notify)) {
+            pushFetchScope.launch { runCatching { fetchNewestFromIndexer(name) } }
+        }
     }
 
     /** Removes the channel from the joined list AND permanently deletes every cached message for it — the UI must confirm this with the user first, since it's destructive and can't be undone (rejoining later starts with no history). Any room can be left, default rooms too (iOS 824a30bb, owner 2026-11-26: every room is one the person added). */
@@ -2841,3 +2847,9 @@ class BroadcastRepository @Inject constructor(
         }
     }
 }
+
+/** Whether joining [name] fetches its newest page right away (release audit 2026-11-27 E3): a
+ *  room the person added ([notify]: a silent join is the app's own machinery, which has its own
+ *  fetches) that wasn't joined before, and not a service room, which never shows a row. */
+internal fun shouldFetchNewestOnJoin(name: String, alreadyJoined: Boolean, notify: Boolean): Boolean =
+    notify && !alreadyJoined && name !in com.kachat.app.models.FeaturedBroadcastChannels.SERVICE_CHANNELS

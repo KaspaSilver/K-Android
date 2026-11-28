@@ -774,7 +774,8 @@ fun ChatsScreen(
                     }
                 }
                 if (allEntries.isNotEmpty()) {
-                    items(allEntries, key = { it.id }) { entry ->
+                    // A chat, group and room row each keep their own reuse pool (audit 2026-11-27 S4).
+                    items(allEntries, key = { it.id }, contentType = { it::class }) { entry ->
                         when (entry) {
                         is ChatListEntry.Room -> {
                             val roomName = entry.channel.channelName

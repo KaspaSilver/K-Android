@@ -113,7 +113,6 @@
     <string name="qr_code">QR কোড</string>
     <string name="read">পঠিত</string>
     <string name="receive">গ্রহণ করুন</string>
-    <string name="recipient_address">প্রাপকের ঠিকানা</string>
     <string name="remove">সরান</string>
     <string name="rename">নাম পরিবর্তন করুন</string>
     <string name="rename_account">অ্যাকাউন্টের নাম পরিবর্তন করুন</string>
@@ -230,7 +229,6 @@
     <string name="welcome_to_kachat">K-এ স্বাগতম</string>
     <string name="lets_walk_through_the_basics_so">আসুন মূল বিষয়গুলো দেখে নিই যাতে আপনি আপনার প্রথম বার্তা পাঠাতে প্রস্তুত হন।</string>
     <string name="how_kachat_uses_kaspa">K কীভাবে Kaspa ব্যবহার করে</string>
-    <string name="kachat_lets_you_send_and_receive">K আপনাকে সরাসরি Kaspa নেটওয়ার্কে বার্তা পাঠাতে ও গ্রহণ করতে দেয়। আপনার বার্তা পাঠানোর সময় ফি পরিশোধ করতে Kaspa প্রয়োজন। আপনি যে ফি প্রদান করেন তা নেটওয়ার্ক সুরক্ষিত রাখা মাইনারদের কাছে যায়।</string>
     <string name="finish">সম্পন্ন</string>
     <string name="choose_your_language">আপনার ভাষা নির্বাচন করুন</string>
     <string name="select_the_language_youd_like_to">K-এ আপনি যে ভাষা ব্যবহার করতে চান তা নির্বাচন করুন।</string>
@@ -270,7 +268,6 @@
     <string name="connection_tab_explorer">এক্সপ্লোরার</string>
     <string name="message_indexer">বার্তা ইনডেক্সার</string>
     <string name="coming_soon">শীঘ্রই আসছে</string>
-    <string name="not_available_on_this_network">এই নেটওয়ার্কে উপলব্ধ নয়</string>
     <!-- .kachat marketplace and KaChat Stats (iOS b064468, f38cac2, 98354d3, 982966d, b8dd56f) -->
     <!-- .kachat setup guide (iOS b000310, 66b152f) -->
     <string name="kg_welcome_body">শুরুর সম্পূর্ণ পরিচিতি: ওয়ালেট, চ্যাট, পেমেন্ট ও আরও অনেক কিছু।</string>
@@ -710,7 +707,7 @@
     <string name="pr_send_request">পেমেন্ট অনুরোধ পাঠান</string>
     <!-- Chat list: delete one chat (iOS ChatListView rowDeleteContact) -->
     <string name="delete_chat_q">Delete Chat?</string>
-    <string name="delete_chat_alert_message">This permanently deletes every message in this chat from this device. This cannot be undone.</string>
+    <string name="delete_chat_alert_message">এটি এই ডিভাইস থেকে এই চ্যাটের সব বার্তা চিরতরে মুছে দেয়। এটি ফেরানো যাবে না।</string>
     <!-- .kachat transaction sheet: coins are combined only after the slide (iOS 778a8fc, IOS-075) -->
     <!-- An address's Domains tab: one card per name service (iOS fe52376) -->
     <!-- Request Payment: Fresh Address / Choose an Address, Used / Unused (iOS 86dfd2d, 6dee531, 338d9f5) -->
@@ -1119,7 +1116,6 @@
     <string name="write_down_your_12_or_24_words">মুছে ফেলার আগে আপনার ১২ বা ২৪টি শব্দ লিখে রাখুন।</string>
     <string name="view_12_or_24_words_and_passphrase">১২ বা ২৪টি শব্দ ও পাসফ্রেজ দেখুন</string>
     <string name="the_passphrase_shows_too_if_this_account">এই অ্যাকাউন্টে পাসফ্রেজ থাকলে সেটিও দেখা যাবে।</string>
-    <string name="transaction_id_tap_to_view_in">লেনদেন আইডি · %1$s-এ দেখতে ট্যাপ করুন</string>
     <string name="transaction_id">লেনদেন আইডি</string>
     <string name="unsilence">নীরবতা সরান</string>
     <string name="silence">নীরব করুন</string>
@@ -1156,7 +1152,6 @@
     <string name="adding_of">%2$dজনের মধ্যে %1$dজনকে যোগ করা হচ্ছে</string>
     <string name="adding_member">সদস্য যোগ করা হচ্ছে</string>
     <string name="each_member_re_keys_the_group_on">প্রতিটি সদস্য অন-চেইনে গ্রুপের কী নতুন করে, তাই এতে এক মিনিট লাগতে পারে। অ্যাপটি খোলা রাখুন।</string>
-    <string name="member_s_could_not_be_added_added">%1$dজন সদস্যকে যোগ করা যায়নি (%2$dজন যোগ হয়েছে)। অনুগ্রহ করে আবার চেষ্টা করুন।</string>
     <string name="clears_the_unread_badge_on_this_group">এই গ্রুপের অপঠিত ব্যাজ সরিয়ে দেয়।</string>
     <string name="notifications_from_this_group_resume_including_menti">এই গ্রুপের নোটিফিকেশন আবার চালু হবে, মেনশনসহ।</string>
     <string name="no_notification_from_this_group_mentions_included">এই গ্রুপ থেকে কোনো নোটিফিকেশন নয়, মেনশনেরও নয়।</string>
@@ -1242,7 +1237,6 @@
     <string name="couldnt_load_the_coins">কয়েন লোড করা যায়নি।</string>
     <string name="these_words_are_invalid_double_check_the">এই শব্দগুলো বৈধ নয়। শব্দগুলো আবার মিলিয়ে দেখুন - শেষ শব্দে একটি চেকসাম থাকে, তাই একটি শব্দ ভুল হলেই যাচাই ব্যর্থ হয়।</string>
     <string name="invalid_words_please_enter_12_or_24">শব্দগুলো বৈধ নয়। অনুগ্রহ করে ১২ বা ২৪টি শব্দ লিখুন।</string>
-    <string name="retry_failed">পুনরায় চেষ্টা ব্যর্থ</string>
     <string name="saving_keep_the_card_still">সংরক্ষণ করা হচ্ছে। কার্ডটি স্থির রাখুন।</string>
     <string name="reading_keep_the_card_still">পড়া হচ্ছে। কার্ডটি স্থির রাখুন।</string>
     <string name="ready_to_scan">স্ক্যানের জন্য প্রস্তুত</string>
@@ -1269,8 +1263,6 @@
     <string name="recovered_n_messages">এই ডিভাইস পড়তে পারেনি এমন %1$dটি বার্তা উদ্ধার হয়েছে।</string>
     <string name="estimated_network_fee_one">\n\nআনুমানিক নেটওয়ার্ক ফি ≈ %1$s %2$s, ১টি লেনদেনে।</string>
     <string name="estimated_network_fee_n">\n\nআনুমানিক নেটওয়ার্ক ফি ≈ %1$s %2$s, %3$dটি লেনদেনে।</string>
-    <string name="add_one_member_to_group">গ্রুপে ১ জন সদস্য যোগ করবেন?%1$s</string>
-    <string name="add_n_members_to_group">গ্রুপে %1$d জন সদস্য যোগ করবেন?%2$s</string>
     <string name="this_group">এই গ্রুপ</string>
     <string name="one_member">১ জন সদস্য</string>
     <string name="video_emoji">🎬 ভিডিও</string>
@@ -1394,7 +1386,6 @@
     <string name="chess_tc_no_timer">কোনো টাইমার নেই।</string>
     <string name="recents">সাম্প্রতিক</string>
     <string name="initial_sync_starting">শুরু হচ্ছে</string>
-    <string name="initial_sync_finished">শেষ হয়েছে</string>
     <string name="wiping_incoming_messages">আগত বার্তা মোছা হচ্ছে...</string>
     <string name="finishing_up">শেষ করা হচ্ছে...</string>
     <string name="re_syncing_chats_progress">পুনরায় সিংক হচ্ছে... %1$d / %2$d চ্যাট</string>
@@ -1445,7 +1436,6 @@
     <string name="notification_mode_default">ডিফল্ট (%1$s)</string>
     <string name="checking_address_n">ঠিকানা #%1$d যাচাই করা হচ্ছে</string>
     <string name="n_found_so_far">এখন পর্যন্ত %1$dটি পাওয়া গেছে</string>
-    <string name="first_sync_all_set">সব প্রস্তুত</string>
     <string name="nc_use_all_files">সব ফাইল ব্যবহার করুন</string>
     <string name="nc_use_this_folder">এই ফোল্ডার ব্যবহার করুন</string>
     <string name="nc_no_subfolders">কোনো সাবফোল্ডার নেই।</string>
@@ -1468,7 +1458,6 @@
     <string name="chess_notif_move">♟️ চাল দিয়েছেন: %1$s → %2$s</string>
     <string name="chess_notif_lost_on_time">♟️ সময় শেষ হওয়ায় হেরেছেন</string>
     <string name="chess_notif_resigned">♟️ দাবা খেলায় পরাজয় স্বীকার করেছেন</string>
-    <string name="fee_label">ফি</string>
     <plurals name="create_group_and_invite">
         <item quantity="one">\"%1$s\" তৈরি করে %2$d জন সদস্যকে আমন্ত্রণ জানাবেন?</item>
         <item quantity="other">\"%1$s\" তৈরি করে %2$d জন সদস্যকে আমন্ত্রণ জানাবেন?</item>
@@ -1516,8 +1505,6 @@
     <string name="kusdt_build_failed">লেনদেন তৈরি করা যায়নি। কিছু পাঠানো হয়নি।</string>
     <string name="token_held_on_addresses">%1$dটি ঠিকানা</string>
     <string name="token_received_title">%1$s পাওয়া গেছে</string>
-    <string name="token_received_on_one">আপনার %1$s-এ</string>
-    <string name="token_received_on_many">আপনার %1$dটি ঠিকানায়</string>
     <string name="connection_not_set">সেট করা নেই</string>
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">শেয়ার লিংক কপি করুন</string>
@@ -1624,4 +1611,5 @@
     <string name="history_change_to_address">বাকি %1$s গেছে %2$s-এ</string>
     <string name="cycle_hint_next_page">পরের পাতায় যায়</string>
     <string name="cycle_hint_next_feed">পরের ফিডে যায়</string>
+    <string name="gif">GIF</string>
 </resources>

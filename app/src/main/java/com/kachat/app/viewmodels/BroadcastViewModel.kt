@@ -1427,7 +1427,7 @@ class BroadcastViewModel @Inject constructor(
                     } catch (e: Exception) {
                         Log.w("BroadcastViewModel", "Nextcloud broadcast voice upload failed, falling back to on-chain send", e)
                         // The public room's toast: iOS PublicChatChannelView's, success-styled and up for 3 s.
-                        if (!roomClosed) com.kachat.app.ui.screens.IosToasts.show("Nextcloud upload failed — sending on-chain instead", durationMs = com.kachat.app.ui.screens.IosToastDuration.LONG)
+                        if (!roomClosed) com.kachat.app.ui.screens.IosToasts.show(com.kachat.app.util.tr(com.kachat.app.R.string.nextcloud_upload_failed_sending_on_chain), durationMs = com.kachat.app.ui.screens.IosToastDuration.LONG)
                     }
                 }
                 val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)

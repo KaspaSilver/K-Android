@@ -327,8 +327,6 @@ class BroadcastScanningService @Inject constructor(
         scope.launch { broadcastRepository.refreshIndexerTrackedRooms() }
     }
 
-    private fun myAddressOrNull(): String? = runCatching { broadcastRepository.myAddress() }.getOrNull()
-
     // MARK: - Background poll of bell-on rooms without push
 
     private var backgroundPollJob: Job? = null

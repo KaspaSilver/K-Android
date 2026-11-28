@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">계정 작업</string>
     <string name="add_kaspa_address">Kaspa 주소 추가</string>
     <string name="add_transaction">거래 추가</string>
     <string name="addresses">주소</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">kpub 복사</string>
     <string name="current_value">현재 가치</string>
     <string name="delete_transaction">거래 삭제</string>
-    <string name="enter_kpub">kpub 입력</string>
     <string name="export_csv">CSV 내보내기</string>
     <string name="fee_usd_optional">수수료 (선택 사항)</string>
     <string name="holdings">보유 자산</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">받을 금액</string>
     <string name="kp_you_receive_about">받을 금액(약)</string>
     <string name="kp_you_saw">이전에 본 금액</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">이 주소 이름 지정</string>
     <string name="no_app_to_open_link">이 휴대폰에는 링크를 열 수 있는 앱이 없습니다</string>
     <string name="notes_optional">메모 (선택 사항)</string>
     <string name="paste_from_clipboard">클립보드에서 붙여넣기</string>
     <string name="paste_kpub">kpub 붙여넣기</string>
-    <string name="paste_the_kpub_exported_from_your">KasSigner 기기에서 내보낸 kpub를 붙여넣으세요. 개인 키 자료는 포함되어 있지 않습니다.</string>
     <string name="pf_actions_add">추가</string>
     <string name="pf_actions_import_export">가져오기 및 내보내기</string>
     <string name="pf_add_kaspa_address_sub">주소의 잔액을 이 포트폴리오의 일부로 추적합니다.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">카메라를 KasSigner 화면에 향하게 하세요</string>
     <string name="quantity">수량</string>
     <string name="remove_cold_storage_account">콜드 스토리지 계정 제거</string>
-    <string name="rename_cold_storage_account">콜드 스토리지 계정 이름 변경</string>
     <string name="scan">스캔</string>
     <string name="scan_kpub_from_kassigner">KasSigner에서 kpub 스캔</string>
     <string name="scan_signed_transaction">서명된 거래 스캔</string>

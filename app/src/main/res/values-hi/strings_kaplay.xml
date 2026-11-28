@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">क्वार्टरफ़ाइनल</string>
     <string name="kp_3ce0ac6e9413" formatted="false">नतीजा नहीं भेजा गया।</string>
     <string name="kaplay_leaderboard_all_time">अब तक</string>
-    <string name="kaplay_leaderboard_counted_from">%1$s से गिना गया।</string>
-    <string name="kaplay_leaderboard_period">लीडरबोर्ड अवधि</string>
-    <string name="kaplay_leaderboard_resets_monthly">हर महीने की 1 तारीख को रीसेट होता है (UTC)।</string>
     <string name="kaplay_leaderboard_this_month">इस महीने</string>
-    <string name="kaplay_no_finished_duels">अभी तक कोई 1v1 गेम पूरा नहीं हुआ।</string>
-    <string name="kaplay_no_finished_duels_this_month">इस महीने अभी तक कोई 1v1 गेम पूरा नहीं हुआ।</string>
-    <string name="kaplay_no_finished_tournaments">अभी तक कोई टूर्नामेंट पूरा नहीं हुआ।</string>
-    <string name="kaplay_no_finished_tournaments_this_month">इस महीने अभी तक कोई टूर्नामेंट पूरा नहीं हुआ।</string>
     <string name="kaplay_tab_leaderboard">लीडरबोर्ड</string>
     <string name="kp_640de0cb0b2c" formatted="false">आपका रिकॉर्ड: %s जीते, %s हारे</string>
     <string name="kp_5d12bd53552c" formatted="false">खेलें</string>

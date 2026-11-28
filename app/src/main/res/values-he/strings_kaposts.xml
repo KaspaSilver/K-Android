@@ -127,4 +127,8 @@
     <string name="pr_card_view">הצג</string>
     <string name="kaposts_scheduled_reminder_body">הפוסט שלך מוכן לצאת. פתח את K כדי לשלוח אותו.</string>
     <string name="kaposts_see_all_posts">לכל הפוסטים</string>
+    <string name="kaposts_couldnt_schedule_toast">לא ניתן היה לתזמן: %1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">מתוזמן ל-%1$s - יישלח מהטלפון הזה</string>
+    <string name="kaposts_tip_didnt_send">הטיפ לא נשלח: %1$s</string>
+    <string name="pr_card_pay">שלם</string>
 </resources>

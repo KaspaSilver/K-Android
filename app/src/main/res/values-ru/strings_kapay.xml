@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">Действия с аккаунтом</string>
     <string name="add_kaspa_address">Добавить адрес Kaspa</string>
     <string name="add_transaction">Добавить транзакцию</string>
     <string name="addresses">Адреса</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">Скопировать kpub</string>
     <string name="current_value">Текущее значение</string>
     <string name="delete_transaction">Удалить транзакцию</string>
-    <string name="enter_kpub">Ввести kpub</string>
     <string name="export_csv">Экспорт в CSV</string>
     <string name="fee_usd_optional">Комиссия (необязательно)</string>
     <string name="holdings">Активы</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">Вы получите</string>
     <string name="kp_you_receive_about">Вы получите около</string>
     <string name="kp_you_saw">Вы видели</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">Назвать этот адрес</string>
     <string name="no_app_to_open_link">На этом телефоне нет приложения, которое может открыть ссылку</string>
     <string name="notes_optional">Заметки (необязательно)</string>
     <string name="paste_from_clipboard">Вставить из буфера обмена</string>
     <string name="paste_kpub">Вставить kpub</string>
-    <string name="paste_the_kpub_exported_from_your">Вставьте kpub, экспортированный с вашего устройства KasSigner. Он не содержит материала приватного ключа.</string>
     <string name="pf_actions_add">Добавить</string>
     <string name="pf_actions_import_export">Импорт и экспорт</string>
     <string name="pf_add_kaspa_address_sub">Отслеживайте баланс адреса как часть этого портфеля.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">Наведите камеру на экран KasSigner</string>
     <string name="quantity">Количество</string>
     <string name="remove_cold_storage_account">Удалить аккаунт холодного хранилища</string>
-    <string name="rename_cold_storage_account">Переименовать аккаунт холодного хранилища</string>
     <string name="scan">Сканировать</string>
     <string name="scan_kpub_from_kassigner">Сканировать kpub с KasSigner</string>
     <string name="scan_signed_transaction">Сканировать подписанную транзакцию</string>

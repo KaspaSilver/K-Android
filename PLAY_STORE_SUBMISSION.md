@@ -1,19 +1,40 @@
-# Play Store submission — KaChat 5.1
+# Play Store submission — K (5.1, updated for 5.4)
 
 Everything the Play Console asks for that is *not* answerable from the listing text, plus the
 build-level checks that have to pass before an upload. Written for the operator doing the
 submission; the companion doc for FCM is `PUSH_ANDROID_SETUP.md`.
 
-> **Open item — Android App Links.** `https://kachat.app/.well-known/assetlinks.json` currently
-> answers `[]`, because the links server's `ANDROID_SHA256` is unset, so the `autoVerify` intent
-> filter on `kachat.app` does not verify and a `https://kachat.app/post/<txid>` link opens the
-> browser fallback page instead of the app. Nothing is broken by it — that page carries the
-> download buttons, and `kachat://` links still open the app directly — and it cannot be finished
-> before the first upload anyway, since the file has to carry the SHA-256 of the **Play
-> app-signing** certificate, which Play generates rather than the upload key. Right after the
-> first release: copy the fingerprint from Play Console > Setup > App integrity > App signing key
-> certificate into the server's `ANDROID_SHA256`, then re-check with
-> `curl -s https://kachat.app/.well-known/assetlinks.json`.
+> **Open item — Android App Links (release audit 2026-11-27 M2).**
+> `https://kachat.app/.well-known/assetlinks.json` still answers with an empty
+> `sha256_cert_fingerprints`, so the `autoVerify` intent filter on `kachat.app` (`/u/`, `/pay/`,
+> `/post/`, `/broadcast/`, `/hub/`) does not verify and Android 12+ opens those links in the
+> browser. The file needs **two** fingerprints, because the GitHub APK and the Play build are
+> signed with different certificates. Publish this, served as `application/json` over https with
+> no redirect, with the Play value copied from Play Console > Setup > App integrity > App signing
+> key certificate > SHA-256:
+>
+> ```json
+> [
+>   {
+>     "relation": ["delegate_permission/common.handle_all_urls"],
+>     "target": {
+>       "namespace": "android_app",
+>       "package_name": "com.kachat.app",
+>       "sha256_cert_fingerprints": [
+>         "AB:DC:99:E2:83:06:75:A4:AC:D4:1A:6D:07:79:78:D8:B8:B0:FD:C0:4D:0B:22:50:34:3A:01:6D:45:D1:9F:4D",
+>         "PLAY_APP_SIGNING_SHA256_FROM_PLAY_CONSOLE"
+>       ]
+>     }
+>   }
+> ]
+> ```
+>
+> The first entry is `kachat-release.keystore` (the GitHub APK). Replace the placeholder before
+> publishing; an invalid entry makes verification fail for both. Debug builds
+> (`com.kachat.app.debug`) are deliberately not listed. Re-check with
+> `curl -s https://kachat.app/.well-known/assetlinks.json` and, on a phone,
+> `adb shell pm verify-app-links --re-verify com.kachat.app` then
+> `adb shell pm get-app-links com.kachat.app` (each domain should read `verified`).
 
 ## 1. The artifact
 
@@ -22,6 +43,9 @@ submission; the companion doc for FCM is `PUSH_ANDROID_SETUP.md`.
 ```
 
 `app/build/outputs/bundle/playRelease/app-play-release.aab`
+
+- Build it again from the exact commit being uploaded and check the file's date: an AAB left in
+  `build/outputs` from an earlier build is easy to upload by mistake (release audit 2026-11-27 L5).
 
 - Signed with the **upload** key (`uploadStoreFile` in `keystore.properties`, Play expects
   SHA-1 `CF:58:68:0B:…`), not the key the GitHub APK uses. The swap is per-variant, in
@@ -86,19 +110,13 @@ These are the ones that block a release if they are missing or wrong.
 **App access** — no login is required to use the app; a wallet is created on device. No reviewer
 credentials needed.
 
-**Foreground service types** (mandatory since Aug 2024). `CallForegroundService` declares
-`microphone|camera`. Justification: keeping a Nextcloud Talk voice/video call's microphone and
-camera usable while the call is backgrounded — Android 14 cuts both off otherwise. Play asks for
-a short screen recording showing the in-app path that starts it: place a call, background the
-app, keep talking.
-
-**No `USE_FULL_SCREEN_INTENT`.** It was removed deliberately after the 2026-09-22 policy notice:
-Play grants it only to apps whose core purpose is calling or alarms, and KaChat is a chat app
-that can also call. Incoming calls ring through a CallStyle notification instead
-(`IncomingCallNotifier`). Do not re-add it.
+**No foreground services, exact alarms or `USE_FULL_SCREEN_INTENT`** (5.4). Calls left the app,
+and with them `CallForegroundService` and its `FOREGROUND_SERVICE_*` permissions; there is no
+foreground-service declaration to make. Do not re-add any of them without a policy review.
 
 **Financial features.** Declare **crypto exchanges and digital wallets** — the app holds Kaspa
-keys on device and includes a ChangeNOW swap. Have the region/licensing answers ready; this is
+keys on device, includes a ChangeNOW swap, the Trestly token trading pages (kUSDT, pool deposits and
+withdrawals) and a buy-with-card flow run by a third-party provider in a WebView. Have the region/licensing answers ready; this is
 the declaration most likely to hold up a first submission.
 
 **Target audience: 18+.** Not negotiable alongside the crypto declaration — Play's Families
@@ -106,7 +124,7 @@ policy excludes crypto apps, so the app must not claim a child audience. Child M
 *parental control inside an adult app* (it hides Swaps, KaPosts and Public Chats behind a
 password); describe it that way if asked, never as a kids mode.
 
-**Privacy policy URL.** Mandatory, and there is no in-app link to one today. It has to cover the
+**Privacy policy URL.** `https://home.kachat.app/privacy/`, linked in the app. It has to cover the
 third-party endpoints in §4.
 
 **Data deletion.** The app stores keys and history on device only; uninstalling removes them.
@@ -114,48 +132,63 @@ Account deletion does not apply (there is no account), but the Console still wan
 
 ## 4. Data Safety
 
-No analytics or crash-reporting SDK is linked. Crash records are written and read locally
-(`CrashRecorder`); nothing is uploaded. System contacts are read for matching and written for
-KaChat's own callable rows, and never leave the device. Language identification for KaPosts runs
-on device (ML Kit language-id, bundled).
+Checked against 5.4 (release audit 2026-11-27 L5). No analytics or crash-reporting SDK is linked.
+Crash records are written and read locally (`CrashRecorder`); nothing is uploaded. K does not read
+or write system contacts (that permission is gone). Language identification for Posts runs on
+device (ML Kit language-id, bundled).
 
 | Data type | Collected | Shared | Purpose / endpoint |
 | --- | --- | --- | --- |
-| Financial info — other (Kaspa address) | Yes | Yes | Push routing (KaChat indexer), KNS lookups, and the swap destination sent to ChangeNOW. App functionality; required. |
-| Messages — other in-app messages | Yes (ephemeral) | No | Public KaPost text goes to KaChat's translation service **only** when the reader taps Translate. The request carries no identifier of any kind; see the iOS repo's `TRANSLATION_SERVICE.md`. |
+| Financial info — other (Kaspa address) | Yes | Yes | Push routing (KaChat indexer), K name lookups, explorer and price pages, the swap destination sent to ChangeNOW, and the address a site sees when the user connects K to it (Kasshi, Trestly). App functionality; required. |
+| Financial info — purchase history | Yes (ephemeral) | Yes | Buy with card: the amount and destination address go to the card provider's page, which handles payment itself. K never sees card details. |
+| Messages — other in-app messages | Yes (ephemeral) | No | Public post text goes to KaChat's translation service **only** when the reader taps Translate. The request carries no identifier. |
 | App activity — other | Yes (ephemeral) | No | Which addresses/rooms/groups to watch, sent to the indexer for push. Addresses are hashed in the auth preimage. |
 | Device ID | Yes | No | FCM registration token, sent to the KaChat indexer's `/v1/push`, signed with the wallet key. |
-| Photos | No | No | Images are attached from the device and sent in-chat; never uploaded to a KaChat service. |
-| Audio | No | No | Voice messages and calls. Calls traverse the user's own Nextcloud Talk server. |
-| Contacts | No | No | Read locally for matching only. |
+| Photos | No | No | Attached from the device and sent in-chat or in a post; never uploaded to a KaChat service except the user's own Nextcloud. |
+| Audio | No | No | Voice messages, recorded on device. |
+| Contacts | No | No | No contacts permission. |
 | Location | No | No | No location permission. |
 
-Third-party hosts contacted and what each sees: `api.coingecko.com`, `api.gateio.ws`,
-`query1.finance.yahoo.com` (prices — no user data), `api.knsdomains.org` (domain/address
-lookups), the KaChat/Kasia indexers (addresses, push token), `api.changenow.io` (swap amount and
-destination address), the user's own Nextcloud server (backups, calls), and — on link previews —
-whatever host a received link points at, which is how that host learns the reader's IP. That
-last one is inherent to link previews and matches iOS.
+Third-party hosts contacted and what each sees:
+- prices: `api.coingecko.com`, `api.gateio.ws`, `query1.finance.yahoo.com` (no user data);
+- the Kaspa REST and explorer APIs: `api.kaspa.org`, `api.kaspa.stream` (and their testnet hosts),
+  `explorer.kaspa.org`, `www.kaspalytics.com` (the address or transaction looked up);
+- the KaChat and Kasia indexers (addresses, push token);
+- `api.changenow.io` (swap amount and destination address);
+- Trestly, `api.trestly.io` / `testnet.trestly.io` (the connected address and the trades the
+  user approves), and `kasshi.io` (the connected address after "Sign In to Kasshi");
+- the card-buy provider's page (amount, destination address, whatever the user types there);
+- the chess and arcade servers (game moves and the player's address);
+- profile pictures from linked social accounts: `api.fxtwitter.com`, `unavatar.io`,
+  `pbs.twimg.com`, `cdn.discordapp.com` (the handle being looked up);
+- the user's own Nextcloud server (backups, Automatic Sync);
+- on link previews, whatever host a received link points at, which is how that host learns the
+  reader's IP. Inherent to link previews, and matches iOS.
 
 ## 5. Permissions
+
+As in the 5.4 manifest:
 
 | Permission | Why |
 | --- | --- |
 | `INTERNET`, `ACCESS_NETWORK_STATE` | Kaspa node gRPC, indexer, REST |
-| `POST_NOTIFICATIONS` | Message and call notifications (runtime-requested) |
-| `RECEIVE_BOOT_COMPLETED` | Re-arm the periodic group-sync worker after a reboot |
-| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Lets data-only encrypted DM/group push wake a force-closed app. See the risk note in §6. |
-| `RECORD_AUDIO`, `CAMERA`, `MODIFY_AUDIO_SETTINGS` | Voice messages, photo sharing, voice/video calls |
-| `FOREGROUND_SERVICE` + `_MICROPHONE` + `_CAMERA` | Backgrounded calls — see §3 |
-| `READ_CONTACTS`, `WRITE_CONTACTS` | Match existing contacts; add KaChat call rows to a contact card |
+| `POST_NOTIFICATIONS` | Message and activity notifications (asked once) |
+| `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` | Lets data-only encrypted push wake a closed app. Asked only on phones where push can't work otherwise, after an in-app rationale sheet; see §6. |
+| `RECORD_AUDIO` | Voice messages |
+| `CAMERA` | Photos and QR scanning |
+| `NFC` | Reading a Kaspa card (Cold Storage) |
 | `WRITE_EXTERNAL_STORAGE` (maxSdk 28) | Saving a received photo on API ≤28 only |
 | `VIBRATE`, `USE_BIOMETRIC` | Notification feedback; the seed-phrase / account-unlock prompt |
 
-The manifest also declares `android.hardware.camera`, `camera.any`, `camera.autofocus` and
-`android.hardware.microphone` as `required="false"`. Play otherwise infers them as *required* from
-the CAMERA and RECORD_AUDIO permissions and hides the app from every device without that hardware
-— most Chromebooks, camera-less tablets, TV and auto form factors — even though KaChat is a chat
-app whose camera and microphone are optional. Do not drop these.
+Gone since 5.1, so don't declare them: `READ_CONTACTS`, `WRITE_CONTACTS`,
+`RECEIVE_BOOT_COMPLETED`, `FOREGROUND_SERVICE` and its `_MICROPHONE` / `_CAMERA` types,
+`MODIFY_AUDIO_SETTINGS`.
+
+The manifest also declares `android.hardware.camera`, `camera.any`, `camera.autofocus`,
+`android.hardware.microphone`, `android.hardware.nfc` and `screen.portrait` as `required="false"`.
+Play otherwise infers them as *required* from the permissions and hides the app from every
+device without that hardware — most Chromebooks, camera-less tablets, TV and auto form factors —
+even though K's camera, microphone and NFC are optional. Do not drop these.
 
 `usesCleartextTraffic="true"` is deliberate and documented in the manifest: Kaspa node gRPC
 (protowire, ports 16110/16210) is plaintext by protocol and a `networkSecurityConfig` can only
@@ -164,13 +197,16 @@ surface in the app is https-only at the application layer, and the one user-edit
 field (Nextcloud) rejects `http://` in the UI and again in `NextcloudService.normalizeServer`.
 Expect to explain this if a reviewer asks.
 
+**Moving between the GitHub APK and the Play build.** They share the package name but not the
+signing key (Play re-signs with Play App Signing's key), so one can't update the other. Someone
+switching must uninstall first, which deletes K's local data. Say so in the release notes and
+the GitHub release page, and tell people to back up (or turn on Nextcloud Automatic Sync) first.
+
 ## 6. Risk notes
 
-- **Battery-optimization dialog on first launch.** `MainActivity.maybeRequestBatteryExemption`
-  fires the system exemption dialog once, as soon as notifications are granted, with no in-app
-  explanation first. It is asked once ever and is the only way push can wake a force-closed app,
-  but an unexplained system dialog at first launch is the pattern reviewers flag, and this app
-  already took one policy notice. Consider gating it behind a short in-app rationale.
+- **Battery-optimization dialog.** `MainActivity` asks for the exemption only on phones where
+  push can't wake K otherwise, and only after K's own rationale sheet explains why. It is asked
+  once. Keep it that way: an unexplained system dialog is what reviewers flag.
 - **One iOS string nuance is not matched.** On a shared public-chat link, iOS says "Tap to *open*
   this KaChat public chat room." for a room you already have and "Tap to *join*…" for one you do
   not; Android always says "join". Closing it means threading the joined/curated channel list into
@@ -196,10 +232,10 @@ Expect to explain this if a reviewer asks.
 - **Dependency updates are available** (24 `GradleDependency` + 19 `NewerVersionAvailable`
   warnings). Deliberately not taken here: shipping the store build on the exact versions the 5.1
   betas were tested against is worth more than the bumps. Revisit right after launch.
-- **`fallbackToDestructiveMigration()`** is on the Room builder (`di/AppModule.kt`). An
-  unhandled schema step wipes cached chat history rather than crashing. Deliberate, and the
-  registered migrations are schema-tested, but every new release must keep its migration
-  registered and green.
+- **Room migrations.** Destructive fallback is only for the 1.0.x databases (versions 1-14). Every
+  step from 15 to the current version is registered (`KaChatDatabase.ALL_MIGRATIONS`), plus the
+  direct 42→45 and 43→45 jumps that keep Portfolio and Public Chats for phones that skipped 5.3.
+  `MigrationPathTest` checks the path Room takes; every new release must keep it green.
 
 ## 7. Security review, 2026-09-25
 

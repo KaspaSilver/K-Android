@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">عملیات حساب</string>
     <string name="add_kaspa_address">افزودن آدرس کاسپا</string>
     <string name="add_transaction">افزودن تراکنش</string>
     <string name="addresses">آدرس‌ها</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">کپی kpub</string>
     <string name="current_value">مقدار فعلی</string>
     <string name="delete_transaction">حذف تراکنش</string>
-    <string name="enter_kpub">وارد کردن kpub</string>
     <string name="export_csv">صدور CSV</string>
     <string name="fee_usd_optional">کارمزد (اختیاری)</string>
     <string name="holdings">دارایی‌ها</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">دریافتی شما</string>
     <string name="kp_you_receive_about">دریافتی شما حدود</string>
     <string name="kp_you_saw">آنچه دیدید</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">نام‌گذاری این آدرس</string>
     <string name="no_app_to_open_link">هیچ برنامه‌ای روی این گوشی نمی‌تواند پیوند را باز کند</string>
     <string name="notes_optional">یادداشت‌ها (اختیاری)</string>
     <string name="paste_from_clipboard">جای‌گذاری از حافظه</string>
     <string name="paste_kpub">چسباندن kpub</string>
-    <string name="paste_the_kpub_exported_from_your">kpub صادرشده از دستگاه KasSigner خود را بچسبانید. این شامل هیچ ماده کلید خصوصی نمی‌شود.</string>
     <string name="pf_actions_add">افزودن</string>
     <string name="pf_actions_import_export">وارد و صادر کردن</string>
     <string name="pf_add_kaspa_address_sub">موجودی یک آدرس را به‌عنوان بخشی از این سبد دارایی دنبال کنید.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">دوربین را به سمت صفحه KasSigner بگیرید</string>
     <string name="quantity">مقدار</string>
     <string name="remove_cold_storage_account">حذف حساب ذخیره سرد</string>
-    <string name="rename_cold_storage_account">تغییر نام حساب ذخیره سرد</string>
     <string name="scan">اسکن</string>
     <string name="scan_kpub_from_kassigner">اسکن kpub از KasSigner</string>
     <string name="scan_signed_transaction">اسکن تراکنش امضاشده</string>

@@ -126,6 +126,22 @@ class KaPostsViewModel @Inject constructor(
         }
     }
 
+    /** A kUSDT tip on a post: [onResult] true once [address] is checked to be the post's author,
+     *  as a KAS tip is (audit 2026-11-27 B1); false shows the KAS path's refusal. */
+    fun verifyTipAuthor(address: String, tip: com.kachat.app.models.KaPostTip, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val ok = try {
+                tipSender.verifyAuthor(address, tip)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                false
+            }
+            if (!ok) _actionError.value = tipSender.authorMismatchMessage()
+            onResult(ok)
+        }
+    }
+
     /** What a tip's own payload adds to a chat payment's fee (see [com.kachat.app.services.KaPostTipSender]). */
     fun tipPayloadExtraFeeSompi(address: String, amountSompi: Long, tip: com.kachat.app.models.KaPostTip?, sourceSpendingIndex: Int?): Long =
         tipSender.tipPayloadExtraFeeSompi(address, amountSompi, tip, sourceSpendingIndex)

@@ -127,4 +127,8 @@
     <string name="pr_card_view">Lihat</string>
     <string name="kaposts_scheduled_reminder_body">Postingan Anda siap dikirim. Buka K untuk mengirimnya.</string>
     <string name="kaposts_see_all_posts">Lihat Semua Postingan</string>
+    <string name="kaposts_couldnt_schedule_toast">Tidak dapat menjadwalkan: %1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">Dijadwalkan untuk %1$s - dikirim dari ponsel ini</string>
+    <string name="kaposts_tip_didnt_send">Tip tidak terkirim: %1$s</string>
+    <string name="pr_card_pay">Bayar</string>
 </resources>

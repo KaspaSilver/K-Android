@@ -163,61 +163,14 @@ internal fun AnimatedQrDisplay(frames: List<ByteArray>, modifier: Modifier = Mod
 
 /**
  * One frame as a byte-mode QR at one pixel per module, no quiet zone (the white card is the
- * margin) - the same encoding as [rememberQrBitmapPainter]'s ByteArray form (ISO-8859-1 round
- * trip, KasSigner's raw-byte QR), just not blown up to screen size.
+ * margin) - the shared [QrModules] encoding, the same as [rememberQrBitmapPainter]'s ByteArray
+ * form (ISO-8859-1 round trip, KasSigner's raw-byte QR).
  */
-private fun encodeQrModules(bytes: ByteArray): androidx.compose.ui.graphics.ImageBitmap {
-    if (bytes.isEmpty()) {
-        return android.graphics.Bitmap.createBitmap(1, 1, android.graphics.Bitmap.Config.ARGB_8888)
+private fun encodeQrModules(bytes: ByteArray): androidx.compose.ui.graphics.ImageBitmap =
+    QrModules.encode(String(bytes, Charsets.ISO_8859_1), margin = 0, byteMode = true)
+        ?: android.graphics.Bitmap.createBitmap(1, 1, android.graphics.Bitmap.Config.ARGB_8888)
             .apply { eraseColor(android.graphics.Color.WHITE) }
             .asImageBitmap()
-    }
-    val matrix = com.google.zxing.qrcode.QRCodeWriter().encode(
-        String(bytes, Charsets.ISO_8859_1),
-        com.google.zxing.BarcodeFormat.QR_CODE,
-        0,
-        0,
-        mapOf(
-            com.google.zxing.EncodeHintType.MARGIN to 0,
-            com.google.zxing.EncodeHintType.CHARACTER_SET to "ISO-8859-1",
-        )
-    )
-    val w = matrix.width
-    val h = matrix.height
-    val pixels = IntArray(w * h)
-    for (y in 0 until h) {
-        val row = y * w
-        for (x in 0 until w) {
-            pixels[row + x] = if (matrix.get(x, y)) android.graphics.Color.BLACK else android.graphics.Color.WHITE
-        }
-    }
-    val bmp = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
-    bmp.setPixels(pixels, 0, w, 0, 0, w, h)
-    return bmp.asImageBitmap()
-}
-
-/** Draws a module-sized QR at the largest whole-number scale that fits, centred, unfiltered:
- *  crisp module edges, as the full-size encode produced. */
-private class QrModulePainter(private val image: androidx.compose.ui.graphics.ImageBitmap) :
-    androidx.compose.ui.graphics.painter.Painter() {
-    override val intrinsicSize: androidx.compose.ui.geometry.Size
-        get() = androidx.compose.ui.geometry.Size.Unspecified
-
-    override fun androidx.compose.ui.graphics.drawscope.DrawScope.onDraw() {
-        val modules = maxOf(image.width, image.height)
-        val side = minOf(size.width, size.height)
-        val scale = kotlin.math.floor(side / modules).coerceAtLeast(1f).toInt()
-        val drawn = modules * scale
-        val left = ((size.width - drawn) / 2f).toInt()
-        val top = ((size.height - drawn) / 2f).toInt()
-        drawImage(
-            image = image,
-            dstOffset = androidx.compose.ui.unit.IntOffset(left, top),
-            dstSize = androidx.compose.ui.unit.IntSize(drawn, drawn),
-            filterQuality = androidx.compose.ui.graphics.FilterQuality.None,
-        )
-    }
-}
 
 /**
  * Scans a KasSigner animated multi-frame QR sequence (a signed KSPT response, or anything else

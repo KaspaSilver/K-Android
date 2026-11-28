@@ -839,8 +839,6 @@ class AppSettingsRepository @Inject constructor(
     /** Who this account follows on KaPost, per account. */
     fun kapostsFollowing(walletAddress: String): Flow<Set<String>> =
         dataStore.data.map { it[kapostsFollowingKey(walletAddress)] ?: emptySet() }
-    suspend fun setKapostsFollowing(walletAddress: String, value: Set<String>) =
-        dataStore.edit { it[kapostsFollowingKey(walletAddress)] = value }
     /** Deletes the old device-wide follow set (it leaked across accounts); the chain rebuilds it. */
     suspend fun clearLegacyKapostsFollowing() = dataStore.edit { it.remove(KaPostKeys.FOLLOWING) }
 

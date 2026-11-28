@@ -127,4 +127,8 @@
     <string name="pr_card_view">Открыть</string>
     <string name="kaposts_scheduled_reminder_body">Ваш пост готов к отправке. Откройте K, чтобы отправить его.</string>
     <string name="kaposts_see_all_posts">Все посты</string>
+    <string name="kaposts_couldnt_schedule_toast">Не удалось запланировать: %1$s</string>
+    <string name="kaposts_scheduled_for_on_phone_toast">Запланировано на %1$s - отправится с этого телефона</string>
+    <string name="kaposts_tip_didnt_send">Чаевые не отправлены: %1$s</string>
+    <string name="pr_card_pay">Оплатить</string>
 </resources>

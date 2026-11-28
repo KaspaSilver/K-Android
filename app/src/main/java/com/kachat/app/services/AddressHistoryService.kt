@@ -82,7 +82,10 @@ class AddressHistoryService @Inject constructor(
     }
 
     private fun mapHistory(address: String, transactions: List<TransactionResponse>): List<AddressTransaction> {
-        return transactions.filter { tx -> com.kachat.app.util.UtxoMath.restAmountsFit(tx.outputs.map { it.amount }, tx.inputs.map { it.previousOutpointAmount ?: 0L }) }.map { tx ->
+        // One row per transaction id: the list is keyed by it, and a REST server (the user can set
+        // their own) that repeats one would crash it (release audit 2026-11-27 L4).
+        return transactions.distinctBy { it.transactionId }
+            .filter { tx -> com.kachat.app.util.UtxoMath.restAmountsFit(tx.outputs.map { it.amount }, tx.inputs.map { it.previousOutpointAmount ?: 0L }) }.map { tx ->
             val sent = tx.inputs.any { it.previousOutpointAddress == address }
             val amount = if (sent) {
                 tx.outputs.filter { it.scriptPublicKeyAddress != address }.sumOf { it.amount }

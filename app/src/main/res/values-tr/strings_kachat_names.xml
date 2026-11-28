@@ -49,7 +49,6 @@
     <string name="kl_message">Mesaj</string>
     <string name="kl_name">Ad</string>
     <string name="kl_note_buy">Satın alma, satıcıya ödemeyi ve adın sana geçişini tek işlemde yapar.</string>
-    <string name="kl_note_message">Mesajlar satıcıya her KaChat sohbeti gibi gider.</string>
     <string name="kl_note_offer">Teklif, satıcı kabul edene, sen geri çekene ya da süresi dolana kadar KAS\'ını zincirde kilitler.</string>
     <string name="kl_offer">Teklif</string>
     <string name="kl_offer_detail">Kendi fiyatını belirle. KAS\'ın, satıcı kabul edene, teklifi geri çekene veya süresi dolana kadar zincirde bekler.</string>

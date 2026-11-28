@@ -1,7 +1,6 @@
 package com.kachat.app.repository
 
 import android.content.Context
-import com.google.gson.Gson
 import com.kachat.app.services.CoinGeckoApi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
@@ -21,9 +20,6 @@ class KasPriceRepository @Inject constructor(
 ) {
     data class Price(val fetchedAtMillis: Long, val price: Double)
 
-    private data class StoredCurrentPrice(val fetchedAt: Long, val price: Double, val change: Double?)
-
-    private val gson = Gson()
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     /**
@@ -38,7 +34,7 @@ class KasPriceRepository @Inject constructor(
     fun readPersisted(currency: String): Price? {
         val json = prefs.getString(cacheKey(currency), null) ?: return null
         return try {
-            gson.fromJson(json, StoredCurrentPrice::class.java)?.let { Price(it.fetchedAt, it.price) }
+            StoredKasPrice.fromJson(json)?.let { Price(it.fetchedAt, it.price) }
         } catch (e: Exception) {
             null
         }
@@ -53,8 +49,8 @@ class KasPriceRepository @Inject constructor(
             try {
                 val kaspa = coinGeckoApi.getSimplePrice(vsCurrencies = currency).kaspa
                 val price = kaspa[currency] ?: return null
-                val stored = StoredCurrentPrice(System.currentTimeMillis(), price, kaspa["${currency}_24h_change"])
-                prefs.edit().putString(cacheKey(currency), gson.toJson(stored)).apply()
+                val stored = StoredKasPrice(System.currentTimeMillis(), price, kaspa["${currency}_24h_change"])
+                prefs.edit().putString(cacheKey(currency), stored.toJson()).apply()
                 throttledUntilMillis = null
                 return price
             } catch (e: HttpException) {

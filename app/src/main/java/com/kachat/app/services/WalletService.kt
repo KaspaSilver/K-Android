@@ -193,13 +193,22 @@ class WalletService @Inject constructor(
         extraFeeSompi: Long = 0L,
         /** A chat payment spends only confirmed non-coinbase coins, and picks greedily among coin
          *  control's (iOS sendPaymentInternal). */
-        chatPayment: Boolean = false
+        chatPayment: Boolean = false,
+        /** The account that pays and signs, bound by the caller (see [sendKasiaMessage]); null
+         *  means the active account at the moment of the call. Passed together. */
+        fromAddress: String? = null,
+        signingPrivateKey: ByteArray? = null,
     ): String {
+        require((fromAddress == null) == (signingPrivateKey == null)) { "fromAddress and signingPrivateKey go together" }
+        val from = fromAddress ?: walletManager.getAddress()
+        val signer = signingPrivateKey ?: walletManager.getPrivateKeyBytes()
         // Coin selection, fee math and a Schnorr signature per input are CPU work, and callers
         // reach here from the main thread (a view model's launch): off it, so a send never
         // stalls the screen. The network calls inside simply suspend as before.
         val result = withContext(kotlinx.coroutines.Dispatchers.Default) { walletEngine.sendKaspa(
             toAddress, amountSompi, payloadBytes,
+            fromAddress = from,
+            signingPrivateKey = signer,
             feeRateOverride = feeRateOverride,
             manualUtxos = manualUtxos,
             allowReducedAmount = allowReducedAmount,
@@ -697,29 +706,49 @@ class WalletService @Inject constructor(
      * is not a message (a `payment_notice`, as iOS `sendEnvelopeInternal` sends it) must not use
      * up the one tagged first message.
      */
-    suspend fun sendKasiaMessage(toContactId: String, text: String, feeRateOverride: Long? = null, firstContactTag: Boolean = true): SendResult {
+    suspend fun sendKasiaMessage(
+        toContactId: String,
+        text: String,
+        feeRateOverride: Long? = null,
+        firstContactTag: Boolean = true,
+        /** The account the send was started under. One account seals, tags and pays for it, read
+         *  once here (audit 2026-11-27 C5/A4): the address and key used to be read again across
+         *  the suspensions below, so a switch in between sealed it as one account and paid from
+         *  the other, linking the two on chain. A switch away from [owner] refuses the send. */
+        owner: String? = null,
+    ): SendResult {
+        val me = walletManager.getAddress()
+        if (owner != null && !me.equals(owner, ignoreCase = true)) throw SendAccountChangedException()
+        val key = walletManager.getPrivateKeyBytes()
+        if (!com.kachat.app.util.AccountKey.belongsTo(key, me)) throw SendAccountChangedException()
         // Writing to someone is consent: their chat is accepted, and a block on them lifts
         // (NO_HANDSHAKE_MESSAGING.md §4).
-        if (!toContactId.equals(walletManager.getAddress(), ignoreCase = true)) chatRepository.acceptChat(toContactId)
+        if (!toContactId.equals(me, ignoreCase = true)) chatRepository.acceptChat(toContactId)
         val recipientPubKey = KaspaAddress.decode(toContactId).second
-        val contact = chatRepository.getContact(toContactId)
+        val contact = chatRepository.getContact(toContactId, walletAddress = me)
 
         val alias = HandshakeAliasPolicy.messageAlias(
             handshakeComplete = contact?.handshakeComplete == true,
             myAlias = contact?.myAlias,
-            deterministicAlias = walletManager.theirDeterministicAlias(toContactId),
+            deterministicAlias = com.kachat.app.util.KasiaCipher.deriveDeterministicAlias(key, recipientPubKey, contextXOnlyPubKey = recipientPubKey),
         )
 
         // Sealed so the seed can read it back on any device (iOS bfe9f022, MESSAGING.md "Reading
         // back your own sends"); to the recipient it's an ordinary message.
         val encrypted = withContext(kotlinx.coroutines.Dispatchers.Default) {
-            MessageProtocol.encryptContextual(text, recipientPubKey, senderPrivateKey = walletManager.getPrivateKeyBytes())
+            MessageProtocol.encryptContextual(text, recipientPubKey, senderPrivateKey = key)
         }
         // First contact carries their inbox tag so they can find it (NO_HANDSHAKE_MESSAGING.md §3).
-        val inboxTag = if (firstContactTag) chatRepository.firstContactInboxTag(toContactId) else null
+        val inboxTag = if (firstContactTag) chatRepository.firstContactInboxTag(toContactId, me = me) else null
         val payloadBytes = MessageProtocol.buildCommPayload(alias, encrypted, inboxTag)
 
-        val txId = sendKaspa(toAddress = walletManager.getAddress(), amountSompi = 0, payloadBytes = payloadBytes, feeRateOverride = feeRateOverride)
+        // Still the same account right before it is signed and paid for, from that account's own
+        // address with that account's own key.
+        if (!walletManager.getAddress().equals(me, ignoreCase = true)) throw SendAccountChangedException()
+        val txId = sendKaspa(
+            toAddress = me, amountSompi = 0, payloadBytes = payloadBytes, feeRateOverride = feeRateOverride,
+            fromAddress = me, signingPrivateKey = key,
+        )
         // The one tagged first message is out - recorded only after the submit, so a failed send
         // does not use the tag up.
         if (inboxTag != null) chatRepository.noteInboxTagged(toContactId)
@@ -948,3 +977,10 @@ class WalletService @Inject constructor(
         }
     }
 }
+
+/** A send started under one account found another one signed in before it was signed (audit
+ *  2026-11-27 C5/A4): nothing was sent. Its text is the chat's "Not sent: you switched accounts". */
+class SendAccountChangedException : IllegalStateException(
+    runCatching { com.kachat.app.util.AppText.context().getString(com.kachat.app.R.string.not_sent_you_switched_accounts) }
+        .getOrDefault("Not sent: you switched accounts")
+)

@@ -111,6 +111,38 @@ fun InAppBrowserScreen(
         },
         disappear = {},
     )
+    // The page pauses while it isn't in view (battery audit 2026-11-27 R4): hidden in a kept Hub
+    // section, or K in the background; in the background its JavaScript timers stop too.
+    val hiddenInHub = LocalHubSectionHidden.current
+    val browserLifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current.lifecycle
+    var appStarted by remember(browserLifecycle) {
+        mutableStateOf(browserLifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED))
+    }
+    androidx.compose.runtime.DisposableEffect(browserLifecycle) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, _ ->
+            appStarted = browserLifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)
+        }
+        browserLifecycle.addObserver(observer)
+        onDispose { browserLifecycle.removeObserver(observer) }
+    }
+    /** This browser's own web data (S1): one profile for every view it shows, gone when it
+     *  closes. */
+    val browserSession = remember(url) { com.kachat.app.services.InAppBrowserData.newSession() }
+    androidx.compose.runtime.DisposableEffect(browserSession) {
+        onDispose { com.kachat.app.services.InAppBrowserData.endSession(browserSession) }
+    }
+    /** The page's WebView now (a new one after its renderer died). */
+    var pageView by remember(url) { mutableStateOf<WebView?>(null) }
+    val pageInView = appStarted && !hiddenInHub
+    androidx.compose.runtime.LaunchedEffect(pageInView, pageView) {
+        val page = pageView ?: return@LaunchedEffect
+        runCatching { if (pageInView) page.onResume() else page.onPause() }
+    }
+    androidx.compose.runtime.LaunchedEffect(appStarted, pageView) {
+        val page = pageView ?: return@LaunchedEffect
+        if (appStarted) com.kachat.app.services.InAppBrowserData.resumeTimers(page)
+        else com.kachat.app.services.InAppBrowserData.pauseTimers(page)
+    }
     val headerHost = remember(currentUrl) {
         val shown = runCatching { android.net.Uri.parse(currentUrl) }.getOrNull()
         val host = shown?.host.orEmpty()
@@ -190,6 +222,9 @@ fun InAppBrowserScreen(
                     webViewMissing = true
                     android.widget.FrameLayout(context)
                 } else created.apply {
+                    // its own web data, only while it's open (iOS `.nonPersistent()`, security
+                    // audit 2026-11-27 S1): first, before anything else is done with the view
+                    com.kachat.app.services.InAppBrowserData.attach(this, browserSession)
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -200,6 +235,7 @@ fun InAppBrowserScreen(
                     siteWallet?.install(this)
                     reloader.webView = this
                     reloader.startUrl = url
+                    pageView = this
                     webViewClient = InAppBrowserClient(
                         startUrl = url,
                         onPage = { now -> if (!now.startsWith("about:", ignoreCase = true)) currentUrl = now },
@@ -229,8 +265,10 @@ fun InAppBrowserScreen(
                 if (!rebuilt) siteWallet?.close()
                 (view as? WebView)?.let { webView ->
                     if (reloader.webView === webView) reloader.webView = null
-                    runCatching { webView.stopLoading() }
-                    runCatching { webView.destroy() }
+                    if (pageView === webView) pageView = null
+                    // its cookies, storage and cache go with it, then the view (S1); one whose
+                    // renderer died leaves them to the view that replaces it (a sign-in stays)
+                    com.kachat.app.services.InAppBrowserData.release(webView, keepData = rebuilt)
                 }
             },
         )
@@ -262,7 +300,8 @@ fun InAppBrowserScreen(
  * another http(s) site opens in the phone's browser - only for a tapped link or the very first
  * load's redirect, so a page's script can't keep throwing the person out - and is never shown
  * under this site's name. Frames inside the page load as they like; `about:` and `blob:` pages
- * are allowed, `data:` and every other scheme refused in the main frame.
+ * are allowed, `data:` and every other scheme refused in the main frame. A plain-http page on the
+ * site loads over https (security audit 2026-11-27 S4).
  */
 private class InAppBrowserClient(
     startUrl: String,
@@ -282,6 +321,9 @@ private class InAppBrowserClient(
         host.removePrefix("www.")
     }
 
+    /** The last http page loaded over https instead ([InAppBrowserRules.httpsUpgrade]). */
+    private var lastUpgrade: String? = null
+
     private fun isOnSite(target: android.net.Uri): Boolean {
         val host = target.host?.lowercase() ?: return false
         if (siteHost.isEmpty()) return false
@@ -294,7 +336,17 @@ private class InAppBrowserClient(
         if (!request.isForMainFrame) return false
         return when (target.scheme?.lowercase()) {
             "http", "https" -> {
-                if (isOnSite(target)) return false
+                if (isOnSite(target)) {
+                    if (target.scheme?.lowercase() == "https") return false
+                    // plain http on the site itself: loaded over https instead, never in the clear
+                    // under K's header (iOS's ATS refuses it; security audit 2026-11-27 S4). A
+                    // site whose https page redirects straight back to http is refused.
+                    val secure = InAppBrowserRules.httpsUpgrade(target.toString()) ?: return true
+                    if (request.isRedirect && secure == lastUpgrade) return true
+                    lastUpgrade = secure
+                    view.loadUrl(secure)
+                    return true
+                }
                 val firstLoad = view.copyBackForwardList().currentItem == null
                 if (request.hasGesture() || firstLoad) {
                     try {
@@ -335,6 +387,20 @@ private class InAppBrowserClient(
         android.util.Log.w("InAppBrowser", "page renderer gone (crash=${detail.didCrash()})")
         onGone?.invoke(view)
         return true
+    }
+}
+
+/** The in-app browser's rules that need no WebView (unit-tested). */
+internal object InAppBrowserRules {
+    /** [url] (plain http) as https: the same host, path and query, the default port. Null for
+     *  anything else, or an http URL on its own port (an https page isn't served there). */
+    fun httpsUpgrade(url: String): String? {
+        val uri = try { java.net.URI(url) } catch (e: Exception) { return null }
+        if (uri.scheme?.lowercase() != "http" || uri.host.isNullOrEmpty()) return null
+        if (uri.port != -1 && uri.port != 80) return null
+        // no user:password@ carried over
+        return "https://" + uri.host + (uri.rawPath ?: "") +
+            (uri.rawQuery?.let { "?$it" } ?: "") + (uri.rawFragment?.let { "#$it" } ?: "")
     }
 }
 

@@ -8,6 +8,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -69,6 +74,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kachat.app.R
@@ -238,151 +244,226 @@ private fun <T : Any> ExplorerLoader(
     }
 }
 
-/** A loaded page: its bar over a scrolling column. */
+/**
+ * A loaded page: its bar over a lazy list (audit 2026-11-27 Smoothness S6, iOS L8's lazy stacks).
+ * A block's transactions, a transaction's inputs and outputs and an address's history are rows
+ * of their own ([explorerCardRows]), so a block with hundreds of transactions or an address after
+ * several Load Mores composes only what is on screen. Sections sit 16 dp apart, as the column's
+ * spacing had them.
+ */
 @Composable
 private fun ExplorerPageScaffold(
     title: String,
     onBack: () -> Unit,
     share: String?,
-    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+    content: LazyListScope.() -> Unit,
 ) {
     Scaffold(
         containerColor = LocalAppColors.current.background,
         contentWindowInsets = WindowInsets(0),
         topBar = { ExplorerPageBar(title, onBack, share) },
     ) { padding ->
-        Column(
+        LazyColumn(
             Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(top = 6.dp, bottom = LocalDockInset.current + 28.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(padding),
+            // Each section carries its 16 dp of spacing below it (explorerSection), so the last
+            // one's comes off the bottom inset.
+            contentPadding = PaddingValues(top = 6.dp, bottom = (LocalDockInset.current + 28.dp - SECTION_GAP).coerceAtLeast(0.dp)),
             content = content,
         )
     }
+}
+
+private val SECTION_GAP = 16.dp
+
+/** One section of a page, [SECTION_GAP] above the next. */
+private fun LazyListScope.explorerSection(
+    key: Any,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    spacing: Dp = 0.dp,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    item(key = key) {
+        Column(
+            Modifier.fillMaxWidth().padding(bottom = SECTION_GAP),
+            horizontalAlignment = horizontalAlignment,
+            verticalArrangement = Arrangement.spacedBy(spacing),
+            content = content,
+        )
+    }
+}
+
+/**
+ * [items] as the rows of one card, each its own list item: the first carries the card's top
+ * corners, the last its bottom corners and the section gap, and every row after the first its
+ * hairline indented [dividerStart]. Keyed by position: these lists only ever grow at the end, and
+ * a position can never repeat as an id from a node could.
+ */
+private fun <T> LazyListScope.explorerCardRows(
+    keyPrefix: String,
+    items: List<T>,
+    dividerStart: Dp,
+    row: @Composable (T) -> Unit,
+) {
+    itemsIndexed(items, key = { index, _ -> "$keyPrefix|$index" }, contentType = { _, _ -> keyPrefix }) { index, item ->
+        val first = index == 0
+        val last = index == items.lastIndex
+        val top = if (first) 16.dp else 0.dp
+        val bottom = if (last) 16.dp else 0.dp
+        Column(
+            Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = if (last) SECTION_GAP else 0.dp)
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom))
+                .background(LocalAppColors.current.surface),
+        ) {
+            if (!first) ExplorerDivider(dividerStart)
+            row(item)
+        }
+    }
+}
+
+/** The live KAS price, read where it is drawn - not at a page's root, where each stats change
+ *  recomposed the whole page (audit 2026-11-27 S6). */
+@Composable
+private fun rememberExplorerPrice(viewModel: ExplorerViewModel): Double {
+    val stats by viewModel.live.stats.collectAsState()
+    return stats?.priceUSD ?: 0.0
 }
 
 // MARK: Transaction
 
 @Composable
 private fun ExplorerTransactionView(viewModel: ExplorerViewModel, tx: ExplorerTransaction, onBack: () -> Unit, open: (ExplorerRoute) -> Unit) {
-    val colors = LocalAppColors.current
     val own by viewModel.ownAddress.collectAsState()
-    val stats by viewModel.live.stats.collectAsState()
     var showPayload by rememberSaveable { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
     val haptic = rememberHaptics()
     val copied = stringResource(R.string.ab_copied)
+    val fromTitle = stringResource(R.string.from)
+    val toTitle = stringResource(R.string.to)
     ExplorerPageScaffold(stringResource(R.string.transaction), onBack = onBack, share = tx.id) {
         // hero
-        Column(
-            Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            ExplorerKindBadge(tx.kind, 58.dp)
-            Text(stringResource(tx.kind.title), color = colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            KachatFitText(
-                ExplorerFormat.amountLine(tx),
-                color = colors.textPrimary,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = Rounded,
-                minScale = 0.5f,
-            )
-            val moved = tx.movedAmount
-            if (tx.tokenUnits == null && moved != null) {
-                Text(ExplorerFormat.usd(moved, stats?.priceUSD ?: 0.0), color = colors.textSecondary, fontSize = 15.sp)
-            }
-            Box(Modifier.padding(top = 2.dp)) {
-                ExplorerStatusPill(tx.confirmations, tx.isInMempool, tx.isAccepted)
+        explorerSection("hero") {
+            val colors = LocalAppColors.current
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ExplorerKindBadge(tx.kind, 58.dp)
+                Text(stringResource(tx.kind.title), color = colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                KachatFitText(
+                    ExplorerFormat.amountLine(tx),
+                    color = colors.textPrimary,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = Rounded,
+                    minScale = 0.5f,
+                )
+                val moved = tx.movedAmount
+                if (tx.tokenUnits == null && moved != null) {
+                    Text(ExplorerFormat.usd(moved, rememberExplorerPrice(viewModel)), color = colors.textSecondary, fontSize = 15.sp)
+                }
+                Box(Modifier.padding(top = 2.dp)) {
+                    ExplorerStatusPill(tx.confirmations, tx.isInMempool, tx.isAccepted)
+                }
             }
         }
         // what it is
-        ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Filled.Info, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(18.dp))
-                    Text(stringResource(tx.kind.explanation), color = colors.textPrimary, fontSize = 15.sp)
-                }
-                if (tx.isNotAccepted) {
+        explorerSection("what") {
+            val colors = LocalAppColors.current
+            ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Filled.Block, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Filled.Info, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(18.dp))
+                        Text(stringResource(tx.kind.explanation), color = colors.textPrimary, fontSize = 15.sp)
+                    }
+                    if (tx.isNotAccepted) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Filled.Block, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(18.dp))
+                            Text(
+                                stringResource(if (tx.kind == ExplorerTxKind.COINBASE) R.string.ex_not_accepted_reward else R.string.ex_not_accepted_moved),
+                                color = colors.textSecondary,
+                                fontSize = 15.sp,
+                            )
+                        }
+                    }
+                    tx.decoded?.let { decoded ->
                         Text(
-                            stringResource(if (tx.kind == ExplorerTxKind.COINBASE) R.string.ex_not_accepted_reward else R.string.ex_not_accepted_moved),
-                            color = colors.textSecondary,
-                            fontSize = 15.sp,
+                            decoded,
+                            color = colors.textPrimary,
+                            fontSize = 16.sp,
+                            fontFamily = if (tx.kind == ExplorerTxKind.KAPOST) null else FontFamily.Monospace,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(KaspaTeal.copy(alpha = 0.12f))
+                                .padding(12.dp),
                         )
                     }
-                }
-                tx.decoded?.let { decoded ->
-                    Text(
-                        decoded,
-                        color = colors.textPrimary,
-                        fontSize = 16.sp,
-                        fontFamily = if (tx.kind == ExplorerTxKind.KAPOST) null else FontFamily.Monospace,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(KaspaTeal.copy(alpha = 0.12f))
-                            .padding(12.dp),
-                    )
                 }
             }
         }
         // details
-        ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-            ExplorerDetailRow(stringResource(R.string.ex_transaction_id)) { ExplorerCopyValue(tx.id) }
-            ExplorerDivider(14.dp)
-            tx.blockHash?.let { block ->
-                ExplorerDetailRow(stringResource(R.string.ex_block), Modifier.explorerRow { open(ExplorerRoute.Block(block)) }, chevron = true) {
-                    ExplorerMonoText(block, middle = true)
-                }
-                ExplorerDivider(14.dp)
-            }
-            ExplorerDetailRow(stringResource(R.string.shell54_time)) { ExplorerValueText(ExplorerFormat.dateTime(tx.time)) }
-            ExplorerDivider(14.dp)
-            ExplorerDetailRow(stringResource(R.string.network_fee)) { ExplorerValueText(tx.fee?.let { ExplorerFormat.kas(it) } ?: "–") }
-            ExplorerDivider(14.dp)
-            ExplorerDetailRow(stringResource(R.string.ex_mass)) { ExplorerValueText(ExplorerFormat.grouped(tx.mass)) }
-        }
-        if (tx.inputs.isNotEmpty()) IoCard(stringResource(R.string.from), tx.inputs, tx, own, marksChange = false, open = open)
-        IoCard(stringResource(R.string.to), tx.outputs, tx, own, marksChange = true, open = open)
-        if (tx.payloadHex.isNotEmpty()) {
+        explorerSection("details") {
             ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(
-                        Modifier.fillMaxWidth().clickable { showPayload = !showPayload },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Text(stringResource(R.string.ex_payload), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                        Text(stringResource(R.string.ex_bytes, tx.payloadHex.length / 2), color = colors.textSecondary, fontSize = 12.sp)
-                        Spacer(Modifier.weight(1f))
-                        Icon(
-                            Icons.Filled.KeyboardArrowDown,
-                            contentDescription = null,
-                            tint = colors.textSecondary,
-                            modifier = Modifier.size(18.dp).rotate(if (showPayload) 180f else 0f),
-                        )
+                ExplorerDetailRow(stringResource(R.string.ex_transaction_id)) { ExplorerCopyValue(tx.id) }
+                ExplorerDivider(14.dp)
+                tx.blockHash?.let { block ->
+                    ExplorerDetailRow(stringResource(R.string.ex_block), Modifier.explorerRow { open(ExplorerRoute.Block(block)) }, chevron = true) {
+                        ExplorerMonoText(block, middle = true)
                     }
-                    AnimatedVisibility(showPayload) {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            SelectionContainer {
-                                Text(tx.payloadHex, color = colors.textSecondary, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-                            }
-                            Row(
-                                Modifier.clickable {
-                                    clipboard.setText(AnnotatedString(tx.payloadHex))
-                                    haptic(IosHaptic.SUCCESS)
-                                    IosToasts.show(copied)
-                                },
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                Icon(Icons.Filled.ContentCopy, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(15.dp))
-                                Text(stringResource(R.string.ex_copy_payload), color = KaspaTeal, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    ExplorerDivider(14.dp)
+                }
+                ExplorerDetailRow(stringResource(R.string.shell54_time)) { ExplorerValueText(ExplorerFormat.dateTime(tx.time)) }
+                ExplorerDivider(14.dp)
+                ExplorerDetailRow(stringResource(R.string.network_fee)) { ExplorerValueText(tx.fee?.let { ExplorerFormat.kas(it) } ?: "–") }
+                ExplorerDivider(14.dp)
+                ExplorerDetailRow(stringResource(R.string.ex_mass)) { ExplorerValueText(ExplorerFormat.grouped(tx.mass)) }
+            }
+        }
+        if (tx.inputs.isNotEmpty()) ioRows("in", fromTitle, tx.inputs, tx, own, marksChange = false, open = open)
+        ioRows("out", toTitle, tx.outputs, tx, own, marksChange = true, open = open)
+        if (tx.payloadHex.isNotEmpty()) {
+            explorerSection("payload") {
+                val colors = LocalAppColors.current
+                ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
+                    Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth().clickable { showPayload = !showPayload },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Text(stringResource(R.string.ex_payload), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.ex_bytes, tx.payloadHex.length / 2), color = colors.textSecondary, fontSize = 12.sp)
+                            Spacer(Modifier.weight(1f))
+                            Icon(
+                                Icons.Filled.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = colors.textSecondary,
+                                modifier = Modifier.size(18.dp).rotate(if (showPayload) 180f else 0f),
+                            )
+                        }
+                        AnimatedVisibility(showPayload) {
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                SelectionContainer {
+                                    Text(tx.payloadHex, color = colors.textSecondary, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                                }
+                                Row(
+                                    Modifier.clickable {
+                                        clipboard.setText(AnnotatedString(tx.payloadHex))
+                                        haptic(IosHaptic.SUCCESS)
+                                        IosToasts.show(copied)
+                                    },
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                ) {
+                                    Icon(Icons.Filled.ContentCopy, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(15.dp))
+                                    Text(stringResource(R.string.ex_copy_payload), color = KaspaTeal, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                }
                             }
                         }
                     }
@@ -392,8 +473,9 @@ private fun ExplorerTransactionView(viewModel: ExplorerViewModel, tx: ExplorerTr
     }
 }
 
-@Composable
-private fun IoCard(
+/** A transaction's inputs or outputs: the section title, then one list row per input or output. */
+private fun LazyListScope.ioRows(
+    keyPrefix: String,
     title: String,
     items: List<ExplorerIO>,
     tx: ExplorerTransaction,
@@ -401,27 +483,22 @@ private fun IoCard(
     marksChange: Boolean,
     open: (ExplorerRoute) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ExplorerSectionTitle(title)
-        ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-            items.forEachIndexed { index, io ->
-                if (index > 0) ExplorerDivider(60.dp)
-                if (io.address.isEmpty()) {
-                    // not known (read off the node) or no address (a script): nothing to open
-                    ExplorerUnknownIORow(
-                        label = stringResource(if (marksChange) R.string.ex_output_n else R.string.ex_input_n, io.index),
-                        amount = if (marksChange) io.amount else null,
-                    )
-                } else {
-                    ExplorerAddressRow(
-                        address = io.address,
-                        amount = io.amount,
-                        isYou = own != null && io.address.equals(own, ignoreCase = true),
-                        isChange = marksChange && io.index > 0 && io.address == tx.inputs.firstOrNull()?.address,
-                        modifier = Modifier.explorerRow { open(ExplorerRoute.Address(io.address)) },
-                    )
-                }
-            }
+    item(key = "$keyPrefix|title") { ExplorerSectionTitle(title, Modifier.padding(bottom = 8.dp)) }
+    explorerCardRows(keyPrefix, items, dividerStart = 60.dp) { io ->
+        if (io.address.isEmpty()) {
+            // not known (read off the node) or no address (a script): nothing to open
+            ExplorerUnknownIORow(
+                label = stringResource(if (marksChange) R.string.ex_output_n else R.string.ex_input_n, io.index),
+                amount = if (marksChange) io.amount else null,
+            )
+        } else {
+            ExplorerAddressRow(
+                address = io.address,
+                amount = io.amount,
+                isYou = own != null && io.address.equals(own, ignoreCase = true),
+                isChange = marksChange && io.index > 0 && io.address == tx.inputs.firstOrNull()?.address,
+                modifier = Modifier.explorerRow { open(ExplorerRoute.Address(io.address)) },
+            )
         }
     }
 }
@@ -432,10 +509,17 @@ private enum class BlockPage { TRANSACTIONS, PARENTS, CHILDREN }
 
 @Composable
 private fun ExplorerBlockView(viewModel: ExplorerViewModel, block: ExplorerBlock, onBack: () -> Unit, open: (ExplorerRoute) -> Unit) {
-    val colors = LocalAppColors.current
     var page by rememberSaveable { mutableStateOf(BlockPage.TRANSACTIONS) }
+    val titles = listOf(
+        stringResource(R.string.transactions) + " · ${block.transactionIds.size}",
+        stringResource(R.string.ex_parents) + " · ${block.parents.size}",
+        stringResource(R.string.ex_children) + " · ${block.children.size}",
+    )
+    val noneText = stringResource(if (page == BlockPage.CHILDREN) R.string.ex_no_children else R.string.ex_no_parents)
+    val agoText = ExplorerFormat.ago(LocalContext.current, block.time, System.currentTimeMillis())
     ExplorerPageScaffold(stringResource(R.string.ex_block), onBack = onBack, share = block.id) {
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        explorerSection("hero", horizontalAlignment = Alignment.CenterHorizontally, spacing = 8.dp) {
+            val colors = LocalAppColors.current
             Box(Modifier.size(58.dp).clip(RoundedCornerShape(16.dp)).background(KaspaTeal), contentAlignment = Alignment.Center) {
                 Icon(ExplorerSymbols.CubeFill, contentDescription = null, tint = Color.White, modifier = Modifier.size(30.dp))
             }
@@ -447,61 +531,57 @@ private fun ExplorerBlockView(viewModel: ExplorerViewModel, block: ExplorerBlock
                     if (block.isChainBlock) Icons.Filled.Link else Icons.Filled.MergeType,
                     if (block.isChainBlock) KaspaTeal else colors.textSecondary,
                 )
-                ExplorerPill(ExplorerFormat.ago(LocalContext.current, block.time, System.currentTimeMillis()), Icons.Filled.Schedule, colors.textSecondary)
+                ExplorerPill(agoText, Icons.Filled.Schedule, colors.textSecondary)
             }
         }
-        ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-            ExplorerDetailRow(stringResource(R.string.ex_block_hash)) { ExplorerCopyValue(block.id) }
-            ExplorerDivider(14.dp)
-            ExplorerDetailRow(stringResource(R.string.ex_daa_score)) { ExplorerValueText(ExplorerFormat.grouped(block.daaScore)) }
-            ExplorerDivider(14.dp)
-            ExplorerDetailRow(stringResource(R.string.shell54_time)) { ExplorerValueText(ExplorerFormat.dateTime(block.time)) }
-            ExplorerDivider(14.dp)
-            ExplorerDetailRow(stringResource(R.string.ex_merge_set)) {
-                ExplorerValueText(stringResource(R.string.ex_merge_set_value, block.mergeSetBlues, block.mergeSetReds))
-            }
-            ExplorerDivider(14.dp)
-            ExplorerDetailRow(stringResource(R.string.ex_difficulty)) { ExplorerValueText(ExplorerFormat.difficulty(block.difficulty)) }
-        }
-        PageCycleBar(
-            titles = listOf(
-                stringResource(R.string.transactions) + " · ${block.transactionIds.size}",
-                stringResource(R.string.ex_parents) + " · ${block.parents.size}",
-                stringResource(R.string.ex_children) + " · ${block.children.size}",
-            ),
-            selectedIndex = page.ordinal,
-            onSelect = { page = BlockPage.entries[it] },
-        )
-        when (page) {
-            BlockPage.TRANSACTIONS -> ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-                block.transactions.forEachIndexed { index, tx ->
-                    if (index > 0) ExplorerDivider(62.dp)
-                    ExplorerTransactionRow(tx, Modifier.explorerRow { open(ExplorerRoute.Transaction(tx.id)) }, showsAge = false)
+        explorerSection("details") {
+            ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
+                ExplorerDetailRow(stringResource(R.string.ex_block_hash)) { ExplorerCopyValue(block.id) }
+                ExplorerDivider(14.dp)
+                ExplorerDetailRow(stringResource(R.string.ex_daa_score)) { ExplorerValueText(ExplorerFormat.grouped(block.daaScore)) }
+                ExplorerDivider(14.dp)
+                ExplorerDetailRow(stringResource(R.string.shell54_time)) { ExplorerValueText(ExplorerFormat.dateTime(block.time)) }
+                ExplorerDivider(14.dp)
+                ExplorerDetailRow(stringResource(R.string.ex_merge_set)) {
+                    ExplorerValueText(stringResource(R.string.ex_merge_set_value, block.mergeSetBlues, block.mergeSetReds))
                 }
+                ExplorerDivider(14.dp)
+                ExplorerDetailRow(stringResource(R.string.ex_difficulty)) { ExplorerValueText(ExplorerFormat.difficulty(block.difficulty)) }
+            }
+        }
+        explorerSection("pages") {
+            PageCycleBar(
+                titles = titles,
+                selectedIndex = page.ordinal,
+                onSelect = { page = BlockPage.entries[it] },
+            )
+        }
+        when (page) {
+            BlockPage.TRANSACTIONS -> explorerCardRows("tx", block.transactions, dividerStart = 62.dp) { tx ->
+                ExplorerTransactionRow(tx, Modifier.explorerRow { open(ExplorerRoute.Transaction(tx.id)) }, showsAge = false)
             }
             BlockPage.PARENTS, BlockPage.CHILDREN -> {
                 val hashes = if (page == BlockPage.PARENTS) block.parents else block.children
                 if (hashes.isEmpty()) {
-                    Text(
-                        stringResource(if (page == BlockPage.CHILDREN) R.string.ex_no_children else R.string.ex_no_parents),
-                        color = colors.textSecondary,
-                        fontSize = 13.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp).padding(top = 8.dp),
-                    )
+                    explorerSection("none-${page.name}") {
+                        Text(
+                            noneText,
+                            color = LocalAppColors.current.textSecondary,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp).padding(top = 8.dp),
+                        )
+                    }
                 } else {
-                    ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-                        hashes.forEachIndexed { index, hash ->
-                            if (index > 0) ExplorerDivider(52.dp)
-                            Row(
-                                Modifier.fillMaxWidth().explorerRow { open(ExplorerRoute.Block(hash)) }.padding(horizontal = 14.dp, vertical = 13.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                Icon(ExplorerSymbols.Cube, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(22.dp))
-                                ExplorerMonoText(hash, middle = true, modifier = Modifier.weight(1f))
-                                ExplorerChevron()
-                            }
+                    explorerCardRows(page.name, hashes, dividerStart = 52.dp) { hash ->
+                        Row(
+                            Modifier.fillMaxWidth().explorerRow { open(ExplorerRoute.Block(hash)) }.padding(horizontal = 14.dp, vertical = 13.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Icon(ExplorerSymbols.Cube, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(22.dp))
+                            ExplorerMonoText(hash, middle = true, modifier = Modifier.weight(1f))
+                            ExplorerChevron()
                         }
                     }
                 }
@@ -519,8 +599,6 @@ private enum class AddressPage { HISTORY, ASSETS }
 private fun ExplorerAddressView(viewModel: ExplorerViewModel, info: ExplorerAddress, onBack: () -> Unit, open: (ExplorerRoute) -> Unit) {
     val colors = LocalAppColors.current
     val own by viewModel.ownAddress.collectAsState()
-    val stats by viewModel.live.stats.collectAsState()
-    val price = stats?.priceUSD ?: 0.0
     val isYou = own != null && info.address.equals(own, ignoreCase = true)
     val clipboard = LocalClipboardManager.current
     val haptic = rememberHaptics()
@@ -560,11 +638,16 @@ private fun ExplorerAddressView(viewModel: ExplorerViewModel, info: ExplorerAddr
         }
     }
 
+    val pageTitles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.ex_assets))
+    // received and sent, complete when the first page of history reaches back 30 days
+    val summaryDetail = if (info.summaryCoversMonth) stringResource(R.string.ex_last_30_days)
+    else stringResource(R.string.ex_newest_n, info.transactions.size)
+    val ownName = viewModel.ownName()
     ExplorerPageScaffold(stringResource(R.string.address), onBack = onBack, share = info.address) {
         // hero
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        explorerSection("hero", horizontalAlignment = Alignment.CenterHorizontally, spacing = 10.dp) {
             if (isYou) {
-                ExplorerOwnAvatar(info.address, viewModel.ownName(), 72.dp)
+                ExplorerOwnAvatar(info.address, ownName, 72.dp)
             } else {
                 ContactAvatar(imageUrl = null, fallbackText = info.username ?: "K", size = 72.dp, includeAssignedPhoto = false)
             }
@@ -592,48 +675,52 @@ private fun ExplorerAddressView(viewModel: ExplorerViewModel, info: ExplorerAddr
                 ExplorerActionChip(stringResource(R.string.qr_code), Icons.Filled.QrCode) { showQR = true }
             }
         }
-        // balance
-        ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(stringResource(R.string.balance).uppercase(), color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                KachatFitText(ExplorerFormat.kas(info.balance), color = colors.textPrimary, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, fontFamily = Rounded, minScale = 0.5f)
-                Text(ExplorerFormat.usd(info.balance, price), color = colors.textSecondary, fontSize = 15.sp)
-                info.kusdtUnits?.let { units ->
-                    ExplorerDivider(0.dp)
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TokenIcon(WalletToken.KUSDT, size = 20.dp)
-                        Text(ExplorerFormat.kusdt(units), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, style = Tabular)
+        // balance: the only part of the page that reads the live price
+        explorerSection("balance") {
+            val price = rememberExplorerPrice(viewModel)
+            ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(stringResource(R.string.balance).uppercase(), color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    KachatFitText(ExplorerFormat.kas(info.balance), color = colors.textPrimary, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, fontFamily = Rounded, minScale = 0.5f)
+                    Text(ExplorerFormat.usd(info.balance, price), color = colors.textSecondary, fontSize = 15.sp)
+                    info.kusdtUnits?.let { units ->
+                        ExplorerDivider(0.dp)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TokenIcon(WalletToken.KUSDT, size = 20.dp)
+                            Text(ExplorerFormat.kusdt(units), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, style = Tabular)
+                        }
                     }
                 }
             }
         }
-        // received and sent, complete when the first page of history reaches back 30 days
-        val summaryDetail = if (info.summaryCoversMonth) stringResource(R.string.ex_last_30_days)
-        else stringResource(R.string.ex_newest_n, info.transactions.size)
-        Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            ExplorerStatTile(Icons.Filled.SouthWest, stringResource(R.string.payment_received), ExplorerFormat.compactKAS(info.received30d), summaryDetail, Modifier.weight(1f))
-            ExplorerStatTile(Icons.Filled.NorthEast, stringResource(R.string.sent), ExplorerFormat.compactKAS(info.sent30d), summaryDetail, Modifier.weight(1f))
+        explorerSection("summary") {
+            Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                ExplorerStatTile(Icons.Filled.SouthWest, stringResource(R.string.payment_received), ExplorerFormat.compactKAS(info.received30d), summaryDetail, Modifier.weight(1f))
+                ExplorerStatTile(Icons.Filled.NorthEast, stringResource(R.string.sent), ExplorerFormat.compactKAS(info.sent30d), summaryDetail, Modifier.weight(1f))
+            }
         }
-        PageCycleBar(
-            titles = listOf(stringResource(R.string.address_tab_history), stringResource(R.string.ex_assets)),
-            selectedIndex = page.ordinal,
-            onSelect = { page = AddressPage.entries[it] },
-        )
+        explorerSection("pages") {
+            PageCycleBar(
+                titles = pageTitles,
+                selectedIndex = page.ordinal,
+                onSelect = { page = AddressPage.entries[it] },
+            )
+        }
         when (page) {
             AddressPage.HISTORY -> {
-                ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-                    if (history.isEmpty()) {
-                        Text(stringResource(R.string.ex_no_transactions), color = colors.textSecondary, fontSize = 13.sp, modifier = Modifier.padding(16.dp))
-                    }
-                    history.forEachIndexed { index, tx ->
-                        key(tx.id) {
-                            if (index > 0) ExplorerDivider(62.dp)
-                            ExplorerTransactionRow(tx, Modifier.explorerRow { open(ExplorerRoute.Transaction(tx.id)) }, perspective = info.address)
+                if (history.isEmpty()) {
+                    explorerSection("history-empty") {
+                        ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
+                            Text(stringResource(R.string.ex_no_transactions), color = colors.textSecondary, fontSize = 13.sp, modifier = Modifier.padding(16.dp))
                         }
+                    }
+                } else {
+                    explorerCardRows("history", history, dividerStart = 62.dp) { tx ->
+                        ExplorerTransactionRow(tx, Modifier.explorerRow { open(ExplorerRoute.Transaction(tx.id)) }, perspective = info.address)
                     }
                 }
                 // the transaction count, and Load More while there's older history
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                explorerSection("history-more", horizontalAlignment = Alignment.CenterHorizontally, spacing = 10.dp) {
                     if (nextBefore != null) {
                         Box(
                             Modifier
@@ -656,24 +743,27 @@ private fun ExplorerAddressView(viewModel: ExplorerViewModel, info: ExplorerAddr
             }
             AddressPage.ASSETS -> {
                 // Kaspa and kUSDT, always both: kUSDT shows at 0 too (owner, 2026-11-25)
-                ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
-                    AssetRow(
-                        name = "Kaspa",
-                        detail = stringResource(R.string.ex_kaspa_coin),
-                        amount = ExplorerFormat.kas(info.balance),
-                        value = ExplorerFormat.usd(info.balance, price),
-                    ) {
-                        Image(painterResource(R.drawable.ic_kaspa_logo), contentDescription = null, modifier = Modifier.size(36.dp))
-                    }
-                    ExplorerDivider(62.dp)
-                    val units = info.kusdtUnits ?: 0L
-                    AssetRow(
-                        name = "kUSDT",
-                        detail = stringResource(R.string.ex_kusdt_coin),
-                        amount = ExplorerFormat.kusdt(units),
-                        value = ExplorerFormat.usdValue(units / 1_000_000.0),
-                    ) {
-                        TokenIcon(WalletToken.KUSDT, size = 36.dp)
+                explorerSection("assets") {
+                    val price = rememberExplorerPrice(viewModel)
+                    ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
+                        AssetRow(
+                            name = "Kaspa",
+                            detail = stringResource(R.string.ex_kaspa_coin),
+                            amount = ExplorerFormat.kas(info.balance),
+                            value = ExplorerFormat.usd(info.balance, price),
+                        ) {
+                            Image(painterResource(R.drawable.ic_kaspa_logo), contentDescription = null, modifier = Modifier.size(36.dp))
+                        }
+                        ExplorerDivider(62.dp)
+                        val units = info.kusdtUnits ?: 0L
+                        AssetRow(
+                            name = "kUSDT",
+                            detail = stringResource(R.string.ex_kusdt_coin),
+                            amount = ExplorerFormat.kusdt(units),
+                            value = ExplorerFormat.usdValue(units / 1_000_000.0),
+                        ) {
+                            TokenIcon(WalletToken.KUSDT, size = 36.dp)
+                        }
                     }
                 }
             }

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.kachat.app.R
 import com.kachat.app.util.KaPostsProtocol
+import com.kachat.app.util.stringOrFormat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -339,5 +340,5 @@ class KaPostsNotificationPoller @Inject constructor(
     }
 
     private fun notice(res: Int, vararg args: Any): String =
-        runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { appContext.getString(res, *args) }
+        runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { appContext.stringOrFormat(res, *args) }
 }

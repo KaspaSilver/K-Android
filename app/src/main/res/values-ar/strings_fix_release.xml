@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">لا يوجد تطبيق لمشاركة ملف CSV</string>
+    <string name="rel5_saves_photo_to_gallery">يحفظ الصورة في معرض الصور.</string>
+    <string name="rel5_chess_time_control">شطرنج - %1$s</string>
+    <string name="rel5_backed_up_just_now">تم النسخ الاحتياطي للتو</string>
+    <string name="rel5_audio_file_empty">الملف الصوتي فارغ</string>
+    <string name="rel5_enter_valid_amount">أدخل مبلغًا صالحًا.</string>
+    <string name="rel5_server_error_code">أعاد الخادم خطأً (%1$d). حاول مرة أخرى بعد قليل.</string>
+    <string name="rel5_fb_could_not_load_folder">تعذّر تحميل هذا المجلد.</string>
+    <string name="rel5_fb_failed_build_tx">تعذّر إنشاء المعاملة</string>
+    <string name="rel5_fb_edit_failed">فشل التعديل</string>
+    <string name="rel5_fb_cant_read_signed_tx">تعذّرت قراءة المعاملة الموقّعة</string>
+    <string name="rel5_fb_reaction_failed">فشل التفاعل</string>
+    <string name="rel5_fb_update_group_photo">تعذّر تحديث صورة المجموعة</string>
+    <string name="rel5_fb_resend_invites">تعذّرت إعادة إرسال الدعوات</string>
+    <string name="rel5_fb_resend_invite">تعذّرت إعادة إرسال الدعوة</string>
+    <string name="rel5_fb_rename_group">تعذّرت إعادة تسمية المجموعة</string>
+    <string name="rel5_fb_create_group">تعذّر إنشاء المجموعة</string>
+    <string name="rel5_fb_schedule_post">تعذّرت جدولة هذا المنشور</string>
+    <string name="rel5_fb_load_more">تعذّر تحميل المزيد</string>
+    <string name="rel5_fb_share_link">تعذّر إنشاء رابط مشاركة.</string>
+    <string name="rel5_fb_connect">تعذّر الاتصال</string>
+    <string name="rel5_fb_broadcast_failed">فشل البث</string>
+    <string name="rel5_fb_backup_failed">فشل النسخ الاحتياطي</string>
+    <string name="rel5_restored_messages">تمت استعادة %1$d رسالة من %2$d محادثة.</string>
+    <string name="rel5_enter_group_name">أدخل اسمًا للمجموعة.</string>
+    <string name="rel5_add_one_member">أضف عضوًا واحدًا على الأقل.</string>
+    <string name="rel5_invalid_address_format">تنسيق عنوان Kaspa غير صالح.</string>
+</resources>

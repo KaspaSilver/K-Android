@@ -69,8 +69,9 @@ class KaPostRepostOrigins @Inject constructor(
         private val now: () -> Long = System::currentTimeMillis,
         private val quoteOf: suspend (String) -> KaPostDraft.QuotedRef?,
     ) {
-        private val found = HashMap<String, KaPostDraft.QuotedRef>()
-        private val failedAt = HashMap<String, Long>()
+        // Bounded: one entry per reposted post ever shown, until the process died (audit 2026-11-27 R9).
+        private val found = BoundedLruMap<String, KaPostDraft.QuotedRef>(BoundedLruMap.KAPOST_CACHE_ENTRIES)
+        private val failedAt = BoundedLruMap<String, Long>(BoundedLruMap.KAPOST_CACHE_ENTRIES)
         private val running = HashMap<String, Deferred<KaPostDraft.QuotedRef?>>()
 
         @Synchronized

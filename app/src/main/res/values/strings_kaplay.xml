@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">Quarterfinals</string>
     <string name="kp_3ce0ac6e9413" formatted="false">The result was not sent.</string>
     <string name="kaplay_leaderboard_all_time">All time</string>
-    <string name="kaplay_leaderboard_counted_from">Counted from %1$s.</string>
-    <string name="kaplay_leaderboard_period">Leaderboard period</string>
-    <string name="kaplay_leaderboard_resets_monthly">Resets on the 1st of every month (UTC).</string>
     <string name="kaplay_leaderboard_this_month">This month</string>
-    <string name="kaplay_no_finished_duels">No finished 1v1 games yet.</string>
-    <string name="kaplay_no_finished_duels_this_month">No finished 1v1 games this month yet.</string>
-    <string name="kaplay_no_finished_tournaments">No finished tournaments yet.</string>
-    <string name="kaplay_no_finished_tournaments_this_month">No finished tournaments this month yet.</string>
     <string name="kaplay_tab_leaderboard">Leaderboard</string>
     <!-- K 5.4 (iOS 518fdc8c): Chess's own screen, its Play sheet, and audit 2026-11-24 #40. -->
     <string name="kp_640de0cb0b2c" formatted="false">Your record: %s won, %s lost</string>

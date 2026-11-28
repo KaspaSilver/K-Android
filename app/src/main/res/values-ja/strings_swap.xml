@@ -2,7 +2,6 @@
 <!-- Swap (iPhone 5.4 518fdc8c: SwapView, SwapService, TrestlyTrade), from the iPhone's
      Localizable.strings for the same keys. -->
 <resources>
-    <string name="swap_title">スワップ</string>
     <string name="swap_failed">スワップに失敗しました</string>
     <string name="swap_couldnt_read_amounts">このスワップの金額を読み取れませんでした</string>
     <string name="swap_already_holds">このスワップはすでに含まれています。再度追加すると二重に計上されます。</string>
@@ -14,7 +13,6 @@
     <string name="swap_destination_tag_optional">宛先タグ（任意）</string>
     <string name="swap_destination_tag_hint">受取アドレスが必要とする場合のみ（ほとんどの取引所が必要とします）。ないと取引所はコインを入金できません。</string>
     <string name="swap_from_kusdt_lands">スワップ元（kUSDT はここに届きます）</string>
-    <string name="swap_from_kas_lands">スワップ元（KAS はここに届きます）</string>
     <string name="swap_change">変更</string>
     <string name="swap_powered_by_trestly">Trestly 提供</string>
     <string name="swap_powered_by_changenow">ChangeNOW 提供</string>
@@ -48,8 +46,6 @@
     <string name="swap_deposit_address">入金アドレス</string>
     <string name="swap_couldnt_reach_changenow">ChangeNOW に接続できませんでした。もう一度お試しください</string>
     <string name="swap_details">スワップの詳細</string>
-    <string name="swap_used">使用済み</string>
-    <string name="swap_unused">未使用</string>
     <string name="swap_search_coins">コインを検索</string>
     <string name="swap_agreements_intro">スワップは K が運営していない 2 つのサービスを使います。続ける前に両方を読んで同意してください。</string>
     <string name="swap_coins_on_other_networks">他のネットワークのコイン</string>

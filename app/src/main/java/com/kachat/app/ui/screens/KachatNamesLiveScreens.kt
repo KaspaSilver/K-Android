@@ -1856,14 +1856,44 @@ fun KachatLiveActivityPage(vm: KachatLiveViewModel?) {
             KachatLiveEmpty(if (vm?.loaded != false) stringResource(R.string.kn_nothing_yet) else null)
         } else {
             val shown = vm.activity.take(100)
+            // The page sits in the market screen's scrolling column, so it can't be a lazy list of
+            // its own: the rows come in a screenful per frame instead of all 100 (and their icons
+            // and lines) in the opening frame (audit 2026-11-27 Smoothness S7).
+            val composedRows = rememberRowsInBatches(shown.size)
             KachatGlassList {
-                shown.forEachIndexed { index, e ->
-                    KachatEventRow(e, showName = true)
-                    if (index < shown.lastIndex) KachatRowDivider(56)
+                for (index in 0 until minOf(composedRows, shown.size)) {
+                    val e = shown[index]
+                    androidx.compose.runtime.key(index, e.hashCode()) {
+                        KachatEventRow(e, showName = true)
+                        if (index < shown.lastIndex) KachatRowDivider(56)
+                    }
                 }
             }
         }
     }
+}
+
+/** How many of [total] rows to compose so far: [RowBatch.FIRST] at once, then [RowBatch.STEP] more
+ *  each frame until all are in. */
+@Composable
+private fun rememberRowsInBatches(total: Int): Int {
+    var count by remember { mutableStateOf(RowBatch.first(total)) }
+    LaunchedEffect(total) {
+        count = maxOf(count, RowBatch.first(total)).coerceAtMost(total)
+        while (count < total) {
+            androidx.compose.runtime.withFrameNanos { }
+            count = RowBatch.next(count, total)
+        }
+    }
+    return count
+}
+
+/** The batches [rememberRowsInBatches] adds rows in. */
+internal object RowBatch {
+    const val FIRST = 16
+    const val STEP = 16
+    fun first(total: Int): Int = minOf(FIRST, total)
+    fun next(count: Int, total: Int): Int = minOf(count + STEP, total)
 }
 
 @Composable
@@ -4263,63 +4293,6 @@ fun kachatNameExpiryLine(n: NameInfo, graceMs: Long): String? = when (n.status(g
     Status.ACTIVE -> stringResource(R.string.kn_expires_on, KachatLive.day(n.expiresAt))
     Status.GRACE -> stringResource(R.string.kn_grace_ends, KachatLive.day(kachatClampedSum(n.expiresAt, graceMs)))
     Status.LAPSED -> null
-}
-
-/**
- * How many .kachat names [walletAddress] holds, for its Your Domains card (iOS 2ee667c
- * `refreshKachatCount`): the same read [KachatLiveDomainsTab] does, reduced to a count - the whole
- * wallet's held names for the own chatting address, the one address's otherwise. Counted again
- * whenever the registry revision moves, so a name inscribed, bought, transferred or lapsed behind
- * a card shows the moment you are back. Null until the first count lands (the card shows a dash,
- * not a made-up 0).
- */
-@Composable
-fun rememberKachatHeldCount(
-    walletAddress: String,
-    vm: KachatLiveViewModel? = if (KachatNamesService.isLaunched) hiltViewModel() else null,
-): Int? {
-    // `vm` is null for the screen's whole life where the registry isn't launched.
-    val revision = vm?.registry?.revision?.collectAsState()?.value
-    var count by remember { mutableStateOf<Int?>(null) }
-    val cacheContext = LocalContext.current
-    LaunchedEffect(revision, walletAddress) {
-        if (vm == null || !KachatNamesService.isEnabled) { count = 0; return@LaunchedEffect }
-        // the saved list's count at once; the reads below correct it when they answer (iOS wallet f4f5c0f)
-        if (count == null) {
-            com.kachat.app.services.kachatnames.KachatOwnedNamesCache.load(cacheContext, walletAddress)?.let { count = it.names.size }
-        }
-        if (vm.registry.refreshedAt.value == null) vm.registry.refresh()
-        var incomplete = false
-        val own = if (walletAddress.lowercase() == vm.actions.myAddress) {
-            try {
-                vm.actions.ownNamesAndOffers(heldOnly = true, requireAllKeys = true)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: com.kachat.app.services.kachatnames.KachatNamesActions.IncompleteKeys) {
-                // an address's history couldn't be read: the count would drop its names (audit LOW L11)
-                incomplete = true
-                if (count == null) e.partial else null
-            } catch (_: Exception) {
-                null
-            }
-        } else {
-            null
-        }
-        val key = KachatNamesRegistry.keyOf(walletAddress)
-        count = when {
-            own != null -> own.first.size
-            incomplete -> count
-            key != null -> try {
-                vm.registry.heldNames(key).size
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                count
-            }
-            else -> 0
-        }
-    }
-    return count
 }
 
 /**

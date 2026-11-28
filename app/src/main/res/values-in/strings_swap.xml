@@ -2,7 +2,6 @@
 <!-- Swap (iPhone 5.4 518fdc8c: SwapView, SwapService, TrestlyTrade), from the iPhone's
      Localizable.strings for the same keys. -->
 <resources>
-    <string name="swap_title">Tukar</string>
     <string name="swap_failed">Penukaran gagal</string>
     <string name="swap_couldnt_read_amounts">Tidak dapat membaca jumlah penukaran ini</string>
     <string name="swap_already_holds">Sudah berisi penukaran ini - menambahkannya lagi akan menghitungnya dua kali.</string>
@@ -14,7 +13,6 @@
     <string name="swap_destination_tag_optional">Tag tujuan (opsional)</string>
     <string name="swap_destination_tag_hint">Hanya jika alamat penerima memerlukannya, seperti kebanyakan bursa. Tanpanya, bursa tidak dapat mengkreditkan koin Anda.</string>
     <string name="swap_from_kusdt_lands">Tukar Dari (kUSDT Masuk ke Sini)</string>
-    <string name="swap_from_kas_lands">Tukar Dari (KAS Masuk ke Sini)</string>
     <string name="swap_change">Ganti</string>
     <string name="swap_powered_by_trestly">Didukung oleh Trestly</string>
     <string name="swap_powered_by_changenow">Didukung oleh ChangeNOW</string>
@@ -48,8 +46,6 @@
     <string name="swap_deposit_address">Alamat Setoran</string>
     <string name="swap_couldnt_reach_changenow">Tidak dapat menghubungi ChangeNOW - coba lagi</string>
     <string name="swap_details">Detail Penukaran</string>
-    <string name="swap_used">Terpakai</string>
-    <string name="swap_unused">Belum dipakai</string>
     <string name="swap_search_coins">Cari koin</string>
     <string name="swap_agreements_intro">Tukar memakai dua layanan yang tidak dijalankan K. Baca dan setujui keduanya sebelum melanjutkan.</string>
     <string name="swap_coins_on_other_networks">Koin di jaringan lain</string>

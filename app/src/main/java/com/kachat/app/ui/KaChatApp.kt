@@ -341,6 +341,9 @@ fun MainShell(
     /** The dock tab you were on before a Hub section opened: where its close (Kasshi's X, Back)
      *  goes back (iOS `tabBeforeHub`). */
     var tabBeforeHub by remember { mutableStateOf(AppTab.CHATS) }
+    /** The Hub section on screen when Kasshi was picked over it (Arcade, say): Kasshi's X goes
+     *  back there, not to [tabBeforeHub] (release audit 2026-11-27 E5). */
+    var sectionBeforeKasshi by remember { mutableStateOf<AppTab?>(null) }
     fun onHubRoute(): Boolean =
         navController.currentDestination?.hierarchy?.any { it.route == AppTab.HUB.route } == true
     /** The dock tab whose page is showing, a pushed page counting as its tab's. */
@@ -351,6 +354,8 @@ fun MainShell(
     val onHubNow = currentDestination?.hierarchy?.any { it.route == AppTab.HUB.route } == true
     LaunchedEffect(onHubNow) {
         if (onHubNow) HubRouter.noteEntered() else HubRouter.noteLeft()
+        // another tab came between: Kasshi's X goes back to that one (tabBeforeHub)
+        if (!onHubNow) sectionBeforeKasshi = null
     }
     /** Leaving for a Hub section: remember where from. */
     fun noteTabBeforeHub() {
@@ -846,6 +851,9 @@ fun MainShell(
         showHubMenu = false
         com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
         val leaving = !onHubRoute()
+        sectionBeforeKasshi = if (tab == AppTab.KASSHI && !leaving) {
+            HubRouter.openSection.value?.takeIf { it != AppTab.KASSHI }
+        } else null
         noteTabBeforeHub()
         HubRouter.open(tab)
         if (leaving) navigateToTab(navController, AppTab.HUB.route)
@@ -1223,7 +1231,12 @@ fun MainShell(
                     // It asks first which address signs you in (iOS b49a021d, owner 2026-11-27),
                     // then Kasshi's own connect and sign-in go through with no more sheets.
                     signInFirst = true,
-                    onClose = { HubRouter.close() },
+                    // back to the Hub section it was picked over, else the tab you came from (E5)
+                    onClose = {
+                        val back = sectionBeforeKasshi?.takeIf { it in DockLayout.hub.value && it != AppTab.KASSHI }
+                        sectionBeforeKasshi = null
+                        if (back != null && HubRouter.openSection.value == AppTab.KASSHI) HubRouter.open(back) else HubRouter.close()
+                    },
                 )
             }
         }
@@ -1754,17 +1767,13 @@ object OwnAddressRoute {
 }
 
 /**
- * What a chat thread keeps clear for the dock: the part the keyboard doesn't already cover. The
- * thread's own bottomBar applies imePadding() to clear the keyboard, so reserving both left a dead
- * gap above a full keyboard; a floating keyboard or a hardware keyboard's small bar is shorter than
- * the dock, which stays on screen and must not cover the message box.
+ * What a chat thread keeps clear for the dock: the whole dock. The part the keyboard already
+ * covers comes off in the composer's layout (`threadDockPadding`), not here: read in composition,
+ * the keyboard's height recomposed this nav entry and its composer on every frame of its slide
+ * (audit 2026-11-27 Smoothness S8).
  */
-@Composable
-private fun threadDockInset(dockInset: Dp): Dp {
-    val density = LocalDensity.current
-    val keyboard = with(density) { WindowInsets.ime.getBottom(density).toDp() }
-    return (dockInset - keyboard).coerceAtLeast(0.dp)
-}
+@Suppress("NOTHING_TO_INLINE")
+private inline fun threadDockInset(dockInset: Dp): Dp = dockInset
 
 /**
  * One of your own addresses, opened from a tapped "Received" notification on its History tab

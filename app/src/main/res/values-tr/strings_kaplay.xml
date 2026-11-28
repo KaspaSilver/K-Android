@@ -318,14 +318,7 @@
     <string name="kp_f4fa709cb963" formatted="false">Çeyrek finaller</string>
     <string name="kp_3ce0ac6e9413" formatted="false">Sonuç gönderilmedi.</string>
     <string name="kaplay_leaderboard_all_time">Tüm zamanlar</string>
-    <string name="kaplay_leaderboard_counted_from">%1$s tarihinden beri sayılıyor.</string>
-    <string name="kaplay_leaderboard_period">Lider tablosu dönemi</string>
-    <string name="kaplay_leaderboard_resets_monthly">Her ayın 1\'inde sıfırlanır (UTC).</string>
     <string name="kaplay_leaderboard_this_month">Bu ay</string>
-    <string name="kaplay_no_finished_duels">Henüz biten 1v1 oyunu yok.</string>
-    <string name="kaplay_no_finished_duels_this_month">Bu ay henüz biten 1v1 oyunu yok.</string>
-    <string name="kaplay_no_finished_tournaments">Henüz biten turnuva yok.</string>
-    <string name="kaplay_no_finished_tournaments_this_month">Bu ay henüz biten turnuva yok.</string>
     <string name="kaplay_tab_leaderboard">Lider Tablosu</string>
     <string name="kp_640de0cb0b2c" formatted="false">Kaydın: %s galibiyet, %s mağlubiyet</string>
     <string name="kp_5d12bd53552c" formatted="false">Oyna</string>

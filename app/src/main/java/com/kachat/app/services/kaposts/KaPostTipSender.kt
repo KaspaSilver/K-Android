@@ -55,14 +55,7 @@ class KaPostTipSender @Inject constructor(
     ): Outcome {
         if (amountSompi <= 0) return Outcome.Failed("Enter a valid amount.")
         KaspaAddress.otherNetworkMessageRes(address)?.let { return Outcome.Failed(context.getString(it)) }
-        if (tip != null && !authorMatches(address, tip)) {
-            return Outcome.Failed(
-                com.kachat.app.util.UserFacingError.message(
-                    com.google.gson.JsonParseException("KaPost author doesn't match the chain"),
-                    fallback = "",
-                )
-            )
-        }
+        if (tip != null && !authorMatches(address, tip)) return Outcome.Failed(authorMismatchMessage())
         val own = runCatching { walletManager.getAddress() }.getOrNull()
         if (!address.equals(own, ignoreCase = true)) {
             // Paying someone is reaching out to them, as writing to them is (iOS 1eb4708).
@@ -103,6 +96,18 @@ class KaPostTipSender @Inject constructor(
      * that doesn't answer (or has no such post yet) doesn't stop the tip, which goes to the
      * person the post names, as before.
      */
+    /** [authorMatches] for a tip that doesn't go through [send]: a kUSDT tip on a post is checked
+     *  the same way before its send opens (audit 2026-11-27 B1), so a lying indexer can't steer
+     *  dollars to an impostor either. */
+    suspend fun verifyAuthor(address: String, tip: KaPostTip): Boolean = authorMatches(address, tip)
+
+    /** What a tip refused by [authorMatches] says, KAS or kUSDT alike. */
+    fun authorMismatchMessage(): String =
+        com.kachat.app.util.UserFacingError.message(
+            com.google.gson.JsonParseException("KaPost author doesn't match the chain"),
+            fallback = "",
+        )
+
     private suspend fun authorMatches(address: String, tip: KaPostTip): Boolean {
         val derived = KaPostsService.kaspaAddressFromPubkey(tip.authorPubkey) ?: return false
         if (!derived.equals(address, ignoreCase = true)) return false

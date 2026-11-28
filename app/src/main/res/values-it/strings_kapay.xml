@@ -2,7 +2,6 @@
 <!-- Portfolio, Cold Storage and Trestly, ported from KaPay (KaChat-Wallet-Android strings_kapay.xml
      and strings.xml) with the iPhone 148a5331 wording where it changed. Read through util/AppText.kt. -->
 <resources>
-    <string name="account_actions">Azioni account</string>
     <string name="add_kaspa_address">Aggiungi indirizzo Kaspa</string>
     <string name="add_transaction">Aggiungi transazione</string>
     <string name="addresses">Indirizzi</string>
@@ -16,7 +15,6 @@
     <string name="copy_kpub">Copia kpub</string>
     <string name="current_value">Valore attuale</string>
     <string name="delete_transaction">Elimina transazione</string>
-    <string name="enter_kpub">Inserisci kpub</string>
     <string name="export_csv">Esporta CSV</string>
     <string name="fee_usd_optional">Commissione (opzionale)</string>
     <string name="holdings">Portafoglio</string>
@@ -208,13 +206,10 @@
     <string name="kp_you_receive">Ricevi</string>
     <string name="kp_you_receive_about">Ricevi circa</string>
     <string name="kp_you_saw">Avevi visto</string>
-    <string name="kpub_2">kpub...</string>
-    <string name="name_this_address">Assegna un nome a questo indirizzo</string>
     <string name="no_app_to_open_link">Nessuna app su questo telefono può aprire il link</string>
     <string name="notes_optional">Note (opzionale)</string>
     <string name="paste_from_clipboard">Incolla dagli appunti</string>
     <string name="paste_kpub">Incolla kpub</string>
-    <string name="paste_the_kpub_exported_from_your">Incolla la kpub esportata dal tuo dispositivo KasSigner. Non contiene materiale di chiave privata.</string>
     <string name="pf_actions_add">Aggiungi</string>
     <string name="pf_actions_import_export">Importa ed esporta</string>
     <string name="pf_add_kaspa_address_sub">Segui il saldo di un indirizzo come parte di questo portafoglio.</string>
@@ -253,7 +248,6 @@
     <string name="qr_point_camera_kassigner">Punta la fotocamera verso lo schermo di KasSigner</string>
     <string name="quantity">Quantita</string>
     <string name="remove_cold_storage_account">Rimuovi account cold storage</string>
-    <string name="rename_cold_storage_account">Rinomina account cold storage</string>
     <string name="scan">Scansiona</string>
     <string name="scan_kpub_from_kassigner">Scansiona kpub da KasSigner</string>
     <string name="scan_signed_transaction">Scansiona transazione firmata</string>

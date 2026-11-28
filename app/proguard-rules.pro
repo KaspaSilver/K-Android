@@ -15,18 +15,28 @@
 # has isMinifyEnabled = false so this never reproduced there).
 -keepclassmembers class com.kachat.app.util.** { *; }
 
-# A Gson-persisted payload outside services/models/util, so nothing above covers it: R8 was free
-# to rename its fields, which makes the persisted JSON readable only by the exact build that
-# wrote it. The Send screens' KAS price (it reads the key Portfolio's price cache wrote, with the
-# same field names).
--keepclassmembers class com.kachat.app.repository.KasPriceRepository$StoredCurrentPrice { *; }
+# Gson-persisted payloads outside services/models/util, so nothing above covers them: R8 is free
+# to rename their fields, which makes the persisted JSON readable only by the exact build that
+# wrote it. (The KAS price Portfolio and the Send screens share is no longer one of them: since
+# release audit 2026-11-27 L1 both write and read it by name in StoredKasPrice, no reflection.
+# Before that only the Send screens' copy of the class was kept here, so each side read the
+# other's record as price 0.)
+
+# Release audit 2026-11-27 L1: more Gson-saved classes outside services/models/util. The release
+# mapping had renamed these fields (a, b, c...), so the saved JSON was readable only while R8 kept
+# handing out the same short names. Portfolio's price-history files, and Cold Storage's
+# address-list snapshot (read back filtered: a row without `address` is dropped).
+-keepclassmembers class com.kachat.app.repository.PortfolioRepository$StoredPricePoint { *; }
+-keepclassmembers class com.kachat.app.repository.PortfolioRepository$StoredPriceHistory { *; }
+-keepclassmembers class com.kachat.app.viewmodels.ColdStorageViewModel$AddressRow { *; }
 
 # And two more in repository (audit AND-001): the per-network connection settings the Testnet
 # switch sets aside, and one wallet's Message Requests state. Release builds before this rule
 # wrote both with renamed fields; the stores detect such a record by its keys and reset it once
 # (PersistedJson) instead of misreading it - Stored's four lists share one type, so a shifted
 # mapping could have read the blocked list as the accepted one. Every other Gson-persisted class
-# lives in services/models/util (kept above) or is listed here.
+# lives in services/models/util (kept above) or is listed here; GsonKeepRulesTest fails when a
+# class outside those packages is handed to Gson without a rule.
 -keepclassmembers class com.kachat.app.repository.ConnectionProfile { *; }
 -keepclassmembers class com.kachat.app.repository.ChatRequestStore$Stored { *; }
 

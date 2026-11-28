@@ -245,25 +245,19 @@ fun ChatThreadScreen(
     // the same 160-row window and pages older history in from the store).
     // Each flow is remembered: built inline, a new instance on every recomposition restarted its
     // collection and re-ran the window query (media included) for nothing.
-    val threadMessagesFlow = remember(contactId) { chatViewModel.threadMessages(contactId) }
+    // The thread model (filter, part grouping, chess sources) is built off the main thread from
+    // the window and the older pages (audit 2026-11-27 Smoothness S1).
+    val threadModelFlow = remember(contactId) { chatViewModel.threadModel(contactId) }
     // The thread's queries stop with the app in the background (audit 2026-11-25 R6).
-    val allMessages by threadMessagesFlow.collectAsStateWhileStarted(initial = emptyList())
+    val threadModel by threadModelFlow.collectAsStateWhileStarted(initial = ChatThreadModel.EMPTY)
     val isLoadingOlderFlow = remember(contactId) { chatViewModel.isLoadingOlderMessages(contactId) }
     val isLoadingOlderMessages by isLoadingOlderFlow.collectAsState(initial = false)
     val hasOlderFlow = remember(contactId) { chatViewModel.hasOlderMessages(contactId) }
     val hasOlderMessages by hasOlderFlow.collectAsState(initial = true)
-    // "Sent via another device" rows are backup fill-in slots, never UI (matches iOS and the
-    // chess mini chat); legacy restores from pre-1d236ba builds can still hold such rows.
-    // Messages this account can't decrypt are hidden the same way (isHiddenPlaceholder).
-    val visibleMessages = remember(allMessages) { allMessages.filterNot { it.isHiddenPlaceholder } }
-    // Long voice notes' and multi-part photos' parts (iOS 7c5c22e3, MESSAGING.md "Long voice
-    // notes (multi-part)"): each shows as one row, its earliest part; the other parts are left out.
-    val mediaPartGroups = remember(visibleMessages) {
-        com.kachat.app.util.VoicePartGrouping.group(visibleMessages, com.kachat.app.repository.ChatMessagePartAccessors)
-    }
-    val messages = remember(visibleMessages, mediaPartGroups) {
-        if (mediaPartGroups.hiddenTxIds.isEmpty()) visibleMessages else visibleMessages.filterNot { it.id in mediaPartGroups.hiddenTxIds }
-    }
+    // Hidden placeholders left out and one row per long voice note / multi-part photo (iOS
+    // 7c5c22e3, MESSAGING.md "Long voice notes (multi-part)"): see ChatThreadModel.
+    val mediaPartGroups = threadModel.mediaPartGroups
+    val messages = threadModel.messages
     // An empty bot chat, on an account with Kaspa to send a message with (iOS shouldShowBotPrompt).
     val chattingBalanceSompi by walletViewModel.balanceSompi.collectAsState()
     val shouldShowBotPrompt = isBotChat && botThreadLoaded && messages.isEmpty() && chattingBalanceSompi > 0L
@@ -751,28 +745,27 @@ fun ChatThreadScreen(
         }
     }
 
-    // Drives the toolbar's quick-access chess icon - null hides it entirely. Computed up here
-    // (rather than reusing the content lambda's own `chessSourceMessages` below) since `topBar`
-    // is a sibling Composable lambda, not nested inside the content lambda, so that one isn't in
-    // scope here.
-    val activeChessGame = remember(messages, myAddress) {
+    // Drives the toolbar's quick-access chess icon - null hides it entirely. The chess rows come
+    // from the thread model, worked out once off the main thread and shared by this and the list
+    // below (audit 2026-11-27 Smoothness S1).
+    val chessSourceMessages = threadModel.chessSources
+    val activeChessGame = remember(chessSourceMessages, myAddress) {
         val address = myAddress ?: return@remember null
-        val sourceMessages = messages.filter { mayHoldChess(it.plaintextBody) }.map {
-            com.kachat.app.util.ChessGameEngine.SimpleChessSourceMessage(
-                id = it.id,
-                plaintextBody = it.plaintextBody,
-                isOutgoing = it.direction == "sent",
-                blockTimestamp = it.blockTimestamp,
-                sendFailed = it.direction == "sent" && it.deliveryStatus == "failed"
-            )
-        }
-        com.kachat.app.util.ChessGameEngine.activeGame(sourceMessages, address, contactId)
+        com.kachat.app.util.ChessGameEngine.activeGame(chessSourceMessages, address, contactId)
     }
 
     // Hoisted out of the content lambda for the same reason `activeChessGame` above is: `topBar`
     // is a sibling Composable lambda, and its "tap the header to go to the first message" needs
     // this list.
-    val scrollState = rememberLazyListState()
+    // Made once the first window is in, already at its newest row (audit 2026-11-27 Smoothness
+    // S10): a list made empty composed the window at index 0 for a frame before the jump to the
+    // bottom - the oldest rows' image and voice parses and decodes, all thrown away at once.
+    val firstWindowLatch = remember(contactId) { BooleanArray(1) }
+    if (!firstWindowLatch[0] && messages.isNotEmpty()) firstWindowLatch[0] = true
+    val firstWindowIn = firstWindowLatch[0]
+    val scrollState = remember(contactId, firstWindowIn) {
+        androidx.compose.foundation.lazy.LazyListState(firstVisibleItemIndex = if (firstWindowIn) messages.lastIndex else 0)
+    }
     val coroutineScope = rememberCoroutineScope()
     val haptic = com.kachat.app.util.rememberHaptics()
     // The header bell (iOS 8cb4c88e `isChatSilenced`): the contact's notification override is
@@ -937,7 +930,8 @@ fun ChatThreadScreen(
             val dockInset = LocalDockInset.current
             Column(
                 modifier = Modifier
-                    .padding(bottom = dockInset)
+                    // the dock less the keyboard, worked out in layout (audit 2026-11-27 S8)
+                    .threadDockPadding(dockInset)
                     // iOS's composer floats over the thread: the messages show through, fading
                     // under it, as on the public room (not an opaque band).
                     .background(
@@ -1701,7 +1695,7 @@ fun ChatThreadScreen(
         // Hoisted: WindowInsets.ime is a @Composable getter and cannot be read inside snapshotFlow.
         val imeInsets = WindowInsets.ime
         val liveMessageCount by rememberUpdatedState(messages.size)
-        LaunchedEffect(Unit) {
+        LaunchedEffect(scrollState) {
             snapshotFlow { imeInsets.getBottom(imeDensity) }
                 .collect {
                     if (pinToBottomForIme && liveMessageCount > 0) {
@@ -1722,7 +1716,7 @@ fun ChatThreadScreen(
         // The newest list size as state: a plain `messages` read here would stay the first (empty)
         // list forever, and the button would never show (as BroadcastScreens' room).
         val latestLastIndex by rememberUpdatedState(messages.lastIndex)
-        val showScrollToBottom by remember {
+        val showScrollToBottom by remember(scrollState) {
             derivedStateOf {
                 val lastVisibleIndex = scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
                 lastVisibleIndex != null && lastVisibleIndex < latestLastIndex - 1
@@ -1731,22 +1725,8 @@ fun ChatThreadScreen(
 
         // Computed here (not inside the LazyColumn content below) - LazyListScope's item-builder
         // lambda isn't a real @Composable context, so a bare remember() call in it fails to
-        // compile ("@Composable invocations can only happen from the context of a @Composable
-        // function").
-        // Only messages holding a chess type's bytes: the summaries and the newest-move scan
-        // parsed every message of the history on each change (iOS 01f71184 `PayloadSniff`, audit
-        // 2026-11-27 C1).
-        val chessSourceMessages = remember(messages) {
-            messages.filter { mayHoldChess(it.plaintextBody) }.map {
-                com.kachat.app.util.ChessGameEngine.SimpleChessSourceMessage(
-                    id = it.id,
-                    plaintextBody = it.plaintextBody,
-                    isOutgoing = it.direction == "sent",
-                    blockTimestamp = it.blockTimestamp,
-                    sendFailed = it.direction == "sent" && it.deliveryStatus == "failed"
-                )
-            }
-        }
+        // compile. chessSourceMessages (only messages holding a chess type's bytes, iOS 01f71184
+        // `PayloadSniff`) is the thread model's, see activeChessGame above.
         // Worked out once per change to the messages, not once per chess row (each row used to
         // summarize its whole game and re-parse every later message): each game's summary on the
         // first row that asks, and each game's newest move time, computed only when a chess row
@@ -1818,7 +1798,8 @@ fun ChatThreadScreen(
                             }
                         }
                     }
-                    itemsIndexed(messages, key = { _, msg -> msg.id }) { index, msg ->
+                    // Rows of one shape share a reuse pool (audit 2026-11-27 Smoothness S4).
+                    itemsIndexed(messages, key = { _, msg -> msg.id }, contentType = { _, msg -> threadModel.rowKind(msg) }) { index, msg ->
                         if (index == 0 || !ChatTimeFormat.isSameDay(messages[index - 1].blockTimestamp, msg.blockTimestamp)) {
                             // iOS: the separator is a row of its own in a list spaced 8, padded
                             // 10 above and 2 below, under a 1pt top anchor. Here it shares the
@@ -2390,8 +2371,11 @@ fun ChatThreadScreen(
 /** Whether [body] can be a chess message (or a reply to one): it holds `"chess_`, the start of
  *  every chess type, so the JSON decode is skipped for nearly every message (iOS 01f71184
  *  `PayloadSniff.chessType`). A reply wraps the chess JSON as an escaped string, which still
- *  holds it. */
-internal fun mayHoldChess(body: String?): Boolean = body != null && body.contains("\"chess_")
+ *  holds it. A photo or voice note (a media envelope, told from its first 2 KB) is answered
+ *  before the scan: its tens of KB of base64 can never hold a chess move (audit 2026-11-27
+ *  Smoothness S1). */
+internal fun mayHoldChess(body: String?): Boolean =
+    body != null && com.kachat.app.util.InlineMediaSniff.mimeType(body) == null && body.contains("\"chess_")
 
 /**
  * The new-chat handshake warning, matching desktop's `handshake-warning-banner` word for word.
@@ -2495,7 +2479,7 @@ private fun MessageRequestBar(onAccept: () -> Unit, onReject: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = dockInset)
+            .threadDockPadding(dockInset)
             .background(colors.background)
             .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -2759,15 +2743,20 @@ fun MessageBubble(
         mediaParts?.let { MediaPartsInput.of(it) { part -> part.plaintextBody } }?.takeIf { it.parts.isNotEmpty() }
     }
     val joinedPhoto = remember(mediaPartsInput?.signature) { mediaPartsInput?.let { joinedPhotoContent(it) } }
-    val imageContent = remember(displayBody, joinedPhoto, mediaPartsInput?.isPhoto) {
-        if (mediaPartsInput?.isPhoto == true) joinedPhoto else ImageMessage.parseOrNull(displayBody)
-    }
-    // Remembered like the image above, and for the same reason: parsing a voice message
-    // deserializes the WHOLE payload, tens of kilobytes of base64, and this bubble asked for it
-    // three separate times per recomposition - once to decide it was audio, once to build the
-    // bubble, and once more in the plain-text test below. Same for the image, which was parsed
-    // twice more despite already being remembered here.
+    // Remembered for the same reason as the image below: parsing a voice message deserializes
+    // the WHOLE payload, tens of kilobytes of base64, and this bubble asked for it three separate
+    // times per recomposition - once to decide it was audio, once to build the bubble, and once
+    // more in the plain-text test below.
     val voiceContent = remember(displayBody) { VoiceMessage.parseOrNull(displayBody) }
+    // A voice note is never also a photo: its image parse is skipped, as the group bubble does
+    // (audit 2026-11-27 Smoothness S3).
+    val imageContent = remember(displayBody, joinedPhoto, mediaPartsInput?.isPhoto, voiceContent) {
+        when {
+            mediaPartsInput?.isPhoto == true -> joinedPhoto
+            voiceContent != null -> null
+            else -> ImageMessage.parseOrNull(displayBody)
+        }
+    }
     val chessEnvelope = remember(displayBody) { com.kachat.app.util.ChessMessage.parseOrNull(displayBody) }
     // Only the plain, non-truncated text bubble ever shows a link preview - hoisted up here
     // (rather than computed inline where it's used) so `separateLinkPreviewUrl`'s card can be
@@ -3267,7 +3256,7 @@ fun MessageBubble(
                         ActionSheetRow(
                             icon = Icons.Default.Download,
                             title = stringResource(R.string.save_photo),
-                            subtitle = "Saves the photo to your gallery.",
+                            subtitle = stringResource(R.string.rel5_saves_photo_to_gallery),
                         ) {
                             try {
                                 val bytes = android.util.Base64.decode(ImageMessage.base64Payload(imageContent), android.util.Base64.DEFAULT)
@@ -3471,7 +3460,7 @@ private fun ChessInviteBubble(
     // while messages are still loading) so "Chess - 3 | 2" shows the moment the bubble renders.
     // The numbers on the wire are the sender's word: only ones a game could be played at show
     // (iOS 4f8e14bb).
-    val timeControlLabel = com.kachat.app.util.ChessTimeControl.fromInvite(invite)?.let { "Chess - ${it.label}" }
+    val timeControlLabel = com.kachat.app.util.ChessTimeControl.fromInvite(invite)?.let { stringResource(R.string.rel5_chess_time_control, it.label) }
     val showsResponseButtons = !isSent && summary?.status?.kind == com.kachat.app.util.ChessGameStatusKind.PENDING_RESPONSE
     Surface(
         color = LocalAppColors.current.surfaceVariant,
@@ -3546,7 +3535,7 @@ private fun ChessLiveCard(summary: com.kachat.app.util.ChessGameSummary, onOpen:
             val timeControlLabel = summary.timeControlLabel
             if (timeControlLabel != null) {
                 Spacer(Modifier.height(2.dp))
-                Text("Chess - $timeControlLabel", color = LocalAppColors.current.textSecondary, fontSize = 11.sp)
+                Text(stringResource(R.string.rel5_chess_time_control, timeControlLabel), color = LocalAppColors.current.textSecondary, fontSize = 11.sp)
             }
         }
     }
@@ -4933,30 +4922,6 @@ fun ManageAddressesScreen(
     }
 }
 
-/** The floating glass button behind "Address Actions" on [ManageAddressesScreen] (iOS d1844582
- *  `addressActionsButton`), a spinner while an action runs. */
-@Composable
-internal fun AddressActionsFloatingButton(isBusy: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val haptic = com.kachat.app.util.rememberHaptics()
-    Box(
-        modifier = modifier
-            .size(56.dp)
-            .iosGlass(cornerRadius = 28.dp)
-            .clickable(enabled = !isBusy) {
-                haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
-                onClick()
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        if (isBusy) {
-            com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(18.dp))
-        } else {
-            // "slider.horizontal.3"
-            Icon(Icons.Default.Tune, contentDescription = stringResource(R.string.address_actions), tint = KaspaTeal, modifier = Modifier.size(26.dp))
-        }
-    }
-}
-
 /** Manage Addresses' floating + (iOS 824a30bb `newAddressButton`): a spinner while an address is
  *  being made; [enabled] false (half opacity, set by the caller) while a pull-down Discover runs. */
 @Composable
@@ -5977,17 +5942,21 @@ fun SpendingAddressSendFlow(
         val customExtra = customExtraFeeSompi
         // A request to a chatting address goes out as a chat payment, its memo encrypted inside:
         // priced as that, not as a plain transfer (iOS 4f8e14bb).
-        val chatPaymentPayload = activeRequest
+        val chatPaymentRequest = activeRequest
             ?.takeIf { it.toChattingAddress && it.address.equals(feeRecipient, ignoreCase = true) && !isCompoundMode && requestChatViewModel != null }
+        val chatPaymentPayload = chatPaymentRequest
             ?.let { com.kachat.app.util.MessageProtocol.estimatedPaymentPayloadSize(it.memo.trim(), estimatedAmount) }
             ?: 0
+        // Priced as the chat payment it sends (audit A5): From a spending address no payload,
+        // confirmed coins only, change on a fresh quantum-safe slot.
+        val asChatPayment = chatPaymentRequest != null
         try {
-            val base = viewModel.estimateSendFee(sourceAddress, sourceIndex, estimatedAmount, manualUtxos, recipientScriptLen, toAddress = feeRecipient, payloadSize = chatPaymentPayload)
+            val base = viewModel.estimateSendFee(sourceAddress, sourceIndex, estimatedAmount, manualUtxos, recipientScriptLen, toAddress = feeRecipient, payloadSize = chatPaymentPayload, chatPayment = asChatPayment)
             val extra = com.kachat.app.util.SendFeeModel.extraFee(base.networkFeeSompi, tier.multiplier, customExtra)
             // With the extra in, its network fee already holds the extra; change too small to keep
             // goes on top.
             val paid = if (extra > 0L) {
-                viewModel.estimateSendFee(sourceAddress, sourceIndex, estimatedAmount, manualUtxos, recipientScriptLen, extraFeeSompi = extra, toAddress = feeRecipient, payloadSize = chatPaymentPayload)
+                viewModel.estimateSendFee(sourceAddress, sourceIndex, estimatedAmount, manualUtxos, recipientScriptLen, extraFeeSompi = extra, toAddress = feeRecipient, payloadSize = chatPaymentPayload, chatPayment = asChatPayment)
             } else {
                 base
             }
@@ -6034,7 +6003,16 @@ fun SpendingAddressSendFlow(
                     // iOS SpendingAddressWithdrawView's Compound says nothing of the cap
                     maxCapped = false
                 } else {
-                    val max = viewModel.estimateMaxSendableAmount(sourceAddress, sourceIndex, manualUtxos, maxTier.multiplier, maxCustomExtra, recipientScriptLen)
+                    // A chat=1 request goes out as a chat payment: its Max leaves room for the
+                    // payload it carries from the chatting address (audit A5).
+                    val maxChatRequest = activeRequest
+                        ?.takeIf { it.toChattingAddress && it.address.equals(feeRecipient, ignoreCase = true) && !isCompoundMode && requestChatViewModel != null }
+                    val max = viewModel.estimateMaxSendableAmount(
+                        sourceAddress, sourceIndex, manualUtxos, maxTier.multiplier, maxCustomExtra, recipientScriptLen,
+                        // priced on the largest amount there can be: the payload's amount field only grows with it
+                        payloadSize = maxChatRequest?.let { com.kachat.app.util.MessageProtocol.estimatedPaymentPayloadSize(it.memo.trim(), Long.MAX_VALUE / 4) } ?: 0,
+                        chatPayment = maxChatRequest != null,
+                    )
                     if (maxRequest != request) return@launch
                     fiatAmountState.setExactKas(KaspaUnit.plain(max.amountSompi), fiatPriceInCurrency)
                     maxCapped = max.cappedAtInputLimit && !(isCompoundMode && coinsPickedByHand)
@@ -7417,6 +7395,8 @@ private fun SpendingAddressPrivateKeyOverlay(privateKeyHex: String, onDismiss: (
             window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
+    // no other app's overlay over Reveal and Copy (security audit 2026-11-27 S3)
+    OverlayTouchGuard()
 
     LaunchedEffect(revealed) {
         if (revealed) {
@@ -8524,6 +8504,8 @@ fun SeedPhraseScreen(viewModel: WalletViewModel, onBack: () -> Unit) {
             window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
+    // no other app's overlay over Reveal and Copy (security audit 2026-11-27 S3)
+    OverlayTouchGuard()
 
     // Auto-hides the words again after a window long enough to write them down (20 s, iOS d063b897;
     // the private key reveals stay at 7) instead of leaving them on screen indefinitely once
@@ -11540,89 +11522,7 @@ fun AllNodeRow(node: NodeInfo) {
     }
 }
 
-@Composable
-fun rememberQrBitmapPainter(
-    content: String,
-    size: Int = 512,
-    padding: Int = 0
-): BitmapPainter {
-    val density = LocalDensity.current
-    val sizePx = with(density) { size.dp.roundToPx() }
-    
-    val bitmap = remember(content) {
-        if (content.isEmpty()) {
-            Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888).asImageBitmap()
-        } else {
-            val matrix = QRCodeWriter().encode(
-                content,
-                BarcodeFormat.QR_CODE,
-                sizePx,
-                sizePx,
-                mapOf(EncodeHintType.MARGIN to padding)
-            )
-            val w = matrix.width
-            val h = matrix.height
-            // One setPixels() beats width*height individual bounds-checked setPixel() calls
-            // (~262k for a 512px QR) by 1-2 orders of magnitude - this runs on the main thread
-            // inside remember{}, and the animated (KSPT) variant re-encodes every 2.5s.
-            val pixels = IntArray(w * h)
-            for (y in 0 until h) {
-                val row = y * w
-                for (x in 0 until w) {
-                    pixels[row + x] = if (matrix.get(x, y)) AndroidColor.BLACK else AndroidColor.WHITE
-                }
-            }
-            val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            bitmap.setPixels(pixels, 0, w, 0, 0, w, h)
-            bitmap.asImageBitmap()
-        }
-    }
-    return BitmapPainter(bitmap)
-}
-
-/**
- * Byte-mode QR encoding for raw binary payloads (e.g. a KSPT transaction frame) — ISO-8859-1 maps
- * every byte 1:1 to a char and back, so wrapping [bytes] this way and forcing ZXing's
- * `CHARACTER_SET` hint round-trips the exact bytes through its String-based encoder in byte mode,
- * matching KasSigner's own raw-byte QR encoding (`qrcode::QrCode::new(&[u8])`) on the other end.
- */
-@Composable
-fun rememberQrBitmapPainter(
-    bytes: ByteArray,
-    size: Int = 512,
-    padding: Int = 0
-): BitmapPainter {
-    val density = LocalDensity.current
-    val sizePx = with(density) { size.dp.roundToPx() }
-
-    val bitmap = remember(bytes) {
-        if (bytes.isEmpty()) {
-            Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888).asImageBitmap()
-        } else {
-            val content = String(bytes, Charsets.ISO_8859_1)
-            val matrix = QRCodeWriter().encode(
-                content,
-                BarcodeFormat.QR_CODE,
-                sizePx,
-                sizePx,
-                mapOf(EncodeHintType.MARGIN to padding, EncodeHintType.CHARACTER_SET to "ISO-8859-1")
-            )
-            val w = matrix.width
-            val h = matrix.height
-            val pixels = IntArray(w * h)
-            for (y in 0 until h) {
-                val row = y * w
-                for (x in 0 until w) {
-                    pixels[row + x] = if (matrix.get(x, y)) AndroidColor.BLACK else AndroidColor.WHITE
-                }
-            }
-            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            bmp.setPixels(pixels, 0, w, 0, 0, w, h)
-            bmp.asImageBitmap()
-        }
-    }
-    return BitmapPainter(bitmap)
-}
+// rememberQrBitmapPainter (both forms): QrCodeImages.kt, made off the main thread at module size.
 
 /** How a receive page ([AddressReceivePage]) is closed - iOS puts a different control in its bar for each way it
  *  presents the page. */

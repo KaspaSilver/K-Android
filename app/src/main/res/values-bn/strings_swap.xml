@@ -2,7 +2,6 @@
 <!-- Swap (iPhone 5.4 518fdc8c: SwapView, SwapService, TrestlyTrade), from the iPhone's
      Localizable.strings for the same keys. -->
 <resources>
-    <string name="swap_title">সোয়াপ</string>
     <string name="swap_failed">সোয়াপ ব্যর্থ হয়েছে</string>
     <string name="swap_couldnt_read_amounts">এই সোয়াপের পরিমাণ পড়া যায়নি</string>
     <string name="swap_already_holds">এই সোয়াপটি আগেই আছে - আবার যোগ করলে দুবার গোনা হবে।</string>
@@ -14,7 +13,6 @@
     <string name="swap_destination_tag_optional">ডেস্টিনেশন ট্যাগ (ঐচ্ছিক)</string>
     <string name="swap_destination_tag_hint">শুধু যদি গ্রহণকারী ঠিকানার এটি দরকার হয়, যেমন বেশিরভাগ এক্সচেঞ্জের হয়। এটি ছাড়া এক্সচেঞ্জ আপনার কয়েন জমা করতে পারবে না।</string>
     <string name="swap_from_kusdt_lands">যেখান থেকে সোয়াপ (kUSDT এখানে আসে)</string>
-    <string name="swap_from_kas_lands">যেখান থেকে সোয়াপ (KAS এখানে আসে)</string>
     <string name="swap_change">বদলান</string>
     <string name="swap_powered_by_trestly">Trestly চালিত</string>
     <string name="swap_powered_by_changenow">ChangeNOW চালিত</string>
@@ -48,8 +46,6 @@
     <string name="swap_deposit_address">জমার ঠিকানা</string>
     <string name="swap_couldnt_reach_changenow">ChangeNOW-এ পৌঁছানো যায়নি - আবার চেষ্টা করুন</string>
     <string name="swap_details">সোয়াপের বিবরণ</string>
-    <string name="swap_used">ব্যবহৃত</string>
-    <string name="swap_unused">অব্যবহৃত</string>
     <string name="swap_search_coins">কয়েন খুঁজুন</string>
     <string name="swap_agreements_intro">সোয়াপ এমন দুটি সেবা ব্যবহার করে যা K চালায় না। চালিয়ে যাওয়ার আগে দুটিই পড়ুন এবং সম্মত হন।</string>
     <string name="swap_coins_on_other_networks">অন্য নেটওয়ার্কের কয়েন</string>

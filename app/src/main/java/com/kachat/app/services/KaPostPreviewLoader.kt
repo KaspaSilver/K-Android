@@ -39,8 +39,9 @@ class KaPostPreviewLoader @Inject constructor(
 ) {
     private val client = okHttpClient.newBuilder().callTimeout(15, TimeUnit.SECONDS).build()
     private val lock = Mutex()
-    private val cache = HashMap<String, KaPostPreview>()
-    private val misses = HashMap<String, Long>()
+    // Bounded: one entry per linked post ever shown, until the process died (audit 2026-11-27 R9).
+    private val cache = BoundedLruMap<String, KaPostPreview>(BoundedLruMap.KAPOST_CACHE_ENTRIES)
+    private val misses = BoundedLruMap<String, Long>(BoundedLruMap.KAPOST_CACHE_ENTRIES)
     private val inFlight = HashMap<String, CompletableDeferred<KaPostPreview?>>()
 
     fun cached(txId: String): KaPostPreview? = synchronized(cache) { cache[txId] }

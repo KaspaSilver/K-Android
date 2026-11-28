@@ -7,6 +7,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.kachat.app.repository.AppSettingsRepository
 import com.kachat.app.util.KaspaUnit
+import com.kachat.app.util.stringOrFormat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -550,7 +551,7 @@ class AddressActivityNotifier @Inject constructor(
 
     /** A notice's text in the app's language (Settings > Language), as iOS `AppLocalization`. */
     private fun notice(res: Int, vararg args: Any): String =
-        runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { context.getString(res, *args) }
+        runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { context.stringOrFormat(res, *args) }
 
     private fun describe(address: String): String {
         if (address == walletAddressOrNull()) return notice(com.kachat.app.R.string.notice_chatting_address, shortAddress(address))

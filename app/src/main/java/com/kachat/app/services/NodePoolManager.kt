@@ -62,13 +62,10 @@ import javax.inject.Singleton
 class NodePoolManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val settings: AppSettingsRepository,
-    // For the probe-loop background gate only (same rule as ChatRepository's 2s sync loop):
-    // while the app is backgrounded AND native FCM push is active, probing pauses instead of
-    // dialing nodes every 5-30s for the whole life of a battery-exempted background process.
-    // Both are dependency-cycle-safe here: NotificationHelper needs only Context + settings,
-    // and PushState is deliberately dependency-free.
+    // For the probe-loop background gate: while the app is backgrounded probing pauses, push or
+    // not (audit 2026-11-27 R1, R2). Dependency-cycle-safe: NotificationHelper needs only
+    // Context + settings.
     private val notificationHelper: NotificationHelper,
-    private val pushState: PushState,
     // Metered-network (cellular) gate for discovery-mode probing — see probeCycle() and
     // startProbing(): a healthy pool probes only its primary node at a slower cadence, and
     // the other pooled connections are closed between cycles so their HTTP/2 keepalive pings
@@ -213,7 +210,7 @@ class NodePoolManager @Inject constructor(
     /** Whether an account is signed in ([WalletManager.signedInAddressFlow]). */
     private val signedIn = MutableStateFlow(!walletManager.isLoggedOut && walletManager.activeAddressFlow.value != null)
 
-    /** In the background with push, and while signed out: closes connections nothing has used for
+    /** In the background, and while signed out: closes connections nothing has used for
      *  a while, for as long as any are open (audit 2026-11-25 N6). */
     private var idleCloseJob: Job? = null
 
@@ -223,8 +220,9 @@ class NodePoolManager @Inject constructor(
     private val wifiFullWaveEveryCycles = 10
     private var cyclesSinceFullWave = 0
 
-    /** Probe cadence while backgrounded with no push (see startProbing). */
-    private val backgroundNoPushDelayMillis = 120_000L
+    /** The longest wait of a cycle that ended in the background, before the gate pauses (see
+     *  startProbing). */
+    private val backgroundDelayMillis = 120_000L
 
     // True once probing has concluded that no Kaspa gRPC node is reachable at all on the
     // current network (every candidate dead for 2+ consecutive automatic-mode cycles, or the
@@ -395,7 +393,7 @@ class NodePoolManager @Inject constructor(
         registerNetworkCallback()
 
         // Signed out: probing pauses (see [probingPaused]) and the idle connections close, as in
-        // the background with push (audit 2026-11-25 N12, B6).
+        // the background (audit 2026-11-25 N12, B6; 2026-11-27 R1).
         scope.launch {
             walletManager.signedInAddressFlow.collect { address ->
                 val now = address != null
@@ -576,7 +574,7 @@ class NodePoolManager @Inject constructor(
     }
 
     /** Back online on the network K was on: what waited for the network goes again. While
-     *  probing is paused (background with push, or signed out) nothing is dialed: the return to
+     *  probing is paused (background, or signed out) nothing is dialed: the return to
      *  the front reconnects (audit 2026-11-25 N4). */
     private fun onBackOnline() {
         publicFallbackAnchor = System.currentTimeMillis()
@@ -611,18 +609,21 @@ class NodePoolManager @Inject constructor(
         prunedAt.clear()
         _nodeConnectionsBlocked.value = false
         publish()
-        // In the background with push, or signed out, nothing is dialed on a network change: a new
+        // In the background, or signed out, nothing is dialed on a network change: a new
         // connection here was pinned and kept alive until the next foreground (audit 2026-11-25
         // N4). The return to the front, or signing in, probes at once.
         if (probingPaused()) return
         refreshNow()
     }
 
-    /** Probing pauses while signed out (audit 2026-11-25 N12), and in the background while push
-     *  delivers (audit B3) or nothing found could be shown (notifications off in K or Android,
-     *  N7: [PushState.backgroundQuiet]). */
+    /** Probing pauses while signed out (audit 2026-11-25 N12), and in the background whether or
+     *  not push delivers (audit 2026-11-27 R1, R2; B3 and N7 paused it only with push or with
+     *  notifications off). Nothing in the no-push background needs a node: the light 1:1 pass and
+     *  the room poll read the indexer, and a notification's Reply or a send dials its node on
+     *  demand through [connectionFor]. Without this the primary was kept with a 60 s HTTP/2
+     *  keepalive all night, and a pool short of 8 nodes ran a full discovery wave every 2 min. */
     private fun probingPaused(): Boolean =
-        !signedIn.value || (!notificationHelper.isAppInForeground && pushState.backgroundQuiet.value)
+        !signedIn.value || !notificationHelper.isAppInForeground
 
     private fun activeCount(): Int = registry.snapshot().count { registry.statusOf(it) == "Active" }
 
@@ -630,20 +631,18 @@ class NodePoolManager @Inject constructor(
         probeJob?.cancel()
         probeJob = scope.launch {
             while (true) {
-                // Background gate, mirroring ChatRepository's poll-loop gate: while the app is
-                // BACKGROUNDED and native FCM push is active, stop dialing nodes entirely
-                // (suspend on the combined flow — no keepalive traffic at all) and resume
-                // instantly on foreground or the moment push stops being reliable. On resume a
-                // probe cycle runs immediately, and the on-foreground
+                // Background gate: while the app is BACKGROUNDED, push or not, stop dialing nodes
+                // entirely (suspend on the combined flow: no probes, no discovery, no keepalive
+                // traffic) and resume instantly on foreground (audit 2026-11-27 R1, R2). On resume
+                // a probe cycle runs immediately, and the on-foreground
                 // reconnectStaleConnections() call in KaChatApplication independently revives
-                // any connections the OS quietly killed during the pause. Without FCM
-                // (pushActive can never turn true) this gate never engages, so the loop
-                // behaves exactly as before.
+                // any connections the OS quietly killed during the pause. A background cold start
+                // (SyncWorker, an FCM message) waits here too, so it never runs discovery.
                 // Signed out it waits too (audit 2026-11-25 N12): nothing on the sign-in screen needs
                 // the pool, and a request that does dials its node itself.
                 if (probingPaused()) {
-                    combine(notificationHelper.appForegroundFlow, pushState.backgroundQuiet, signedIn) { foreground, quiet, signed ->
-                        signed && (foreground || !quiet)
+                    combine(notificationHelper.appForegroundFlow, signedIn) { foreground, signed ->
+                        signed && foreground
                     }.first { it }
                 }
                 // Offline every probe fails (and used to count against the node): wait for the
@@ -676,18 +675,21 @@ class NodePoolManager @Inject constructor(
                     // node dead: 20 s doubling to two minutes, until something answers; a network
                     // change resets both. Healthy: the foreground beat, and probeCycle itself shrinks
                     // to the primary on a metered path.
-                    NodeProbeCadence.automatic(consecutiveDeadCycles, activeAfter, targetActiveNodes, unhealthyStallCycles, meteredNetwork.isMetered)
+                    NodeProbeCadence.automatic(
+                        consecutiveDeadCycles, activeAfter, targetActiveNodes, unhealthyStallCycles, meteredNetwork.isMetered,
+                        beatMs = ForegroundBeat.intervalMs,
+                    )
                 }
                 val delayMillis = wait.millis
                 if (!notificationHelper.isAppInForeground) {
-                    // Backgrounded without push (the gate above lets only that through): the pool
-                    // stays up for what still needs it - a notification's Reply - but probes at a
-                    // background pace, and probeCycle keeps only the primary connected. No block
-                    // stream runs in the background (audit 2026-11-25 N1). The front of the app
-                    // ends the wait at once.
-                    kotlinx.coroutines.withTimeoutOrNull(maxOf(delayMillis, backgroundNoPushDelayMillis)) {
+                    // Went to the background during this cycle: the gate above pauses the next one.
+                    // The front of the app ends this wait at once.
+                    kotlinx.coroutines.withTimeoutOrNull(maxOf(delayMillis, backgroundDelayMillis)) {
                         notificationHelper.appForegroundFlow.first { it }
                     }
+                } else if (wait.onBeat && wait.millis > ForegroundBeat.intervalMs) {
+                    // A stretched unhealthy probe: the first beat at least that far away (R6).
+                    ForegroundBeat.sleepUntilBeatAtLeast(wait.millis, offsetMs = PROBE_BEAT_OFFSET_MS)
                 } else if (wait.onBeat) {
                     ForegroundBeat.sleepUntilNextBeat(offsetMs = PROBE_BEAT_OFFSET_MS)
                 } else {
@@ -870,6 +872,19 @@ class NodePoolManager @Inject constructor(
     private fun trustedKeepaliveMillis(): Long = ForegroundBeat.intervalMs
 
     /** Whether [address] was pruned as dead within the last hour (audit 2026-11-25 N8). */
+    /** Notes [address] as pruned. Gossip can name a new address every cycle for the life of the
+     *  process, so the memory is kept to [MAX_PRUNED_MEMORY] entries: the expired ones go first,
+     *  then the oldest (audit 2026-11-27 R9). */
+    private fun rememberPruned(address: String, nowMs: Long = System.currentTimeMillis()) {
+        prunedAt[address] = nowMs
+        if (prunedAt.size <= MAX_PRUNED_MEMORY) return
+        prunedAt.entries.removeIf { nowMs - it.value >= PRUNED_MEMORY_MS }
+        val excess = prunedAt.size - MAX_PRUNED_MEMORY
+        if (excess > 0) {
+            prunedAt.entries.sortedBy { it.value }.take(excess).forEach { prunedAt.remove(it.key, it.value) }
+        }
+    }
+
     private fun recentlyPruned(address: String, nowMs: Long = System.currentTimeMillis()): Boolean {
         val at = prunedAt[address] ?: return false
         if (nowMs - at < PRUNED_MEMORY_MS) return true
@@ -955,10 +970,19 @@ class NodePoolManager @Inject constructor(
         // so a slow resolver never delays dialing the seeds/persisted known-good nodes we
         // already have in hand — fresh DNS answers get their own probe wave later this cycle.
         val activeCount = registry.snapshot().count { registry.statusOf(it) == "Active" }
-        val dnsJob = if (activeCount < targetActiveNodes) scope.async { resolveDnsSeedsIfNeeded() } else null
+        // A cycle that runs in the background (a Refresh or a network change that raced the move
+        // to the back; the loop itself pauses there) never discovers: no DNS, no wss walk, no
+        // peer gossip, and only the primary is probed, whatever the pool's health (audit
+        // 2026-11-27 R2). Discovery waits for the front.
+        val background = !notificationHelper.isAppInForeground
+        val discover = activeCount < targetActiveNodes && !background
+        // What the DNS and wss refreshes add this cycle is probed in its second wave below; what
+        // was there already is part of the first wave's plan, not probed again on top of it.
+        val seedCandidatesBefore = (dnsResolvedEndpoints.toList() + wssSeedEndpoints.toList()).toSet()
+        val dnsJob = if (discover) scope.async { resolveDnsSeedsIfNeeded() } else null
         // The public wss seeds are looked up beside the DNS seeds (iOS `refreshWssSeeds`): where
         // gRPC is blocked they are the nodes that answer.
-        val wssJob = if (activeCount < targetActiveNodes) scope.async { refreshWssSeedsIfNeeded() } else null
+        val wssJob = if (discover) scope.async { refreshWssSeedsIfNeeded() } else null
 
         // Metered steady state: with a healthy pool on cellular, probing all ~26 endpoints
         // every cycle — and keeping a persistent gRPC channel (20s HTTP/2 keepalive pings each)
@@ -984,19 +1008,37 @@ class NodePoolManager @Inject constructor(
         val standIns = registry.publicFallbacks().map { it.address }
         val fullWave = (seeds + manualEndpoints + discoveredEndpoints + dnsResolvedEndpoints + wssSeedEndpoints + standIns).distinct()
         val healthy = activeCount >= targetActiveNodes
-        // Backgrounded (only reached without push, see startProbing) is treated as metered: the
-        // primary alone.
-        val firstWave = if ((meteredNetwork.isMetered || !notificationHelper.isAppInForeground) && healthy) {
-            registry.activeBestFirst().firstOrNull()
-                ?.let { listOf(it.address) }
-                ?: fullWave
-        } else if (healthy && cyclesSinceFullWave < wifiFullWaveEveryCycles - 1) {
-            cyclesSinceFullWave++
-            registry.activeBestFirst().take(wifiSteadyStateNodes).map { it.address }
-                .ifEmpty { fullWave }
-        } else {
-            cyclesSinceFullWave = 0
-            fullWave
+        val plan = NodeWavePlan.kind(
+            background = background,
+            metered = meteredNetwork.isMetered,
+            healthy = healthy,
+            activeCount = activeCount,
+            cyclesSinceFullWave = cyclesSinceFullWave,
+            fullWaveEveryCycles = wifiFullWaveEveryCycles,
+        )
+        val primaryWave = registry.activeBestFirst().firstOrNull()?.let { listOf(it.address) }
+        val firstWave = when (plan) {
+            // In the background with no Active node there is nothing to keep up: nothing is
+            // dialed, and the front runs discovery.
+            NodeWavePlan.Kind.BACKGROUND_PRIMARY -> primaryWave ?: return false
+            NodeWavePlan.Kind.PRIMARY -> primaryWave ?: fullWave
+            NodeWavePlan.Kind.STEADY -> {
+                cyclesSinceFullWave++
+                registry.activeBestFirst().take(wifiSteadyStateNodes).map { it.address }
+                    .ifEmpty { fullWave }
+            }
+            // A pool short of nodes on a metered path: the nodes that answered and the saved
+            // known-good ones, with the full ~45-endpoint wave only every
+            // [wifiFullWaveEveryCycles]th cycle (audit 2026-11-27 R6).
+            NodeWavePlan.Kind.KNOWN_GOOD -> {
+                cyclesSinceFullWave++
+                val answered = registry.snapshot().filter { it.lastProbe?.reachable == true }.map { it.address }
+                (answered + lastPersistedKnownGood.filter { it in fullWave }).distinct().ifEmpty { fullWave }
+            }
+            NodeWavePlan.Kind.FULL -> {
+                cyclesSinceFullWave = 0
+                fullWave
+            }
         }.let { wave -> (wave + standIns).distinct() }
         val firstResults = probeWave(firstWave, epoch)
 
@@ -1005,7 +1047,11 @@ class NodePoolManager @Inject constructor(
         // have all gone stale, these fresh answers ARE the pool.
         dnsJob?.await()
         wssJob?.await()
-        val secondWave = (dnsResolvedEndpoints + wssSeedEndpoints).filter { it !in firstWave }
+        // Only what this cycle's refreshes added: the whole DNS and wss list used to ride along
+        // every cycle, which undid the primary-only and steady-state waves.
+        val secondWave = (dnsResolvedEndpoints.toList() + wssSeedEndpoints.toList())
+            .filter { it !in seedCandidatesBefore && it !in firstWave }
+            .distinct()
         val secondResults = if (secondWave.isNotEmpty()) probeWave(secondWave, epoch) else emptyList()
 
         // The user may have switched into trusted-node mode while these probes were still in
@@ -1017,8 +1063,12 @@ class NodePoolManager @Inject constructor(
         val results = firstResults + secondResults
         val probedAddresses = firstWave + secondWave
 
-        // Drop connections for addresses no longer tracked (e.g. after clearPool()).
-        connections.keys.filter { it !in probedAddresses }.forEach { addr -> connections.remove(addr)?.close() }
+        // Drop connections for addresses no longer tracked (e.g. after clearPool()). In the
+        // background a connection a Reply or a send is waiting on is left to finish; the idle
+        // sweep closes it after.
+        connections.entries.filter { (addr, conn) -> addr !in probedAddresses && !(background && conn.hasPendingRequests) }
+            .forEach { (addr, conn) -> if (connections.remove(addr, conn)) conn.close() }
+        if (background) ensureIdleClose()
 
         results.forEach { result ->
             registry.update(result.address, typeOf(result.address), result)
@@ -1031,7 +1081,7 @@ class NodePoolManager @Inject constructor(
         registry.snapshot()
             .filter { (it.type == "Discovered" || it.type == "DNS") && registry.statusOf(it) == "Quarantined" }
             .forEach { record ->
-                prunedAt[record.address] = System.currentTimeMillis()
+                rememberPruned(record.address)
                 discoveredEndpoints.remove(record.address)
                 dnsResolvedEndpoints.remove(record.address)
                 connections.remove(record.address)?.close()
@@ -1055,7 +1105,7 @@ class NodePoolManager @Inject constructor(
         // discovering until it reaches a real active-node target (8-12), not until a handful of
         // specific bootstrap addresses look fine.
         val activeCountAfterProbe = registry.snapshot().count { registry.statusOf(it) == "Active" }
-        if (activeCountAfterProbe < targetActiveNodes && discoveredEndpoints.size < maxDiscoveredEndpoints) {
+        if (!background && activeCountAfterProbe < targetActiveNodes && discoveredEndpoints.size < maxDiscoveredEndpoints) {
             val discoverRecord = registry.snapshot()
                 .filter { registry.statusOf(it) != "Quarantined" }
                 .minByOrNull { it.lastProbe?.latencyMs ?: Long.MAX_VALUE }
@@ -1181,6 +1231,14 @@ class NodePoolManager @Inject constructor(
         pinnedServing()?.let { return it }
         servingStandIn()?.let { return it }
         registry.activeBestFirst().firstOrNull()?.address?.takeIf { connections.containsKey(it) }?.let { return it }
+        // While probing is paused (the background, signed out) the idle connections were closed
+        // by the pause, not because their node failed: the best Active node is still the best bet
+        // for a Reply, then a saved known-good node, before a bundled seed (audit 2026-11-27 R1).
+        if (probingPaused()) {
+            registry.activeBestFirst().firstOrNull()?.address?.let { return it }
+            dnsResolvedEndpoints.firstOrNull()?.let { return it }
+            lastPersistedKnownGood.firstOrNull()?.let { return it }
+        }
         return dnsResolvedEndpoints.firstOrNull() ?: seeds.first()
     }
 
@@ -1699,11 +1757,11 @@ class NodePoolManager @Inject constructor(
     // MARK: - Background (iOS 961fc05a `enterBackground` / `enterForeground`)
 
     /**
-     * The app went to the background. The public fallback's watch stops; in push mode every
+     * The app went to the background. The public fallback's watch stops; push or not, every
      * connection that carries nothing (no request waiting, no block client) is closed, the former
      * primary's included: an open one was kept alive with HTTP/2 pings and redialed after every
      * drop for nothing (audit 2026-11-25 B3). The probe loop itself already sleeps in the
-     * background with push, and the block scanners stop themselves there. The known-good list is
+     * background, and the block scanners stop themselves there. The known-good list is
      * saved, since the app may not come back. Each step stops if the app came back meanwhile (N2).
      */
     private fun enterBackground() {
@@ -1715,8 +1773,8 @@ class NodePoolManager @Inject constructor(
             previous?.join()
             if (lifecycleGeneration != generation) return@launch
             persistKnownGoodNodes(force = true)
-            // Push mode, or nothing could be shown (N7): the background needs no connection.
-            if (!pushState.isBackgroundQuiet) return@launch
+            // The background needs no connection, push or not (audit 2026-11-27 R1): a Reply or a
+            // send dials its node on demand.
             closeIdleConnections(idleForMs = 0L, reason = "the background") { lifecycleGeneration != generation }
             // What is still open (a block client stopping, a request in flight), and anything
             // opened later in the background, is closed once idle (audit 2026-11-25 N6).
@@ -1744,7 +1802,7 @@ class NodePoolManager @Inject constructor(
     }
 
     /**
-     * While probing is paused (the background with push, or signed out), one small sweep closes
+     * While probing is paused (the background, or signed out), one small sweep closes
      * any connection that has been idle for [IDLE_CLOSE_MS], for as long as connections are open:
      * the close on going to the background ran once, so a connection a block client still held
      * then, or one opened later (a network change, a send from a notification, a background
@@ -1971,6 +2029,8 @@ class NodePoolManager @Inject constructor(
         const val KNOWN_GOOD_SAVE_INTERVAL_MS = 5 * 60_000L
         /** Where the pinned node's probe sits in the foreground beat (the room sweep is at 0). */
         const val PROBE_BEAT_OFFSET_MS = 1_200L
+        /** The most pruned nodes remembered at once (see rememberPruned). */
+        private const val MAX_PRUNED_MEMORY = 200
         /** How long a pruned node stays out of gossip and DNS answers. */
         const val PRUNED_MEMORY_MS = 60 * 60_000L
         /** While the pool is idle, a connection unused this long is closed. */
@@ -1982,6 +2042,44 @@ class NodePoolManager @Inject constructor(
          * covers metered WiFi and cellular, the only paths where the 400 / 800 ms tiers would apply.
          */
         const val FEE_HEDGE_DELAY_MS = 3_000L
+    }
+}
+
+/**
+ * Which nodes one probe cycle of Automatic Scan dials; pure, for the tests.
+ */
+internal object NodeWavePlan {
+    enum class Kind {
+        /** In the background: the primary alone, or nothing when there is none; never discovery
+         *  (audit 2026-11-27 R2). */
+        BACKGROUND_PRIMARY,
+        /** A healthy pool on a metered path: the primary alone. */
+        PRIMARY,
+        /** A healthy pool on Wi-Fi between full waves: the best few Active nodes. */
+        STEADY,
+        /** A pool short of nodes on a metered path that has some: the nodes that answered and the
+         *  saved known-good ones, between full waves (audit 2026-11-27 R6). */
+        KNOWN_GOOD,
+        /** Every endpoint known. */
+        FULL,
+    }
+
+    fun kind(
+        background: Boolean,
+        metered: Boolean,
+        healthy: Boolean,
+        activeCount: Int,
+        cyclesSinceFullWave: Int,
+        fullWaveEveryCycles: Int,
+    ): Kind {
+        val betweenFullWaves = cyclesSinceFullWave < fullWaveEveryCycles - 1
+        return when {
+            background -> Kind.BACKGROUND_PRIMARY
+            healthy && metered -> Kind.PRIMARY
+            healthy && betweenFullWaves -> Kind.STEADY
+            !healthy && metered && activeCount > 0 && betweenFullWaves -> Kind.KNOWN_GOOD
+            else -> Kind.FULL
+        }
     }
 }
 
@@ -2012,11 +2110,24 @@ internal object NodeProbeCadence {
     }
 
     /** Automatic Scan: dead pool backs off; short of [target] Active nodes, 10 s stretching with
-     *  [stallCycles] to 60 s (audit 2026-11-25 N8); healthy, the beat. */
-    fun automatic(deadCycles: Int, activeCount: Int, target: Int, stallCycles: Int, metered: Boolean): Wait = when {
+     *  [stallCycles] to 60 s (audit 2026-11-25 N8), and once that stretch reaches the beat
+     *  ([beatMs]) it lands on the beat at least that far away, so it wakes the radio with the
+     *  other polls (audit 2026-11-27 R6); healthy, the beat. An on-beat [Wait] longer than the
+     *  beat means "the first beat at least [Wait.millis] away". */
+    fun automatic(
+        deadCycles: Int,
+        activeCount: Int,
+        target: Int,
+        stallCycles: Int,
+        metered: Boolean,
+        beatMs: Long = if (metered) HEALTHY_METERED_MS else HEALTHY_MS,
+    ): Wait = when {
         deadCycles > 0 -> Wait(deadBackoffMillis(deadCycles), onBeat = false)
-        activeCount < target -> Wait(minOf(UNHEALTHY_MS shl stallCycles.coerceIn(0, 5), UNHEALTHY_MAX_MS), onBeat = false)
-        else -> Wait(if (metered) HEALTHY_METERED_MS else HEALTHY_MS, onBeat = true)
+        activeCount < target -> {
+            val stretch = minOf(UNHEALTHY_MS shl stallCycles.coerceIn(0, 5), UNHEALTHY_MAX_MS)
+            Wait(stretch, onBeat = stretch >= beatMs)
+        }
+        else -> Wait(beatMs, onBeat = true)
     }
 
     /** The stall count after a cycle: back to 0 when the pool is healthy or the Active count rose. */

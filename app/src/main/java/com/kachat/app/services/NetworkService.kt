@@ -40,8 +40,15 @@ class NetworkService @Inject constructor(
 
     /** Every answer from the indexer counts toward or against an outage ([IndexerHealth]). */
     private val indexerClient: OkHttpClient by lazy {
-        okHttpClient.newBuilder().addInterceptor(IndexerHealthInterceptor(::networkIsOnline)).build()
+        okHttpClient.newBuilder()
+            .addInterceptor(IndexerHealthInterceptor(::networkIsOnline, ::networkIsMetered) { lastNetworkChangeAtMs })
+            .build()
     }
+
+    /** When the phone last changed network: a timeout just after is the handoff, not the indexer
+     *  (audit 2026-11-27 R8). */
+    @Volatile private var lastNetworkChangeAtMs = 0L
+    @Volatile private var lastNetwork: android.net.Network? = null
 
     /** An address's history on the Kaspa REST API, for what is read from the chain while the
      *  indexer is down (iOS 4f8e14bb). */
@@ -49,7 +56,36 @@ class NetworkService @Inject constructor(
 
     init {
         IndexerHealth.init(context)
+        watchNetworkChanges()
         observeSettings()
+    }
+
+    private fun watchNetworkChanges() {
+        try {
+            (context.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager)
+                ?.registerDefaultNetworkCallback(object : android.net.ConnectivityManager.NetworkCallback() {
+                    override fun onAvailable(network: android.net.Network) {
+                        // The first answer is the network the app started on, not a change.
+                        val previous = lastNetwork
+                        lastNetwork = network
+                        if (previous != null && previous != network) lastNetworkChangeAtMs = System.currentTimeMillis()
+                    }
+
+                    override fun onLost(network: android.net.Network) {
+                        lastNetworkChangeAtMs = System.currentTimeMillis()
+                    }
+                })
+        } catch (e: Exception) {
+            Log.w("NetworkService", "Could not watch network changes: ${e.message}")
+        }
+    }
+
+    /** Cellular or a metered hotspot: a timeout there may be the signal, not the indexer. */
+    private fun networkIsMetered(): Boolean = try {
+        (context.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager)
+            ?.isActiveNetworkMetered == true
+    } catch (_: Exception) {
+        false
     }
 
     /** A weak signal looks like a dead server: a phone with no connection says nothing about it. */

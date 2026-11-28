@@ -228,6 +228,10 @@ class KaPostsScheduledStore @Inject constructor(
     suspend fun cancel(entry: KaPostScheduledEntry): Int? {
         if (!inFlight.add(entry.txId)) return com.kachat.app.R.string.kaposts_scheduled_on_its_way
         try {
+            // The account the post belongs to, whatever is loaded once the indexer answers: after
+            // a switch during the call, the post was dropped from the other account's list and
+            // stayed scheduled in its own, where this phone then sent it (audit 2026-11-27 D4).
+            val wallet = loadedWallet
             val current = _entries.value.firstOrNull { it.txId == entry.txId } ?: entry
             if (current.status == KaPostScheduledEntry.STATUS_SCHEDULED) {
                 try {
@@ -241,7 +245,7 @@ class KaPostsScheduledStore @Inject constructor(
                     if (!e.isNotFound) {
                         Log.w(TAG, "Cancelling a scheduled post failed", e)
                         if (current.onServer) return com.kachat.app.R.string.kaposts_scheduled_cancel_unreachable
-                        rememberCancel(entry.txId)
+                        rememberCancel(entry.txId, wallet)
                     }
                 } catch (e: Exception) {
                     Log.w(TAG, "Cancelling a scheduled post failed", e)
@@ -250,10 +254,10 @@ class KaPostsScheduledStore @Inject constructor(
                     // was lost reached it all the same. Cancelled here now, and told to the
                     // indexer whenever it can be reached again, before the post's time if
                     // possible (iOS 369794e).
-                    rememberCancel(entry.txId)
+                    rememberCancel(entry.txId, wallet)
                 }
             }
-            persist(_entries.value.filterNot { it.txId == entry.txId })
+            removeEntry(entry.txId, wallet)
             reminder.cancel(entry.txId)
             return null
         } finally {
@@ -263,11 +267,31 @@ class KaPostsScheduledStore @Inject constructor(
 
     // MARK: - Cancels still owed to the indexer (iOS 369794e)
 
-    private fun pendingCancelsKey(): String? = loadedWallet?.let { "${key(it)}_pending_cancels" }
+    private fun pendingCancelsKey(wallet: String? = loadedWallet): String? = wallet?.let { pendingCancelsKeyFor(it) }
 
+    /** True while [wallet] is both the one loaded here and the one signed in: the indexer's
+     *  cancel is signed by the account signed in (iOS `stillLoaded`). */
+    private fun stillLoaded(wallet: String?): Boolean =
+        wallet != null && wallet == loadedWallet && walletAddressOrNull() == wallet
+
+    /** Drops [txId] from [wallet]'s list: the wallet it was read from, as [update] does. One that
+     *  is gone from there by now (Delete Account) writes nothing. */
     @Synchronized
-    private fun rememberCancel(txId: String) {
-        val key = pendingCancelsKey() ?: return
+    private fun removeEntry(txId: String, wallet: String?) {
+        if (wallet == null) return
+        if (wallet != loadedWallet) {
+            val stored = read(wallet)
+            if (stored.none { it.txId == txId }) return
+            prefs.edit().putString(key(wallet), gson.toJson(entriesWithout(stored, txId))).apply()
+            return
+        }
+        persist(entriesWithout(_entries.value, txId))
+    }
+
+    /** Filed under [wallet]'s key, the account the post belongs to (audit 2026-11-27 D4). */
+    @Synchronized
+    private fun rememberCancel(txId: String, wallet: String?) {
+        val key = pendingCancelsKey(wallet) ?: return
         val ids = prefs.getStringSet(key, null)?.toMutableSet() ?: mutableSetOf()
         if (ids.add(txId)) prefs.edit().putStringSet(key, ids).apply()
     }
@@ -276,11 +300,18 @@ class KaPostsScheduledStore @Inject constructor(
      *  cancelled it or said it doesn't hold it; any other answer keeps it for next time (iOS
      *  b78fdb0). */
     private suspend fun flushPendingCancels() {
-        val key = pendingCancelsKey() ?: return
+        val wallet = loadedWallet
+        val key = pendingCancelsKey(wallet) ?: return
         val ids = prefs.getStringSet(key, null)?.toSet().orEmpty()
         if (ids.isEmpty()) return
         val left = mutableSetOf<String>()
         for (id in ids) {
+            // The cancel is signed by the account signed in: after a switch, the rest wait for
+            // their own account to come back, rather than being refused on every run (iOS).
+            if (!stillLoaded(wallet)) {
+                left += id
+                continue
+            }
             try {
                 kaPostsService.get().cancelScheduledOnServer(id)
             } catch (e: CancellationException) {
@@ -485,6 +516,13 @@ class KaPostsScheduledStore @Inject constructor(
         private const val KEY_PREFIX = "scheduled_"
 
         private fun key(wallet: String) = "$KEY_PREFIX${wallet.replace(":", "_")}"
+
+        /** [entries] without [txId], in time order, as they are stored. */
+        internal fun entriesWithout(entries: List<KaPostScheduledEntry>, txId: String): List<KaPostScheduledEntry> =
+            entries.filterNot { it.txId == txId }.sortedBy { it.notBeforeMs }
+
+        /** The pending-cancels key of [wallet]'s list (audit 2026-11-27 D4: never another's). */
+        internal fun pendingCancelsKeyFor(wallet: String): String = "${key(wallet)}_pending_cancels"
 
         private fun readEntries(prefs: android.content.SharedPreferences, wallet: String): List<KaPostScheduledEntry> {
             val raw = prefs.getString(key(wallet), null) ?: return emptyList()

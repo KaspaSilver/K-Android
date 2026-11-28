@@ -85,7 +85,11 @@ fun GamesScreen(
     Scaffold(
         containerColor = LocalAppColors.current.background,
         contentWindowInsets = WindowInsets(0),
-        topBar = { ChessHomeBar(onBack = null, title = androidx.compose.ui.res.stringResource(com.kachat.app.R.string.tab_arcade)) },
+        // The header every other Hub section and dock tab carries (Posts, Cold Storage, Portfolio):
+        // its bar keeps the glass row's 44 height with nothing in it, so the balance and the title
+        // sit where theirs do. ChessHomeBar's bar shrank to the balance alone and lifted both
+        // (release audit 2026-11-27 E4).
+        topBar = { com.kachat.app.ui.screens.MainPageHeader(title = androidx.compose.ui.res.stringResource(com.kachat.app.R.string.tab_arcade)) },
     ) { padding ->
         Column(
             Modifier

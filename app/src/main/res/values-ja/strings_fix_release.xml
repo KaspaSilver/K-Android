@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 L2: toasts, errors and fallbacks that were hard-coded English. -->
+<resources>
+    <string name="rel5_no_app_share_csv">CSV を共有できるアプリがありません</string>
+    <string name="rel5_saves_photo_to_gallery">写真をギャラリーに保存します。</string>
+    <string name="rel5_chess_time_control">チェス - %1$s</string>
+    <string name="rel5_backed_up_just_now">たった今バックアップしました</string>
+    <string name="rel5_audio_file_empty">音声ファイルが空です</string>
+    <string name="rel5_enter_valid_amount">有効な金額を入力してください。</string>
+    <string name="rel5_server_error_code">サーバーがエラーを返しました（%1$d）。少し待ってからもう一度お試しください。</string>
+    <string name="rel5_fb_could_not_load_folder">このフォルダを読み込めませんでした。</string>
+    <string name="rel5_fb_failed_build_tx">トランザクションを作成できませんでした</string>
+    <string name="rel5_fb_edit_failed">編集に失敗しました</string>
+    <string name="rel5_fb_cant_read_signed_tx">署名済みトランザクションを読み取れませんでした</string>
+    <string name="rel5_fb_reaction_failed">リアクションに失敗しました</string>
+    <string name="rel5_fb_update_group_photo">グループの写真を更新できませんでした</string>
+    <string name="rel5_fb_resend_invites">招待を再送信できませんでした</string>
+    <string name="rel5_fb_resend_invite">招待を再送信できませんでした</string>
+    <string name="rel5_fb_rename_group">グループ名を変更できませんでした</string>
+    <string name="rel5_fb_create_group">グループを作成できませんでした</string>
+    <string name="rel5_fb_schedule_post">この投稿を予約できませんでした</string>
+    <string name="rel5_fb_load_more">これ以上読み込めませんでした</string>
+    <string name="rel5_fb_share_link">共有リンクを作成できませんでした。</string>
+    <string name="rel5_fb_connect">接続できませんでした</string>
+    <string name="rel5_fb_broadcast_failed">ブロードキャストに失敗しました</string>
+    <string name="rel5_fb_backup_failed">バックアップに失敗しました</string>
+    <string name="rel5_restored_messages">%1$d件のメッセージを%2$d件のチャットから復元しました。</string>
+    <string name="rel5_enter_group_name">グループ名を入力してください。</string>
+    <string name="rel5_add_one_member">メンバーを1人以上追加してください。</string>
+    <string name="rel5_invalid_address_format">Kaspaアドレスの形式が無効です。</string>
+</resources>

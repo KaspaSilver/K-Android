@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">네트워크가 아직 이전 전송을 확인하고 있습니다. 몇 초 후에 다시 시도하세요.</string>
     <string name="pc_l53_room_kept_for">보관 기간</string>
     <string name="pc_l53_room_on_this_device">이 기기</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">이전 메시지 불러오기</string>
     <string name="pc_no_testnet_indexer_yet">아직 테스트넷 인덱서가 없음</string>
     <string name="pc_room_no_spendable_funds_yet">아직 사용 가능한 자금이 없습니다. 컨펌을 기다린 후 다시 시도하세요.</string>
     <string name="pc_room_not_enough_kas">채팅 주소에 KAS가 부족합니다. 추가한 후 다시 시도하세요.</string>

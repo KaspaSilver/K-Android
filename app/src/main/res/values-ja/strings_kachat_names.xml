@@ -49,7 +49,6 @@
     <string name="kl_message">メッセージ</string>
     <string name="kl_name">名前</string>
     <string name="kl_note_buy">購入すると、1つのトランザクションで売り手への支払いとあなたへの名前の移転が行われます。</string>
-    <string name="kl_note_message">メッセージは通常の KaChat チャットと同じように売り手に届きます。</string>
     <string name="kl_note_offer">オファーは、売り手が承諾するか、取り下げるか、期限が切れるまで KAS をオンチェーンでロックします。</string>
     <string name="kl_offer">オファー</string>
     <string name="kl_offer_detail">希望の価格を指定できます。KASは、売り手が承諾するか、オファーを取り下げるか、期限が切れるまでチェーン上で待機します。</string>

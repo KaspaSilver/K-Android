@@ -333,17 +333,21 @@ internal fun ExplorerStatTile(
                     Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
                 }
             }
-            Text(
-                title,
-                color = colors.textSecondary,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false).explorerRedacted(),
-            )
+            // All the row's free width, as iOS's title before its Spacer: a weighted Spacer for the
+            // chevron took half of it, which cut "Network Fee" to "Networ…" on a Pixel 8 (release
+            // audit 2026-11-27 E2). A translation too long for one line wraps to a second.
+            Box(Modifier.weight(1f)) {
+                Text(
+                    title,
+                    color = colors.textSecondary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.explorerRedacted(),
+                )
+            }
             if (showsChevron) {
-                Spacer(Modifier.weight(1f))
                 Icon(
                     Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,

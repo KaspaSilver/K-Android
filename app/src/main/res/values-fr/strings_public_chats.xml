@@ -6,7 +6,7 @@
     <string name="pc_l53_network_still_confirming">Le réseau confirme encore votre envoi précédent. Réessayez dans quelques secondes.</string>
     <string name="pc_l53_room_kept_for">Conservé pendant</string>
     <string name="pc_l53_room_on_this_device">Sur cet appareil</string>
-    <string name="pc_load_earlier_messages">Load earlier messages</string>
+    <string name="pc_load_earlier_messages">Charger les messages précédents</string>
     <string name="pc_no_testnet_indexer_yet">Pas encore d\'indexeur testnet</string>
     <string name="pc_room_no_spendable_funds_yet">Aucun fonds dépensable disponible pour le moment. Attendez les confirmations et réessayez.</string>
     <string name="pc_room_not_enough_kas">Pas assez de KAS sur votre adresse de discussion. Ajoutez-en et réessayez.</string>

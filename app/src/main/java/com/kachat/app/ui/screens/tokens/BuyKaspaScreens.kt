@@ -436,6 +436,7 @@ internal fun CardBuyBrowserScreen(
 
     var isLoading by remember { mutableStateOf(true) }
     var webView by remember { mutableStateOf<WebView?>(null) }
+    PauseTrestlyPageInBackground(webView)
     var unavailable by remember { mutableStateOf(false) }
     val reloader = remember { WebPageReloader() }
     val latestClose by rememberUpdatedState(onClose)

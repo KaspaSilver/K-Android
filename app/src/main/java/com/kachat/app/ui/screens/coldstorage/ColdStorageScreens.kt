@@ -530,8 +530,11 @@ fun ColdStorageDetailScreen(
     // without a manual pull (iOS ColdStorageView's `.ownAddressUtxoActivity`); not while hidden in
     // the Hub. Two seconds after the last such change, and balances only: the scan, the used checks
     // and the name tags run on appear and pull (iOS d88891ea `reloadAfterActivity`, audit
-    // 2026-11-27 L21). A newer change restarts the wait.
-    LaunchedEffect(accountId) {
+    // 2026-11-27 L21). A newer change restarts the wait. Hidden, it doesn't collect at all, so it
+    // doesn't count as a balance screen listening and Address Activity stops its beat pass when its
+    // notifications are off (audit 2026-11-27 R5); showing again reloads.
+    LaunchedEffect(accountId, coldHubHidden) {
+        if (coldHubHidden) return@LaunchedEffect
         var pendingReload: kotlinx.coroutines.Job? = null
         viewModel.ownAddressActivity.collect { changed ->
             if (latestColdHubHidden) return@collect
