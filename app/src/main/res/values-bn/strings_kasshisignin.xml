@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS b49a021d: K's own "Sign In to Kasshi" sheet before the site asks (KaChatSiteWallet.preConnect) -->
+<resources>
+    <string name="site_signin_title">Kasshi-তে সাইন ইন</string>
+    <string name="site_signin_button">সাইন ইন</string>
+    <string name="site_signin_note">আপনি যে ঠিকানা বেছে নেবেন তা দিয়ে K আপনাকে Kasshi-তে সাইন ইন করায়: Kasshi সেটি ও তার ব্যালান্স দেখে। পেমেন্ট এখনও আগে এখানে জিজ্ঞাসা করে।</string>
+    <string name="site_signin_question">কোন ঠিকানা দিয়ে সাইন ইন করতে চান?</string>
+</resources>

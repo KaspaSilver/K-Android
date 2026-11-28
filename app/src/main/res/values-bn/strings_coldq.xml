@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">এই ঠিকানাটি আগে থেকেই এই অ্যাকাউন্টে আছে।</string>
     <string name="coldq_error_in_other_account">এই ঠিকানাটি আগে থেকেই আপনার Cold Storage অ্যাকাউন্ট “%1$s”-এ আছে।</string>
     <string name="coldq_added_toast">কোয়ান্টাম-প্রতিরোধী ঠিকানা যোগ করা হয়েছে।</string>
-    <string name="coldq_add_action">কোয়ান্টাম-প্রতিরোধী ঠিকানা যোগ করুন</string>
     <string name="coldq_add_action_subtitle">KasSigner-এর ঠিকানা স্ক্রিন থেকে একটি KCC-3 ঠিকানা স্ক্যান করুন।</string>
     <string name="coldq_stop_watching">ওয়াচ করা বন্ধ করুন</string>
     <string name="coldq_stop_watching_subtitle">এই কোয়ান্টাম ঠিকানাটি অ্যাকাউন্ট থেকে সরায়। আবার যোগ করতে এটি আবার স্ক্যান করুন।</string>

@@ -19,7 +19,6 @@
     <string name="enter_kpub">kpub Gir</string>
     <string name="export_csv">CSV Disa Aktar</string>
     <string name="fee_usd_optional">Ucret (istege bagli)</string>
-    <string name="generate_more_addresses">Daha Fazla Adres Olustur</string>
     <string name="holdings">Varliklar</string>
     <string name="import_action">İçe Aktar</string>
     <string name="import_csv">CSV Ice Aktar</string>
@@ -36,12 +35,8 @@
     <string name="kp_address_hidden_reenable">Adres gizlendi. Adres Görünürlüğü\'nden yeniden etkinleştirin.</string>
     <string name="kp_address_lld_64ab3">Adres #%1$s</string>
     <string name="kp_address_number_ready">%1$d numaralı adres hazır.</string>
-    <string name="kp_address_row_copy_subtitle">Adresin tamamını panoya kopyalar.</string>
     <string name="kp_address_row_hide_subtitle">Bu listeden kaldırır. Adres Görünürlüğü’nden yeniden aç.</string>
-    <string name="kp_address_row_qr_subtitle">Başka bir cihazla taramak için tam ekran.</string>
-    <string name="kp_address_row_rename_subtitle">Bu adrese kendi etiketini verir.</string>
     <string name="kp_address_visibility_9c9a7">Adres Görünürlüğü</string>
-    <string name="kp_address_visibility_subtitle">Listede olmasını istediğin her adresi tek seferde işaretle.</string>
     <string name="kp_already_added_26837">Zaten eklendi</string>
     <string name="kp_amount_and_price_08599">Tutar ve fiyat</string>
     <string name="kp_and_its_transactions_will_be_deleted_3c57d">\'%1$s\' ve işlemleri silinecek. Bu işlem geri alınamaz.</string>
@@ -55,8 +50,6 @@
     <string name="kp_check_address_history_before_trying_again">Tekrar denemeden önce adresin geçmişini kontrol edin.</string>
     <string name="kp_trade_may_have_gone_through">İşlem gerçekleşmiş olabilir.</string>
     <string name="kp_checking_address_lld_5b84c">Adres #%1$s kontrol ediliyor</string>
-    <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">İlk bin adresi aradaki boşluklara bakmadan kontrol eder, sonra bulmaya devam ettiği sürece devam eder.</string>
-    <string name="kp_close_and_keep_scanning_b66cc">Kapat ve Taramaya Devam Et</string>
     <string name="kp_close_bbfa7">Kapat</string>
     <string name="kp_coin_just_spent">Az önce bir gönderimde harcandı</string>
     <string name="kp_coin_locked_by_covenant">Bir covenant ile kilitli</string>
@@ -128,7 +121,6 @@
     <string name="kp_mining_per_week">Haftalık</string>
     <string name="kp_new_portfolio_5c1c7">Yeni Portföy</string>
     <string name="kp_no_addresses_discovered_yet_15738">Henuz kesfedilen adres yok.</string>
-    <string name="kp_no_used_addresses_yet">Henüz kullanılmış adres yok</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Henüz yeterli geçmiş yok - birkaç günlük etkinlikten sonra tekrar bak.</string>
     <string name="kp_note_optional_4e395">Not (isteğe bağlı)</string>
     <string name="kp_nothing_can_change_now_this_is_8bf3a">Artık hiçbir şey değişemez: bu, KasSigner\'ın imzaladığı işlemdir.</string>
@@ -216,7 +208,6 @@
     <string name="kp_you_receive">Alacağınız</string>
     <string name="kp_you_receive_about">Yaklaşık Alacağınız</string>
     <string name="kp_you_saw">Gördüğünüz</string>
-    <string name="kpub">kpub</string>
     <string name="kpub_2">kpub...</string>
     <string name="name_this_address">Bu Adresi Adlandir</string>
     <string name="no_app_to_open_link">Bu telefonda bağlantıyı açabilecek bir uygulama yok</string>
@@ -271,22 +262,17 @@
     <string name="total_invested">Toplam Yatirim</string>
     <string name="total_p_l">Toplam K/Z</string>
     <string name="transactions">Islemler</string>
-    <string name="kp_changes_the_name_shown_for_this_account_kc">Bu hesap için gösterilen adı değiştirir.</string>
     <string name="kp_compound_utxos_description_kc">Bu adresteki tüm UTXO\'ları tek bir UTXO\'da birleştirir; böylece sonraki bir gönderimin ihtiyaç duyduğu girdi sayısı azalır.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">Aynı kelimeleri kullanan diğer uygulamalarınız aynı kUSDT\'yi gösterir ve gönderebilir. Takas burada yapılır.</string>
     <string name="kp_kusdt_guide_swapping_detail_kc">KAS ile kUSDT takası yapmak veya havuza eklemek için Cüzdan sekmesinde Stablecoin Takas Et\'a dokunup kUSDT\'yi seçin. Trestly\'nin kendi sitesi K içinde, seçtiğiniz adrese bağlı olarak açılır.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">K ekledikçe daha fazla stablecoin burada görünecek.</string>
-    <string name="kp_notifies_you_when_this_account_kc">Bu hesap Kaspa aldığında seni bilgilendirir.</string>
     <string name="kp_on_trestly_inside_kachat_kc">Trestly\'de, K içinde</string>
-    <string name="kp_puts_the_extended_public_key_kc">Genişletilmiş genel anahtarı panoya kopyalar.</string>
     <string name="kp_reveals_next_unused_address_account_kc">Bu hesaptaki bir sonraki kullanılmamış adresi gösterir.</string>
     <string name="kp_scan_it_into_another_device_kc">Bu hesabı orada izlemek için başka bir cihazda tara.</string>
     <string name="kp_scan_this_on_your_kassigner_kc">Bunu KasSigner\'ında tara</string>
     <string name="kp_selected_one_utxo_kc">Seçili: %1$s (1 UTXO)</string>
     <string name="kp_selected_utxos_kc">Seçili: %1$s (%2$d UTXO)</string>
-    <string name="kp_show_kpub_qr_kc">kpub QR\'ını Göster</string>
     <string name="kp_something_went_wrong_kc">Bir Seyler Ters Gitti</string>
-    <string name="kp_stops_notifying_when_this_account_kc">Bu hesap Kaspa aldığında artık bildirmez. Diğer hesaplar kendi bildirimlerini korur.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">Bu, yalnizca K\'in izleme listesinden kaldirir. KasSigner cihazi veya tuttugu fonlar uzerinde hicbir etkisi yoktur.</string>
     <string name="kp_token_empty_state_swap_kc">Yeni bir adrese alın ya da Cüzdan sekmesindeki Stablecoin Takas Et ile satın alın.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly, K\'den şunu istiyor:</string>
@@ -296,8 +282,5 @@
     <string name="kp_trestly_site_kc">Trestly Sitesi</string>
     <string name="kp_trestly_site_url_kc">Trestly Site URL\'si</string>
     <string name="kp_trestly_swap_note_kc">K içinde Trestly\'nin kendi koduyla oluşturulup kontrol edildi. Havuz önce değişirse yeniden fiyat verir: yalnızca bu fiyat veya daha iyisiyle devam eder, daha azı için tekrar sorar ve sitenin minimumunun altına asla inmez.</string>
-    <string name="kp_turn_off_receive_notifications_kc">Alma Bildirimlerini Kapat</string>
-    <string name="kp_turn_on_receive_notifications_kc">Alma Bildirimlerini Aç</string>
-    <string name="cold_copy_kpub_reveals_all_addresses">Bu hesabın kpub\'ını panoya kopyalar. Tüm adreslerini açığa çıkarır.</string>
     <string name="cold_not_a_valid_kpub">Geçerli bir kpub değil</string>
 </resources>

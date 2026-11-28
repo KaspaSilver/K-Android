@@ -49,11 +49,12 @@ object BroadcastPushPreview {
 
         if (!text.startsWith("{")) return text.ifEmpty { body }
 
-        MessageReaction.parseOrNull(text)?.let { return "Reacted ${it.emoji}" }
-        if (MessageEdit.parseOrNull(text) != null) return "Edited a message"
-        if (ChessMessage.parseOrNull(text) != null) return "♟️ Chess game"
+        // in the app's language (iOS audit 2026-11-27 R7); English where none is set up (tests)
+        MessageReaction.parseOrNull(text)?.let { reaction -> return say(com.kachat.app.R.string.rel_bell_reacted, "Reacted ${reaction.emoji}", reaction.emoji) }
+        if (MessageEdit.parseOrNull(text) != null) return say(com.kachat.app.R.string.rel_bell_edited_message, "Edited a message")
+        if (ChessMessage.parseOrNull(text) != null) return say(com.kachat.app.R.string.chess_game_2, "♟️ Chess game")
         // KaChat has no calls (iOS 7c5c22e3): never a call envelope's raw JSON.
-        if (CallSignal.isCallSignal(text)) return "New message"
+        if (CallSignal.isCallSignal(text)) return say(com.kachat.app.R.string.dm_notif_new_message, "New message")
         MessageReply.parseOrNull(text)?.let { return it.text }
 
         // Still JSON: most likely a reply envelope cut off at the server's preview length (or
@@ -64,16 +65,21 @@ object BroadcastPushPreview {
             looseJsonString("text", text)?.let { return it }
             // The cut came before the reply's own text (the target's txid and sender alone fill
             // most of a 150-character preview): its words are not in this push at all.
-            return "Replied to a message"
+            return say(com.kachat.app.R.string.rel_bell_replied_to_message, "Replied to a message")
         }
         // Any other envelope that reached here: never the raw JSON on a lock screen.
         if (compact.contains("\"mimeType\":\"audio")) return "🎤 Audio message"
         if (compact.contains("\"mimeType\":\"image")) return "📷 Photo"
         if (compact.contains("\"mimeType\":\"video")) return "🎬 Video"
-        if (compact.contains("\"type\":\"edit\"")) return "Edited a message"
+        if (compact.contains("\"type\":\"edit\"")) return say(com.kachat.app.R.string.rel_bell_edited_message, "Edited a message")
         looseJsonString("text", text)?.let { return it }
-        return "New message"
+        return say(com.kachat.app.R.string.dm_notif_new_message, "New message")
     }
+
+    /** A preview word in Settings > Language's language ([tr]), or [english] where the app's
+     *  text isn't set up (unit tests). */
+    private fun say(res: Int, english: String, vararg args: Any): String =
+        runCatching { tr(res, *args) }.getOrDefault(english)
 
     private fun decodeBase64Text(run: String): String? = runCatching {
         var candidate = run.replace('-', '+').replace('_', '/')

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4, iOS 01f71184 (release audit 2026-11-27): chat, group and Explorer screens. Translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="rs_group_refresh_invites">Повторно читаем приглашения в группы</string>
+    <string name="rs_group_refresh_control">Повторно читаем состав и ключи эпох</string>
+    <string name="rs_group_refresh_messages">Повторно загружаем сообщения (%1$d из %2$d участников)</string>
+    <string name="rs_group_refresh_decrypting">Расшифровываем историю</string>
+    <string name="rs_group_you_changed_photo">Вы изменили фото группы</string>
+    <string name="rs_group_you_removed_photo">Вы удалили фото группы</string>
+    <string name="rs_group_you_renamed">Вы переименовали группу в «%1$s»</string>
+    <string name="rs_group_changed_photo">%1$s изменяет фото группы</string>
+    <string name="rs_group_removed_photo">%1$s удаляет фото группы</string>
+    <string name="rs_group_renamed">%1$s переименовывает группу в «%2$s»</string>
+    <string name="rs_own_account_not_contact">Этот адрес принадлежит одному из ваших аккаунтов, поэтому его нельзя добавить в контакты.</string>
+    <string name="ex_kind_kaposts">Посты</string>
+</resources>

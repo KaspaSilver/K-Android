@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS b49a021d: K's own "Sign In to Kasshi" sheet before the site asks (KaChatSiteWallet.preConnect) -->
+<resources>
+    <string name="site_signin_title">ورود به Kasshi</string>
+    <string name="site_signin_button">ورود</string>
+    <string name="site_signin_note">K با آدرسی که انتخاب می‌کنید شما را وارد Kasshi می‌کند: Kasshi آن و موجودی‌اش را می‌بیند. پرداخت‌ها همچنان اول اینجا از شما می‌پرسند.</string>
+    <string name="site_signin_question">با کدام آدرس می‌خواهید وارد شوید؟</string>
+</resources>

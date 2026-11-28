@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">Conectado, e tem as mensagens desta sala.</string>
     <string name="kpui_room_indexer_footer">Um chat público vive no blockDAG da Kaspa, então qualquer indexador que observe a mesma rede serve a mesma sala. Aponte esta para onde quiser - o seu próprio ou o de outra pessoa - sem mudar o indexador que as outras salas usam.</string>
     <string name="kpui_use_app_indexer">Usar o indexador do app</string>
-    <string name="kpui_room_switched_off_footer">Uma sala desativada deixa de aparecer em Chats públicos e nunca envia notificações. Ative-a de novo quando quiser.</string>
-    <string name="kpui_languages">Idiomas</string>
-    <string name="kpui_languages_footer">Desativado tira todas as salas de idiomas de Chats públicos. Ativado, desative as que você não quiser.</string>
     <string name="kpui_notifications_off">Notificações desativadas</string>
     <string name="kpui_notifications_on">Notificações ativadas</string>
     <string name="kpui_room_notified_closed">Você é avisado de novas mensagens aqui, mesmo com o app fechado.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">Nada aqui ainda</string>
     <string name="kpui_engagement_empty">Quando alguém interagir com este post, aparecerá aqui.</string>
     <string name="kpui_instant_tip_limit">As gorjetas instantâneas são limitadas a 10 KAS. Deslize para cima para enviar esta.</string>
-    <string name="kpui_kapost_settings">Configurações do KaPost</string>
     <string name="kpui_cool_down">Aguarde antes de postar</string>
     <string name="kpui_cooldown_on">Posts, comentários, curtidas, republicações, votos, edições e exclusões esperam 5 segundos, com Desfazer, antes de irem para a blockchain.</string>
     <string name="kpui_cooldown_off">Posts, comentários, curtidas, republicações, votos, edições e exclusões vão para a blockchain na hora, sem Desfazer.</string>

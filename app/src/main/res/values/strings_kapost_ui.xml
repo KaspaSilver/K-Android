@@ -31,7 +31,6 @@
     <string name="kpui_pr_shows_your_request">Shows your payment request.</string>
     <string name="kpui_pr_opens_send_kaspa">Opens Send Kaspa to pay it.</string>
     <string name="kpui_room_info">Room Info</string>
-    <string name="kpui_room_curated_desc">A curated room, always in your list. Anyone on K can post to it.</string>
     <string name="kpui_room_added_desc">A room you added. Anyone who knows the name can post to it.</string>
     <string name="kpui_kind">Kind</string>
     <string name="kpui_added_by_you">Added by you</string>
@@ -52,9 +51,6 @@
     <string name="kpui_use_app_indexer">Use the app\'s indexer</string>
     <string name="kpui_hidden_users_title">Hidden Users - #%1$s</string>
     <string name="kpui_no_hidden_users_in">No hidden users in #%1$s. Long-press a message to hide its sender.</string>
-    <string name="kpui_room_switched_off_footer">A room that is switched off no longer appears in Public Chats and never sends a notification. Switch it back on at any time.</string>
-    <string name="kpui_languages">Languages</string>
-    <string name="kpui_languages_footer">Off takes every language room out of Public Chats. On, switch off the ones you don\'t want.</string>
     <string name="kpui_notifications_off">Notifications off</string>
     <string name="kpui_notifications_on">Notifications on</string>
     <string name="kpui_room_notified_closed">You\'re notified of new messages here, even when the app is closed.</string>
@@ -211,7 +207,6 @@
     <string name="kpui_nothing_here_yet">Nothing here yet</string>
     <string name="kpui_engagement_empty">When someone engages with this post, they\'ll show up here.</string>
     <string name="kpui_instant_tip_limit">Instant tips are limited to 10 KAS. Swipe up to send this one.</string>
-    <string name="kpui_kapost_settings">KaPost Settings</string>
     <string name="kpui_cool_down">Cool down before post</string>
     <string name="kpui_cooldown_on">Posts, comments, likes, reposts, votes, edits and deletes wait 5 seconds, with an Undo, before they go on chain.</string>
     <string name="kpui_cooldown_off">Posts, comments, likes, reposts, votes, edits and deletes go on chain at once, with no Undo.</string>

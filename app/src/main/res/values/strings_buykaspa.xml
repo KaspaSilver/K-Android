@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">Buy Kaspa</string>
+    <string name="buykaspa_swap_to_kaspa">Swap to Kaspa</string>
+    <string name="buykaspa_waiting_payment">Waiting for your payment</string>
+    <string name="buykaspa_paid">Paid. Your USDC is on its way.</string>
+    <string name="buykaspa_bridging">Bridging to Kaspa as kUSDT, usually about 20 minutes</string>
+    <string name="buykaspa_arrived">%1$s arrived. Swap it for Kaspa.</string>
+    <string name="buykaspa_sign_again">Open to sign the bridge again</string>
+    <string name="buykaspa_rejected">Stripe refused this purchase. Nothing was taken.</string>
+    <string name="buykaspa_refunded">The bridge couldn\'t run, so the USDC was returned. Open to bridge it again.</string>
+    <string name="buykaspa_expired">Not paid. Nothing was taken.</string>
+    <string name="buykaspa_where_land">Where should your kUSDT land?</string>
+    <string name="buykaspa_needs_words">K needs this account\'s recovery words on this phone to buy with a card.</string>
+    <string name="buykaspa_stripe_note">Stripe sells to buyers in the US and the EU. The card fee and network fees show on the next page, before you pay.</string>
+    <string name="buykaspa_lands_on_format">kUSDT lands on: %1$s</string>
+    <string name="buykaspa_can_close">You can close this. K keeps following your order on the Wallet tab.</string>
+    <string name="buykaspa_approve_bridge">Approve the Bridge</string>
+    <string name="buykaspa_sign_explainer">One signature lets Trestly\'s bridge take up to this much USDC from K\'s Ethereum address and deposit it to Kaspa as kUSDT. No ETH is needed, and no Kaspa leaves your wallet.</string>
+    <string name="buykaspa_up_to">Up to</string>
+    <string name="buykaspa_lands_on">kUSDT lands on</string>
+    <string name="buykaspa_ends">Ends</string>
+    <string name="buykaspa_bridge">Bridge</string>
+    <string name="buykaspa_eth_note">K\'s Ethereum address comes from this account\'s words, as any Ethereum wallet would make it.</string>
+    <string name="buykaspa_fresh_note">A new address that has never been used, so this purchase stays apart from your username and chats.</string>
+    <string name="buykaspa_chatting_note">The address people message and pay you on.</string>
+    <string name="buykaspa_fresh_address">Fresh Address</string>
+    <string name="buykaspa_reload">Reload</string>
+</resources>

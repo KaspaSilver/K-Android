@@ -75,7 +75,9 @@ class CacheManager @Inject constructor(
     suspend fun sweepStaleTempFiles() = withContext(Dispatchers.IO) {
         val cutoff = System.currentTimeMillis() - STALE_TEMP_AGE_MS
         var removed = 0
-        directories(Category.TEMPORARY_FILES).forEach { dir ->
+        // Plus the Nextcloud files the PDF viewer downloaded (counted under Web Responses): each
+        // was a full copy of a share, up to 50 MB, kept nowhere else.
+        (directories(Category.TEMPORARY_FILES) + File(context.cacheDir, "nextcloud_previews")).forEach { dir ->
             dir.listFiles()?.filter { it.lastModified() <= cutoff }?.forEach { if (runCatching { it.deleteRecursively() }.getOrDefault(false)) removed++ }
         }
         looseTempFiles().filter { it.lastModified() <= cutoff }.forEach { if (runCatching { it.delete() }.getOrDefault(false)) removed++ }

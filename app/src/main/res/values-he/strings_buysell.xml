@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">קנייה</string>
+    <string name="buysell_sell">מכירה</string>
+    <string name="buysell_history">היסטוריית קנייה/מכירה</string>
+    <string name="buysell_buy_kaspa">קניית Kaspa</string>
+    <string name="buysell_sell_kaspa">מכירת Kaspa</string>
+    <string name="buysell_buy_with_crypto">קניית Kaspa בקריפטו</string>
+    <string name="buysell_buy_with_crypto_sub">שלם במטבע אחר, כמו kUSDT או ביטקוין.</string>
+    <string name="buysell_buy_with_debit_card">קניית Kaspa בכרטיס חיוב</string>
+    <string name="buysell_debit_card_sub">שלם בכרטיס. זה מגיע כ-kUSDT, ואיתו אתה קונה Kaspa.</string>
+    <string name="buysell_pay_with_question">במה תרצה לשלם?</string>
+    <string name="buysell_sell_for_question">מה תרצה תמורת ה-Kaspa שלך?</string>
+    <string name="buysell_sell_kaspa_for">מכירת Kaspa תמורת %1$s</string>
+    <string name="buysell_buy_kaspa_with">קניית Kaspa עם %1$s</string>
+    <string name="buysell_on_networks">%1$s ב-%2$d רשתות</string>
+    <string name="buysell_you_pay">אתם משלמים</string>
+    <string name="buysell_where_land">לאן ה-Kaspa שלך צריך להגיע?</string>
+    <string name="buysell_kusdt_one_address">ה-kUSDT משולם מכתובת אחת, וה-Kaspa שלך מגיע לאותה כתובת.</string>
+    <string name="buysell_fresh_note">כתובת חדשה שמעולם לא נעשה בה שימוש, כדי שהרכישה הזו תישאר נפרדת משם המשתמש ומהצ\'אטים שלך.</string>
+    <string name="buysell_send_payment">שליחת תשלום</string>
+    <string name="buysell_send_amount_coin">שלח %1$s %2$s</string>
+    <string name="buysell_to_buy_kaspa">כדי לקנות Kaspa</string>
+    <string name="buysell_to_sell_for">כדי למכור אותו תמורת %1$s</string>
+    <string name="buysell_copy_amount">העתק סכום</string>
+    <string name="buysell_amount_copied">הסכום הועתק</string>
+    <string name="buysell_send_kas_from_k">שלח KAS מ-K</string>
+    <string name="buysell_transaction_id">מזהה עסקה</string>
+    <string name="buysell_copy_id">העתק מזהה</string>
+    <string name="buysell_you_get_about">תקבל בערך %1$s %2$s, שיישלחו אל %3$s.</string>
+    <string name="buysell_payment_received">התשלום התקבל</string>
+    <string name="buysell_waiting_confirm">ממתין לאישור.</string>
+    <string name="buysell_converting">ChangeNOW ממירה את המטבעות שלך.</string>
+    <string name="buysell_sending_your">שולח את ה-%1$s שלך</string>
+    <string name="buysell_almost_done">כמעט סיימנו.</string>
+    <string name="buysell_failed_detail">ChangeNOW לא הצליחה להשלים את ההזמנה. בדוק אותה ב-ChangeNOW.</string>
+    <string name="buysell_refunded_detail">ChangeNOW החזירה את המטבעות.</string>
+    <string name="buysell_expired_detail">שום דבר לא הגיע בזמן. התחל הזמנה חדשה.</string>
+    <string name="buysell_verifying_detail">ChangeNOW בודקת את ההזמנה הזו.</string>
+    <string name="buysell_waiting_payment">ממתין לתשלום</string>
+    <string name="buysell_waiting_payment_detail">שלח את הסכום שלמעלה. המסך מתעדכן מעצמו.</string>
+    <string name="buysell_purchase_complete">הקנייה הושלמה</string>
+    <string name="buysell_sale_complete">המכירה הושלמה</string>
+    <string name="buysell_you_paid">שילמת %1$s %2$s</string>
+    <string name="buysell_you_got_about">קיבלת בערך %1$s %2$s</string>
+    <string name="buysell_added_to_portfolio">נוסף לתיק</string>
+    <string name="buysell_order_sent">ההזמנה נשלחה</string>
+</resources>

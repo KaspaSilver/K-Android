@@ -107,6 +107,10 @@ import com.kachat.app.ui.screens.IosFullSheet
 import com.kachat.app.ui.screens.IosSheetNavBar
 import com.kachat.app.ui.screens.IosBarTextButton
 import com.kachat.app.ui.screens.LocalDockInset
+import com.kachat.app.ui.screens.InlineRename
+import com.kachat.app.ui.screens.InlineRenameRules
+import com.kachat.app.ui.screens.ManagedAddressCard
+import com.kachat.app.ui.screens.ManagedAddressUsed
 import com.kachat.app.ui.screens.SheetBarBackButton
 import com.kachat.app.ui.screens.SheetBarIconButton
 import com.kachat.app.ui.screens.amount
@@ -127,19 +131,21 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 // Managing a token, the way Manage Addresses manages Kaspa (iOS 5b7c772c
-// `Views/Tokens/TokenManageViews.swift`, owner's design 2026-11-19, from KaPay): the addresses
-// holding it, each with its own page (its history of just that token, Receive and Send), and a
-// floating options button at the bottom right. Every row has its own ⋮ (owner's call, 2026-11-21,
-// the Chatting Address too). Buying, swapping and the pool are Trestly's site, opened from the
+// `Views/Tokens/TokenManageViews.swift`, owner's design 2026-11-19, from KaPay; laid out as Manage
+// Addresses since iOS 824a30bb): the addresses holding it, each on Manage Addresses' card with
+// Copy, Send, Receive and Rename, each with its own page (its history of just that token), and a
+// floating + at the bottom right. Buying, swapping and the pool are Trestly's site, opened from the
 // Wallet tab's Swap Stablecoins (iOS 148a5331: KaChat trades too).
 
 // MARK: - Manage kUSDT
 
 /**
  * "Manage kUSDT" (iOS `TokenManageView`): the total, then every address holding it (the Chatting
- * Address and regular spending addresses), each opening [TokenAddressScreen], then what the token
- * is. The floating button at the bottom right opens its actions: a fresh address, Discover and
- * Address Visibility. A pull is Discover. Full-screen content: it draws its own bar ([onBack]).
+ * Address and regular spending addresses), each on Manage Addresses' card ([ManagedAddressCard],
+ * iOS 824a30bb, owner 2026-11-26: "the same setup") opening [TokenAddressScreen]. As there: kUSDT
+ * Address Visibility at the top right, a floating + for a fresh address (a regular one: kUSDT never
+ * lives on quantum addresses), and a pull down is Discover kUSDT Addresses. Full-screen content: it
+ * draws its own bar ([onBack]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -164,19 +170,18 @@ fun TokenManageScreen(
     val chattingAddress by walletViewModel.address.collectAsState()
     val manageAddresses by walletViewModel.manageAddresses.collectAsState()
 
-    var showActions by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
     var showVisibility by remember { mutableStateOf(false) }
     /** Open Trestly, under the balance card (iOS 518fdc8c, owner's call 2026-11-23): the address it
      *  should use, then Trestly's site inside K, for its pool and everything else there. */
     var showTrestly by remember { mutableStateOf(false) }
-    /** The ⋮ on an address row: its own actions (as Manage Addresses has for each address). */
+    /** The ⋮ on an address card: Send to Chatting Address, Combine Coins and Hide. */
     var rowActionsTarget by remember { mutableStateOf<TokenHolding?>(null) }
-    var renameTarget by remember { mutableStateOf<TokenHolding?>(null) }
-    var renameText by remember { mutableStateOf("") }
     /** Bumped after a rename, so the rows read their names again. */
     var labelRevision by remember { mutableIntStateOf(0) }
     var qrTarget by remember { mutableStateOf<TokenHolding?>(null) }
+    /** A card's Send. */
+    var sendTarget by remember { mutableStateOf<TokenHolding?>(null) }
     var combineTarget by remember { mutableStateOf<TokenHolding?>(null) }
     /** Send to Chatting Address from a row's ⋮: that address's kUSDT, the Chatting Address filled in. */
     var sendToChattingTarget by remember { mutableStateOf<TokenHolding?>(null) }
@@ -184,11 +189,10 @@ fun TokenManageScreen(
     var openedHolding by remember { mutableStateOf<TokenHolding?>(null) }
     var lastOpenedHolding by remember { mutableStateOf<TokenHolding?>(null) }
     var isGenerating by remember { mutableStateOf(false) }
-    /** Discover kUSDT Addresses: it belongs to this screen, so closing the sheet doesn't stop it. */
+    /** Discover kUSDT Addresses, run by pulling down: how far it is, under the total. */
     var isDiscovering by remember { mutableStateOf(false) }
     var discoveryChecking by remember { mutableIntStateOf(0) }
     var discoveryFound by remember { mutableIntStateOf(0) }
-    var discoverySummary by remember { mutableStateOf<String?>(null) }
 
     // every revealed address here (the regular look asks about fewer, for privacy)
     LaunchedEffect(Unit) { tokenViewModel.refreshIfStale(everyAddress = true) }
@@ -231,31 +235,42 @@ fun TokenManageScreen(
         }
     }
 
-    /** Walks the addresses for the token, reporting in the sheet as it goes; the result stays in
-     *  the sheet, or the button's spinner if it was closed. */
-    fun discover() {
+    /** How many rows a card's ⋮ has: Send to Chatting Address and Hide (not on the Chatting
+     *  Address), and Combine Coins with more than one coin. */
+    fun rowActionCount(holding: TokenHolding): Int = (if (holding.isChatting) 0 else 2) + (if (holding.coins > 1) 1 else 0)
+
+    /** Discover kUSDT Addresses, run by pulling down (iOS 824a30bb `discover`): walks the addresses
+     *  for the token, showing how far it is, and says what it found in a toast. The pull's spinner
+     *  stays until it's done. */
+    suspend fun discover() {
         if (isDiscovering) return
         isDiscovering = true
         discoveryChecking = 0
         discoveryFound = 0
-        discoverySummary = null
-        scope.launch {
-            val found = tokenViewModel.discover(token) { checking, soFar ->
-                discoveryChecking = checking
-                discoveryFound = soFar
+        val found = try {
+            tokenViewModel.discover(token) { checking, soFar ->
+                // reported on a background thread: onto the main one for the readout
+                scope.launch {
+                    discoveryChecking = checking
+                    discoveryFound = soFar
+                }
             }
+        } finally {
             isDiscovering = false
-            discoverySummary = if (found == 0) context.getString(R.string.token_no_addresses_found, token.symbol)
-            else context.getString(R.string.token_found_addresses, found, token.symbol)
-            haptic(IosHaptic.SUCCESS)
         }
+        haptic(IosHaptic.SUCCESS)
+        com.kachat.app.ui.screens.IosToasts.show(
+            if (found == 0) context.getString(R.string.token_no_addresses_found, token.symbol)
+            else context.getString(R.string.token_found_addresses, found, token.symbol)
+        )
     }
 
     val pullRefreshState = rememberPullToRefreshState()
-    // a pull is Discover kUSDT Addresses: every address to 20 past the last, revealing any holding some
+    // a pull is Discover kUSDT Addresses: every address to 20 past the last, revealing any holding
+    // some (its own button is gone, iOS 824a30bb)
     LaunchedEffect(pullRefreshState.isRefreshing) {
         if (pullRefreshState.isRefreshing) {
-            tokenViewModel.discover(token)
+            discover()
             pullRefreshState.endRefresh()
         }
     }
@@ -270,6 +285,18 @@ fun TokenManageScreen(
                         Text(stringResource(R.string.token_manage_title, token.symbol), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
                     },
                     navigationIcon = { SheetBarBackButton(onClick = onBack, modifier = Modifier.padding(start = 12.dp)) },
+                    // kUSDT Address Visibility at the top right, as on Manage Addresses (iOS 824a30bb)
+                    actions = {
+                        SheetBarIconButton(
+                            Icons.Filled.Checklist,
+                            stringResource(R.string.token_address_visibility_title, token.symbol),
+                            onClick = {
+                                haptic(IosHaptic.IMPACT_LIGHT)
+                                showVisibility = true
+                            },
+                            modifier = Modifier.padding(end = 12.dp),
+                        )
+                    },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = colors.background),
                 )
             },
@@ -319,6 +346,28 @@ fun TokenManageScreen(
                             }
                         }
                     }
+                    // While a pull-down scan runs: how far it is, under the total.
+                    if (isDiscovering) {
+                        item {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp),
+                            ) {
+                                IosActivityIndicator(modifier = Modifier.size(16.dp))
+                                Text(stringResource(R.string.checking_address_n, discoveryChecking), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                Spacer(Modifier.weight(1f))
+                                Text(
+                                    if (discoveryFound == 0) stringResource(R.string.token_no_addresses_yet, token.symbol)
+                                    else stringResource(R.string.n_found_so_far, discoveryFound),
+                                    color = colors.textSecondary,
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
                     if (token == WalletToken.KUSDT) {
                         item {
                             OpenTrestlyButton(
@@ -346,7 +395,24 @@ fun TokenManageScreen(
                                         lastOpenedHolding = holding
                                         openedHolding = holding
                                     },
-                                    onActions = { rowActionsTarget = holding },
+                                    onCopy = {
+                                        clipboard.setText(AnnotatedString(holding.address))
+                                        showAddressCopiedToast(context, holding.address)
+                                    },
+                                    onSend = { sendTarget = holding },
+                                    onReceive = { qrTarget = holding },
+                                    // In place (iOS b49a021d, owner 2026-11-27), saved once when
+                                    // the rename ends (iOS d88891ea, audit 2026-11-27 L20) under the
+                                    // address's Kaspa name, which Manage Addresses shows too; empty
+                                    // goes back to "Address #n". No pop-up.
+                                    onRenameChange = holding.spendingIndex?.takeUnless { holding.isChatting }?.let { index ->
+                                        { text: String ->
+                                            walletViewModel.setManageAddressLabel(index, text)
+                                            labelRevision++
+                                        }
+                                    },
+                                    // the Chatting Address's ⋮ has only Combine Coins
+                                    onActions = if (rowActionCount(holding) == 0) null else { { rowActionsTarget = holding } },
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                                 )
                             }
@@ -373,13 +439,13 @@ fun TokenManageScreen(
                 if (showTrestly) {
                     SwapStablecoinsSheet(walletViewModel = walletViewModel, onDismissed = { showTrestly = false }, startToken = token)
                 }
-                TokenActionsFloatingButton(
-                    token = token,
-                    isBusy = isDiscovering,
-                    onClick = {
-                        haptic(IosHaptic.IMPACT_LIGHT)
-                        showActions = true
-                    },
+                // The floating +: a fresh regular address on the list, as Manage Addresses' +
+                // (kUSDT never lives on quantum addresses).
+                com.kachat.app.ui.screens.NewAddressFloatingButton(
+                    isBusy = isGenerating,
+                    enabled = !isGenerating,
+                    contentDescription = stringResource(R.string.generate_new_address),
+                    onClick = { generateFresh() },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(end = 20.dp, bottom = 16.dp + dockInset),
@@ -410,73 +476,6 @@ fun TokenManageScreen(
     }
     BackHandler(enabled = openedHolding == null, onBack = onBack)
 
-    if (showActions) {
-        ActionSheetContainer(
-            title = stringResource(R.string.token_actions_title, token.symbol),
-            subtitle = null,
-            onDismiss = {
-                showActions = false
-                if (!isDiscovering) discoverySummary = null
-            },
-        ) {
-            if (isDiscovering) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                ) {
-                    IosActivityIndicator()
-                    Text(stringResource(R.string.checking_address_n, discoveryChecking), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        if (discoveryFound == 0) stringResource(R.string.token_no_addresses_yet, token.symbol)
-                        else stringResource(R.string.n_found_so_far, discoveryFound),
-                        color = colors.textSecondary,
-                        fontSize = 12.sp,
-                    )
-                    Text(
-                        stringResource(R.string.close_and_keep_scanning),
-                        color = KaspaTeal,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(top = 6.dp)
-                            .fillMaxWidth()
-                            .sendKaspaGlass(14.dp)
-                            .clickable(role = Role.Button) { showActions = false }
-                            .padding(vertical = 12.dp),
-                    )
-                }
-            } else {
-                ActionSheetRow(
-                    icon = Icons.Filled.LibraryAdd,
-                    title = stringResource(R.string.generate_new_address),
-                    subtitle = stringResource(R.string.token_generate_new_address_subtitle),
-                    enabled = !isGenerating,
-                ) {
-                    showActions = false
-                    generateFresh()
-                }
-                ActionSheetRow(
-                    icon = Icons.Filled.Search,
-                    title = stringResource(R.string.token_discover_addresses),
-                    subtitle = stringResource(R.string.token_discover_addresses_subtitle),
-                ) { discover() }
-                ActionSheetRow(
-                    icon = Icons.Filled.Checklist,
-                    title = stringResource(R.string.token_address_visibility_title, token.symbol),
-                    subtitle = stringResource(R.string.token_address_visibility_subtitle),
-                ) {
-                    showActions = false
-                    showVisibility = true
-                }
-                discoverySummary?.let { summary ->
-                    Text(summary, color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 2.dp))
-                }
-            }
-        }
-    }
-
     rowActionsTarget?.let { holding ->
         TokenRowActionsSheet(
             token = token,
@@ -484,21 +483,6 @@ fun TokenManageScreen(
             labelRevision = labelRevision,
             tokenViewModel = tokenViewModel,
             onDismiss = { rowActionsTarget = null },
-            onRename = { currentLabel ->
-                rowActionsTarget = null
-                // the name it was given, or empty for the default "Address #n"
-                renameText = if (currentLabel.startsWith("Address #")) "" else currentLabel
-                renameTarget = holding
-            },
-            onCopy = {
-                clipboard.setText(AnnotatedString(holding.address))
-                rowActionsTarget = null
-                showAddressCopiedToast(context, holding.address)
-            },
-            onShowQr = {
-                rowActionsTarget = null
-                qrTarget = holding
-            },
             onSendToChatting = {
                 rowActionsTarget = null
                 sendToChattingTarget = holding
@@ -514,23 +498,11 @@ fun TokenManageScreen(
         )
     }
 
-    renameTarget?.let { holding ->
-        TokenRenameDialog(
-            text = renameText,
-            onTextChange = { renameText = it },
-            onDismiss = { renameTarget = null },
-            onSave = {
-                holding.spendingIndex?.let { index ->
-                    walletViewModel.setManageAddressLabel(index, renameText)
-                    labelRevision++
-                }
-                renameTarget = null
-            },
-        )
-    }
-
     if (showVisibility) {
         TokenAddressVisibilityScreen(token = token, onDismiss = { showVisibility = false }, tokenViewModel = tokenViewModel, walletViewModel = walletViewModel)
+    }
+    sendTarget?.let { holding ->
+        TokenSendScreen(token = token, startFrom = holding, onDismiss = { sendTarget = null }, tokenViewModel = tokenViewModel, walletViewModel = walletViewModel)
     }
     qrTarget?.let { holding ->
         TokenReceiveSheet(token = token, chattingAddress = "", fixedHolding = holding, onDismiss = { qrTarget = null }, tokenViewModel = tokenViewModel)
@@ -592,8 +564,10 @@ private fun TokenManageEmptyState(token: WalletToken) {
     }
 }
 
-/** One address holding the token, as Manage Addresses draws a row: its name, the address, the
- *  amount, the KAS held with it, and Used or Unused. */
+/** One address holding the token, on Manage Addresses' card (iOS 824a30bb `addressRow`): its name,
+ *  the amount, its worth and the KAS held with it, Used or Unused, then Copy, Send, Receive and
+ *  Rename (none on the Chatting Address) and Tap to View History. No quantum tag: kUSDT is never on
+ *  a quantum address. */
 @Composable
 private fun TokenManageAddressRow(
     token: WalletToken,
@@ -602,81 +576,64 @@ private fun TokenManageAddressRow(
     labelRevision: Int,
     tokenViewModel: TokenViewModel,
     onOpen: () -> Unit,
-    onActions: () -> Unit,
+    onCopy: () -> Unit,
+    onSend: () -> Unit,
+    onReceive: () -> Unit,
+    /** An in-place rename's name, saved once when it ends (iOS d88891ea); null on the Chatting
+     *  Address. */
+    onRenameChange: ((String) -> Unit)?,
+    onActions: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalAppColors.current
     val label = rememberHoldingLabel(holding, tokenViewModel, labelRevision)
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .sendKaspaGlass(18.dp)
-            .clickable(onClick = onOpen)
-            .padding(16.dp),
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(label, color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Icon(
-                    if (holding.isChatting) Icons.Filled.Forum else Icons.Filled.VisibilityOff,
-                    contentDescription = null,
-                    tint = if (holding.isChatting) KaspaTeal else colors.success,
-                    modifier = Modifier.size(12.dp),
+    ManagedAddressCard(
+        name = label,
+        amount = TokenAmount.amount(holding.units, token),
+        canSend = holding.units > 0,
+        used = if (used) ManagedAddressUsed.USED else ManagedAddressUsed.UNUSED,
+        ownsUsername = false,
+        quantum = null,
+        nameAccessory = {
+            if (holding.isChatting) {
+                Icon(Icons.Filled.Forum, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(14.dp))
+            }
+        },
+        detail = {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                TokenAmount.dollars(holding.units, token)?.let {
+                    Text(it, color = colors.textSecondary, fontSize = 15.sp)
+                }
+                Text(
+                    stringResource(R.string.token_held_with_it, KaspaUnit.amount(holding.coins.toLong() * token.kasPerCoinSompi)),
+                    color = colors.textSecondary,
+                    fontSize = 12.sp,
                 )
             }
-            Text(shortTokenAddress(holding.address), color = colors.textPrimary, fontSize = 15.sp, fontFamily = FontFamily.Monospace, maxLines = 1)
-            Text(TokenAmount.amount(holding.units, token), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            Text(
-                stringResource(R.string.token_held_with_it, KaspaUnit.amount(holding.coins.toLong() * token.kasPerCoinSompi)),
-                color = colors.textSecondary,
-                fontSize = 12.sp,
+        },
+        onCopy = onCopy,
+        onSend = onSend,
+        onReceive = onReceive,
+        // The stored name itself, so a name like "Address #5 savings" isn't taken for the
+        // default, and the default's number as the card shows it (iOS d88891ea, audit 2026-11-27
+        // L14).
+        rename = onRenameChange?.let { save ->
+            val defaultTitle = holding.spendingIndex?.let { WalletManager.spendingAddressTitle(it) } ?: label
+            InlineRename(
+                current = InlineRenameRules.kusdtStartingText(label, defaultTitle),
+                placeholder = defaultTitle,
+                onChange = save,
             )
-            // Manage Addresses' tag: orange once the address has been used, green while fresh
-            Text(
-                stringResource(if (used) R.string.pr_used else R.string.pr_unused),
-                color = if (used) colors.warning else colors.success,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
-        // every row has its own actions (owner's call, 2026-11-21: the Chatting Address too)
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .clickable(role = Role.Button, onClick = onActions),
-        ) {
-            Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.address_actions), tint = colors.textSecondary, modifier = Modifier.size(22.dp))
-        }
-    }
+        },
+        onMore = onActions,
+        onOpen = onOpen,
+        modifier = modifier,
+    )
 }
 
-/** The floating glass button at the bottom right, as on Manage Addresses. */
-@Composable
-private fun TokenActionsFloatingButton(token: WalletToken, isBusy: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val label = stringResource(R.string.token_actions_title, token.symbol)
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(56.dp)
-            .iosGlass(cornerRadius = 28.dp)
-            .clickable(role = Role.Button, onClick = onClick),
-    ) {
-        if (isBusy) {
-            IosActivityIndicator(modifier = Modifier.size(18.dp))
-        } else {
-            // "slider.horizontal.3"
-            Icon(Icons.Filled.Tune, contentDescription = label, tint = KaspaTeal, modifier = Modifier.size(26.dp))
-        }
-    }
-}
-
-/** One address's ⋮: Rename, Copy, Show QR Code, Send to Chatting Address, Combine Coins and Hide,
- *  as Manage Addresses has for each address (iOS `rowActionsSheet`). The Chatting Address has only
- *  Copy, Show QR Code and Combine Coins: it can't be renamed, sent to itself or hidden (148a5331). */
+/** One address's ⋮ (iOS 824a30bb `rowActionsSheet`): Send to Chatting Address, Combine Coins and
+ *  Hide; Copy, Receive and Rename are on the card. The Chatting Address has only Combine Coins: it
+ *  can't be sent to itself or hidden. */
 @Composable
 private fun TokenRowActionsSheet(
     token: WalletToken,
@@ -684,9 +641,6 @@ private fun TokenRowActionsSheet(
     labelRevision: Int,
     tokenViewModel: TokenViewModel,
     onDismiss: () -> Unit,
-    onRename: (currentLabel: String) -> Unit,
-    onCopy: () -> Unit,
-    onShowQr: () -> Unit,
     onSendToChatting: () -> Unit,
     onCombine: () -> Unit,
     onHide: () -> Unit,
@@ -698,25 +652,6 @@ private fun TokenRowActionsSheet(
         detail = shortTokenAddress(holding.address),
         onDismiss = onDismiss,
     ) {
-        if (!holding.isChatting) {
-            ActionSheetRow(
-                icon = Icons.Filled.Edit,
-                title = stringResource(R.string.rename_address),
-                subtitle = stringResource(R.string.gives_this_address_a_label_of_your),
-            ) { onRename(label) }
-        }
-        ActionSheetRow(
-            icon = Icons.Filled.ContentCopy,
-            title = stringResource(R.string.copy_address),
-            subtitle = stringResource(R.string.puts_the_full_address_on_the_clipboard),
-            onClick = onCopy,
-        )
-        ActionSheetRow(
-            icon = Icons.Filled.QrCode,
-            title = stringResource(R.string.show_qr_code),
-            subtitle = stringResource(R.string.full_screen_for_scanning_with_another_device),
-            onClick = onShowQr,
-        )
         // as Kaspa's Manage Addresses: this address's kUSDT, the Chatting Address filled in
         if (!holding.isChatting) {
             ActionSheetRow(
@@ -749,40 +684,6 @@ private fun TokenRowActionsSheet(
     }
 }
 
-/** "Rename Address" with its Label field (iOS's alert). Blank goes back to "Address #n". */
-@Composable
-private fun TokenRenameDialog(text: String, onTextChange: (String) -> Unit, onDismiss: () -> Unit, onSave: () -> Unit) {
-    val colors = LocalAppColors.current
-    com.kachat.app.ui.theme.IosAlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.rename_address), color = colors.textPrimary) },
-        text = {
-            Column {
-                Text(stringResource(R.string.token_rename_message), color = colors.textSecondary, fontSize = 13.sp)
-                Spacer(Modifier.height(12.dp))
-                com.kachat.app.ui.theme.IosTextField(
-                    value = text,
-                    onValueChange = onTextChange,
-                    placeholder = { Text(stringResource(R.string.token_rename_label_placeholder)) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = colors.textPrimary,
-                        unfocusedTextColor = colors.textPrimary,
-                        focusedBorderColor = KaspaTeal,
-                        unfocusedBorderColor = colors.textSecondary,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onSave) { Text(stringResource(R.string.save), color = KaspaTeal, fontWeight = FontWeight.Bold) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = colors.textSecondary) }
-        },
-    )
-}
 
 // MARK: - Address Visibility
 
@@ -980,9 +881,10 @@ private fun TokenVisibilityRow(
 
 /**
  * One address holding the token (iOS `TokenAddressView`), like a spending address's page in Manage
- * Addresses: its balance, its history of just this token, and Receive and Send at the bottom (from
- * this address). The options button at the top right has Combine Coins (more than one coin) and the
- * explorer. Full-screen content: it draws its own bar ([onBack]).
+ * Addresses: its balance with the full address, and its history of just this token. Send and
+ * Receive are on Manage kUSDT's card (iOS 824a30bb). The options button at the top right has
+ * Combine Coins (more than one coin) and the explorer. Full-screen content: it draws its own bar
+ * ([onBack]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1006,8 +908,6 @@ fun TokenAddressScreen(
     }
     val rows = remember(activityMap, holding) { tokenViewModel.activity(token, holding) }
     var showOptions by remember { mutableStateOf(false) }
-    var showReceive by remember { mutableStateOf(false) }
-    var showSend by remember { mutableStateOf(false) }
     var showCombine by remember { mutableStateOf(false) }
 
     BackHandler(onBack = onBack)
@@ -1029,37 +929,14 @@ fun TokenAddressScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = colors.background),
             )
         },
-        bottomBar = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colors.background)
-                    .background(if (colors.isDark) Color.White.copy(alpha = 0.055f) else Color.Black.copy(alpha = 0.03f))
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
-                    .padding(bottom = dockInset),
-            ) {
-                TokenPageButton(
-                    title = stringResource(R.string.receive),
-                    icon = Icons.Filled.QrCode,
-                    enabled = true,
-                    bold = false,
-                    modifier = Modifier.weight(1f),
-                ) { showReceive = true }
-                TokenPageButton(
-                    title = stringResource(R.string.send),
-                    icon = Icons.Filled.ArrowCircleUp,
-                    enabled = current.units > 0,
-                    bold = true,
-                    modifier = Modifier.weight(1f),
-                ) { showSend = true }
-            }
-        },
+        // Send and Receive are on Manage kUSDT's card (iOS 824a30bb): just the dock's room.
+        bottomBar = { Spacer(Modifier.height(dockInset)) },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            // the same card as a Kaspa address's page
+            // the same card as a Kaspa address's page, the full address under the name
             AddressBalanceCard(
                 label = label,
+                address = holding.address,
                 amount = TokenAmount.amount(current.units, token),
                 detail = stringResource(R.string.token_held_with_it, KaspaUnit.amount(current.coins.toLong() * token.kasPerCoinSompi)),
             )
@@ -1140,39 +1017,8 @@ fun TokenAddressScreen(
             }
         }
     }
-    if (showReceive) {
-        TokenReceiveSheet(token = token, chattingAddress = "", fixedHolding = current, onDismiss = { showReceive = false }, tokenViewModel = tokenViewModel)
-    }
-    if (showSend) {
-        TokenSendScreen(token = token, startFrom = current, onDismiss = { showSend = false }, tokenViewModel = tokenViewModel, walletViewModel = walletViewModel)
-    }
     if (showCombine) {
         TokenCombineScreen(token = token, holding = current, onDismiss = { showCombine = false }, tokenViewModel = tokenViewModel)
-    }
-}
-
-/** Receive / Send at the bottom of an address's page: teal capsules with black text. */
-@Composable
-private fun TokenPageButton(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    enabled: Boolean,
-    bold: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .alpha(if (enabled) 1f else 0.5f)
-            .clip(CircleShape)
-            .background(KaspaTeal)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(vertical = 16.dp),
-    ) {
-        Icon(icon, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
-        Text(title, color = Color.Black, fontSize = 15.sp, fontWeight = if (bold) FontWeight.Bold else FontWeight.SemiBold)
     }
 }
 

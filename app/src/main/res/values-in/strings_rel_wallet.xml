@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">Emas</string>
+    <string name="rel_wallet_silver">Perak</string>
+    <string name="rel_wallet_pair_bitcoin">Harga Kaspa dalam bitcoin</string>
+    <string name="rel_wallet_pair_voo">Saham ETF S&amp;P 500 Vanguard</string>
+    <string name="rel_wallet_pair_gold">Troy ounce emas</string>
+    <string name="rel_wallet_pair_silver">Troy ounce perak</string>
+    <string name="rel_wallet_cold_storage_n">Cold Storage %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">Tidak ada UTXO yang dapat dibelanjakan di alamat ini</string>
+    <string name="rel_wallet_insufficient_plus_fee">Dana tidak cukup untuk jumlah itu ditambah biaya jaringan</string>
+    <string name="rel_wallet_too_many_inputs">Pengiriman ini membutuhkan %1$d UTXO, tetapi KasSigner hanya mendukung %2$d input per transaksi. Kirim jumlah lebih kecil atau gabungkan alamat ini terlebih dahulu.</string>
+    <string name="rel_wallet_cancelled">Dibatalkan.</string>
+    <string name="rel_wallet_err_no_internet">Tidak ada koneksi internet. Periksa koneksi Anda lalu coba lagi.</string>
+    <string name="rel_wallet_err_timed_out">Koneksi habis waktu. Periksa koneksi Anda lalu coba lagi.</string>
+    <string name="rel_wallet_err_cant_reach">Tidak dapat menjangkau server. Periksa alamat di Pengaturan dan koneksi Anda.</string>
+    <string name="rel_wallet_err_secure">Tidak dapat membuat koneksi aman ke server.</string>
+    <string name="rel_wallet_err_network">Terjadi kesalahan jaringan. Periksa koneksi Anda lalu coba lagi.</string>
+    <string name="rel_wallet_err_unreadable">Server mengirim sesuatu yang tidak dapat dibaca aplikasi. Coba lagi; jika terus terjadi, perbarui aplikasi.</string>
+    <string name="rel_wallet_err_node">Node Kaspa mengembalikan kesalahan. Aplikasi akan mencoba node lain; coba lagi sebentar lagi.</string>
+    <string name="rel_wallet_err_unknown">Terjadi kesalahan yang tidak diketahui.</string>
+    <string name="rel_wallet_err_no_spendable_available">Tidak ada UTXO yang dapat dibelanjakan</string>
+    <string name="rel_wallet_err_no_private_key">Tidak dapat mengambil kunci privat</string>
+    <string name="rel_wallet_err_insufficient_payment">Dana tidak cukup untuk pembayaran</string>
+    <string name="rel_wallet_err_insufficient_after_fee">Dana tidak cukup setelah biaya</string>
+    <string name="rel_wallet_err_insufficient_handshake">Dana tidak cukup untuk handshake</string>
+    <string name="rel_wallet_err_insufficient_self_stash">Dana tidak cukup untuk biaya self-stash</string>
+    <string name="rel_wallet_err_group_secrets">Rahasia grup tidak ada - coba bergabung lagi ke grup ini.</string>
+    <string name="rel_wallet_err_admin_secrets">Rahasia admin grup tidak ada.</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">Adicionar sala</string>
+    <string name="roomsoptin_indexer_rooms_footer">Salas que o indexador mantém: o histórico fica salvo e elas podem avisar você mesmo com o K fechado.</string>
+    <string name="roomsoptin_other_languages">Outros idiomas</string>
+    <string name="roomsoptin_create_title">Como funciona uma sala criada por você</string>
+    <string name="roomsoptin_create_point_name">Quem digitar o mesmo nome entra na mesma sala. Ela não tem dono nem convite.</string>
+    <string name="roomsoptin_create_point_history">Nenhum indexador guarda o histórico dela. O K lê da rede Kaspa enquanto a sala está aberta e guarda até 3 dias no seu telefone.</string>
+    <string name="roomsoptin_create_point_bell">Sem notificações com o K fechado. Com o sino ligado, o K avisa só enquanto está aberto.</string>
+    <string name="roomsoptin_create_point_public">Tudo o que é dito lá é público: qualquer pessoa pode ler na rede Kaspa.</string>
+    <string name="roomsoptin_create_room">Criar sala</string>
+    <string name="roomsoptin_name_your_room">Dê um nome à sua sala</string>
+    <string name="roomsoptin_empty_title">Ainda não há chats públicos</string>
+    <string name="roomsoptin_empty_body">Adicione salas que o indexador mantém, como #kaspa, ou crie a sua. Nada é adicionado sem você escolher.</string>
+    <string name="roomsoptin_removed_toast">#%1$s removida. Adicione de novo quando quiser em Adicionar sala.</string>
+    <string name="roomsoptin_bulk_delete_message">Salas que o indexador mantém podem ser adicionadas de novo em Adicionar sala. Salas criadas por você são apagadas deste aparelho com as mensagens.</string>
+    <string name="roomsoptin_not_in_list_add">Esta sala não está nos seus chats públicos. Adicionar?</string>
+    <string name="roomsoptin_room_info_curated">Uma sala que o indexador mantém. Você a adicionou, e qualquer pessoa no K pode postar nela.</string>
+</resources>

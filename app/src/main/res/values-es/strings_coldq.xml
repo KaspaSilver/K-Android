@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">Esa dirección ya está en esta cuenta.</string>
     <string name="coldq_error_in_other_account">Esa dirección ya está en tu cuenta de Cold Storage «%1$s».</string>
     <string name="coldq_added_toast">Dirección resistente a cuántica añadida.</string>
-    <string name="coldq_add_action">Añadir dirección resistente a cuántica</string>
     <string name="coldq_add_action_subtitle">Escanea una dirección KCC-3 desde la pantalla de direcciones de KasSigner.</string>
     <string name="coldq_stop_watching">Dejar de vigilar</string>
     <string name="coldq_stop_watching_subtitle">Quita esta dirección cuántica de la cuenta. Escanéala de nuevo para volver a añadirla.</string>

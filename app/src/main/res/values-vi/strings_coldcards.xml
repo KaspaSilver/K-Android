@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage account cards, in-place rename (iOS b49a021d) -->
+<resources>
+    <string name="cold_hide_funded_refused">Địa chỉ đang có Kaspa vẫn nằm trong danh sách.</string>
+    <string name="cold_remove_account">Gỡ tài khoản</string>
+    <string name="cold_kpub_qr">QR kpub</string>
+    <string name="cold_alerts_on">Thông báo bật</string>
+    <string name="cold_alerts_off">Thông báo tắt</string>
+    <string name="cold_tap_to_view_addresses">Chạm để xem địa chỉ</string>
+    <string name="cold_alerts_on_toast">Bạn sẽ được thông báo khi tài khoản này nhận Kaspa.</string>
+    <string name="cold_alerts_off_toast">Không còn thông báo khi tài khoản này nhận Kaspa.</string>
+    <string name="cold_kpub_copied">Đã sao chép kpub.</string>
+    <string name="cold_watch_this_account">Theo dõi tài khoản này</string>
+    <string name="cold_kpub_qr_warning">Ai quét mã này sẽ thấy mọi địa chỉ, số dư và giao dịch của tài khoản này. Chỉ cho thiết bị bạn tin tưởng quét.</string>
+</resources>

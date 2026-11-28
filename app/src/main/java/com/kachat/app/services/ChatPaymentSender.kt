@@ -54,6 +54,38 @@ class ChatPaymentSender @Inject constructor(
     /** iOS `scheduledSendRetries`: the pending payments with a retry already on the timer. */
     private val scheduledSendRetries = ConcurrentHashMap.newKeySet<String>()
 
+    /** Spending-address chat payments whose send got no answer, by txid: the notice each owes
+     *  (iOS `owedSpendingNotices`, audit 2026-11-27 C5). Kept across an account switch; each
+     *  names its owner. */
+    private val owedSpendingNotices = OwedSpendingNotices()
+
+    init {
+        // A Not confirmed payment turned out Sent: the notice it owes goes now, from the account
+        // that made it only (iOS `sendOwedSpendingNoticeIfAny`).
+        scope.launch {
+            chatRepository.settledSends.collect { settled ->
+                try {
+                    sendOwedSpendingNoticeIfAny(settled)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w(TAG, "Owed payment_notice for ${settled.txId.take(12)} not sent: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private suspend fun sendOwedSpendingNoticeIfAny(settled: ChatRepository.SettledSend) {
+        val current = runCatching { walletManager.getAddress() }.getOrNull() ?: return
+        if (!settled.walletAddress.equals(current, ignoreCase = true)) return
+        val owed = owedSpendingNotices.due(settled.txId, settled.contactId, current, System.currentTimeMillis()) ?: return
+        // a contact not loaded keeps it for a later settle
+        if (chatRepository.getContact(owed.contactAddress) == null) return
+        owedSpendingNotices.remove(settled.txId)
+        Log.i(TAG, "Not confirmed payment ${settled.txId.take(12)} landed: sending its owed payment_notice")
+        sendSpendingPaymentNotice(owed.contactAddress, settled.txId, owed.amountSompi, owed.memo, owed.owner)
+    }
+
     data class Request(
         val contactId: String,
         val amountSompi: Long,
@@ -306,6 +338,21 @@ class ChatPaymentSender @Inject constructor(
             // ("warning") under the transaction's own id, until the payment is read back
             // (iOS d23e6f7a `markSendUnconfirmed`).
             Log.w(TAG, "Payment outcome unknown: marked not confirmed")
+            // From a spending address, its payment_notice goes once the payment shows up
+            // (settleUnconfirmedSend): sent now it could name a payment that never lands, and
+            // never sent, the payee has the KAS with no bubble or memo (audit 2026-11-27 C5).
+            if (request.sourceSpendingIndex != null) {
+                owedSpendingNotices.put(
+                    unknown.txId,
+                    OwedSpendingNotice(
+                        contactAddress = request.contactId,
+                        amountSompi = request.amountSompi,
+                        memo = request.memo,
+                        owner = owner,
+                        atMs = System.currentTimeMillis(),
+                    ),
+                )
+            }
             finalizeUnconfirmed(request, pendingId, unknown.txId)
             clearNoInputRetryState(pendingId)
             return Outcome.Failed(context.getString(com.kachat.app.R.string.send_outcome_unknown), unknownTxId = unknown.txId)
@@ -443,8 +490,47 @@ class ChatPaymentSender @Inject constructor(
         }
     }
 
+    /** A payment From a spending address whose send got no answer: the notice it owes until the
+     *  payment shows up (iOS `OwedSpendingNotice`, audit 2026-11-27 C5). */
+    internal data class OwedSpendingNotice(
+        val contactAddress: String,
+        val amountSompi: Long,
+        val memo: String,
+        val owner: String,
+        val atMs: Long,
+    )
+
+    /** The owed notices by txid, in memory, a week at most (iOS `owedSpendingNotices`). */
+    internal class OwedSpendingNotices {
+        private val byTxId = HashMap<String, OwedSpendingNotice>()
+
+        @Synchronized
+        fun put(txId: String, notice: OwedSpendingNotice) {
+            byTxId[txId.trim().lowercase()] = notice
+        }
+
+        /** The notice [txId] owes, when it is for [contactAddress] and [current] is the account
+         *  that made it; null otherwise (it stays). Ones older than a week go first. */
+        @Synchronized
+        fun due(txId: String, contactAddress: String, current: String, nowMs: Long): OwedSpendingNotice? {
+            byTxId.entries.removeAll { nowMs - it.value.atMs >= OWED_NOTICE_LIFETIME_MS }
+            val owed = byTxId[txId.trim().lowercase()] ?: return null
+            if (!owed.contactAddress.equals(contactAddress, ignoreCase = true)) return null
+            if (!owed.owner.equals(current, ignoreCase = true)) return null
+            return owed
+        }
+
+        @Synchronized
+        fun remove(txId: String) {
+            byTxId.remove(txId.trim().lowercase())
+        }
+    }
+
     companion object {
         private const val TAG = "ChatPaymentSender"
+
+        /** How long an owed notice waits for its payment to show up (iOS: a week). */
+        internal const val OWED_NOTICE_LIFETIME_MS = 7 * 24 * 3600 * 1000L
         private const val JITTER_MIN = 0.10
         private const val JITTER_MAX = 0.35
         private const val MAX_BASE_DELAY_SECONDS = 60.0

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">Kaspa खरीदें</string>
+    <string name="buykaspa_swap_to_kaspa">Kaspa में स्वैप करें</string>
+    <string name="buykaspa_waiting_payment">आपके भुगतान का इंतज़ार</string>
+    <string name="buykaspa_paid">भुगतान हो गया। आपका USDC रास्ते में है।</string>
+    <string name="buykaspa_bridging">kUSDT के रूप में Kaspa पर ब्रिज हो रहा है, आमतौर पर लगभग 20 मिनट</string>
+    <string name="buykaspa_arrived">%1$s आ गया। इसे Kaspa में स्वैप करें।</string>
+    <string name="buykaspa_sign_again">ब्रिज पर फिर से साइन करने के लिए खोलें</string>
+    <string name="buykaspa_rejected">Stripe ने यह खरीद अस्वीकार कर दी। कुछ भी नहीं कटा।</string>
+    <string name="buykaspa_refunded">ब्रिज नहीं चल सका, इसलिए USDC लौटा दिया गया। फिर से ब्रिज करने के लिए खोलें।</string>
+    <string name="buykaspa_expired">भुगतान नहीं हुआ। कुछ भी नहीं कटा।</string>
+    <string name="buykaspa_where_land">आपका kUSDT कहाँ आए?</string>
+    <string name="buykaspa_needs_words">कार्ड से खरीदने के लिए K को इस फ़ोन पर इस अकाउंट के रिकवरी शब्द चाहिए।</string>
+    <string name="buykaspa_stripe_note">Stripe अमेरिका और EU के खरीदारों को बेचता है। कार्ड शुल्क और नेटवर्क शुल्क भुगतान से पहले अगले पेज पर दिखते हैं।</string>
+    <string name="buykaspa_lands_on_format">kUSDT यहाँ आएगा: %1$s</string>
+    <string name="buykaspa_can_close">आप इसे बंद कर सकते हैं। K वॉलेट टैब पर आपके ऑर्डर पर नज़र रखता रहेगा।</string>
+    <string name="buykaspa_approve_bridge">ब्रिज को मंज़ूरी दें</string>
+    <string name="buykaspa_sign_explainer">एक हस्ताक्षर से Trestly का ब्रिज K के Ethereum एड्रेस से इतने तक USDC ले सकता है और उसे kUSDT के रूप में Kaspa पर जमा कर सकता है। ETH की ज़रूरत नहीं, और आपके वॉलेट से कोई Kaspa नहीं जाता।</string>
+    <string name="buykaspa_up_to">अधिकतम</string>
+    <string name="buykaspa_lands_on">kUSDT यहाँ आएगा</string>
+    <string name="buykaspa_ends">समाप्ति</string>
+    <string name="buykaspa_bridge">ब्रिज</string>
+    <string name="buykaspa_eth_note">K का Ethereum एड्रेस इस अकाउंट के शब्दों से बनता है, जैसे कोई भी Ethereum वॉलेट बनाता।</string>
+    <string name="buykaspa_fresh_note">एक नया एड्रेस जो कभी इस्तेमाल नहीं हुआ, ताकि यह खरीद आपके यूज़रनेम और चैट से अलग रहे।</string>
+    <string name="buykaspa_chatting_note">वह एड्रेस जिस पर लोग आपको मैसेज और भुगतान भेजते हैं।</string>
+    <string name="buykaspa_fresh_address">नया पता</string>
+    <string name="buykaspa_reload">फिर से लोड करें</string>
+</resources>

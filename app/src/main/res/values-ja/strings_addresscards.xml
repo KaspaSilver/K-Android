@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">タップして履歴を表示</string>
+    <string name="addrcard_quantum_protected">量子耐性あり</string>
+    <string name="addrcard_not_quantum_protected">量子耐性なし</string>
+    <string name="addrcard_new_address">新しいアドレス</string>
+    <string name="addrcard_regular_address">通常のアドレス</string>
+    <string name="addrcard_regular_address_subtitle">すべてに対応：KaspaとkUSDT。</string>
+    <string name="addrcard_quantum_protected_address">量子耐性アドレス</string>
+    <string name="addrcard_quantum_protected_address_subtitle">送金するまで鍵を隠したままにします。Kaspa専用。</string>
+    <string name="addrcard_no_kusdt_on_quantum">量子耐性アドレスではkUSDTを送ることも受け取ることもできません。</string>
+</resources>

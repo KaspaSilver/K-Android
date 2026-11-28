@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">مبادلة</string>
-    <string name="swap_history">سجل المبادلات</string>
-    <string name="swap_started">المبادلة بدأت</string>
     <string name="swap_failed">المبادلة فشلت</string>
     <string name="swap_couldnt_read_amounts">مش قادرين نقرا مبالغ المبادلة دي</string>
     <string name="swap_already_holds">المبادلة دي موجودة فيها خلاص - لو ضفتها تاني هتتحسب مرتين.</string>
     <string name="swap_lands_in_portfolio">المبادلة هتتضاف للمحفظة دي.</string>
     <string name="swap_delete_title">تمسح المبادلة دي؟</string>
     <string name="swap_delete_message">ده بيشيلها من السجل اللي على جهازك بس - مش بيأثر على المبادلة نفسها.</string>
-    <string name="swap_you_send">انت بتبعت</string>
     <string name="swap_you_get">انت هتاخد</string>
-    <string name="swap_switch_direction">اعكس الاتجاه</string>
-    <string name="swap_get_deposit_address">هات عنوان الإيداع</string>
     <string name="swap_receive_coin_at">استلم %1$s على</string>
     <string name="swap_destination_tag_optional">تاج الوجهة (اختياري)</string>
     <string name="swap_destination_tag_hint">بس لو عنوان الاستلام محتاجه، زي أغلب المنصات. من غيره المنصة مش هتقدر تضيف عملاتك لحسابك.</string>
     <string name="swap_from_kusdt_lands">المبادلة من (الـ kUSDT هتوصل هنا)</string>
     <string name="swap_from_kas_lands">المبادلة من (الـ KAS هتوصل هنا)</string>
-    <string name="swap_receiving_kas_at">استلام KAS على</string>
     <string name="swap_change">غيّر</string>
     <string name="swap_powered_by_trestly">بدعم من Trestly</string>
     <string name="swap_powered_by_changenow">بدعم من ChangeNOW</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">بيع %1$s KAS بسعر %2$s - اختار المحفظة اللي عايز تضيفه ليها.</string>
     <string name="swap_rate">سعر الصرف</string>
     <string name="swap_unavailable">مش متاح</string>
-    <string name="swap_go_to_spending_addresses">روح لعناوين الإنفاق</string>
-    <string name="swap_send_coin_to_address">ابعت %1$s على العنوان ده</string>
     <string name="swap_amount_to_send">المبلغ اللي هتبعته</string>
     <string name="swap_destination_tag_copied">تاج الوجهة اتنسخ</string>
     <string name="swap_payout_address">عنوان الاستلام</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">عنوان الإيداع</string>
     <string name="swap_couldnt_reach_changenow">مقدرناش نوصل لـ ChangeNOW - جرّب تاني</string>
     <string name="swap_details">تفاصيل المبادلة</string>
-    <string name="swap_picker_footer">المبادلة بتدفع على عنوان عمرك ما استخدمته قبل كده، علشان محدش يقدر يربط الدفعة بنشاطك اللي فات. اعمل عنوان لو مفيش عنوان فاضي.</string>
-    <string name="swap_picker_all_used">كل العناوين هنا اتستخدمت. اعمل عنوان جديد فوق.</string>
-    <string name="swap_unused_addresses">عناوين مش مستخدمة</string>
-    <string name="swap_choose_address">اختار عنوان</string>
     <string name="swap_used">مستخدم</string>
     <string name="swap_unused">غير مستخدم</string>
-    <string name="swap_check_history_before">بص على سجله قبل ما تبعت له مبادلة.</string>
-    <string name="swap_use_for_this_swap">استخدمه للمبادلة دي</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW بيدفع الـ KAS اللي اتبدلت على العنوان ده.</string>
     <string name="swap_search_coins">دوّر على عملات</string>
-    <string name="swap_choose_coin">اختار عملة</string>
     <string name="swap_agreements_intro">المبادلة بتستخدم خدمتين K مش بيشغّلهم. اقرا الاتنين ووافق عليهم قبل ما تكمل.</string>
     <string name="swap_coins_on_other_networks">عملات على شبكات تانية</string>
     <string name="swap_changenow_agreement">المبادلات بين Kaspa والعملات اللي على شبكات تانية (Bitcoin وEthereum وUSDC وUSDT وغيرهم) بيعملها ChangeNOW، وده منصة تبادل تبع طرف تالت. K بيطلب من ChangeNOW سعر وعنوان إيداع بس، وبيعرض حالة المبادلة؛ وChangeNOW هو اللي بيعمل التبادل وبيبعت العملات. K مش مسؤول عن المبادلات اللي بتفشل أو بتتأخر أو بتضيع. لو مبادلة ما تمّتش، كلّم دعم ChangeNOW.</string>

@@ -192,6 +192,9 @@ class AppSettingsRepository @Inject constructor(
         // `chatPhotoQualityPreset` setting. Only affects photos sent, not received.
         // Which block explorer website "Go to Explorer" links open in.
         val KEY_KASPA_EXPLORER = stringPreferencesKey("kaspa_explorer")
+        /** A pick made since K's own Explorer became everyone's default (iOS
+         *  `kachat_k_explorer_default_migrated`). */
+        val KEY_K_EXPLORER_DEFAULT_MIGRATED = booleanPreferencesKey("k_explorer_default_migrated")
         // Per-group hidden/muted member sets - each entry is "{groupId}|{address}", flattened
         // into one Set<String> rather than a nested map since DataStore preferences only have
         // flat native collection types. Mirrors iOS's GroupChatService.groupHiddenMembers/
@@ -453,8 +456,12 @@ class AppSettingsRepository @Inject constructor(
         it[KEY_ACTIVE_ADDRESS]
     }
 
+    /** K's own Explorer for everyone on the update that added it (iOS bfb902b7
+     *  `kExplorerDefaultMigration`, owner 2026-11-26: "by default all users are directed to K
+     *  explorer, they can go in and change"): a pick made before it reads as K; one made after
+     *  sticks. */
     val kaspaExplorer: Flow<com.kachat.app.models.KaspaExplorer> = dataStore.data.map {
-        com.kachat.app.models.KaspaExplorer.fromName(it[KEY_KASPA_EXPLORER])
+        com.kachat.app.models.KaspaExplorer.stored(it[KEY_KASPA_EXPLORER], it[KEY_K_EXPLORER_DEFAULT_MIGRATED] == true)
     }
 
     /** See KEY_APPEARANCE: the stored choice, else the old Dark Mode switch's, else System. */
@@ -741,7 +748,10 @@ class AppSettingsRepository @Inject constructor(
         prefs[KEY_SAVED_NODE_ADDRESSES] = Gson().toJson(current.filterNot { it.id == id })
     }
     suspend fun setActiveAddress(value: String) = dataStore.edit { it[KEY_ACTIVE_ADDRESS] = value }
-    suspend fun setKaspaExplorer(value: com.kachat.app.models.KaspaExplorer) = dataStore.edit { it[KEY_KASPA_EXPLORER] = value.name }
+    suspend fun setKaspaExplorer(value: com.kachat.app.models.KaspaExplorer) = dataStore.edit {
+        it[KEY_KASPA_EXPLORER] = value.name
+        it[KEY_K_EXPLORER_DEFAULT_MIGRATED] = true
+    }
     suspend fun setVerboseApiLogging(value: Boolean) = dataStore.edit { it[KEY_VERBOSE_API_LOGGING] = value }
     suspend fun setAppearance(value: com.kachat.app.models.AppAppearance) = dataStore.edit { it[KEY_APPEARANCE] = value.name }
     suspend fun setCurrency(value: String) = dataStore.edit { it[KEY_CURRENCY] = value }

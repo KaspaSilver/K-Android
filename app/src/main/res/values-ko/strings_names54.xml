@@ -5,9 +5,8 @@
     <string name="names54_no_username_found">사용자 이름을 찾을 수 없습니다</string>
     <string name="names54_use_their_username">상대의 사용자 이름 사용</string>
     <string name="names54_kaspa_address_or_username">Kaspa 주소 또는 사용자 이름</string>
-    <string name="names54_enter_address_or_username_example">Kaspa 주소(kaspa:...) 또는 사용자 이름(예: alice.kachat)을 입력하세요.</string>
+    <string name="names54_enter_address_or_username_example">Kaspa 주소(kaspa:...) 또는 사용자 이름(예: @alice)을 입력하세요.</string>
     <string name="names54_members_footer">연락처에서 사람을 고르거나 Kaspa 주소 또는 사용자 이름으로 누구든 추가하세요.</string>
-    <string name="names54_finds_addresses_balance_or_username">잔액이나 사용자 이름이 있는 주소를 찾습니다.</string>
     <string name="names54_no_addresses_balance_or_username_found">잔액이나 사용자 이름이 있는 주소를 찾지 못했습니다.</string>
     <string name="names54_found_one_address_balance_username">잔액이나 사용자 이름이 있는 주소 1개를 찾았습니다.</string>
     <string name="names54_found_n_addresses_balance_username">잔액이나 사용자 이름이 있는 주소 %1$d개를 찾았습니다.</string>

@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">Intercambiar</string>
-    <string name="swap_history">Historial de intercambios</string>
-    <string name="swap_started">Intercambio iniciado</string>
     <string name="swap_failed">El intercambio falló</string>
     <string name="swap_couldnt_read_amounts">No se pudieron leer los importes de este intercambio</string>
     <string name="swap_already_holds">Ya incluye este intercambio: agregarlo de nuevo lo cuenta dos veces.</string>
     <string name="swap_lands_in_portfolio">El intercambio se agrega a este portafolio.</string>
     <string name="swap_delete_title">¿Eliminar este intercambio?</string>
     <string name="swap_delete_message">Esto solo lo quita de tu historial local; no afecta al intercambio real.</string>
-    <string name="swap_you_send">Envías</string>
     <string name="swap_you_get">Recibes</string>
-    <string name="swap_switch_direction">Invertir sentido</string>
-    <string name="swap_get_deposit_address">Obtener dirección de depósito</string>
     <string name="swap_receive_coin_at">Recibir %1$s en</string>
     <string name="swap_destination_tag_optional">Etiqueta de destino (opcional)</string>
     <string name="swap_destination_tag_hint">Solo si la dirección de destino la necesita, como en la mayoría de los exchanges. Sin ella, el exchange no puede acreditar tus monedas.</string>
     <string name="swap_from_kusdt_lands">Intercambiar desde (aquí llegan los kUSDT)</string>
     <string name="swap_from_kas_lands">Intercambiar desde (aquí llegan los KAS)</string>
-    <string name="swap_receiving_kas_at">Recibir KAS en</string>
     <string name="swap_change">Cambiar</string>
     <string name="swap_powered_by_trestly">Con tecnología de Trestly</string>
     <string name="swap_powered_by_changenow">Con tecnología de ChangeNOW</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">Venta de %1$s KAS a %2$s: elige a qué portafolio agregarla.</string>
     <string name="swap_rate">Tasa</string>
     <string name="swap_unavailable">No disponible</string>
-    <string name="swap_go_to_spending_addresses">Ir a direcciones de gasto</string>
-    <string name="swap_send_coin_to_address">Envía %1$s a esta dirección</string>
     <string name="swap_amount_to_send">Cantidad a enviar</string>
     <string name="swap_destination_tag_copied">Etiqueta de destino copiada</string>
     <string name="swap_payout_address">Dirección de pago</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">Dirección de depósito</string>
     <string name="swap_couldnt_reach_changenow">No se pudo contactar con ChangeNOW: inténtalo de nuevo</string>
     <string name="swap_details">Detalles del intercambio</string>
-    <string name="swap_picker_footer">Un intercambio paga a una dirección que no has usado antes, así que el pago no puede vincularse a tu actividad anterior. Genera una si no hay ninguna libre.</string>
-    <string name="swap_picker_all_used">Todas las direcciones de aquí ya se usaron. Genera una nueva arriba.</string>
-    <string name="swap_unused_addresses">Direcciones sin usar</string>
-    <string name="swap_choose_address">Elegir dirección</string>
     <string name="swap_used">Usada</string>
     <string name="swap_unused">Sin usar</string>
-    <string name="swap_check_history_before">Revisa su historial antes de enviarle un intercambio.</string>
-    <string name="swap_use_for_this_swap">Usar para este intercambio</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW paga los KAS intercambiados a esta dirección.</string>
     <string name="swap_search_coins">Buscar monedas</string>
-    <string name="swap_choose_coin">Elegir moneda</string>
     <string name="swap_agreements_intro">Intercambiar usa dos servicios que K no gestiona. Lee y acepta ambos antes de continuar.</string>
     <string name="swap_coins_on_other_networks">Monedas en otras redes</string>
     <string name="swap_changenow_agreement">Los intercambios entre Kaspa y monedas de otras redes (Bitcoin, Ethereum, USDC, USDT y otras) los realiza ChangeNOW, un exchange de terceros. K solo pide a ChangeNOW una cotización y una dirección de depósito y muestra el estado del intercambio; ChangeNOW hace el intercambio y envía las monedas. K no se hace responsable de intercambios fallidos, retrasados o perdidos. Si uno no se completa, contacta con el soporte de ChangeNOW.</string>

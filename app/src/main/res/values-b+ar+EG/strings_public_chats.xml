@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">الإشعارات مقفولة للمحادثة العامة دي</string>
     <string name="pc_notifications_on_closed_toast">هيجيلك إشعارات بالرسايل الجديدة في المحادثة العامة دي، حتى لو التطبيق مقفول</string>
     <string name="pc_notifications_on_open_toast">هيجيلك إشعار بالرسايل الجديدة في المحادثة العامة دي طول ما التطبيق مفتوح</string>
-    <string name="pc_default_room_off_toast">#%1$s اتقفلت - رجّعها من تعديل الشاتات العامة الافتراضية</string>
     <string name="pc_delete_room_title">تمسح #%1$s؟</string>
     <string name="pc_delete_room_message">كل رسالة متخزنة للأوضة دي على الجهاز ده هتتمسح. مينفعش تتراجع - لو رجعت بعدين هتبدأ من غير سجل.</string>
     <string name="pc_delete_room_row_subtitle">بيشيل الأوضة دي ورسايلها من الجهاز ده.</string>
     <string name="pc_keep">إبقاء</string>
     <string name="pc_keep_subtitle">سيب الأوضة زي ما هي.</string>
-    <string name="pc_new_public_chat">شات عام جديد</string>
-    <string name="pc_edit_default_public_chats">تعديل الشاتات العامة الافتراضية</string>
-    <string name="pc_new_public_chat_explainer">أي حد ينضم لنفس اسم القناة يقدر يشوف الرسايل وينشر فيها - مفيش مالك ولا دعوة.</string>
     <string name="pc_join">انضمام</string>
     <string name="pc_channel_name_rules">اسم القناة لازم يكون من 1 لـ %1$d حرف من غير مسافات أو نقطتين.</string>
     <string name="pc_join_failed">حصلت مشكلة وإحنا بندخل القناة دي.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">بلّغ عن محتوى مسيء أو مرفوض. بيفتح إيميل ومعاه الرسالة دي.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">بيخفي منشوراتهم ورسايلهم في الأوض، وبيمنعهم يتفاعلوا معاك.</string>
-    <string name="pc_sender_view_profile_subtitle">بروفايله على KaPost: المنشورات والردود والمتابعين.</string>
+    <string name="pc_sender_view_profile_subtitle">البروفايل بتاعه: البوستات والردود والمتابعين.</string>
     <string name="pc_sender_send_kaspa_subtitle">ابعت Kaspa لعنوانه.</string>
     <string name="pc_sender_copy_address_subtitle">انسخ عنوان Kaspa بتاعه.</string>
     <string name="pc_original_message_not_loaded">الرسالة الأصلية متحملتش</string>

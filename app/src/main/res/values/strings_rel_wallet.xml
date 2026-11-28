@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">Gold</string>
+    <string name="rel_wallet_silver">Silver</string>
+    <string name="rel_wallet_pair_bitcoin">Kaspa priced in bitcoin</string>
+    <string name="rel_wallet_pair_voo">Shares of Vanguard\'s S&amp;P 500 ETF</string>
+    <string name="rel_wallet_pair_gold">Troy ounces of gold</string>
+    <string name="rel_wallet_pair_silver">Troy ounces of silver</string>
+    <string name="rel_wallet_cold_storage_n">Cold Storage %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">No spendable UTXOs at this address</string>
+    <string name="rel_wallet_insufficient_plus_fee">Insufficient funds to cover that amount plus the network fee</string>
+    <string name="rel_wallet_too_many_inputs">This send would need %1$d UTXOs, but KasSigner only supports %2$d inputs per transaction. Send a smaller amount or consolidate this address first.</string>
+    <string name="rel_wallet_cancelled">Cancelled.</string>
+    <string name="rel_wallet_err_no_internet">No internet connection. Check your connection and try again.</string>
+    <string name="rel_wallet_err_timed_out">The connection timed out. Check your connection and try again.</string>
+    <string name="rel_wallet_err_cant_reach">Couldn\'t reach the server. Check the address in Settings and your connection.</string>
+    <string name="rel_wallet_err_secure">Couldn\'t make a secure connection to the server.</string>
+    <string name="rel_wallet_err_network">A network error occurred. Check your connection and try again.</string>
+    <string name="rel_wallet_err_unreadable">The server sent something the app couldn\'t read. Try again; if it keeps happening, update the app.</string>
+    <string name="rel_wallet_err_node">The Kaspa node returned an error. The app will try another node; try again in a moment.</string>
+    <string name="rel_wallet_err_unknown">An unknown error occurred.</string>
+    <string name="rel_wallet_err_no_spendable_available">No spendable UTXOs available</string>
+    <string name="rel_wallet_err_no_private_key">Could not get private key</string>
+    <string name="rel_wallet_err_insufficient_payment">Insufficient funds for payment</string>
+    <string name="rel_wallet_err_insufficient_after_fee">Insufficient funds after fee</string>
+    <string name="rel_wallet_err_insufficient_handshake">Insufficient funds for handshake</string>
+    <string name="rel_wallet_err_insufficient_self_stash">Insufficient funds for self-stash fee</string>
+    <string name="rel_wallet_err_group_secrets">Missing group secrets - try rejoining this group.</string>
+    <string name="rel_wallet_err_admin_secrets">Missing admin group secrets.</string>
+</resources>

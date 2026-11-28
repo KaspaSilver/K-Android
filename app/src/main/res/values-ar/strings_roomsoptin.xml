@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">إضافة غرفة</string>
+    <string name="roomsoptin_indexer_rooms_footer">غرف يحفظها المفهرس: يُحفظ سجلها ويمكنها إشعارك حتى عندما يكون K مغلقًا.</string>
+    <string name="roomsoptin_other_languages">لغات أخرى</string>
+    <string name="roomsoptin_create_title">كيف تعمل الغرفة التي تنشئها</string>
+    <string name="roomsoptin_create_point_name">كل من يكتب الاسم نفسه ينضم إلى الغرفة نفسها. لا مالك لها ولا دعوة.</string>
+    <string name="roomsoptin_create_point_history">لا يحفظ أي مفهرس سجلها. يقرؤه K من شبكة كاسبا أثناء فتح الغرفة، ويحتفظ بما يصل إلى 3 أيام على هاتفك.</string>
+    <string name="roomsoptin_create_point_bell">لا إشعارات أثناء إغلاق K. مع تشغيل جرسها، يُشعرك K فقط أثناء فتحه.</string>
+    <string name="roomsoptin_create_point_public">كل ما يُقال فيها علني: يمكن لأي شخص قراءته على شبكة كاسبا.</string>
+    <string name="roomsoptin_create_room">إنشاء غرفة</string>
+    <string name="roomsoptin_name_your_room">سمِّ غرفتك</string>
+    <string name="roomsoptin_empty_title">لا توجد دردشات عامة بعد</string>
+    <string name="roomsoptin_empty_body">أضف غرفًا يحفظها المفهرس، مثل #kaspa، أو أنشئ غرفتك. لا يُضاف شيء إلا إذا اخترته.</string>
+    <string name="roomsoptin_removed_toast">أُزيلت #%1$s. أضفها مجددًا في أي وقت من إضافة غرفة.</string>
+    <string name="roomsoptin_bulk_delete_message">يمكن إضافة الغرف التي يحفظها المفهرس مجددًا من إضافة غرفة. أما الغرف التي أنشأتها فتُحذف مع رسائلها من هذا الجهاز.</string>
+    <string name="roomsoptin_not_in_list_add">هذه الغرفة ليست في دردشاتك العامة. هل تريد إضافتها؟</string>
+    <string name="roomsoptin_room_info_curated">غرفة يحفظها المفهرس. أضفتها أنت، ويمكن لأي شخص على K النشر فيها.</string>
+</resources>

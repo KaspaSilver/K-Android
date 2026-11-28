@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">Tìm trò chuyện công khai</string>
-    <string name="r55_no_public_chats">Không có trò chuyện công khai</string>
-    <string name="r55_no_public_chats_hint">Chạm + để tham gia hoặc tạo phòng công khai.</string>
     <string name="r55_page_cycle_hint">Chuyển giữa cuộc trò chuyện của bạn và trò chuyện công khai</string>
-    <string name="r55_more_rooms">Phòng khác</string>
-    <string name="r55_more_rooms_footer">Các phòng được thêm trên trình lập chỉ mục mà K đọc trò chuyện công khai.</string>
     <string name="r55_delete_one_public_chat">Xóa 1 trò chuyện công khai?</string>
     <string name="r55_delete_n_public_chats">Xóa %1$d trò chuyện công khai?</string>
-    <string name="r55_delete_public_chats_message">Các trò chuyện công khai mặc định sẽ bị tắt (bật lại trong Sửa trò chuyện công khai mặc định). Các phòng bạn đã thêm sẽ bị xóa cùng tin nhắn trên thiết bị này.</string>
     <string name="r55_delete_for_everyone">Xóa với mọi người</string>
     <string name="r55_delete_for_everyone_subtitle">Xóa tin nhắn khỏi phòng này với mọi người dùng K.</string>
     <string name="r55_delete_for_everyone_q">Xóa với mọi người?</string>

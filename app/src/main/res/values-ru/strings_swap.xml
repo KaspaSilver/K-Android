@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">Обмен</string>
-    <string name="swap_history">История обменов</string>
-    <string name="swap_started">Обмен начат</string>
     <string name="swap_failed">Обмен не удался</string>
     <string name="swap_couldnt_read_amounts">Не удалось прочитать суммы этого обмена</string>
     <string name="swap_already_holds">Уже содержит этот обмен – повторное добавление учтёт его дважды.</string>
     <string name="swap_lands_in_portfolio">Обмен попадёт в этот портфель.</string>
     <string name="swap_delete_title">Удалить этот обмен?</string>
     <string name="swap_delete_message">Это удаляет его только из локальной истории — на сам обмен это не влияет.</string>
-    <string name="swap_you_send">Вы отправляете</string>
     <string name="swap_you_get">Вы получаете</string>
-    <string name="swap_switch_direction">Сменить направление</string>
-    <string name="swap_get_deposit_address">Получить адрес для депозита</string>
     <string name="swap_receive_coin_at">Получить %1$s на</string>
     <string name="swap_destination_tag_optional">Тег назначения (необязательно)</string>
     <string name="swap_destination_tag_hint">Только если он нужен адресу получения, как на большинстве бирж. Без него биржа не сможет зачислить ваши монеты.</string>
     <string name="swap_from_kusdt_lands">Обменять с адреса (сюда придут kUSDT)</string>
     <string name="swap_from_kas_lands">Обменять с адреса (сюда придут KAS)</string>
-    <string name="swap_receiving_kas_at">Получение KAS на</string>
     <string name="swap_change">Изменить</string>
     <string name="swap_powered_by_trestly">Работает на Trestly</string>
     <string name="swap_powered_by_changenow">Работает на ChangeNOW</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">Продажа %1$s KAS по %2$s – выберите портфель, в который её добавить.</string>
     <string name="swap_rate">Курс</string>
     <string name="swap_unavailable">Недоступно</string>
-    <string name="swap_go_to_spending_addresses">К адресам для расходов</string>
-    <string name="swap_send_coin_to_address">Отправьте %1$s на этот адрес</string>
     <string name="swap_amount_to_send">Сумма к отправке</string>
     <string name="swap_destination_tag_copied">Тег назначения скопирован</string>
     <string name="swap_payout_address">Адрес выплаты</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">Адрес для депозита</string>
     <string name="swap_couldnt_reach_changenow">Не удалось связаться с ChangeNOW – попробуйте ещё раз</string>
     <string name="swap_details">Детали обмена</string>
-    <string name="swap_picker_footer">Обмен выплачивается на адрес, который вы ещё не использовали, чтобы выплату нельзя было связать с вашей прошлой активностью. Создайте новый, если свободных нет.</string>
-    <string name="swap_picker_all_used">Все адреса здесь уже использованы. Создайте новый выше.</string>
-    <string name="swap_unused_addresses">Неиспользованные адреса</string>
-    <string name="swap_choose_address">Выбрать адрес</string>
     <string name="swap_used">Использован</string>
     <string name="swap_unused">Не использован</string>
-    <string name="swap_check_history_before">Проверьте его историю, прежде чем отправлять на него обмен.</string>
-    <string name="swap_use_for_this_swap">Использовать для этого обмена</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW выплатит обменянные KAS на этот адрес.</string>
     <string name="swap_search_coins">Поиск монет</string>
-    <string name="swap_choose_coin">Выбрать монету</string>
     <string name="swap_agreements_intro">Обмен использует два сервиса, которыми K не управляет. Прочитайте и примите условия обоих, прежде чем продолжить.</string>
     <string name="swap_coins_on_other_networks">Монеты в других сетях</string>
     <string name="swap_changenow_agreement">Обмены между Kaspa и монетами в других сетях (Bitcoin, Ethereum, USDC, USDT и другие) выполняет ChangeNOW, сторонняя биржа. K лишь запрашивает у ChangeNOW котировку и адрес для депозита и показывает статус обмена; обмен выполняет и монеты отправляет ChangeNOW. K не несёт ответственности за неудавшиеся, задержанные или потерянные обмены. Если обмен не прошёл, обратитесь в поддержку ChangeNOW.</string>

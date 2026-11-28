@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">Kaspa Al</string>
+    <string name="buykaspa_swap_to_kaspa">Kaspa\'ya Takas Et</string>
+    <string name="buykaspa_waiting_payment">Ödemeniz bekleniyor</string>
+    <string name="buykaspa_paid">Ödendi. USDC\'niz yolda.</string>
+    <string name="buykaspa_bridging">kUSDT olarak Kaspa\'ya köprüleniyor, genellikle yaklaşık 20 dakika</string>
+    <string name="buykaspa_arrived">%1$s geldi. Kaspa ile takas edin.</string>
+    <string name="buykaspa_sign_again">Köprüyü yeniden imzalamak için açın</string>
+    <string name="buykaspa_rejected">Stripe bu satın almayı reddetti. Hiçbir ücret alınmadı.</string>
+    <string name="buykaspa_refunded">Köprü çalışamadı, bu yüzden USDC iade edildi. Yeniden köprülemek için açın.</string>
+    <string name="buykaspa_expired">Ödenmedi. Hiçbir ücret alınmadı.</string>
+    <string name="buykaspa_where_land">kUSDT\'niz nereye gelsin?</string>
+    <string name="buykaspa_needs_words">Kartla almak için K\'nin bu hesabın kurtarma kelimelerine bu telefonda ihtiyacı var.</string>
+    <string name="buykaspa_stripe_note">Stripe ABD ve AB\'deki alıcılara satış yapar. Kart ücreti ve ağ ücretleri, ödemeden önce sonraki sayfada gösterilir.</string>
+    <string name="buykaspa_lands_on_format">kUSDT\'nin geleceği adres: %1$s</string>
+    <string name="buykaspa_can_close">Bunu kapatabilirsiniz. K siparişinizi Cüzdan sekmesinde izlemeye devam eder.</string>
+    <string name="buykaspa_approve_bridge">Köprüyü Onayla</string>
+    <string name="buykaspa_sign_explainer">Tek bir imza, Trestly\'nin köprüsünün K\'nin Ethereum adresinden bu kadar USDC\'ye kadar almasına ve bunu Kaspa\'ya kUSDT olarak yatırmasına izin verir. ETH gerekmez ve cüzdanınızdan hiç Kaspa çıkmaz.</string>
+    <string name="buykaspa_up_to">En fazla</string>
+    <string name="buykaspa_lands_on">kUSDT\'nin geleceği adres</string>
+    <string name="buykaspa_ends">Bitiş</string>
+    <string name="buykaspa_bridge">Köprü</string>
+    <string name="buykaspa_eth_note">K\'nin Ethereum adresi, herhangi bir Ethereum cüzdanının yapacağı gibi bu hesabın kelimelerinden türetilir.</string>
+    <string name="buykaspa_fresh_note">Hiç kullanılmamış yeni bir adres; böylece bu satın alma kullanıcı adınızdan ve sohbetlerinizden ayrı kalır.</string>
+    <string name="buykaspa_chatting_note">İnsanların size mesaj attığı ve ödeme yaptığı adres.</string>
+    <string name="buykaspa_fresh_address">Yeni Adres</string>
+    <string name="buykaspa_reload">Yenile</string>
+</resources>

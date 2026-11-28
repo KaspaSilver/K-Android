@@ -20,7 +20,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.AlternateEmail
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.QrCode
@@ -69,9 +71,13 @@ import com.kachat.app.viewmodels.ConnectionViewModel
 import com.kachat.app.viewmodels.WalletViewModel
 import com.kachat.app.util.showAddressCopiedToast
 
-private enum class WelcomeGuideStep { WELCOME, LANGUAGE, CURRENCY, FEES, FUNDING, NODE_CONNECTION, ADDRESS_EXPLAINER }
-
-private enum class NodeChoice { DEFAULT_NODE, OWN_NODE, AUTO_DISCOVER }
+/**
+ * The guide's steps (iOS 824a30bb, owner 2026-11-26): no Fund Your Chatting Address step ("5 Kaspa
+ * lets you send around 2,500 messages" is on the fees step) and no Connect to a Node step (a
+ * newcomer wouldn't know what it means, so K starts on the default node and the choice lives in
+ * Settings > Connection Settings > Node). The last step shares the chatting address.
+ */
+private enum class WelcomeGuideStep { WELCOME, LANGUAGE, CURRENCY, FEES, ADDRESS_EXPLAINER, SHARE_ADDRESS }
 
 /**
  * First-run guided walkthrough shown automatically right after an account is added — whether
@@ -96,8 +102,6 @@ fun WelcomeGuideScreen(
     var step by remember { mutableStateOf(WelcomeGuideStep.WELCOME) }
     val chattingAddress by walletViewModel.address.collectAsState()
     val justImportedWallet by walletViewModel.justImportedWallet.collectAsState()
-    val trustedNodeAddress by connectionViewModel.trustedNodeAddress.collectAsState()
-    val fundingBalanceSompi by walletViewModel.balanceSompi.collectAsState()
 
     // Skip gating: an onboarding run is unskippable END TO END (top-bar Skip hidden and system back
     // swallowed until Finish); a replay skips any time.
@@ -106,27 +110,10 @@ fun WelcomeGuideScreen(
         // Swallowed - onboarding runs must reach Finish.
     }
 
-    var nodeChoice by remember(trustedNodeAddress) {
-        mutableStateOf(
-            when {
-                trustedNodeAddress.isBlank() -> NodeChoice.AUTO_DISCOVER
-                trustedNodeAddress == AppSettingsRepository.DEFAULT_TRUSTED_NODE_ADDRESS -> NodeChoice.DEFAULT_NODE
-                else -> NodeChoice.OWN_NODE
-            }
-        )
-    }
-    var ownNodeInput by remember(trustedNodeAddress) {
-        mutableStateOf(if (nodeChoice == NodeChoice.OWN_NODE) trustedNodeAddress else "")
-    }
-    var nodeValidationError by remember { mutableStateOf<String?>(null) }
-    val enterAsHostPortError = stringResource(R.string.nodes_enter_as_host_port_grpcs_or_wss)
-
     // One step back. Null at Welcome so the shared button row renders Previous disabled there.
     val goBack: (() -> Unit)? = if (step == WelcomeGuideStep.WELCOME) null else {
         { step = WelcomeGuideStep.entries[step.ordinal - 1] }
     }
-    // The funding step's Show QR Code, pushed over the whole guide as iOS's NavigationLink pushes it.
-    var showFundingQr by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize()) {
     Scaffold(
@@ -170,52 +157,26 @@ fun WelcomeGuideScreen(
                     onPrevious = goBack,
                     onNext = { step = WelcomeGuideStep.FEES }
                 )
-                WelcomeGuideStep.FEES -> WelcomeGuideStepScaffold(
-                    icon = Icons.Default.Language,
-                    title = stringResource(R.string.how_kachat_uses_kaspa),
-                    body = stringResource(R.string.kachat_lets_you_send_and_receive),
-                    buttonLabel = stringResource(R.string.next),
-                    onPrevious = goBack,
-                    onNext = { step = WelcomeGuideStep.FUNDING }
-                )
-                WelcomeGuideStep.FUNDING -> WelcomeGuideFundingStep(
-                    chattingAddress = chattingAddress,
+                WelcomeGuideStep.FEES -> WelcomeGuideFeesStep(
                     // "Change Chatting Address" is offered ONLY on import onboarding runs: a
                     // freshly created wallet has nothing but index 0, and a Help replay must never
-                    // let the user re-pick an identity behind their existing conversations.
+                    // let the user re-pick an identity behind their existing conversations. It
+                    // lived on the funding step until that step left (iOS 824a30bb).
                     walletViewModel = walletViewModel,
                     canChangeChattingAddress = isOnboardingRun && justImportedWallet,
-                    onShowQr = { showFundingQr = true },
                     onPrevious = goBack,
-                    onNext = { step = WelcomeGuideStep.NODE_CONNECTION }
-                )
-                WelcomeGuideStep.NODE_CONNECTION -> WelcomeGuideNodeConnectionStep(
-                    nodeChoice = nodeChoice,
-                    onNodeChoiceChange = { nodeChoice = it; nodeValidationError = null },
-                    ownNodeInput = ownNodeInput,
-                    onOwnNodeInputChange = { ownNodeInput = it; nodeValidationError = null },
-                    validationError = nodeValidationError,
-                    onPrevious = goBack,
-                    onNext = {
-                        val valueToApply = when (nodeChoice) {
-                            NodeChoice.DEFAULT_NODE -> AppSettingsRepository.DEFAULT_TRUSTED_NODE_ADDRESS
-                            NodeChoice.AUTO_DISCOVER -> ""
-                            NodeChoice.OWN_NODE -> ownNodeInput
-                        }
-                        val trimmed = valueToApply.trim()
-                        if (trimmed.isNotEmpty() && com.kachat.app.services.grpc.parseNodeAddress(trimmed) == null) {
-                            nodeValidationError = enterAsHostPortError
-                        } else {
-                            nodeValidationError = null
-                            connectionViewModel.setTrustedNodeAddress(trimmed)
-                            step = WelcomeGuideStep.ADDRESS_EXPLAINER
-                        }
-                    }
+                    onNext = { step = WelcomeGuideStep.ADDRESS_EXPLAINER }
                 )
                 WelcomeGuideStep.ADDRESS_EXPLAINER -> WelcomeGuideAddressExplainerStep(
                     chattingAddress = chattingAddress,
                     onPrevious = goBack,
-                    // The guide's final step (iOS d1844582 removed Starting a Conversation after it).
+                    onNext = { step = WelcomeGuideStep.SHARE_ADDRESS }
+                )
+                // The guide's final step (iOS 824a30bb): share the chatting address so people
+                // can reach you.
+                WelcomeGuideStep.SHARE_ADDRESS -> WelcomeGuideShareStep(
+                    chattingAddress = chattingAddress,
+                    onPrevious = goBack,
                     onNext = {
                         // Reaching Finish is what completes an onboarding run — clear the
                         // persisted re-presentation marker (no-op on replays, which never set it).
@@ -225,14 +186,6 @@ fun WelcomeGuideScreen(
                 )
             }
         }
-    }
-    PushedQrPage(visible = showFundingQr, white = false, onBack = { showFundingQr = false }) {
-        ChattingAddressQrPage(
-            address = chattingAddress.orEmpty(),
-            balanceSompi = fundingBalanceSompi,
-            dismiss = QrPageDismiss.BACK,
-            onDismiss = { showFundingQr = false },
-        )
     }
     }
 }
@@ -475,22 +428,20 @@ private fun WelcomeGuideCurrencyStep(walletViewModel: WalletViewModel, onPreviou
     }
 }
 
+/**
+ * How K Uses Kaspa (iOS 824a30bb): the fees, with "5 Kaspa lets you send around 2,500 messages",
+ * and on an import's onboarding run, Change Chatting Address (an imported seed may hold its real
+ * identity at a nonzero index). The picker takes over the step while open and pops back here on
+ * Back or after a switch.
+ */
 @Composable
-private fun WelcomeGuideFundingStep(
-    chattingAddress: String?,
+private fun WelcomeGuideFeesStep(
     walletViewModel: WalletViewModel,
     canChangeChattingAddress: Boolean,
-    onShowQr: () -> Unit,
     onPrevious: (() -> Unit)?,
     onNext: () -> Unit
 ) {
     var showChattingAddressPicker by remember { mutableStateOf(false) }
-    val clipboardManager = LocalClipboardManager.current
-    val context = LocalContext.current
-
-    // The picker takes over the whole step while open, and pops back here on Back or after a
-    // switch — this step re-renders with the new address, since [chattingAddress] reads the live
-    // WalletViewModel state the switch updates.
     if (showChattingAddressPicker) {
         ChattingAddressPickerScreen(
             walletViewModel = walletViewModel,
@@ -499,200 +450,160 @@ private fun WelcomeGuideFundingStep(
         )
         return
     }
-
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
-        modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(Icons.Default.QrCode, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(56.dp))
-        Spacer(Modifier.height(20.dp))
-        Text(
-            stringResource(R.string.fund_your_chatting_address),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = LocalAppColors.current.textPrimary,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(20.dp))
-        Text(
-            stringResource(R.string.welcome_fund_chatting_body),
-            color = LocalAppColors.current.textSecondary,
-            fontSize = 15.sp,
-            textAlign = TextAlign.Center
-        )
-        if (chattingAddress != null) {
+            modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(Icons.Default.Language, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(56.dp))
             Spacer(Modifier.height(20.dp))
             Text(
-                chattingAddress,
-                // iOS: .footnote.monospaced(), at most two lines, 24pt in from the sides.
-                fontSize = 13.sp,
-                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                stringResource(R.string.how_kachat_uses_kaspa),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
                 color = LocalAppColors.current.textPrimary,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                modifier = Modifier
-                    .clickable {
-                        clipboardManager.setText(AnnotatedString(chattingAddress))
-                        showAddressCopiedToast(context, chattingAddress)
-                    }
-                    .padding(horizontal = 24.dp)
+                textAlign = TextAlign.Center
             )
-            TextButton(onClick = onShowQr) {
-                Icon(Icons.Default.QrCode, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.show_qr_code), color = KaspaTeal, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(20.dp))
+            Text(
+                stringResource(R.string.welcome2_fees_body),
+                color = LocalAppColors.current.textSecondary,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center
+            )
+            if (canChangeChattingAddress) {
+                Spacer(Modifier.height(12.dp))
+                TextButton(onClick = {
+                    walletViewModel.resetChattingAddressScan()
+                    showChattingAddressPicker = true
+                }) {
+                    Icon(Icons.Outlined.Badge, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.change_chatting_address), color = KaspaTeal, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
-        if (canChangeChattingAddress) {
-            TextButton(onClick = {
-                walletViewModel.resetChattingAddressScan()
-                showChattingAddressPicker = true
-            }) {
-                Icon(Icons.Outlined.Badge, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.change_chatting_address), color = KaspaTeal, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
         Spacer(Modifier.height(16.dp))
         WelcomeGuideButtonRow(onPrevious = onPrevious, onNext = onNext)
     }
 }
 
+/**
+ * Share Your Chatting Address, the guide's last step (iOS 824a30bb `shareAddressStep`): its QR,
+ * the address, Share (the system share sheet) and Copy Share Link, as Profile's Share Profile has
+ * them (the same kachat.app link), then Finish.
+ */
 @Composable
-private fun WelcomeGuideNodeConnectionStep(
-    nodeChoice: NodeChoice,
-    onNodeChoiceChange: (NodeChoice) -> Unit,
-    ownNodeInput: String,
-    onOwnNodeInputChange: (String) -> Unit,
-    validationError: String?,
-    onPrevious: (() -> Unit)?,
-    onNext: () -> Unit
-) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-
+private fun WelcomeGuideShareStep(chattingAddress: String?, onPrevious: (() -> Unit)?, onNext: () -> Unit) {
+    val colors = LocalAppColors.current
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+    val haptic = com.kachat.app.util.rememberHaptics()
+    val address = chattingAddress.orEmpty()
+    val shareUrl = remember(address) { if (address.isEmpty()) null else KaChatLink.profileWebUrl(address) }
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Column(
-        modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(Icons.Default.Dns, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(56.dp))
-        Spacer(Modifier.height(20.dp))
-        Text(
-            stringResource(R.string.connect_to_a_node),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = LocalAppColors.current.textPrimary,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            stringResource(R.string.kachat_needs_to_connect_to_a),
-            color = LocalAppColors.current.textSecondary,
-            fontSize = 15.sp,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(16.dp))
-
-        NodeChoiceRow(
-            selected = nodeChoice == NodeChoice.DEFAULT_NODE,
-            title = stringResource(R.string.default_option),
-            badge = stringResource(R.string.recommended),
-            subtitle = AppSettingsRepository.DEFAULT_TRUSTED_NODE_ADDRESS,
-            onClick = { onNodeChoiceChange(NodeChoice.DEFAULT_NODE) }
-        )
-        Spacer(Modifier.height(10.dp))
-        NodeChoiceRow(
-            selected = nodeChoice == NodeChoice.OWN_NODE,
-            title = stringResource(R.string.connect_your_own_node),
-            badge = stringResource(R.string.best),
-            subtitle = stringResource(R.string.enter_a_node_address_you_trust),
-            onClick = { onNodeChoiceChange(NodeChoice.OWN_NODE) }
-        )
-        if (nodeChoice == NodeChoice.OWN_NODE) {
-            Spacer(Modifier.height(8.dp))
-            TextField(
-                value = ownNodeInput,
-                onValueChange = onOwnNodeInputChange,
-                placeholder = { Text(stringResource(R.string.nodes_address_placeholder), color = LocalAppColors.current.textTertiary) },
-                modifier = Modifier.fillMaxWidth().height(50.dp).clip(RoundedCornerShape(12.dp)),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = LocalAppColors.current.surfaceVariant,
-                    unfocusedContainerColor = LocalAppColors.current.surfaceVariant,
-                    focusedTextColor = LocalAppColors.current.textPrimary,
-                    unfocusedTextColor = LocalAppColors.current.textPrimary,
-                    cursorColor = KaspaTeal,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
+            modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(Icons.Outlined.IosShare, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(56.dp))
+            Spacer(Modifier.height(20.dp))
+            Text(
+                stringResource(R.string.welcome2_share_title),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = colors.textPrimary,
+                textAlign = TextAlign.Center
             )
-        }
-        Spacer(Modifier.height(10.dp))
-        NodeChoiceRow(
-            selected = nodeChoice == NodeChoice.AUTO_DISCOVER,
-            title = stringResource(R.string.auto_search_for_nodes),
-            badge = null,
-            subtitle = stringResource(R.string.most_taxing_on_the_device_not_as),
-            onClick = { onNodeChoiceChange(NodeChoice.AUTO_DISCOVER) }
-        )
-
-        validationError?.let {
-            Spacer(Modifier.height(8.dp))
-            Text(it, color = LocalAppColors.current.danger, fontSize = 12.sp)
-        }
-    }
-        Spacer(Modifier.height(16.dp))
-        WelcomeGuideButtonRow(onPrevious = onPrevious, onNext = onNext)
-    }
-}
-
-@Composable
-private fun NodeChoiceRow(
-    selected: Boolean,
-    title: String,
-    badge: String?,
-    subtitle: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(LocalAppColors.current.surface)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Icon(
-            if (selected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-            contentDescription = null,
-            tint = if (selected) KaspaTeal else LocalAppColors.current.textSecondary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(Modifier.width(12.dp))
-        Column {
-            Row {
-                Text(title, fontWeight = FontWeight.SemiBold, color = LocalAppColors.current.textPrimary, fontSize = 15.sp)
-                if (badge != null) {
-                    Spacer(Modifier.width(6.dp))
-                    Text(badge, fontWeight = FontWeight.Bold, color = KaspaTeal, fontSize = 11.sp)
+            Spacer(Modifier.height(20.dp))
+            Text(
+                stringResource(R.string.welcome2_share_body),
+                color = colors.textSecondary,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center
+            )
+            if (address.isNotEmpty()) {
+                Spacer(Modifier.height(20.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .padding(12.dp)
+                        .size(180.dp),
+                ) {
+                    androidx.compose.foundation.Image(
+                        painter = rememberQrBitmapPainter(address),
+                        contentDescription = stringResource(R.string.qr_code),
+                        modifier = Modifier.size(180.dp),
+                    )
+                }
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    address,
+                    fontSize = 13.sp,
+                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                    color = colors.textPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+            }
+            if (shareUrl != null) {
+                Spacer(Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(KaspaTeal)
+                            .clickable {
+                                val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(android.content.Intent.EXTRA_TEXT, shareUrl)
+                                }
+                                runCatching { context.startActivity(android.content.Intent.createChooser(send, null)) }
+                            },
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Outlined.IosShare, contentDescription = null, tint = Color.Black, modifier = Modifier.size(17.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.share), color = Color.Black, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    }
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(KaspaTeal.copy(alpha = 0.15f))
+                            .clickable {
+                                clipboardManager.setText(AnnotatedString(shareUrl))
+                                haptic(com.kachat.app.util.IosHaptic.SUCCESS)
+                                IosToasts.show(context.getString(R.string.share_link_copied))
+                            },
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.Link, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(17.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.copy_share_link), color = KaspaTeal, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    }
                 }
             }
-            Text(subtitle, color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
         }
+        Spacer(Modifier.height(16.dp))
+        WelcomeGuideButtonRow(onPrevious = onPrevious, onNext = onNext, nextLabel = stringResource(R.string.finish))
     }
 }
 
@@ -729,6 +640,14 @@ private fun WelcomeGuideAddressExplainerStep(chattingAddress: String?, onPreviou
             caption = stringResource(R.string.welcome_how_people_reach_you_caption)
         )
         Spacer(Modifier.height(12.dp))
+        // a username makes the address easy to find (iOS 824a30bb)
+        AddressMockRow(
+            icon = Icons.Filled.AlternateEmail,
+            title = stringResource(R.string.welcome2_get_username),
+            address = "",
+            caption = stringResource(R.string.welcome2_get_username_caption)
+        )
+        Spacer(Modifier.height(12.dp))
         AddressMockRow(
             icon = Icons.AutoMirrored.Filled.Send,
             title = stringResource(R.string.welcome_paying_for_messages),
@@ -744,7 +663,7 @@ private fun WelcomeGuideAddressExplainerStep(chattingAddress: String?, onPreviou
         )
     }
         Spacer(Modifier.height(16.dp))
-        WelcomeGuideButtonRow(onPrevious = onPrevious, onNext = onNext, nextLabel = stringResource(R.string.finish))
+        WelcomeGuideButtonRow(onPrevious = onPrevious, onNext = onNext)
     }
 }
 

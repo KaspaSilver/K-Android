@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The chat link card's eyebrow, translated as iOS d88891ea does -->
+    <string name="link_card_kachat_profile">KaChat Profile</string>
+    <string name="link_card_public_chat_room">Public Chat Room</string>
+</resources>

@@ -184,6 +184,7 @@ class MainActivity : AppCompatActivity() {
         guarded("KaPost link") { handleKaPostDeepLink(intent) }
         guarded("public chat link") { handlePublicChatDeepLink(intent) }
         guarded("Kaspa Hub card link") { handleHubCardDeepLink(intent) }
+        guarded("K Explorer link") { handleExplorerDeepLink(intent) }
         guarded("KaPost, KaPay and KaPlay links") { handleRetiredAppLinks(intent) }
         guarded("share") { handleShareIntent(intent) }
         guarded("clear intent payload") { clearConsumedIntentPayload(intent) }
@@ -243,7 +244,17 @@ class MainActivity : AppCompatActivity() {
                 }
             }.onFailure { if (it is kotlinx.coroutines.CancellationException) throw it }
         }
-        handleLaunchIntent(intent)
+        // A link, notification or share is routed only when it just launched K: a screen rebuilt
+        // (process death, Settings > Language) or a reopen from Recents carries the old Intent,
+        // and routing it again re-opened a pay link's filled Send, a chat or a share. Its payload
+        // is still stripped so a later rebuild can't route it either.
+        val launchedFromHistory = intent != null &&
+            (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0
+        if (savedInstanceState == null && !launchedFromHistory) {
+            handleLaunchIntent(intent)
+        } else {
+            intent?.let { stale -> guarded("clear intent payload") { clearConsumedIntentPayload(stale) } }
+        }
         // The stored Appearance, as it loads and on every change in Settings > Customization: the
         // window's night mode follows it, so the window under Compose, the system bars and the
         // next launch's splash screen are never the other appearance (iOS 518fdc8c).
@@ -295,7 +306,8 @@ class MainActivity : AppCompatActivity() {
      */
     @androidx.compose.runtime.Composable
     private fun BatteryExemptionRationale(isLoggedIn: Boolean) {
-        val onboardingHeld by onboardingGate.held.collectAsState()
+        // not over the Welcome Guide (the sync no longer waits for it, iOS 824a30bb)
+        val onboardingHeld by onboardingGate.wizardShowing.collectAsState()
         if (!batteryRationaleDue || !isLoggedIn || onboardingHeld) return
         com.kachat.app.ui.screens.ActionSheetContainer(
             title = androidx.compose.ui.res.stringResource(R.string.battery_rationale_title),
@@ -662,6 +674,15 @@ class MainActivity : AppCompatActivity() {
     /** kachat://hub/<card> or https://kachat.app/hub/<card> - a Kaspa Hub card (iOS 961fc05a: a
      *  hold on a Hub card copies it): that card opens, wherever it lives. Only the fixed card
      *  words are taken. */
+    /** K's own Explorer (iOS bfb902b7 `ExplorerDeepLink`): `kachat://explorer-tx/<id>` or
+     *  `kachat://explorer-address/<address>` opens that page in Kaspa Hub's Explorer. */
+    private fun handleExplorerDeepLink(intent: Intent) {
+        if (intent.action != Intent.ACTION_VIEW) return
+        val uri = intent.data ?: return
+        // from another app: it never closes a sheet that can't be swiped away (audit 2026-11-27 L6)
+        com.kachat.app.services.explorer.ExplorerDeepLink.openIfLink(uri.toString(), fromOutside = true)
+    }
+
     private fun handleHubCardDeepLink(intent: Intent) {
         if (intent.action != Intent.ACTION_VIEW) return
         val uri = intent.data ?: return
@@ -756,7 +777,7 @@ class MainActivity : AppCompatActivity() {
             android.util.Log.i("MainActivity", "[Share] Dropped a share target made under another account")
             return null
         }
-        return target.contactId
+        return com.kachat.app.services.ShareShortcutsManager.routableContactId(target)
     }
 
     /** Copies a shared image stream into app cache, returning a file:// URI readable at any later point (or null on failure). */

@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">As notificações estão desativadas para este chat público</string>
     <string name="pc_notifications_on_closed_toast">Você receberá notificações de novas mensagens neste chat público, mesmo com o app fechado</string>
     <string name="pc_notifications_on_open_toast">Você receberá uma notificação de novas mensagens neste chat público enquanto o app permanecer aberto</string>
-    <string name="pc_default_room_off_toast">#%1$s está desativada - ative de novo em Editar chats públicos padrão</string>
     <string name="pc_delete_room_title">Excluir #%1$s?</string>
     <string name="pc_delete_room_message">Todas as mensagens desta sala guardadas neste dispositivo são excluídas. Isso não pode ser desfeito - ao entrar de novo mais tarde, você começa sem histórico.</string>
     <string name="pc_delete_room_row_subtitle">Remove esta sala e suas mensagens deste dispositivo.</string>
     <string name="pc_keep">Manter</string>
     <string name="pc_keep_subtitle">Deixe a sala como está.</string>
-    <string name="pc_new_public_chat">Nova conversa pública</string>
-    <string name="pc_edit_default_public_chats">Editar chats públicos padrão</string>
-    <string name="pc_new_public_chat_explainer">Qualquer pessoa que entrar no mesmo nome de canal pode ver e enviar mensagens ali - não há dono nem convite.</string>
     <string name="pc_join">Entrar</string>
     <string name="pc_channel_name_rules">Nomes de canal devem ter de 1 a %1$d caracteres, sem espaços ou dois-pontos.</string>
     <string name="pc_join_failed">Algo deu errado ao entrar nesse canal.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">Denuncie conteúdo abusivo ou impróprio. Abre um e-mail com esta mensagem anexada.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">Oculta os posts e as mensagens de sala dessa pessoa e impede que interaja com você.</string>
-    <string name="pc_sender_view_profile_subtitle">O perfil da pessoa no KaPost: posts, respostas e seguidores.</string>
+    <string name="pc_sender_view_profile_subtitle">O perfil: posts, respostas e seguidores.</string>
     <string name="pc_sender_send_kaspa_subtitle">Envie Kaspa para o endereço da pessoa.</string>
     <string name="pc_sender_copy_address_subtitle">Copiar o endereço Kaspa da pessoa.</string>
     <string name="pc_original_message_not_loaded">Mensagem original não carregada</string>

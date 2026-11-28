@@ -43,10 +43,11 @@ import javax.inject.Singleton
  *   (payment composer's Available pill, Manage Addresses) deliberately separate
  *   from the notification decision and NOT gated by the Address Activity setting.
  * - The notification itself is gated by Settings > Notifications > Wallet > "Address Activity"
- *   (default ON) plus the global notifications toggle. The gates decide only what is announced:
- *   baselines, handled marks and the chatting floor follow every own address whatever they say,
+ *   (default ON) plus the global notifications toggle. The gates decide only what rings:
+ *   baselines, handled marks and the catch-up floors follow every own address whatever they say,
  *   so turning a switch back on never announces what came while it was off (iOS 8cb4c88e, audit
- *   2026-11-24 notifications).
+ *   2026-11-24 notifications). Every receive goes in the bell, with the switches off too (iOS
+ *   01f71184, owner 2026-11-27: "the switches are the pings, not the record").
  *
  * The chatting address notifies too, for plain transfers only (no payload, iOS 56b75c8): a
  * KaChat chat payment or a handshake is the chat's own news and stays quiet. Its catch-up only
@@ -56,7 +57,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class AddressActivityNotifier @Inject constructor(
-    @ApplicationContext context: Context,
+    @ApplicationContext private val context: Context,
     private val walletManager: WalletManager,
     private val networkService: NetworkService,
     private val settingsRepository: AppSettingsRepository,
@@ -92,10 +93,20 @@ class AddressActivityNotifier @Inject constructor(
     @Volatile private var activeSinceMs = System.currentTimeMillis()
 
     /** Called from the process lifecycle observer on foreground: immediate catch-up pass, then a
-     *  foreground-only poll loop approximating iOS's live subscription events. */
+     *  foreground-only poll loop approximating iOS's live subscription events. The catch-up runs
+     *  whatever the switches say, as iOS's `runCatchUpIfNeeded`: every receive goes in the bell
+     *  (iOS 01f71184); only the beat's polls are skipped when no one needs them. */
     fun onAppForeground() {
         activeSinceMs = System.currentTimeMillis()
-        scope.launch { runDiffPassIfWanted() }
+        scope.launch {
+            try {
+                runDiffPass()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "Address activity catch-up failed", e)
+            }
+        }
         if (pollJob?.isActive == true) return
         pollJob = scope.launch {
             while (true) {
@@ -113,9 +124,9 @@ class AddressActivityNotifier @Inject constructor(
     }
 
     /**
-     * Baselines a skipped pass left behind: the next pass that runs moves them on silently, so
-     * what came while nothing looked is never announced late (a switch turned back on never
-     * announces what came while it was off, iOS 8cb4c88e).
+     * Baselines a skipped pass left behind: the next pass that runs files what came meanwhile in
+     * the bell without ringing, so it is never announced late (a switch turned back on never
+     * announces what came while it was off, iOS 8cb4c88e), yet still listed (iOS 01f71184).
      */
     @Volatile private var baselinesStale = false
 
@@ -140,6 +151,8 @@ class AddressActivityNotifier @Inject constructor(
     fun onAppBackground() {
         pollJob?.cancel()
         pollJob = null
+        // the debounced handled list is written before Android may end the process (iOS 01f71184)
+        scope.launch { runMutex.withLock { flushHandledSave() } }
     }
 
     /** One immediate pass - used by the payment composer's post-send refresh path. */
@@ -285,7 +298,8 @@ class AddressActivityNotifier @Inject constructor(
         val watched = spending + walletAddress + cold
 
         // NOTIFIABLE = watched, the chatting address included (only its plain transfers count -
-        // see attributeAndMaybeNotifyIncrease).
+        // see attributeAndMaybeNotifyIncrease). Notifiable decides what rings; every own address
+        // is attributed and goes in the bell (iOS 01f71184).
         // The spending chain has a switch of its own, and each cold account its own. Switched off
         // it is still ours - still watched, still counted for the self-send test - just quiet
         // (iOS ba352a2).
@@ -298,7 +312,8 @@ class AddressActivityNotifier @Inject constructor(
         // cold), not one request per address (audit 2026-11-25 B7); any failure keeps every
         // baseline untouched.
         val currentBalances = mutableMapOf<String, Long>()
-        // read before the fetch: a pass that runs after skipped ones announces nothing
+        // read before the fetch: a pass that runs after skipped ones rings for nothing (its
+        // receives still go in the bell)
         val silent = baselinesStale
         for (chunk in ((spending + walletAddress).toList() + cold).chunked(100)) {
             val rows = try { api.getBalances(BalancesRequest(chunk)) } catch (e: Exception) { return@withLock }
@@ -312,9 +327,12 @@ class AddressActivityNotifier @Inject constructor(
 
         val baselines = loadBaselines(walletAddress).toMutableMap()
         val isFirstRun = baselines.isEmpty()
-        val featureOn = !silent && settingsRepository.addressActivityNotificationsEnabled.first() &&
+        // What may ring; the bell gets every receive whatever this says (iOS 01f71184).
+        val ringsAllowed = !silent && settingsRepository.addressActivityNotificationsEnabled.first() &&
             settingsRepository.notificationsEnabled.first()
         if (silent) baselinesStale = false
+        ensureFloorsLoaded(walletAddress)
+        var floorsSeeded = false
 
         var changed = false
         val changedAddresses = mutableSetOf<String>()
@@ -324,10 +342,10 @@ class AddressActivityNotifier @Inject constructor(
                 // First sighting of this address (feature install, newly revealed slot) - seed
                 // silently.
                 baselines[address] = balance
-                if (address == walletAddress) {
-                    // the chatting address's receives count from now on
-                    prefs.edit().putLong(chattingFloorKey(walletAddress), System.currentTimeMillis()).apply()
-                }
+                // its receives count from now on (every address, as the chatting one's did; iOS
+                // audit 2026-11-27 R2), written once for the pass
+                setCatchUpFloor(System.currentTimeMillis(), address, walletAddress, persist = false)
+                floorsSeeded = true
                 changed = true
                 continue
             }
@@ -338,13 +356,14 @@ class AddressActivityNotifier @Inject constructor(
                 // (0 -> more) do count: they end the zero-balance funding gate (audit 2026-11-25 R2).
                 if (address != walletAddress || previous == 0L) changedAddresses.add(address)
             }
-            if (balance > previous && !isFirstRun && address in notifiable) {
+            if (balance > previous && !isFirstRun) {
+                if (floorsSeeded) { persistFloors(walletAddress); floorsSeeded = false }
                 attributeAndMaybeNotifyIncrease(
                     address = address,
                     delta = balance - previous,
                     walletAddress = walletAddress,
                     ownAll = ownAll,
-                    featureOn = featureOn,
+                    rings = ringsAllowed && address in notifiable,
                     api = api
                 )
                 // Switched account meanwhile: stop, and save nothing more for this one now; the
@@ -353,6 +372,7 @@ class AddressActivityNotifier @Inject constructor(
             }
             baselines[address] = balance
         }
+        if (floorsSeeded) persistFloors(walletAddress)
 
         if (changed) {
             saveBaselines(baselines, walletAddress)
@@ -365,22 +385,24 @@ class AddressActivityNotifier @Inject constructor(
     /**
      * Attributes a balance increase to its transaction(s) via recent history for the address:
      * per unhandled tx paying this address, resolve the inputs - any own address among them
-     * means self-transfer, suppressed silently; otherwise notify once for the tx's summed
-     * outputs to this address. If history can't attribute the delta at all, a neutral
-     * "Balance increased" notification fires instead (never silently missing real funds).
+     * means self-transfer, suppressed silently; otherwise a bell row for the tx's summed outputs
+     * to this address, and a banner when [rings]. If history can't attribute the delta at all, a
+     * neutral "Balance increased" row goes in the bell instead (never silently missing real funds).
      */
     private suspend fun attributeAndMaybeNotifyIncrease(
         address: String,
         delta: Long,
         walletAddress: String,
         ownAll: Set<String>,
-        featureOn: Boolean,
+        rings: Boolean,
         api: KaspaRestApi
     ) {
         ensureHandledLoaded(walletAddress)
         val isChatting = address == walletAddress
+        // Three: a catch-up runs every foreground, and the chatting address's newest are mostly
+        // your own photos and voice notes, each a large read (iOS audit 2026-11-27 B6).
         val transactions = try {
-            api.getTransactions(address, limit = 10)
+            api.getTransactions(address, limit = CATCH_UP_TX_LIMIT)
         } catch (e: Exception) {
             emptyList()
         }
@@ -388,19 +410,24 @@ class AddressActivityNotifier @Inject constructor(
         // current account's news. Left unmarked, so the catch-up finds it on the way back (iOS
         // 4f8e14bb).
         if (walletAddressOrNull() != walletAddress) return
-        // the chatting address: only plain transfers newer than what was already looked at
-        val floorKey = chattingFloorKey(walletAddress)
-        val floor = prefs.getLong(floorKey, 0L).coerceAtLeast(0L)
+        // Every address has a floor: only transactions newer than what was already looked at
+        // count. The chatting address has had one all along. Any other address gets its own the
+        // first time it's attributed (iOS audit 2026-11-27 R2): since every own address is
+        // attributed, quiet ones too, a Cold Storage account with receive notifications off or
+        // switched-off spending addresses would otherwise file months-old receives once. A quiet
+        // address's first look only sets it; one that rings looks as it did before floors (it was
+        // attributed then too, and what it announced is marked handled).
+        val storedFloor = catchUpFloor(address, walletAddress)
+        val floor = storedFloor ?: 0L
         val nowMs = System.currentTimeMillis()
-        if (isChatting) {
-            prefs.edit().putLong(floorKey, nextChattingFloor(transactions, floor, nowMs)).apply()
-            // the first look only sets where it starts
-            if (floor == 0L) return
-        }
+        setCatchUpFloor(nextChattingFloor(transactions, floor, nowMs), address, walletAddress)
+        // the first look only sets where it starts (the chatting address's always; another's
+        // while it's quiet)
+        if (isFirstLookOnly(storedFloor, isChatting, rings)) return
         if (transactions.isEmpty()) {
             // Resolution failed entirely - still surface the funds, neutral wording (not for the
             // chatting address, whose balance moves with every chat payment too).
-            if (featureOn && !isChatting) postBalanceIncreased(address, delta)
+            if (!isChatting) postBalanceIncreased(address, delta)
             return
         }
         // Receives the push service announced while the app was away (see [activeSinceMs]).
@@ -417,9 +444,11 @@ class AddressActivityNotifier @Inject constructor(
             if (!tx.belongsInHistory) continue
             // An unknown block time is now (it's that new).
             if (isChatting && (!isPlainTransfer(tx) || (tx.blockTime ?: nowMs) <= floor)) continue
-            val toAddress = tx.outputs.filter { it.scriptPublicKeyAddress == address }.sumOf { it.amount }
+            val toAddress = saturatingSum(tx.outputs.filter { it.scriptPublicKeyAddress == address }.map { it.amount })
             if (toAddress <= 0) continue
-            if (isHandled(tx.transactionId, walletAddress)) {
+            // At or below the floor: already looked at (or from before it was watched), so it
+            // explains the balance without being filed again (iOS R2).
+            if (isHandled(tx.transactionId, walletAddress) || isAtOrBelowFloor(tx.blockTime, floor, nowMs)) {
                 attributedAny = true
                 continue
             }
@@ -431,7 +460,7 @@ class AddressActivityNotifier @Inject constructor(
                 Log.i(TAG, "Suppressed self-send ${tx.transactionId.take(12)}")
                 continue
             }
-            if (featureOn) {
+            run {
                 val blockTime = tx.blockTime ?: 0L
                 val pushWasTheNotice = pushWatched && blockTime > 0L && blockTime < awayBeforeMs
                 // Only a receive from the last few minutes rings. The catch-up finds what came
@@ -444,12 +473,12 @@ class AddressActivityNotifier @Inject constructor(
                     totalSompi = toAddress,
                     address = address,
                     dedupeKey = tx.transactionId,
-                    banner = isCurrent && !pushWasTheNotice,
+                    banner = rings && isCurrent && !pushWasTheNotice,
                     happenedAtMs = blockTime.takeIf { it > 0L },
                 )
             }
         }
-        if (!attributedAny && featureOn && !isChatting) {
+        if (!attributedAny && !isChatting) {
             // Balance grew but none of the fetched recent txs pays this address (deep history
             // page or indexer lag) - neutral fallback rather than staying silent.
             postBalanceIncreased(address, delta)
@@ -458,8 +487,11 @@ class AddressActivityNotifier @Inject constructor(
 
     // --- Notifications ----------------------------------------------------------------
 
-    /** [banner] false: the bell only (the push already told them, [activeSinceMs], or it isn't
-     *  from the last few minutes). [happenedAtMs] dates the bell's row (the block's time). */
+    /** [banner] false: the bell only (the push already told them, [activeSinceMs], it isn't from
+     *  the last few minutes, or its address's switches are off). The bell always gets it, with
+     *  notifications off too (iOS 01f71184, owner 2026-11-27). [happenedAtMs] dates the bell's
+     *  row (the block's time). The sound and the vibration go with the banner only - they're the
+     *  posted notification's own - so a bell-only row never buzzes (iOS audit 2026-11-27 R1). */
     private suspend fun postReceive(
         totalSompi: Long,
         address: String,
@@ -471,7 +503,8 @@ class AddressActivityNotifier @Inject constructor(
         // The chatting address: the payment sync may have bannered this payment already.
         // One notice per transaction (iOS 428a797b `InAppBanner.claim`): the payment sync, or this
         // transaction's Received push (`address_activity`, same tx_id) already showing, means none.
-        val title = "Received ${com.kachat.app.repository.ChatRepository.formatKas(totalSompi)} ${KaspaUnit.symbol}"
+        // in the app's language (iOS audit 2026-11-27 M10)
+        val title = notice(com.kachat.app.R.string.notice_received, "${com.kachat.app.repository.ChatRepository.formatKas(totalSompi)} ${KaspaUnit.symbol}")
         val pushShowing = notificationHelper.isReceivedPushShowing(dedupeKey, totalSompi)
         // A Cold Storage address has no history sheet of its own here: the tap opens Wallet (iOS
         // 428a797b).
@@ -500,11 +533,11 @@ class AddressActivityNotifier @Inject constructor(
         val dedupeKey = "bal-${address.takeLast(12)}-${System.currentTimeMillis()}"
         // a Cold Storage address's tap opens Wallet (iOS 428a797b)
         val opensAddress = !isColdOnly(address, walletAddressOrNull(), walletManager.allSpendingAddresses().toSet())
-        // Bell only: this is the catch-up's fallback when it can't find the transaction, so when
-        // the Kaspa came is unknown and it may be long ago (owner, 2026-11-25: no ping for the
-        // past; iOS 961fc05a).
+        // Bell only, so no sound or vibration either (iOS audit 2026-11-27 R1): this is the
+        // catch-up's fallback when it can't find the transaction, so when the Kaspa came is
+        // unknown and it may be long ago (owner, 2026-11-25: no ping for the past; iOS 961fc05a).
         // the bell's row opens the same address's History (iOS 95e2cba)
-        notificationCenter.record("wallet-$dedupeKey", "wallet", "Balance increased by ${com.kachat.app.repository.ChatRepository.formatKas(delta)} ${KaspaUnit.symbol}", describe(address), System.currentTimeMillis(), address.takeIf { opensAddress })
+        notificationCenter.record("wallet-$dedupeKey", "wallet", notice(com.kachat.app.R.string.notice_balance_increased, "${com.kachat.app.repository.ChatRepository.formatKas(delta)} ${KaspaUnit.symbol}"), describe(address), System.currentTimeMillis(), address.takeIf { opensAddress })
     }
 
     /** Which wallet screen the notification's tap should open - mirrors iOS's `kindKey(for:)`,
@@ -515,10 +548,15 @@ class AddressActivityNotifier @Inject constructor(
         else -> NotificationHelper.KIND_SPENDING
     }
 
+    /** A notice's text in the app's language (Settings > Language), as iOS `AppLocalization`. */
+    private fun notice(res: Int, vararg args: Any): String =
+        runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { context.getString(res, *args) }
+
     private fun describe(address: String): String {
-        if (address == walletAddressOrNull()) return "Chatting address ${shortAddress(address)}"
-        coldLabelByAddress[address]?.let { return "Cold storage ($it) ${shortAddress(address)}" }
-        return "Spending address ${shortAddress(address)}"
+        if (address == walletAddressOrNull()) return notice(com.kachat.app.R.string.notice_chatting_address, shortAddress(address))
+        // e.g. "Cold storage address kaspa:qq... (Savings)" (iOS)
+        coldLabelByAddress[address]?.let { return notice(com.kachat.app.R.string.notice_cold_storage_address, shortAddress(address), it) }
+        return notice(com.kachat.app.R.string.notice_spending_address, shortAddress(address))
     }
 
     // --- Persistence (per wallet) -----------------------------------------------------
@@ -528,11 +566,17 @@ class AddressActivityNotifier @Inject constructor(
         prefs.edit()
             .remove(baselinesKey(walletAddress))
             .remove(chattingFloorKey(walletAddress))
+            .remove(addressFloorsKey(walletAddress))
             .remove(handledKey(walletAddress))
             .apply()
         // and the copy in memory (iOS 5b7c772c `removeAllData(forWallet:)`)
         scope.launch {
             runMutex.withLock {
+                if (handledDirtyWallet == walletAddress) handledDirtyWallet = null
+                if (floorsLoadedFor == walletAddress) {
+                    floorsLoadedFor = null
+                    floors = mutableMapOf()
+                }
                 if (handledLoadedFor == walletAddress) {
                     handledLoadedFor = null
                     handledOrder = mutableListOf()
@@ -548,6 +592,47 @@ class AddressActivityNotifier @Inject constructor(
      *  wallet: older receives were before it was watched, or already notified - never a burst of
      *  old payments (iOS 56b75c8 `chattingCatchUpFloorKey`). */
     private fun chattingFloorKey(walletAddress: String) = "addr_activity_chat_floor_${walletAddress.lowercase()}"
+
+    /** The same floor for every other own address (iOS audit 2026-11-27 R2), one map per wallet:
+     *  address -> ms (iOS `addressFloorsKey`). */
+    private fun addressFloorsKey(walletAddress: String) = "addr_activity_floors_${walletAddress.lowercase()}"
+
+    private var floors: MutableMap<String, Long> = mutableMapOf()
+    private var floorsLoadedFor: String? = null
+
+    private fun ensureFloorsLoaded(walletAddress: String) {
+        if (floorsLoadedFor == walletAddress) return
+        val json = prefs.getString(addressFloorsKey(walletAddress), null)
+        floors = if (json == null) mutableMapOf() else try {
+            val type = object : TypeToken<Map<String, Long>>() {}.type
+            gson.fromJson<Map<String, Long>>(json, type).toMutableMap()
+        } catch (e: Exception) {
+            mutableMapOf()
+        }
+        floorsLoadedFor = walletAddress
+    }
+
+    /** Null until the address's first look (or its baseline being seeded) sets it. */
+    private fun catchUpFloor(address: String, walletAddress: String): Long? {
+        if (address == walletAddress) return prefs.getLong(chattingFloorKey(walletAddress), 0L).takeIf { it > 0L }
+        ensureFloorsLoaded(walletAddress)
+        return floors[address]?.takeIf { it > 0L }
+    }
+
+    private fun setCatchUpFloor(ms: Long, address: String, walletAddress: String, persist: Boolean = true) {
+        if (address == walletAddress) {
+            prefs.edit().putLong(chattingFloorKey(walletAddress), ms).apply()
+            return
+        }
+        ensureFloorsLoaded(walletAddress)
+        floors[address] = ms
+        if (persist) persistFloors(walletAddress)
+    }
+
+    private fun persistFloors(walletAddress: String) {
+        if (floorsLoadedFor != walletAddress) return
+        prefs.edit().putString(addressFloorsKey(walletAddress), gson.toJson(floors)).apply()
+    }
 
     /** A transaction with no payload: plain KAS, not a KaChat chat payment, message or handshake. */
     private fun isPlainTransfer(tx: TransactionResponse): Boolean = tx.payload.isNullOrEmpty()
@@ -573,6 +658,8 @@ class AddressActivityNotifier @Inject constructor(
 
     private fun ensureHandledLoaded(walletAddress: String) {
         if (handledLoadedFor == walletAddress) return
+        // the last wallet's marks are written before its list leaves memory
+        flushHandledSave()
         val json = prefs.getString(handledKey(walletAddress), null)
         val list: List<String> = if (json == null) emptyList() else try {
             gson.fromJson(json, Array<String>::class.java).toList()
@@ -619,13 +706,71 @@ class AddressActivityNotifier @Inject constructor(
         while (handledOrder.size > HANDLED_TX_ID_CAP) {
             handledSet.remove(handledOrder.removeAt(0))
         }
-        prefs.edit().putString(handledKey(walletAddress), gson.toJson(handledOrder)).apply()
+        scheduleHandledSave(walletAddress)
+    }
+
+    /** The wallet whose handled list has marks not written yet, and the debounced write. */
+    private var handledDirtyWallet: String? = null
+    private var handledSaveJob: Job? = null
+
+    /** The handled list (up to 500 ids) is written a couple of seconds after the last mark, not
+     *  on every mark (iOS audit 2026-11-27 B7); going to the background writes it at once.
+     *  Called under [runMutex]. */
+    private fun scheduleHandledSave(walletAddress: String) {
+        handledDirtyWallet = walletAddress
+        if (handledSaveJob?.isActive == true) return
+        handledSaveJob = scope.launch {
+            kotlinx.coroutines.delay(HANDLED_SAVE_DELAY_MS)
+            runMutex.withLock {
+                handledSaveJob = null
+                flushHandledSave()
+            }
+        }
+    }
+
+    /** Called under [runMutex]. */
+    private fun flushHandledSave() {
+        val wallet = handledDirtyWallet ?: return
+        handledDirtyWallet = null
+        if (handledLoadedFor != wallet) return
+        prefs.edit().putString(handledKey(wallet), gson.toJson(handledOrder)).apply()
     }
 
     companion object {
         private const val TAG = "AddressActivity"
         private const val PREFS_NAME = "kachat_address_activity"
         private const val HANDLED_TX_ID_CAP = 500
+        /** How many of an address's newest transactions a catch-up reads (iOS audit 2026-11-27
+         *  B6: 3, not 10). */
+        internal const val CATCH_UP_TX_LIMIT = 3
+        /** How long after the last handled mark the list is written (iOS B7: 2 s). */
+        private const val HANDLED_SAVE_DELAY_MS = 2_000L
+
+        /**
+         * Whether an address's look only sets where its floor starts (iOS audit 2026-11-27 R2):
+         * the chatting address's first look always; another's while it's quiet. One that rings
+         * looks as it did before floors.
+         */
+        internal fun isFirstLookOnly(storedFloor: Long?, isChatting: Boolean, rings: Boolean): Boolean =
+            storedFloor == null && (isChatting || !rings)
+
+        /** A transaction at or below the floor was already looked at (or is from before the
+         *  address was watched): it explains the balance without being filed again (iOS R2). An
+         *  unknown block time is now. */
+        internal fun isAtOrBelowFloor(blockTimeMs: Long?, floor: Long, nowMs: Long): Boolean =
+            (blockTimeMs ?: nowMs) <= floor
+
+        /** A sum of REST amounts (a user-set server) that stops at Long.MAX_VALUE instead of
+         *  wrapping negative (iOS audit 2026-11-27 R6 `saturatingAdd`). */
+        internal fun saturatingSum(amounts: List<Long>): Long {
+            var total = 0L
+            for (amount in amounts) {
+                if (amount <= 0L) continue
+                total = if (total > Long.MAX_VALUE - amount) Long.MAX_VALUE else total + amount
+            }
+            return total
+        }
+
         /** Where in the shared [ForegroundBeat] the poll runs (rooms 0, KaPost 0.8 s, kUSDT 1.5 s). */
         private const val BEAT_OFFSET_MS = 400L
 
@@ -646,8 +791,8 @@ class AddressActivityNotifier @Inject constructor(
             blockTimeMs <= 0L || nowMs - blockTimeMs <= RECEIVE_RING_WINDOW_MS
 
         /**
-         * Where the chatting address's catch-up floor goes after a look at [transactions] (iOS
-         * 961fc05a, audit 2026-11-25 C1): the newest block time seen, but never past a transaction
+         * Where an address's catch-up floor goes after a look at [transactions] (iOS 961fc05a,
+         * audit 2026-11-25 C1; every own address has one since iOS audit 2026-11-27 R2): the newest block time seen, but never past a transaction
          * this look skipped - a block reward not accepted yet, from the last 10 minutes, may still
          * be, so the next look sees it again. An empty answer (the read failed) moves it only on
          * the first look.

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">Thêm phòng</string>
+    <string name="roomsoptin_indexer_rooms_footer">Các phòng do indexer lưu: lịch sử được giữ lại và có thể thông báo cho bạn kể cả khi K đóng.</string>
+    <string name="roomsoptin_other_languages">Ngôn ngữ khác</string>
+    <string name="roomsoptin_create_title">Phòng bạn tạo hoạt động thế nào</string>
+    <string name="roomsoptin_create_point_name">Ai gõ cùng tên sẽ vào cùng phòng. Phòng không có chủ và không cần lời mời.</string>
+    <string name="roomsoptin_create_point_history">Không indexer nào lưu lịch sử của phòng. K đọc từ mạng Kaspa khi phòng đang mở và giữ tối đa 3 ngày trên điện thoại.</string>
+    <string name="roomsoptin_create_point_bell">Không có thông báo khi K đóng. Khi bật chuông, K chỉ thông báo lúc đang mở.</string>
+    <string name="roomsoptin_create_point_public">Mọi điều nói ở đó đều công khai: ai cũng đọc được trên mạng Kaspa.</string>
+    <string name="roomsoptin_create_room">Tạo phòng</string>
+    <string name="roomsoptin_name_your_room">Đặt tên phòng</string>
+    <string name="roomsoptin_empty_title">Chưa có trò chuyện công khai</string>
+    <string name="roomsoptin_empty_body">Thêm các phòng do indexer lưu, như #kaspa, hoặc tự tạo phòng. Không gì được thêm nếu bạn không chọn.</string>
+    <string name="roomsoptin_removed_toast">Đã xóa #%1$s. Thêm lại bất cứ lúc nào từ Thêm phòng.</string>
+    <string name="roomsoptin_bulk_delete_message">Các phòng do indexer lưu có thể thêm lại từ Thêm phòng. Phòng bạn tạo sẽ bị xóa khỏi thiết bị này cùng tin nhắn.</string>
+    <string name="roomsoptin_not_in_list_add">Phòng này không có trong Trò chuyện công khai của bạn. Thêm vào?</string>
+    <string name="roomsoptin_room_info_curated">Một phòng do indexer lưu. Bạn đã thêm phòng này, và bất kỳ ai trên K đều có thể đăng ở đây.</string>
+</resources>

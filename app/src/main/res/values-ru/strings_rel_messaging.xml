@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Messaging and chess core, iOS 01f71184 (release audit 2026-11-27 R7): the 1:1 chess status
+     sentences, looked up by their English text through util/KaPlayText.kt (`kp_` and 12 hex of
+     the SHA-1 of the English). Translations from the iPhone Localizable.strings. -->
+<resources>
+    <string name="kp_5aef51fe1d56" formatted="false">Ожидание ответа</string>
+    <string name="kp_05c4963982e5" formatted="false">Партия отклонена</string>
+    <string name="kp_8a4e60471b34" formatted="false">Ваш ход</string>
+    <string name="kp_4359fcb0e687" formatted="false">Ход соперника</string>
+    <string name="kp_391d5d74dbe2" formatted="false">Мат - белые победили</string>
+    <string name="kp_a534bb864737" formatted="false">Мат - чёрные победили</string>
+    <string name="kp_0f9e5bb6b743" formatted="false">Мат - вы победили!</string>
+    <string name="kp_2a7ac7c63195" formatted="false">Мат - вы проиграли</string>
+    <string name="kp_6749d67e4cd9" formatted="false">Пат - ничья</string>
+    <string name="kp_c18f3c99c790" formatted="false">Ничья - недостаточно фигур для мата</string>
+    <string name="kp_bcdfd3342e87" formatted="false">Белые проиграли по времени</string>
+    <string name="kp_fe8f09db78ac" formatted="false">Чёрные проиграли по времени</string>
+    <string name="kp_a1fbe5b06f5c" formatted="false">Вы проиграли по времени</string>
+    <string name="kp_8f6cbd69632b" formatted="false">Соперник проиграл по времени</string>
+    <string name="kp_ca7ec66b40dd" formatted="false">Белые сдались</string>
+    <string name="kp_132872205f44" formatted="false">Чёрные сдались</string>
+    <string name="kp_fb49f7dcd5a0" formatted="false">Вы сдались</string>
+    <string name="kp_1b3b9e398740" formatted="false">Соперник сдался</string>
+</resources>

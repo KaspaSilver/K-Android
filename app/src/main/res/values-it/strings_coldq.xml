@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">Questo indirizzo è già in questo account.</string>
     <string name="coldq_error_in_other_account">Questo indirizzo è già nel tuo account Cold Storage «%1$s».</string>
     <string name="coldq_added_toast">Indirizzo resistente ai quanti aggiunto.</string>
-    <string name="coldq_add_action">Aggiungi indirizzo resistente ai quanti</string>
     <string name="coldq_add_action_subtitle">Scansiona un indirizzo KCC-3 dalla schermata degli indirizzi di KasSigner.</string>
     <string name="coldq_stop_watching">Smetti di monitorare</string>
     <string name="coldq_stop_watching_subtitle">Rimuove questo indirizzo quantistico dall\'account. Scansionalo di nuovo per aggiungerlo ancora.</string>

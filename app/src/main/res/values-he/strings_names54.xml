@@ -5,9 +5,8 @@
     <string name="names54_no_username_found">לא נמצא שם משתמש</string>
     <string name="names54_use_their_username">השתמשו בשם המשתמש שלו</string>
     <string name="names54_kaspa_address_or_username">כתובת Kaspa או שם משתמש</string>
-    <string name="names54_enter_address_or_username_example">הזינו כתובת Kaspa ‏(kaspa:...) או שם משתמש (למשל alice.kachat).</string>
+    <string name="names54_enter_address_or_username_example">הזינו כתובת Kaspa ‏(kaspa:...) או שם משתמש (למשל @alice).</string>
     <string name="names54_members_footer">בחרו אנשים מאנשי הקשר, או הוסיפו כל אחד לפי כתובת Kaspa או שם משתמש.</string>
-    <string name="names54_finds_addresses_balance_or_username">מוצא כתובות עם יתרה או שם משתמש.</string>
     <string name="names54_no_addresses_balance_or_username_found">לא נמצאו כתובות עם יתרה או שם משתמש.</string>
     <string name="names54_found_one_address_balance_username">נמצאה כתובת אחת עם יתרה או שם משתמש.</string>
     <string name="names54_found_n_addresses_balance_username">נמצאו %1$d כתובות עם יתרה או שם משתמש.</string>

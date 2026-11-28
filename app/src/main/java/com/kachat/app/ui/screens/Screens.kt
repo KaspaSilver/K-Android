@@ -291,7 +291,10 @@ fun ChatThreadScreen(
     val editsFlow = remember(contactId) { chatViewModel.getEdits(contactId) }
     val edits by editsFlow.collectAsStateWhileStarted(initial = emptyList())
     val editsByTxId = remember(edits) { edits.associateBy { it.targetTxId } }
-    val editingMessage by chatViewModel.editingMessage.collectAsState()
+    // The one ChatViewModel serves every chat: an edit, reply or staged photo started in another
+    // chat is never shown or sent here.
+    val anyEditingMessage by chatViewModel.editingMessage.collectAsState()
+    val editingMessage = anyEditingMessage?.takeIf { it.contactId == contactId }
     val handshakeSendInFlight by chatViewModel.handshakeSendInFlight.collectAsState()
 
     val dotColorHex by connectionViewModel.dotColorHex.collectAsState()
@@ -339,7 +342,8 @@ fun ChatThreadScreen(
     }
     val voiceRecordingState by chatViewModel.voiceRecordingState.collectAsState()
     val voiceNoteFee by chatViewModel.voiceNoteFeeSompi.collectAsState()
-    val pendingPhotoUri by chatViewModel.pendingPhotoUri.collectAsState()
+    val anyPendingPhotoUri by chatViewModel.pendingPhotoUri.collectAsState()
+    val pendingPhotoUri = anyPendingPhotoUri?.takeIf { chatViewModel.pendingPhotoBelongsTo(contactId) }
     // An animated GIF going on chain: "GIF Quality", its tiers GIFs, a GIF badge (iOS d7c56280).
     val pendingPhotoIsGif by chatViewModel.pendingPhotoIsGif.collectAsState()
     val nextcloudStaged by chatViewModel.nextcloudStaged.collectAsState()
@@ -357,7 +361,8 @@ fun ChatThreadScreen(
             onDismiss = { showPhotoQualitySheet = false },
         )
     }
-    val replyingTo by chatViewModel.replyingTo.collectAsState()
+    val anyReplyingTo by chatViewModel.replyingTo.collectAsState()
+    val replyingTo = anyReplyingTo?.takeIf { it.contactId == contactId }
     val kaspaExplorer by chatViewModel.kaspaExplorer.collectAsState()
     val networkFeeRate by chatViewModel.networkFeeRate.collectAsState()
     val feeRateOverride by chatViewModel.feeRateOverride.collectAsState()
@@ -601,13 +606,15 @@ fun ChatThreadScreen(
     // permission prompt and the camera/picker round trip (iOS nextcloudVoiceRequested /
     // nextcloudPhotoRequested, 8b13460).
     var voiceViaNextcloud by remember { mutableStateOf(false) }
-    var cameraViaNextcloud by remember { mutableStateOf(false) }
+    // saved with the screen, like the photo's file, so a photo taken while K was killed still
+    // goes the way it was asked to
+    var cameraViaNextcloud by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     val recordAudioPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) chatViewModel.startVoiceRecording(contactId, viaNextcloud = voiceViaNextcloud)
     }
     // Photo on chain: images only - no on-chain path fits a video.
     val photoPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri != null) chatViewModel.setPendingPhoto(uri)
+        if (uri != null) chatViewModel.setPendingPhoto(uri, contactId = contactId)
     }
     // The "+" sheet's GIF: the picker offers animated images (GIF, WebP, PNG, HEIF), and anything
     // that isn't animated is turned away (iOS d7c56280, PHPickerFilter imageAnimated). Always on
@@ -622,14 +629,14 @@ fun ChatThreadScreen(
         if (micContext.contentResolver.getType(uri)?.startsWith("video/") == true) {
             chatViewModel.setPendingNextcloudVideo(contactId, uri)
         } else {
-            chatViewModel.setPendingPhoto(uri, viaNextcloud = true)
+            chatViewModel.setPendingPhoto(uri, viaNextcloud = true, contactId = contactId)
         }
     }
     // Camera or microphone access is off for good: the alert explains it and opens Settings,
     // instead of a camera that never opens or a mic that does nothing (iOS ca013fc8 MediaAccess).
     var deniedMediaAccess by remember { mutableStateOf<com.kachat.app.util.MediaAccess?>(null) }
     com.kachat.app.util.MediaAccessAlert(deniedMediaAccess) { deniedMediaAccess = null }
-    val startCameraCapture = rememberCameraCaptureLauncher(onDenied = { deniedMediaAccess = it }) { uri -> chatViewModel.setPendingPhoto(uri, viaNextcloud = cameraViaNextcloud) }
+    val startCameraCapture = rememberCameraCaptureLauncher(onDenied = { deniedMediaAccess = it }) { uri -> chatViewModel.setPendingPhoto(uri, viaNextcloud = cameraViaNextcloud, contactId = contactId) }
     val startVoiceRecordingIfPermitted = { viaNextcloud: Boolean ->
         voiceViaNextcloud = viaNextcloud
         if (chatViewModel.voiceRecordingSupported) {
@@ -696,9 +703,20 @@ fun ChatThreadScreen(
         chatViewModel.markAsRead(contactId)
     }
 
+    // This thread's back stack entry: covered by a screen on top of it (User Info, a chess game)
+    // it stays on the stack and keeps what's staged in its composer; popped, it doesn't.
+    val threadEntry = androidx.compose.ui.platform.LocalLifecycleOwner.current as? androidx.navigation.NavBackStackEntry
     DisposableEffect(contactId) {
         chatViewModel.enterContact(contactId)
-        onDispose { chatViewModel.leaveContact(contactId) }
+        onDispose {
+            chatViewModel.leaveContact(contactId)
+            // Leaving ends a recording, as in a group (iOS 83806b3d): the mic must not stay on
+            // behind another screen, and the note can't be sent in another chat.
+            chatViewModel.cancelVoiceRecording()
+            if (threadEntry == null || navController.currentBackStack.value.none { it.id == threadEntry.id }) {
+                chatViewModel.clearContactComposer(contactId)
+            }
+        }
     }
     // Voice-note playback is owned per bubble; the thread going away is what ends it.
     DisposableEffect(Unit) { onDispose { VoicePlayback.stopAllAfterChildrenDispose() } }
@@ -739,7 +757,7 @@ fun ChatThreadScreen(
     // scope here.
     val activeChessGame = remember(messages, myAddress) {
         val address = myAddress ?: return@remember null
-        val sourceMessages = messages.map {
+        val sourceMessages = messages.filter { mayHoldChess(it.plaintextBody) }.map {
             com.kachat.app.util.ChessGameEngine.SimpleChessSourceMessage(
                 id = it.id,
                 plaintextBody = it.plaintextBody,
@@ -929,7 +947,8 @@ fun ChatThreadScreen(
                         )
                     )
             ) {
-            if (fundingGate.active) {
+            // the card stays while its Buy Kaspa flow is open, or the flow closes with it (iOS 824a30bb)
+            if (fundingGate.active || com.kachat.app.ui.screens.tokens.BuyKaspaFlowPresence.isOpen) {
                 ZeroBalanceFundingCard(
                     walletAddress = fundingGate.chattingAddress,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
@@ -1700,10 +1719,13 @@ fun ChatThreadScreen(
         // message as the last fully visible one for a moment even when the re-pin effect
         // above hasn't finished animating yet. A genuine scroll-up to read history moves
         // by much more than one item, so this threshold still catches real cases.
+        // The newest list size as state: a plain `messages` read here would stay the first (empty)
+        // list forever, and the button would never show (as BroadcastScreens' room).
+        val latestLastIndex by rememberUpdatedState(messages.lastIndex)
         val showScrollToBottom by remember {
             derivedStateOf {
                 val lastVisibleIndex = scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-                lastVisibleIndex != null && lastVisibleIndex < messages.lastIndex - 1
+                lastVisibleIndex != null && lastVisibleIndex < latestLastIndex - 1
             }
         }
 
@@ -1711,8 +1733,11 @@ fun ChatThreadScreen(
         // lambda isn't a real @Composable context, so a bare remember() call in it fails to
         // compile ("@Composable invocations can only happen from the context of a @Composable
         // function").
+        // Only messages holding a chess type's bytes: the summaries and the newest-move scan
+        // parsed every message of the history on each change (iOS 01f71184 `PayloadSniff`, audit
+        // 2026-11-27 C1).
         val chessSourceMessages = remember(messages) {
-            messages.map {
+            messages.filter { mayHoldChess(it.plaintextBody) }.map {
                 com.kachat.app.util.ChessGameEngine.SimpleChessSourceMessage(
                     id = it.id,
                     plaintextBody = it.plaintextBody,
@@ -1969,7 +1994,7 @@ fun ChatThreadScreen(
         val currentFeeSompi = estimatedFee ?: 0L
         if (currentFeeSompi > 0 && effectiveRate > 0) {
             val impliedMass = currentFeeSompi / effectiveRate
-            chatViewModel.setFeeRateOverride(kotlin.math.ceil(desiredFeeSompi / impliedMass).toLong())
+            chatViewModel.setFeeRateOverride(kotlin.math.ceil(desiredFeeSompi / impliedMass).toLong(), com.kachat.app.util.ConversationOwnership.contact(contactId))
         } else {
             chatViewModel.setFeeRateOverride(null)
         }
@@ -2361,6 +2386,12 @@ fun ChatThreadScreen(
         )
     }
 }
+
+/** Whether [body] can be a chess message (or a reply to one): it holds `"chess_`, the start of
+ *  every chess type, so the JSON decode is skipped for nearly every message (iOS 01f71184
+ *  `PayloadSniff.chessType`). A reply wraps the chess JSON as an escaped string, which still
+ *  holds it. */
+internal fun mayHoldChess(body: String?): Boolean = body != null && body.contains("\"chess_")
 
 /**
  * The new-chat handshake warning, matching desktop's `handshake-warning-banner` word for word.
@@ -4275,6 +4306,9 @@ fun DomainNameCard(
     modifier: Modifier = Modifier,
     /** A small line in the bottom-right corner (Your Domains > .kachat: when it expires, iOS 72b7dc7). */
     footnote: String? = null,
+    /** The badge is a warning (an expired name in grace): red, with a warning sign, so it isn't
+     *  missed (iOS b49a021d `badgeIsWarning`, owner 2026-11-27). */
+    badgeIsWarning: Boolean = false,
 ) {
     Box(
         modifier = modifier
@@ -4293,18 +4327,29 @@ fun DomainNameCard(
             modifier = Modifier.padding(horizontal = 20.dp)
         )
         if (badge != null) {
-            Text(
-                badge,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(10.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(Color.Black.copy(alpha = 0.35f))
+                    .background(if (badgeIsWarning) LocalAppColors.current.danger else Color.Black.copy(alpha = 0.35f))
                     .padding(horizontal = 8.dp, vertical = 4.dp)
-            )
+            ) {
+                // iOS "exclamationmark.triangle.fill"
+                if (badgeIsWarning) {
+                    Icon(Icons.Filled.Warning, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+                }
+                Text(
+                    badge,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+            }
         }
         if (footnote != null) {
             Text(
@@ -4354,12 +4399,20 @@ fun ManageAddressesScreen(
     var qrAddress by remember { mutableStateOf<String?>(null) }
     var renamingEntry by remember { mutableStateOf<com.kachat.app.services.WalletService.SpendingAddressEntry?>(null) }
     var renameInput by remember { mutableStateOf("") }
-    var showActionsMenu by remember { mutableStateOf(false) }
+    /** The floating +'s half sheet: a regular or a quantum-protected address (iOS 824a30bb
+     *  `showNewAddressSheet`, in place of the Address Actions sheet). */
+    var showNewAddressSheet by remember { mutableStateOf(false) }
     val isDiscoveringAddresses by viewModel.discoveringAddresses.collectAsState()
-    /** Generate is working: the floating button spins, as for discovery (iOS `isGenerating`). */
+    /** Generate is working: the floating button spins (iOS `isGenerating`). */
     var isGeneratingAddress by remember { mutableStateOf(false) }
     val discoveryProgress by viewModel.spendingDiscoveryProgress.collectAsState()
-    var discoverySummary by remember { mutableStateOf<String?>(null) }
+    /** A card's Send: Send Kaspa from that address (iOS 824a30bb `sendTarget`). */
+    var sendTarget by remember { mutableStateOf<com.kachat.app.services.WalletService.SpendingAddressEntry?>(null) }
+    /** The half sheet behind a card's ⋮: Send to Chatting Address and Hide. */
+    var addressActionsTarget by remember { mutableStateOf<com.kachat.app.services.WalletService.SpendingAddressEntry?>(null) }
+    /** The Chatting Address card's Send and Receive. */
+    var showChattingSend by remember { mutableStateOf(false) }
+    var showChattingReceive by remember { mutableStateOf(false) }
     val pullRefreshState = rememberPullToRefreshState()
 
     val domainOwningAddresses by viewModel.domainOwningAddresses.collectAsState()
@@ -4402,10 +4455,39 @@ fun ManageAddressesScreen(
     // flag only flips on the empty-list initial load (a warm pull leaves it false the whole
     // time, so a spinner waiting on it spun forever) and is also driven by background reloads,
     // which must not surface or dismiss the pull indicator.
+    //
+    // Pulling down is Discover Addresses (iOS 824a30bb, owner 2026-11-26: its own button is gone):
+    // it scans for every address holding a balance or a username, then reloads, as the Wallet
+    // tab's pull does. The spinner stays until the scan is done, and a toast says what it found.
     LaunchedEffect(pullRefreshState.isRefreshing) {
         if (pullRefreshState.isRefreshing) {
-            viewModel.loadManageAddressesAndAwait()
+            if (onAddressPicked != null) {
+                viewModel.loadManageAddressesAndAwait()
+            } else {
+                awaitManageAddressesDiscovery(viewModel) { count ->
+                    // One string per plural form, translated (audit 2026-11-24 #34, #36).
+                    IosToasts.show(
+                        if (count == 0) context.getString(R.string.names54_no_addresses_balance_or_username_found)
+                        else if (count == 1) context.getString(R.string.names54_found_one_address_balance_username)
+                        else context.getString(R.string.names54_found_n_addresses_balance_username, count)
+                    )
+                }
+            }
             pullRefreshState.endRefresh()
+        }
+    }
+
+    /** iOS hideAddress, for the ⋮'s Hide Address and the swipe. */
+    val hideAddress: (com.kachat.app.services.WalletService.SpendingAddressEntry) -> Unit = hide@{ entry ->
+        // On Manage kUSDT's list: it stays here (iOS 5b7c772c).
+        if (entry.index in kusdtListed) {
+            IosToasts.show(context.getString(R.string.kusdt_listed_stays_here))
+            return@hide
+        }
+        // Any address, funded too - it comes back from Address Visibility (iOS 245a5d2).
+        viewModel.setManageAddressHidden(entry.index, true) { ok ->
+            if (ok) IosToasts.show(context.getString(R.string.address_hidden_re_enable_it_in_address))
+            else IosToasts.show(context.getString(R.string.this_address_cant_be_hidden))
         }
     }
 
@@ -4420,23 +4502,32 @@ fun ManageAddressesScreen(
                 navigationIcon = {
                     SheetBarBackButton(onClick = onBack, modifier = Modifier.padding(start = 12.dp))
                 },
-                // Address Visibility used to be an unlabelled checklist glyph here. It is one
-                // of this account's address actions, so it lives with the others in the Address
-                // Actions sheet, where it has room to say what it does.
-                actions = {},
+                // Address Visibility at the top right (iOS 824a30bb, owner 2026-11-26), not in a
+                // sheet behind the floating button.
+                actions = {
+                    if (onAddressPicked == null) {
+                        val haptic = com.kachat.app.util.rememberHaptics()
+                        SheetBarIconButton(
+                            Icons.Default.Checklist,
+                            stringResource(R.string.address_visibility),
+                            onClick = {
+                                haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                                onNavigateToVisibility()
+                            },
+                            modifier = Modifier.padding(end = 12.dp),
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LocalAppColors.current.background)
             )
         },
     ) { padding ->
-        // Half sheet, opened by the floating button (iOS d1844582) - see
-        // ManageAddressesActionsSheet for the discovery readout.
-        if (showActionsMenu) {
-            ManageAddressesActionsSheet(
-                isDiscovering = isDiscoveringAddresses,
-                progress = discoveryProgress,
-                summary = discoverySummary,
+        // The floating +'s half sheet (iOS 824a30bb `newAddressSheet`): a regular address or a
+        // quantum-protected one, with the kUSDT warning.
+        if (showNewAddressSheet) {
+            ManageAddressesNewAddressSheet(
                 onGenerate = { quantum ->
-                    showActionsMenu = false
+                    showNewAddressSheet = false
                     isGeneratingAddress = true
                     // A regular address or a quantum-resistant one, each chosen on purpose (iOS
                     // 5b7c772c `generateNew(quantum:)`).
@@ -4450,21 +4541,7 @@ fun ManageAddressesScreen(
                         else IosToasts.error(context.getString(R.string.could_not_check_addresses_try_again_when))
                     }
                 },
-                onDiscover = {
-                    discoverySummary = null
-                    viewModel.discoverSpendingAddresses { count ->
-                        // The count is addresses that hold a balance or a KNS domain - say so,
-                        // rather than "used", which is what the old number implied and was not.
-                        val summary = if (count == 0) context.getString(R.string.names54_no_addresses_balance_or_username_found)
-                        else if (count == 1) context.getString(R.string.names54_found_one_address_balance_username) else context.getString(R.string.names54_found_n_addresses_balance_username, count)
-                        discoverySummary = summary
-                        // Closed the sheet and carried on? Then the summary above has nowhere to
-                        // render, so say it here instead of finishing silently.
-                        if (!showActionsMenu) IosToasts.show(summary)
-                    }
-                },
-                onVisibility = { showActionsMenu = false; onNavigateToVisibility() },
-                onDismiss = { showActionsMenu = false; discoverySummary = null },
+                onDismiss = { showNewAddressSheet = false },
             )
         }
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -4501,16 +4578,42 @@ fun ManageAddressesScreen(
                     }
                 }
             }
-            // The chatting address, first in the list: it opens its own screen (history, UTXOs,
-            // Domains, Send / Receive), the same one Profile used to.
+            // While a pull-down scan runs: how far it is, under the Total Balance (iOS 824a30bb
+            // `discoveryStatus`).
+            val progressNow = discoveryProgress
+            if (onAddressPicked == null && isDiscoveringAddresses && progressNow != null) {
+                item { ManageAddressesDiscoveryStatus(progressNow) }
+            }
+            // The chatting address, first in the list, on the same card as the others (iOS
+            // 824a30bb `chattingAddressRow`): no rename; it opens its own screen (history, UTXOs,
+            // Usernames).
             val chatting = chattingAddress
             if (onAddressPicked == null && chatting != null) {
                 item {
-                    ManageChattingAddressRow(
-                        address = chatting,
-                        balanceSompi = knownChattingSompi,
-                        showsDomainTag = chatting in domainOwningAddresses,
-                        onClick = onOpenChattingAddress,
+                    ManagedAddressCard(
+                        name = stringResource(R.string.chatting_address),
+                        amount = managedKasAmount(knownChattingSompi),
+                        canSend = (knownChattingSompi ?: 0L) > 0L,
+                        used = ManagedAddressUsed.USED,
+                        ownsUsername = chatting in domainOwningAddresses,
+                        quantum = QuantumProtection.NOT_PROTECTED,
+                        nameAccessory = {
+                            Icon(Icons.Default.Forum, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(14.dp))
+                        },
+                        detail = {
+                            knownChattingSompi?.let { sompi ->
+                                kaspaFiatText(sompi)?.let { Text(it, color = LocalAppColors.current.textSecondary, fontSize = 15.sp) }
+                            }
+                        },
+                        onCopy = {
+                            clipboardManager.setText(AnnotatedString(chatting))
+                            showAddressCopiedToast(context, chatting)
+                        },
+                        onSend = { showChattingSend = true },
+                        onReceive = { showChattingReceive = true },
+                        rename = null,
+                        onMore = null,
+                        onOpen = onOpenChattingAddress,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                     )
                 }
@@ -4577,20 +4680,8 @@ fun ManageAddressesScreen(
                 }
             } else {
                 items(visibleAddresses, key = { it.index }) { entry ->
-                    // iOS hideAddress, for the row menu's Hide Address and the swipe below.
-                    val hideEntry: () -> Unit = hide@{
-                        // On Manage kUSDT's list: it stays here (iOS 5b7c772c).
-                        if (entry.index in kusdtListed) {
-                            IosToasts.show(context.getString(R.string.kusdt_listed_stays_here))
-                            return@hide
-                        }
-                        // Any address, funded too - it comes back from Address Visibility
-                        // (iOS 245a5d2).
-                        viewModel.setManageAddressHidden(entry.index, true) { ok ->
-                            if (ok) IosToasts.show(context.getString(R.string.address_hidden_re_enable_it_in_address))
-                            else IosToasts.show(context.getString(R.string.this_address_cant_be_hidden))
-                        }
-                    }
+                    // iOS hideAddress, for the ⋮'s Hide Address and the swipe below.
+                    val hideEntry: () -> Unit = { hideAddress(entry) }
                     // Swipe left to hide (iOS 2026-11-22 `.swipeActions(edge: .trailing,
                     // allowsFullSwipe: true)`), like marking mail read: a partial swipe shows an
                     // orange Hide, a full swipe hides at once. The row springs back first, so a
@@ -4610,7 +4701,46 @@ fun ManageAddressesScreen(
                         ) else emptyList(),
                         trailingFullSwipe = true,
                     ) {
-                        ManageAddressRow(
+                        if (onAddressPicked == null) {
+                            // Each address on a card like the Total Balance card (iOS 824a30bb
+                            // `addressRow`): Copy, Send, Receive and Rename on it, the ⋮ keeps
+                            // Send to Chatting Address and Hide, and the card opens the history.
+                            // A row painted from the snapshot, or whose probe failed, isn't known
+                            // to be unused: "Checking", never a guess (claiming "Unused" could
+                            // invite address reuse). Pull to refresh re-checks.
+                            val usedNow = entry.everUsed || entry.balanceSompi > 0
+                            ManagedAddressCard(
+                                name = entry.displayLabel,
+                                amount = managedKasAmount(entry.balanceSompi),
+                                canSend = entry.balanceSompi > 0L,
+                                used = if (usedNow) ManagedAddressUsed.USED else if (entry.liveChecked) ManagedAddressUsed.UNUSED else ManagedAddressUsed.CHECKING,
+                                ownsUsername = entry.address in domainOwningAddresses,
+                                quantum = QuantumProtection.of(entry.isQuantum, entry.address.lowercase() in quantumSpentAddresses, entry.balanceSompi),
+                                detail = {
+                                    kaspaFiatText(entry.balanceSompi)?.let { Text(it, color = LocalAppColors.current.textSecondary, fontSize = 15.sp) }
+                                },
+                                onCopy = {
+                                    clipboardManager.setText(AnnotatedString(entry.address))
+                                    // A copied address can be handed out for kUSDT like Receive's
+                                    // (audit 2026-11-25 M2). Quantum addresses never hold tokens.
+                                    if (!entry.isQuantum) tokenViewModel.noteReceiveAddressShown(entry.address)
+                                    showAddressCopiedToast(context, entry.address)
+                                },
+                                onSend = { sendTarget = entry },
+                                onReceive = { qrAddress = entry.address },
+                                // In place (iOS b49a021d, owner 2026-11-27), saved once when the
+                                // rename ends (iOS d88891ea, audit 2026-11-27 L20), the row's label
+                                // kept in step so the list and the address's page agree; empty goes
+                                // back to "Address #n". No pop-up.
+                                rename = InlineRename(current = entry.label ?: "", placeholder = entry.displayTitle) { text ->
+                                    viewModel.setManageAddressLabel(entry.index, text)
+                                },
+                                // The rest (Send to Chatting Address, Hide) in a half sheet.
+                                onMore = { addressActionsTarget = entry },
+                                onOpen = { onNavigateToTxHistory(entry.index) },
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                            )
+                        } else ManageAddressRow(
                             entry = entry,
                             showsDomainTag = entry.address in domainOwningAddresses,
                             quantumSpent = entry.address.lowercase() in quantumSpentAddresses,
@@ -4639,15 +4769,19 @@ fun ManageAddressesScreen(
             }
         }
 
-        // The floating glass button behind Address Actions, like Profile's send / receive one
-        // (iOS d1844582), over the list and clear of the dock.
+        // The floating +, over the list and clear of the dock (iOS 824a30bb `newAddressButton`):
+        // asks which kind of address. Not while a pull-down Discover is still writing the list
+        // (audit 2026-11-26).
         if (onAddressPicked == null) {
-            AddressActionsFloatingButton(
-                isBusy = isGeneratingAddress || isDiscoveringAddresses,
-                onClick = { showActionsMenu = true },
+            NewAddressFloatingButton(
+                isBusy = isGeneratingAddress,
+                enabled = !isGeneratingAddress && !isDiscoveringAddresses,
+                contentDescription = stringResource(R.string.addrcard_new_address),
+                onClick = { showNewAddressSheet = true },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 20.dp, bottom = 16.dp + dockInset),
+                    .padding(end = 20.dp, bottom = 16.dp + dockInset)
+                    .alpha(if (isDiscoveringAddresses) 0.5f else 1f),
             )
         }
 
@@ -4685,8 +4819,84 @@ fun ManageAddressesScreen(
         }
     }
 
-    // Send Kaspa from that address with the Chatting Address already the recipient (iOS 5b7c772c).
+    // A card's ⋮ (iOS 824a30bb `addressRowActionsSheet`): Send to Chatting Address and Hide; Copy,
+    // Send, Receive and Rename are on the card itself.
+    addressActionsTarget?.let { entry ->
+        ManageAddressActionsSheet(
+            title = entry.displayLabel,
+            subtitle = "${entry.address.take(14)}...${entry.address.takeLast(6)}",
+            onDismiss = { addressActionsTarget = null },
+        ) {
+            // Send Kaspa from this address with the Chatting Address already the recipient
+            ActionSheetRow(
+                icon = Icons.Default.ArrowCircleUp,
+                title = stringResource(R.string.send_to_chatting_address),
+                subtitle = stringResource(R.string.moves_kaspa_to_your_chatting_address),
+                enabled = entry.balanceSompi > 0L,
+            ) { addressActionsTarget = null; sendToChattingTarget = entry }
+            // Same effect as unchecking it in Address Visibility. Any address, funded too: it
+            // comes back from there (iOS 245a5d2).
+            ActionSheetRow(
+                icon = Icons.Default.VisibilityOff,
+                title = stringResource(R.string.hide_address),
+                subtitle = stringResource(R.string.removes_it_from_this_list_re_enable),
+                tint = LocalAppColors.current.warning,
+            ) { addressActionsTarget = null; hideAddress(entry) }
+        }
+    }
+
+    // Send and Receive on a card (iOS 824a30bb): from that address, and the Chatting Address's.
     val sendChatting = chattingAddress
+    sendTarget?.let { entry ->
+        if (sendChatting != null) {
+            IosFullSheet(
+                onDismissed = {
+                    sendTarget = null
+                    viewModel.loadManageAddresses()
+                },
+                swipeToDismiss = false,
+            ) { close ->
+                SpendingAddressSendFlow(
+                    fromAddress = sendChatting,
+                    balanceSompi = entry.balanceSompi,
+                    title = stringResource(R.string.chats_send_kaspa),
+                    viewModel = viewModel,
+                    onDone = close,
+                    lockedSource = SendSource.Spending(entry.index, entry.address, entry.displayLabel),
+                )
+            }
+        }
+    }
+    if (showChattingSend && sendChatting != null) {
+        IosFullSheet(
+            onDismissed = {
+                showChattingSend = false
+                viewModel.loadManageAddresses()
+            },
+            swipeToDismiss = false,
+        ) { close ->
+            SpendingAddressSendFlow(
+                fromAddress = sendChatting,
+                balanceSompi = knownChattingSompi ?: 0L,
+                title = stringResource(R.string.chats_send_kaspa),
+                viewModel = viewModel,
+                onDone = close,
+                lockedSource = SendSource.Chatting,
+            )
+        }
+    }
+    if (showChattingReceive && sendChatting != null) {
+        QrPageSheet(onDismiss = { showChattingReceive = false }, white = false) {
+            ChattingAddressQrPage(
+                address = sendChatting,
+                balanceSompi = knownChattingSompi,
+                dismiss = QrPageDismiss.CLOSE,
+                onDismiss = { showChattingReceive = false },
+            )
+        }
+    }
+
+    // Send Kaspa from that address with the Chatting Address already the recipient (iOS 5b7c772c).
     sendToChattingTarget?.let { entry ->
         if (sendChatting != null) {
             IosFullSheet(
@@ -4744,6 +4954,92 @@ internal fun AddressActionsFloatingButton(isBusy: Boolean, onClick: () -> Unit, 
             // "slider.horizontal.3"
             Icon(Icons.Default.Tune, contentDescription = stringResource(R.string.address_actions), tint = KaspaTeal, modifier = Modifier.size(26.dp))
         }
+    }
+}
+
+/** Manage Addresses' floating + (iOS 824a30bb `newAddressButton`): a spinner while an address is
+ *  being made; [enabled] false (half opacity, set by the caller) while a pull-down Discover runs. */
+@Composable
+internal fun NewAddressFloatingButton(
+    isBusy: Boolean,
+    enabled: Boolean,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptic = com.kachat.app.util.rememberHaptics()
+    Box(
+        modifier = modifier
+            .size(56.dp)
+            .iosGlass(cornerRadius = 28.dp)
+            .clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button) {
+                haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                onClick()
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        if (isBusy) {
+            com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(18.dp))
+        } else {
+            Icon(Icons.Default.Add, contentDescription = contentDescription, tint = KaspaTeal, modifier = Modifier.size(28.dp))
+        }
+    }
+}
+
+/**
+ * Manage Addresses' pull-down Discover (iOS 824a30bb `discoverAddresses`): runs the scan and
+ * returns once it has finished and the list reloaded, so the pull's spinner stays until it's done.
+ * [onResult] gets how many addresses hold a balance or a username. A scan already going is waited
+ * out rather than started twice; one that ends without an answer (it failed) still returns.
+ */
+internal suspend fun awaitManageAddressesDiscovery(viewModel: WalletViewModel, onResult: (Int) -> Unit) {
+    if (viewModel.discoveringAddresses.value) {
+        viewModel.discoveringAddresses.first { !it }
+        return
+    }
+    val answered = kotlinx.coroutines.CompletableDeferred<Unit>()
+    viewModel.discoverSpendingAddresses { count ->
+        onResult(count)
+        answered.complete(Unit)
+    }
+    kotlinx.coroutines.coroutineScope {
+        val watcher = launch {
+            viewModel.discoveringAddresses.first { it }
+            viewModel.discoveringAddresses.first { !it }
+            answered.complete(Unit)
+        }
+        answered.await()
+        watcher.cancel()
+    }
+}
+
+/** While a pull-down scan runs: how far it is, under the Total Balance (iOS 824a30bb
+ *  `discoveryStatus`). */
+@Composable
+private fun ManageAddressesDiscoveryStatus(progress: com.kachat.app.services.SpendingAddressDiscovery.DiscoveryProgress) {
+    val colors = LocalAppColors.current
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(16.dp))
+        Text(
+            stringResource(R.string.checking_address_n, progress.checkingIndex),
+            color = colors.textPrimary,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+        )
+        Spacer(Modifier.weight(1f))
+        Text(
+            if (progress.foundCount == 0) stringResource(R.string.names54_no_addresses_balance_or_username_yet)
+            else stringResource(R.string.n_found_so_far, progress.foundCount),
+            color = colors.textSecondary,
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -5425,6 +5721,11 @@ fun SpendingAddressSendFlow(
     siteHost: String? = null,
     /** The txid of the send that went out (iOS 48f5c357 `onSent`). */
     onSent: ((String) -> Unit)? = null,
+    /** The send went out but the network's answer was lost ([com.kachat.app.services.SendOutcomeUnknownException]):
+     *  it may land, with this txid (empty when cancelled mid-submit). A site's request is answered
+     *  "may have been sent" and Swap's deposit is marked sent, so neither invites paying again
+     *  (iOS d88891ea `onOutcomeUnknown`, audit 2026-11-27 M1, M3). */
+    onOutcomeUnknown: ((String) -> Unit)? = null,
     priceViewModel: com.kachat.app.viewmodels.KasPriceViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -5633,6 +5934,7 @@ fun SpendingAddressSendFlow(
         } else {
             val error = result.exceptionOrNull()
             sendOutcomeUnknown = error is com.kachat.app.services.SendOutcomeUnknownException
+            if (error is com.kachat.app.services.SendOutcomeUnknownException) onOutcomeUnknown?.invoke(error.txId)
             sendError = when (error) {
                 is com.kachat.app.services.SendOutcomeUnknownException -> context.getString(R.string.send_outcome_unknown)
                 is com.kachat.app.services.SendFeeChangedException ->
@@ -6270,6 +6572,9 @@ fun SpendingAddressTxHistoryScreen(
     /** Opened as the root of the "Received" History sheet (iOS 13046ad `OwnAddressHistorySheet`):
      *  Done closes it, top left, in place of the back arrow. */
     closesWithDone: Boolean = false,
+    /** Receive and Send at the bottom: only where Manage Addresses' card isn't behind the page (a
+     *  tapped address-activity notification, iOS 824a30bb `showsSendReceive`). */
+    showsSendReceive: Boolean = false,
 ) {
     val addresses by viewModel.manageAddresses.collectAsState()
     // Looked up from the already-loaded address list (shared with ManageAddressesScreen) rather
@@ -6403,20 +6708,27 @@ fun SpendingAddressTxHistoryScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LocalAppColors.current.background)
             )
         },
+        // Send and Receive are on Manage Addresses' card (iOS 824a30bb); only a page opened from a
+        // notification, with no card behind it, keeps them. Otherwise just the dock's room.
         bottomBar = {
-            AddressReceiveSendBar(
-                receiveEnabled = address.isNotEmpty(),
-                sendEnabled = (entry?.balanceSompi ?: 0L) > 0L,
-                onReceive = { showQr = true },
-                onSend = { showWithdraw = true },
-            )
+            if (showsSendReceive) {
+                AddressReceiveSendBar(
+                    receiveEnabled = address.isNotEmpty(),
+                    sendEnabled = (entry?.balanceSompi ?: 0L) > 0L,
+                    onReceive = { showQr = true },
+                    onSend = { showWithdraw = true },
+                )
+            } else {
+                Spacer(Modifier.height(LocalDockInset.current))
+            }
         }
     ) { padding ->
         // What Receive / Send and the dock cover: the lists scroll clear of it.
         val barInset = padding.calculateBottomPadding()
         Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
             // The card an address's own page opens with (iOS 5b7c772c KaspaAddressBalanceCard).
-            KaspaAddressBalanceCard(label = entry?.displayLabel ?: displayName, sompi = entry?.balanceSompi ?: 0L, priceViewModel = priceViewModel)
+            // The full address under the name (iOS 824a30bb): the cards no longer show it.
+            KaspaAddressBalanceCard(label = entry?.displayLabel ?: displayName, sompi = entry?.balanceSompi ?: 0L, address = address.ifEmpty { null }, priceViewModel = priceViewModel)
             // The app's page switch (`PageCycleBar`, iOS 518fdc8c), not a segmented control; plain
             // names - History, UTXOs, Domains. Each tap fades to the next page.
             com.kachat.app.ui.components.PageCycleBar(
@@ -6586,6 +6898,9 @@ fun IdentityAddressDetailScreen(
     /** Opened as the root of the "Received" History sheet (iOS 13046ad `OwnAddressHistorySheet`):
      *  Done closes it, top left, in place of the back arrow. */
     closesWithDone: Boolean = false,
+    /** Receive and Send at the bottom: only where Manage Addresses' card isn't behind the page (a
+     *  tapped address-activity notification, iOS 824a30bb `showsSendReceive`). */
+    showsSendReceive: Boolean = false,
 ) {
     val address by viewModel.address.collectAsState()
     val balanceSompi by viewModel.balanceSompi.collectAsState()
@@ -6705,13 +7020,19 @@ fun IdentityAddressDetailScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LocalAppColors.current.background)
             )
         },
+        // Send and Receive are on Manage Addresses' card (iOS 824a30bb); only a page opened from a
+        // notification, with no card behind it, keeps them. Otherwise just the dock's room.
         bottomBar = {
-            AddressReceiveSendBar(
-                receiveEnabled = !address.isNullOrEmpty(),
-                sendEnabled = balanceSompi > 0L,
-                onReceive = { showQr = true },
-                onSend = { showWithdraw = true },
-            )
+            if (showsSendReceive) {
+                AddressReceiveSendBar(
+                    receiveEnabled = !address.isNullOrEmpty(),
+                    sendEnabled = balanceSompi > 0L,
+                    onReceive = { showQr = true },
+                    onSend = { showWithdraw = true },
+                )
+            } else {
+                Spacer(Modifier.height(LocalDockInset.current))
+            }
         }
     ) { padding ->
         // What Receive / Send and the dock cover: the lists scroll clear of it.
@@ -6719,7 +7040,8 @@ fun IdentityAddressDetailScreen(
         Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
             // The card an address's own page opens with (iOS 5b7c772c KaspaAddressBalanceCard):
             // the wallet's own balance for this address, as Manage Addresses shows it.
-            KaspaAddressBalanceCard(label = stringResource(R.string.chatting_address), sompi = balanceSompi, priceViewModel = priceViewModel)
+            // The full address under the name (iOS 824a30bb): the cards no longer show it.
+            KaspaAddressBalanceCard(label = stringResource(R.string.chatting_address), sompi = balanceSompi, address = address?.ifEmpty { null }, priceViewModel = priceViewModel)
             // Right above what it switches, the way Chats has it: History, UTXOs, Domains, on the
             // app's page switch (`PageCycleBar`, iOS 518fdc8c). Each tap fades to the next page.
             com.kachat.app.ui.components.PageCycleBar(
@@ -7875,66 +8197,6 @@ private fun ManageAddressActionsSheet(
 }
 
 /**
- * The chatting address's row at the top of [ManageAddressesScreen] (iOS 6333dd3
- * `chattingAddressRow`): "Chatting Address" with its icon, the short address, its balance and
- * "Used", and a chevron - it opens the chatting address's own screen.
- */
-@Composable
-private fun ManageChattingAddressRow(address: String, balanceSompi: Long?, showsDomainTag: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .manageAddressGlass()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = stringResource(R.string.chatting_address),
-                    color = LocalAppColors.current.textSecondary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Icon(Icons.Default.Forum, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(14.dp))
-            }
-            Text(
-                text = "${address.take(14)}...${address.takeLast(6)}",
-                color = LocalAppColors.current.textPrimary,
-                fontSize = 15.sp,
-                fontFamily = FontFamily.Monospace,
-                maxLines = 1
-            )
-            Text(
-                text = balanceSompi?.let { "%.8f ${KaspaUnit.symbol}".format(java.util.Locale.US, it / 100_000_000.0) } ?: "-- ${KaspaUnit.symbol}",
-                color = LocalAppColors.current.textPrimary,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            // "Used", and the Contains domain tag when it holds a KNS or .kachat name (iOS 428a797b).
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = stringResource(R.string.pr_used),
-                    color = LocalAppColors.current.warning,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                if (showsDomainTag) ContainsDomainTag()
-            }
-        }
-        // iOS: "chevron.right" at caption size, secondary.
-        Icon(
-            Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = LocalAppColors.current.textSecondary,
-            modifier = Modifier.size(20.dp).offset(x = 6.dp).mirrorInRtl()
-        )
-    }
-}
-
-/**
  * iOS ManageAddressesView `glassBackground(cornerRadius: 18)` behind the address cards:
  * `.regularMaterial` (it reads #202020 on the black list), a 0.8 white hairline at 18% and a soft
  * shadow (black 12%, radius 10, 5 down).
@@ -8651,14 +8913,16 @@ fun SettingsScreen(
                     SettingsDivider(inset = IosRowTextInset)
                     SettingsNavigationItem(stringResource(R.string.diagnostics), Icons.Outlined.MonitorHeart, onClick = { navController.navigate("settings_section/diagnostics") })
                     SettingsDivider(inset = IosRowTextInset)
-                    // KaPost's own settings (tips, cool down), here since iOS 148a5331 rather than in
-                    // the feed's menu; then Help, moved from the old Profile screen.
-                    SettingsNavigationItem(stringResource(R.string.tab_posts), com.kachat.app.ui.AppTab.KAPOSTS.hubIcon, onClick = { showKaPostSettings = true })
-                    SettingsDivider(inset = IosRowTextInset)
+                    // Help, moved from the old Profile screen.
                     SettingsNavigationItem(stringResource(R.string.help), Icons.AutoMirrored.Outlined.HelpOutline, onClick = { navController.navigate("help") })
                     SettingsDivider(inset = IosRowTextInset)
                     // Chats / Wallet subpages (4.0, matches iOS).
                     SettingsNavigationItem(stringResource(R.string.notifications), Icons.Outlined.NotificationsActive, onClick = { navController.navigate("settings_section/notifications") })
+                    SettingsDivider(inset = IosRowTextInset)
+                    // KaPost's own settings (tips, cool down), here since iOS 148a5331 rather than in
+                    // the feed's menu. Under its name, Posts, in the alphabetical list (iOS 01f71184,
+                    // release audit).
+                    SettingsNavigationItem(stringResource(R.string.tab_posts), com.kachat.app.ui.AppTab.KAPOSTS.hubIcon, onClick = { showKaPostSettings = true })
                     SettingsDivider(inset = IosRowTextInset)
                     SettingsNavigationItem(stringResource(R.string.security), com.kachat.app.ui.theme.IosSymbols.LockShield, onClick = { navController.navigate("settings_section/security") })
                     SettingsDivider(inset = IosRowTextInset)
@@ -11742,14 +12006,21 @@ fun CreateChatScreen(
     var groupPhoto by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     var groupPhotoHex by remember { mutableStateOf<String?>(null) }
     val groupPhotoContext = LocalContext.current
+    val groupPhotoScope = rememberCoroutineScope()
     val groupPhotoPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         // Same ~10KB JPEG budget the admin photo flow uses - a group photo rides on chain.
-        val prepared = runCatching {
-            com.kachat.app.util.ImagePrep.prepareForChatMessage(groupPhotoContext, uri, 10_000)
-        }.getOrNull() ?: return@rememberLauncherForActivityResult
-        groupPhotoHex = prepared.bytes.joinToString("") { "%02x".format(it) }
-        groupPhoto = android.graphics.BitmapFactory.decodeByteArray(prepared.bytes, 0, prepared.bytes.size)
+        // Compressed off the main thread, as the admin flow does: it can take a while.
+        groupPhotoScope.launch {
+            val prepared = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching {
+                    val photo = com.kachat.app.util.ImagePrep.prepareForChatMessage(groupPhotoContext, uri, 10_000)
+                    photo.bytes to android.graphics.BitmapFactory.decodeByteArray(photo.bytes, 0, photo.bytes.size)
+                }.getOrNull()
+            } ?: return@launch
+            groupPhotoHex = prepared.first.joinToString("") { "%02x".format(it) }
+            groupPhoto = prepared.second
+        }
     }
 
     // Who is in the group so far, sorted by name.
@@ -12513,7 +12784,7 @@ fun ChatInfoScreen(
     // would just be clutter). See ChessGameEngine.record.
     val chessRecord = remember(messages, myAddress) {
         val address = myAddress ?: return@remember null
-        val chessSourceMessages = messages.map {
+        val chessSourceMessages = messages.filter { mayHoldChess(it.plaintextBody) }.map {
             com.kachat.app.util.ChessGameEngine.SimpleChessSourceMessage(
                 id = it.id,
                 plaintextBody = it.plaintextBody,
@@ -12912,7 +13183,11 @@ fun ChatInfoScreen(
                     grouped = true,
                     onDismiss = { infoSheet = null },
                 ) {
-                    ContactAddressSection(contactId, onOpenExplorer = { uriHandler.openUri(kaspaExplorer.addressUrl(contactId)) })
+                    ContactAddressSection(contactId, onOpenExplorer = {
+                        // K's own Explorer (iOS bfb902b7): the sheet closes, or its page would open behind it.
+                        val url = kaspaExplorer.addressUrl(contactId)
+                        if (com.kachat.app.services.explorer.ExplorerDeepLink.openIfLink(url)) infoSheet = null else uriHandler.openUri(url)
+                    })
                 }
             }
 
@@ -13546,27 +13821,18 @@ private fun SheetChoiceRow(label: String, selected: Boolean, onClick: () -> Unit
 }
 
 /**
- * The half sheet behind "Address Actions" on Manage Addresses. Mirrors Cold Storage's
- * [ColdStorageAddressActionsSheet], including Address Visibility living here rather than as a
- * toolbar glyph.
- *
- * Discovery reports its position as it walks, and that lands HERE rather than dismissing: a scan
- * is one balance lookup per address until the gap limit is reached, so it runs for a while, and a
- * closed sheet with a toast at the end said nothing about whether anything was happening.
+ * The floating +'s half sheet on Manage Addresses (iOS 824a30bb `newAddressSheet`, owner
+ * 2026-11-26, in place of the Address Actions sheet): Regular Address or Quantum-Protected Address,
+ * both saying what they're for, and the warning repeats that kUSDT can't go to or from a
+ * quantum-protected one.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ManageAddressesActionsSheet(
-    isDiscovering: Boolean,
-    progress: com.kachat.app.services.SpendingAddressDiscovery.DiscoveryProgress?,
-    summary: String?,
-    /** Generate Non-Quantum (false) or Quantum-Resistant (true) Address (iOS 5b7c772c). */
+private fun ManageAddressesNewAddressSheet(
+    /** Regular (false) or quantum-protected (true). */
     onGenerate: (quantum: Boolean) -> Unit,
-    onDiscover: () -> Unit,
-    onVisibility: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = LocalAppColors.current
     com.kachat.app.ui.theme.IosSheetColors {
         val colors = LocalAppColors.current
         ModalBottomSheet(
@@ -13575,12 +13841,8 @@ private fun ManageAddressesActionsSheet(
             shape = IosFloatingSheetShape,
             tonalElevation = com.kachat.app.ui.theme.IosSheetTonalElevation,
             windowInsets = androidx.compose.foundation.layout.WindowInsets.statusBars,
-            // Freely dismissable mid-scan now, by the swipe as well as by the button above: the scan
-            // belongs to the ViewModel rather than to the sheet, so closing it abandons nothing - the
-            // Address Actions button keeps its spinner and the result still arrives. Holding the
-            // sheet open was only ever protecting a progress readout.
             onDismissRequest = onDismiss,
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             containerColor = colors.background,
         ) {
             // The sheet runs down behind the navigation bar, as iOS's does behind the home indicator;
@@ -13592,76 +13854,35 @@ private fun ManageAddressesActionsSheet(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        stringResource(R.string.address_actions),
+                        stringResource(R.string.addrcard_new_address),
                         color = colors.textPrimary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp,
                     )
-
-                    if (isDiscovering) {
-                        Spacer(Modifier.height(8.dp))
-                        com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal, strokeWidth = 3.dp, modifier = Modifier.size(32.dp))
+                    ActionSheetRow(
+                        icon = Icons.Default.AddCircleOutline,
+                        title = stringResource(R.string.addrcard_regular_address),
+                        subtitle = stringResource(R.string.addrcard_regular_address_subtitle),
+                        onClick = { onGenerate(false) },
+                    )
+                    ActionSheetRow(
+                        icon = Icons.Outlined.Shield,
+                        title = stringResource(R.string.addrcard_quantum_protected_address),
+                        subtitle = stringResource(R.string.addrcard_quantum_protected_address_subtitle),
+                        onClick = { onGenerate(true) },
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = colors.warning, modifier = Modifier.size(16.dp).padding(top = 1.dp))
                         Text(
-                            stringResource(R.string.checking_address_n, progress?.checkingIndex ?: 0),
-                            color = colors.textPrimary,
+                            stringResource(R.string.addrcard_no_kusdt_on_quantum),
+                            color = colors.warning,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
                         )
-                        Text(
-                            if ((progress?.foundCount ?: 0) == 0) stringResource(R.string.names54_no_addresses_balance_or_username_yet)
-                            else stringResource(R.string.n_found_so_far, progress?.foundCount ?: 0),
-                            color = colors.textSecondary,
-                            fontSize = 12.sp,
-                        )
-                        Text(
-                            stringResource(R.string.checks_the_first_thousand_addresses),
-                            color = colors.textSecondary,
-                            fontSize = 11.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        // The scan runs in the ViewModel's own scope, not the sheet's, so closing the
-                        // sheet does not stop it - it keeps running and reports what it found. Holding
-                        // the sheet open for the length of a thousand-address sweep was the only reason
-                        // to sit and watch it.
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(28.dp),
-                        ) {
-                            Text(stringResource(R.string.close_and_keep_scanning), color = KaspaTeal, fontWeight = FontWeight.SemiBold)
-                        }
-                        Spacer(Modifier.height(8.dp))
-                    } else {
-                        // A regular address (Receive's kind, the one that takes kUSDT too) or a
-                        // quantum-resistant one, each chosen on purpose (iOS 5b7c772c, as in KaPay).
-                        ActionSheetRow(
-                            icon = Icons.Default.AddCircleOutline,
-                            title = stringResource(R.string.generate_non_quantum_address),
-                            subtitle = stringResource(R.string.generate_non_quantum_address_subtitle),
-                            onClick = { onGenerate(false) },
-                        )
-                        ActionSheetRow(
-                            icon = Icons.Outlined.Shield,
-                            title = stringResource(R.string.generate_quantum_resistant_address),
-                            subtitle = stringResource(R.string.generate_quantum_resistant_address_subtitle),
-                            onClick = { onGenerate(true) },
-                        )
-                        ActionSheetRow(
-                            icon = Icons.Default.Search,
-                            title = stringResource(R.string.discover_addresses),
-                            subtitle = stringResource(R.string.names54_finds_addresses_balance_or_username),
-                            onClick = onDiscover,
-                        )
-                        ActionSheetRow(
-                            icon = Icons.Default.Checklist,
-                            title = stringResource(R.string.address_visibility),
-                            subtitle = stringResource(R.string.check_off_every_address_you_want_on_the_list),
-                            onClick = onVisibility,
-                        )
-                        if (summary != null) {
-                            Text(summary, color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                        }
                     }
                 }
             }

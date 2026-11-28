@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification and banner previews (iOS 01f71184, audit 2026-11-27 R7). -->
+<resources>
+    <string name="rel_bell_reacted_to_your_message">내 메시지에 %1$s 반응을 남겼습니다</string>
+    <string name="rel_bell_removed_reaction">%1$s 반응을 취소했습니다</string>
+    <string name="rel_bell_replied_to_message">메시지에 답장했습니다</string>
+    <string name="rel_bell_edited_message">메시지를 수정했습니다</string>
+    <string name="rel_bell_reacted">%1$s 반응을 남겼습니다</string>
+</resources>

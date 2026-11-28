@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">スワップ</string>
-    <string name="swap_history">スワップ履歴</string>
-    <string name="swap_started">スワップを開始しました</string>
     <string name="swap_failed">スワップに失敗しました</string>
     <string name="swap_couldnt_read_amounts">このスワップの金額を読み取れませんでした</string>
     <string name="swap_already_holds">このスワップはすでに含まれています。再度追加すると二重に計上されます。</string>
     <string name="swap_lands_in_portfolio">スワップはこのポートフォリオに追加されます。</string>
     <string name="swap_delete_title">このスワップを削除しますか？</string>
     <string name="swap_delete_message">端末内の履歴から削除するだけです。実際の交換には影響しません。</string>
-    <string name="swap_you_send">送る額</string>
     <string name="swap_you_get">受け取る額</string>
-    <string name="swap_switch_direction">方向を切り替え</string>
-    <string name="swap_get_deposit_address">入金アドレスを取得</string>
     <string name="swap_receive_coin_at">%1$s の受取アドレス</string>
     <string name="swap_destination_tag_optional">宛先タグ（任意）</string>
     <string name="swap_destination_tag_hint">受取アドレスが必要とする場合のみ（ほとんどの取引所が必要とします）。ないと取引所はコインを入金できません。</string>
     <string name="swap_from_kusdt_lands">スワップ元（kUSDT はここに届きます）</string>
     <string name="swap_from_kas_lands">スワップ元（KAS はここに届きます）</string>
-    <string name="swap_receiving_kas_at">KAS の受取アドレス</string>
     <string name="swap_change">変更</string>
     <string name="swap_powered_by_trestly">Trestly 提供</string>
     <string name="swap_powered_by_changenow">ChangeNOW 提供</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">%2$s で %1$s KAS を売却 - 追加するポートフォリオを選んでください。</string>
     <string name="swap_rate">レート</string>
     <string name="swap_unavailable">利用できません</string>
-    <string name="swap_go_to_spending_addresses">支出アドレスへ</string>
-    <string name="swap_send_coin_to_address">このアドレスに %1$s を送ってください</string>
     <string name="swap_amount_to_send">送金額</string>
     <string name="swap_destination_tag_copied">宛先タグをコピーしました</string>
     <string name="swap_payout_address">受取アドレス</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">入金アドレス</string>
     <string name="swap_couldnt_reach_changenow">ChangeNOW に接続できませんでした。もう一度お試しください</string>
     <string name="swap_details">スワップの詳細</string>
-    <string name="swap_picker_footer">スワップは一度も使っていないアドレスに支払われるため、受け取りを過去のアクティビティと結びつけられません。空きがなければ作成してください。</string>
-    <string name="swap_picker_all_used">ここのアドレスはすべて使用済みです。上で新しいアドレスを作成してください。</string>
-    <string name="swap_unused_addresses">未使用のアドレス</string>
-    <string name="swap_choose_address">アドレスを選ぶ</string>
     <string name="swap_used">使用済み</string>
     <string name="swap_unused">未使用</string>
-    <string name="swap_check_history_before">スワップを送る前に、このアドレスの履歴を確認してください。</string>
-    <string name="swap_use_for_this_swap">このスワップに使う</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW はスワップした KAS をこのアドレスに支払います。</string>
     <string name="swap_search_coins">コインを検索</string>
-    <string name="swap_choose_coin">コインを選ぶ</string>
     <string name="swap_agreements_intro">スワップは K が運営していない 2 つのサービスを使います。続ける前に両方を読んで同意してください。</string>
     <string name="swap_coins_on_other_networks">他のネットワークのコイン</string>
     <string name="swap_changenow_agreement">Kaspa と他のネットワークのコイン（Bitcoin、Ethereum、USDC、USDT など）とのスワップは、第三者の取引所である ChangeNOW が行います。K は ChangeNOW に見積もりと入金アドレスを求め、スワップの状況を表示するだけです。交換とコインの送付は ChangeNOW が行います。失敗、遅延、紛失したスワップについて K は責任を負いません。スワップが完了しない場合は、ChangeNOW のサポートにお問い合わせください。</string>

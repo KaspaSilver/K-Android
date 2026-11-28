@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">מחובר, ויש בו את ההודעות של החדר הזה.</string>
     <string name="kpui_room_indexer_footer">צ\'אט ציבורי חי על ה-blockDAG של Kaspa, ולכן כל אינדקסר שעוקב אחרי אותה רשת מגיש את אותו חדר. כוונו את זה לכל מקום שתרצו - משלכם או של מישהו אחר - בלי לשנות את האינדקסר שכל שאר החדרים משתמשים בו.</string>
     <string name="kpui_use_app_indexer">השתמש באינדקסר של האפליקציה</string>
-    <string name="kpui_room_switched_off_footer">חדר שכובה כבר לא מופיע בצ\'אטים ציבוריים ולעולם לא שולח התראה. אפשר להפעיל אותו מחדש בכל עת.</string>
-    <string name="kpui_languages">שפות</string>
-    <string name="kpui_languages_footer">כבוי מוציא את כל חדרי השפות מהצ\'אטים הציבוריים. כשהוא פועל, כבו את אלה שאינכם רוצים.</string>
     <string name="kpui_notifications_off">התראות כבויות</string>
     <string name="kpui_notifications_on">התראות פועלות</string>
     <string name="kpui_room_notified_closed">אתה מקבל התראה על הודעות חדשות כאן, גם כשהאפליקציה סגורה.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">עדיין אין כאן דבר</string>
     <string name="kpui_engagement_empty">כשמישהו יגיב לפוסט הזה, הוא יופיע כאן.</string>
     <string name="kpui_instant_tip_limit">טיפים מיידיים מוגבלים ל-10 KAS. החלק למעלה כדי לשלוח את הטיפ הזה.</string>
-    <string name="kpui_kapost_settings">הגדרות KaPost</string>
     <string name="kpui_cool_down">המתן קצת לפני הפרסום</string>
     <string name="kpui_cooldown_on">פוסטים, תגובות, לייקים, שיתופים מחדש, הצבעות, עריכות ומחיקות ממתינים 5 שניות, עם אפשרות ביטול, לפני שהם עולים לשרשרת.</string>
     <string name="kpui_cooldown_off">פוסטים, תגובות, לייקים, שיתופים מחדש, הצבעות, עריכות ומחיקות עולים לשרשרת מיד, בלי אפשרות ביטול.</string>

@@ -4,31 +4,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -38,38 +17,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.kachat.app.R
 import com.kachat.app.ui.AppTab
 import com.kachat.app.ui.DockLayout
 import com.kachat.app.ui.HubRouter
 import com.kachat.app.ui.theme.KaspaTeal
-import com.kachat.app.ui.theme.LocalAppColors
 
 /**
- * The Kaspa Hub tab (iOS `KaspaHubView`): a grid of everything that isn't in the (fixed) dock,
- * and the section picked from it. The section owns the whole screen, exactly as it looks from its
- * own dock slot ([content] draws the same screen the dock would). Tapping the Kaspa Hub tab again
- * goes back to the grid ([HubRouter.close]); so does the system Back, after the section's own.
+ * The Kaspa Hub tab (iOS `KaspaHubView`): the section picked from Kaspa Hub's menu
+ * ([KaspaHubMenu]). The section owns the whole screen, exactly as it looks from its own dock slot
+ * ([content] draws the same screen the dock would). The system Back closes it
+ * ([HubRouter.close]), after the section's own.
  *
  * A section opened here stays alive, hidden, once left (iOS 428a797b `keptSections`, audit
  * 2026-11-21 #28): KaPost, Portfolio, KaPlay, .kachat, the Explorer and Cold Storage come back exactly
@@ -80,12 +51,9 @@ import com.kachat.app.ui.theme.LocalAppColors
  * parked, and [LocalHubSectionHidden] tells what runs inside it ([OnScreenPresence]). Kept
  * sections live as long as this screen does; their saved state outlives it (a dock tab switch
  * disposes the Hub's route), so one opened again after that still comes back where it was left.
- *
- * [badgeCount] is what the dock would show on a tab, so moving one here never hides its badge.
  */
 @Composable
 fun KaspaHubScreen(
-    badgeCount: (AppTab) -> Int,
     content: @Composable (AppTab) -> Unit,
 ) {
     val hub by DockLayout.hub.collectAsState()
@@ -108,6 +76,19 @@ fun KaspaHubScreen(
             keptSections = keptSections - gone.toSet()
             gone.forEach { sectionStates.removeState(it.key) }
         }
+    }
+    // Left over a minute: the section was forgotten ([HubRouter.forgetIfStale]), and the kept
+    // ones go with it, so nothing comes back as it was left (iOS b49a021d `forgetCount`). The
+    // forget happens while this screen is off the back stack's top (its saved state kept by the
+    // tab switch), so it's applied here when the screen next draws, before any section restores
+    // its saved state.
+    val forgetCount by HubRouter.forgetCount.collectAsState()
+    var forgetsApplied by rememberSaveable { mutableStateOf(0) }
+    if (forgetCount != forgetsApplied) {
+        val keep = HubRouter.openSection.value
+        AppTab.entries.filter { it != keep }.forEach { sectionStates.removeState(it.key) }
+        keptSections = keptSections.filter { it == keep }
+        forgetsApplied = forgetCount
     }
     // Opened: kept from now on (iOS `keep`).
     LaunchedEffect(open) {
@@ -150,11 +131,8 @@ fun KaspaHubScreen(
     BackHandler(enabled = open != null) { HubRouter.close() }
 
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.hubLayerHidden(open != null)) {
-            HubSectionPresence(hidden = open != null) {
-                KaspaHubGrid(hub = hub, badgeCount = badgeCount, onOpen = { HubRouter.open(it) })
-            }
-        }
+        // No grid: Kaspa Hub is a menu (owner, 2026-11-26, [KaspaHubMenu]), the way into every
+        // section; the grid and its hold sheet were removed (iOS d88891ea, audit 2026-11-27).
         for (tab in alive) {
             // keyed, so one section's remembered state never carries into the next
             androidx.compose.runtime.key(tab) {
@@ -243,130 +221,6 @@ private fun Modifier.hubLayerHidden(hidden: Boolean): Modifier =
     } else {
         this.fillMaxSize()
     }
-
-@Composable
-private fun KaspaHubGrid(
-    hub: List<AppTab>,
-    badgeCount: (AppTab) -> Int,
-    onOpen: (AppTab) -> Unit,
-) {
-    val colors = LocalAppColors.current
-    val dockInset = LocalDockInset.current
-    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
-    // The card held down: its half sheet (Copy Link, Open; iOS 961fc05a).
-    var heldCard by remember { mutableStateOf<AppTab?>(null) }
-    Scaffold(
-        containerColor = colors.background,
-        // The grid runs on under the dock; it pads its own end.
-        contentWindowInsets = WindowInsets(0),
-        topBar = {
-            // The balance centred, no connection dot and no Customize Dock (iOS 518fdc8c: the dock
-            // is fixed, and the dot is only on Settings).
-            MainPageHeader(title = stringResource(AppTab.HUB.labelRes))
-        },
-    ) { padding ->
-        // Three across, so the tiles line up the same way whatever the count.
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            modifier = Modifier.fillMaxSize().padding(padding),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            // iOS's 16 sides and 8 top as content padding: a right-column badge sits 6 past its tile.
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp + dockInset),
-        ) {
-            items(hub, key = { it.key }) { tab ->
-                HubTile(
-                    tab = tab,
-                    badgeCount = badgeCount(tab),
-                    onClick = {
-                        // A hold that opened the half sheet doesn't also open the card behind it
-                        // (iOS 961fc05a, audit 2026-11-25 L6, as the chat circles guard).
-                        if (heldCard != null) return@HubTile
-                        haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                        onOpen(tab)
-                    },
-                    // Hold: its half sheet, with the card's link to copy (iOS 961fc05a).
-                    onLongClick = if (HubCardLinks.slug(tab) != null) {
-                        {
-                            haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                            heldCard = tab
-                        }
-                    } else null,
-                )
-            }
-        }
-    }
-    heldCard?.let { tab ->
-        val copied = stringResource(R.string.kp55_link_copied)
-        HubCardActionSheet(
-            tab = tab,
-            onDismiss = { heldCard = null },
-            onOpen = { onOpen(tab) },
-            onCopied = { IosToasts.show(copied) },
-        )
-    }
-}
-
-/**
- * One tile: a square from the grid column, the icon and label laid over it, so every tile is the
- * same size whatever it is called. iOS: `.regularMaterial` in an 18pt rounded square with a 0.8
- * white hairline at 15%, the icon in a 30pt-tall slot, 10 above a caption-semibold label, and the
- * dock's badge on the top-right corner, 6 out each way.
- */
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-@Composable
-private fun HubTile(tab: AppTab, badgeCount: Int, onClick: () -> Unit, onLongClick: (() -> Unit)? = null) {
-    val colors = LocalAppColors.current
-    val shape = RoundedCornerShape(18.dp)
-    Box(modifier = Modifier.fillMaxWidth().aspectRatio(1f)) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(shape)
-                .background(colors.surface)
-                .border(0.8.dp, Color.White.copy(alpha = 0.15f), shape)
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-                .padding(horizontal = 8.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Box(Modifier.height(30.dp), contentAlignment = Alignment.Center) {
-                    AppTabIcon(tab, 26.dp)
-                }
-                Spacer(Modifier.size(10.dp))
-                Text(
-                    stringResource(tab.labelRes),
-                    color = colors.textPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        if (badgeCount > 0) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(x = 6.dp, y = (-6).dp)
-                    .defaultMinSize(minWidth = 20.dp, minHeight = 20.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(colors.danger)
-                    .padding(horizontal = 5.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    if (badgeCount > 99) "99+" else badgeCount.toString(),
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
-}
 
 /**
  * A tab's icon at a size, as the Hub draws it (iOS `AppTabIcon`): Kaspa Hub is the Kaspa logo,

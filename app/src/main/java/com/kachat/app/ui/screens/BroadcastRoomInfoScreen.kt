@@ -153,8 +153,9 @@ fun BroadcastRoomInfoScreen(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
+                // nothing is in the list unasked since iOS 824a30bb: a default room is one you added too
                 if (isCurated) {
-                    stringResource(R.string.kpui_room_curated_desc)
+                    stringResource(R.string.roomsoptin_room_info_curated)
                 } else {
                     stringResource(R.string.kpui_room_added_desc)
                 },

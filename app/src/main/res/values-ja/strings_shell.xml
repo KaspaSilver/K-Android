@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">ウェブサイト</string>
     <string name="shell_kaspa_websites">Kaspa のウェブサイト</string>
     <string name="shell_terms_of_use">利用規約</string>
-    <string name="shell_message_indexer_footer">KaPost、パブリックチャット、チェスもこのインデクサーから読み込みます。</string>
+    <string name="shell_message_indexer_footer">投稿、パブリックチャット、チェスもこのインデクサーから読み込まれます。</string>
 </resources>

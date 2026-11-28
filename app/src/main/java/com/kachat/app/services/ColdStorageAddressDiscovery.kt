@@ -364,7 +364,8 @@ class ColdStorageAddressDiscovery @Inject constructor(
     }
 
     private fun mapHistory(address: String, transactions: List<TransactionResponse>, ownAddresses: Set<String>): List<AddressTransaction> {
-        return transactions.map { tx -> HistoryRows.historyRow(address, tx, ownAddresses) }
+        return transactions.filter { tx -> com.kachat.app.util.UtxoMath.restAmountsFit(tx.outputs.map { it.amount }, tx.inputs.map { it.previousOutpointAmount ?: 0L }) }
+            .map { tx -> HistoryRows.historyRow(address, tx, ownAddresses) }
             .sortedByDescending { it.blockTimeMillis ?: 0L }
     }
 
@@ -459,7 +460,7 @@ class ColdStorageAddressDiscovery @Inject constructor(
             // a block reward the chain never accepted paid nothing: not a ledger row (the page's
             // full count still decides whether there is another page)
             all.addAll(
-                page.filter { it.belongsInHistory }.map { tx ->
+                page.filter { it.belongsInHistory }.filter { tx -> com.kachat.app.util.UtxoMath.restAmountsFit(tx.outputs.map { it.amount }, tx.inputs.map { it.previousOutpointAmount ?: 0L }) }.map { tx ->
                     val sent = tx.inputs.any { it.previousOutpointAddress == address }
                     val amount = if (sent) {
                         tx.outputs.filter { it.scriptPublicKeyAddress != address }.sumOf { it.amount }

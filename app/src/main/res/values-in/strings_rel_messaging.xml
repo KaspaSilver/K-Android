@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Messaging and chess core, iOS 01f71184 (release audit 2026-11-27 R7): the 1:1 chess status
+     sentences, looked up by their English text through util/KaPlayText.kt (`kp_` and 12 hex of
+     the SHA-1 of the English). Translations from the iPhone Localizable.strings. -->
+<resources>
+    <string name="kp_5aef51fe1d56" formatted="false">Menunggu tanggapan</string>
+    <string name="kp_05c4963982e5" formatted="false">Permainan ditolak</string>
+    <string name="kp_8a4e60471b34" formatted="false">Giliran Anda</string>
+    <string name="kp_4359fcb0e687" formatted="false">Giliran lawan</string>
+    <string name="kp_391d5d74dbe2" formatted="false">Skakmat - Putih menang</string>
+    <string name="kp_a534bb864737" formatted="false">Skakmat - Hitam menang</string>
+    <string name="kp_0f9e5bb6b743" formatted="false">Skakmat - Anda menang!</string>
+    <string name="kp_2a7ac7c63195" formatted="false">Skakmat - Anda kalah</string>
+    <string name="kp_6749d67e4cd9" formatted="false">Remis (pat)</string>
+    <string name="kp_c18f3c99c790" formatted="false">Remis - bidak tidak cukup untuk skakmat</string>
+    <string name="kp_bcdfd3342e87" formatted="false">Putih kalah waktu</string>
+    <string name="kp_fe8f09db78ac" formatted="false">Hitam kalah waktu</string>
+    <string name="kp_a1fbe5b06f5c" formatted="false">Anda kalah waktu</string>
+    <string name="kp_8f6cbd69632b" formatted="false">Lawan kalah waktu</string>
+    <string name="kp_ca7ec66b40dd" formatted="false">Putih menyerah</string>
+    <string name="kp_132872205f44" formatted="false">Hitam menyerah</string>
+    <string name="kp_fb49f7dcd5a0" formatted="false">Anda menyerah</string>
+    <string name="kp_1b3b9e398740" formatted="false">Lawan menyerah</string>
+</resources>

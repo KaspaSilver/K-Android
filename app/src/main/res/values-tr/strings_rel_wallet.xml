@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">Altın</string>
+    <string name="rel_wallet_silver">Gümüş</string>
+    <string name="rel_wallet_pair_bitcoin">Bitcoin cinsinden Kaspa</string>
+    <string name="rel_wallet_pair_voo">Vanguard S&amp;P 500 ETF payları</string>
+    <string name="rel_wallet_pair_gold">Troy ons altın</string>
+    <string name="rel_wallet_pair_silver">Troy ons gümüş</string>
+    <string name="rel_wallet_cold_storage_n">Soğuk Depolama %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">Bu adreste harcanabilir UTXO yok</string>
+    <string name="rel_wallet_insufficient_plus_fee">Bu tutar ve ağ ücreti için yetersiz bakiye</string>
+    <string name="rel_wallet_too_many_inputs">Bu gönderim %1$d UTXO gerektirir, ancak KasSigner işlem başına yalnızca %2$d girdiyi destekler. Daha küçük bir tutar gönderin veya önce bu adresi birleştirin.</string>
+    <string name="rel_wallet_cancelled">İptal edildi.</string>
+    <string name="rel_wallet_err_no_internet">İnternet bağlantısı yok. Bağlantınızı kontrol edip tekrar deneyin.</string>
+    <string name="rel_wallet_err_timed_out">Bağlantı zaman aşımına uğradı. Bağlantınızı kontrol edip tekrar deneyin.</string>
+    <string name="rel_wallet_err_cant_reach">Sunucuya ulaşılamadı. Ayarlar\'daki adresi ve bağlantınızı kontrol edin.</string>
+    <string name="rel_wallet_err_secure">Sunucuyla güvenli bağlantı kurulamadı.</string>
+    <string name="rel_wallet_err_network">Bir ağ hatası oluştu. Bağlantınızı kontrol edip tekrar deneyin.</string>
+    <string name="rel_wallet_err_unreadable">Sunucu, uygulamanın okuyamadığı bir yanıt gönderdi. Tekrar deneyin; devam ederse uygulamayı güncelleyin.</string>
+    <string name="rel_wallet_err_node">Kaspa düğümü bir hata döndürdü. Uygulama başka bir düğüm deneyecek; biraz sonra tekrar deneyin.</string>
+    <string name="rel_wallet_err_unknown">Bilinmeyen bir hata oluştu.</string>
+    <string name="rel_wallet_err_no_spendable_available">Harcanabilir UTXO yok</string>
+    <string name="rel_wallet_err_no_private_key">Özel anahtar alınamadı</string>
+    <string name="rel_wallet_err_insufficient_payment">Ödeme için yetersiz bakiye</string>
+    <string name="rel_wallet_err_insufficient_after_fee">Ücretten sonra bakiye yetersiz</string>
+    <string name="rel_wallet_err_insufficient_handshake">El sıkışma için yetersiz bakiye</string>
+    <string name="rel_wallet_err_insufficient_self_stash">Kendine kayıt ücreti için yetersiz bakiye</string>
+    <string name="rel_wallet_err_group_secrets">Grup anahtarları eksik - bu gruba yeniden katılmayı deneyin.</string>
+    <string name="rel_wallet_err_admin_secrets">Grup yönetici anahtarları eksik.</string>
+</resources>

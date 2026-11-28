@@ -3,7 +3,6 @@
 <resources>
     <string name="ex_kind_payment">Платёж</string>
     <string name="ex_kind_handshake">Запрос на общение</string>
-    <string name="ex_kind_kapost">KaPost</string>
     <string name="ex_kind_username">Имя пользователя</string>
     <string name="ex_kind_swap">Обмен</string>
     <string name="ex_kind_other">Транзакция</string>

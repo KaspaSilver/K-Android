@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">Compra Kaspa</string>
+    <string name="buykaspa_swap_to_kaspa">Scambia in Kaspa</string>
+    <string name="buykaspa_waiting_payment">In attesa del tuo pagamento</string>
+    <string name="buykaspa_paid">Pagato. I tuoi USDC sono in arrivo.</string>
+    <string name="buykaspa_bridging">Passaggio a Kaspa come kUSDT, di solito circa 20 minuti</string>
+    <string name="buykaspa_arrived">%1$s arrivati. Scambiali in Kaspa.</string>
+    <string name="buykaspa_sign_again">Apri per firmare di nuovo il ponte</string>
+    <string name="buykaspa_rejected">Stripe ha rifiutato questo acquisto. Non è stato addebitato nulla.</string>
+    <string name="buykaspa_refunded">Il ponte non è riuscito, quindi gli USDC sono stati restituiti. Apri per farli passare di nuovo.</string>
+    <string name="buykaspa_expired">Non pagato. Non è stato addebitato nulla.</string>
+    <string name="buykaspa_where_land">Dove devono arrivare i tuoi kUSDT?</string>
+    <string name="buykaspa_needs_words">K ha bisogno delle parole di recupero di questo account su questo telefono per comprare con carta.</string>
+    <string name="buykaspa_stripe_note">Stripe vende ad acquirenti negli Stati Uniti e nell\'UE. La commissione della carta e quelle di rete compaiono nella pagina successiva, prima di pagare.</string>
+    <string name="buykaspa_lands_on_format">I kUSDT arrivano su: %1$s</string>
+    <string name="buykaspa_can_close">Puoi chiudere. K continua a seguire il tuo ordine nella scheda Wallet.</string>
+    <string name="buykaspa_approve_bridge">Approva il ponte</string>
+    <string name="buykaspa_sign_explainer">Una firma consente al ponte di Trestly di prendere fino a questo importo di USDC dall\'indirizzo Ethereum di K e depositarlo su Kaspa come kUSDT. Non serve ETH e nessun Kaspa lascia il tuo wallet.</string>
+    <string name="buykaspa_up_to">Fino a</string>
+    <string name="buykaspa_lands_on">I kUSDT arrivano su</string>
+    <string name="buykaspa_ends">Scade</string>
+    <string name="buykaspa_bridge">Ponte</string>
+    <string name="buykaspa_eth_note">L\'indirizzo Ethereum di K deriva dalle parole di questo account, come lo creerebbe qualsiasi wallet Ethereum.</string>
+    <string name="buykaspa_fresh_note">Un indirizzo nuovo mai usato, così questo acquisto resta separato dal tuo nome utente e dalle tue chat.</string>
+    <string name="buykaspa_chatting_note">L\'indirizzo su cui ti scrivono e ti pagano.</string>
+    <string name="buykaspa_fresh_address">Indirizzo nuovo</string>
+    <string name="buykaspa_reload">Ricarica</string>
+</resources>

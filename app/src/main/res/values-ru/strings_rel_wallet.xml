@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">Золото</string>
+    <string name="rel_wallet_silver">Серебро</string>
+    <string name="rel_wallet_pair_bitcoin">Kaspa в биткоинах</string>
+    <string name="rel_wallet_pair_voo">Паи ETF Vanguard на S&amp;P 500</string>
+    <string name="rel_wallet_pair_gold">Тройские унции золота</string>
+    <string name="rel_wallet_pair_silver">Тройские унции серебра</string>
+    <string name="rel_wallet_cold_storage_n">Холодное хранилище %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">На этом адресе нет UTXO для траты</string>
+    <string name="rel_wallet_insufficient_plus_fee">Недостаточно средств на эту сумму с комиссией сети</string>
+    <string name="rel_wallet_too_many_inputs">Для этой отправки нужно UTXO: %1$d, но KasSigner поддерживает не более %2$d входов в транзакции. Отправьте меньшую сумму или сначала объедините этот адрес.</string>
+    <string name="rel_wallet_cancelled">Отменено.</string>
+    <string name="rel_wallet_err_no_internet">Нет подключения к интернету. Проверьте подключение и попробуйте снова.</string>
+    <string name="rel_wallet_err_timed_out">Время ожидания истекло. Проверьте подключение и попробуйте снова.</string>
+    <string name="rel_wallet_err_cant_reach">Не удалось связаться с сервером. Проверьте адрес в настройках и подключение.</string>
+    <string name="rel_wallet_err_secure">Не удалось установить защищённое соединение с сервером.</string>
+    <string name="rel_wallet_err_network">Произошла ошибка сети. Проверьте подключение и попробуйте снова.</string>
+    <string name="rel_wallet_err_unreadable">Сервер прислал ответ, который приложение не смогло прочитать. Попробуйте снова; если это повторяется, обновите приложение.</string>
+    <string name="rel_wallet_err_node">Узел Kaspa вернул ошибку. Приложение попробует другой узел; повторите попытку чуть позже.</string>
+    <string name="rel_wallet_err_unknown">Произошла неизвестная ошибка.</string>
+    <string name="rel_wallet_err_no_spendable_available">Нет доступных для траты UTXO</string>
+    <string name="rel_wallet_err_no_private_key">Не удалось получить закрытый ключ</string>
+    <string name="rel_wallet_err_insufficient_payment">Недостаточно средств для платежа</string>
+    <string name="rel_wallet_err_insufficient_after_fee">Недостаточно средств с учётом комиссии</string>
+    <string name="rel_wallet_err_insufficient_handshake">Недостаточно средств для рукопожатия</string>
+    <string name="rel_wallet_err_insufficient_self_stash">Недостаточно средств для комиссии самосохранения</string>
+    <string name="rel_wallet_err_group_secrets">Нет ключей группы - попробуйте заново вступить в группу.</string>
+    <string name="rel_wallet_err_admin_secrets">Нет ключей администратора группы.</string>
+</resources>

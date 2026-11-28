@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">Địa chỉ đó đã có trong tài khoản này.</string>
     <string name="coldq_error_in_other_account">Địa chỉ đó đã có trong tài khoản Cold Storage “%1$s” của bạn.</string>
     <string name="coldq_added_toast">Đã thêm địa chỉ chống lượng tử.</string>
-    <string name="coldq_add_action">Thêm địa chỉ chống lượng tử</string>
     <string name="coldq_add_action_subtitle">Quét một địa chỉ KCC-3 từ màn hình địa chỉ của KasSigner.</string>
     <string name="coldq_stop_watching">Ngừng theo dõi</string>
     <string name="coldq_stop_watching_subtitle">Xóa địa chỉ lượng tử này khỏi tài khoản. Quét lại để thêm lại.</string>

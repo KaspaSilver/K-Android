@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">وب‌سایت‌ها</string>
     <string name="shell_kaspa_websites">وب‌سایت‌های Kaspa</string>
     <string name="shell_terms_of_use">شرایط استفاده</string>
-    <string name="shell_message_indexer_footer">KaPost، گفتگوهای عمومی و شطرنج هم از همین ایندکسر خوانده می‌شوند.</string>
+    <string name="shell_message_indexer_footer">پست‌ها، گفتگوهای عمومی و شطرنج هم از این ایندکسر خوانده می‌شوند.</string>
 </resources>

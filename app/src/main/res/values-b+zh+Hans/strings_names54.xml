@@ -5,9 +5,8 @@
     <string name="names54_no_username_found">未找到该用户名</string>
     <string name="names54_use_their_username">使用对方的用户名</string>
     <string name="names54_kaspa_address_or_username">Kaspa 地址或用户名</string>
-    <string name="names54_enter_address_or_username_example">输入 Kaspa 地址（kaspa:...）或用户名（例如 alice.kachat）。</string>
+    <string name="names54_enter_address_or_username_example">输入 Kaspa 地址（kaspa:...）或用户名（例如 @alice）。</string>
     <string name="names54_members_footer">从联系人中选择，或通过 Kaspa 地址或用户名添加任何人。</string>
-    <string name="names54_finds_addresses_balance_or_username">查找有余额或用户名的地址。</string>
     <string name="names54_no_addresses_balance_or_username_found">未找到有余额或用户名的地址。</string>
     <string name="names54_found_one_address_balance_username">找到 1 个有余额或用户名的地址。</string>
     <string name="names54_found_n_addresses_balance_username">找到 %1$d 个有余额或用户名的地址。</string>

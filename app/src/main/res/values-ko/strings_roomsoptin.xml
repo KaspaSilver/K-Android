@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">방 추가</string>
+    <string name="roomsoptin_indexer_rooms_footer">인덱서가 보관하는 방: 기록이 저장되고 K가 닫혀 있어도 알림을 보낼 수 있습니다.</string>
+    <string name="roomsoptin_other_languages">다른 언어</string>
+    <string name="roomsoptin_create_title">직접 만든 방의 작동 방식</string>
+    <string name="roomsoptin_create_point_name">같은 이름을 입력한 사람은 같은 방에 들어옵니다. 주인도 초대도 없습니다.</string>
+    <string name="roomsoptin_create_point_history">기록을 보관하는 인덱서가 없습니다. 방이 열려 있는 동안 K가 Kaspa 네트워크에서 읽고, 휴대폰에 최대 3일까지 보관합니다.</string>
+    <string name="roomsoptin_create_point_bell">K가 닫혀 있으면 알림이 없습니다. 벨을 켜면 K가 열려 있을 때만 알립니다.</string>
+    <string name="roomsoptin_create_point_public">그곳에서 한 말은 모두 공개됩니다. 누구나 Kaspa 네트워크에서 읽을 수 있습니다.</string>
+    <string name="roomsoptin_create_room">방 만들기</string>
+    <string name="roomsoptin_name_your_room">방 이름 정하기</string>
+    <string name="roomsoptin_empty_title">아직 공개 채팅이 없습니다</string>
+    <string name="roomsoptin_empty_body">#kaspa처럼 인덱서가 보관하는 방을 추가하거나 직접 만드세요. 직접 고르지 않으면 아무것도 추가되지 않습니다.</string>
+    <string name="roomsoptin_removed_toast">#%1$s을(를) 삭제했습니다. 방 추가에서 언제든 다시 추가하세요.</string>
+    <string name="roomsoptin_bulk_delete_message">인덱서가 보관하는 방은 방 추가에서 다시 추가할 수 있습니다. 직접 만든 방은 메시지와 함께 이 기기에서 삭제됩니다.</string>
+    <string name="roomsoptin_not_in_list_add">이 방은 공개 채팅에 없습니다. 추가할까요?</string>
+    <string name="roomsoptin_room_info_curated">인덱서가 보관하는 방입니다. 직접 추가했으며, K의 누구나 글을 올릴 수 있습니다.</string>
+</resources>

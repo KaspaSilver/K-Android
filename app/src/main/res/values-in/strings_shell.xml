@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">Situs</string>
     <string name="shell_kaspa_websites">Situs Kaspa</string>
     <string name="shell_terms_of_use">Ketentuan Penggunaan</string>
-    <string name="shell_message_indexer_footer">KaPost, Obrolan Publik, dan Catur juga dibaca dari indexer ini.</string>
+    <string name="shell_message_indexer_footer">Postingan, Obrolan Publik, dan Catur juga dibaca dari indexer ini.</string>
 </resources>

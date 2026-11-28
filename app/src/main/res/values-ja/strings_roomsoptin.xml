@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">ルームを追加</string>
+    <string name="roomsoptin_indexer_rooms_footer">インデクサーが保存するルーム：履歴が残り、Kを閉じていても通知できます。</string>
+    <string name="roomsoptin_other_languages">その他の言語</string>
+    <string name="roomsoptin_create_title">作成したルームの仕組み</string>
+    <string name="roomsoptin_create_point_name">同じ名前を入力した人は同じルームに入ります。オーナーも招待もありません。</string>
+    <string name="roomsoptin_create_point_history">履歴を保存するインデクサーはありません。ルームを開いている間にKがKaspaネットワークから読み込み、端末には最大3日分を保存します。</string>
+    <string name="roomsoptin_create_point_bell">Kを閉じている間は通知されません。ベルをオンにすると、Kが開いている間だけ通知します。</string>
+    <string name="roomsoptin_create_point_public">そこでの発言はすべて公開され、誰でもKaspaネットワーク上で読めます。</string>
+    <string name="roomsoptin_create_room">ルームを作成</string>
+    <string name="roomsoptin_name_your_room">ルーム名を入力</string>
+    <string name="roomsoptin_empty_title">まだ公開チャットはありません</string>
+    <string name="roomsoptin_empty_body">#kaspaのようなインデクサーが保存するルームを追加するか、自分で作成します。あなたが選ばない限り何も追加されません。</string>
+    <string name="roomsoptin_removed_toast">#%1$sを削除しました。「ルームを追加」からいつでも再追加できます。</string>
+    <string name="roomsoptin_bulk_delete_message">インデクサーが保存するルームは「ルームを追加」から再追加できます。自分で作成したルームはメッセージごとこの端末から削除されます。</string>
+    <string name="roomsoptin_not_in_list_add">このルームは公開チャットにありません。追加しますか？</string>
+    <string name="roomsoptin_room_info_curated">インデクサーが保存するルーム。あなたが追加したルームで、Kの誰でも投稿できます。</string>
+</resources>

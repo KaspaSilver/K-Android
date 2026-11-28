@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">الدهب</string>
+    <string name="rel_wallet_silver">الفضة</string>
+    <string name="rel_wallet_pair_bitcoin">سعر Kaspa بالبيتكوين</string>
+    <string name="rel_wallet_pair_voo">أسهم صندوق Vanguard S&amp;P 500 ETF</string>
+    <string name="rel_wallet_pair_gold">أونصات تروي من الدهب</string>
+    <string name="rel_wallet_pair_silver">أونصات تروي من الفضة</string>
+    <string name="rel_wallet_cold_storage_n">التخزين البارد %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">مفيش UTXOs ينفع تتصرف على العنوان ده</string>
+    <string name="rel_wallet_insufficient_plus_fee">الرصيد مش كفاية للمبلغ ده مع رسوم الشبكة</string>
+    <string name="rel_wallet_too_many_inputs">الإرسال ده محتاج %1$d من UTXOs، لكن KasSigner بيدعم %2$d مدخل بس في المعاملة. ابعت مبلغ أقل أو اجمع العنوان ده الأول.</string>
+    <string name="rel_wallet_cancelled">تم الإلغاء.</string>
+    <string name="rel_wallet_err_no_internet">مفيش إنترنت. اتأكد من الاتصال وجرّب تاني.</string>
+    <string name="rel_wallet_err_timed_out">الاتصال خلص وقته. اتأكد من الاتصال وجرّب تاني.</string>
+    <string name="rel_wallet_err_cant_reach">مقدرناش نوصل للسيرفر. اتأكد من العنوان في الإعدادات ومن الاتصال.</string>
+    <string name="rel_wallet_err_secure">مقدرناش نعمل اتصال آمن بالسيرفر.</string>
+    <string name="rel_wallet_err_network">حصل خطأ في الشبكة. اتأكد من الاتصال وجرّب تاني.</string>
+    <string name="rel_wallet_err_unreadable">السيرفر بعت حاجة التطبيق مقدرش يقراها. جرّب تاني، ولو فضلت تحصل حدّث التطبيق.</string>
+    <string name="rel_wallet_err_node">نود Kaspa رجّع خطأ. التطبيق هيجرب نود تانية؛ جرّب تاني كمان شوية.</string>
+    <string name="rel_wallet_err_unknown">حصل خطأ مش معروف.</string>
+    <string name="rel_wallet_err_no_spendable_available">مفيش UTXOs ينفع تتصرف</string>
+    <string name="rel_wallet_err_no_private_key">مقدرناش نجيب المفتاح الخاص</string>
+    <string name="rel_wallet_err_insufficient_payment">الرصيد مش كفاية للدفع</string>
+    <string name="rel_wallet_err_insufficient_after_fee">الرصيد مش كفاية بعد الرسوم</string>
+    <string name="rel_wallet_err_insufficient_handshake">الرصيد مش كفاية للمصافحة</string>
+    <string name="rel_wallet_err_insufficient_self_stash">الرصيد مش كفاية لرسوم الحفظ الذاتي</string>
+    <string name="rel_wallet_err_group_secrets">أسرار المجموعة مش موجودة - جرّب تدخل المجموعة دي تاني.</string>
+    <string name="rel_wallet_err_admin_secrets">أسرار أدمن المجموعة مش موجودة.</string>
+</resources>

@@ -893,15 +893,9 @@ fun AddressBookEntryEditor(
         }
     }
     // What "Use Their Username" fills in: a typed name that resolved, else the address's
-    // .kachat name. Saved in full ("alice.kachat"), never the bare form K shows names in, since
-    // the book syncs to Nextcloud and KaPay (iOS 413f6d6d, 518fdc8c).
-    val domainSuggestion: String? = run {
-        val tld = selectedTld
-        val shown = resolvedName
-        if (resolvedAddress != null && shown != null && tld != null) {
-            if (shown.lowercase().endsWith(tld.suffix)) shown else shown + tld.suffix
-        } else kachatName
-    }
+    // .kachat name. Bare, "alice", never "alice.kachat" (iOS 824a30bb, owner 2026-11-26: the
+    // ending is never shown anywhere, so it isn't saved into a contact's name either).
+    val domainSuggestion: String? = bareUsernameSuggestion(if (resolvedAddress != null) resolvedName else null, kachatName)
     // A typed name resolves as .kachat (iOS 518fdc8c); the entry saves the address.
     LaunchedEffect(addressInput) {
         resolvedAddress = null
@@ -1375,4 +1369,15 @@ val ContactsFilledIcon: androidx.compose.ui.graphics.vector.ImageVector by lazy 
             close()
         }
     }.build()
+}
+
+/**
+ * Add Contact's "Use Their Username" (iOS 824a30bb `AddressBookEntryEditor.domainSuggestion`): the
+ * typed name that resolved, else the address's .kachat name, trimmed and without a ".kachat"
+ * ending; null when nothing is left.
+ */
+internal fun bareUsernameSuggestion(resolvedName: String?, kachatName: String?): String? {
+    var bare = (resolvedName ?: kachatName)?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+    if (bare.lowercase().endsWith(".kachat")) bare = bare.dropLast(".kachat".length)
+    return bare.ifEmpty { null }
 }

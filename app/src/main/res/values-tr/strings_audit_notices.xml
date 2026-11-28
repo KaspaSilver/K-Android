@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Received KAS notices and in-app Posts banners in the app's language (iOS audit 2026-11-27 M10) -->
+    <string name="notice_received">%1$s alındı</string>
+    <string name="notice_balance_increased">Bakiye %1$s arttı</string>
+    <string name="notice_chatting_address">Sohbet adresi %1$s</string>
+    <string name="notice_spending_address">Harcama adresi %1$s</string>
+    <string name="notice_cold_storage_address">Soğuk depolama adresi %1$s (%2$s)</string>
+    <string name="notice_post_liked">gönderini beğendi</string>
+    <string name="notice_post_disliked">gönderini beğenmedi</string>
+    <string name="notice_post_tipped">gönderine bahşiş verdi</string>
+    <string name="notice_post_tipped_amount">gönderine bahşiş verdi: %1$s</string>
+    <string name="notice_post_replied">gönderine yanıt verdi</string>
+    <string name="notice_post_quoted">gönderini alıntıladı</string>
+    <string name="notice_post_reposted">gönderini yeniden paylaştı</string>
+    <string name="notice_followed_you">seni takip etti</string>
+    <string name="notice_post_mentioned">bir gönderide senden bahsetti</string>
+    <string name="notice_post_interacted">gönderinle etkileşime geçti</string>
+</resources>

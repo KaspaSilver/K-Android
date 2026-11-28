@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">يتيح لك K إرسال واستقبال الرسائل مباشرة عبر شبكة Kaspa نفسها. يلزم استخدام Kaspa لدفع الرسوم عند إرسال رسائلك. تذهب الرسوم التي تدفعها إلى المعدّنين الذين يؤمّنون الشبكة. 5 كاسبا بيخلّوك تبعت حوالي 2,500 رسالة.</string>
+    <string name="welcome2_get_username">خد اسم مستخدم</string>
+    <string name="welcome2_get_username_caption">احجز اسم مستخدم، زي @alice، عشان الناس تلاقيك وتبعتلك من غير العنوان الطويل. هتلاقيه في Kaspa Hub &gt; أسماء المستخدم.</string>
+    <string name="welcome2_share_title">شارك عنوان الشات بتاعك</string>
+    <string name="welcome2_share_body">ابعته لحد عشان يلاقيك ويبعتلك على K.</string>
+</resources>

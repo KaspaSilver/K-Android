@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">مبادلة</string>
-    <string name="swap_history">سجل المبادلات</string>
-    <string name="swap_started">بدأت المبادلة</string>
     <string name="swap_failed">فشلت المبادلة</string>
     <string name="swap_couldnt_read_amounts">تعذّرت قراءة مبالغ هذه المبادلة</string>
     <string name="swap_already_holds">تحتوي على هذه المبادلة بالفعل - إضافتها مجددًا تحسبها مرتين.</string>
     <string name="swap_lands_in_portfolio">تُضاف المبادلة إلى هذه المحفظة.</string>
     <string name="swap_delete_title">حذف هذه المبادلة؟</string>
     <string name="swap_delete_message">هذا يزيلها من سجلك المحلي فقط - ولا يؤثر على عملية التبادل الفعلية.</string>
-    <string name="swap_you_send">أنت ترسل</string>
     <string name="swap_you_get">أنت تحصل على</string>
-    <string name="swap_switch_direction">عكس الاتجاه</string>
-    <string name="swap_get_deposit_address">الحصول على عنوان الإيداع</string>
     <string name="swap_receive_coin_at">استلام %1$s على</string>
     <string name="swap_destination_tag_optional">وسم الوجهة (اختياري)</string>
     <string name="swap_destination_tag_hint">فقط إذا كان عنوان الاستلام يحتاج إليه، كما في معظم المنصات. بدونه لا تستطيع المنصة إضافة عملاتك إلى حسابك.</string>
     <string name="swap_from_kusdt_lands">المبادلة من (تصل kUSDT هنا)</string>
     <string name="swap_from_kas_lands">المبادلة من (تصل KAS هنا)</string>
-    <string name="swap_receiving_kas_at">استلام KAS على</string>
     <string name="swap_change">تغيير</string>
     <string name="swap_powered_by_trestly">بدعم من Trestly</string>
     <string name="swap_powered_by_changenow">بدعم من ChangeNOW</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">بيع %1$s KAS بسعر %2$s - اختر المحفظة التي تريد إضافته إليها.</string>
     <string name="swap_rate">سعر الصرف</string>
     <string name="swap_unavailable">غير متاح</string>
-    <string name="swap_go_to_spending_addresses">الانتقال إلى عناوين الإنفاق</string>
-    <string name="swap_send_coin_to_address">أرسل %1$s إلى هذا العنوان</string>
     <string name="swap_amount_to_send">المبلغ المطلوب إرساله</string>
     <string name="swap_destination_tag_copied">تم نسخ وسم الوجهة</string>
     <string name="swap_payout_address">عنوان الاستلام</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">عنوان الإيداع</string>
     <string name="swap_couldnt_reach_changenow">تعذّر الوصول إلى ChangeNOW - حاول مرة أخرى</string>
     <string name="swap_details">تفاصيل المبادلة</string>
-    <string name="swap_picker_footer">تدفع المبادلة إلى عنوان لم تستخدمه من قبل، فلا يمكن ربط الدفعة بنشاطك السابق. أنشئ عنوانًا إن لم يكن هناك عنوان متاح.</string>
-    <string name="swap_picker_all_used">جميع العناوين هنا مستخدمة. أنشئ عنوانًا جديدًا في الأعلى.</string>
-    <string name="swap_unused_addresses">عناوين غير مستخدمة</string>
-    <string name="swap_choose_address">اختيار العنوان</string>
     <string name="swap_used">مستخدم</string>
     <string name="swap_unused">غير مستخدم</string>
-    <string name="swap_check_history_before">تحقّق من سجله قبل أن ترسل إليه مبادلة.</string>
-    <string name="swap_use_for_this_swap">استخدامه لهذه المبادلة</string>
-    <string name="swap_changenow_pays_out_here">يدفع ChangeNOW عملات KAS المُبادلة إلى هذا العنوان.</string>
     <string name="swap_search_coins">ابحث عن العملات</string>
-    <string name="swap_choose_coin">اختيار العملة</string>
     <string name="swap_agreements_intro">تستخدم المبادلة خدمتين لا يديرهما K. اقرأ الاثنتين ووافق عليهما قبل المتابعة.</string>
     <string name="swap_coins_on_other_networks">عملات على شبكات أخرى</string>
     <string name="swap_changenow_agreement">تتم المبادلات بين Kaspa والعملات على الشبكات الأخرى (Bitcoin وEthereum وUSDC وUSDT وغيرها) عبر ChangeNOW، وهي منصة تبادل تابعة لطرف ثالث. يطلب K من ChangeNOW عرض سعر وعنوان إيداع فقط، ويعرض حالة المبادلة؛ أما ChangeNOW فينفذ التبادل ويرسل العملات. K غير مسؤول عن المبادلات الفاشلة أو المتأخرة أو المفقودة. إذا لم تكتمل مبادلة، فتواصل مع دعم ChangeNOW.</string>

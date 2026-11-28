@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">Buscar chats públicos</string>
-    <string name="r55_no_public_chats">No hay chats públicos</string>
-    <string name="r55_no_public_chats_hint">Toca + para unirte a una sala pública o crear una.</string>
     <string name="r55_page_cycle_hint">Cambia entre tus chats y los chats públicos</string>
-    <string name="r55_more_rooms">Más salas</string>
-    <string name="r55_more_rooms_footer">Salas añadidas en el indexador del que K lee los chats públicos.</string>
     <string name="r55_delete_one_public_chat">¿Eliminar 1 chat público?</string>
     <string name="r55_delete_n_public_chats">¿Eliminar %1$d chats públicos?</string>
-    <string name="r55_delete_public_chats_message">Los chats públicos predeterminados se desactivan (vuelve a activarlos en Editar chats públicos predeterminados). Las salas que añadiste se eliminan con sus mensajes en este dispositivo.</string>
     <string name="r55_delete_for_everyone">Eliminar para todos</string>
     <string name="r55_delete_for_everyone_subtitle">La quita de esta sala para todos los que usan K.</string>
     <string name="r55_delete_for_everyone_q">¿Eliminar para todos?</string>

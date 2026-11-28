@@ -1323,8 +1323,19 @@ class ChatRepository @Inject constructor(
         dao.updateStatus(txId, wallet, "sent")
         Log.i("ChatRepository", "Settled not-confirmed send ${txId.take(12)}: its copy was read back")
         contactNotesLazy.get().onMessageDelivered(row.contactId)
+        // A payment From a spending address whose send got no answer owes its payment_notice
+        // until now (ChatPaymentSender, iOS `sendOwedSpendingNoticeIfAny`, audit 2026-11-27 C5).
+        _settledSends.tryEmit(SettledSend(txId = txId.lowercase(), contactId = row.contactId, walletAddress = wallet))
         return true
     }
+
+    /** A Not confirmed send that was just read back from the network ([settleUnconfirmedSend]). */
+    data class SettledSend(val txId: String, val contactId: String, val walletAddress: String)
+
+    private val _settledSends = kotlinx.coroutines.flow.MutableSharedFlow<SettledSend>(extraBufferCapacity = 64)
+
+    /** Each Not confirmed send as it settles, for whoever owes something once it has landed. */
+    val settledSends: kotlinx.coroutines.flow.SharedFlow<SettledSend> = _settledSends
 
     /**
      * Repair sweep for stuck pairs that already exist: an orphaned provisional outgoing row
@@ -3454,9 +3465,13 @@ class ChatRepository @Inject constructor(
     private suspend fun checkNoticeOnChain(myAddress: String, txId: String, claimedSompi: Long, payer: String, noticeBlockTime: Long): NoticeCheck {
         val (tx, failed) = fetchNoticeTransaction(txId)
         if (tx == null) return failed ?: NoticeCheck.Unknown()
-        val paid = tx.outputs
-            .filter { it.scriptPublicKeyAddress?.equals(myAddress, ignoreCase = true) == true }
-            .sumOf { it.amount }
+        // REST's amounts: a sum that isn't one can't equal the claim (iOS R6: no wrap-around
+        // into a matching number)
+        val paid = com.kachat.app.util.UtxoMath.restTotalOrNull(
+            tx.outputs
+                .filter { it.scriptPublicKeyAddress?.equals(myAddress, ignoreCase = true) == true }
+                .map { it.amount }
+        ) ?: return NoticeCheck.Invalid("its amounts don't add up")
         val inputs = tx.inputs.map { it.previousOutpointAddress }
         val payerAddress = payer.trim().lowercase()
         val otherContacts = inputs.mapNotNull { it?.trim()?.lowercase()?.takeIf { a -> a.isNotEmpty() && a != payerAddress } }
@@ -3767,10 +3782,13 @@ class ChatRepository @Inject constructor(
         val payerCheck = com.kachat.app.util.PaymentNoticeProof.payerVerdict(provenPayer, tx.blockTime, noticeBlockTime)
         if (payerCheck !is NoticeCheck.Valid) return payerCheck
 
-        // the real token: its covenant id, from the explorer or else the node
+        // The real token: its covenant id. The node decides while the coin is unspent; the REST
+        // API's id is only a hint (audit 2026-11-27 C7: a user-set REST server could name kUSDT's
+        // id on a look-alike). A REST id that isn't kUSDT's is refused at once.
         val covenantHex = kusdt.current.covenantIdHex
-        output.covenantId?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }?.let { covenant ->
-            return if (covenant == covenantHex) NoticeCheck.Valid else NoticeCheck.Invalid("the coin isn't ${token.symbol}")
+        val restCovenant = output.covenantId
+        if (com.kachat.app.util.PaymentNoticeProof.restCovenantRefuses(restCovenant, covenantHex)) {
+            return NoticeCheck.Invalid("the coin isn't ${token.symbol}")
         }
         // Two nodes must agree (M6: one gossip-discovered node over plaintext gRPC is no proof).
         val unspent = try {
@@ -3778,15 +3796,19 @@ class ChatRepository @Inject constructor(
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
         } catch (e: Exception) {
-            emptyList()
+            // no node answer: asked again later
+            return NoticeCheck.Unknown()
         }
-        // spent since, or no node answer: can't tell it from a look-alike
         val coin = unspent.firstOrNull { it.outpoint.transactionId.lowercase() == txId && it.outpoint.index == position }
-            ?: return NoticeCheck.Unknown()
-        if (!coin.utxoEntry.scriptPublicKey.scriptPublicKey.equals(kusdt.hex(script), ignoreCase = true) ||
-            coin.utxoEntry.covenantId?.lowercase() != covenantHex
-        ) return NoticeCheck.Invalid("the coin isn't ${token.symbol}")
-        return NoticeCheck.Valid
+        return com.kachat.app.util.PaymentNoticeProof.tokenCoinVerdict(
+            restCovenant = restCovenant,
+            expectedCovenant = covenantHex,
+            coinOnNode = coin != null,
+            coinMatches = coin != null &&
+                coin.utxoEntry.scriptPublicKey.scriptPublicKey.equals(kusdt.hex(script), ignoreCase = true) &&
+                coin.utxoEntry.covenantId?.lowercase() == covenantHex,
+            symbol = token.symbol,
+        )
     }
 
     /**
@@ -4660,15 +4682,17 @@ class ChatRepository @Inject constructor(
                 } else {
                     rawAddress?.trim()?.equals(myAddress, ignoreCase = true) == true
                 }
+                // The amounts are the REST API's (a user-set server): a sum that isn't one is a
+                // made-up transaction, skipped (iOS audit 2026-11-27 R6).
                 if (paysUs) {
-                    toUs += amount
+                    toUs = com.kachat.app.util.UtxoMath.restSumOrNull(toUs, amount) ?: return PaymentTxDirection.None
                     continue
                 }
                 val address = rawAddress?.trim()?.takeIf { it.isNotEmpty() } ?: continue
                 // labelled ours, but the script says otherwise: not ours, and not anyone's we can
                 // name either
                 if (address.equals(myAddress, ignoreCase = true)) continue
-                toOthers += amount
+                toOthers = com.kachat.app.util.UtxoMath.restSumOrNull(toOthers, amount) ?: return PaymentTxDirection.None
                 if (foreignSender == null || !address.equals(foreignSender, ignoreCase = true)) {
                     // the actual destination, not change back to a co-signing sender: prefer the
                     // smaller amount (the larger is usually change)

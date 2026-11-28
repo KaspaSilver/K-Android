@@ -31,7 +31,7 @@
     <string name="kg_use_body">设为主名称后，你在 K 各处都以它显示。</string>
     <string name="kg_use_find">别人输入你的名称就能找到你。</string>
     <string name="kg_use_link">你的个人资料链接显示你的名称。</string>
-    <string name="kg_use_pay">他们可以把 Kaspa 发到 yourname.kachat，而不是一长串地址。</string>
+    <string name="kg_use_pay">他们可以把 Kaspa 发到 @yourname，而不是一长串地址。</string>
     <string name="kg_use_title">让它成为你的名字</string>
     <string name="kl_1d">1 天</string>
     <string name="kl_3d">3 天</string>

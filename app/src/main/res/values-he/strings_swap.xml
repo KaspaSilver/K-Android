@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">החלפה</string>
-    <string name="swap_history">היסטוריית החלפות</string>
-    <string name="swap_started">ההחלפה התחילה</string>
     <string name="swap_failed">ההחלפה נכשלה</string>
     <string name="swap_couldnt_read_amounts">לא ניתן לקרוא את הסכומים של ההחלפה הזו</string>
     <string name="swap_already_holds">ההחלפה הזו כבר כלולה - הוספה חוזרת תספור אותה פעמיים.</string>
     <string name="swap_lands_in_portfolio">ההחלפה תיכנס לתיק הזה.</string>
     <string name="swap_delete_title">למחוק את ההחלפה הזו?</string>
     <string name="swap_delete_message">זה רק מסיר אותה מההיסטוריה המקומית שלכם - זה לא משפיע על ההחלפה עצמה.</string>
-    <string name="swap_you_send">אתם שולחים</string>
     <string name="swap_you_get">אתם מקבלים</string>
-    <string name="swap_switch_direction">החלפת כיוון</string>
-    <string name="swap_get_deposit_address">קבלת כתובת הפקדה</string>
     <string name="swap_receive_coin_at">קבלת %1$s בכתובת</string>
     <string name="swap_destination_tag_optional">תג יעד (אופציונלי)</string>
     <string name="swap_destination_tag_hint">רק אם כתובת הקבלה דורשת תג, כמו ברוב הבורסות. בלעדיו הבורסה לא תוכל לזכות את המטבעות שלכם.</string>
     <string name="swap_from_kusdt_lands">החלפה מכתובת (ה-kUSDT יגיעו לכאן)</string>
     <string name="swap_from_kas_lands">החלפה מכתובת (ה-KAS יגיעו לכאן)</string>
-    <string name="swap_receiving_kas_at">קבלת KAS בכתובת</string>
     <string name="swap_change">שינוי</string>
     <string name="swap_powered_by_trestly">מופעל על ידי Trestly</string>
     <string name="swap_powered_by_changenow">מופעל על ידי ChangeNOW</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">מכירה של %1$s KAS ב-%2$s - בחרו לאיזה תיק להוסיף אותה.</string>
     <string name="swap_rate">שער</string>
     <string name="swap_unavailable">לא זמין</string>
-    <string name="swap_go_to_spending_addresses">מעבר לכתובות ההוצאה</string>
-    <string name="swap_send_coin_to_address">שלחו %1$s לכתובת הזו</string>
     <string name="swap_amount_to_send">סכום לשליחה</string>
     <string name="swap_destination_tag_copied">תג היעד הועתק</string>
     <string name="swap_payout_address">כתובת התשלום</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">כתובת הפקדה</string>
     <string name="swap_couldnt_reach_changenow">לא ניתן להגיע ל-ChangeNOW - נסו שוב</string>
     <string name="swap_details">פרטי ההחלפה</string>
-    <string name="swap_picker_footer">החלפה משלמת לכתובת שלא השתמשתם בה קודם, כך שאי אפשר לקשר את התשלום לפעילות הקודמת שלכם. צרו כתובת אם אין כתובת פנויה.</string>
-    <string name="swap_picker_all_used">כל הכתובות כאן כבר היו בשימוש. צרו כתובת חדשה למעלה.</string>
-    <string name="swap_unused_addresses">כתובות שלא היו בשימוש</string>
-    <string name="swap_choose_address">בחירת כתובת</string>
     <string name="swap_used">בשימוש</string>
     <string name="swap_unused">לא בשימוש</string>
-    <string name="swap_check_history_before">בדקו את ההיסטוריה שלה לפני ששולחים אליה החלפה.</string>
-    <string name="swap_use_for_this_swap">שימוש בהחלפה הזו</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW משלמת את ה-KAS שהוחלפו לכתובת הזו.</string>
     <string name="swap_search_coins">חיפוש מטבעות</string>
-    <string name="swap_choose_coin">בחירת מטבע</string>
     <string name="swap_agreements_intro">ההחלפה משתמשת בשני שירותים ש-K לא מפעילה. קראו והסכימו לשניהם לפני שתמשיכו.</string>
     <string name="swap_coins_on_other_networks">מטבעות ברשתות אחרות</string>
     <string name="swap_changenow_agreement">החלפות בין Kaspa למטבעות ברשתות אחרות (Bitcoin, Ethereum, USDC, USDT ועוד) מתבצעות על ידי ChangeNOW, בורסה של צד שלישי. K רק מבקשת מ-ChangeNOW הצעת מחיר וכתובת הפקדה ומציגה את מצב ההחלפה; ChangeNOW מבצעת את ההחלפה ושולחת את המטבעות. K אינה אחראית להחלפות שנכשלו, התעכבו או אבדו. אם החלפה לא עוברת, פנו לתמיכה של ChangeNOW.</string>

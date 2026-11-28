@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- KaPost and Kaspa Hub card links (iOS 961fc05a, 2026-11-25). -->
 <resources>
-    <string name="kp55_link_copied">Link copied</string>
     <string name="kp55_hub_link_subtitle">A link that opens this card in K.</string>
     <string name="kp55_open">Open</string>
     <string name="kp55_opens_this_card">Opens this card.</string>

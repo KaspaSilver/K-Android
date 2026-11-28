@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">Bu herkese açık sohbet için bildirimler kapalı</string>
     <string name="pc_notifications_on_closed_toast">Uygulama kapalıyken bile bu herkese açık sohbetteki yeni mesajlar için bildirim alırsın</string>
     <string name="pc_notifications_on_open_toast">Uygulaman açık kaldığı sürece bu herkese açık sohbetteki yeni mesajlar için bildirim alırsın</string>
-    <string name="pc_default_room_off_toast">#%1$s kapalı - Varsayılan Herkese Açık Sohbetleri Düzenle\'den yeniden açın</string>
     <string name="pc_delete_room_title">#%1$s silinsin mi?</string>
     <string name="pc_delete_room_message">Bu odanın bu cihazda önbelleğe alınmış tüm mesajları silinir. Bu geri alınamaz - sonra tekrar katılırsan geçmişsiz başlarsın.</string>
     <string name="pc_delete_room_row_subtitle">Bu odayı ve mesajlarını bu cihazdan kaldırır.</string>
     <string name="pc_keep">Tut</string>
     <string name="pc_keep_subtitle">Odayı olduğu gibi bırak.</string>
-    <string name="pc_new_public_chat">Yeni Herkese Açık Sohbet</string>
-    <string name="pc_edit_default_public_chats">Varsayılan Herkese Açık Sohbetleri Düzenle</string>
-    <string name="pc_new_public_chat_explainer">Aynı kanal adına katılan herkes orada mesajları görebilir ve gönderebilir - sahibi ya da daveti yoktur.</string>
     <string name="pc_join">Katil</string>
     <string name="pc_channel_name_rules">Kanal adları boşluk veya iki nokta olmadan 1-%1$d karakter olmalı.</string>
     <string name="pc_join_failed">O kanala katılırken bir sorun oluştu.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">Kötüye kullanım ya da rahatsız edici içeriği bildir. Bu mesajın ekli olduğu bir e-posta açar.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">Gönderilerini ve oda mesajlarını gizler, seninle etkileşime girmesini engeller.</string>
-    <string name="pc_sender_view_profile_subtitle">KaPost profili: gönderiler, yanıtlar ve takipçiler.</string>
+    <string name="pc_sender_view_profile_subtitle">Profili: gönderiler, yanıtlar ve takipçiler.</string>
     <string name="pc_sender_send_kaspa_subtitle">Adresine Kaspa gönder.</string>
     <string name="pc_sender_copy_address_subtitle">Kaspa adresini kopyala.</string>
     <string name="pc_original_message_not_loaded">Orijinal mesaj yüklenmedi</string>

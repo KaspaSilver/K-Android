@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">Этот адрес уже есть в этом аккаунте.</string>
     <string name="coldq_error_in_other_account">Этот адрес уже есть в вашем аккаунте Cold Storage «%1$s».</string>
     <string name="coldq_added_toast">Квантово-устойчивый адрес добавлен.</string>
-    <string name="coldq_add_action">Добавить квантово-устойчивый адрес</string>
     <string name="coldq_add_action_subtitle">Отсканируйте адрес KCC-3 с экрана адреса KasSigner.</string>
     <string name="coldq_stop_watching">Перестать отслеживать</string>
     <string name="coldq_stop_watching_subtitle">Удаляет этот квантовый адрес из аккаунта. Отсканируйте его снова, чтобы вернуть.</string>

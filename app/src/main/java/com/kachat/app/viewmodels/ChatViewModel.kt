@@ -2,6 +2,7 @@ package com.kachat.app.viewmodels
 
 import kotlinx.coroutines.flow.flowOn
 import com.kachat.app.util.UserFacingError
+import com.kachat.app.util.ConversationOwnership
 import com.kachat.app.util.coalesced
 import android.content.Context
 import android.net.Uri
@@ -80,45 +81,20 @@ class ChatViewModel @Inject constructor(
     // Onboarding sync hold
     // ---------------------------------------------------------------------
 
-    /** Which phase the post-wizard initial sync is in, for its progress sheet. Null when idle. */
-    enum class InitialSyncPhase(val label: String) {
-        Messages("Downloading message history"),
-        Groups("Syncing your group chats"),
-        Balance("Checking your balance"),
-        Finished("Finished"),
-    }
-
-    private val _initialSyncPhase = MutableStateFlow<InitialSyncPhase?>(null)
-    val initialSyncPhase: StateFlow<InitialSyncPhase?> = _initialSyncPhase.asStateFlow()
-
     /**
-     * Lifts the wizard's hold and runs the account's first full sync, publishing a phase as it
-     * goes. Everything was deferred until now, so this is where all of that work happens - and a
-     * half-populated chat list invites taps on chats whose history has not arrived.
+     * The Welcome Guide finished. The first sync already ran during it (iOS 824a30bb, owner
+     * 2026-11-26: no sync hold, and no progress screen or "You're all set" after it): the app is
+     * usable at once and chats and history fill in as they sync. A hold an older path left is
+     * lifted.
      */
-    fun runInitialSyncAfterOnboarding() {
-        if (!onboardingGate.isHeld) return
-        onboardingGate.release()
-        viewModelScope.launch {
-            try {
-                _initialSyncPhase.value = InitialSyncPhase.Messages
-                chatRepository.syncMessages()
-                _initialSyncPhase.value = InitialSyncPhase.Groups
-                groupRepository.syncGroups()
-                _initialSyncPhase.value = InitialSyncPhase.Balance
-                walletService.refreshBalance()
-            } catch (e: Exception) {
-                Log.w("ChatViewModel", "Initial sync after onboarding failed", e)
-            } finally {
-                _initialSyncPhase.value = InitialSyncPhase.Finished
-            }
-        }
+    fun finishOnboardingGuide() {
+        onboardingGate.wizardDone()
+        if (onboardingGate.isHeld) onboardingGate.release()
     }
-
-    fun clearInitialSyncPhase() { _initialSyncPhase.value = null }
 
     /** Lifts a hold with no wizard behind it, so the account can never be stranded unsynced. */
     fun releaseOnboardingHoldIfIdle() {
+        onboardingGate.wizardDone()
         if (onboardingGate.isHeld) onboardingGate.release()
     }
 
@@ -130,6 +106,7 @@ class ChatViewModel @Inject constructor(
     /** Suppresses a notification for whichever contact's thread is currently open. */
     fun enterContact(contactId: String) {
         notificationHelper.enterContact(contactId)
+        claimContactComposer(contactId)
         // Opening a chat is one of the two moments the recency order the share sheet shows can
         // change — keep the direct-share conversation shortcuts current. refresh() diffs against
         // what's already published, so this is free when nothing changed.
@@ -153,6 +130,7 @@ class ChatViewModel @Inject constructor(
      *  arriving while you're actively looking at it doesn't tick the unread badge up. */
     fun setActiveGroup(groupId: String?) {
         notificationHelper.setActiveGroup(groupId)
+        if (groupId != null) claimGroupComposer(groupId)
         // What arrived while the app was away, now - through the coalesced catch-up, so a
         // tapped push and this open never run two full syncs at once (iOS 360e5d2).
         if (groupId != null) {
@@ -901,9 +879,82 @@ class ChatViewModel @Inject constructor(
     // a stale manual bump doesn't silently carry over to an unrelated later send.
     private val _feeRateOverride = MutableStateFlow<Long?>(null)
     val feeRateOverride: StateFlow<Long?> = _feeRateOverride.asStateFlow()
+    /** The thread whose fee pill set [_feeRateOverride] ([ConversationOwnership] key): only a send
+     *  there spends it, and opening another thread drops it. */
+    private var feeRateOverrideOwner: String? = null
 
-    fun setFeeRateOverride(rate: Long?) {
+    fun setFeeRateOverride(rate: Long?, conversation: String? = null) {
+        feeRateOverrideOwner = if (rate == null) null else conversation
         _feeRateOverride.value = rate
+    }
+
+    /** The custom fee a text send in [conversation] pays, used up by it; another thread's stays. */
+    private fun takeFeeRateOverride(conversation: String): Long? {
+        val rate = ConversationOwnership.ownedBy(_feeRateOverride.value, feeRateOverrideOwner, conversation) ?: return null
+        setFeeRateOverride(null)
+        return rate
+    }
+
+    // The 1:1 composer's staged photo belongs to the chat it was staged in (null: staged outside
+    // a thread, e.g. by the share sheet, which then opens its chat). The group composer's belongs
+    // to the group thread on screen when it was staged.
+    private var pendingPhotoContactId: String? = null
+    private var groupPendingPhotoGroupId: String? = null
+    private var shownGroupId: String? = null
+
+    /** The 1:1 reply/edit and the staged photo, when they were set in [contactId]'s chat. */
+    private fun replyFor(contactId: String): MessageEntity? = _replyingTo.value?.takeIf { it.contactId == contactId }
+    private fun ownsPendingPhoto(contactId: String): Boolean =
+        ConversationOwnership.belongsTo(pendingPhotoContactId?.let(ConversationOwnership::contact), ConversationOwnership.contact(contactId))
+
+    /**
+     * Opening [contactId]'s chat: the one-slot composer state another chat left (its reply, edit,
+     * staged photo) and another thread's custom fee are dropped, so this chat neither shows, prices
+     * nor sends them. What was staged in this chat stays.
+     */
+    private fun claimContactComposer(contactId: String) {
+        val key = ConversationOwnership.contact(contactId)
+        if (!ConversationOwnership.belongsTo(feeRateOverrideOwner, key)) setFeeRateOverride(null)
+        if (_replyingTo.value.let { it != null && it.contactId != contactId }) _replyingTo.value = null
+        if (_editingMessage.value.let { it != null && it.contactId != contactId }) _editingMessage.value = null
+        if (_pendingPhotoUri.value != null && !ownsPendingPhoto(contactId)) cancelPendingPhoto()
+    }
+
+    /** [claimContactComposer] for the group thread [groupId]. */
+    private fun claimGroupComposer(groupId: String) {
+        shownGroupId = groupId
+        if (!ConversationOwnership.belongsTo(feeRateOverrideOwner, ConversationOwnership.group(groupId))) setFeeRateOverride(null)
+        if (_groupReplyingTo.value.let { it != null && it.groupId != groupId }) _groupReplyingTo.value = null
+        if (_groupEditingMessage.value.let { it != null && it.groupId != groupId }) _groupEditingMessage.value = null
+        if (_groupPendingPhotoUri.value != null && groupPendingPhotoGroupId != groupId) cancelGroupPendingPhoto()
+    }
+
+    /** The 1:1 thread with [contactId] was left for good (popped, not just covered by a screen on
+     *  top of it): what was staged in it goes with it. */
+    fun clearContactComposer(contactId: String) {
+        if (_replyingTo.value?.contactId == contactId) _replyingTo.value = null
+        if (_editingMessage.value?.contactId == contactId) _editingMessage.value = null
+        if (_pendingPhotoUri.value != null && ownsPendingPhoto(contactId)) cancelPendingPhoto()
+        if (feeRateOverrideOwner == ConversationOwnership.contact(contactId)) setFeeRateOverride(null)
+    }
+
+    /** [clearContactComposer] for the group thread [groupId]. */
+    fun clearGroupComposer(groupId: String) {
+        if (_groupReplyingTo.value?.groupId == groupId) _groupReplyingTo.value = null
+        if (_groupEditingMessage.value?.groupId == groupId) _groupEditingMessage.value = null
+        if (_groupPendingPhotoUri.value != null && groupPendingPhotoGroupId == groupId) cancelGroupPendingPhoto()
+        if (feeRateOverrideOwner == ConversationOwnership.group(groupId)) setFeeRateOverride(null)
+    }
+
+    /** Another account: nothing staged in the last one's threads carries over. */
+    private fun clearAllComposerState() {
+        _replyingTo.value = null
+        _editingMessage.value = null
+        _groupReplyingTo.value = null
+        _groupEditingMessage.value = null
+        if (_pendingPhotoUri.value != null) cancelPendingPhoto()
+        if (_groupPendingPhotoUri.value != null) cancelGroupPendingPhoto()
+        setFeeRateOverride(null)
     }
 
     /** Recording, then "Encoding…", then "Audio ready" with a preview until Send or the trash
@@ -1036,9 +1087,12 @@ class ChatViewModel @Inject constructor(
     /** The 1:1 composer's staged Nextcloud upload, if any. */
     val nextcloudStaged: StateFlow<NextcloudStagedMedia?> = nextcloudStager.staged.asStateFlow()
 
-    fun setPendingPhoto(uri: Uri?, viaNextcloud: Boolean = false) {
+    /** [contactId]: the chat it is staged in - it shows and sends only there (null: staged
+     *  outside a thread, e.g. by the share sheet, for the chat it then opens). */
+    fun setPendingPhoto(uri: Uri?, viaNextcloud: Boolean = false, contactId: String? = null) {
         nextcloudStager.cancel()
         _nextcloudPhotoRequested.value = viaNextcloud && uri != null
+        pendingPhotoContactId = if (uri == null) null else contactId
         _pendingPhotoUri.value = uri
         if (uri != null && photoViaNextcloud) nextcloudStager.start(uri, isVideo = false) {}
         // An animation (picked with Photo, shared or pasted) goes on chain as a GIF (iOS d7c56280).
@@ -1054,7 +1108,7 @@ class ChatViewModel @Inject constructor(
                 null -> reportSendFailure(contactId, "Couldn't load that photo. Please try another.")
                 false -> reportSendFailure(contactId, appContext.getString(com.kachat.app.R.string.that_isnt_an_animated_gif))
                 true -> {
-                    setPendingPhoto(uri)
+                    setPendingPhoto(uri, contactId = contactId)
                     _pendingGifUri.value = uri
                 }
             }
@@ -1098,11 +1152,16 @@ class ChatViewModel @Inject constructor(
         nextcloudStager.cancel()
         _nextcloudPhotoRequested.value = true
         _pendingGifUri.value = null
+        pendingPhotoContactId = contactId
         _pendingPhotoUri.value = uri
         nextcloudStager.start(uri, isVideo = true) { reportSendFailure(contactId, it) }
     }
 
+    /** Whether the staged 1:1 photo was staged in [contactId]'s chat - another chat's isn't shown there. */
+    fun pendingPhotoBelongsTo(contactId: String): Boolean = ownsPendingPhoto(contactId)
+
     fun cancelPendingPhoto() {
+        pendingPhotoContactId = null
         nextcloudStager.discard()
         _pendingGifUri.value = null
         photoTierPrep.clear()
@@ -1127,9 +1186,11 @@ class ChatViewModel @Inject constructor(
     /** The group composer's staged Nextcloud upload, if any. */
     val groupNextcloudStaged: StateFlow<NextcloudStagedMedia?> = groupNextcloudStager.staged.asStateFlow()
 
-    fun setGroupPendingPhoto(uri: Uri?, viaNextcloud: Boolean = false) {
+    /** [groupId]: the group thread it is staged in, the one on screen unless given. */
+    fun setGroupPendingPhoto(uri: Uri?, viaNextcloud: Boolean = false, groupId: String? = shownGroupId) {
         groupNextcloudStager.cancel()
         _groupNextcloudPhotoRequested.value = viaNextcloud && uri != null
+        groupPendingPhotoGroupId = if (uri == null) null else groupId
         _groupPendingPhotoUri.value = uri
         if (uri != null && groupPhotoViaNextcloud) groupNextcloudStager.start(uri, isVideo = false) {}
         markIfAnimatedGif(uri, onChain = !groupPhotoViaNextcloud, _groupPendingPhotoUri, _groupPendingGifUri)
@@ -1137,12 +1198,13 @@ class ChatViewModel @Inject constructor(
 
     /** The group "+" sheet's GIF, as [setPendingGif]; [onError] shows why a pick was turned away. */
     fun setGroupPendingGif(uri: Uri, onError: (String) -> Unit) {
+        val groupId = shownGroupId
         viewModelScope.launch {
             when (readAnimatedGif(uri)) {
                 null -> onError("Couldn't load that photo. Please try another.")
                 false -> onError(appContext.getString(com.kachat.app.R.string.that_isnt_an_animated_gif))
                 true -> {
-                    setGroupPendingPhoto(uri)
+                    setGroupPendingPhoto(uri, groupId = groupId)
                     _groupPendingGifUri.value = uri
                 }
             }
@@ -1155,11 +1217,16 @@ class ChatViewModel @Inject constructor(
         groupNextcloudStager.cancel()
         _groupNextcloudPhotoRequested.value = true
         _groupPendingGifUri.value = null
+        groupPendingPhotoGroupId = shownGroupId
         _groupPendingPhotoUri.value = uri
         groupNextcloudStager.start(uri, isVideo = true, onError)
     }
 
+    /** Whether the staged group photo was staged in [groupId]'s thread. */
+    fun groupPendingPhotoBelongsTo(groupId: String): Boolean = groupPendingPhotoGroupId == null || groupPendingPhotoGroupId == groupId
+
     fun cancelGroupPendingPhoto() {
+        groupPendingPhotoGroupId = null
         groupNextcloudStager.discard()
         _groupPendingGifUri.value = null
         groupPhotoTierPrep.clear()
@@ -1814,7 +1881,8 @@ class ChatViewModel @Inject constructor(
             if (!stored) {
                 onResult(
                     if (deliberate) "That is the account you are using - there is no one to talk to."
-                    else "That address is one of your own accounts."
+                    // in the reader's language (iOS 01f71184)
+                    else com.kachat.app.util.tr(com.kachat.app.R.string.rs_own_account_not_contact)
                 )
                 return@launch
             }
@@ -2076,7 +2144,7 @@ class ChatViewModel @Inject constructor(
     fun sendGroupEdit(groupId: String, targetTxId: String, text: String, onError: (String) -> Unit = {}) {
         val clean = text.trim()
         if (clean.isEmpty()) return
-        _groupEditingMessage.value = null
+        if (_groupEditingMessage.value?.groupId == groupId) _groupEditingMessage.value = null
         viewModelScope.launch {
             try {
                 groupRepository.sendGroupEdit(targetTxId, groupId, clean)
@@ -2136,14 +2204,15 @@ class ChatViewModel @Inject constructor(
         val recovered: Int? = null,
         val rejections: com.kachat.app.repository.GroupRepository.GroupRefreshRejections? = null,
     ) {
-        val label: String
-            get() = when (val p = phase) {
-                is com.kachat.app.repository.GroupRepository.GroupRefreshPhase.Invites -> "Re-reading your group invites"
-                is com.kachat.app.repository.GroupRepository.GroupRefreshPhase.Control -> "Re-reading roster and epoch keys"
-                is com.kachat.app.repository.GroupRepository.GroupRefreshPhase.Messages -> "Re-fetching messages (${p.done} of ${p.total} members)"
-                is com.kachat.app.repository.GroupRepository.GroupRefreshPhase.Rebuilding -> "Decrypting history"
-                null -> "Starting"
-            }
+        /** What it is doing, in the reader's language (iOS 01f71184: the phase labels and
+         *  "Starting" were English in every language). */
+        fun label(context: android.content.Context): String = when (val p = phase) {
+            is com.kachat.app.repository.GroupRepository.GroupRefreshPhase.Invites -> context.getString(com.kachat.app.R.string.rs_group_refresh_invites)
+            is com.kachat.app.repository.GroupRepository.GroupRefreshPhase.Control -> context.getString(com.kachat.app.R.string.rs_group_refresh_control)
+            is com.kachat.app.repository.GroupRepository.GroupRefreshPhase.Messages -> context.getString(com.kachat.app.R.string.rs_group_refresh_messages, p.done, p.total)
+            is com.kachat.app.repository.GroupRepository.GroupRefreshPhase.Rebuilding -> context.getString(com.kachat.app.R.string.rs_group_refresh_decrypting)
+            null -> context.getString(com.kachat.app.R.string.initial_sync_starting)
+        }
     }
 
     private val _groupRefreshState = MutableStateFlow<GroupRefreshState?>(null)
@@ -2282,12 +2351,12 @@ class ChatViewModel @Inject constructor(
     }
 
     fun sendGroupMessage(text: String, groupId: String, onError: (String) -> Unit = {}) {
-        val reply = _groupReplyingTo.value
+        // Only a reply started in this group: another group's never wraps this text.
+        val reply = _groupReplyingTo.value?.takeIf { it.groupId == groupId }
         // The fee pill's custom fee pays for this text and is used up by it, as in 1:1 (iOS
         // GroupChatDetailView `sendGroupMessage(feeOverride:)`), capped when it was set
-        // (MessageFeeLimit).
-        val feeRate = _feeRateOverride.value
-        _feeRateOverride.value = null
+        // (MessageFeeLimit). Only this group's.
+        val feeRate = takeFeeRateOverride(ConversationOwnership.group(groupId))
         viewModelScope.launch {
             try {
                 // If replying, wrap the content in the shared reply envelope (matches
@@ -2301,7 +2370,7 @@ class ChatViewModel @Inject constructor(
                     text
                 }
                 groupRepository.sendGroupMessage(payload, groupId, feeRateOverride = feeRate)
-                _groupReplyingTo.value = null
+                if (reply != null) _groupReplyingTo.compareAndSet(reply, null)
             } catch (e: Exception) {
                 onError(UserFacingError.message(e, "Failed to send"))
             }
@@ -2618,6 +2687,7 @@ class ChatViewModel @Inject constructor(
     private val _replyingTo = MutableStateFlow<MessageEntity?>(null)
     val replyingTo: StateFlow<MessageEntity?> = _replyingTo.asStateFlow()
 
+    /** The reply belongs to [message]'s chat (its contactId): only that chat shows and sends it. */
     fun startReplyTo(message: MessageEntity) {
         _replyingTo.value = message
     }
@@ -2650,8 +2720,8 @@ class ChatViewModel @Inject constructor(
     fun sendEdit(contactId: String, target: MessageEntity, text: String, onError: (String) -> Unit = {}) {
         val clean = text.trim()
         if (clean.isEmpty() || target.direction != "sent" ||
-            !com.kachat.app.util.MessageEdit.isEditable(target.plaintextBody)) return
-        _editingMessage.value = null
+            !com.kachat.app.util.MessageEdit.isEditable(target.plaintextBody) || target.contactId != contactId) return
+        if (_editingMessage.value?.contactId == contactId) _editingMessage.value = null
         viewModelScope.launch {
             val owner = walletManager.getAddress()
             val now = System.currentTimeMillis()
@@ -2704,9 +2774,9 @@ class ChatViewModel @Inject constructor(
         // mirrors — promote it explicitly since the conversations flow only reorders after the
         // pending insert lands. Diffed inside refresh(), so repeat sends to the same top chat are free.
         shareShortcutsManager.refresh(conversations.value, promoteContactId = contactId)
-        val reply = if (plain) null else _replyingTo.value
-        val feeRate = if (plain || mediaSend) null else _feeRateOverride.value
-        if (!plain && !mediaSend) _feeRateOverride.value = null
+        // Only this chat's reply and custom fee: what another chat staged never goes with it.
+        val reply = if (plain) null else replyFor(contactId)
+        val feeRate = if (plain || mediaSend) null else takeFeeRateOverride(ConversationOwnership.contact(contactId))
         run {
             val pendingId = "pending_${java.util.UUID.randomUUID()}"
             try {
@@ -2756,7 +2826,7 @@ class ChatViewModel @Inject constructor(
                         deliveryStatus = "sent"
                     )
                 )
-                if (!plain) _replyingTo.value = null
+                if (reply != null) _replyingTo.compareAndSet(reply, null)
                 return true
             } catch (unknown: com.kachat.app.services.SendOutcomeUnknownException) {
                 // It may have landed: never Retry (that could post it twice). The row takes the
@@ -3089,6 +3159,11 @@ class ChatViewModel @Inject constructor(
 
     /** Sends the ready note: its parts on chain, or its upload's link via Nextcloud. */
     fun sendRecordedVoice(contactId: String) {
+        // Only a note recorded in this chat: one started in another never goes here.
+        if (voiceContactId != contactId) {
+            if (_voiceRecordingState.value.isActive) cancelVoiceRecording()
+            return
+        }
         val viaNextcloud = _voiceRecordingState.value.viaNextcloud
         val ready = voiceComposer.take() ?: return
         _nextcloudVoiceRequested.value = false
@@ -3242,7 +3317,7 @@ class ChatViewModel @Inject constructor(
         tier: com.kachat.app.util.PhotoTier = com.kachat.app.util.PhotoTier.LOW,
         onError: (String) -> Unit = { com.kachat.app.ui.screens.IosToasts.error(it) },
     ) {
-        val uri = _groupPendingPhotoUri.value ?: return
+        val uri = _groupPendingPhotoUri.value?.takeIf { groupPendingPhotoBelongsTo(groupId) } ?: return
         val staged = groupNextcloudStager.staged.value
         // The send button spins until the share link is back.
         if (staged?.isUploading == true) return
@@ -3309,7 +3384,8 @@ class ChatViewModel @Inject constructor(
      *  video bubble. A photo whose upload failed goes on chain at [tier] (iOS 7c5c22e3: the quality
      *  sheet asks first), as several tagged parts when it is bigger than one transaction. */
     fun sendPendingPhoto(contactId: String, tier: com.kachat.app.util.PhotoTier = com.kachat.app.util.PhotoTier.LOW) {
-        val uri = _pendingPhotoUri.value ?: return
+        // Only a photo staged in this chat: another chat's is never sent here.
+        val uri = _pendingPhotoUri.value?.takeIf { ownsPendingPhoto(contactId) } ?: return
         val staged = nextcloudStager.staged.value
         // The send button spins until the share link is back.
         if (staged?.isUploading == true) return
@@ -3527,7 +3603,7 @@ class ChatViewModel @Inject constructor(
             )
             pendingId
         }
-        _replyingTo.value = null
+        if (_replyingTo.value?.contactId == contactId) _replyingTo.value = null
         for ((offset, content) in contents.withIndex()) {
             val pendingId = pendingIds[offset]
             try {
@@ -3976,6 +4052,7 @@ class ChatViewModel @Inject constructor(
 
     /** Older pages belong to the account that read them. */
     private fun resetThreadHistoryForAccountSwitch() {
+        clearAllComposerState()
         _olderThreadPages.value = emptyMap()
         _olderHistoryExhausted.value = emptySet()
         latestThreadWindows.clear()

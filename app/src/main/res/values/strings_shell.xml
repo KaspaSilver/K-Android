@@ -6,5 +6,5 @@
     <string name="shell_tab_websites">Websites</string>
     <string name="shell_kaspa_websites">Kaspa Websites</string>
     <string name="shell_terms_of_use">Terms of Use</string>
-    <string name="shell_message_indexer_footer">KaPost, Public Chats and Chess are read from this indexer too.</string>
+    <string name="shell_message_indexer_footer">Posts, Public Chats and Chess are read from this indexer too.</string>
 </resources>

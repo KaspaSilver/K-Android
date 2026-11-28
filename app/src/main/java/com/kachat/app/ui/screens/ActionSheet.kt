@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.layout.Layout
@@ -414,6 +415,8 @@ fun ActionSheetContainer(
     grouped: Boolean = false,
     /** Above the title: the Delete Account warning's triangle. */
     headerIcon: (@Composable () -> Unit)? = null,
+    /** Always full height (iOS `[.large]`): the Delete Account warning, never half hidden. */
+    fullHeight: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     ActionSheetContainer(
@@ -422,6 +425,7 @@ fun ActionSheetContainer(
         onDismiss = onDismiss,
         headerIcon = headerIcon,
         grouped = grouped,
+        fullHeight = fullHeight,
         // Opens EXPANDED, not half-height. Partial expansion caps the opening height at about
         // half the screen, so a sheet with more than a few options opened already cut off - the
         // 1:1 composer's + menu hid Send Handshake below the fold, and an option you cannot see
@@ -448,6 +452,7 @@ fun ActionSheetContainer(
     detail: String? = null,
     grouped: Boolean = false,
     headerIcon: (@Composable () -> Unit)? = null,
+    fullHeight: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalAppColors.current
@@ -472,6 +477,7 @@ fun ActionSheetContainer(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .then(if (fullHeight) Modifier.fillMaxHeight() else Modifier)
                         // For the rare sheet taller than the screen itself - expanded tops out at full
                         // height, and without this the overflow would be unreachable rather than merely
                         // below the fold.
@@ -1131,6 +1137,8 @@ fun DeleteAccountSheet(
         title = stringResource(R.string.delete_account),
         subtitle = null,
         onDismiss = onDismiss,
+        // always full height (iOS 824a30bb, owner 2026-11-26): the warning is never half hidden
+        fullHeight = true,
         headerIcon = {
             Icon(
                 Icons.Default.Warning,

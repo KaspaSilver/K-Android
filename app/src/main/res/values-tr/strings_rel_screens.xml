@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4, iOS 01f71184 (release audit 2026-11-27): chat, group and Explorer screens. Translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="rs_group_refresh_invites">Grup davetlerin yeniden okunuyor</string>
+    <string name="rs_group_refresh_control">Üye listesi ve dönem anahtarları yeniden okunuyor</string>
+    <string name="rs_group_refresh_messages">Mesajlar yeniden alınıyor (%1$d/%2$d üye)</string>
+    <string name="rs_group_refresh_decrypting">Geçmişin şifresi çözülüyor</string>
+    <string name="rs_group_you_changed_photo">Grup fotoğrafını değiştirdin</string>
+    <string name="rs_group_you_removed_photo">Grup fotoğrafını kaldırdın</string>
+    <string name="rs_group_you_renamed">Grup adını \"%1$s\" olarak değiştirdin</string>
+    <string name="rs_group_changed_photo">%1$s grup fotoğrafını değiştirdi</string>
+    <string name="rs_group_removed_photo">%1$s grup fotoğrafını kaldırdı</string>
+    <string name="rs_group_renamed">%1$s grup adını \"%2$s\" olarak değiştirdi</string>
+    <string name="rs_own_account_not_contact">Bu adres kendi hesaplarınızdan biri, bu yüzden kişi olarak eklenemez.</string>
+    <string name="ex_kind_kaposts">Gönderiler</string>
+</resources>

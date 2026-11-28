@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">سوآپ</string>
-    <string name="swap_history">سابقهٔ سوآپ</string>
-    <string name="swap_started">سوآپ شروع شد</string>
     <string name="swap_failed">سوآپ ناموفق بود</string>
     <string name="swap_couldnt_read_amounts">مبالغ این سوآپ خوانده نشد</string>
     <string name="swap_already_holds">این سوآپ از قبل در آن هست - افزودن دوباره آن را دو بار حساب می‌کند.</string>
     <string name="swap_lands_in_portfolio">سوآپ به این سبد دارایی اضافه می‌شود.</string>
     <string name="swap_delete_title">این سوآپ حذف شود؟</string>
     <string name="swap_delete_message">این فقط آن را از سابقهٔ محلی شما حذف می‌کند - روی خود مبادله اثری ندارد.</string>
-    <string name="swap_you_send">ارسال می‌کنید</string>
     <string name="swap_you_get">دریافت می‌کنید</string>
-    <string name="swap_switch_direction">تغییر جهت</string>
-    <string name="swap_get_deposit_address">دریافت آدرس واریز</string>
     <string name="swap_receive_coin_at">دریافت %1$s در</string>
     <string name="swap_destination_tag_optional">تگ مقصد (اختیاری)</string>
     <string name="swap_destination_tag_hint">فقط اگر آدرس دریافت به آن نیاز دارد، مثل بیشتر صرافی‌ها. بدون آن، صرافی نمی‌تواند کوین‌های شما را واریز کند.</string>
     <string name="swap_from_kusdt_lands">سوآپ از (kUSDT اینجا می‌رسد)</string>
     <string name="swap_from_kas_lands">سوآپ از (KAS اینجا می‌رسد)</string>
-    <string name="swap_receiving_kas_at">دریافت KAS در</string>
     <string name="swap_change">تغییر</string>
     <string name="swap_powered_by_trestly">با قدرت Trestly</string>
     <string name="swap_powered_by_changenow">با قدرت ChangeNOW</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">فروش %1$s KAS به قیمت %2$s - انتخاب کنید به کدام سبد دارایی اضافه شود.</string>
     <string name="swap_rate">نرخ</string>
     <string name="swap_unavailable">در دسترس نیست</string>
-    <string name="swap_go_to_spending_addresses">رفتن به آدرس‌های هزینه</string>
-    <string name="swap_send_coin_to_address">%1$s را به این آدرس بفرستید</string>
     <string name="swap_amount_to_send">مقدار ارسال</string>
     <string name="swap_destination_tag_copied">تگ مقصد کپی شد</string>
     <string name="swap_payout_address">آدرس دریافت</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">آدرس واریز</string>
     <string name="swap_couldnt_reach_changenow">دسترسی به ChangeNOW ممکن نشد - دوباره تلاش کنید</string>
     <string name="swap_details">جزئیات سوآپ</string>
-    <string name="swap_picker_footer">سوآپ به آدرسی پرداخت می‌شود که قبلاً از آن استفاده نکرده‌اید، تا پرداخت به فعالیت‌های قبلی شما ربط داده نشود. اگر آدرس آزادی نیست، یکی بسازید.</string>
-    <string name="swap_picker_all_used">همهٔ آدرس‌های اینجا استفاده شده‌اند. در بالا یک آدرس جدید بسازید.</string>
-    <string name="swap_unused_addresses">آدرس‌های استفاده‌نشده</string>
-    <string name="swap_choose_address">انتخاب آدرس</string>
     <string name="swap_used">استفاده‌شده</string>
     <string name="swap_unused">استفاده‌نشده</string>
-    <string name="swap_check_history_before">پیش از فرستادن سوآپ به آن، سابقه‌اش را بررسی کنید.</string>
-    <string name="swap_use_for_this_swap">استفاده برای این سوآپ</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW مقدار KAS سوآپ‌شده را به این آدرس می‌پردازد.</string>
     <string name="swap_search_coins">جستجوی کوین‌ها</string>
-    <string name="swap_choose_coin">انتخاب کوین</string>
     <string name="swap_agreements_intro">سوآپ از دو سرویس استفاده می‌کند که K آن‌ها را اداره نمی‌کند. پیش از ادامه، هر دو را بخوانید و بپذیرید.</string>
     <string name="swap_coins_on_other_networks">کوین‌ها در شبکه‌های دیگر</string>
     <string name="swap_changenow_agreement">سوآپ میان Kaspa و کوین‌های شبکه‌های دیگر (Bitcoin، Ethereum، USDC، USDT و دیگران) را ChangeNOW انجام می‌دهد که یک صرافی شخص ثالث است. K فقط از ChangeNOW یک قیمت پیشنهادی و یک آدرس واریز می‌گیرد و وضعیت سوآپ را نشان می‌دهد؛ مبادله و ارسال کوین‌ها با ChangeNOW است. K مسئول سوآپ‌های ناموفق، دیرکرده یا گم‌شده نیست. اگر سوآپی انجام نشد، با پشتیبانی ChangeNOW تماس بگیرید.</string>

@@ -7,6 +7,7 @@ import com.kachat.app.util.ApiLogging
 import com.kachat.app.util.shortenAddresses
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.kachat.app.repository.AppSettingsRepository
@@ -24,8 +25,12 @@ import com.kachat.app.services.CoinGeckoApi
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
-// DataStore extension — creates a single instance per app
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "kachat_settings")
+// DataStore extension — creates a single instance per app. A settings file that can't be read
+// (cut off by a crash or a full disk mid-write) starts over empty instead of every read throwing.
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "kachat_settings",
+    corruptionHandler = androidx.datastore.core.handlers.ReplaceFileCorruptionHandler { emptyPreferences() },
+)
 
 @Module
 @InstallIn(SingletonComponent::class)

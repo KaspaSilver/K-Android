@@ -269,8 +269,11 @@ internal fun KaPostsWalletNotificationRow(entry: GlobalNotificationCenterStore.E
                     modifier = Modifier.size(22.dp),
                 )
             } else {
-                // dollarsign.circle for a token, at for a mention (iOS `entry.source.icon`)
-                val icon = if (entry.source == GlobalNotificationCenterStore.SOURCE_MENTION) Icons.Outlined.AlternateEmail else Icons.Outlined.MonetizationOn
+                // dollarsign.circle for a token, at for a mention or a .kachat name (iOS `entry.source.icon`)
+                val icon = when (entry.source) {
+                    GlobalNotificationCenterStore.SOURCE_MENTION, GlobalNotificationCenterStore.SOURCE_KACHAT -> Icons.Outlined.AlternateEmail
+                    else -> Icons.Outlined.MonetizationOn
+                }
                 Icon(icon, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
             }
         }

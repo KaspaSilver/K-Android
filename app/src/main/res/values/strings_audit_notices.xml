@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Received KAS notices and in-app Posts banners in the app's language (iOS audit 2026-11-27 M10) -->
+    <string name="notice_received">Received %1$s</string>
+    <string name="notice_balance_increased">Balance increased by %1$s</string>
+    <string name="notice_chatting_address">Chatting address %1$s</string>
+    <string name="notice_spending_address">Spending address %1$s</string>
+    <string name="notice_cold_storage_address">Cold storage address %1$s (%2$s)</string>
+    <string name="notice_post_liked">liked your post</string>
+    <string name="notice_post_disliked">disliked your post</string>
+    <string name="notice_post_tipped">tipped your post</string>
+    <string name="notice_post_tipped_amount">tipped your post: %1$s</string>
+    <string name="notice_post_replied">replied to your post</string>
+    <string name="notice_post_quoted">quoted your post</string>
+    <string name="notice_post_reposted">reposted your post</string>
+    <string name="notice_followed_you">followed you</string>
+    <string name="notice_post_mentioned">mentioned you in a post</string>
+    <string name="notice_post_interacted">interacted with your post</string>
+</resources>

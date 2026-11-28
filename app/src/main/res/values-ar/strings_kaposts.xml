@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">تعذر العثور على المنشور الذي تتعلق به هذه المسودة الآن، لذا لا يمكن نشرها بعد. ستبقى في مسوداتك.</string>
     <string name="kaposts_likes">الإعجابات</string>
     <string name="kaposts_no_tips_yet">لا توجد إكراميات بعد.</string>
-    <string name="kaposts_not_on_testnet">منشورات KaPost غير متاحة على الشبكة التجريبية بعد</string>
-    <string name="kaposts_not_on_testnet_sub">لا يوجد مفهرس KaPost للشبكة التجريبية. أوقف الشبكة التجريبية من الإعدادات > الاتصال للقراءة والنشر على الشبكة الرئيسية.</string>
+    <string name="kaposts_not_on_testnet">المنشورات غير متاحة على الشبكة التجريبية بعد</string>
+    <string name="kaposts_not_on_testnet_sub">لا يوجد مفهرس للمنشورات على الشبكة التجريبية. أوقف الشبكة التجريبية من الإعدادات &gt; إعدادات الاتصال للقراءة والنشر على الشبكة الرئيسية.</string>
     <string name="kaposts_poll_days_left">متبقٍ %1$d ي</string>
     <string name="kaposts_poll_final_results">%1$s · النتائج النهائية</string>
     <string name="kaposts_poll_hours_left">متبقٍ %1$d س</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">هذا المنشور قيد الإرسال الآن، لذا لا يمكن إلغاؤه.</string>
     <string name="kaposts_scheduled_reminder_title">منشور مجدول</string>
     <string name="kaposts_scheduled_sending_soon">سيتم الإرسال فور استجابة الشبكة</string>
-    <string name="kaposts_server_not_answering">خادم KaPost لا يستجيب. يتم عرض المنشورات المحفوظة والمنشورات الجديدة من الشبكة.</string>
+    <string name="kaposts_server_not_answering">خادم المنشورات لا يستجيب. يتم عرض المنشورات المحفوظة والجديدة من الشبكة.</string>
     <string name="kaposts_thread_not_confirmed">لم تؤكد الشبكة جزءًا من سلسلتك، لذا لم يُرسل الباقي. هل تريد حفظ ما تبقى كمسودة؟ ربما نُشر منشورها الأول، لذا تحقق قبل نشره مرة أخرى.</string>
     <string name="kaposts_tip_from_chatting_note">الإكرامية من Chatting Address تُحسب على المنشور، وتظهر بين من قدّموا إكراميات.</string>
     <string name="kaposts_tip_from_private_note">الإكرامية من عنوان آخر خاصة: يستلمها الكاتب ويراها في محادثتكما، لكنها لا تُحسب على المنشور ولا تذكر اسمك.</string>

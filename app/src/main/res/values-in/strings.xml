@@ -48,7 +48,6 @@
     <string name="close">Tutup</string>
     <string name="confirm">Konfirmasi</string>
     <string name="confirm_selection">Konfirmasi Pilihan</string>
-    <string name="connect_to_a_node">Hubungkan ke Node</string>
     <string name="connected_only_to_this_node">Hanya terhubung ke node ini</string>
     <string name="connection_settings">Pengaturan Koneksi</string>
     <string name="connection_status">Status Koneksi</string>
@@ -73,7 +72,6 @@
     <string name="failed_to_send">Gagal Mengirim</string>
     <string name="fee_kas">Biaya (KAS)</string>
     <string name="from">Dari</string>
-    <string name="fund_your_chatting_address">Isi Saldo Alamat Obrolan Anda</string>
     <string name="group_info">Info Grup</string>
     <string name="group_name_2">Nama Grup</string>
     <string name="hidden_addresses">Alamat Tersembunyi</string>
@@ -82,7 +80,6 @@
     <string name="import_account">Impor Akun</string>
     <string name="import_existing_account">Impor Akun yang Ada</string>
     <string name="incoming_notifications">Pemberitahuan Masuk</string>
-    <string name="kachat_needs_to_connect_to_a">K perlu terhubung ke sebuah node. Bagaimana Anda ingin terhubung?</string>
     <string name="kaspa_explorer">Penjelajah Kaspa</string>
     <string name="label_optional">Label (opsional)</string>
     <string name="last_message">Pesan Terakhir</string>
@@ -177,7 +174,6 @@
     <string name="created">Dibuat</string>
     <string name="customization">Kustomisasi</string>
     <string name="diagnostics">Diagnostik</string>
-    <string name="discover_addresses">Temukan Alamat</string>
     <string name="email">Email</string>
     <string name="explorer">Penjelajah</string>
     <string name="github">GitHub</string>
@@ -227,14 +223,8 @@
     <string name="how_kachat_uses_kaspa">Cara K Menggunakan Kaspa</string>
     <string name="kachat_lets_you_send_and_receive">K memungkinkan Anda mengirim dan menerima pesan di jaringan Kaspa itu sendiri. Kaspa diperlukan untuk membayar biaya saat mengirim pesan. Biaya yang Anda bayar diberikan kepada penambang yang mengamankan jaringan.</string>
     <string name="finish">Selesai</string>
-    <string name="recommended">Disarankan</string>
-    <string name="connect_your_own_node">Hubungkan Node Anda Sendiri</string>
-    <string name="enter_a_node_address_you_trust">Masukkan alamat node yang Anda percayai</string>
-    <string name="auto_search_for_nodes">Cari Node Otomatis</string>
-    <string name="most_taxing_on_the_device_not_as">Paling membebani perangkat, kurang andal - bergantung pada lokasi Anda</string>
     <string name="choose_your_language">Pilih Bahasa Anda</string>
     <string name="select_the_language_youd_like_to">Pilih bahasa yang ingin digunakan di K.</string>
-    <string name="best">Terbaik</string>
     <string name="receive_kaspa">Terima Kaspa</string>
     <string name="currency">Mata Uang</string>
     <string name="choose_your_currency">Pilih Mata Uang Anda</string>
@@ -310,7 +300,6 @@
     <string name="new_message_request">Permintaan pesan baru</string>
     <string name="wants_to_chat_with_you">%1$s ingin mengobrol denganmu.</string>
     <!-- Welcome Guide: .kachat and Message Requests (iOS 5c15ca0) -->
-    <string name="welcome_fund_chatting_body">5 Kaspa cukup untuk sekitar 2500 pesan.</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">Testnet</string>
     <string name="testnet_restart_to_testnet">Tutup K sepenuhnya lalu buka lagi untuk menyelesaikan peralihan ke Testnet.</string>
@@ -639,7 +628,7 @@
     <string name="ab_export_failed">Ekspor gagal. File tidak bisa ditulis.</string>
     <string name="ab_already_up_to_date">Sudah terbaru. Semua alamat di file sudah tersimpan.</string>
     <string name="ab_imported_counts">Diimpor: %1$d ditambahkan, %2$d diperbarui.</string>
-    <string name="ab_err_not_an_export">File itu bukan ekspor kontak KaChat.</string>
+    <string name="ab_err_not_an_export">File itu bukan ekspor kontak K.</string>
     <string name="ab_err_export_empty">Ekspor kontak itu tidak berisi kontak.</string>
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">Dikirim ke jaringan</string>
@@ -868,7 +857,6 @@
     <string name="wallet_spending">Pengeluaran</string>
     <string name="wallet_send">Kirim</string>
     <string name="wallet_receive">Terima</string>
-    <string name="wallet_request">Minta</string>
     <string name="profile_share_profile">Bagikan Profil</string>
     <string name="settings_back_up_account">Cadangkan Akun</string>
     <string name="settings_complete_your_backup">Selesaikan Cadangan Anda</string>
@@ -1402,12 +1390,9 @@
     <string name="chess_tc_1_1_subtitle">Masing-masing satu menit, ditambah satu detik per langkah.</string>
     <string name="chess_tc_casual">Santai</string>
     <string name="chess_tc_no_timer">Tanpa pengatur waktu.</string>
-    <string name="check_off_every_address_you_want_on_the_list">Centang sekaligus setiap alamat yang Anda inginkan di daftar.</string>
-    <string name="close_and_keep_scanning">Tutup dan Lanjutkan Memindai</string>
     <string name="recents">Terbaru</string>
     <string name="initial_sync_starting">Memulai</string>
     <string name="initial_sync_finished">Selesai</string>
-    <string name="downloading_message_history">Mengunduh riwayat pesan</string>
     <string name="wiping_incoming_messages">Menghapus pesan masuk...</string>
     <string name="finishing_up">Menyelesaikan...</string>
     <string name="re_syncing_chats_progress">Menyinkronkan ulang... %1$d dari %2$d obrolan</string>
@@ -1458,12 +1443,7 @@
     <string name="notification_mode_default">Default (%1$s)</string>
     <string name="checking_address_n">Memeriksa alamat #%1$d</string>
     <string name="n_found_so_far">%1$d ditemukan sejauh ini</string>
-    <string name="checks_the_first_thousand_addresses">Memeriksa seribu alamat pertama meskipun ada celah, lalu terus berlanjut selama masih ada yang ditemukan.</string>
     <string name="first_sync_all_set">Semua siap</string>
-    <string name="first_sync_up_to_date">Obrolan dan riwayat Anda sudah terbaru.</string>
-    <string name="first_sync_setting_up">Menyiapkan akun Anda</string>
-    <string name="first_sync_downloading_footer">Mengunduh semua yang dimiliki akun ini di chain. Selama ini hanya terjadi sekali.</string>
-    <string name="first_sync_continue_anyway">Tetap lanjutkan</string>
     <string name="nc_use_all_files">Gunakan Semua File</string>
     <string name="nc_use_this_folder">Gunakan Folder Ini</string>
     <string name="nc_no_subfolders">Tidak ada subfolder.</string>
@@ -1539,10 +1519,6 @@
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">Salin Tautan Bagikan</string>
     <string name="share_link_copied">Tautan bagikan disalin.</string>
-    <string name="generate_non_quantum_address">Buat Alamat Non-Kuantum</string>
-    <string name="generate_non_quantum_address_subtitle">Alamat biasa, seperti yang diberikan Terima. Bisa untuk semuanya, termasuk kUSDT.</string>
-    <string name="generate_quantum_resistant_address">Buat Alamat Tahan Kuantum</string>
-    <string name="generate_quantum_resistant_address_subtitle">Menyembunyikan kuncinya sampai membelanjakan. Hanya untuk Kaspa: kUSDT tidak bisa diperdagangkan dari sini.</string>
     <string name="kaspa">Kaspa</string>
     <string name="kusdt_balances">Saldo kUSDT</string>
     <string name="kusdt_listed_stays_here">Alamat ini ada di daftar kUSDT Anda, jadi tetap di sini. Sembunyikan dulu dari Kelola kUSDT.</string>
@@ -1567,14 +1543,12 @@
     <string name="tap_to_manage">Ketuk untuk mengelola</string>
     <string name="token_about_kusdt">kUSDT adalah USDT dari Ethereum dan BNB Chain, disimpan 1:1 di brankas Trestly dan diterbitkan sebagai token di Kaspa. kUSDT tidak diterbitkan oleh Tether, dan hanya Trestly yang bisa mengubahnya kembali menjadi USDT.</string>
     <string name="token_about_title">Tentang %1$s</string>
-    <string name="token_actions_title">Tindakan %1$s</string>
     <string name="token_activity_bridged_in">Masuk via Bridge</string>
     <string name="token_activity_combined_coins">Koin Digabungkan</string>
     <string name="token_activity_swapped">Di-swap</string>
     <string name="token_add_for_fee_and_change">Tambah %1$s untuk Biaya dan Koin Kembalian</string>
     <string name="token_add_for_network_fee">Tambah %1$s untuk Biaya Jaringan</string>
     <string name="token_add_more">Tambah %1$s Lagi</string>
-    <string name="token_address_visibility_subtitle">Centang alamat ber-kUSDT mana yang tampil di daftar.</string>
     <string name="token_address_visibility_title">Visibilitas Alamat %1$s</string>
     <string name="token_amount_accessibility">Jumlah (%1$s)</string>
     <string name="token_available">Tersedia: %1$s</string>
@@ -1591,9 +1565,7 @@
     <string name="token_combine_explainer">Setiap koin %1$s menyimpan %2$s. Jika digabung jadi satu koin, sisa KAS kembali ke alamat ini sebagai KAS biasa, dikurangi biaya jaringan. %3$s milikmu tetap sama.</string>
     <string name="token_combine_limit">Paling banyak %1$d koin digabung sekaligus. Gabungkan lagi untuk sisanya.</string>
     <string name="token_combined">Digabungkan</string>
-    <string name="token_couldnt_check">Tidak bisa memeriksa %1$@ sekarang: %2$@ Tarik ke bawah untuk mencoba lagi.</string>
-    <string name="token_discover_addresses">Temukan Alamat kUSDT</string>
-    <string name="token_discover_addresses_subtitle">Menemukan alamatmu yang menyimpan kUSDT.</string>
+    <string name="token_couldnt_check">Tidak bisa memeriksa %1$s sekarang: %2$s Tarik ke bawah untuk mencoba lagi.</string>
     <string name="token_every_coin_goes_to_recipient">Setiap koin %1$s menyimpan %2$s. KAS itu ikut ke penerima bersama %3$s, jadi tidak hilang.</string>
     <string name="token_every_coin_holds_kas">Setiap koin kUSDT menyimpan 1.5 KAS. KAS itu ikut terkirim bersama kUSDT saat kamu mengirimnya.</string>
     <string name="token_fee">Biaya %1$s</string>
@@ -1601,13 +1573,12 @@
     <string name="token_fee_same_address_note">KAS untuk biaya diambil dari alamat yang sama, jadi pengiriman ini tidak mengaitkannya dengan alamatmu yang lain.</string>
     <string name="token_found_addresses">Ditemukan %1$d alamat dengan %2$s.</string>
     <string name="token_fund_hint">Pilih dari alamatmu yang mana KAS-nya, geser ke atas, lalu kamu kembali ke sini.</string>
-    <string name="token_generate_new_address_subtitle">Menambahkan alamat biasa milikmu yang baru ke daftar ini.</string>
     <string name="token_goes_with_it">Ikut Terkirim</string>
     <string name="token_held_on">Disimpan di</string>
     <string name="token_held_with_it">%1$s tersimpan bersamanya</string>
     <string name="token_hidden_count">%1$d disembunyikan: tetap dihitung dalam total.</string>
     <string name="token_hide_address_subtitle">Menghapusnya dari daftar ini. Aktifkan lagi di Visibilitas Alamat %1$s.</string>
-    <string name="token_hide_all_message">Kelola %1$@ dimulai ulang hanya dengan alamat chat kamu. Tak ada yang hilang: kembalikan alamat mana pun di sini, dan %2$@-nya tetap dihitung dalam totalmu.</string>
+    <string name="token_hide_all_message">Kelola %1$s dimulai ulang hanya dengan alamat chat kamu. Tak ada yang hilang: kembalikan alamat mana pun di sini, dan %2$s-nya tetap dihitung dalam totalmu.</string>
     <string name="token_history_from_now_on">Kiriman, penerimaan, dan penggabungan di ponsel ini akan tampil di sini mulai sekarang.</string>
     <string name="token_history_title">Riwayat %1$s</string>
     <string name="token_kas_for_send">KAS untuk pengiriman %1$s</string>
@@ -1626,8 +1597,6 @@
     <string name="token_receive_no_usdt_warning">Jangan kirim USDT dari Ethereum, BNB Chain, atau bursa ke alamat ini: akan hilang. Bridge dulu ke Kaspa di Trestly.</string>
     <string name="token_receive_only">Hanya %1$s di Kaspa, atau KAS, yang bisa dikirim ke sini.</string>
     <string name="token_receive_title">Terima %1$s</string>
-    <string name="token_rename_label_placeholder">Label</string>
-    <string name="token_rename_message">Beri label alamat ini untuk membantu Anda mengenalinya.</string>
     <string name="token_script_address_error">%1$s hanya bisa dikirim ke alamat Kaspa biasa, bukan ke alamat aman-kuantum atau alamat skrip lain.</string>
     <string name="token_send_title">Kirim %1$s</string>
     <string name="token_send_to_chatting_subtitle">Memindahkan kUSDT dari alamat ini ke Alamat Obrolanmu.</string>

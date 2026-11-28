@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">برای دیدن تاریخچه ضربه بزنید</string>
+    <string name="addrcard_quantum_protected">محافظت‌شده در برابر کوانتوم</string>
+    <string name="addrcard_not_quantum_protected">بدون محافظت در برابر کوانتوم</string>
+    <string name="addrcard_new_address">نشانی جدید</string>
+    <string name="addrcard_regular_address">نشانی معمولی</string>
+    <string name="addrcard_regular_address_subtitle">با همه‌چیز کار می‌کند: کسپا و kUSDT.</string>
+    <string name="addrcard_quantum_protected_address">نشانی محافظت‌شده در برابر کوانتوم</string>
+    <string name="addrcard_quantum_protected_address_subtitle">کلیدش را تا زمان خرج کردن پنهان نگه می‌دارد. فقط کسپا.</string>
+    <string name="addrcard_no_kusdt_on_quantum">kUSDT را نمی‌توان به نشانی محافظت‌شده در برابر کوانتوم فرستاد یا روی آن دریافت کرد.</string>
+</resources>

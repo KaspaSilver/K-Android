@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">Les notifications sont désactivées pour cette discussion publique</string>
     <string name="pc_notifications_on_closed_toast">Vous recevrez des notifications pour les nouveaux messages de cette discussion publique, même lorsque l\'app est fermée</string>
     <string name="pc_notifications_on_open_toast">Vous recevrez une notification pour les nouveaux messages de cette discussion publique tant que votre app reste ouverte</string>
-    <string name="pc_default_room_off_toast">#%1$s est désactivé - réactivez-le dans Modifier les chats publics par défaut</string>
     <string name="pc_delete_room_title">Supprimer #%1$s ?</string>
     <string name="pc_delete_room_message">Tous les messages de ce salon mis en cache sur cet appareil sont supprimés. Cette action est irréversible - si vous rejoignez le salon plus tard, vous repartirez sans historique.</string>
     <string name="pc_delete_room_row_subtitle">Retire ce salon et ses messages de cet appareil.</string>
     <string name="pc_keep">Garder</string>
     <string name="pc_keep_subtitle">Laisser le salon tel quel.</string>
-    <string name="pc_new_public_chat">Nouveau salon public</string>
-    <string name="pc_edit_default_public_chats">Modifier les chats publics par défaut</string>
-    <string name="pc_new_public_chat_explainer">Toute personne qui rejoint le même nom de canal peut y voir et y publier des messages - il n\'y a ni propriétaire ni invitation.</string>
     <string name="pc_join">Rejoindre</string>
     <string name="pc_channel_name_rules">Les noms de canal doivent faire 1 à %1$d caractères, sans espaces ni deux-points.</string>
     <string name="pc_join_failed">Un problème est survenu en rejoignant ce canal.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">Signalez un contenu abusif ou répréhensible. Ouvre un e-mail avec ce message en pièce jointe.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">Masque leurs publications et leurs messages de salon, et les empêche d\'interagir avec vous.</string>
-    <string name="pc_sender_view_profile_subtitle">Leur profil KaPost : publications, réponses et abonnés.</string>
+    <string name="pc_sender_view_profile_subtitle">Son profil : posts, réponses et abonnés.</string>
     <string name="pc_sender_send_kaspa_subtitle">Envoyer des Kaspa à leur adresse.</string>
     <string name="pc_sender_copy_address_subtitle">Copier son adresse Kaspa.</string>
     <string name="pc_original_message_not_loaded">Message d\'origine non chargé</string>

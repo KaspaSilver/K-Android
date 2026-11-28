@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification and banner previews (iOS 01f71184, audit 2026-11-27 R7). -->
+<resources>
+    <string name="rel_bell_reacted_to_your_message">عمل ريأكشن %1$s على رسالتك</string>
+    <string name="rel_bell_removed_reaction">شال الريأكشن %1$s</string>
+    <string name="rel_bell_replied_to_message">رد على رسالة</string>
+    <string name="rel_bell_edited_message">عدّل رسالة</string>
+    <string name="rel_bell_reacted">عمل ريأكشن %1$s</string>
+</resources>

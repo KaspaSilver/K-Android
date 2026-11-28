@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">הכתובת הזו כבר נמצאת בחשבון הזה.</string>
     <string name="coldq_error_in_other_account">הכתובת הזו כבר נמצאת בחשבון ה-Cold Storage שלכם „%1$s”.</string>
     <string name="coldq_added_toast">כתובת עמידה לקוונטים נוספה.</string>
-    <string name="coldq_add_action">הוספת כתובת עמידה לקוונטים</string>
     <string name="coldq_add_action_subtitle">סרקו כתובת KCC-3 ממסך הכתובת של KasSigner.</string>
     <string name="coldq_stop_watching">הפסקת מעקב</string>
     <string name="coldq_stop_watching_subtitle">מסיר את הכתובת הקוונטית הזו מהחשבון. סרקו אותה שוב כדי להוסיף אותה בחזרה.</string>

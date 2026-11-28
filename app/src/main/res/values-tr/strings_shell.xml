@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">Web Siteleri</string>
     <string name="shell_kaspa_websites">Kaspa Web Siteleri</string>
     <string name="shell_terms_of_use">Kullanım Şartları</string>
-    <string name="shell_message_indexer_footer">KaPost, Herkese Açık Sohbetler ve Satranç da bu dizinleyiciden okunur.</string>
+    <string name="shell_message_indexer_footer">Gönderiler, Herkese Açık Sohbetler ve Satranç da bu dizinleyiciden okunur.</string>
 </resources>

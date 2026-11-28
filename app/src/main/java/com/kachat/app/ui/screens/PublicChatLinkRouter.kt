@@ -2,7 +2,6 @@ package com.kachat.app.ui.screens
 
 import android.content.Context
 import com.kachat.app.R
-import com.kachat.app.models.FeaturedBroadcastChannels
 import com.kachat.app.services.publicchats.PublicChatLink
 import com.kachat.app.util.findFragmentActivity
 import kotlinx.coroutines.Dispatchers
@@ -28,10 +27,10 @@ object PublicChatLinkRouter {
     private fun deps(context: Context): PublicChatLinkDeps =
         dagger.hilt.android.EntryPointAccessors.fromApplication(context.applicationContext, PublicChatLinkDeps::class.java)
 
-    /** True when [channel] is a curated room or already in this account's list (waits for the
-     *  account on a cold start, up to 10 s, as iOS waits for the store). */
+    /** True when [channel] is already in this account's list (waits for the account on a cold
+     *  start, up to 10 s, as iOS waits for the store). Default rooms too since iOS 824a30bb: no
+     *  room is in the list unasked. */
     suspend fun isListed(context: Context, channel: String): Boolean {
-        if (channel in FeaturedBroadcastChannels.CURATED_NAMES) return true
         return withContext(Dispatchers.IO) {
             runCatching { deps(context).broadcastRepository().isJoined(channel) }.getOrDefault(false)
         }
@@ -39,16 +38,12 @@ object PublicChatLinkRouter {
 
     /**
      * A room link (a tapped card, a system link). Re-validated here, the last gate before a name
-     * from a pasted link can create a row. Curated rooms and rooms already listed just open;
-     * anything else joins the user's own list first, once they say so: any app or post can hand
-     * over a link, and the name is whatever it likes.
+     * from a pasted link can create a row. A room already listed just opens; anything else joins
+     * the user's list first, once they say so: any app or post can hand over a link, and the name
+     * is whatever it likes. Default rooms too since iOS 824a30bb (owner, 2026-11-26).
      */
     fun open(context: Context, channel: String) {
         val name = PublicChatLink.normalizeAndValidateChannel(channel) ?: return
-        if (name in FeaturedBroadcastChannels.CURATED_NAMES) {
-            BroadcastDeepLink.request(name)
-            return
-        }
         val activity = context.findFragmentActivity()
         scope.launch {
             if (isListed(context, name)) {
@@ -56,7 +51,30 @@ object PublicChatLinkRouter {
                 return@launch
             }
             val host = activity?.takeUnless { it.isFinishing || it.isDestroyed } ?: return@launch
-            confirmJoin(host, name) { BroadcastDeepLink.request(name) }
+            confirmJoin(host, name) { joinThenOpen(context, name) }
+        }
+    }
+
+    /**
+     * A room handed to the Chats list that isn't in it (an old @mention in Profile's bell for a
+     * room since left): asked first, as a link is (iOS 824a30bb `askToJoinRoom`, owner 2026-11-26:
+     * no room is added unasked).
+     */
+    fun askToJoinRoom(context: Context, name: String) {
+        val host = context.findFragmentActivity()?.takeUnless { it.isFinishing || it.isDestroyed } ?: return
+        confirmJoin(host, name, host.getString(R.string.roomsoptin_not_in_list_add)) { joinThenOpen(context, name) }
+    }
+
+    /** Joins (its bell on, as every room the person adds) and opens. */
+    private fun joinThenOpen(context: Context, name: String) {
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val repository = deps(context).broadcastRepository()
+                    if (!repository.isJoined(name)) repository.joinChannel(name)
+                }.onFailure { android.util.Log.w("PublicChatLinkRouter", "Could not join #$name", it) }
+            }
+            BroadcastDeepLink.request(name)
         }
     }
 
@@ -75,9 +93,9 @@ object PublicChatLinkRouter {
         }
     }
 
-    /** Asks before a link adds a room (iOS `confirmJoin`). */
-    private fun confirmJoin(activity: androidx.fragment.app.FragmentActivity, name: String, onJoin: () -> Unit) {
-        var message = activity.getString(R.string.pl_join_room_message)
+    /** Asks before a link adds a room (iOS `confirmJoin`); [askMessage] in place of the link's. */
+    private fun confirmJoin(activity: androidx.fragment.app.FragmentActivity, name: String, askMessage: String? = null, onJoin: () -> Unit) {
+        var message = askMessage ?: activity.getString(R.string.pl_join_room_message)
         if (hasMixedScripts(name)) message += "\n\n" + activity.getString(R.string.pl_join_room_mixed_scripts)
         android.app.AlertDialog.Builder(activity)
             .setTitle(activity.getString(R.string.pl_join_room_title, name))

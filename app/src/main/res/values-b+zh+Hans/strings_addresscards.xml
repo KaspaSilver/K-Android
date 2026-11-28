@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">轻点查看历史记录</string>
+    <string name="addrcard_quantum_protected">抗量子保护</string>
+    <string name="addrcard_not_quantum_protected">无抗量子保护</string>
+    <string name="addrcard_new_address">新地址</string>
+    <string name="addrcard_regular_address">普通地址</string>
+    <string name="addrcard_regular_address_subtitle">适用于一切：Kaspa 和 kUSDT。</string>
+    <string name="addrcard_quantum_protected_address">抗量子保护地址</string>
+    <string name="addrcard_quantum_protected_address_subtitle">在花费之前隐藏其密钥。仅限 Kaspa。</string>
+    <string name="addrcard_no_kusdt_on_quantum">抗量子保护地址无法发送或接收 kUSDT。</string>
+</resources>

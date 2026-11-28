@@ -23,8 +23,8 @@ data class DmNotificationLabels(
     val chessMove: (from: String, to: String) -> String = { from, to -> "♟️ Played $from → $to" },
     val chessLostOnTime: String = "♟️ Lost on time",
     val chessResigned: String = "♟️ Resigned the chess game",
-    /** A 1:1 reaction. English on every language, as iOS's notification service words it
-     *  (NotificationService.reactionPreviewText, not localized there). */
+    /** A 1:1 reaction, as iOS's notification service words it (NotificationService
+     *  .reactionPreviewText, in every language since iOS 01f71184, audit 2026-11-27 R7). */
     val reacted: (emoji: String) -> String = { "Reacted $it to your message" },
     val removedReaction: (emoji: String) -> String = { "Removed their $it reaction" },
     /** "Sent you kUSDT": a dollar payment in a chat (iOS "Sent you %@", 2026-11-22). */
@@ -49,6 +49,8 @@ data class DmNotificationLabels(
             chessLostOnTime = context.getString(R.string.chess_notif_lost_on_time),
             chessResigned = context.getString(R.string.chess_notif_resigned),
             sentYouToken = { symbol -> context.getString(R.string.push_sent_you_token, symbol) },
+            reacted = { emoji -> context.getString(R.string.rel_bell_reacted_to_your_message, emoji) },
+            removedReaction = { emoji -> context.getString(R.string.rel_bell_removed_reaction, emoji) },
         )
     }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Received KAS notices and in-app Posts banners in the app's language (iOS audit 2026-11-27 M10) -->
+    <string name="notice_received">وصلك %1$s</string>
+    <string name="notice_balance_increased">الرصيد زاد %1$s</string>
+    <string name="notice_chatting_address">عنوان الشات %1$s</string>
+    <string name="notice_spending_address">عنوان الصرف %1$s</string>
+    <string name="notice_cold_storage_address">عنوان التخزين البارد %1$s (%2$s)</string>
+    <string name="notice_post_liked">عمل إعجاب لبوستك</string>
+    <string name="notice_post_disliked">عمل عدم إعجاب لبوستك</string>
+    <string name="notice_post_tipped">بعت تيب لبوستك</string>
+    <string name="notice_post_tipped_amount">بعتلك تيب على البوست: %1$s</string>
+    <string name="notice_post_replied">رد على بوستك</string>
+    <string name="notice_post_quoted">اقتبس بوستك</string>
+    <string name="notice_post_reposted">عمل إعادة نشر لبوستك</string>
+    <string name="notice_followed_you">تابعك</string>
+    <string name="notice_post_mentioned">عمل لك منشن في بوست</string>
+    <string name="notice_post_interacted">اتفاعل مع بوستك</string>
+</resources>

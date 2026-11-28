@@ -50,7 +50,6 @@
     <string name="close">閉じる</string>
     <string name="confirm">確認</string>
     <string name="confirm_selection">選択を確定</string>
-    <string name="connect_to_a_node">ノードに接続</string>
     <string name="connected_only_to_this_node">このノードのみに接続</string>
     <string name="connection_settings">接続設定</string>
     <string name="connection_status">接続状況</string>
@@ -75,7 +74,6 @@
     <string name="failed_to_send">送信に失敗しました</string>
     <string name="fee_kas">手数料 (KAS)</string>
     <string name="from">送信元</string>
-    <string name="fund_your_chatting_address">チャットアドレスに資金を入れる</string>
     <string name="group_info">グループ情報</string>
     <string name="group_name_2">グループ名</string>
     <string name="hidden_addresses">非表示のアドレス</string>
@@ -84,7 +82,6 @@
     <string name="import_account">アカウントをインポート</string>
     <string name="import_existing_account">既存のアカウントをインポート</string>
     <string name="incoming_notifications">受信通知</string>
-    <string name="kachat_needs_to_connect_to_a">Kはノードに接続する必要があります。どのように接続しますか?</string>
     <string name="kaspa_explorer">Kaspaエクスプローラー</string>
     <string name="label_optional">ラベル (任意)</string>
     <string name="last_message">最後のメッセージ</string>
@@ -185,7 +182,6 @@
     <string name="created">作成日</string>
     <string name="customization">カスタマイズ</string>
     <string name="diagnostics">診断</string>
-    <string name="discover_addresses">アドレスを検出</string>
     <string name="email">メール</string>
     <string name="explorer">エクスプローラー</string>
     <string name="github">GitHub</string>
@@ -236,14 +232,8 @@
     <string name="how_kachat_uses_kaspa">KがKaspaを利用する仕組み</string>
     <string name="kachat_lets_you_send_and_receive">Kでは、Kaspaネットワーク上で直接メッセージを送受信できます。メッセージを送信する際の手数料を支払うためにKaspaが必要です。支払った手数料は、ネットワークを保護するマイナーに渡ります。</string>
     <string name="finish">完了</string>
-    <string name="recommended">おすすめ</string>
-    <string name="connect_your_own_node">自分のノードに接続する</string>
-    <string name="enter_a_node_address_you_trust">信頼できるノードアドレスを入力してください</string>
-    <string name="auto_search_for_nodes">ノードを自動検索</string>
-    <string name="most_taxing_on_the_device_not_as">デバイスへの負荷が最も大きく、信頼性もそれほど高くありません - お住まいの地域によって異なります</string>
     <string name="choose_your_language">言語を選択してください</string>
     <string name="select_the_language_youd_like_to">Kで使用したい言語を選択してください。</string>
-    <string name="best">最適</string>
     <string name="receive_kaspa">Kaspaを受け取る</string>
     <string name="currency">通貨</string>
     <string name="choose_your_currency">通貨を選択してください</string>
@@ -319,7 +309,6 @@
     <string name="new_message_request">新しいメッセージリクエスト</string>
     <string name="wants_to_chat_with_you">%1$s があなたとチャットしたいようです。</string>
     <!-- Welcome Guide: .kachat and Message Requests (iOS 5c15ca0) -->
-    <string name="welcome_fund_chatting_body">5 Kaspa で約 2500 件のメッセージを送れます。</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">テストネット</string>
     <string name="testnet_restart_to_testnet">テストネットへの切り替えを完了するには、K を完全に終了して開き直してください。</string>
@@ -646,7 +635,7 @@
     <string name="ab_export_failed">エクスポートに失敗しました。ファイルを書き込めませんでした。</string>
     <string name="ab_already_up_to_date">すでに最新です。ファイルのアドレスはすべて保存済みです。</string>
     <string name="ab_imported_counts">インポート完了：追加 %1$d 件、更新 %2$d 件。</string>
-    <string name="ab_err_not_an_export">そのファイルは KaChat の連絡先エクスポートではありません。</string>
+    <string name="ab_err_not_an_export">このファイルはKの連絡先エクスポートではありません。</string>
     <string name="ab_err_export_empty">その連絡先エクスポートには連絡先がありません。</string>
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">ネットワークに送信</string>
@@ -874,7 +863,6 @@
     <string name="wallet_spending">支出</string>
     <string name="wallet_send">送信</string>
     <string name="wallet_receive">受け取る</string>
-    <string name="wallet_request">リクエスト</string>
     <string name="profile_share_profile">プロフィールを共有</string>
     <string name="settings_back_up_account">アカウントをバックアップ</string>
     <string name="settings_complete_your_backup">バックアップを完了する</string>
@@ -1403,12 +1391,9 @@
     <string name="chess_tc_1_1_subtitle">持ち時間は各1分、1手ごとに1秒加算。</string>
     <string name="chess_tc_casual">カジュアル</string>
     <string name="chess_tc_no_timer">持ち時間なし。</string>
-    <string name="check_off_every_address_you_want_on_the_list">リストに入れたいアドレスをまとめてチェックします。</string>
-    <string name="close_and_keep_scanning">閉じてスキャンを続ける</string>
     <string name="recents">最近使用したもの</string>
     <string name="initial_sync_starting">開始中</string>
     <string name="initial_sync_finished">完了</string>
-    <string name="downloading_message_history">メッセージ履歴をダウンロード中</string>
     <string name="wiping_incoming_messages">受信メッセージを消去中...</string>
     <string name="finishing_up">仕上げ中...</string>
     <string name="re_syncing_chats_progress">再同期中... %1$d / %2$d チャット</string>
@@ -1459,12 +1444,7 @@
     <string name="notification_mode_default">デフォルト（%1$s）</string>
     <string name="checking_address_n">アドレス #%1$d を確認中</string>
     <string name="n_found_so_far">これまでに%1$d件見つかりました</string>
-    <string name="checks_the_first_thousand_addresses">途中に空きがあっても最初の1,000個のアドレスを確認し、その後も見つかる限り続けます。</string>
     <string name="first_sync_all_set">準備完了</string>
-    <string name="first_sync_up_to_date">チャットと履歴は最新です。</string>
-    <string name="first_sync_setting_up">アカウントを設定中</string>
-    <string name="first_sync_downloading_footer">このアカウントがチェーン上に持つすべてをダウンロードしています。これだけ時間がかかるのは最初の1回だけです。</string>
-    <string name="first_sync_continue_anyway">このまま続ける</string>
     <string name="nc_use_all_files">すべてのファイルを使う</string>
     <string name="nc_use_this_folder">このフォルダを使う</string>
     <string name="nc_no_subfolders">サブフォルダはありません。</string>
@@ -1540,10 +1520,6 @@
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">共有リンクをコピー</string>
     <string name="share_link_copied">共有リンクをコピーしました。</string>
-    <string name="generate_non_quantum_address">非量子アドレスを作成</string>
-    <string name="generate_non_quantum_address_subtitle">「受け取る」と同じ通常のアドレスです。kUSDT を含め、何にでも使えます。</string>
-    <string name="generate_quantum_resistant_address">耐量子アドレスを作成</string>
-    <string name="generate_quantum_resistant_address_subtitle">使うまで鍵を隠しておきます。Kaspa 専用：ここから kUSDT は取引できません。</string>
     <string name="kaspa">Kaspa</string>
     <string name="kusdt_balances">kUSDT 残高</string>
     <string name="kusdt_listed_stays_here">このアドレスはkUSDTのリストにあるため、ここに残ります。先に「kUSDT を管理」で非表示にしてください。</string>
@@ -1568,14 +1544,12 @@
     <string name="tap_to_manage">タップして管理</string>
     <string name="token_about_kusdt">kUSDT は Ethereum と BNB Chain の USDT で、Trestly の保管庫に 1:1 で保管され、Kaspa 上のトークンとして発行されます。Tether が発行するものではなく、USDT に戻せるのは Trestly だけです。</string>
     <string name="token_about_title">%1$s について</string>
-    <string name="token_actions_title">%1$s の操作</string>
     <string name="token_activity_bridged_in">ブリッジで入金</string>
     <string name="token_activity_combined_coins">コインをまとめました</string>
     <string name="token_activity_swapped">スワップ済み</string>
     <string name="token_add_for_fee_and_change">手数料とお釣りコイン用に %1$s を追加</string>
     <string name="token_add_for_network_fee">ネットワーク手数料用に %1$s を追加</string>
     <string name="token_add_more">さらに %1$s を追加</string>
-    <string name="token_address_visibility_subtitle">kUSDT を保有するアドレスのうち、一覧に表示するものにチェックを入れます。</string>
     <string name="token_address_visibility_title">%1$s アドレスの表示</string>
     <string name="token_amount_accessibility">金額（%1$s）</string>
     <string name="token_available">利用可能: %1$s</string>
@@ -1592,23 +1566,20 @@
     <string name="token_combine_explainer">%1$s のコインはそれぞれ %2$s を保持しています。1枚にまとめると、余分な KAS がネットワーク手数料を差し引いて通常の KAS としてこのアドレスに戻ります。%3$s の額は変わりません。</string>
     <string name="token_combine_limit">一度にまとめられるのは %1$d 枚までです。残りはもう一度まとめてください。</string>
     <string name="token_combined">まとめた額</string>
-    <string name="token_couldnt_check">%1$@ を確認できませんでした：%2$@ 下に引いて再試行してください。</string>
-    <string name="token_discover_addresses">kUSDT アドレスを検出</string>
-    <string name="token_discover_addresses_subtitle">kUSDT を保有しているアドレスを見つけます。</string>
+    <string name="token_couldnt_check">%1$s を確認できませんでした：%2$s 下に引いて再試行してください。</string>
     <string name="token_every_coin_goes_to_recipient">%1$s コインには1枚ごとに %2$s が含まれます。この KAS は %3$s と一緒に受取人に届くため、失われません。</string>
     <string name="token_every_coin_holds_kas">kUSDT コインには1枚ごとに 1.5 KAS が含まれます。kUSDT を送ると一緒に送られます。</string>
     <string name="token_fee">手数料 %1$s</string>
     <string name="token_fee_from_token_kas">このアドレスには KAS がなかったため、ネットワーク手数料は kUSDT に付く KAS から支払われました。</string>
     <string name="token_fee_same_address_note">手数料の KAS は同じアドレスから支払われるため、この送金がほかのアドレスと結び付くことはありません。</string>
-    <string name="token_found_addresses">%2$@ のあるアドレスが %1$d 件見つかりました。</string>
+    <string name="token_found_addresses">%2$s のあるアドレスが %1$d 件見つかりました。</string>
     <string name="token_fund_hint">どのアドレスから KAS を送るか選んで上にスワイプすると、ここに戻ります。</string>
-    <string name="token_generate_new_address_subtitle">まったく新しい通常のアドレスをこの一覧に追加します。</string>
     <string name="token_goes_with_it">一緒に送付</string>
     <string name="token_held_on">保管先</string>
     <string name="token_held_with_it">%1$s を一緒に保持</string>
     <string name="token_hidden_count">%1$d 件を非表示：合計には含まれます。</string>
     <string name="token_hide_address_subtitle">この一覧から外します。「%1$s アドレスの表示」で再表示できます。</string>
-    <string name="token_hide_all_message">「%1$@ を管理」はチャットアドレスだけから始め直します。何も失われません。ここでどのアドレスも戻せ、その %2$@ は引き続き合計に含まれます。</string>
+    <string name="token_hide_all_message">「%1$s を管理」はチャットアドレスだけから始め直します。何も失われません。ここでどのアドレスも戻せ、その %2$s は引き続き合計に含まれます。</string>
     <string name="token_history_from_now_on">これ以降、この端末での送金・受取・まとめがここに表示されます。</string>
     <string name="token_history_title">%1$s の履歴</string>
     <string name="token_kas_for_send">%1$s 送金用の KAS</string>
@@ -1627,8 +1598,6 @@
     <string name="token_receive_no_usdt_warning">Ethereum、BNB Chain、取引所からこのアドレスに USDT を送らないでください：失われます。先に Trestly で Kaspa へブリッジしてください。</string>
     <string name="token_receive_only">ここに送れるのは Kaspa 上の %1$s または KAS のみです。</string>
     <string name="token_receive_title">%1$s を受け取る</string>
-    <string name="token_rename_label_placeholder">ラベル</string>
-    <string name="token_rename_message">識別しやすいようにこのアドレスにラベルを付けてください。</string>
     <string name="token_script_address_error">%1$s は通常の Kaspa アドレスにのみ送れます。量子耐性アドレスやその他のスクリプトアドレスには送れません。</string>
     <string name="token_send_title">%1$s を送信</string>
     <string name="token_send_to_chatting_subtitle">このアドレスの kUSDT をチャットアドレスに移します。</string>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">Tap to View History</string>
+    <string name="addrcard_quantum_protected">Quantum Protected</string>
+    <string name="addrcard_not_quantum_protected">Not Quantum Protected</string>
+    <string name="addrcard_new_address">New Address</string>
+    <string name="addrcard_regular_address">Regular Address</string>
+    <string name="addrcard_regular_address_subtitle">Works with everything: Kaspa and kUSDT.</string>
+    <string name="addrcard_quantum_protected_address">Quantum-Protected Address</string>
+    <string name="addrcard_quantum_protected_address_subtitle">Keeps its key hidden until it spends. Kaspa only.</string>
+    <string name="addrcard_no_kusdt_on_quantum">kUSDT can\'t be sent to or received on a quantum-protected address.</string>
+</resources>

@@ -82,7 +82,7 @@ class AddressHistoryService @Inject constructor(
     }
 
     private fun mapHistory(address: String, transactions: List<TransactionResponse>): List<AddressTransaction> {
-        return transactions.map { tx ->
+        return transactions.filter { tx -> com.kachat.app.util.UtxoMath.restAmountsFit(tx.outputs.map { it.amount }, tx.inputs.map { it.previousOutpointAmount ?: 0L }) }.map { tx ->
             val sent = tx.inputs.any { it.previousOutpointAddress == address }
             val amount = if (sent) {
                 tx.outputs.filter { it.scriptPublicKeyAddress != address }.sumOf { it.amount }

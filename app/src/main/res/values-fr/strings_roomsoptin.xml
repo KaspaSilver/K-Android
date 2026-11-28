@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">Ajouter un salon</string>
+    <string name="roomsoptin_indexer_rooms_footer">Salons conservés par l\'indexeur : leur historique est gardé et ils peuvent vous notifier même quand K est fermé.</string>
+    <string name="roomsoptin_other_languages">Autres langues</string>
+    <string name="roomsoptin_create_title">Comment fonctionne un salon que vous créez</string>
+    <string name="roomsoptin_create_point_name">Quiconque tape le même nom rejoint le même salon. Il n\'a ni propriétaire ni invitation.</string>
+    <string name="roomsoptin_create_point_history">Aucun indexeur ne garde son historique. K le lit sur le réseau Kaspa pendant que le salon est ouvert, et en garde jusqu\'à 3 jours sur votre téléphone.</string>
+    <string name="roomsoptin_create_point_bell">Pas de notifications quand K est fermé. Avec sa cloche activée, K vous notifie seulement quand il est ouvert.</string>
+    <string name="roomsoptin_create_point_public">Tout ce qui s\'y dit est public : n\'importe qui peut le lire sur le réseau Kaspa.</string>
+    <string name="roomsoptin_create_room">Créer le salon</string>
+    <string name="roomsoptin_name_your_room">Nommez votre salon</string>
+    <string name="roomsoptin_empty_title">Pas encore de discussions publiques</string>
+    <string name="roomsoptin_empty_body">Ajoutez des salons conservés par l\'indexeur, comme #kaspa, ou créez le vôtre. Rien n\'est ajouté sans votre choix.</string>
+    <string name="roomsoptin_removed_toast">#%1$s retiré. Ajoutez-le à nouveau quand vous voulez depuis Ajouter un salon.</string>
+    <string name="roomsoptin_bulk_delete_message">Les salons conservés par l\'indexeur peuvent être ajoutés à nouveau depuis Ajouter un salon. Les salons que vous avez créés sont supprimés de cet appareil avec leurs messages.</string>
+    <string name="roomsoptin_not_in_list_add">Ce salon n\'est pas dans vos discussions publiques. L\'ajouter ?</string>
+    <string name="roomsoptin_room_info_curated">Un salon conservé par l\'indexeur. Vous l\'avez ajouté, et n\'importe qui sur K peut y publier.</string>
+</resources>

@@ -31,7 +31,7 @@
     <string name="kg_use_body">इसे प्राथमिक नाम बनाएँ, फिर K में हर जगह आप इसी नाम से दिखेंगे।</string>
     <string name="kg_use_find">लोग आपका नाम टाइप करके आपको ढूंढ सकते हैं।</string>
     <string name="kg_use_link">आपकी प्रोफ़ाइल लिंक आपका नाम दिखाती है।</string>
-    <string name="kg_use_pay">वे लंबे पते की जगह yourname.kachat पर Kaspa भेज सकते हैं।</string>
+    <string name="kg_use_pay">वे लंबे पते की जगह @yourname पर Kaspa भेज सकते हैं।</string>
     <string name="kg_use_title">इसे अपना नाम बनाएँ</string>
     <string name="kl_1d">1 दिन</string>
     <string name="kl_3d">3 दिन</string>

@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">该地址已在此账户中。</string>
     <string name="coldq_error_in_other_account">该地址已在你的冷存储账户“%1$s”中。</string>
     <string name="coldq_added_toast">已添加抗量子地址。</string>
-    <string name="coldq_add_action">添加抗量子地址</string>
     <string name="coldq_add_action_subtitle">从 KasSigner 的地址界面扫描一个 KCC-3 地址。</string>
     <string name="coldq_stop_watching">停止监视</string>
     <string name="coldq_stop_watching_subtitle">从账户中移除这个量子地址。再次扫描即可重新添加。</string>

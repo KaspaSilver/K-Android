@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">Aggiungi stanza</string>
+    <string name="roomsoptin_indexer_rooms_footer">Stanze conservate dall\'indicizzatore: la cronologia viene salvata e possono avvisarti anche a K chiuso.</string>
+    <string name="roomsoptin_other_languages">Altre lingue</string>
+    <string name="roomsoptin_create_title">Come funziona una stanza che crei</string>
+    <string name="roomsoptin_create_point_name">Chiunque digiti lo stesso nome entra nella stessa stanza. Non ha proprietario né inviti.</string>
+    <string name="roomsoptin_create_point_history">Nessun indicizzatore ne conserva la cronologia. K la legge dalla rete Kaspa mentre la stanza è aperta e ne tiene fino a 3 giorni sul telefono.</string>
+    <string name="roomsoptin_create_point_bell">Nessuna notifica a K chiuso. Con la campanella attiva, K ti avvisa solo mentre è aperto.</string>
+    <string name="roomsoptin_create_point_public">Tutto ciò che vi si scrive è pubblico: chiunque può leggerlo sulla rete Kaspa.</string>
+    <string name="roomsoptin_create_room">Crea stanza</string>
+    <string name="roomsoptin_name_your_room">Dai un nome alla stanza</string>
+    <string name="roomsoptin_empty_title">Ancora nessuna chat pubblica</string>
+    <string name="roomsoptin_empty_body">Aggiungi le stanze conservate dall\'indicizzatore, come #kaspa, o creane una tua. Non viene aggiunto nulla senza la tua scelta.</string>
+    <string name="roomsoptin_removed_toast">#%1$s rimossa. Aggiungila di nuovo quando vuoi da Aggiungi stanza.</string>
+    <string name="roomsoptin_bulk_delete_message">Le stanze conservate dall\'indicizzatore si possono aggiungere di nuovo da Aggiungi stanza. Le stanze che hai creato vengono eliminate da questo dispositivo con i loro messaggi.</string>
+    <string name="roomsoptin_not_in_list_add">Questa stanza non è nelle tue chat pubbliche. Aggiungerla?</string>
+    <string name="roomsoptin_room_info_curated">Una stanza conservata dall\'indicizzatore. L\'hai aggiunta tu, e chiunque su K può scriverci.</string>
+</resources>

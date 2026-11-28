@@ -33,4 +33,14 @@ class ShareShortcutIdTest {
     fun `an id with an empty account reads as no account`() {
         assertEquals(ShareShortcutsManager.ShortcutTarget(null, contact), ShareShortcutsManager.parseShortcutId("|$contact"))
     }
+
+    @Test
+    fun `only a valid Kaspa address is routed as the share's chat`() {
+        val valid = "kaspa:qqtk9u6alm8vz7tp5a425x9cacad7nezhpwmvz890yndpt9f07e0udw59l300"
+        assertEquals(valid, ShareShortcutsManager.routableContactId(ShareShortcutsManager.parseShortcutId("$owner|$valid")))
+        assertEquals(valid, ShareShortcutsManager.routableContactId(ShareShortcutsManager.parseShortcutId(valid)))
+        assertNull(ShareShortcutsManager.routableContactId(ShareShortcutsManager.parseShortcutId("$owner|$contact")))
+        assertNull(ShareShortcutsManager.routableContactId(ShareShortcutsManager.parseShortcutId("$owner|../../etc")))
+        assertNull(ShareShortcutsManager.routableContactId(null))
+    }
 }

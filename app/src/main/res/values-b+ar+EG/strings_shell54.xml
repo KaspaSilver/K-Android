@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">أي حد يقدر يشوف العنوان ده ورصيده على شبكة Kaspa، بس محدش يقدر يقرا رسايلك. استخدمه للدردشة وأسماء المستخدم بس.</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... أو اسم مستخدم</string>
     <string name="shell54_looking_up_username">بندوّر على اسم المستخدم...</string>
-    <string name="shell54_portfolio_add_address_footer">اكتب عنوان Kaspa أو اسم مستخدم زي name.kachat. كل معاملة مستلمة على العنوان ده بتبقى شراء، وكل معاملة مبعوتة بتبقى بيع، بسعر KAS التاريخي في اليوم ده. لو ضفت نفس العنوان تاني بعدين، هيتم استيراد المعاملات اللي ظهرت من آخر استيراد بس.</string>
+    <string name="shell54_portfolio_add_address_footer">اكتب عنوان Kaspa أو اسم مستخدم زي @name. كل معاملة مستلمة على العنوان ده بتبقى شراء، وكل معاملة مبعوتة بتبقى بيع، بسعر KAS التاريخي في اليوم ده. لو ضفت نفس العنوان تاني بعدين، هيتم استيراد المعاملات اللي ظهرت من آخر استيراد بس.</string>
     <string name="shell54_report_copied">اتنسخ البلاغ</string>
     <string name="shell54_report_no_mail_app">مفيش تطبيق بريد قدر يفتحه. الزق البلاغ في إيميل لـ %1$s.</string>
     <string name="shell54_show_amounts">إظهار المبالغ</string>

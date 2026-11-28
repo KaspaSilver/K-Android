@@ -31,7 +31,7 @@
     <string name="kg_use_body">הגדירו אותו כשם הראשי וכך תופיעו בכל מקום ב-K.</string>
     <string name="kg_use_find">אפשר למצוא אתכם בהקלדת השם שלכם.</string>
     <string name="kg_use_link">קישור הפרופיל שלך מציג את השם.</string>
-    <string name="kg_use_pay">הם יכולים לשלוח Kaspa ל-yourname.kachat במקום לכתובת ארוכה.</string>
+    <string name="kg_use_pay">הם יכולים לשלוח Kaspa ל-@yourname במקום לכתובת ארוכה.</string>
     <string name="kg_use_title">הפכו אותו לשם שלכם</string>
     <string name="kl_1d">יום אחד</string>
     <string name="kl_3d">3 ימים</string>

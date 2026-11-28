@@ -21,7 +21,9 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -48,20 +50,46 @@ class KachatNamesNotifier @Inject constructor(
     private val actions: KachatNamesActions,
     private val service: KachatNamesService,
     private val bell: GlobalNotificationCenterStore,
-    /** Local renewal reminders for names on the wallet's other addresses (iOS d1026de, XP-024). */
+    /** Local reminders for the wallet's names (iOS d1026de, XP-024; every name since b49a021d). */
     private val reminders: KachatNameReminders,
+    /** Whether the indexer's pushes reach this device (iOS `PushNotificationManager.isRegistered`). */
+    private val pushState: com.kachat.app.services.PushState,
 ) {
     private val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     private val checking = AtomicBoolean(false)
+    /** A check asked for while one ran, with [check]'s `rerunIfBusy`: it runs once that one ends. */
+    private val rerun = AtomicBoolean(false)
+
+    init {
+        // Push decides which reminders the phone schedules itself (`pushCoversChatting`), and it
+        // changes after launch and account switches: check again whenever it does, so the phone's
+        // reminders never double the pushes, nor go missing (iOS audit 2026-11-27 L9).
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO).launch {
+            pushState.pushActive.drop(1).collect { runCatching { check(rerunIfBusy = true) } }
+        }
+    }
 
     private fun key(wallet: String) = "kachatNamesNotifier.$wallet"
 
-    suspend fun check() {
+    suspend fun check(rerunIfBusy: Boolean = false) {
         if (!KachatNamesService.isLaunched) return
+        if (actions.myKey == null || actions.myAddress == null || service.manifest.value?.params == null) return
+        if (!checking.compareAndSet(false, true)) {
+            if (rerunIfBusy) rerun.set(true)
+            return
+        }
+        try {
+            checkOnce()
+        } finally {
+            checking.set(false)
+        }
+        if (rerun.getAndSet(false)) check()
+    }
+
+    private suspend fun checkOnce() {
         val me = actions.myKey ?: return
         val wallet = actions.myAddress ?: return
         val p = service.manifest.value?.params ?: return
-        if (!checking.compareAndSet(false, true)) return
         try {
             // every address of this wallet, not only the chatting one: a name claimed with Buy From
             // gets its notices too (iOS d1026de, IOS-085 / XP-024)
@@ -78,13 +106,29 @@ class KachatNamesNotifier @Inject constructor(
                 offersOnMine += (orNull { registry.offers(n.name) } ?: return)
                     .filter { o -> ownKeys.any { it.contentEquals(o.seller) } }
             }
-            // The indexer pushes name reminders only to the chatting address: for a name on another
-            // address of this wallet the phone schedules its own (XP-024).
+            // The indexer pushes name reminders only to the chatting address, and none before grace
+            // ends: the phone schedules its own for every name ([KachatNameReminders]), all of them
+            // for a name on another address or when push isn't on, and the ones push doesn't send
+            // for the chatting address's (iOS b49a021d, owner 2026-11-27: "make sure no one misses it").
             // a different wallet signed in meanwhile: this answer isn't its
             if (actions.myAddress != wallet) return
-            reminders.schedule(owned.filter { !it.owner.contentEquals(me) }, p, wallet)
+            reminders.schedule(owned, p, wallet, chattingKey = me, pushCoversChatting = pushState.isActive)
 
-            val old = prefs.getString(key(wallet), null)?.let(Snapshot::decode)
+            var old = prefs.getString(key(wallet), null)?.let(Snapshot::decode)
+            // Name rows reach the Profile bell since iOS b49a021d; before, the bell refused them.
+            // Once per wallet, a name already noted as in grace or up for renewal is noted again,
+            // so its row lands now instead of never. A new wallet has nothing to catch up on (its
+            // first check is quiet), so it's marked done at once; otherwise the flag is saved with
+            // the snapshot below, after a whole check for the same wallet, or the catch-up rows of
+            // an interrupted one would be lost (iOS audit 2026-11-27 L8).
+            val bellKey = "kachatNamesNotifier.bell.$wallet"
+            var catchingUp = false
+            if (old == null) {
+                prefs.edit().putBoolean(bellKey, true).apply()
+            } else if (!prefs.getBoolean(bellKey, false)) {
+                old = renotedForBell(old)
+                catchingUp = true
+            }
             val now = KachatNames.nowMs()
             // A failed history read isn't "nothing happened": saving that diff forgets the name
             // and a later real sale is never told, so the last snapshot is kept for the next check.
@@ -106,13 +150,13 @@ class KachatNamesNotifier @Inject constructor(
             for (n in news) {
                 bell.record("kachat-${n.id}", SOURCE, title(n), body(n), now, n.name)
             }
-            prefs.edit().putString(key(wallet), next.encode()).apply()
+            val edit = prefs.edit().putString(key(wallet), next.encode())
+            if (catchingUp) edit.putBoolean(bellKey, true)
+            edit.apply()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Log.w(TAG, "check failed: ${e.message ?: e}")
-        } finally {
-            checking.set(false)
         }
     }
 
@@ -126,7 +170,9 @@ class KachatNamesNotifier @Inject constructor(
 
     // The row's words (iOS: every formatted string goes through KaspaUnit.label)
 
-    private fun s(res: Int, vararg args: Any): String = KaspaUnit.label(context.getString(res, *args))
+    // in the app's language (iOS audit 2026-11-27 M10)
+    private fun s(res: Int, vararg args: Any): String =
+        KaspaUnit.label(runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { context.getString(res, *args) })
 
     private fun day(ms: Long): String = com.kachat.app.ui.screens.KachatLive.day(ms)
 
@@ -263,6 +309,12 @@ class KachatNamesNotifier @Inject constructor(
          *  Filled by [KachatNamesActions.perform]; for this session, as on iOS. */
         val selfClosedOffers: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+        /** [old] with every name's renewal-open and expired notices forgotten, so the next diff
+         *  notes them again: the once-per-wallet catch-up when name rows came back to the bell
+         *  (iOS b49a021d). Lapsed notices stay noted. */
+        fun renotedForBell(old: Snapshot): Snapshot =
+            old.copy(names = old.names.mapValues { (_, v) -> v.copy(renewNoted = false, graceNoted = false) })
+
         private val LEFT_OPS = setOf("sale", "offer_accepted", "offer_accept", "transfer", "release", "reclaim")
         private val MY_OFFER_OPS = setOf("offer_decline", "offer_refund", "offer_withdraw")
 
@@ -362,10 +414,11 @@ class KachatNamesNotifier @Inject constructor(
 }
 
 /**
- * Local reminders for .kachat names held by one of this wallet's spending addresses (Buy From):
- * the indexer's renewal and expiry pushes reach only the chatting address, so the phone schedules
- * its own - renewal opens, the name expired, and a day before grace ends - from each name's expiry
- * (iOS d1026de `KachatNameReminders`, XP-024). Nothing leaves the phone. Rescheduled on every
+ * Local reminders for this wallet's .kachat names: renewal opens, the name expired, a week before
+ * grace ends (mainnet) and a day before (the last call). The indexer's renewal and expiry pushes
+ * reach only the chatting address and stop at expiry, so the phone schedules every reminder for a
+ * name on another address (iOS d1026de, XP-024) or when push is off, and the grace-ending ones for
+ * every name (iOS b49a021d, owner 2026-11-27). Nothing leaves the phone. Rescheduled on every
  * notifier check: a renewed name moves its reminders, a name that left the wallet loses them.
  * Each one is a one-time [KachatNameReminderWorker] under its own unique work name; tapping it
  * opens the name, like the pushes.
@@ -406,15 +459,35 @@ class KachatNameReminders @Inject constructor(
         prefs.edit().putString(KEY, root.toString()).apply()
     }
 
-    private fun s(res: Int, vararg args: Any): String = KaspaUnit.label(context.getString(res, *args))
+    // in the app's language (iOS audit 2026-11-27 M10)
+    private fun s(res: Int, vararg args: Any): String =
+        KaspaUnit.label(runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { context.getString(res, *args) })
 
     private fun day(ms: Long): String = com.kachat.app.ui.screens.KachatLive.day(ms)
 
-    suspend fun schedule(names: List<NameInfo>, params: Params, wallet: String) = withContext(Dispatchers.IO) {
-        mutex.withLock { scheduleLocked(names, params, wallet) }
+    /**
+     * [chattingKey]: the chatting address's owner key. Its names get the renewal and expiry pushes
+     * from the indexer when [pushCoversChatting] (push active), so only the reminders push never
+     * sends (grace about to end) are scheduled for them here; every other name, or any name with
+     * push off, gets them all (iOS b49a021d).
+     */
+    suspend fun schedule(
+        names: List<NameInfo>,
+        params: Params,
+        wallet: String,
+        chattingKey: ByteArray? = null,
+        pushCoversChatting: Boolean = false,
+    ) = withContext(Dispatchers.IO) {
+        mutex.withLock { scheduleLocked(names, params, wallet, chattingKey, pushCoversChatting) }
     }
 
-    private fun scheduleLocked(names: List<NameInfo>, params: Params, wallet: String) {
+    private fun scheduleLocked(
+        names: List<NameInfo>,
+        params: Params,
+        wallet: String,
+        chattingKey: ByteArray?,
+        pushCoversChatting: Boolean,
+    ) {
         val p = params
         val work = runCatching { WorkManager.getInstance(context) }.getOrNull() ?: return
         val all = scheduled()
@@ -434,31 +507,16 @@ class KachatNameReminders @Inject constructor(
         val now = KachatNames.nowMs()
         val wanted = LinkedHashMap<String, Reminder>()
         val bases = HashSet<String>()
-        for (n in names) {
+        for (n in names) bases += "$prefix${n.name}-${n.expiresAt}-"
+        for (r in plan(names, p, now, chattingKey, pushCoversChatting)) {
+            val n = r.info
             val display = com.kachat.app.models.KachatNameLabel.display(n.name)
-            val base = "$prefix${n.name}-${n.expiresAt}-"
-            bases += base
-            // clamped sums: a junk expiry can't wrap a date (iOS 5848fb0)
-            val graceEnds = KachatNames.clampedSum(n.expiresAt, p.graceMs)
-            val renewAt = p.renewOpens(n.expiresAt)
-            if (renewAt > now) {
-                wanted[base + "renew"] = Reminder(
-                    renewAt, s(R.string.kn_bell_renew_title, display),
-                    s(R.string.kn_bell_renewal_open, day(n.expiresAt)), n.name
-                )
-            }
-            if (n.expiresAt > now) {
-                wanted[base + "grace"] = Reminder(
-                    n.expiresAt, s(R.string.kn_bell_expired_title, display),
-                    s(R.string.kn_bell_expired_body, day(graceEnds)), n.name
-                )
-            }
-            val lastCall = KachatNames.clampedSum(graceEnds, -minOf(p.graceMs / 2, 86_400_000L))
-            if (lastCall > now) {
-                wanted[base + "lastcall"] = Reminder(
-                    lastCall, s(R.string.kn_bell_expired_title, display),
-                    s(R.string.kn_bell_expired_body, day(graceEnds)), n.name
-                )
+            val id = "$prefix${n.name}-${n.expiresAt}-${r.kind}"
+            wanted[id] = if (r.kind == KIND_RENEW) {
+                Reminder(r.date, s(R.string.kn_bell_renew_title, display), s(R.string.kn_bell_renewal_open, day(n.expiresAt)), n.name)
+            } else {
+                // expired, a week before grace ends, the last call: renew before grace ends
+                Reminder(r.date, s(R.string.kn_bell_expired_title, display), s(R.string.kn_bell_expired_body, day(r.graceEnds)), n.name)
             }
         }
         // iOS hands a due notification to the system at its time; WorkManager may run one a little
@@ -489,6 +547,55 @@ class KachatNameReminders @Inject constructor(
     }
 
     companion object {
+        const val KIND_RENEW = "renew"
+        const val KIND_GRACE = "grace"
+        const val KIND_GRACE_WEEK = "graceweek"
+        const val KIND_LAST_CALL = "lastcall"
+
+        /** One reminder to schedule: [kind] is the last part of its work name. */
+        class Planned(val info: NameInfo, val kind: String, val date: Long, val graceEnds: Long)
+
+        private const val DAY_MS = 86_400_000L
+        private const val WEEK_MS = 7 * DAY_MS
+
+        /**
+         * Which reminders [names] get, and when (iOS b49a021d `KachatNameReminders.schedule`), only
+         * those still ahead of [nowMs]:
+         * - renewal opens, and the name expired: unless push already sends them (a name of
+         *   [chattingKey] with [pushCoversChatting]);
+         * - a week before grace ends, where grace is long enough to warn that early (mainnet);
+         * - the last call: a day before grace ends, or halfway through a short testnet grace.
+         * Push sends neither of the last two, so every name gets them. Sums are clamped: a junk
+         * expiry can't wrap a date (iOS 5848fb0).
+         */
+        fun plan(
+            names: List<NameInfo>,
+            params: Params,
+            nowMs: Long,
+            chattingKey: ByteArray?,
+            pushCoversChatting: Boolean,
+        ): List<Planned> {
+            val p = params
+            val out = ArrayList<Planned>()
+            for (n in names) {
+                val graceEnds = KachatNames.clampedSum(n.expiresAt, p.graceMs)
+                // the indexer already pushes renewal-open and expired for the chatting address's names
+                val pushCovered = pushCoversChatting && chattingKey != null && n.owner.contentEquals(chattingKey)
+                if (!pushCovered) {
+                    val renewAt = p.renewOpens(n.expiresAt)
+                    if (renewAt > nowMs) out += Planned(n, KIND_RENEW, renewAt, graceEnds)
+                    if (n.expiresAt > nowMs) out += Planned(n, KIND_GRACE, n.expiresAt, graceEnds)
+                }
+                if (p.graceMs > 2 * WEEK_MS) {
+                    val weekBefore = KachatNames.clampedSum(graceEnds, -WEEK_MS)
+                    if (weekBefore > nowMs) out += Planned(n, KIND_GRACE_WEEK, weekBefore, graceEnds)
+                }
+                val lastCall = KachatNames.clampedSum(graceEnds, -minOf(p.graceMs / 2, DAY_MS))
+                if (lastCall > nowMs) out += Planned(n, KIND_LAST_CALL, lastCall, graceEnds)
+            }
+            return out
+        }
+
         private const val PREFS = "kachat_name_reminders"
         private const val KEY = "scheduled"
         /** `kachat-reminder-<network>-<wallet tag>-<name>-<expiresAt>-<kind>` (IOS-088). */

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">الذهب</string>
+    <string name="rel_wallet_silver">الفضة</string>
+    <string name="rel_wallet_pair_bitcoin">سعر Kaspa بالبيتكوين</string>
+    <string name="rel_wallet_pair_voo">أسهم صندوق Vanguard S&amp;P 500 ETF</string>
+    <string name="rel_wallet_pair_gold">أونصات تروي من الذهب</string>
+    <string name="rel_wallet_pair_silver">أونصات تروي من الفضة</string>
+    <string name="rel_wallet_cold_storage_n">التخزين البارد %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">لا توجد UTXOs قابلة للإنفاق في هذا العنوان</string>
+    <string name="rel_wallet_insufficient_plus_fee">الرصيد غير كافٍ لتغطية هذا المبلغ مع رسوم الشبكة</string>
+    <string name="rel_wallet_too_many_inputs">يحتاج هذا الإرسال إلى %1$d من UTXOs، لكن KasSigner يدعم %2$d مدخلًا فقط لكل معاملة. أرسل مبلغًا أصغر أو ادمج هذا العنوان أولًا.</string>
+    <string name="rel_wallet_cancelled">تم الإلغاء.</string>
+    <string name="rel_wallet_err_no_internet">لا يوجد اتصال بالإنترنت. تحقّق من اتصالك وحاول مرة أخرى.</string>
+    <string name="rel_wallet_err_timed_out">انتهت مهلة الاتصال. تحقّق من اتصالك وحاول مرة أخرى.</string>
+    <string name="rel_wallet_err_cant_reach">تعذّر الوصول إلى الخادم. تحقّق من العنوان في الإعدادات ومن اتصالك.</string>
+    <string name="rel_wallet_err_secure">تعذّر إنشاء اتصال آمن بالخادم.</string>
+    <string name="rel_wallet_err_network">حدث خطأ في الشبكة. تحقّق من اتصالك وحاول مرة أخرى.</string>
+    <string name="rel_wallet_err_unreadable">أرسل الخادم شيئًا لم يتمكن التطبيق من قراءته. حاول مرة أخرى، وإذا تكرر ذلك فحدّث التطبيق.</string>
+    <string name="rel_wallet_err_node">أعادت عقدة Kaspa خطأً. سيجرّب التطبيق عقدة أخرى؛ حاول مرة أخرى بعد قليل.</string>
+    <string name="rel_wallet_err_unknown">حدث خطأ غير معروف.</string>
+    <string name="rel_wallet_err_no_spendable_available">لا توجد UTXOs قابلة للإنفاق</string>
+    <string name="rel_wallet_err_no_private_key">تعذّر الحصول على المفتاح الخاص</string>
+    <string name="rel_wallet_err_insufficient_payment">الرصيد غير كافٍ للدفع</string>
+    <string name="rel_wallet_err_insufficient_after_fee">الرصيد غير كافٍ بعد الرسوم</string>
+    <string name="rel_wallet_err_insufficient_handshake">الرصيد غير كافٍ للمصافحة</string>
+    <string name="rel_wallet_err_insufficient_self_stash">الرصيد غير كافٍ لرسوم الحفظ الذاتي</string>
+    <string name="rel_wallet_err_group_secrets">أسرار المجموعة مفقودة - حاول الانضمام إلى هذه المجموعة مجددًا.</string>
+    <string name="rel_wallet_err_admin_secrets">أسرار إدارة المجموعة مفقودة.</string>
+</resources>

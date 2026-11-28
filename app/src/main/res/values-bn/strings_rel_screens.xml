@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4, iOS 01f71184 (release audit 2026-11-27): chat, group and Explorer screens. Translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="rs_group_refresh_invites">আপনার গ্রুপ আমন্ত্রণ আবার পড়া হচ্ছে</string>
+    <string name="rs_group_refresh_control">সদস্য তালিকা ও ইপক কী আবার পড়া হচ্ছে</string>
+    <string name="rs_group_refresh_messages">মেসেজ আবার আনা হচ্ছে (%1$d/%2$d জন সদস্য)</string>
+    <string name="rs_group_refresh_decrypting">ইতিহাস ডিক্রিপ্ট করা হচ্ছে</string>
+    <string name="rs_group_you_changed_photo">আপনি গ্রুপের ছবি বদলেছেন</string>
+    <string name="rs_group_you_removed_photo">আপনি গ্রুপের ছবি সরিয়েছেন</string>
+    <string name="rs_group_you_renamed">আপনি গ্রুপের নাম বদলে \"%1$s\" রেখেছেন</string>
+    <string name="rs_group_changed_photo">%1$s গ্রুপের ছবি বদলেছেন</string>
+    <string name="rs_group_removed_photo">%1$s গ্রুপের ছবি সরিয়েছেন</string>
+    <string name="rs_group_renamed">%1$s গ্রুপের নাম বদলে \"%2$s\" রেখেছেন</string>
+    <string name="rs_own_account_not_contact">ঠিকানাটি আপনার নিজের একটি অ্যাকাউন্টের, তাই এটি কন্টাক্ট হিসেবে যোগ করা যাবে না।</string>
+    <string name="ex_kind_kaposts">পোস্ট</string>
+</resources>

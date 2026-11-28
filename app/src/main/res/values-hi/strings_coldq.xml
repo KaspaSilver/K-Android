@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">यह पता पहले से इस खाते में है।</string>
     <string name="coldq_error_in_other_account">यह पता पहले से आपके Cold Storage खाते “%1$s” में है।</string>
     <string name="coldq_added_toast">क्वांटम-प्रतिरोधी पता जोड़ा गया।</string>
-    <string name="coldq_add_action">क्वांटम-प्रतिरोधी पता जोड़ें</string>
     <string name="coldq_add_action_subtitle">KasSigner की पता स्क्रीन से एक KCC-3 पता स्कैन करें।</string>
     <string name="coldq_stop_watching">वॉच करना बंद करें</string>
     <string name="coldq_stop_watching_subtitle">यह क्वांटम पता खाते से हटाता है। इसे वापस जोड़ने के लिए फिर से स्कैन करें।</string>

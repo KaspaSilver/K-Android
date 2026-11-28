@@ -31,7 +31,7 @@
     <string name="kg_use_body">Назначьте его основным, и вас будут видеть под ним везде в K.</string>
     <string name="kg_use_find">Вас можно найти, набрав ваше имя.</string>
     <string name="kg_use_link">Ссылка на ваш профиль показывает ваше имя.</string>
-    <string name="kg_use_pay">Вам могут отправить Kaspa на вашеимя.kachat вместо длинного адреса.</string>
+    <string name="kg_use_pay">Вам могут отправить Kaspa на @вашеимя вместо длинного адреса.</string>
     <string name="kg_use_title">Сделайте его своим именем</string>
     <string name="kl_1d">1 день</string>
     <string name="kl_3d">3 дня</string>

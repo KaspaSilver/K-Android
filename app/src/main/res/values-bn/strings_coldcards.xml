@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage account cards, in-place rename (iOS b49a021d) -->
+<resources>
+    <string name="cold_hide_funded_refused">যে ঠিকানায় ক্যাসপা আছে তা তালিকায় থাকে।</string>
+    <string name="cold_remove_account">অ্যাকাউন্ট সরান</string>
+    <string name="cold_kpub_qr">kpub QR</string>
+    <string name="cold_alerts_on">সতর্কতা চালু</string>
+    <string name="cold_alerts_off">সতর্কতা বন্ধ</string>
+    <string name="cold_tap_to_view_addresses">ঠিকানা দেখতে ট্যাপ করুন</string>
+    <string name="cold_alerts_on_toast">এই অ্যাকাউন্টে ক্যাসপা এলে আপনাকে জানানো হবে।</string>
+    <string name="cold_alerts_off_toast">এই অ্যাকাউন্টে ক্যাসপা এলে আর জানানো হবে না।</string>
+    <string name="cold_kpub_copied">kpub ক্লিপবোর্ডে কপি হয়েছে।</string>
+    <string name="cold_watch_this_account">এই অ্যাকাউন্ট দেখুন</string>
+    <string name="cold_kpub_qr_warning">যে স্ক্যান করবে সে এই অ্যাকাউন্টের প্রতিটি ঠিকানা, ব্যালান্স ও পেমেন্ট দেখতে পাবে। শুধু বিশ্বস্ত ডিভাইসকে দেখান।</string>
+</resources>

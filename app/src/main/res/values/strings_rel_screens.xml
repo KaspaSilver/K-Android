@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4, iOS 01f71184 (release audit 2026-11-27): chat, group and Explorer screens. Translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="rs_group_refresh_invites">Re-reading your group invites</string>
+    <string name="rs_group_refresh_control">Re-reading roster and epoch keys</string>
+    <string name="rs_group_refresh_messages">Re-fetching messages (%1$d of %2$d members)</string>
+    <string name="rs_group_refresh_decrypting">Decrypting history</string>
+    <string name="rs_group_you_changed_photo">You changed the group photo</string>
+    <string name="rs_group_you_removed_photo">You removed the group photo</string>
+    <string name="rs_group_you_renamed">You changed the group name to \"%1$s\"</string>
+    <string name="rs_group_changed_photo">%1$s changed the group photo</string>
+    <string name="rs_group_removed_photo">%1$s removed the group photo</string>
+    <string name="rs_group_renamed">%1$s changed the group name to \"%2$s\"</string>
+    <string name="rs_own_account_not_contact">That address is one of your own accounts, so it cannot be added as a contact.</string>
+    <string name="ex_fee_not_served">not served yet</string>
+</resources>

@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">Tukar</string>
-    <string name="swap_history">Riwayat Penukaran</string>
-    <string name="swap_started">Penukaran dimulai</string>
     <string name="swap_failed">Penukaran gagal</string>
     <string name="swap_couldnt_read_amounts">Tidak dapat membaca jumlah penukaran ini</string>
     <string name="swap_already_holds">Sudah berisi penukaran ini - menambahkannya lagi akan menghitungnya dua kali.</string>
     <string name="swap_lands_in_portfolio">Penukaran masuk ke portofolio ini.</string>
     <string name="swap_delete_title">Hapus penukaran ini?</string>
     <string name="swap_delete_message">Ini hanya menghapusnya dari riwayat lokalmu - tidak memengaruhi penukaran yang sebenarnya.</string>
-    <string name="swap_you_send">Kamu Kirim</string>
     <string name="swap_you_get">Kamu Dapat</string>
-    <string name="swap_switch_direction">Balik arah</string>
-    <string name="swap_get_deposit_address">Dapatkan Alamat Setoran</string>
     <string name="swap_receive_coin_at">Terima %1$s di</string>
     <string name="swap_destination_tag_optional">Tag tujuan (opsional)</string>
     <string name="swap_destination_tag_hint">Hanya jika alamat penerima memerlukannya, seperti kebanyakan bursa. Tanpanya, bursa tidak dapat mengkreditkan koin Anda.</string>
     <string name="swap_from_kusdt_lands">Tukar Dari (kUSDT Masuk ke Sini)</string>
     <string name="swap_from_kas_lands">Tukar Dari (KAS Masuk ke Sini)</string>
-    <string name="swap_receiving_kas_at">Menerima KAS di</string>
     <string name="swap_change">Ganti</string>
     <string name="swap_powered_by_trestly">Didukung oleh Trestly</string>
     <string name="swap_powered_by_changenow">Didukung oleh ChangeNOW</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">Jual %1$s KAS seharga %2$s - pilih portofolio untuk menambahkannya.</string>
     <string name="swap_rate">Kurs</string>
     <string name="swap_unavailable">Tidak tersedia</string>
-    <string name="swap_go_to_spending_addresses">Buka Alamat Belanja</string>
-    <string name="swap_send_coin_to_address">Kirim %1$s ke alamat ini</string>
     <string name="swap_amount_to_send">Jumlah yang Dikirim</string>
     <string name="swap_destination_tag_copied">Tag tujuan disalin</string>
     <string name="swap_payout_address">Alamat Pembayaran</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">Alamat Setoran</string>
     <string name="swap_couldnt_reach_changenow">Tidak dapat menghubungi ChangeNOW - coba lagi</string>
     <string name="swap_details">Detail Penukaran</string>
-    <string name="swap_picker_footer">Penukaran dibayarkan ke alamat yang belum pernah kamu pakai, sehingga pembayarannya tidak bisa dikaitkan dengan aktivitasmu sebelumnya. Buat satu jika tidak ada yang kosong.</string>
-    <string name="swap_picker_all_used">Semua alamat di sini sudah terpakai. Buat yang baru di atas.</string>
-    <string name="swap_unused_addresses">Alamat Belum Dipakai</string>
-    <string name="swap_choose_address">Pilih Alamat</string>
     <string name="swap_used">Terpakai</string>
     <string name="swap_unused">Belum dipakai</string>
-    <string name="swap_check_history_before">Periksa riwayatnya sebelum mengirim penukaran ke alamat ini.</string>
-    <string name="swap_use_for_this_swap">Gunakan untuk Penukaran Ini</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW membayarkan KAS hasil penukaran ke alamat ini.</string>
     <string name="swap_search_coins">Cari koin</string>
-    <string name="swap_choose_coin">Pilih Koin</string>
     <string name="swap_agreements_intro">Tukar memakai dua layanan yang tidak dijalankan K. Baca dan setujui keduanya sebelum melanjutkan.</string>
     <string name="swap_coins_on_other_networks">Koin di jaringan lain</string>
     <string name="swap_changenow_agreement">Penukaran antara Kaspa dan koin di jaringan lain (Bitcoin, Ethereum, USDC, USDT, dan lainnya) dilakukan oleh ChangeNOW, bursa pihak ketiga. K hanya meminta penawaran harga dan alamat deposit ke ChangeNOW dan menampilkan status penukaran; ChangeNOW yang melakukan penukaran dan mengirim koinnya. K tidak bertanggung jawab atas penukaran yang gagal, tertunda, atau hilang. Jika ada yang tidak berhasil, hubungi dukungan ChangeNOW.</string>

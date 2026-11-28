@@ -91,6 +91,9 @@ object ChessMessage {
 
     fun parseOrNull(text: String?): ChessEnvelope? {
         if (text.isNullOrBlank() || text.length > 100_000 || text.trimStart().firstOrNull() != '{') return null
+        // Every chess envelope's type value starts `"chess_`: a text search answers the rest -
+        // photos, voice parts, replies - with no decode (iOS PayloadSniff, audit 2026-11-27 C1).
+        if (!PayloadSniff.mayBeChess(text)) return null
         return try {
             val json = com.google.gson.JsonParser.parseString(text)
             if (!json.isJsonObject) return null
@@ -266,7 +269,12 @@ data class ChessGameSummary(
         else -> null
     }
 
+    /** The status line in the app's language (iOS `statusText`, audit 2026-11-27 R7). */
     val statusText: String
+        get() = KaPlayText.string(statusKey)
+
+    /** The English status, the key [statusText] looks up: one whole sentence per case. */
+    val statusKey: String
         get() = when (status.kind) {
             ChessGameStatusKind.PENDING_RESPONSE -> "Waiting for response"
             ChessGameStatusKind.DECLINED -> "Game declined"
@@ -277,7 +285,7 @@ data class ChessGameSummary(
             }
             ChessGameStatusKind.CHECKMATE -> {
                 if (viewerColor == null) {
-                    "Checkmate - ${if (status.color == ChessColor.WHITE) "White" else "Black"} wins"
+                    if (status.color == ChessColor.WHITE) "Checkmate - White wins" else "Checkmate - Black wins"
                 } else if (status.color == viewerColor) "Checkmate - You win!" else "Checkmate - You lost"
             }
             ChessGameStatusKind.STALEMATE -> "Stalemate - draw"
@@ -285,10 +293,10 @@ data class ChessGameSummary(
             ChessGameStatusKind.RESIGNED -> {
                 if (status.timedOut) {
                     if (viewerColor == null) {
-                        "${if (status.color == ChessColor.WHITE) "White" else "Black"} lost on time"
+                        if (status.color == ChessColor.WHITE) "White lost on time" else "Black lost on time"
                     } else if (status.color == viewerColor) "You lost on time" else "They lost on time"
                 } else if (viewerColor == null) {
-                    "${if (status.color == ChessColor.WHITE) "White" else "Black"} resigned"
+                    if (status.color == ChessColor.WHITE) "White resigned" else "Black resigned"
                 } else if (status.color == viewerColor) "You resigned" else "They resigned"
             }
         }
@@ -504,7 +512,9 @@ object ChessGameEngine {
      *  contact (not just the current one) - checkmate/resignation count as a win or loss for the
      *  local player; stalemate/declined/pending/in-progress games don't count either way. Used by
      *  [ChessGameScreen]'s W/L counter and the chat info screen's "Chess Stats" row. */
-    fun record(messages: List<ChessSourceMessage>, myAddress: String, contactAddress: String): Pair<Int, Int> {
+    fun record(allMessages: List<ChessSourceMessage>, myAddress: String, contactAddress: String): Pair<Int, Int> {
+        // only chess messages are parsed, and each game is summarized over them alone
+        val messages = chessMessages(allMessages)
         val inviteMessages = messages.filter { message ->
             val unwrapped = MessageReply.parseOrNull(message.plaintextBody)?.text ?: message.plaintextBody
             ChessMessage.parseOrNull(unwrapped) is ChessEnvelope.Invite
@@ -537,7 +547,9 @@ object ChessGameEngine {
      *  active. Enforcement (see `ChatViewModel.startChessGame`) keeps at most one active game per
      *  contact, so this should never find more than one candidate in practice; if older history
      *  somehow left more than one, the most recently invited game wins. */
-    fun activeGame(messages: List<ChessSourceMessage>, myAddress: String, contactAddress: String): ChessGameSummary? {
+    fun activeGame(allMessages: List<ChessSourceMessage>, myAddress: String, contactAddress: String): ChessGameSummary? {
+        // only chess messages are parsed, and each game is summarized over them alone
+        val messages = chessMessages(allMessages)
         val inviteMessages = messages
             .filter { message ->
                 val unwrapped = MessageReply.parseOrNull(message.plaintextBody)?.text ?: message.plaintextBody
@@ -555,6 +567,12 @@ object ChessGameEngine {
         }
         return null
     }
+
+    /** The messages that can be chess at all (a text search, [PayloadSniff]): a whole history's
+     *  photos and voice parts were unwrapped and decoded for every game (iOS
+     *  `ChessGameService.chessMessages`, audit 2026-11-27 C1). */
+    fun <T : ChessSourceMessage> chessMessages(messages: List<T>): List<T> =
+        messages.filter { PayloadSniff.mayBeChess(it.plaintextBody) }
 
     /** True if `message` is any chess envelope and no *later* message in `messages` shares its
      *  `gameId` - i.e. this is the current/latest state for that game, which is the only one that

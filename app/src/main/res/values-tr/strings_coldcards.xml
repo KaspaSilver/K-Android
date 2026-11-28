@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage account cards, in-place rename (iOS b49a021d) -->
+<resources>
+    <string name="cold_hide_funded_refused">Kaspa bulunan bir adres listede kalır.</string>
+    <string name="cold_remove_account">Hesabı Kaldır</string>
+    <string name="cold_kpub_qr">kpub QR</string>
+    <string name="cold_alerts_on">Uyarılar Açık</string>
+    <string name="cold_alerts_off">Uyarılar Kapalı</string>
+    <string name="cold_tap_to_view_addresses">Adresleri Görmek İçin Dokun</string>
+    <string name="cold_alerts_on_toast">Bu hesap Kaspa aldığında bildirim alacaksınız.</string>
+    <string name="cold_alerts_off_toast">Bu hesap Kaspa aldığında artık bildirim gelmeyecek.</string>
+    <string name="cold_kpub_copied">kpub panoya kopyalandı.</string>
+    <string name="cold_watch_this_account">Bu Hesabı İzle</string>
+    <string name="cold_kpub_qr_warning">Bunu tarayan, bu hesabın her adresini, bakiyesini ve ödemesini görür. Yalnızca güvendiğiniz cihazlara gösterin.</string>
+</resources>

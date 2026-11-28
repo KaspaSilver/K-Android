@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">المواقع</string>
     <string name="shell_kaspa_websites">مواقع Kaspa</string>
     <string name="shell_terms_of_use">شروط الاستخدام</string>
-    <string name="shell_message_indexer_footer">تُقرأ KaPost والمحادثات العامة والشطرنج من هذا الفهرس أيضًا.</string>
+    <string name="shell_message_indexer_footer">تُقرأ المنشورات والمحادثات العامة والشطرنج من هذا المفهرس أيضًا.</string>
 </resources>

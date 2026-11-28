@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">Mua</string>
+    <string name="buysell_sell">Bán</string>
+    <string name="buysell_history">Lịch sử mua/bán</string>
+    <string name="buysell_buy_kaspa">Mua Kaspa</string>
+    <string name="buysell_sell_kaspa">Bán Kaspa</string>
+    <string name="buysell_buy_with_crypto">Mua Kaspa bằng tiền mã hóa</string>
+    <string name="buysell_buy_with_crypto_sub">Thanh toán bằng đồng coin khác, như kUSDT hoặc Bitcoin.</string>
+    <string name="buysell_buy_with_debit_card">Mua Kaspa bằng thẻ ghi nợ</string>
+    <string name="buysell_debit_card_sub">Thanh toán bằng thẻ. Tiền đến dưới dạng kUSDT, rồi bạn dùng nó mua Kaspa.</string>
+    <string name="buysell_pay_with_question">Bạn muốn thanh toán bằng gì?</string>
+    <string name="buysell_sell_for_question">Bạn muốn nhận gì cho Kaspa của mình?</string>
+    <string name="buysell_sell_kaspa_for">Bán Kaspa lấy %1$s</string>
+    <string name="buysell_buy_kaspa_with">Mua Kaspa bằng %1$s</string>
+    <string name="buysell_on_networks">%1$s trên %2$d mạng</string>
+    <string name="buysell_you_pay">Bạn trả</string>
+    <string name="buysell_where_land">Kaspa của bạn sẽ đến đâu?</string>
+    <string name="buysell_kusdt_one_address">kUSDT được trả từ một địa chỉ, và Kaspa của bạn về đúng địa chỉ đó.</string>
+    <string name="buysell_fresh_note">Một địa chỉ mới chưa từng dùng, để giao dịch mua này tách biệt khỏi tên người dùng và các cuộc trò chuyện của bạn.</string>
+    <string name="buysell_send_payment">Gửi thanh toán</string>
+    <string name="buysell_send_amount_coin">Gửi %1$s %2$s</string>
+    <string name="buysell_to_buy_kaspa">để mua Kaspa</string>
+    <string name="buysell_to_sell_for">để bán lấy %1$s</string>
+    <string name="buysell_copy_amount">Sao chép số tiền</string>
+    <string name="buysell_amount_copied">Đã sao chép số tiền</string>
+    <string name="buysell_send_kas_from_k">Gửi KAS từ K</string>
+    <string name="buysell_transaction_id">Mã giao dịch</string>
+    <string name="buysell_copy_id">Sao chép mã</string>
+    <string name="buysell_you_get_about">Bạn nhận khoảng %1$s %2$s, gửi đến %3$s.</string>
+    <string name="buysell_payment_received">Đã nhận thanh toán</string>
+    <string name="buysell_waiting_confirm">Đang chờ xác nhận.</string>
+    <string name="buysell_converting">ChangeNOW đang chuyển đổi coin của bạn.</string>
+    <string name="buysell_sending_your">Đang gửi %1$s của bạn</string>
+    <string name="buysell_almost_done">Sắp xong.</string>
+    <string name="buysell_failed_detail">ChangeNOW không thể hoàn tất lệnh này. Hãy kiểm tra trên ChangeNOW.</string>
+    <string name="buysell_refunded_detail">ChangeNOW đã hoàn trả coin.</string>
+    <string name="buysell_expired_detail">Không có gì đến kịp thời. Hãy bắt đầu lệnh mới.</string>
+    <string name="buysell_verifying_detail">ChangeNOW đang kiểm tra lệnh này.</string>
+    <string name="buysell_waiting_payment">Đang chờ thanh toán</string>
+    <string name="buysell_waiting_payment_detail">Gửi số tiền ở trên. Màn hình này tự cập nhật.</string>
+    <string name="buysell_purchase_complete">Mua hoàn tất</string>
+    <string name="buysell_sale_complete">Bán hoàn tất</string>
+    <string name="buysell_you_paid">Bạn đã trả %1$s %2$s</string>
+    <string name="buysell_you_got_about">Bạn đã nhận khoảng %1$s %2$s</string>
+    <string name="buysell_added_to_portfolio">Đã thêm vào danh mục</string>
+    <string name="buysell_order_sent">Đã gửi lệnh</string>
+</resources>

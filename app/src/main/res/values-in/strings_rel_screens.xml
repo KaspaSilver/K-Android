@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4, iOS 01f71184 (release audit 2026-11-27): chat, group and Explorer screens. Translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="rs_group_refresh_invites">Membaca ulang undangan grup Anda</string>
+    <string name="rs_group_refresh_control">Membaca ulang daftar anggota dan kunci epoch</string>
+    <string name="rs_group_refresh_messages">Mengambil ulang pesan (%1$d dari %2$d anggota)</string>
+    <string name="rs_group_refresh_decrypting">Mendekripsi riwayat</string>
+    <string name="rs_group_you_changed_photo">Anda mengubah foto grup</string>
+    <string name="rs_group_you_removed_photo">Anda menghapus foto grup</string>
+    <string name="rs_group_you_renamed">Anda mengubah nama grup menjadi \"%1$s\"</string>
+    <string name="rs_group_changed_photo">%1$s mengubah foto grup</string>
+    <string name="rs_group_removed_photo">%1$s menghapus foto grup</string>
+    <string name="rs_group_renamed">%1$s mengubah nama grup menjadi \"%2$s\"</string>
+    <string name="rs_own_account_not_contact">Alamat itu adalah salah satu akun Anda sendiri, jadi tidak dapat ditambahkan sebagai kontak.</string>
+    <string name="ex_kind_kaposts">Postingan</string>
+</resources>

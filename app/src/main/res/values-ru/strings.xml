@@ -50,7 +50,6 @@
     <string name="close">Закрыть</string>
     <string name="confirm">Подтвердить</string>
     <string name="confirm_selection">Подтвердить выбор</string>
-    <string name="connect_to_a_node">Подключиться к узлу</string>
     <string name="connected_only_to_this_node">Подключено только к этому узлу</string>
     <string name="connection_settings">Настройки подключения</string>
     <string name="connection_status">Состояние подключения</string>
@@ -75,7 +74,6 @@
     <string name="failed_to_send">Ошибка отправки</string>
     <string name="fee_kas">Комиссия (KAS)</string>
     <string name="from">От</string>
-    <string name="fund_your_chatting_address">Пополните ваш адрес для чата</string>
     <string name="group_info">Информация о группе</string>
     <string name="group_name_2">Название группы</string>
     <string name="hidden_addresses">Скрытые адреса</string>
@@ -84,7 +82,6 @@
     <string name="import_account">Импортировать аккаунт</string>
     <string name="import_existing_account">Импортировать существующий аккаунт</string>
     <string name="incoming_notifications">Входящие уведомления</string>
-    <string name="kachat_needs_to_connect_to_a">K нужно подключиться к узлу. Как вы хотите подключиться?</string>
     <string name="kaspa_explorer">Kaspa Explorer</string>
     <string name="label_optional">Метка (необязательно)</string>
     <string name="last_message">Последнее сообщение</string>
@@ -185,7 +182,6 @@
     <string name="created">Создан</string>
     <string name="customization">Настройка</string>
     <string name="diagnostics">Диагностика</string>
-    <string name="discover_addresses">Найти адреса</string>
     <string name="email">Email</string>
     <string name="explorer">Обозреватель</string>
     <string name="github">GitHub</string>
@@ -236,14 +232,8 @@
     <string name="how_kachat_uses_kaspa">Как K использует Kaspa</string>
     <string name="kachat_lets_you_send_and_receive">K позволяет отправлять и получать сообщения прямо в сети Kaspa. Kaspa требуется для оплаты комиссий при отправке сообщений. Комиссия, которую вы платите, идёт майнерам, защищающим сеть.</string>
     <string name="finish">Готово</string>
-    <string name="recommended">Рекомендуется</string>
-    <string name="connect_your_own_node">Подключить свой узел</string>
-    <string name="enter_a_node_address_you_trust">Введите адрес узла, которому вы доверяете</string>
-    <string name="auto_search_for_nodes">Автопоиск узлов</string>
-    <string name="most_taxing_on_the_device_not_as">Наиболее нагружает устройство, менее надёжен - зависит от места проживания</string>
     <string name="choose_your_language">Выберите язык</string>
     <string name="select_the_language_youd_like_to">Выберите язык, который вы хотите использовать в K.</string>
-    <string name="best">Лучший</string>
     <string name="receive_kaspa">Получить Kaspa</string>
     <string name="currency">Валюта</string>
     <string name="choose_your_currency">Выберите валюту</string>
@@ -319,7 +309,6 @@
     <string name="new_message_request">Новый запрос на переписку</string>
     <string name="wants_to_chat_with_you">%1$s хочет пообщаться с вами.</string>
     <!-- Welcome Guide: .kachat and Message Requests (iOS 5c15ca0) -->
-    <string name="welcome_fund_chatting_body">5 Kaspa хватает примерно на 2500 сообщений.</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">Testnet</string>
     <string name="testnet_restart_to_testnet">Полностью закройте K и откройте снова, чтобы завершить переход на Testnet.</string>
@@ -646,7 +635,7 @@
     <string name="ab_export_failed">Экспорт не удался. Не получилось записать файл.</string>
     <string name="ab_already_up_to_date">Уже актуально. Все адреса из файла сохранены.</string>
     <string name="ab_imported_counts">Импортировано: добавлено %1$d, обновлено %2$d.</string>
-    <string name="ab_err_not_an_export">Этот файл не является экспортом контактов KaChat.</string>
+    <string name="ab_err_not_an_export">Этот файл не является экспортом контактов K.</string>
     <string name="ab_err_export_empty">В этом экспорте контактов нет контактов.</string>
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">Отправлено в сеть</string>
@@ -874,7 +863,6 @@
     <string name="wallet_spending">Траты</string>
     <string name="wallet_send">Отправить</string>
     <string name="wallet_receive">Получить</string>
-    <string name="wallet_request">Запросить</string>
     <string name="profile_share_profile">Поделиться профилем</string>
     <string name="settings_back_up_account">Резервная копия аккаунта</string>
     <string name="settings_complete_your_backup">Завершите резервное копирование</string>
@@ -1406,12 +1394,9 @@
     <string name="chess_tc_1_1_subtitle">По одной минуте каждому, плюс одна секунда за ход.</string>
     <string name="chess_tc_casual">Без контроля</string>
     <string name="chess_tc_no_timer">Без часов.</string>
-    <string name="check_off_every_address_you_want_on_the_list">Отметьте за один раз все адреса, которые нужны в списке.</string>
-    <string name="close_and_keep_scanning">Закрыть и продолжить сканирование</string>
     <string name="recents">Недавние</string>
     <string name="initial_sync_starting">Запуск</string>
     <string name="initial_sync_finished">Готово</string>
-    <string name="downloading_message_history">Загрузка истории сообщений</string>
     <string name="wiping_incoming_messages">Очистка входящих сообщений...</string>
     <string name="finishing_up">Завершение...</string>
     <string name="re_syncing_chats_progress">Повторная синхронизация... %1$d из %2$d чатов</string>
@@ -1462,12 +1447,7 @@
     <string name="notification_mode_default">По умолчанию (%1$s)</string>
     <string name="checking_address_n">Проверка адреса #%1$d</string>
     <string name="n_found_so_far">Найдено пока: %1$d</string>
-    <string name="checks_the_first_thousand_addresses">Проверяет первую тысячу адресов, даже если среди них есть пустые, и продолжает, пока находит новые.</string>
     <string name="first_sync_all_set">Всё готово</string>
-    <string name="first_sync_up_to_date">Ваши чаты и история обновлены.</string>
-    <string name="first_sync_setting_up">Настраиваем ваш аккаунт</string>
-    <string name="first_sync_downloading_footer">Загружаем всё, что у этого аккаунта есть в блокчейне. Так долго это бывает только один раз.</string>
-    <string name="first_sync_continue_anyway">Всё равно продолжить</string>
     <string name="nc_use_all_files">Использовать все файлы</string>
     <string name="nc_use_this_folder">Использовать эту папку</string>
     <string name="nc_no_subfolders">Вложенных папок нет.</string>
@@ -1546,10 +1526,6 @@
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">Скопировать ссылку</string>
     <string name="share_link_copied">Ссылка скопирована.</string>
-    <string name="generate_non_quantum_address">Создать неквантовый адрес</string>
-    <string name="generate_non_quantum_address_subtitle">Обычный адрес, как в «Получить». Работает со всем, включая kUSDT.</string>
-    <string name="generate_quantum_resistant_address">Создать квантово-устойчивый адрес</string>
-    <string name="generate_quantum_resistant_address_subtitle">Скрывает ключ, пока с него не потратят. Только для Kaspa: торговать kUSDT с него нельзя.</string>
     <string name="kaspa">Kaspa</string>
     <string name="kusdt_balances">Балансы kUSDT</string>
     <string name="kusdt_listed_stays_here">Этот адрес есть в вашем списке kUSDT, поэтому он остаётся здесь. Сначала скройте его в «Управление kUSDT».</string>
@@ -1574,14 +1550,12 @@
     <string name="tap_to_manage">Нажмите, чтобы управлять</string>
     <string name="token_about_kusdt">kUSDT — это USDT из Ethereum и BNB Chain, хранящиеся 1:1 в хранилище Trestly и выпущенные как токен в Kaspa. Их выпускает не Tether, и только Trestly может обменять их обратно на USDT.</string>
     <string name="token_about_title">О %1$s</string>
-    <string name="token_actions_title">Действия с %1$s</string>
     <string name="token_activity_bridged_in">Получено через мост</string>
     <string name="token_activity_combined_coins">Монеты объединены</string>
     <string name="token_activity_swapped">Обменено</string>
     <string name="token_add_for_fee_and_change">Добавить %1$s на комиссию и монету сдачи</string>
     <string name="token_add_for_network_fee">Добавить %1$s на комиссию сети</string>
     <string name="token_add_more">Добавить ещё %1$s</string>
-    <string name="token_address_visibility_subtitle">Отметьте, какие адреса с kUSDT показывать в списке.</string>
     <string name="token_address_visibility_title">Видимость адресов %1$s</string>
     <string name="token_amount_accessibility">Сумма (%1$s)</string>
     <string name="token_available">Доступно: %1$s</string>
@@ -1598,23 +1572,20 @@
     <string name="token_combine_explainer">Каждая монета %1$s содержит %2$s. Если объединить их в одну, лишние KAS вернутся на этот адрес обычными KAS за вычетом комиссии сети. Ваш %3$s не изменится.</string>
     <string name="token_combine_limit">За раз объединяется до %1$d монет. Для остальных объедините ещё раз.</string>
     <string name="token_combined">Объединено</string>
-    <string name="token_couldnt_check">Не удалось проверить %1$@: %2$@ Потяните вниз, чтобы повторить.</string>
-    <string name="token_discover_addresses">Найти адреса с kUSDT</string>
-    <string name="token_discover_addresses_subtitle">Находит ваши адреса, на которых есть kUSDT.</string>
+    <string name="token_couldnt_check">Не удалось проверить %1$s: %2$s Потяните вниз, чтобы повторить.</string>
     <string name="token_every_coin_goes_to_recipient">Каждая монета %1$s содержит %2$s. Эти KAS уходят получателю вместе с %3$s, поэтому не теряются.</string>
     <string name="token_every_coin_holds_kas">Каждая монета kUSDT содержит 1.5 KAS. Они уходят вместе с kUSDT, когда вы его отправляете.</string>
     <string name="token_fee">Комиссия %1$s</string>
     <string name="token_fee_from_token_kas">На этом адресе не было KAS, поэтому комиссия сети взята из KAS, который идёт вместе с kUSDT.</string>
     <string name="token_fee_same_address_note">KAS на комиссию берётся с того же адреса, поэтому отправка не связывает его с другими вашими адресами.</string>
-    <string name="token_found_addresses">Найдено адресов с %2$@: %1$d.</string>
+    <string name="token_found_addresses">Найдено адресов с %2$s: %1$d.</string>
     <string name="token_fund_hint">Выберите, с какого вашего адреса взять KAS, смахните вверх — и вы снова здесь.</string>
-    <string name="token_generate_new_address_subtitle">Добавляет в этот список совершенно новый ваш обычный адрес.</string>
     <string name="token_goes_with_it">Отправляется вместе</string>
     <string name="token_held_on">Хранится на</string>
     <string name="token_held_with_it">%1$s хранится вместе</string>
     <string name="token_hidden_count">Скрыто: %1$d. Они всё равно учитываются в сумме.</string>
     <string name="token_hide_address_subtitle">Убирает его из этого списка. Вернуть можно в «Видимости адресов %1$s».</string>
-    <string name="token_hide_all_message">«Управление %1$@» начнётся заново только с адресом чата. Ничего не теряется: верните любой адрес здесь, и его %2$@ по-прежнему учитывается в сумме.</string>
+    <string name="token_hide_all_message">«Управление %1$s» начнётся заново только с адресом чата. Ничего не теряется: верните любой адрес здесь, и его %2$s по-прежнему учитывается в сумме.</string>
     <string name="token_history_from_now_on">Отправки, получения и объединения на этом телефоне будут видны здесь с этого момента.</string>
     <string name="token_history_title">История %1$s</string>
     <string name="token_kas_for_send">KAS для отправки %1$s</string>
@@ -1633,8 +1604,6 @@
     <string name="token_receive_no_usdt_warning">Не отправляйте на этот адрес USDT из Ethereum, BNB Chain или с биржи: они пропадут. Сначала переведите их в Kaspa через мост Trestly.</string>
     <string name="token_receive_only">Сюда можно отправлять только %1$s в сети Kaspa или KAS.</string>
     <string name="token_receive_title">Получить %1$s</string>
-    <string name="token_rename_label_placeholder">Метка</string>
-    <string name="token_rename_message">Дайте этому адресу метку, чтобы его было легче узнать.</string>
     <string name="token_script_address_error">%1$s можно отправить только на обычный адрес Kaspa, а не на квантово-устойчивый или другой скриптовый адрес.</string>
     <string name="token_send_title">Отправить %1$s</string>
     <string name="token_send_to_chatting_subtitle">Переводит kUSDT с этого адреса на ваш адрес для чата.</string>

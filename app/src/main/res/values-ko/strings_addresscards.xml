@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">탭하여 기록 보기</string>
+    <string name="addrcard_quantum_protected">양자 보호됨</string>
+    <string name="addrcard_not_quantum_protected">양자 보호 안 됨</string>
+    <string name="addrcard_new_address">새 주소</string>
+    <string name="addrcard_regular_address">일반 주소</string>
+    <string name="addrcard_regular_address_subtitle">모든 것에 사용 가능: Kaspa와 kUSDT.</string>
+    <string name="addrcard_quantum_protected_address">양자 보호 주소</string>
+    <string name="addrcard_quantum_protected_address_subtitle">보낼 때까지 키를 숨겨 둡니다. Kaspa 전용.</string>
+    <string name="addrcard_no_kusdt_on_quantum">양자 보호 주소로는 kUSDT를 보내거나 받을 수 없습니다.</string>
+</resources>

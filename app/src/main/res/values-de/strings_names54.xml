@@ -5,9 +5,8 @@
     <string name="names54_no_username_found">Kein Benutzername gefunden</string>
     <string name="names54_use_their_username">Ihren Benutzernamen verwenden</string>
     <string name="names54_kaspa_address_or_username">Kaspa-Adresse oder Benutzername</string>
-    <string name="names54_enter_address_or_username_example">Gib eine Kaspa-Adresse (kaspa:...) oder einen Benutzernamen ein (z. B. alice.kachat).</string>
+    <string name="names54_enter_address_or_username_example">Gib eine Kaspa-Adresse (kaspa:...) oder einen Benutzernamen ein (z. B. @alice).</string>
     <string name="names54_members_footer">Wähle Personen aus deinen Kontakten oder füge jemanden per Kaspa-Adresse oder Benutzername hinzu.</string>
-    <string name="names54_finds_addresses_balance_or_username">Findet Adressen mit Guthaben oder Benutzername.</string>
     <string name="names54_no_addresses_balance_or_username_found">Keine Adressen mit Guthaben oder Benutzername gefunden.</string>
     <string name="names54_found_one_address_balance_username">1 Adresse mit Guthaben oder Benutzername gefunden.</string>
     <string name="names54_found_n_addresses_balance_username">%1$d Adressen mit Guthaben oder Benutzername gefunden.</string>

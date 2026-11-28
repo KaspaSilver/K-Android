@@ -82,9 +82,38 @@ class KaPostsIndexerHealth @Inject constructor(
      *  succeeds, [noteAnswered]) end it. */
     private var probePassesInARow = 0
 
-    /** A request that failed: counts against the indexer only if it says so ([meansDown]). */
+    /** When the phone last changed network (iOS `NetworkEpochMonitor.onEpochChange`). */
+    @Volatile private var lastNetworkChangeAt = 0L
+    @Volatile private var lastNetwork: android.net.Network? = null
+
+    init {
+        try {
+            context.getSystemService(ConnectivityManager::class.java)?.registerDefaultNetworkCallback(
+                object : ConnectivityManager.NetworkCallback() {
+                    override fun onAvailable(network: android.net.Network) {
+                        // The first answer is the network the app started on, not a change.
+                        val previous = lastNetwork
+                        lastNetwork = network
+                        if (previous != null && previous != network) lastNetworkChangeAt = System.currentTimeMillis()
+                    }
+
+                    override fun onLost(network: android.net.Network) {
+                        lastNetworkChangeAt = System.currentTimeMillis()
+                    }
+                },
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not watch network changes: ${e.message}")
+        }
+    }
+
+    /** A request that failed: counts against the indexer only if it says so ([meansDown]). A
+     *  timeout or dropped connection this soon after the phone changed network is the handoff,
+     *  not the indexer (iOS 01f71184, audit B1: cellular timeouts turned the block stream on). */
     fun note(error: Throwable) {
-        if (meansDown(error)) noteFailure()
+        if (!meansDown(error)) return
+        if (isHandoffError(error) && inNetworkChangeGrace(System.currentTimeMillis(), lastNetworkChangeAt)) return
+        noteFailure()
     }
 
     @Synchronized
@@ -174,6 +203,22 @@ class KaPostsIndexerHealth @Inject constructor(
         private const val FAILURE_WINDOW_MS = 120_000L
         /** A network handoff fails every request in flight at once: that's one failure, not three. */
         private const val MIN_FAILURE_SPACING_MS = 5_000L
+        /** How long after a network change a timeout or dropped connection is the handoff's. */
+        const val NETWORK_CHANGE_GRACE_MS = 30_000L
+
+        /** A timeout or a dropped connection (iOS `.timedOut`, `.networkConnectionLost`); not a
+         *  refused connection. */
+        fun isHandoffError(error: Throwable): Boolean = when (error) {
+            is java.net.SocketTimeoutException -> true
+            is java.net.ConnectException -> false
+            is java.net.SocketException -> true
+            // OkHttp's call timeout
+            is java.io.InterruptedIOException -> error.message == "timeout"
+            else -> false
+        }
+
+        fun inNetworkChangeGrace(nowMs: Long, lastChangeMs: Long): Boolean =
+            lastChangeMs > 0L && nowMs - lastChangeMs < NETWORK_CHANGE_GRACE_MS
 
         fun meansDown(statusCode: Int): Boolean = statusCode == 429 || statusCode >= 500
 
@@ -575,13 +620,16 @@ class KaPostsChainPosts @Inject constructor(
 /**
  * New posts off the node's block stream while the indexer is down: what the feed can still get
  * live. Only while it's down, since streaming every block costs data the indexer otherwise saves,
- * and only while the app is in front (iOS suspends the app instead). Its own owner on the same
- * connection [BroadcastScanningService] streams from, so the two never stop each other's blocks.
+ * only while the app is in front (iOS suspends the app instead), and only while a Posts feed is
+ * on screen off a metered network (iOS 01f71184, audit B1: about 10 blocks a second on every tab
+ * and on cellular). What it found stays for the outage. Its own owner on the same connection
+ * [BroadcastScanningService] streams from, so the two never stop each other's blocks.
  */
 @Singleton
 class KaPostsLiveChainFeed @Inject constructor(
     private val nodePoolManager: NodePoolManager,
     private val notificationHelper: NotificationHelper,
+    private val meteredNetwork: MeteredNetwork,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + com.kachat.app.util.StartupSafety.logOnlyHandler("KaPostsLiveChainFeed"))
 
@@ -607,7 +655,10 @@ class KaPostsLiveChainFeed @Inject constructor(
      *  indexer, so a stranger's signed "delete" of someone else's post is never matched. */
     val amendments: StateFlow<Map<String, LiveAmendment>> = _amendments.asStateFlow()
 
+    /** The outage: posts and amendments are kept while this is on. */
     private var active = false
+    /** The block stream is on ([shouldStream]). */
+    @Volatile private var streaming = false
     /** Every copy of a signed payload after the first is a replay ([KaPostsChainPosts.VerifiedPost.repeatKey]).
      *  Capped, oldest out first ([seenOrder]): during a long outage it grew by every post streamed
      *  while [posts] stayed at [KEEP]. The cap is far past [KEEP], so a replay is only missed for
@@ -618,6 +669,8 @@ class KaPostsLiveChainFeed @Inject constructor(
 
     init {
         scope.launch { notificationHelper.appForegroundFlow.collect { reevaluate() } }
+        scope.launch { com.kachat.app.ui.screens.KaPostsDock.onScreen.collect { reevaluate() } }
+        scope.launch { meteredNetwork.isMeteredFlow.collect { reevaluate() } }
     }
 
     @Synchronized
@@ -636,7 +689,13 @@ class KaPostsLiveChainFeed @Inject constructor(
 
     @Synchronized
     private fun reevaluate() {
-        if (active && notificationHelper.isAppInForeground) start() else stop()
+        streaming = shouldStream(
+            active = active,
+            foreground = notificationHelper.isAppInForeground,
+            feedOnScreen = com.kachat.app.ui.screens.KaPostsDock.onScreen.value,
+            metered = meteredNetwork.isMeteredFlow.value,
+        )
+        if (streaming) start() else stop()
     }
 
     private fun start() {
@@ -750,7 +809,7 @@ class KaPostsLiveChainFeed @Inject constructor(
 
     @Synchronized
     private fun add(scan: Scan) {
-        if (!active) return
+        if (!active || !streaming) return
         if (scan.amendments.isNotEmpty()) {
             val updated = _amendments.value.toMutableMap()
             for ((key, amendment, repeatKey) in scan.amendments) {
@@ -800,6 +859,11 @@ class KaPostsLiveChainFeed @Inject constructor(
 
         fun amendmentKey(postId: String, authorPubkey: String): String =
             postId + ":" + KaPostsChainPosts.xOnly(authorPubkey)
+
+        /** The block stream runs only during an outage, with the app in front, a Posts feed on
+         *  screen and the network not metered (iOS 01f71184 B1 `updateStreaming`). */
+        fun shouldStream(active: Boolean, foreground: Boolean, feedOnScreen: Boolean, metered: Boolean): Boolean =
+            active && foreground && feedOnScreen && !metered
         private const val RETRY_DELAY_MS = 5_000L
         /** A stop that hangs mustn't hold up the next start, which waits for it. */
         private const val UNSUBSCRIBE_TIMEOUT_MS = 5_000L

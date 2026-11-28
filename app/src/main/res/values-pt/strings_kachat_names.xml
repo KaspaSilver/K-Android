@@ -31,7 +31,7 @@
     <string name="kg_use_body">Defina-o como nome principal e é assim que você aparece em todo o K.</string>
     <string name="kg_use_find">As pessoas podem encontrar você digitando seu nome.</string>
     <string name="kg_use_link">Seu link de perfil mostra seu nome.</string>
-    <string name="kg_use_pay">Elas podem enviar Kaspa para seunome.kachat em vez de um endereço longo.</string>
+    <string name="kg_use_pay">Elas podem enviar Kaspa para @seunome em vez de um endereço longo.</string>
     <string name="kg_use_title">Faça dele o seu nome</string>
     <string name="kl_1d">1 dia</string>
     <string name="kl_3d">3 dias</string>

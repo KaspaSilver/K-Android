@@ -3,7 +3,6 @@
 <resources>
     <string name="ex_kind_payment">Pago</string>
     <string name="ex_kind_handshake">Solicitud de comunicación</string>
-    <string name="ex_kind_kapost">KaPost</string>
     <string name="ex_kind_username">Nombre de usuario</string>
     <string name="ex_kind_swap">Intercambiar</string>
     <string name="ex_kind_other">Transacción</string>

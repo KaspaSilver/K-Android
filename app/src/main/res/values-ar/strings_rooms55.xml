@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">البحث في المحادثات العامة</string>
-    <string name="r55_no_public_chats">لا توجد محادثات عامة</string>
-    <string name="r55_no_public_chats_hint">اضغط + للانضمام إلى غرفة عامة أو إنشاء واحدة.</string>
     <string name="r55_page_cycle_hint">يبدّل بين محادثاتك والمحادثات العامة</string>
-    <string name="r55_more_rooms">غرف أخرى</string>
-    <string name="r55_more_rooms_footer">غرف أُضيفت على المفهرس الذي يقرأ منه K المحادثات العامة.</string>
     <string name="r55_delete_one_public_chat">حذف محادثة عامة واحدة؟</string>
     <string name="r55_delete_n_public_chats">حذف %1$d من المحادثات العامة؟</string>
-    <string name="r55_delete_public_chats_message">يتم إيقاف المحادثات العامة الافتراضية (أعد تشغيلها من تعديل المحادثات العامة الافتراضية). أما الغرف التي أضفتها فتُحذف مع رسائلها من هذا الجهاز.</string>
     <string name="r55_delete_for_everyone">حذف لدى الجميع</string>
     <string name="r55_delete_for_everyone_subtitle">يزيلها من هذه الغرفة لدى كل من يستخدم K.</string>
     <string name="r55_delete_for_everyone_q">حذف لدى الجميع؟</string>

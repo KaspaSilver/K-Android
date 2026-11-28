@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">خرید</string>
+    <string name="buysell_sell">فروش</string>
+    <string name="buysell_history">تاریخچه خرید/فروش</string>
+    <string name="buysell_buy_kaspa">خرید Kaspa</string>
+    <string name="buysell_sell_kaspa">فروش کسپا</string>
+    <string name="buysell_buy_with_crypto">خرید کسپا با رمزارز</string>
+    <string name="buysell_buy_with_crypto_sub">با ارز دیگری مثل kUSDT یا بیت‌کوین پرداخت کنید.</string>
+    <string name="buysell_buy_with_debit_card">خرید Kaspa با کارت بانکی</string>
+    <string name="buysell_debit_card_sub">با کارت پرداخت کنید. به‌صورت kUSDT می‌رسد و سپس با آن کسپا می‌خرید.</string>
+    <string name="buysell_pay_with_question">با چه چیزی می‌خواهید پرداخت کنید؟</string>
+    <string name="buysell_sell_for_question">در ازای کسپای خود چه می‌خواهید؟</string>
+    <string name="buysell_sell_kaspa_for">فروش کسپا در ازای %1$s</string>
+    <string name="buysell_buy_kaspa_with">خرید کسپا با %1$s</string>
+    <string name="buysell_on_networks">%1$s روی %2$d شبکه</string>
+    <string name="buysell_you_pay">پرداختی شما</string>
+    <string name="buysell_where_land">کسپای شما کجا برسد؟</string>
+    <string name="buysell_kusdt_one_address">kUSDT از یک نشانی پرداخت می‌شود و کسپای شما به همان نشانی می‌رسد.</string>
+    <string name="buysell_fresh_note">نشانی تازه‌ای که هرگز استفاده نشده، تا این خرید از نام کاربری و گفتگوهای شما جدا بماند.</string>
+    <string name="buysell_send_payment">ارسال پرداخت</string>
+    <string name="buysell_send_amount_coin">%1$s %2$s بفرستید</string>
+    <string name="buysell_to_buy_kaspa">برای خرید کسپا</string>
+    <string name="buysell_to_sell_for">برای فروش آن در ازای %1$s</string>
+    <string name="buysell_copy_amount">کپی مبلغ</string>
+    <string name="buysell_amount_copied">مبلغ کپی شد</string>
+    <string name="buysell_send_kas_from_k">ارسال KAS از K</string>
+    <string name="buysell_transaction_id">شناسه تراکنش</string>
+    <string name="buysell_copy_id">کپی شناسه</string>
+    <string name="buysell_you_get_about">حدود %1$s %2$s دریافت می‌کنید که به %3$s فرستاده می‌شود.</string>
+    <string name="buysell_payment_received">پرداخت دریافت شد</string>
+    <string name="buysell_waiting_confirm">در انتظار تأیید آن.</string>
+    <string name="buysell_converting">ChangeNOW در حال تبدیل ارزهای شماست.</string>
+    <string name="buysell_sending_your">در حال ارسال %1$s شما</string>
+    <string name="buysell_almost_done">تقریباً تمام است.</string>
+    <string name="buysell_failed_detail">ChangeNOW نتوانست این سفارش را کامل کند. آن را در ChangeNOW بررسی کنید.</string>
+    <string name="buysell_refunded_detail">ChangeNOW ارزها را بازگرداند.</string>
+    <string name="buysell_expired_detail">چیزی به‌موقع نرسید. یک سفارش جدید شروع کنید.</string>
+    <string name="buysell_verifying_detail">ChangeNOW در حال بررسی این سفارش است.</string>
+    <string name="buysell_waiting_payment">در انتظار پرداخت</string>
+    <string name="buysell_waiting_payment_detail">مبلغ بالا را بفرستید. این صفحه خودش به‌روز می‌شود.</string>
+    <string name="buysell_purchase_complete">خرید کامل شد</string>
+    <string name="buysell_sale_complete">فروش کامل شد</string>
+    <string name="buysell_you_paid">%1$s %2$s پرداخت کردید</string>
+    <string name="buysell_you_got_about">حدود %1$s %2$s دریافت کردید</string>
+    <string name="buysell_added_to_portfolio">به سبد دارایی افزوده شد</string>
+    <string name="buysell_order_sent">سفارش ارسال شد</string>
+</resources>

@@ -117,6 +117,7 @@ import com.kachat.app.util.KsptCodec
 import com.kachat.app.viewmodels.ColdStorageViewModel
 import com.kachat.app.viewmodels.WalletViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -151,7 +152,31 @@ fun ColdStorageListScreen(
     val kpubHaptic = com.kachat.app.util.rememberHaptics()
     /** Account whose kpub QR is on screen. */
     var kpubQrAccount by remember { mutableStateOf<ColdStorageManager.ColdAccount?>(null) }
-    var renameInput by remember { mutableStateOf("") }
+    /** The card's trash: the account waiting on "Remove Cold Storage Account" (iOS b49a021d). */
+    var removeTarget by remember { mutableStateOf<ColdStorageManager.ColdAccount?>(null) }
+    /** Each account's balance (its addresses summed), the last known first, then read live. */
+    val balances by viewModel.accountBalances.collectAsState()
+    val balanceScope = rememberCoroutineScope()
+    val listPullState = rememberPullToRefreshState()
+
+    // Each card's balance: the last known at once, then the live read. Only while the list shows
+    // (kept hidden in Kaspa Hub, it reads nothing) (iOS b49a021d `onScreenPresence`).
+    com.kachat.app.ui.screens.OnScreenPresence(appear = { balanceScope.launch { viewModel.loadAccountBalances() } }, disappear = {})
+    // An account added or removed: read again (iOS `.onChange(of: manager.accounts.map(\.id))`).
+    val accountIds = accounts.map { it.id }
+    var seenAccountIds by remember { mutableStateOf<List<String>?>(null) }
+    LaunchedEffect(accountIds) {
+        val before = seenAccountIds
+        seenAccountIds = accountIds
+        if (before != null && before != accountIds) viewModel.loadAccountBalances()
+    }
+    // Pulling down reads them again (iOS `.refreshable`).
+    LaunchedEffect(listPullState.isRefreshing) {
+        if (listPullState.isRefreshing) {
+            viewModel.loadAccountBalances()
+            listPullState.endRefresh()
+        }
+    }
 
     LaunchedEffect(importState.status) {
         if (importState.status == ColdStorageViewModel.ImportStatus.SUCCESS) {
@@ -166,7 +191,7 @@ fun ColdStorageListScreen(
         QrScannerSheet(
             onScanned = { scanned ->
                 pendingKpub = scanned
-                nameInput = "Cold Storage ${accounts.size + 1}"
+                nameInput = tr(R.string.rel_wallet_cold_storage_n, accounts.size + 1)
             },
             onDismiss = { showScanner = false }
         )
@@ -204,7 +229,7 @@ fun ColdStorageListScreen(
                         } else {
                             kpubHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
                             pendingKpub = text
-                            nameInput = "Cold Storage ${accounts.size + 1}"
+                            nameInput = tr(R.string.rel_wallet_cold_storage_n, accounts.size + 1)
                         }
                     },
                     modifier = Modifier.weight(1f).height(56.dp),
@@ -261,129 +286,97 @@ fun ColdStorageListScreen(
                 )
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                // The last account scrolls clear of the dock it runs under.
-                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp + dockInset),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .clipToBounds()
+                    .nestedScroll(listPullState.nestedScrollConnection)
             ) {
-                items(accounts) { account ->
-                    var showMenu by remember { mutableStateOf(false) }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(LocalAppColors.current.surface)
-                            .clickable { onOpenAccount(account.id) }
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Security, null, tint = KaspaTeal, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            // Only the name: a kpub is never shown as text (iOS, owner 2026-11-22).
-                            Text(account.name, color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
-                        }
-                        IconButton(
-                            onClick = { showMenu = true },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(Icons.Default.MoreVert, stringResource(R.string.account_actions), tint = LocalAppColors.current.textSecondary, modifier = Modifier.size(20.dp))
-                        }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    // The last account scrolls clear of the dock it runs under, and of Paste kpub
+                    // and Scan over it.
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 16.dp + dockInset + 72.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Each account on Manage Addresses' card look (iOS b49a021d `accountCard`, owner
+                    // 2026-11-27): its name, balance and worth, then Copy kpub, kpub QR, Rename and
+                    // Alerts on the card, the trash at its top right, and Tap to View Addresses.
+                    items(accounts, key = { it.id }) { account ->
+                        ColdStorageAccountCard(
+                            account = account,
+                            sompi = balances[account.id],
+                            onOpen = { onOpenAccount(account.id) },
+                            onCopyKpub = {
+                                // marked sensitive, cleared after 30 s (iOS 428a797b, audit #4)
+                                com.kachat.app.util.copyPrivateKeyWithAutoWipe(kpubContext, account.kpub, label = "kpub")
+                                kpubHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
+                                IosToasts.show(tr(R.string.cold_kpub_copied))
+                            },
+                            onShowKpubQr = { kpubQrAccount = account },
+                            // Per account: this account's receives alone (iOS ba352a2).
+                            onToggleAlerts = {
+                                val on = !account.notifyOnReceive
+                                viewModel.setNotifyOnReceive(account.id, on)
+                                kpubHaptic(com.kachat.app.util.IosHaptic.SELECTION)
+                                IosToasts.show(tr(if (on) R.string.cold_alerts_on_toast else R.string.cold_alerts_off_toast))
+                            },
+                            // Saved once when the rename ends; an empty name keeps the old one.
+                            onRename = { viewModel.renameAccount(account.id, it) },
+                            onRemove = {
+                                kpubHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                                removeTarget = account
+                            },
+                        )
                     }
-
-                    if (showMenu) {
-                        // Renaming happens IN the sheet rather than by dismissing into a dialog:
-                        // the sheet is already the context for "this account", and bouncing out
-                        // to a dialog to type one word threw that away. Matches iOS's
-                        // ColdStorageAccountActionsSheet.
-                        var isRenaming by remember(account.id) { mutableStateOf(false) }
-                        ActionSheetContainer(
-                            // No kpub under the title: it is never shown as text (iOS
-                            // ColdStorageAccountActionsSheet shows the name alone).
-                            title = if (isRenaming) tr(R.string.kp_rename_account_90ddc) else account.name,
-                            subtitle = null,
-                            onDismiss = { showMenu = false },
-                        ) {
-                            if (isRenaming) {
-                                ActionSheetRenameFields(
-                                    value = renameInput,
-                                    onValueChange = { renameInput = it },
-                                    // Cancel walks back to the options rather than closing, so a
-                                    // mis-tap on Rename costs nothing.
-                                    onCancel = { isRenaming = false },
-                                    onSave = {
-                                        viewModel.renameAccount(account.id, renameInput.trim())
-                                        showMenu = false
-                                    },
-                                )
-                            } else {
-                                ActionSheetRow(
-                                    icon = Icons.Default.ContentCopy,
-                                    title = stringResource(R.string.copy_kpub),
-                                    subtitle = tr(R.string.kp_puts_the_extended_public_key_kc),
-                                ) {
-                                    showMenu = false
-                                    com.kachat.app.util.copyPrivateKeyWithAutoWipe(kpubContext, account.kpub, label = "kpub")
-                                    kpubHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                                    IosToasts.show("kpub copied to clipboard.")
-                                }
-                                ActionSheetRow(
-                                    icon = Icons.Default.QrCode,
-                                    title = tr(R.string.kp_show_kpub_qr_kc),
-                                    subtitle = tr(R.string.kp_scan_it_into_another_device_kc),
-                                ) {
-                                    showMenu = false
-                                    kpubQrAccount = account
-                                }
-                                ActionSheetRow(
-                                    icon = Icons.Default.Edit,
-                                    title = stringResource(R.string.rename),
-                                    subtitle = tr(R.string.kp_changes_the_name_shown_for_this_account_kc),
-                                ) {
-                                    renameInput = account.name
-                                    isRenaming = true
-                                }
-                                // Per account, not all of cold storage at once: this account's
-                                // receives alone (iOS ba352a2).
-                                ActionSheetRow(
-                                    icon = if (account.notifyOnReceive) Icons.Default.NotificationsOff else Icons.Default.Notifications,
-                                    title = if (account.notifyOnReceive) tr(R.string.kp_turn_off_receive_notifications_kc) else tr(R.string.kp_turn_on_receive_notifications_kc),
-                                    subtitle = if (account.notifyOnReceive) {
-                                        tr(R.string.kp_stops_notifying_when_this_account_kc)
-                                    } else {
-                                        tr(R.string.kp_notifies_you_when_this_account_kc)
-                                    },
-                                ) {
-                                    viewModel.setNotifyOnReceive(account.id, !account.notifyOnReceive)
-                                    showMenu = false
-                                }
-                            }
-                        }
-                    }
+                }
+                if (listPullState.verticalOffset > 0f || listPullState.isRefreshing) {
+                    PullToRefreshContainer(
+                        state = listPullState,
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
                 }
             }
         }
     }
 
     kpubQrAccount?.let { account ->
-        // The app's own full-screen QR overlay, the same one an address uses - white to the
-        // edges, tap anywhere to copy, back arrow to leave. A kpub deserves the same treatment as
-        // an address, and it is the harder of the two to scan (114 characters against ~60), so
-        // the extra screen actually matters here.
-        //
-        // The message says what a kpub is: no private key, cannot spend - which is why showing it
-        // is safe at all - but it derives EVERY address in the account, so whoever scans it can
-        // watch that balance and history forever.
-        QrCodeOverlay(
-            value = account.kpub,
-            onDismiss = { kpubQrAccount = null },
-            message = tr(R.string.kp_watch_only_this_cannot_spend_but_95314),
-            // No kpub text under the code (iOS, owner 2026-11-22): only the QR, for scanning.
-            valueMaxLines = 0,
-            copiedToast = "kpub copied to clipboard.",
-            sensitiveCopy = true,
+        // Laid out as every receive screen (iOS b49a021d `ColdStorageKpubQRView`, owner
+        // 2026-11-27): no kpub text, only the QR, for scanning; a tap anywhere copies it.
+        QrPageSheet(onDismiss = { kpubQrAccount = null }, white = false) {
+            AddressReceivePage(dismiss = QrPageDismiss.CLOSE, onDismiss = { kpubQrAccount = null }) {
+                ColdStorageKpubQrView(account = account)
+            }
+        }
+    }
+
+    removeTarget?.let { account ->
+        com.kachat.app.ui.theme.IosAlertDialog(
+            onDismissRequest = { removeTarget = null },
+            containerColor = LocalAppColors.current.surface,
+            title = { Text(stringResource(R.string.remove_cold_storage_account), color = LocalAppColors.current.textPrimary) },
+            text = {
+                Text(
+                    // K's watch list (iOS 148a5331)
+                    tr(R.string.kp_this_only_removes_it_from_kachat_watch_list_kc),
+                    color = LocalAppColors.current.textSecondary
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteAccount(account.id)
+                    removeTarget = null
+                    kpubHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
+                }) {
+                    Text(stringResource(R.string.remove), color = Color.Red, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { removeTarget = null }) {
+                    Text(stringResource(R.string.cancel), color = LocalAppColors.current.textSecondary)
+                }
+            }
         )
     }
 
@@ -473,6 +466,16 @@ fun ColdStorageListScreen(
 
 }
 
+/**
+ * One Cold Storage account, laid out as Manage Addresses (iOS b49a021d `ColdStorageDetailView`,
+ * owner 2026-11-27): the full-width Total Balance card, then each address on [ManagedAddressCard],
+ * sorted as Manage Addresses sorts ([ColdStorageViewModel.sortedForList]). A regular address's top
+ * right hides it at once (no Send to Chatting Address in Cold Storage); a quantum one keeps the ⋮
+ * for Hide, Edit Address Number and Stop Watching. Swipe left to hide; an address holding Kaspa
+ * never hides. Address Visibility is the only button at the top right: the account's own actions
+ * are on its card on the list. The floating + asks Regular or Quantum-Protected Address, and
+ * pulling down runs Discover Addresses, with the count under the Total Balance.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ColdStorageDetailScreen(
@@ -491,16 +494,15 @@ fun ColdStorageDetailScreen(
     val discoveryProgress by viewModel.discoveryProgress.collectAsState()
     val isUserDiscovering by viewModel.isUserDiscovering.collectAsState()
     val clipboardManager = LocalClipboardManager.current
-    val kpubHaptic = com.kachat.app.util.rememberHaptics()
+    val haptic = com.kachat.app.util.rememberHaptics()
     val context = LocalContext.current
-    var showDeleteConfirm by remember { mutableStateOf(false) }
     var sendFromRow by remember { mutableStateOf<ColdStorageViewModel.AddressRow?>(null) }
-    var showRenameDialog by remember { mutableStateOf(false) }
-    var renameInput by remember { mutableStateOf("") }
-    var labelingRow by remember { mutableStateOf<ColdStorageViewModel.AddressRow?>(null) }
-    var labelInput by remember { mutableStateOf("") }
     var qrRow by remember { mutableStateOf<ColdStorageViewModel.AddressRow?>(null) }
-    var showActionsSheet by remember { mutableStateOf(false) }
+    /** The floating +'s sheet: the next regular address, or a quantum one scanned from the unit. */
+    var showNewAddressSheet by remember { mutableStateOf(false) }
+    var isGenerating by remember { mutableStateOf(false) }
+    /** A quantum card's ⋮: Hide, Edit Address Number, Stop Watching. */
+    var addressActionsRow by remember { mutableStateOf<ColdStorageViewModel.AddressRow?>(null) }
     /** Add Quantum-Resistant Address's sheet (iOS 961fc05a `ColdQuantumAddressAddSheet`). */
     var showAddQuantum by remember { mutableStateOf(false) }
     /** The quantum row whose number and chain on the unit are being edited. */
@@ -508,57 +510,98 @@ fun ColdStorageDetailScreen(
     /** A funded quantum row the person asked to stop watching, while the confirmation is up. */
     var stopWatchingRow by remember { mutableStateOf<ColdStorageViewModel.AddressRow?>(null) }
     val quantumSpent by viewModel.quantumSpentAddresses.collectAsState()
-    /** Result line kept on screen after a scan finishes, until the sheet is dismissed. */
-    var discoverySummary by remember { mutableStateOf<String?>(null) }
     val pullRefreshState = rememberPullToRefreshState()
+    // The row whose swipe-to-hide is open: one at a time, closed when the list scrolls.
+    val listState = rememberLazyListState()
+    var openSwipeRow by remember { mutableStateOf<Any?>(null) }
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress) openSwipeRow = null
+    }
 
     // Only while the section shows: kept hidden in Kaspa Hub, a LaunchedEffect derived addresses
     // and rescanned on every Hub tab selection. Showing again reloads, which also covers any
     // activity skipped below while hidden (iOS 518fdc8c `onScreenPresence`, audit 2026-11-24 #23).
     val coldHubHidden = com.kachat.app.ui.screens.LocalHubSectionHidden.current
     val latestColdHubHidden by rememberUpdatedState(coldHubHidden)
-    com.kachat.app.ui.screens.OnScreenPresence(appear = { viewModel.refreshAddresses(accountId) }, disappear = {})
+    // Back within two minutes of the last full load: balances only (iOS 01f71184, smoothness L1).
+    com.kachat.app.ui.screens.OnScreenPresence(appear = { viewModel.screenAppeared(accountId) }, disappear = {})
 
-    // A receipt or spend on one of this account's addresses: reload, so the funds show without a
-    // manual pull (iOS ColdStorageView's `.ownAddressUtxoActivity`); not while hidden in the Hub.
+    // A receipt or spend on one of this account's addresses: its balances again, so the funds show
+    // without a manual pull (iOS ColdStorageView's `.ownAddressUtxoActivity`); not while hidden in
+    // the Hub. Two seconds after the last such change, and balances only: the scan, the used checks
+    // and the name tags run on appear and pull (iOS d88891ea `reloadAfterActivity`, audit
+    // 2026-11-27 L21). A newer change restarts the wait.
     LaunchedEffect(accountId) {
+        var pendingReload: kotlinx.coroutines.Job? = null
         viewModel.ownAddressActivity.collect { changed ->
             if (latestColdHubHidden) return@collect
-            if (!viewModel.isDiscovering.value && viewModel.addresses.value.any { it.address in changed }) {
-                viewModel.refreshAddresses(accountId)
+            if (viewModel.addresses.value.none { it.address in changed }) return@collect
+            pendingReload?.cancel()
+            pendingReload = launch {
+                kotlinx.coroutines.delay(2_000)
+                if (latestColdHubHidden || viewModel.isDiscovering.value) return@launch
+                viewModel.refreshBalances(accountId)
             }
         }
     }
 
+    // Pulling down is Discover Addresses, as on Manage Addresses (iOS b49a021d): it scans for
+    // every address holding a balance or a username, then reloads; the spinner stays until it's
+    // done, and a toast says what it found. A load already going is waited out first.
     LaunchedEffect(pullRefreshState.isRefreshing) {
         if (pullRefreshState.isRefreshing) {
-            viewModel.refreshAddresses(accountId)
-        }
-    }
-
-    LaunchedEffect(isDiscovering) {
-        if (!isDiscovering && pullRefreshState.isRefreshing) {
+            viewModel.isDiscovering.first { !it }
+            val answered = kotlinx.coroutines.CompletableDeferred<Int>()
+            viewModel.refreshAddresses(accountId, userInitiated = true) { count -> answered.complete(count) }
+            val count = kotlinx.coroutines.withTimeoutOrNull(10 * 60_000L) {
+                kotlinx.coroutines.coroutineScope {
+                    // An answer that never comes (the account went away) still ends the pull.
+                    val watcher = launch {
+                        viewModel.isDiscovering.first { !it }
+                        answered.complete(-1)
+                    }
+                    answered.await().also { watcher.cancel() }
+                }
+            }
+            if (count != null && count >= 0) {
+                IosToasts.show(
+                    when (count) {
+                        0 -> tr(R.string.names54_no_addresses_balance_or_username_found)
+                        1 -> tr(R.string.names54_found_one_address_balance_username)
+                        else -> tr(R.string.names54_found_n_addresses_balance_username, count)
+                    }
+                )
+            }
             pullRefreshState.endRefresh()
         }
     }
 
-    // Ordering (matches iOS ColdStorageView / Manage Addresses): addresses with a balance OR an
-    // owned KNS domain first (funded before domain-only, newest index first within each group),
-    // then fresh addresses. Domain knowledge fills in asynchronously after the batched lookups.
     val domainOwningAddresses by viewModel.domainOwningAddresses.collectAsState()
     val visibleAddresses = remember(addresses, domainOwningAddresses) {
-        // The quantum addresses added by scan list after the regular ones, in the order added
-        // (iOS 961fc05a).
-        val (quantumRows, visible) = addresses.filterNot { it.hidden }.partition { it.isQuantum }
-        val rest = visible
-            .sortedWith(compareByDescending<ColdStorageViewModel.AddressRow> { it.balanceSompi > 0 }.thenByDescending { it.index })
-        val active = rest.filter { it.balanceSompi > 0 || it.address in domainOwningAddresses }
-        val fresh = rest.filter { it.balanceSompi == 0L && it.address !in domainOwningAddresses }
-        active + fresh + quantumRows.sortedBy { it.index }
+        ColdStorageViewModel.sortedForList(addresses, domainOwningAddresses)
     }
-    // A hidden address is excluded on purpose (a "put this aside" gesture) — it shouldn't keep
-    // inflating the balance you actually think of as available.
-    val totalBalanceSompi = visibleAddresses.sumOf { it.balanceSompi }
+    // Every address, hidden ones too, as the account's card on the list and Manage Addresses count
+    // it: one rule (iOS d88891ea, audit 2026-11-27 L16). A funded address can't be hidden anyway.
+    // Summed without overflowing on a server's numbers (L4).
+    val totalBalanceSompi = remember(addresses) { ColdStorageViewModel.totalSompi(addresses) }
+
+    /** iOS hideAddress (the eye, the ⋮ or a swipe): the same per-account hidden flag Address
+     *  Visibility edits. An address holding Kaspa stays, with a toast; the setter re-checks the
+     *  live balance and refuses when it can't. */
+    val hideRow: (ColdStorageViewModel.AddressRow) -> Unit = hide@{ row ->
+        if (row.balanceSompi > 0L) {
+            IosToasts.show(tr(R.string.cold_hide_funded_refused))
+            return@hide
+        }
+        val index = viewModel.currentIndex(accountId, row) ?: return@hide
+        viewModel.setColdVisibilityHidden(accountId, index, true) { ok ->
+            if (ok) haptic(com.kachat.app.util.IosHaptic.SUCCESS)
+            IosToasts.show(
+                if (ok) tr(R.string.kp_address_hidden_reenable)
+                else tr(R.string.kp_address_cant_be_hidden)
+            )
+        }
+    }
 
     // A sheet over the list, as iOS presents ColdSendFlowView; a swipe down closes it, except
     // while the signed transaction is going out.
@@ -589,158 +632,128 @@ fun ColdStorageDetailScreen(
                 title = { Text(account?.name ?: tr(R.string.kp_cold_storage_e1246), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp) },
                 navigationIcon = { SheetBarBackButton(onBack, Modifier.padding(start = 12.dp)) },
                 actions = {
-                    // Address Visibility used to be an unlabelled checklist glyph up here. It is
-                    // one of this account's address actions, so it lives with the others in the
-                    // Address Actions sheet, where it has room to say what it does.
+                    // Address Visibility at the top right, as on Manage Addresses. The account's
+                    // own actions (kpub, rename, alerts, remove) are on its card on the Cold
+                    // Storage list (iOS b49a021d, owner 2026-11-27), not in here.
                     SheetBarIconButton(
-                        Icons.Default.Delete,
-                        stringResource(R.string.remove),
-                        onClick = { showDeleteConfirm = true },
+                        Icons.Default.Checklist,
+                        tr(R.string.kp_address_visibility_9c9a7),
+                        onClick = {
+                            haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                            onOpenVisibility(accountId)
+                        },
                         modifier = Modifier.padding(end = 12.dp),
-                        tint = Color.Red,
-                        iconSize = 22.dp,
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LocalAppColors.current.background)
             )
         },
-        floatingActionButtonPosition = FabPosition.Center,
-        floatingActionButton = {
-        }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding).nestedScroll(pullRefreshState.nestedScrollConnection)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .clipToBounds()
+                .nestedScroll(pullRefreshState.nestedScrollConnection)
+        ) {
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
-            // The last address scrolls clear of the dock it runs under. No side padding here: the
-            // Total Balance card runs full width as Manage Addresses shows it, and every other
-            // row brings its own 16 in.
-            contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp + dockInset),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            // The last address scrolls clear of the dock it runs under, and out from under the
+            // floating button. No side padding here: the Total Balance card runs full width as
+            // Manage Addresses shows it, and every card brings its own 16 in.
+            contentPadding = PaddingValues(bottom = 16.dp + dockInset + 72.dp),
         ) {
             item {
-                Column(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(LocalAppColors.current.surface)
-                        .padding(20.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.name), color = LocalAppColors.current.textSecondary, fontSize = 12.sp)
-                            Text(
-                                account?.name ?: tr(R.string.kp_cold_storage_e1246),
-                                color = LocalAppColors.current.textPrimary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                renameInput = account?.name ?: ""
-                                showRenameDialog = true
-                            },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(Icons.Default.Edit, tr(R.string.kp_rename_d3f4c), tint = KaspaTeal, modifier = Modifier.size(18.dp))
-                        }
-                    }
-                    // No kpub here (iOS, owner 2026-11-22): it reveals every address of the
-                    // account, so it is only copied, from Address Actions.
-                }
-            }
-
-            item {
-                // Full width in its own row, as Manage Addresses shows its total (iOS, owner
-                // 2026-11-22), with its worth in your currency on mainnet.
+                // Full width, as Manage Addresses shows its total (owner, 2026-11-22), with its
+                // worth in your currency on mainnet.
                 com.kachat.app.ui.screens.KaspaAddressBalanceCard(
                     label = stringResource(R.string.total_balance),
                     sompi = totalBalanceSompi,
                 )
             }
-
-            item {
-                Text(
-                    stringResource(R.string.addresses),
-                    color = LocalAppColors.current.textPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
+            // While a pull-down scan runs: how far it is, under the Total Balance.
+            val progressNow = discoveryProgress
+            if (isUserDiscovering && progressNow != null) {
+                item { ColdDiscoveryStatus(progressNow) }
             }
 
             if (isDiscovering && addresses.isEmpty()) {
                 item {
-                    Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(top = 20.dp), contentAlignment = Alignment.Center) {
                         com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal)
                     }
                 }
             } else if (visibleAddresses.isEmpty()) {
                 item {
                     Text(
-                        if (addresses.isEmpty()) tr(R.string.kp_no_addresses_discovered_yet_15738) else "All addresses are hidden.",
+                        tr(R.string.kp_no_addresses_discovered_yet_15738),
                         color = LocalAppColors.current.textSecondary,
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                     )
                 }
             } else {
                 items(visibleAddresses, key = { it.index }) { row ->
-                    Box(Modifier.padding(horizontal = 16.dp)) {
-                    ColdAddressRow(
-                        row = row,
-                        showsDomainTag = row.address in domainOwningAddresses,
-                        onAddressClick = { onOpenAddress(row.address) },
-                        onLabelClick = { labelingRow = row; labelInput = row.label ?: "" },
-                        onCopyClick = {
-                            clipboardManager.setText(AnnotatedString(row.address))
-                            com.kachat.app.util.showAddressCopiedToast(context, row.address)
-                        },
-                        onSendClick = { if (row.balanceSompi > 0) sendFromRow = row },
-                        onShowQrClick = { qrRow = row },
-                        // iOS: Hide is offered only for an unfunded address; the toast waits for
-                        // the setter's live check, and a refusal says the address can't be hidden.
-                        quantumSpent = row.address.lowercase() in quantumSpent,
-                        onEditNumberClick = if (row.isQuantum) ({ editNumberRow = row }) else null,
-                        onStopWatchingClick = if (row.isQuantum) ({
-                            if (row.balanceSompi > 0) stopWatchingRow = row
-                            else viewModel.stopWatchingQuantumAddress(accountId, row.address)
-                        }) else null,
-                        onHideClick = if (row.balanceSompi == 0L) {
-                            {
-                                val index = viewModel.currentIndex(accountId, row) ?: row.index
-                                viewModel.setColdVisibilityHidden(accountId, index, true) { ok ->
-                                    IosToasts.show(
-                                        if (ok) tr(R.string.kp_address_hidden_reenable)
-                                        else tr(R.string.kp_address_cant_be_hidden)
-                                    )
-                                }
-                            }
-                        } else null
-                    )
+                    // Swipe left to hide, as on Manage Addresses. An address holding Kaspa
+                    // refuses with a toast (`hideRow`).
+                    SwipeActionsRow(
+                        key = row.index,
+                        openKey = openSwipeRow,
+                        onOpenKeyChange = { openSwipeRow = it },
+                        enabled = true,
+                        leadingActions = emptyList(),
+                        trailingActions = listOf(
+                            SwipeAction(Icons.Filled.VisibilityOff, stringResource(R.string.hide), LocalAppColors.current.warning) {
+                                haptic(com.kachat.app.util.IosHaptic.IMPACT_MEDIUM)
+                                hideRow(row)
+                            },
+                        ),
+                        trailingFullSwipe = true,
+                    ) {
+                        ColdAddressCard(
+                            row = row,
+                            ownsUsername = row.address in domainOwningAddresses,
+                            quantumSpent = row.address.lowercase() in quantumSpent,
+                            onCopy = {
+                                clipboardManager.setText(AnnotatedString(row.address))
+                                com.kachat.app.util.showAddressCopiedToast(context, row.address)
+                            },
+                            onSend = { if (row.balanceSompi > 0) sendFromRow = row },
+                            onReceive = { qrRow = row },
+                            // In place, as Manage Addresses: each keystroke saved; empty goes back
+                            // to the default name.
+                            onRenameChange = { text -> viewModel.setAddressLabel(accountId, row, text) },
+                            // A regular address has only Hide left (owner, 2026-11-27: Send to
+                            // Chatting Address isn't for Cold Storage), so the button hides it at
+                            // once; a quantum one keeps the ⋮ for Edit Address Number and Stop
+                            // Watching.
+                            onMore = { if (row.isQuantum) addressActionsRow = row else hideRow(row) },
+                            onOpen = { onOpenAddress(row.address) },
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        )
                     }
                 }
             }
-
-            item {
-                // Room to scroll the last row out from under the floating button: 72 with the
-                // list's 12 spacing (iOS's 72 safe-area inset, as Manage Addresses has).
-                Spacer(Modifier.height(72.dp - 12.dp))
-            }
         }
-        // The floating glass button behind Address Actions, the same one Manage Addresses has
-        // (iOS, owner 2026-11-22): bottom-trailing, over the list and clear of the dock.
-        AddressActionsFloatingButton(
-            isBusy = isUserDiscovering,
-            onClick = { showActionsSheet = true },
+        // The floating +, as on Manage Addresses: asks which kind of address. Not while a
+        // pull-down Discover is still writing the list.
+        NewAddressFloatingButton(
+            isBusy = isGenerating,
+            enabled = !isGenerating && !isUserDiscovering,
+            contentDescription = stringResource(R.string.addrcard_new_address),
+            onClick = { showNewAddressSheet = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 16.dp + dockInset),
+                .padding(end = 20.dp, bottom = 16.dp + dockInset)
+                .alpha(if (isUserDiscovering) 0.5f else 1f),
         )
-        PullToRefreshContainer(
-            state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
+        if (pullRefreshState.verticalOffset > 0f || pullRefreshState.isRefreshing) {
+            PullToRefreshContainer(
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+        }
         qrRow?.let { row ->
             // The shared receive screen, Kaspa only, in a sheet with Close (iOS 3d126db
             // ColdStorageAddressQRView).
@@ -757,121 +770,81 @@ fun ColdStorageDetailScreen(
         }
     }
 
-    if (showDeleteConfirm) {
-        com.kachat.app.ui.theme.IosAlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            containerColor = LocalAppColors.current.surface,
-            title = { Text(stringResource(R.string.remove_cold_storage_account), color = LocalAppColors.current.textPrimary) },
-            text = {
-                Text(
-                    // KaChat's watch list (iOS 148a5331)
-                    tr(R.string.kp_this_only_removes_it_from_kachat_watch_list_kc),
-                    color = LocalAppColors.current.textSecondary
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteAccount(accountId)
-                    showDeleteConfirm = false
-                    onBack()
-                }) {
-                    Text(stringResource(R.string.remove), color = Color.Red, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(stringResource(R.string.cancel), color = LocalAppColors.current.textSecondary)
+    // Regular (the next unused address of the kpub) or quantum-protected (KasSigner never exports
+    // its quantum kpub, since it would show every key those addresses hide, so each is scanned
+    // from the unit) (iOS b49a021d `newAddressSheet`).
+    if (showNewAddressSheet) {
+        ActionSheetContainer(
+            title = stringResource(R.string.addrcard_new_address),
+            subtitle = null,
+            onDismiss = { showNewAddressSheet = false },
+        ) {
+            ActionSheetRow(
+                icon = Icons.Default.AddCircleOutline,
+                title = stringResource(R.string.addrcard_regular_address),
+                subtitle = tr(R.string.kp_reveals_next_unused_address_account_kc),
+            ) {
+                showNewAddressSheet = false
+                if (!isGenerating) {
+                    isGenerating = true
+                    viewModel.generateMoreAddresses(accountId) { index ->
+                        isGenerating = false
+                        if (index != null) IosToasts.show(tr(R.string.kp_address_number_ready, index)) else IosToasts.error(tr(R.string.shell54_new_address_failed))
+                    }
                 }
             }
-        )
-    }
-
-    if (showRenameDialog) {
-        ActionSheetContainer(
-            title = stringResource(R.string.rename_cold_storage_account),
-            subtitle = account?.name,
-            onDismiss = { showRenameDialog = false },
-        ) {
-            ActionSheetRenameFields(
-                value = renameInput,
-                onValueChange = { renameInput = it },
-                onCancel = { showRenameDialog = false },
-                onSave = {
-                    viewModel.renameAccount(accountId, renameInput.trim())
-                    showRenameDialog = false
-                },
-            )
-        }
-    }
-
-    labelingRow?.let { row ->
-        ActionSheetContainer(
-            title = stringResource(R.string.name_this_address),
-            subtitle = com.kachat.app.services.AddressActivityNotifier.shortAddress(row.address),
-            onDismiss = { labelingRow = null },
-        ) {
-            ActionSheetRenameFields(
-                value = labelInput,
-                onValueChange = { labelInput = it },
-                onCancel = { labelingRow = null },
-                onSave = {
-                    viewModel.setAddressLabel(accountId, row, labelInput)
-                    labelingRow = null
-                },
-            )
-        }
-    }
-
-    if (showActionsSheet) {
-        ColdStorageAddressActionsSheet(
-            isDiscovering = isUserDiscovering,
-            progress = discoveryProgress,
-            summary = discoverySummary,
-            onGenerate = {
-                showActionsSheet = false
-                viewModel.generateMoreAddresses(accountId) { index ->
-                    if (index != null) IosToasts.show(tr(R.string.kp_address_number_ready, index)) else IosToasts.error(tr(R.string.shell54_new_address_failed))
-                }
-            },
-            onDiscover = {
-                discoverySummary = null
-                viewModel.refreshAddresses(accountId, userInitiated = true) { count ->
-                    val summary = if (count > 0) {
-                        if (count == 1) tr(R.string.names54_found_one_address_balance_username) else tr(R.string.names54_found_n_addresses_balance_username, count)
-                    } else {
-                        tr(R.string.names54_no_addresses_balance_or_username_found)
-                    }
-                    discoverySummary = summary
-                    // Closed the sheet and carried on? Then the summary above has nowhere to
-                    // render, so say it here instead of finishing silently.
-                    if (!showActionsSheet) IosToasts.show(summary)
-                }
-            },
-            onVisibility = {
-                showActionsSheet = false
-                discoverySummary = null
-                onOpenVisibility(accountId)
-            },
-            onCopyKpub = {
-                account?.kpub?.let {
-                    // marked sensitive, cleared after 30 s (iOS 428a797b, audit #4)
-                    com.kachat.app.util.copyPrivateKeyWithAutoWipe(context, it, label = "kpub")
-                    kpubHaptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                    IosToasts.show("kpub copied to clipboard.")
-                }
-                showActionsSheet = false
-                discoverySummary = null
-            },
-            onDismiss = {
-                showActionsSheet = false
-                discoverySummary = null
-            },
-            onAddQuantum = {
-                showActionsSheet = false
-                discoverySummary = null
+            ActionSheetRow(
+                icon = Icons.Outlined.Shield,
+                title = stringResource(R.string.addrcard_quantum_protected_address),
+                subtitle = stringResource(R.string.coldq_add_action_subtitle),
+            ) {
+                showNewAddressSheet = false
                 showAddQuantum = true
-            },
-        )
+            }
+        }
+    }
+
+    // The ⋮ on a quantum card: what isn't on the card itself.
+    addressActionsRow?.let { row ->
+        ActionSheetContainer(
+            title = row.displayLabel,
+            subtitle = com.kachat.app.services.AddressActivityNotifier.shortAddress(row.address),
+            onDismiss = { addressActionsRow = null },
+        ) {
+            // Same effect as unchecking it in Address Visibility. Never an address holding Kaspa.
+            ActionSheetRow(
+                icon = Icons.Default.VisibilityOff,
+                title = tr(R.string.kp_hide_address),
+                subtitle = if (row.balanceSompi > 0L) tr(R.string.cold_hide_funded_refused) else tr(R.string.kp_address_row_hide_subtitle),
+                tint = LocalAppColors.current.warning,
+                enabled = row.balanceSompi == 0L,
+            ) {
+                addressActionsRow = null
+                hideRow(row)
+            }
+            // A wrong number (or a change address given as a receive one) makes the unit refuse
+            // the request: the person can put it right, or clear it to let the unit search (Q4).
+            ActionSheetRow(
+                icon = Icons.Default.Numbers,
+                title = stringResource(R.string.coldq_edit_number),
+                subtitle = stringResource(R.string.coldq_edit_number_subtitle),
+            ) {
+                addressActionsRow = null
+                editNumberRow = row
+            }
+            // A quantum address added by mistake (or no longer wanted) goes from the account; its
+            // coins stay on chain and it can be added again. With coins on it, only after saying so.
+            ActionSheetRow(
+                icon = Icons.Default.RemoveCircleOutline,
+                title = stringResource(R.string.coldq_stop_watching),
+                subtitle = stringResource(R.string.coldq_stop_watching_subtitle),
+                tint = Color.Red,
+            ) {
+                addressActionsRow = null
+                if (row.balanceSompi > 0) stopWatchingRow = row
+                else viewModel.stopWatchingQuantumAddress(accountId, row.address)
+            }
+        }
     }
 
     if (showAddQuantum) {
@@ -1214,188 +1187,80 @@ fun ColdStorageAddressVisibilityScreen(
 }
 
 /**
- * One address row on [ColdStorageDetailScreen]. Swipe-to-hide was retired when the Address
- * Visibility checklist ([ColdStorageAddressVisibilityScreen]) became the one place to manage
- * visibility — the same redesign Manage Addresses' spending rows got. A quick "Hide Address"
- * lives in the row's overflow menu (same as spending rows), writing the same hidden flag the
- * checklist edits.
+ * One address of a Cold Storage account on Manage Addresses' card (iOS b49a021d `addressRow`, owner
+ * 2026-11-27): name, quantum tag, balance, worth, Used / Unused, then Copy, Send, Receive and Rename
+ * (in place, [onRenameChange] once when the rename ends), and Tap to View History ([onOpen]). The top right
+ * is [onMore]: an eye with a slash that hides a regular address at once, a ⋮ on a quantum one.
+ * Used is a history, a balance or a username; "Unused" only when this session's live pass
+ * confirmed the row, else "Checking" (a failed check must not pass for a fresh address).
  */
 @Composable
-private fun ColdAddressRow(
+private fun ColdAddressCard(
     row: ColdStorageViewModel.AddressRow,
-    onAddressClick: () -> Unit,
-    onLabelClick: () -> Unit,
-    onCopyClick: () -> Unit,
-    onSendClick: () -> Unit,
-    onShowQrClick: () -> Unit,
-    /** Row-menu "Hide Address" (same as spending rows) — same flag the Address Visibility
-     *  checklist edits. Null hides the menu entry. */
-    onHideClick: (() -> Unit)? = null,
-    /** "Contains domain" tag — this address owns at least one KNS domain (batched lookup). */
-    showsDomainTag: Boolean = false,
-    /** A quantum row whose key a spend has put on chain: the slashed shield (iOS 961fc05a). */
-    quantumSpent: Boolean = false,
-    /** Edit Address Number (quantum rows only). */
-    onEditNumberClick: (() -> Unit)? = null,
-    /** Stop Watching (quantum rows only). */
-    onStopWatchingClick: (() -> Unit)? = null,
+    ownsUsername: Boolean,
+    quantumSpent: Boolean,
+    onCopy: () -> Unit,
+    onSend: () -> Unit,
+    onReceive: () -> Unit,
+    onRenameChange: (String) -> Unit,
+    onMore: () -> Unit,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    var showMenu by remember { mutableStateOf(false) }
-
-    Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(LocalAppColors.current.surface)
-                .clickable(onClick = onAddressClick)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text(
-                        text = row.displayLabel,
-                        color = KaspaTeal,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (row.isQuantum) ColdQuantumShield(spent = quantumSpent, funded = row.balanceSompi > 0)
-                }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "${row.address.take(14)}...${row.address.takeLast(6)}",
-                    color = LocalAppColors.current.textPrimary,
-                    fontSize = 14.sp,
-                    maxLines = 1
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "${KaspaUnit.groupedExact(row.balanceSompi)} ${KaspaUnit.symbol}",
-                    color = LocalAppColors.current.textPrimary,
-                    fontSize = 14.sp
-                )
-                Spacer(Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    // Same three-state rule as the spending list: "Used" is monotonic, "Unused"
-                    // only when this session's live pass confirmed the row, and a neutral
-                    // "Unverified" for snapshot-painted or failed-check rows — a failed check
-                    // must not masquerade as a fresh address.
-                    val (usedTagText, usedTagColor) = when {
-                        row.hasHistory -> tr(R.string.kp_used_02c0e) to LocalAppColors.current.warning
-                        row.liveChecked -> tr(R.string.kp_unused_41369) to LocalAppColors.current.success
-                        else -> "Unverified" to LocalAppColors.current.textSecondary
-                    }
-                    Text(
-                        text = usedTagText,
-                        color = usedTagColor,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    if (showsDomainTag) {
-                        com.kachat.app.ui.screens.ContainsDomainTag()
-                    }
-                }
-            }
-            IconButton(
-                onClick = { showMenu = true },
-                modifier = Modifier.size(44.dp)
-            ) {
-                Icon(Icons.Default.MoreVert, stringResource(R.string.actions), tint = LocalAppColors.current.textSecondary, modifier = Modifier.size(28.dp))
-            }
-        }
-
-    if (showMenu) {
-        ActionSheetContainer(
-            title = row.displayLabel,
-            subtitle = com.kachat.app.services.AddressActivityNotifier.shortAddress(row.address),
-            onDismiss = { showMenu = false },
-        ) {
-            ActionSheetRow(
-                icon = Icons.Default.Edit,
-                title = stringResource(R.string.rename_address),
-                subtitle = tr(R.string.kp_address_row_rename_subtitle),
-            ) {
-                showMenu = false
-                onLabelClick()
-            }
-            ActionSheetRow(
-                icon = Icons.Default.ContentCopy,
-                title = stringResource(R.string.copy_address),
-                subtitle = tr(R.string.kp_address_row_copy_subtitle),
-            ) {
-                showMenu = false
-                onCopyClick()
-            }
-            ActionSheetRow(
-                icon = Icons.Default.QrCode,
-                title = stringResource(R.string.show_qr_code),
-                subtitle = tr(R.string.kp_address_row_qr_subtitle),
-            ) {
-                showMenu = false
-                onShowQrClick()
-            }
-            // Hide straight from the row (same as spending rows) — no primary-address rule for a
-            // watch-only kpub account; the caller passes null for a funded address (iOS).
-            if (onHideClick != null) {
-                ActionSheetRow(
-                    icon = Icons.Default.VisibilityOff,
-                    title = tr(R.string.kp_hide_address),
-                    subtitle = tr(R.string.kp_address_row_hide_subtitle),
-                    tint = LocalAppColors.current.warning,
-                ) {
-                    showMenu = false
-                    onHideClick()
-                }
-            }
-            // A wrong number (or a change address given as a receive one) makes the unit refuse
-            // the request: the person can put it right, or clear it to let the unit search (Q4).
-            if (onEditNumberClick != null) {
-                ActionSheetRow(
-                    icon = Icons.Default.Numbers,
-                    title = stringResource(R.string.coldq_edit_number),
-                    subtitle = stringResource(R.string.coldq_edit_number_subtitle),
-                ) {
-                    showMenu = false
-                    onEditNumberClick()
-                }
-            }
-            // A quantum address added by mistake (or no longer wanted) goes from the account; its
-            // coins stay on chain and it can be added again. With coins on it, only after saying so.
-            if (onStopWatchingClick != null) {
-                ActionSheetRow(
-                    icon = Icons.Default.RemoveCircleOutline,
-                    title = stringResource(R.string.coldq_stop_watching),
-                    subtitle = stringResource(R.string.coldq_stop_watching_subtitle),
-                    tint = Color.Red,
-                ) {
-                    showMenu = false
-                    onStopWatchingClick()
-                }
-            }
-        }
-    }
+    val used = row.hasHistory || row.balanceSompi > 0L || ownsUsername
+    ManagedAddressCard(
+        name = row.displayLabel,
+        amount = managedKasAmount(row.balanceSompi),
+        canSend = row.balanceSompi > 0L,
+        used = when {
+            used -> ManagedAddressUsed.USED
+            row.liveChecked -> ManagedAddressUsed.UNUSED
+            else -> ManagedAddressUsed.CHECKING
+        },
+        ownsUsername = ownsUsername,
+        // As Manage Addresses tells it: a quantum address is protected until a spend puts its key
+        // on chain (orange once it holds Kaspa again); a regular one never is.
+        quantum = QuantumProtection.of(row.isQuantum, quantumSpent, row.balanceSompi),
+        detail = {
+            kaspaFiatText(row.balanceSompi)?.let { Text(it, color = LocalAppColors.current.textSecondary, fontSize = 15.sp) }
+        },
+        onCopy = onCopy,
+        onSend = onSend,
+        onReceive = onReceive,
+        rename = InlineRename(current = row.label ?: "", placeholder = row.defaultLabel, onChange = onRenameChange),
+        onMore = onMore,
+        moreIsHide = !row.isQuantum,
+        onOpen = onOpen,
+        modifier = modifier,
+    )
 }
 
-/**
- * The quantum state of a Cold Storage row, as Manage Addresses tells it (iOS 961fc05a
- * `quantumShield`): a shield while the key has never been on chain, slashed once the address has
- * spent (orange while it holds Kaspa again).
- */
+/** While a pull-down scan runs: how far it is, under the Total Balance (iOS b49a021d
+ *  `discoveryStatus`, as Manage Addresses'). */
 @Composable
-private fun ColdQuantumShield(spent: Boolean, funded: Boolean) {
-    if (spent) {
-        Icon(
-            Icons.Filled.RemoveModerator,
-            contentDescription = stringResource(R.string.key_revealed_by_a_spend),
-            tint = if (funded) LocalAppColors.current.warning else LocalAppColors.current.textSecondary,
-            modifier = Modifier.size(11.dp),
+private fun ColdDiscoveryStatus(progress: ColdStorageAddressDiscovery.DiscoveryProgress) {
+    val colors = LocalAppColors.current
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(16.dp))
+        Text(
+            stringResource(R.string.checking_address_n, progress.checkingIndex),
+            color = colors.textPrimary,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
         )
-    } else {
-        Icon(
-            Icons.Filled.Shield,
-            contentDescription = stringResource(R.string.quantum_safe),
-            tint = LocalAppColors.current.success,
-            modifier = Modifier.size(11.dp),
+        Spacer(Modifier.weight(1f))
+        Text(
+            if (progress.foundCount == 0) stringResource(R.string.names54_no_addresses_balance_or_username_yet)
+            else stringResource(R.string.n_found_so_far, progress.foundCount),
+            color = colors.textSecondary,
+            fontSize = 12.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -2697,8 +2562,6 @@ fun ColdStorageTxHistoryScreen(
     }
 
     var selectedTab by remember { mutableStateOf(0) }
-    var showQr by remember { mutableStateOf(false) }
-    var showSendFlow by remember { mutableStateOf(false) }
     var showCompoundFlow by remember { mutableStateOf(false) }
     // The "Address Actions" sheet, and the public-key screen it can open (iOS 2da5f4b).
     var showAddressActions by remember { mutableStateOf(false) }
@@ -2731,29 +2594,9 @@ fun ColdStorageTxHistoryScreen(
         return
     }
 
-    // Send and Compound are sheets over this screen, as iOS presents ColdSendFlowView (which a
-    // swipe down also closes, except while the signed transaction is going out).
-    if (showSendFlow) {
-        var isSending by remember { mutableStateOf(false) }
-        IosFullSheet(
-            onDismissed = {
-                showSendFlow = false
-                viewModel.loadTxHistory(address)
-                viewModel.loadUtxos(address)
-            },
-            swipeToDismiss = !isSending,
-        ) { close ->
-            ColdSendFlow(
-                fromAddress = address,
-                availableBalanceSompi = addressBalanceSompi,
-                viewModel = viewModel,
-                onDone = close,
-                presentedAsSheet = true,
-                onSendingChange = { isSending = it },
-            )
-        }
-    }
-
+    // Compound is a sheet over this screen, as iOS presents ColdSendFlowView (which a swipe down
+    // also closes, except while the signed transaction is going out). Send and Receive are on the
+    // account's card for this address (iOS b49a021d, owner 2026-11-27), as on Manage Addresses.
     if (showCompoundFlow) {
         var isSending by remember { mutableStateOf(false) }
         IosFullSheet(
@@ -2779,8 +2622,7 @@ fun ColdStorageTxHistoryScreen(
     val dockInset = LocalDockInset.current
     Scaffold(
         containerColor = LocalAppColors.current.background,
-        // Runs on under Receive / Send and the dock, as iOS's list runs on under its
-        // safeAreaInset bar and tab bar.
+        // Runs on under the dock, as iOS's list runs on under its tab bar.
         contentWindowInsets = WindowInsets(0),
         topBar = {
             CenterAlignedTopAppBar(
@@ -2804,52 +2646,19 @@ fun ColdStorageTxHistoryScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = LocalAppColors.current.background)
             )
         },
-        bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    // Above the dock the page runs under.
-                    .padding(bottom = dockInset),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Button(
-                    onClick = { showQr = true },
-                    modifier = Modifier.weight(1f).height(52.dp),
-                    shape = CircleShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal, contentColor = Color.Black)
-                ) {
-                    Icon(Icons.Default.QrCode, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.receive), fontWeight = FontWeight.SemiBold)
-                }
-                Button(
-                    onClick = { showSendFlow = true },
-                    // The live UTXO sum, not the account row's cached balance. The row is null
-                    // whenever the account's address list is not loaded in this ViewModel, which
-                    // left Send greyed out on an address plainly holding coins - the same cause
-                    // as the 0.00000000 KAS the balance used to print above a UTXOs (1) tab.
-                    enabled = addressBalanceSompi > 0L,
-                    modifier = Modifier.weight(1f).height(52.dp),
-                    shape = CircleShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal, contentColor = Color.Black)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.Send, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.send), fontWeight = FontWeight.Bold)
-                }
-            }
-        }
     ) { padding ->
-        // What Receive / Send and the dock cover: the lists scroll clear of it.
-        val barInset = padding.calculateBottomPadding()
+        // What the dock covers: the lists scroll clear of it (no Send / Receive bar since iOS
+        // b49a021d).
+        val barInset = dockInset
         Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
             // The same balance card as a Manage Addresses address's page (iOS, owner 2026-11-22):
             // the address's name, its balance large, and its worth in your currency. Summed from
             // the UTXOs this screen loads for itself (the account row's balance when it has none):
             // reading only addressRow.balanceSompi showed 0.00000000 KAS above a UTXOs (1) tab
             // holding real coins whenever the account's list wasn't loaded in this ViewModel.
-            com.kachat.app.ui.screens.KaspaAddressBalanceCard(label = displayName, sompi = addressBalanceSompi)
+            // The full address on the card (iOS b49a021d, owner 2026-11-27, as Manage Addresses'
+            // pages): the account's cards no longer show it.
+            com.kachat.app.ui.screens.KaspaAddressBalanceCard(label = displayName, sompi = addressBalanceSompi, address = address)
             // The app's page switch (`PageCycleBar`, iOS 518fdc8c), not a segmented control;
             // plain names - History, UTXOs, Domains. Each tap fades to the next page.
             com.kachat.app.ui.components.PageCycleBar(
@@ -3011,20 +2820,6 @@ fun ColdStorageTxHistoryScreen(
                     utxoLabels = viewModel.getUtxoLabels(address)
                     labelingUtxoKey = null
                 },
-            )
-        }
-    }
-
-    if (showQr) {
-        // The shared receive screen, Kaspa only, in a sheet with Close (iOS 3d126db
-        // ColdStorageAddressQRView).
-        QrPageSheet(onDismiss = { showQr = false }, white = false) {
-            ColdStorageReceivePage(
-                address = address,
-                label = displayName,
-                balanceSompi = addressBalanceSompi,
-                dismiss = QrPageDismiss.CLOSE,
-                onDismiss = { showQr = false },
             )
         }
     }
@@ -3208,140 +3003,6 @@ private fun ColdTxHistoryRow(tx: ColdStorageAddressDiscovery.AddressTransaction,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.bodySmall
         )
-    }
-}
-
-
-/**
- * The half sheet behind "Address Actions" on a watch-only account. Mirrors iOS's
- * `addressActionsSheet`.
- *
- * Discovery reports its position as it walks, and that lands HERE rather than dismissing: a scan
- * is one network call per address until the gap limit is reached, so it runs for a while, and a
- * closed sheet with a toast at the end said nothing about whether anything was happening.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ColdStorageAddressActionsSheet(
-    isDiscovering: Boolean,
-    progress: ColdStorageAddressDiscovery.DiscoveryProgress?,
-    summary: String?,
-    onGenerate: () -> Unit,
-    onDiscover: () -> Unit,
-    onVisibility: () -> Unit,
-    onCopyKpub: () -> Unit,
-    onDismiss: () -> Unit,
-    /** Add Quantum-Resistant Address (iOS 961fc05a): KasSigner never exports its quantum (22')
-     *  kpub, so each is scanned from the unit, one at a time. */
-    onAddQuantum: () -> Unit = {},
-) {
-    val colors = LocalAppColors.current
-    com.kachat.app.ui.theme.IosSheetColors {
-        val colors = LocalAppColors.current
-        ModalBottomSheet(
-            scrimColor = com.kachat.app.ui.theme.IosSheetScrim,
-            shape = com.kachat.app.ui.theme.IosSheetShape,
-            tonalElevation = com.kachat.app.ui.theme.IosSheetTonalElevation,
-            windowInsets = androidx.compose.foundation.layout.WindowInsets.statusBars,
-            // Dismissing mid-scan would abandon the only progress readout, and the work keeps running
-            // either way - so the sheet holds until it is done.
-            // Freely dismissable mid-scan now, by the swipe as well as by the button above: the scan
-            // belongs to the ViewModel rather than to the sheet, so closing it abandons nothing - the
-            // Address Actions button keeps its spinner and the result still arrives. Holding the
-            // sheet open was only ever protecting a progress readout.
-            onDismissRequest = onDismiss,
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
-            containerColor = colors.background,
-        ) {
-            // The sheet runs down behind the navigation bar, as iOS's does behind the home indicator;
-            // its content stays above it.
-            Column(Modifier.navigationBarsPadding()) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        stringResource(R.string.address_actions),
-                        color = colors.textPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
-                    )
-
-                    if (isDiscovering) {
-                        Spacer(Modifier.height(8.dp))
-                        com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal, strokeWidth = 3.dp, modifier = Modifier.size(32.dp))
-                        Text(
-                            tr(R.string.kp_checking_address_lld_5b84c, progress?.checkingIndex ?: 0),
-                            color = colors.textPrimary,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                        )
-                        Text(
-                            if ((progress?.foundCount ?: 0) == 0) tr(R.string.kp_no_used_addresses_yet)
-                            else tr(R.string.kp_lld_found_so_far_c6c1d, progress?.foundCount),
-                            color = colors.textSecondary,
-                            fontSize = 12.sp,
-                        )
-                        Text(
-                            tr(R.string.kp_checks_the_first_thousand_addresses_whatever_90acf),
-                            color = colors.textSecondary,
-                            fontSize = 11.sp,
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        // The scan runs in the ViewModel's own scope, not the sheet's, so closing the
-                        // sheet does not stop it - it keeps running and reports what it found. Holding
-                        // the sheet open for the length of a thousand-address sweep was the only reason
-                        // to sit and watch it.
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(28.dp),
-                        ) {
-                            Text(tr(R.string.kp_close_and_keep_scanning_b66cc), color = KaspaTeal, fontWeight = FontWeight.SemiBold)
-                        }
-                        Spacer(Modifier.height(8.dp))
-                    } else {
-                        ActionSheetRow(
-                            icon = Icons.Default.AddCircleOutline,
-                            title = stringResource(R.string.generate_more_addresses),
-                            subtitle = tr(R.string.kp_reveals_next_unused_address_account_kc),
-                            onClick = onGenerate,
-                        )
-                        ActionSheetRow(
-                            icon = Icons.Outlined.Shield,
-                            title = stringResource(R.string.coldq_add_action),
-                            subtitle = stringResource(R.string.coldq_add_action_subtitle),
-                            onClick = onAddQuantum,
-                        )
-                        ActionSheetRow(
-                            icon = Icons.Default.Search,
-                            title = stringResource(R.string.discover_addresses),
-                            subtitle = stringResource(R.string.names54_finds_addresses_balance_or_username),
-                            onClick = onDiscover,
-                        )
-                        ActionSheetRow(
-                            icon = Icons.Default.Checklist,
-                            title = tr(R.string.kp_address_visibility_9c9a7),
-                            subtitle = tr(R.string.kp_address_visibility_subtitle),
-                            onClick = onVisibility,
-                        )
-                        // The kpub is never on screen (iOS, owner 2026-11-22): it reveals every
-                        // address of the account, so it is only copied, from here.
-                        ActionSheetRow(
-                            icon = Icons.Default.ContentCopy,
-                            title = stringResource(R.string.copy_kpub),
-                            subtitle = stringResource(R.string.cold_copy_kpub_reveals_all_addresses),
-                            onClick = onCopyKpub,
-                        )
-                        if (summary != null) {
-                            Text(summary, color = colors.textSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 

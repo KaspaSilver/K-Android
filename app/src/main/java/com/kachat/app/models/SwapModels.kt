@@ -122,7 +122,14 @@ data class SwapTransaction(
     val payinExtraId: String? = null,
     /** The tag (destination tag / memo) the payout goes out with, when one was given. */
     val payoutExtraId: String? = null,
+    /** Who ran it: null for ChangeNOW (every swap saved before 2026-11-27), [TRESTLY] for a kUSDT
+     *  swap through Trestly's pool on Kaspa (iOS b49a021d, owner 2026-11-27: kUSDT swaps go in
+     *  Buy/Sell History too). A Trestly swap's [id] is its Kaspa transaction id, both addresses are
+     *  the one it traded from, and ChangeNOW is never asked about it. */
+    val provider: String? = null,
 ) {
+    val isTrestly: Boolean get() = provider == TRESTLY
+
     fun toJson(): JsonObject = JsonObject().apply {
         addProperty("id", id)
         addProperty("fromTicker", fromTicker)
@@ -139,9 +146,16 @@ data class SwapTransaction(
         addProperty("addedToPortfolio", addedToPortfolio)
         payinExtraId?.let { addProperty("payinExtraId", it) }
         payoutExtraId?.let { addProperty("payoutExtraId", it) }
+        provider?.let { addProperty("provider", it) }
     }
 
     companion object {
+        const val TRESTLY = "trestly"
+
+        /** A ticker as people read it: "kUSDT", else upper case ("KAS", "USDC"). */
+        fun displayTicker(ticker: String): String =
+            if (ticker.lowercase() == "kusdt") "kUSDT" else ticker.uppercase()
+
         private fun JsonObject.str(key: String): String? =
             get(key)?.takeIf { it.isJsonPrimitive }?.asString
 
@@ -164,6 +178,7 @@ data class SwapTransaction(
                     addedToPortfolio = o.get("addedToPortfolio")?.takeIf { it.isJsonPrimitive }?.asBoolean ?: false,
                     payinExtraId = o.str("payinExtraId")?.takeIf { it.isNotEmpty() },
                     payoutExtraId = o.str("payoutExtraId")?.takeIf { it.isNotEmpty() },
+                    provider = o.str("provider")?.takeIf { it.isNotEmpty() },
                 )
             } catch (e: Exception) {
                 null

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">ضيف أوضة</string>
+    <string name="roomsoptin_indexer_rooms_footer">أوض الفهرس بيحفظها: سجلها محفوظ وممكن تنبّهك حتى وK مقفول.</string>
+    <string name="roomsoptin_other_languages">لغات تانية</string>
+    <string name="roomsoptin_create_title">الأوضة اللي بتعملها بتشتغل إزاي</string>
+    <string name="roomsoptin_create_point_name">أي حد يكتب نفس الاسم بيدخل نفس الأوضة. ملهاش صاحب ولا دعوة.</string>
+    <string name="roomsoptin_create_point_history">مفيش فهرس بيحفظ سجلها. K بيقراه من شبكة كاسبا وإنت فاتح الأوضة، وبيحتفظ بلحد 3 أيام على موبايلك.</string>
+    <string name="roomsoptin_create_point_bell">مفيش إشعارات وK مقفول. لو الجرس شغّال، K بينبّهك بس وهو مفتوح.</string>
+    <string name="roomsoptin_create_point_public">كل اللي بيتقال فيها عام: أي حد يقدر يقراه على شبكة كاسبا.</string>
+    <string name="roomsoptin_create_room">اعمل أوضة</string>
+    <string name="roomsoptin_name_your_room">سمّي أوضتك</string>
+    <string name="roomsoptin_empty_title">مفيش شاتات عامة لسه</string>
+    <string name="roomsoptin_empty_body">ضيف أوض الفهرس بيحفظها، زي #kaspa، أو اعمل أوضتك. مفيش حاجة بتتضاف غير لما تختارها.</string>
+    <string name="roomsoptin_removed_toast">#%1$s اتشالت. ضيفها تاني في أي وقت من ضيف أوضة.</string>
+    <string name="roomsoptin_bulk_delete_message">الأوض اللي الفهرس بيحفظها ممكن تضيفها تاني من ضيف أوضة. الأوض اللي عملتها بتتمسح هي ورسايلها من الجهاز ده.</string>
+    <string name="roomsoptin_not_in_list_add">الأوضة دي مش في شاتاتك العامة. تضيفها؟</string>
+    <string name="roomsoptin_room_info_curated">أوضة الفهرس بيحفظها. إنت اللي ضفتها، وأي حد على K يقدر ينشر فيها.</string>
+</resources>

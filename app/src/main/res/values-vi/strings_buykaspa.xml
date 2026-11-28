@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">Mua Kaspa</string>
+    <string name="buykaspa_swap_to_kaspa">Hoán đổi sang Kaspa</string>
+    <string name="buykaspa_waiting_payment">Đang chờ bạn thanh toán</string>
+    <string name="buykaspa_paid">Đã thanh toán. USDC của bạn đang được chuyển.</string>
+    <string name="buykaspa_bridging">Đang chuyển sang Kaspa dưới dạng kUSDT, thường khoảng 20 phút</string>
+    <string name="buykaspa_arrived">Đã nhận %1$s. Hoán đổi sang Kaspa.</string>
+    <string name="buykaspa_sign_again">Mở để ký lại cầu nối</string>
+    <string name="buykaspa_rejected">Stripe đã từ chối giao dịch mua này. Không có khoản nào bị trừ.</string>
+    <string name="buykaspa_refunded">Cầu nối không chạy được nên USDC đã được trả lại. Mở để chuyển lại.</string>
+    <string name="buykaspa_expired">Chưa thanh toán. Không có khoản nào bị trừ.</string>
+    <string name="buykaspa_where_land">kUSDT của bạn nên về địa chỉ nào?</string>
+    <string name="buykaspa_needs_words">K cần các từ khôi phục của tài khoản này trên điện thoại này để mua bằng thẻ.</string>
+    <string name="buykaspa_stripe_note">Stripe bán cho người mua ở Mỹ và EU. Phí thẻ và phí mạng hiển thị ở trang tiếp theo, trước khi bạn thanh toán.</string>
+    <string name="buykaspa_lands_on_format">kUSDT về: %1$s</string>
+    <string name="buykaspa_can_close">Bạn có thể đóng mục này. K vẫn theo dõi đơn hàng của bạn ở tab Ví.</string>
+    <string name="buykaspa_approve_bridge">Phê duyệt cầu nối</string>
+    <string name="buykaspa_sign_explainer">Một chữ ký cho phép cầu nối của Trestly lấy tối đa số USDC này từ địa chỉ Ethereum của K và nạp vào Kaspa dưới dạng kUSDT. Không cần ETH và không có Kaspa nào rời khỏi ví của bạn.</string>
+    <string name="buykaspa_up_to">Tối đa</string>
+    <string name="buykaspa_lands_on">kUSDT về</string>
+    <string name="buykaspa_ends">Hết hạn</string>
+    <string name="buykaspa_bridge">Cầu nối</string>
+    <string name="buykaspa_eth_note">Địa chỉ Ethereum của K được tạo từ các từ của tài khoản này, giống như bất kỳ ví Ethereum nào cũng sẽ tạo.</string>
+    <string name="buykaspa_fresh_note">Một địa chỉ mới chưa từng dùng, để giao dịch mua này tách biệt khỏi tên người dùng và các cuộc trò chuyện của bạn.</string>
+    <string name="buykaspa_chatting_note">Địa chỉ mọi người nhắn tin và thanh toán cho bạn.</string>
+    <string name="buykaspa_fresh_address">Địa chỉ mới</string>
+    <string name="buykaspa_reload">Tải lại</string>
+</resources>

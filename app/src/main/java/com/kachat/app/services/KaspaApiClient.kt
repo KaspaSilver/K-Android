@@ -103,9 +103,10 @@ data class TransactionResponse(
             var totalIn = 0L
             for (input in inputs) {
                 val amount = input.previousOutpointAmount ?: return null
-                totalIn += amount
+                // REST's amounts: a sum that isn't one is no fee at all (iOS audit 2026-11-27 R6)
+                totalIn = com.kachat.app.util.UtxoMath.restSumOrNull(totalIn, amount) ?: return null
             }
-            val totalOut = outputs.sumOf { it.amount }
+            val totalOut = com.kachat.app.util.UtxoMath.restTotalOrNull(outputs.map { it.amount }) ?: return null
             return if (totalIn >= totalOut) totalIn - totalOut else null
         }
 }

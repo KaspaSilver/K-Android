@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">रूम जोड़ें</string>
+    <string name="roomsoptin_indexer_rooms_footer">इंडेक्सर जिन रूम्स को रखता है: उनका इतिहास सहेजा जाता है और K बंद होने पर भी वे आपको सूचित कर सकते हैं।</string>
+    <string name="roomsoptin_other_languages">अन्य भाषाएँ</string>
+    <string name="roomsoptin_create_title">आपका बनाया रूम कैसे काम करता है</string>
+    <string name="roomsoptin_create_point_name">जो भी वही नाम लिखता है, वह उसी रूम में जुड़ता है। इसका न कोई मालिक है, न कोई निमंत्रण।</string>
+    <string name="roomsoptin_create_point_history">कोई इंडेक्सर इसका इतिहास नहीं रखता। रूम खुला रहने पर K इसे कैस्पा नेटवर्क से पढ़ता है, और आपके फ़ोन पर 3 दिन तक रखता है।</string>
+    <string name="roomsoptin_create_point_bell">K बंद होने पर कोई सूचना नहीं। घंटी चालू होने पर K केवल खुला रहने पर सूचित करता है।</string>
+    <string name="roomsoptin_create_point_public">वहाँ कही गई हर बात सार्वजनिक है: कोई भी उसे कैस्पा नेटवर्क पर पढ़ सकता है।</string>
+    <string name="roomsoptin_create_room">रूम बनाएँ</string>
+    <string name="roomsoptin_name_your_room">अपने रूम का नाम रखें</string>
+    <string name="roomsoptin_empty_title">अभी कोई पब्लिक चैट नहीं</string>
+    <string name="roomsoptin_empty_body">इंडेक्सर जिन रूम्स को रखता है, जैसे #kaspa, उन्हें जोड़ें या अपना बनाएँ। आपके चुने बिना कुछ नहीं जुड़ता।</string>
+    <string name="roomsoptin_removed_toast">#%1$s हटाया गया। रूम जोड़ें से कभी भी दोबारा जोड़ें।</string>
+    <string name="roomsoptin_bulk_delete_message">इंडेक्सर जिन रूम्स को रखता है, उन्हें रूम जोड़ें से दोबारा जोड़ा जा सकता है। आपके बनाए रूम उनके संदेशों के साथ इस डिवाइस से हट जाते हैं।</string>
+    <string name="roomsoptin_not_in_list_add">यह रूम आपकी पब्लिक चैट में नहीं है। जोड़ें?</string>
+    <string name="roomsoptin_room_info_curated">इंडेक्सर द्वारा रखा गया रूम। आपने इसे जोड़ा है, और K पर कोई भी इसमें पोस्ट कर सकता है।</string>
+</resources>

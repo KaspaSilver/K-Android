@@ -53,6 +53,8 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
     @Inject lateinit var kaPostsNotificationPollerLazy: dagger.Lazy<KaPostsNotificationPoller>
     // Received KAS pushes (iOS 428a797b).
     @Inject lateinit var addressActivityNotifierLazy: dagger.Lazy<AddressActivityNotifier>
+    // A mention push from a room you haven't joined: its bell row (iOS audit 2026-11-27 L13).
+    @Inject lateinit var roomMentionBellLazy: dagger.Lazy<RoomMentionBell>
     private val notificationHelper: NotificationHelper get() = notificationHelperLazy.get()
     private val pushRegistrationManager: PushRegistrationManager get() = pushRegistrationManagerLazy.get()
     private val walletManager: WalletManager get() = walletManagerLazy.get()
@@ -109,8 +111,45 @@ class KaChatFirebaseMessagingService : FirebaseMessagingService() {
             super.handleIntent(intent)
             // A KaPost tip push the system just drew (app away) after the tip's payment notice.
             runCatching { intent.extras?.let { afterSystemDrawnKaPostTip(RemoteMessage(it)) } }
+            // A room push that @'s you from a room you haven't joined, now shown: its bell row.
+            if (isMessage) runCatching { intent.extras?.let { recordUnjoinedRoomMention(RemoteMessage(it)) } }
         } finally {
             lastHandlerEndMs = System.currentTimeMillis()
+        }
+    }
+
+    /**
+     * A push that @'s you from a room you haven't joined (iOS audit 2026-11-27 L13): nothing loads
+     * that room's messages, so the push itself becomes the bell's row once it's shown, whether the
+     * system drew it (app away) or [onMessageReceived] did. Not for the other network, while
+     * signed out, for an edit or delete, or for a message one of this phone's accounts sent.
+     */
+    private fun recordUnjoinedRoomMention(message: RemoteMessage) {
+        val data = message.data
+        val threadId = data["thread_id"].orEmpty()
+        if (data["type"] != "broadcast" && !threadId.startsWith("broadcast:")) return
+        if (!isTruePushFlag(data["mention"])) return
+        if (!com.kachat.app.util.SecureStores.accountStoresOpen(applicationContext)) return
+        if (com.kachat.app.util.PushNetworkFilter.isOtherNetwork(data, com.kachat.app.util.KaspaNetwork.launch)) return
+        val raw = message.notification?.body?.takeIf { it.isNotBlank() } ?: data["body"].orEmpty()
+        if (com.kachat.app.util.BroadcastPushPreview.isEditEnvelope(raw) || com.kachat.app.util.MessageDelete.isDeleteEnvelope(raw)) return
+        val channel = data["channel"] ?: threadId.removePrefix("broadcast:")
+        val senderAddress = data["sender"]?.trim().orEmpty()
+        runBlocking {
+            kotlinx.coroutines.withTimeoutOrNull(PRE_DRAW_BUDGET_MS) {
+                if (walletManager.isLoggedOut || walletManager.getActiveAccount() == null) return@withTimeoutOrNull
+                if (senderAddress.isNotEmpty() && broadcastRepositoryLazy.get().isLocalAccountAddress(senderAddress)) return@withTimeoutOrNull
+                val sender = data["subtitle"]?.takeIf { it.isNotBlank() }
+                    ?: senderAddress.takeIf { it.isNotEmpty() }?.let { com.kachat.app.models.addressDisplayName(it) }
+                    ?: ""
+                roomMentionBellLazy.get().recordMentionPush(
+                    rawChannel = channel,
+                    txId = data["tx_id"]?.trim()?.takeIf { it.isNotEmpty() } ?: message.collapseKey,
+                    sender = sender,
+                    preview = com.kachat.app.util.BroadcastPushPreview.clean(raw),
+                    mention = true,
+                )
+            }
         }
     }
 

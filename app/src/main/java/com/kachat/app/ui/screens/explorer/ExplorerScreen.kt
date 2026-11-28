@@ -151,6 +151,17 @@ class ExplorerViewModel @Inject constructor(
     /** The signed-in account's name, for its picture's fallback. */
     fun ownName(): String = runCatching { walletManager.getActiveAccount()?.name }.getOrNull().orEmpty()
 
+    /** [hex] is the chatting key or a revealed spending address's key: never sent anywhere (iOS
+     *  d88891ea `isOwnPrivateKey`, audit 2026-11-27 L5). Off the main thread (the address list
+     *  can derive). */
+    suspend fun isOwnPrivateKey(hex: String): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+        if (!com.kachat.app.services.explorer.ExplorerParsing.isHexId(hex.trim())) return@withContext false
+        val own = runCatching {
+            listOfNotNull(walletManager.getActiveAccount()?.address) + walletManager.allSpendingAddresses()
+        }.getOrDefault(emptyList())
+        com.kachat.app.services.explorer.ExplorerKeyGuard.isOwnKey(hex, own)
+    }
+
     /** What was searched for, newest first, at most six (iOS `recentSearches`, this session only). */
     val recentSearches = mutableStateListOf<String>()
 
@@ -179,6 +190,11 @@ private sealed class TypedMatch {
     data object NotFound : TypedMatch()
     /** kaspa.stream couldn't be asked, so it isn't known whether the id exists. */
     data object Unreachable : TypedMatch()
+    /** A 64-character id: asked about only on Search or a tap, never as you type, since it could
+     *  be a pasted private key (iOS d88891ea, audit 2026-11-27 L5). */
+    data class IdToLookUp(val id: String) : TypedMatch()
+    /** One of this wallet's own private keys: never sent anywhere. */
+    data object PrivateKey : TypedMatch()
 }
 
 private enum class ExplorerHomePage { BLOCKS, TRANSACTIONS, K_ACTIVITY }
@@ -214,6 +230,15 @@ fun ExplorerScreen(viewModel: ExplorerViewModel = hiltViewModel()) {
     DisposableEffect(Unit) { onDispose { viewModel.live.stop() } }
 
     BackHandler(enabled = stack.isNotEmpty()) { pop() }
+
+    // a K Explorer link (iOS bfb902b7 `ExplorerDeepLink`): its transaction or address, on top of
+    // the Explorer's home
+    val deepLink by com.kachat.app.services.explorer.ExplorerDeepLink.pending.collectAsState()
+    LaunchedEffect(deepLink) {
+        val route = com.kachat.app.services.explorer.ExplorerDeepLink.take() ?: return@LaunchedEffect
+        stack.forEachIndexed { index, text -> viewModel.pages.remove("$index|$text") }
+        stackText = route.encode()
+    }
 
     val states = rememberSaveableStateHolder()
     CompositionLocalProvider(LocalExplorerPaused provides !running) {
@@ -281,11 +306,34 @@ private fun ExplorerHome(viewModel: ExplorerViewModel, running: Boolean, open: (
         openRoute(route)
     }
 
+    /** What a 64-character id is (light calls: not the whole transaction or block), once asked
+     *  (iOS d88891ea `identifyTyped`). */
+    fun identifyTyped(id: String) {
+        scope.launch {
+            if (viewModel.isOwnPrivateKey(id)) {
+                typedMatch = TypedMatch.PrivateKey
+                return@launch
+            }
+            typedMatch = TypedMatch.LookingUp
+            val match = identifyId(viewModel.api, id) ?: return@launch
+            // typed on meanwhile: not this text's answer
+            if (query.trim().lowercase() != id) return@launch
+            typedMatch = match
+        }
+    }
+
     fun runSearch(text: String) {
         val trimmed = text.trim()
         if (trimmed.isEmpty() || searching) return
         searching = true
         scope.launch {
+            // one of your own private keys never leaves the phone (iOS d88891ea, audit L5)
+            if (com.kachat.app.services.explorer.ExplorerKeyGuard.isLookedUpOnlyOnSearch(trimmed) && viewModel.isOwnPrivateKey(trimmed)) {
+                searching = false
+                typedMatch = TypedMatch.PrivateKey
+                haptic(IosHaptic.ERROR)
+                return@launch
+            }
             val match = viewModel.api.search(trimmed)
             searching = false
             when (match) {
@@ -387,9 +435,9 @@ private fun ExplorerHome(viewModel: ExplorerViewModel, running: Boolean, open: (
                 trimmedQuery.isNotEmpty() -> {
                     // looked up a moment after typing stops
                     LaunchedEffect(trimmedQuery.lowercase()) {
-                        typedMatch = lookUpTyped(viewModel.api, trimmedQuery) { typedMatch = it } ?: return@LaunchedEffect
+                        typedMatch = lookUpTyped(viewModel.api, trimmedQuery, isOwnKey = viewModel::isOwnPrivateKey) { typedMatch = it } ?: return@LaunchedEffect
                     }
-                    LiveResults(typedMatch, trimmedQuery, onOpen = ::openTyped)
+                    LiveResults(typedMatch, trimmedQuery, onOpen = ::openTyped, onLookUp = ::identifyTyped)
                 }
                 searchFocused -> Suggestions(
                     ownAddress = ownAddress,
@@ -416,10 +464,11 @@ private fun ExplorerHome(viewModel: ExplorerViewModel, running: Boolean, open: (
                         }
                         val shownPeriod = if (kPeriod in periods) kPeriod else (periods.firstOrNull() ?: ExplorerKPeriod.DAY)
                         Column(Modifier.padding(horizontal = 16.dp)) {
-                            // K's indexer's numbers; the demo only until they first arrive
+                            // K's indexer's numbers; until they first arrive, the demo (debug) or "–"
+                            // (release; iOS 01f71184 `kActivityFallback`)
                             ExplorerKActivityCard(
                                 periods = periods,
-                                activity = activity[shownPeriod] ?: ExplorerDemo.kActivity(shownPeriod, System.currentTimeMillis()),
+                                activity = activity[shownPeriod] ?: kActivityFallback(shownPeriod),
                                 onPeriod = { kPeriod = it },
                             )
                         }
@@ -457,7 +506,12 @@ private fun ExplorerHome(viewModel: ExplorerViewModel, running: Boolean, open: (
  * balance), a transaction or block id, or a .kachat username. [show] puts up what's known so far;
  * the answer is returned (null when cancelled).
  */
-private suspend fun lookUpTyped(api: ExplorerApi, text: String, show: (TypedMatch) -> Unit): TypedMatch? {
+private suspend fun lookUpTyped(
+    api: ExplorerApi,
+    text: String,
+    isOwnKey: suspend (String) -> Boolean,
+    show: (TypedMatch) -> Unit,
+): TypedMatch? {
     var lower = text.lowercase()
     ExplorerParsing.addressIn(lower)?.let { lower = it }
     if (lower.isEmpty()) return null
@@ -474,20 +528,9 @@ private suspend fun lookUpTyped(api: ExplorerApi, text: String, show: (TypedMatc
                     TypedMatch.Address(lower, name.await(), balance.await())
                 }
             }
-            ExplorerParsing.isHexId(lower) -> {
-                // light calls: what the id is, not the whole transaction or block
-                try {
-                    when (val match = api.identify(lower)) {
-                        is ExplorerApi.IdMatch.Transaction -> TypedMatch.Transaction(lower, match.kind)
-                        ExplorerApi.IdMatch.Block -> TypedMatch.Block(lower)
-                        ExplorerApi.IdMatch.NotFound -> TypedMatch.NotFound
-                    }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    TypedMatch.Unreachable
-                }
-            }
+            // nothing leaves the phone until it's asked for (Search, or the row's tap): it could
+            // be a pasted private key (iOS d88891ea, audit 2026-11-27 L5)
+            ExplorerParsing.isHexId(lower) -> if (isOwnKey(lower)) TypedMatch.PrivateKey else TypedMatch.IdToLookUp(lower)
             else -> api.username(text)?.let { (name, address) -> TypedMatch.Username(name, address) } ?: TypedMatch.NoUsername(text)
         }
     } catch (e: CancellationException) {
@@ -495,8 +538,22 @@ private suspend fun lookUpTyped(api: ExplorerApi, text: String, show: (TypedMatc
     }
 }
 
+/** What a 64-character id is: light calls, not the whole transaction or block. Null when
+ *  cancelled. */
+private suspend fun identifyId(api: ExplorerApi, id: String): TypedMatch? = try {
+    when (val match = api.identify(id)) {
+        is ExplorerApi.IdMatch.Transaction -> TypedMatch.Transaction(id, match.kind)
+        ExplorerApi.IdMatch.Block -> TypedMatch.Block(id)
+        ExplorerApi.IdMatch.NotFound -> TypedMatch.NotFound
+    }
+} catch (e: CancellationException) {
+    null
+} catch (e: Exception) {
+    TypedMatch.Unreachable
+}
+
 @Composable
-private fun LiveResults(match: TypedMatch, text: String, onOpen: (ExplorerRoute) -> Unit) {
+private fun LiveResults(match: TypedMatch, text: String, onOpen: (ExplorerRoute) -> Unit, onLookUp: (String) -> Unit) {
     val colors = LocalAppColors.current
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
@@ -534,6 +591,21 @@ private fun LiveResults(match: TypedMatch, text: String, onOpen: (ExplorerRoute)
                     }
                     ExplorerChevron()
                 }
+                is TypedMatch.IdToLookUp -> Row(
+                    Modifier.fillMaxWidth().explorerRow { onLookUp(match.id) }.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Box(Modifier.width(34.dp), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Filled.Search, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(22.dp))
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(stringResource(R.string.ex_look_up_this_id), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        ExplorerMonoText(match.id, middle = true)
+                    }
+                    ExplorerChevron()
+                }
+                TypedMatch.PrivateKey -> TypedNote(stringResource(R.string.ex_own_private_key))
                 is TypedMatch.NoUsername -> TypedNote(stringResource(R.string.ex_no_username, match.text))
                 TypedMatch.NotAnAddress -> TypedNote(stringResource(R.string.ex_not_an_address))
                 TypedMatch.NotFound -> TypedNote(stringResource(R.string.ex_no_such_id))
@@ -729,12 +801,29 @@ private fun ExplorerDaaScore(live: ExplorerLive, hasStats: Boolean) {
     )
 }
 
+/** K Activity before K's indexer answers: the demo in debug builds, "–" in release (iOS 01f71184
+ *  `kActivityFallback`, release audit R8). */
+internal fun kActivityFallback(period: ExplorerKPeriod, now: Long = System.currentTimeMillis()): ExplorerKActivity =
+    if (ExplorerDemo.allowed) ExplorerDemo.kActivity(period, now)
+    else ExplorerKActivity(period = period, counts = emptyMap(), unavailable = true)
+
 @Composable
 private fun StatsGrid(stats: ExplorerNetworkStats, lastDayFee: Long?, onOpen: (ExplorerChartMetric) -> Unit) {
     val context = LocalContext.current
-    // What the Network Fee tile's number is: Kaspalytics' last full day, or the demo.
-    val feeDetail = stringResource(if (lastDayFee != null) R.string.ex_fee_yesterday else R.string.ex_fee_demo)
-    val feeKas = (lastDayFee ?: stats.averageFee24h) / 100_000_000.0
+    // What the Network Fee tile's number is: Kaspalytics' last full day, else the demo in debug
+    // builds and "–" in release (iOS 01f71184 `feeTileValue`: a wallet doesn't show made-up numbers).
+    val feeDetail = stringResource(
+        when {
+            lastDayFee != null -> R.string.ex_fee_yesterday
+            ExplorerDemo.allowed -> R.string.ex_fee_demo
+            else -> R.string.ex_fee_not_served
+        },
+    )
+    val feeValue = when {
+        lastDayFee != null -> ExplorerFormat.metric(ExplorerChartMetric.NETWORK_FEES, lastDayFee / 100_000_000.0)
+        ExplorerDemo.allowed -> ExplorerFormat.metric(ExplorerChartMetric.NETWORK_FEES, stats.averageFee24h / 100_000_000.0)
+        else -> "–"
+    }
     val usDollars = stringResource(R.string.ex_us_dollars)
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         TileRow(
@@ -755,7 +844,7 @@ private fun StatsGrid(stats: ExplorerNetworkStats, lastDayFee: Long?, onOpen: (E
             {
                 ExplorerStatTile(
                     Icons.Filled.Speed, stringResource(R.string.network_fee),
-                    ExplorerFormat.metric(ExplorerChartMetric.NETWORK_FEES, feeKas), feeDetail, it, showsChevron = true,
+                    feeValue, feeDetail, it, showsChevron = true,
                 ) { onOpen(ExplorerChartMetric.NETWORK_FEES) }
             },
             {
@@ -888,7 +977,7 @@ private fun ExplorerKActivityCard(periods: List<ExplorerKPeriod>, activity: Expl
             Row(verticalAlignment = Alignment.Bottom) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        ExplorerFormat.grouped(activity.total.toLong()),
+                        if (activity.unavailable) "–" else ExplorerFormat.grouped(activity.total.toLong()),
                         color = colors.textPrimary,
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,

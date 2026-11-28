@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">Beli</string>
+    <string name="buysell_sell">Jual</string>
+    <string name="buysell_history">Riwayat Beli/Jual</string>
+    <string name="buysell_buy_kaspa">Beli Kaspa</string>
+    <string name="buysell_sell_kaspa">Jual Kaspa</string>
+    <string name="buysell_buy_with_crypto">Beli Kaspa dengan Kripto</string>
+    <string name="buysell_buy_with_crypto_sub">Bayar dengan koin lain, seperti kUSDT atau Bitcoin.</string>
+    <string name="buysell_buy_with_debit_card">Beli Kaspa dengan Kartu Debit</string>
+    <string name="buysell_debit_card_sub">Bayar dengan kartu. Masuk sebagai kUSDT, lalu Anda membeli Kaspa dengannya.</string>
+    <string name="buysell_pay_with_question">Anda ingin membayar dengan apa?</string>
+    <string name="buysell_sell_for_question">Apa yang Anda inginkan untuk Kaspa Anda?</string>
+    <string name="buysell_sell_kaspa_for">Jual Kaspa untuk %1$s</string>
+    <string name="buysell_buy_kaspa_with">Beli Kaspa dengan %1$s</string>
+    <string name="buysell_on_networks">%1$s di %2$d jaringan</string>
+    <string name="buysell_you_pay">Anda Bayar</string>
+    <string name="buysell_where_land">Ke mana Kaspa Anda harus masuk?</string>
+    <string name="buysell_kusdt_one_address">kUSDT dibayar dari satu alamat, dan Kaspa Anda masuk ke alamat yang sama.</string>
+    <string name="buysell_fresh_note">Alamat baru yang belum pernah dipakai, agar pembelian ini terpisah dari nama pengguna dan obrolan Anda.</string>
+    <string name="buysell_send_payment">Kirim Pembayaran</string>
+    <string name="buysell_send_amount_coin">Kirim %1$s %2$s</string>
+    <string name="buysell_to_buy_kaspa">untuk membeli Kaspa</string>
+    <string name="buysell_to_sell_for">untuk menjualnya demi %1$s</string>
+    <string name="buysell_copy_amount">Salin Jumlah</string>
+    <string name="buysell_amount_copied">Jumlah disalin</string>
+    <string name="buysell_send_kas_from_k">Kirim KAS dari K</string>
+    <string name="buysell_transaction_id">ID Transaksi</string>
+    <string name="buysell_copy_id">Salin ID</string>
+    <string name="buysell_you_get_about">Anda menerima sekitar %1$s %2$s, dikirim ke %3$s.</string>
+    <string name="buysell_payment_received">Pembayaran diterima</string>
+    <string name="buysell_waiting_confirm">Menunggu konfirmasi.</string>
+    <string name="buysell_converting">ChangeNOW sedang mengonversi koin Anda.</string>
+    <string name="buysell_sending_your">Mengirim %1$s Anda</string>
+    <string name="buysell_almost_done">Hampir selesai.</string>
+    <string name="buysell_failed_detail">ChangeNOW tidak bisa menyelesaikan pesanan ini. Periksa di ChangeNOW.</string>
+    <string name="buysell_refunded_detail">ChangeNOW mengembalikan koinnya.</string>
+    <string name="buysell_expired_detail">Tidak ada yang masuk tepat waktu. Mulai pesanan baru.</string>
+    <string name="buysell_verifying_detail">ChangeNOW sedang memeriksa pesanan ini.</string>
+    <string name="buysell_waiting_payment">Menunggu pembayaran</string>
+    <string name="buysell_waiting_payment_detail">Kirim jumlah di atas. Layar ini diperbarui sendiri.</string>
+    <string name="buysell_purchase_complete">Pembelian Selesai</string>
+    <string name="buysell_sale_complete">Penjualan Selesai</string>
+    <string name="buysell_you_paid">Anda membayar %1$s %2$s</string>
+    <string name="buysell_you_got_about">Anda menerima sekitar %1$s %2$s</string>
+    <string name="buysell_added_to_portfolio">Ditambahkan ke Portofolio</string>
+    <string name="buysell_order_sent">Pesanan Terkirim</string>
+</resources>

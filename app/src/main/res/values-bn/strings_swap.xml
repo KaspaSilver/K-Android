@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">সোয়াপ</string>
-    <string name="swap_history">সোয়াপ ইতিহাস</string>
-    <string name="swap_started">সোয়াপ শুরু হয়েছে</string>
     <string name="swap_failed">সোয়াপ ব্যর্থ হয়েছে</string>
     <string name="swap_couldnt_read_amounts">এই সোয়াপের পরিমাণ পড়া যায়নি</string>
     <string name="swap_already_holds">এই সোয়াপটি আগেই আছে - আবার যোগ করলে দুবার গোনা হবে।</string>
     <string name="swap_lands_in_portfolio">সোয়াপটি এই পোর্টফোলিওতে যাবে।</string>
     <string name="swap_delete_title">এই সোয়াপটি মুছবেন?</string>
     <string name="swap_delete_message">এটি শুধু আপনার লোকাল ইতিহাস থেকে সরায় - আসল এক্সচেঞ্জে কোনো প্রভাব পড়ে না।</string>
-    <string name="swap_you_send">আপনি পাঠাবেন</string>
     <string name="swap_you_get">আপনি পাবেন</string>
-    <string name="swap_switch_direction">দিক বদলান</string>
-    <string name="swap_get_deposit_address">জমার ঠিকানা নিন</string>
     <string name="swap_receive_coin_at">%1$s গ্রহণের ঠিকানা</string>
     <string name="swap_destination_tag_optional">ডেস্টিনেশন ট্যাগ (ঐচ্ছিক)</string>
     <string name="swap_destination_tag_hint">শুধু যদি গ্রহণকারী ঠিকানার এটি দরকার হয়, যেমন বেশিরভাগ এক্সচেঞ্জের হয়। এটি ছাড়া এক্সচেঞ্জ আপনার কয়েন জমা করতে পারবে না।</string>
     <string name="swap_from_kusdt_lands">যেখান থেকে সোয়াপ (kUSDT এখানে আসে)</string>
     <string name="swap_from_kas_lands">যেখান থেকে সোয়াপ (KAS এখানে আসে)</string>
-    <string name="swap_receiving_kas_at">KAS গ্রহণের ঠিকানা</string>
     <string name="swap_change">বদলান</string>
     <string name="swap_powered_by_trestly">Trestly চালিত</string>
     <string name="swap_powered_by_changenow">ChangeNOW চালিত</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">%2$s দামে %1$s KAS বিক্রি - কোন পোর্টফোলিওতে যোগ করবেন বেছে নিন।</string>
     <string name="swap_rate">রেট</string>
     <string name="swap_unavailable">অনুপলব্ধ</string>
-    <string name="swap_go_to_spending_addresses">স্পেন্ডিং ঠিকানায় যান</string>
-    <string name="swap_send_coin_to_address">এই ঠিকানায় %1$s পাঠান</string>
     <string name="swap_amount_to_send">পাঠানোর পরিমাণ</string>
     <string name="swap_destination_tag_copied">ডেস্টিনেশন ট্যাগ কপি হয়েছে</string>
     <string name="swap_payout_address">পেআউট ঠিকানা</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">জমার ঠিকানা</string>
     <string name="swap_couldnt_reach_changenow">ChangeNOW-এ পৌঁছানো যায়নি - আবার চেষ্টা করুন</string>
     <string name="swap_details">সোয়াপের বিবরণ</string>
-    <string name="swap_picker_footer">সোয়াপ এমন একটি ঠিকানায় পেআউট করে যা আপনি আগে ব্যবহার করেননি, যাতে পেআউটটি আপনার আগের কার্যকলাপের সাথে যুক্ত করা না যায়। কোনোটি খালি না থাকলে একটি তৈরি করুন।</string>
-    <string name="swap_picker_all_used">এখানের প্রতিটি ঠিকানা ব্যবহৃত হয়েছে। উপরে একটি নতুন তৈরি করুন।</string>
-    <string name="swap_unused_addresses">অব্যবহৃত ঠিকানা</string>
-    <string name="swap_choose_address">ঠিকানা বাছুন</string>
     <string name="swap_used">ব্যবহৃত</string>
     <string name="swap_unused">অব্যবহৃত</string>
-    <string name="swap_check_history_before">এতে সোয়াপ পাঠানোর আগে এর ইতিহাস দেখে নিন।</string>
-    <string name="swap_use_for_this_swap">এই সোয়াপের জন্য ব্যবহার করুন</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW সোয়াপ করা KAS এই ঠিকানায় পাঠায়।</string>
     <string name="swap_search_coins">কয়েন খুঁজুন</string>
-    <string name="swap_choose_coin">কয়েন বাছুন</string>
     <string name="swap_agreements_intro">সোয়াপ এমন দুটি সেবা ব্যবহার করে যা K চালায় না। চালিয়ে যাওয়ার আগে দুটিই পড়ুন এবং সম্মত হন।</string>
     <string name="swap_coins_on_other_networks">অন্য নেটওয়ার্কের কয়েন</string>
     <string name="swap_changenow_agreement">Kaspa এবং অন্য নেটওয়ার্কের কয়েনের (Bitcoin, Ethereum, USDC, USDT ও অন্যান্য) মধ্যে সোয়াপ করে ChangeNOW, একটি তৃতীয় পক্ষের এক্সচেঞ্জ। K শুধু ChangeNOW-এর কাছে একটি কোট ও একটি ডিপোজিট ঠিকানা চায় এবং সোয়াপের স্থিতি দেখায়; এক্সচেঞ্জ করে ও কয়েন পাঠায় ChangeNOW। ব্যর্থ, বিলম্বিত বা হারানো সোয়াপের জন্য K দায়ী নয়। কোনো সোয়াপ সম্পন্ন না হলে ChangeNOW-এর সাপোর্টে যোগাযোগ করুন।</string>

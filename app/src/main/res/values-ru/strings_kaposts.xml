@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">Сейчас не удаётся найти пост, к которому относится этот черновик, поэтому его пока нельзя опубликовать. Он останется в ваших черновиках.</string>
     <string name="kaposts_likes">Лайки</string>
     <string name="kaposts_no_tips_yet">Чаевых пока нет.</string>
-    <string name="kaposts_not_on_testnet">KaPost пока недоступен в тестовой сети</string>
-    <string name="kaposts_not_on_testnet_sub">Для тестовой сети нет индексатора KaPost. Выключите тестовую сеть в Настройки > Подключение, чтобы читать и публиковать в основной сети.</string>
+    <string name="kaposts_not_on_testnet">Посты пока недоступны в тестнете</string>
+    <string name="kaposts_not_on_testnet_sub">Для тестовой сети нет индексатора постов. Выключите тестовую сеть в Настройки &gt; Настройки подключения, чтобы читать и публиковать в основной сети.</string>
     <string name="kaposts_poll_days_left">осталось %1$d дн.</string>
     <string name="kaposts_poll_final_results">%1$s · Итоговые результаты</string>
     <string name="kaposts_poll_hours_left">осталось %1$d ч</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">Этот пост уже отправляется, поэтому его нельзя отменить.</string>
     <string name="kaposts_scheduled_reminder_title">Запланированный пост</string>
     <string name="kaposts_scheduled_sending_soon">Отправится, как только сеть ответит</string>
-    <string name="kaposts_server_not_answering">Сервер KaPost не отвечает. Показаны сохранённые посты и новые из сети.</string>
+    <string name="kaposts_server_not_answering">Сервер постов не отвечает. Показаны сохранённые посты и новые из сети.</string>
     <string name="kaposts_thread_not_confirmed">Сеть не подтвердила часть вашей цепочки, поэтому остальное не отправлено. Сохранить оставшееся как черновик? Первый пост из него мог уже опубликоваться, поэтому проверьте перед повторной публикацией.</string>
     <string name="kaposts_tip_from_chatting_note">С вашего Chatting Address чаевые засчитываются посту, и вы в списке давших чаевые.</string>
     <string name="kaposts_tip_from_private_note">С другого адреса чаевые приватны: автор их получит и увидит в вашем чате, но они не засчитываются посту и не называют вас.</string>

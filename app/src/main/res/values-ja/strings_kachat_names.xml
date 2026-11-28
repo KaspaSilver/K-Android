@@ -31,7 +31,7 @@
     <string name="kg_use_body">メインの名前に設定すると、K のどこでもその名前で表示されます。</string>
     <string name="kg_use_find">名前を入力するだけで見つけてもらえます。</string>
     <string name="kg_use_link">プロフィールリンクにも名前が表示されます。</string>
-    <string name="kg_use_pay">長いアドレスの代わりに yourname.kachat へ Kaspa を送れます。</string>
+    <string name="kg_use_pay">長いアドレスの代わりに @yourname へ Kaspa を送れます。</string>
     <string name="kg_use_title">あなたの名前にする</string>
     <string name="kl_1d">1日</string>
     <string name="kl_3d">3日</string>

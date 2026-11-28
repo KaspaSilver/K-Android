@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">Connecté, et il contient les messages de ce salon.</string>
     <string name="kpui_room_indexer_footer">Un chat public vit sur le blockDAG de Kaspa : tout indexeur qui surveille le même réseau fournit donc le même salon. Pointez celui-ci où vous voulez - le vôtre ou celui de quelqu\'un d\'autre - sans changer l\'indexeur utilisé par tous les autres salons.</string>
     <string name="kpui_use_app_indexer">Utiliser l\'indexeur de l\'app</string>
-    <string name="kpui_room_switched_off_footer">Un salon désactivé n\'apparaît plus dans les discussions publiques et n\'envoie jamais de notification. Vous pouvez le réactiver à tout moment.</string>
-    <string name="kpui_languages">Langues</string>
-    <string name="kpui_languages_footer">Désactivé retire tous les salons de langue des discussions publiques. Activé, désactivez ceux dont vous ne voulez pas.</string>
     <string name="kpui_notifications_off">Notifications désactivées</string>
     <string name="kpui_notifications_on">Notifications activées</string>
     <string name="kpui_room_notified_closed">Vous êtes notifié des nouveaux messages ici, même lorsque l\'app est fermée.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">Rien ici pour l\'instant</string>
     <string name="kpui_engagement_empty">Quand quelqu\'un interagit avec cette publication, il apparaîtra ici.</string>
     <string name="kpui_instant_tip_limit">Les pourboires instantanés sont limités à 10 KAS. Balayez vers le haut pour envoyer celui-ci.</string>
-    <string name="kpui_kapost_settings">Réglages KaPost</string>
     <string name="kpui_cool_down">Faire une pause avant de publier</string>
     <string name="kpui_cooldown_on">Les publications, commentaires, J\'aime, republications, votes, modifications et suppressions attendent 5 secondes, avec un Annuler, avant d\'être enregistrés sur la chaîne.</string>
     <string name="kpui_cooldown_off">Les publications, commentaires, J\'aime, republications, votes, modifications et suppressions sont enregistrés sur la chaîne immédiatement, sans Annuler.</string>

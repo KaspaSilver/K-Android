@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage account cards, in-place rename (iOS b49a021d) -->
+<resources>
+    <string name="cold_hide_funded_refused">Alamat yang berisi Kaspa tetap ada di daftar.</string>
+    <string name="cold_remove_account">Hapus Akun</string>
+    <string name="cold_kpub_qr">QR kpub</string>
+    <string name="cold_alerts_on">Notifikasi Aktif</string>
+    <string name="cold_alerts_off">Notifikasi Mati</string>
+    <string name="cold_tap_to_view_addresses">Ketuk untuk Melihat Alamat</string>
+    <string name="cold_alerts_on_toast">Anda akan diberi tahu saat akun ini menerima Kaspa.</string>
+    <string name="cold_alerts_off_toast">Tidak ada lagi notifikasi saat akun ini menerima Kaspa.</string>
+    <string name="cold_kpub_copied">kpub disalin ke papan klip.</string>
+    <string name="cold_watch_this_account">Pantau Akun Ini</string>
+    <string name="cold_kpub_qr_warning">Siapa pun yang memindainya melihat setiap alamat, saldo, dan pembayaran akun ini. Tunjukkan hanya ke perangkat yang Anda percaya.</string>
+</resources>

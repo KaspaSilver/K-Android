@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">এই ড্রাফটটি যে পোস্ট নিয়ে সেটি এখন পাওয়া যাচ্ছে না, তাই এটি এখনও পোস্ট করা যাবে না। এটি আপনার ড্রাফটে থাকবে।</string>
     <string name="kaposts_likes">লাইক</string>
     <string name="kaposts_no_tips_yet">এখনও কোনো টিপ নেই।</string>
-    <string name="kaposts_not_on_testnet">KaPost এখনও টেস্টনেটে উপলব্ধ নয়</string>
-    <string name="kaposts_not_on_testnet_sub">টেস্টনেটের জন্য কোনো KaPost ইনডেক্সার নেই। মেইননেটে পড়তে ও পোস্ট করতে সেটিংস > সংযোগ থেকে টেস্টনেট বন্ধ করুন।</string>
+    <string name="kaposts_not_on_testnet">টেস্টনেটে পোস্ট এখনও উপলব্ধ নয়</string>
+    <string name="kaposts_not_on_testnet_sub">টেস্টনেটের জন্য পোস্টের কোনো ইনডেক্সার নেই। মেইননেটে পড়তে ও পোস্ট করতে সেটিংস &gt; সংযোগ সেটিংস থেকে টেস্টনেট বন্ধ করুন।</string>
     <string name="kaposts_poll_days_left">%1$d দিন বাকি</string>
     <string name="kaposts_poll_final_results">%1$s · চূড়ান্ত ফলাফল</string>
     <string name="kaposts_poll_hours_left">%1$d ঘণ্টা বাকি</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">এই পোস্টটি এখন পাঠানো হচ্ছে, তাই এটি বাতিল করা যাবে না।</string>
     <string name="kaposts_scheduled_reminder_title">নির্ধারিত পোস্ট</string>
     <string name="kaposts_scheduled_sending_soon">নেটওয়ার্ক সাড়া দিলেই পাঠানো হবে</string>
-    <string name="kaposts_server_not_answering">KaPost-এর সার্ভার সাড়া দিচ্ছে না। সংরক্ষিত পোস্ট এবং নেটওয়ার্ক থেকে নতুন পোস্ট দেখানো হচ্ছে।</string>
+    <string name="kaposts_server_not_answering">পোস্টের সার্ভার সাড়া দিচ্ছে না। সংরক্ষিত পোস্ট ও নেটওয়ার্ক থেকে নতুন পোস্ট দেখানো হচ্ছে।</string>
     <string name="kaposts_thread_not_confirmed">নেটওয়ার্ক আপনার থ্রেডের একটি অংশ নিশ্চিত করেনি, তাই বাকিটা পাঠানো হয়নি। বাকি অংশ ড্রাফট হিসেবে সংরক্ষণ করবেন? এর প্রথম পোস্টটি হয়তো চলে গেছে, তাই আবার পোস্ট করার আগে দেখে নিন।</string>
     <string name="kaposts_tip_from_chatting_note">Chatting Address থেকে দেওয়া টিপ পোস্টে গোনা হয়, আর আপনি টিপদাতাদের তালিকায় থাকেন।</string>
     <string name="kaposts_tip_from_private_note">অন্য ঠিকানা থেকে টিপ ব্যক্তিগত: লেখক পান এবং আপনাদের চ্যাটে দেখেন, কিন্তু পোস্টে গোনা হয় না এবং আপনার নাম আসে না।</string>

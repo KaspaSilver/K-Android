@@ -161,7 +161,28 @@ class AddressBookManager @Inject constructor(
         photoCache.evictAll()
         photolessAddresses.clear()
         photoVersion++
+        prewarmPhotos()
         return wallet
+    }
+
+    /** Decodes the first screens' assigned photos in the background, so the first scroll through
+     *  Contacts shows them at once rather than as rows come in (iOS 01f71184 `prewarmPhotos`,
+     *  smoothness audit L12). Only the first few dozen: the rest decode on demand. */
+    private fun prewarmPhotos() {
+        val version = photoVersion
+        val wanted = book.entries.take(PREWARMED_PHOTOS).map { normalize(it.address) }
+        if (wanted.isEmpty()) return
+        scope.launch {
+            for (address in wanted) {
+                // a photo changed, or another account loaded, while these were read
+                if (photoVersion != version) return@launch
+                if (photoCache.get(address) != null || address in photolessAddresses) continue
+                val file = photoFile(address)?.takeIf { it.exists() } ?: continue
+                val bitmap = decodePhotoFile(file) ?: continue
+                if (photoVersion != version) return@launch
+                if (photoCache.get(address) == null) photoCache.put(address, bitmap)
+            }
+        }
     }
 
     private suspend fun setActiveWalletAddress(walletAddress: String?) {
@@ -747,9 +768,9 @@ class AddressBookManager @Inject constructor(
         const val EXPORT_KIND = "kachat-address-book"
 
         /** The export's file name, with the time so several exports don't overwrite each other:
-         *  "KaChat Contacts 2026-10-08T18-37-50Z.json", exactly as iOS names it (iOS bc3e1ff3). */
+         *  "K Contacts 2026-10-08T18-37-50Z.json", exactly as iOS names it (iOS bc3e1ff3, 01f71184). */
         fun exportFileName(epochMs: Long = System.currentTimeMillis()): String =
-            "KaChat Contacts ${isoSeconds(epochMs).replace(":", "-")}.json"
+            "K Contacts ${isoSeconds(epochMs).replace(":", "-")}.json"
 
         @Volatile private var instance: AddressBookManager? = null
 
@@ -852,9 +873,13 @@ class AddressBookManager @Inject constructor(
         /** The largest Address Book file Import reads (AND-032). */
         const val MAX_IMPORT_FILE_BYTES = 20 * 1024 * 1024
 
-        /** Byte budget of the decoded-photo cache: an eighth of the heap, at most 32 MB. */
+        /** Byte budget of the decoded-photo cache: an eighth of the heap, at most 24 MB (iOS
+         *  01f71184 `totalCostLimit`, audit 2026-11-27). */
         private val PHOTO_CACHE_BYTES: Int =
-            (Runtime.getRuntime().maxMemory() / 8).coerceIn(4L * 1024 * 1024, 32L * 1024 * 1024).toInt()
+            (Runtime.getRuntime().maxMemory() / 8).coerceIn(4L * 1024 * 1024, 24L * 1024 * 1024).toInt()
+
+        /** How many photos [prewarmPhotos] decodes ahead (iOS: the first 30 entries). */
+        private const val PREWARMED_PHOTOS = 30
 
         /**
          * The picked Address Book file's bytes, or null when it can't be read or is larger than

@@ -187,21 +187,28 @@ class BroadcastRepository @Inject constructor(
         }
     }
 
-    /** "Joining" and "creating" a channel are the same action — there's no ownership/membership protocol. */
-    suspend fun joinChannel(rawName: String) {
+    /**
+     * "Joining" and "creating" a channel are the same action — there's no ownership/membership
+     * protocol. A room the person adds starts with its bell ON (iOS 824a30bb `joinChannel(notify:)`,
+     * owner 2026-11-26: they chose it); a room already joined keeps the bell it has, and machinery
+     * rooms (chess, the bots, the arcade) stay silent. [notify] false joins silently (the chess
+     * arena).
+     */
+    suspend fun joinChannel(rawName: String, notify: Boolean = true) {
         val name = MessageProtocol.normalizeChannelName(rawName)
         require(MessageProtocol.isValidChannelName(name)) { "Invalid channel name" }
+        val address = walletManager.getAddress()
+        val alreadyJoined = database.broadcastDao().getJoinedChannels(address).first().any { it.channelName == name }
         database.broadcastDao().joinChannel(
-            BroadcastChannelEntity(channelName = name, walletAddress = walletManager.getAddress())
+            BroadcastChannelEntity(channelName = name, walletAddress = address)
         )
+        if (com.kachat.app.services.publicchats.AutoAddedRooms.bellOnJoin(name, alreadyJoined, notify)) {
+            setNotifyEnabled(name, true)
+        }
     }
 
-    /** Removes the channel from the joined list AND permanently deletes every cached message for it — the UI must confirm this with the user first, since it's destructive and can't be undone (rejoining later starts with no history). Featured rooms can't be left (matches iOS). */
+    /** Removes the channel from the joined list AND permanently deletes every cached message for it — the UI must confirm this with the user first, since it's destructive and can't be undone (rejoining later starts with no history). Any room can be left, default rooms too (iOS 824a30bb, owner 2026-11-26: every room is one the person added). */
     suspend fun leaveChannel(channelName: String) {
-        // Curated rooms (Popular and the language rooms alike) are permanent fixtures of the
-        // list screen, so no UI offers Leave; guard against stray paths. A room the indexer
-        // tracks that you added yourself stays one you can leave (iOS 21c480d).
-        if (channelName in FeaturedBroadcastChannels.CURATED_NAMES) return
         database.broadcastDao().leaveChannel(channelName, walletManager.getAddress())
         // The message table is shared by every account on this device (iOS keeps one store per
         // account): the history goes only once no other account still has the room.
@@ -222,28 +229,8 @@ class BroadcastRepository @Inject constructor(
         indexerCoveredUntil.remove(channelName)
     }
 
-    /**
-     * Every default room is in Public Chats from the start (iOS KaPosts 865c9ab
-     * `ensureDefaultChannelsJoined`): #kaspa, #report-bugs, the language rooms and the rooms the
-     * indexer lists (iOS 961fc05a), auto-joined with the FIXED retention their indexer backfill
-     * serves - except any in [hidden], switched off with the customize button. They join with
-     * notifications off, which is what keeps the language rooms cheap: the background scan and
-     * the push registration only cover rooms whose bell is on. Idempotent - joinChannel inserts
-     * with IGNORE, so an already-joined row (and its bell/listen toggles) is left completely
-     * untouched. [com.kachat.app.services.publicchats.PublicChatDefaultRooms] runs it.
-     */
-    suspend fun ensureDefaultChannelsJoined(
-        hidden: Set<String>,
-        names: List<String> = FeaturedBroadcastChannels.CURATED_NAMES,
-    ) {
-        for (name in names) {
-            if (name in hidden) continue
-            joinDefaultChannel(name)
-        }
-    }
-
-    /** Joins one default room as [ensureDefaultChannelsJoined] does; an already-joined row is
-     *  left untouched. */
+    /** Joins a retired default room's replacement for an account that had the old one
+     *  (`PublicChatDefaultRooms.moveRetiredRooms`); an already-joined row is left untouched. */
     suspend fun joinDefaultChannel(name: String) {
         val address = try { walletManager.getAddress() } catch (_: Exception) { return }
         database.broadcastDao().joinChannel(
@@ -1642,10 +1629,14 @@ class BroadcastRepository @Inject constructor(
                 if (!held.senderAddress.equals(sender, ignoreCase = true)) continue
                 gone += held.id
             }
-            // held from that sender, or not here (yet): remembered either way
-            roomDeletes.record(wallet, channel, target, sender)
+            // held from that sender, or not here (yet): remembered either way (capped when not
+            // held, iOS audit 2026-11-27 L7)
+            roomDeletes.record(wallet, channel, target, sender, held = held != null)
         }
-        return removeMessages(channel, gone)
+        val removed = removeMessages(channel, gone)
+        // their mention rows and any notice still showing go too (iOS audit 2026-11-27 L10)
+        if (removed) roomMentionBell.get().forgetNotices(gone)
+        return removed
     }
 
     /** Deletes these messages from a room with the reactions and edits naming them; true when
@@ -1872,6 +1863,8 @@ class BroadcastRepository @Inject constructor(
      */
     suspend fun refreshIndexerTrackedRooms(maxAgeMs: Long = TRACKED_ROOMS_CHECK_INTERVAL_MS) {
         val base = settings.broadcastIndexerUrl.first().trim()
+        // each indexer's list is its own (iOS audit 2026-11-27 L12)
+        com.kachat.app.services.IndexerTrackedRooms.setIndexer(base)
         if (base.isEmpty()) return
         val now = System.currentTimeMillis()
         synchronized(this) {

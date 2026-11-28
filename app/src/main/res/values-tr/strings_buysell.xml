@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">Al</string>
+    <string name="buysell_sell">Sat</string>
+    <string name="buysell_history">Alım/Satım Geçmişi</string>
+    <string name="buysell_buy_kaspa">Kaspa Al</string>
+    <string name="buysell_sell_kaspa">Kaspa Sat</string>
+    <string name="buysell_buy_with_crypto">Kripto ile Kaspa Al</string>
+    <string name="buysell_buy_with_crypto_sub">kUSDT veya Bitcoin gibi başka bir coin ile ödeyin.</string>
+    <string name="buysell_buy_with_debit_card">Banka Kartıyla Kaspa Al</string>
+    <string name="buysell_debit_card_sub">Kartla ödeyin. kUSDT olarak gelir, sonra onunla Kaspa alırsınız.</string>
+    <string name="buysell_pay_with_question">Neyle ödemek istersiniz?</string>
+    <string name="buysell_sell_for_question">Kaspa\'nız karşılığında ne istersiniz?</string>
+    <string name="buysell_sell_kaspa_for">%1$s karşılığında Kaspa sat</string>
+    <string name="buysell_buy_kaspa_with">%1$s ile Kaspa al</string>
+    <string name="buysell_on_networks">%2$d ağda %1$s</string>
+    <string name="buysell_you_pay">Ödediğiniz</string>
+    <string name="buysell_where_land">Kaspa\'nız nereye gelsin?</string>
+    <string name="buysell_kusdt_one_address">kUSDT tek bir adresten ödenir ve Kaspa\'nız aynı adrese gelir.</string>
+    <string name="buysell_fresh_note">Hiç kullanılmamış yeni bir adres; böylece bu satın alma kullanıcı adınızdan ve sohbetlerinizden ayrı kalır.</string>
+    <string name="buysell_send_payment">Ödeme Gönder</string>
+    <string name="buysell_send_amount_coin">%1$s %2$s gönderin</string>
+    <string name="buysell_to_buy_kaspa">Kaspa almak için</string>
+    <string name="buysell_to_sell_for">%1$s karşılığında satmak için</string>
+    <string name="buysell_copy_amount">Tutarı Kopyala</string>
+    <string name="buysell_amount_copied">Tutar kopyalandı</string>
+    <string name="buysell_send_kas_from_k">K\'den KAS Gönder</string>
+    <string name="buysell_transaction_id">İşlem Kimliği</string>
+    <string name="buysell_copy_id">Kimliği Kopyala</string>
+    <string name="buysell_you_get_about">Yaklaşık %1$s %2$s alırsınız, %3$s adresine gönderilir.</string>
+    <string name="buysell_payment_received">Ödeme alındı</string>
+    <string name="buysell_waiting_confirm">Onaylanması bekleniyor.</string>
+    <string name="buysell_converting">ChangeNOW coinlerinizi dönüştürüyor.</string>
+    <string name="buysell_sending_your">%1$s gönderiliyor</string>
+    <string name="buysell_almost_done">Neredeyse bitti.</string>
+    <string name="buysell_failed_detail">ChangeNOW bu siparişi tamamlayamadı. ChangeNOW\'da kontrol edin.</string>
+    <string name="buysell_refunded_detail">ChangeNOW coinleri geri gönderdi.</string>
+    <string name="buysell_expired_detail">Zamanında hiçbir şey gelmedi. Yeni bir sipariş başlatın.</string>
+    <string name="buysell_verifying_detail">ChangeNOW bu siparişi kontrol ediyor.</string>
+    <string name="buysell_waiting_payment">Ödeme bekleniyor</string>
+    <string name="buysell_waiting_payment_detail">Yukarıdaki tutarı gönderin. Bu ekran kendiliğinden güncellenir.</string>
+    <string name="buysell_purchase_complete">Alım Tamamlandı</string>
+    <string name="buysell_sale_complete">Satış Tamamlandı</string>
+    <string name="buysell_you_paid">%1$s %2$s ödediniz</string>
+    <string name="buysell_you_got_about">Yaklaşık %1$s %2$s aldınız</string>
+    <string name="buysell_added_to_portfolio">Portföye eklendi</string>
+    <string name="buysell_order_sent">Sipariş Gönderildi</string>
+</resources>

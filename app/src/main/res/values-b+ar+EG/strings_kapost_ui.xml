@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">متصل، وعنده رسايل الأوضة دي.</string>
     <string name="kpui_room_indexer_footer">المحادثة العامة عايشة على Kaspa blockDAG، فأي مفهرس بيراقب نفس الشبكة بيقدّم نفس الأوضة. وجّه الأوضة دي لأي مفهرس تحبه - بتاعك أو بتاع حد تاني - من غير ما تغيّر المفهرس اللي باقي الأوض بتستخدمه.</string>
     <string name="kpui_use_app_indexer">استخدم مفهرس التطبيق</string>
-    <string name="kpui_room_switched_off_footer">الأوضة المقفولة مبتظهرش في المحادثات العامة وعمرها ما بتبعت إشعار. تقدر تشغّلها تاني في أي وقت.</string>
-    <string name="kpui_languages">اللغات</string>
-    <string name="kpui_languages_footer">لو قفلته هيشيل كل أوض اللغات من المحادثات العامة. ولو شغّلته، اقفل الأوض اللي مش عايزها.</string>
     <string name="kpui_notifications_off">الإشعارات مقفولة</string>
     <string name="kpui_notifications_on">الإشعارات شغّالة</string>
     <string name="kpui_room_notified_closed">بيجيلك إشعار بالرسايل الجديدة هنا، حتى لو التطبيق مقفول.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">مفيش حاجة هنا لسه</string>
     <string name="kpui_engagement_empty">لما حد يتفاعل مع المنشور ده، هيظهر هنا.</string>
     <string name="kpui_instant_tip_limit">الإكراميات الفورية محدودة بـ 10 KAS. اسحب لفوق علشان تبعت دي.</string>
-    <string name="kpui_kapost_settings">إعدادات KaPost</string>
     <string name="kpui_cool_down">استنى شوية قبل النشر</string>
     <string name="kpui_cooldown_on">المنشورات والتعليقات والإعجابات وإعادات النشر والأصوات والتعديلات والمسح بتستنى ٥ ثواني، مع إمكانية التراجع، قبل ما تتسجّل على السلسلة.</string>
     <string name="kpui_cooldown_off">المنشورات والتعليقات والإعجابات وإعادات النشر والأصوات والتعديلات والمسح بتتسجّل على السلسلة على طول، من غير تراجع.</string>

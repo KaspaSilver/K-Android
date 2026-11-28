@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification and banner previews (iOS 01f71184, audit 2026-11-27 R7). -->
+<resources>
+    <string name="rel_bell_reacted_to_your_message">Bereaksi %1$s pada pesan Anda</string>
+    <string name="rel_bell_removed_reaction">Menghapus reaksi %1$s</string>
+    <string name="rel_bell_replied_to_message">Membalas pesan</string>
+    <string name="rel_bell_edited_message">Mengedit pesan</string>
+    <string name="rel_bell_reacted">Bereaksi %1$s</string>
+</resources>

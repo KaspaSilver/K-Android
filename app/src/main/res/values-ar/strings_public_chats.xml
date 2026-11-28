@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">الإشعارات متوقفة لهذه المحادثة العامة</string>
     <string name="pc_notifications_on_closed_toast">ستتلقى إشعارات بالرسائل الجديدة في هذه المحادثة العامة، حتى عندما يكون التطبيق مغلقًا</string>
     <string name="pc_notifications_on_open_toast">ستتلقى إشعارًا بالرسائل الجديدة في هذه المحادثة العامة ما دام تطبيقك مفتوحًا</string>
-    <string name="pc_default_room_off_toast">تم إيقاف #%1$s - أعد تشغيلها من تعديل المحادثات العامة الافتراضية</string>
     <string name="pc_delete_room_title">حذف #%1$s؟</string>
     <string name="pc_delete_room_message">تُحذف كل رسالة مخزنة لهذه الغرفة على هذا الجهاز. لا يمكن التراجع عن ذلك - الانضمام لاحقًا يبدأ بلا سجل.</string>
     <string name="pc_delete_room_row_subtitle">يزيل هذه الغرفة ورسائلها من هذا الجهاز.</string>
     <string name="pc_keep">إبقاء</string>
     <string name="pc_keep_subtitle">اترك الغرفة كما هي.</string>
-    <string name="pc_new_public_chat">دردشة عامة جديدة</string>
-    <string name="pc_edit_default_public_chats">تعديل المحادثات العامة الافتراضية</string>
-    <string name="pc_new_public_chat_explainer">يمكن لأي شخص ينضم إلى اسم القناة نفسه رؤية الرسائل ونشرها هناك - لا يوجد مالك ولا دعوة.</string>
     <string name="pc_join">انضمام</string>
     <string name="pc_channel_name_rules">يجب أن تكون أسماء القنوات من 1 إلى %1$d حرفًا بلا مسافات أو نقطتين.</string>
     <string name="pc_join_failed">حدث خطأ أثناء الانضمام إلى تلك القناة.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">أبلغ عن محتوى مسيء أو مرفوض. يفتح بريدًا إلكترونيًا مرفقًا به هذه الرسالة.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">يخفي منشوراتهم ورسائلهم في الغرف، ويمنعهم من التفاعل معك.</string>
-    <string name="pc_sender_view_profile_subtitle">الملف الشخصي لهذا الحساب في KaPost: المنشورات والردود والمتابعون.</string>
+    <string name="pc_sender_view_profile_subtitle">ملفه الشخصي: المنشورات والردود والمتابعون.</string>
     <string name="pc_sender_send_kaspa_subtitle">أرسل Kaspa إلى عنوانه.</string>
     <string name="pc_sender_copy_address_subtitle">انسخ عنوان Kaspa الخاص به.</string>
     <string name="pc_original_message_not_loaded">لم يتم تحميل الرسالة الأصلية</string>

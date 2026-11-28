@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">Qualquer pessoa pode ver este endereço e o saldo dele na rede Kaspa, mas ninguém pode ler suas mensagens. Use-o só para conversar e para nomes de usuário.</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... ou nome de usuário</string>
     <string name="shell54_looking_up_username">Procurando nome de usuário...</string>
-    <string name="shell54_portfolio_add_address_footer">Digite um endereço Kaspa ou um nome de usuário como name.kachat. Cada transação recebida neste endereço vira uma compra, cada transação enviada vira uma venda, pelo preço histórico do KAS naquele dia. Adicionar o mesmo endereço de novo depois importa só as transações encontradas desde a última importação.</string>
+    <string name="shell54_portfolio_add_address_footer">Digite um endereço Kaspa ou um nome de usuário como @name. Cada transação recebida neste endereço vira uma compra, cada transação enviada vira uma venda, pelo preço histórico do KAS naquele dia. Adicionar o mesmo endereço de novo depois importa só as transações encontradas desde a última importação.</string>
     <string name="shell54_report_copied">Denúncia copiada</string>
     <string name="shell54_report_no_mail_app">Nenhum app de e-mail conseguiu abri-la. Cole a denúncia em um e-mail para %1$s.</string>
     <string name="shell54_show_amounts">Mostrar valores</string>

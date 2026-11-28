@@ -84,6 +84,9 @@ object MessageReply {
      */
     fun parseOrNull(text: String?): MessageReplyContent? {
         if (text.isNullOrBlank() || text.length > 100_000 || text.trimStart().firstOrNull() != '{') return null
+        // A reply's JSON always holds its "reply" type value: anything without it is answered
+        // with no decode (iOS PayloadSniff, audit 2026-11-27 C1).
+        if (!PayloadSniff.mayBeReply(text)) return null
         return try {
             // Every field must be there as a string, as iOS's JSONDecoder requires
             // (MessageReplyCodec.parse): Gson leaves a missing key null in a non-null field, and a

@@ -188,9 +188,12 @@ internal fun GroupChatRow(
                         SilencedPill()
                     }
                 }
+                // Drawn again when the day moves on (iOS 01f71184, release audit C2).
+                val dayStamp = com.kachat.app.util.LocalChatDayStamp.current
                 convo.lastMessage?.let { last ->
                     Spacer(Modifier.width(8.dp))
-                    Text(chatListDate(last.blockTimestamp, stringResource(R.string.chat_day_yesterday)), fontSize = 12.sp, color = colors.textSecondary, maxLines = 1)
+                    val yesterdayLabel = stringResource(R.string.chat_day_yesterday)
+                    Text(remember(last.blockTimestamp, dayStamp, yesterdayLabel) { chatListDate(last.blockTimestamp, yesterdayLabel) }, fontSize = 12.sp, color = colors.textSecondary, maxLines = 1)
                 }
             }
             Spacer(Modifier.height(4.dp))

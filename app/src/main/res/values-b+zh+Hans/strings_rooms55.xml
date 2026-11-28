@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">搜索公共聊天</string>
-    <string name="r55_no_public_chats">没有公共聊天</string>
-    <string name="r55_no_public_chats_hint">轻点 + 加入或创建一个公共聊天室。</string>
     <string name="r55_page_cycle_hint">在你的聊天和公共聊天之间切换</string>
-    <string name="r55_more_rooms">更多聊天室</string>
-    <string name="r55_more_rooms_footer">在 K 读取公共聊天的索引器上添加的聊天室。</string>
     <string name="r55_delete_one_public_chat">删除 1 个公共聊天？</string>
     <string name="r55_delete_n_public_chats">删除 %1$d 个公共聊天？</string>
-    <string name="r55_delete_public_chats_message">默认公共聊天会被关闭（可在“编辑默认公开聊天”中重新打开）。你添加的房间会连同其消息从此设备上删除。</string>
     <string name="r55_delete_for_everyone">为所有人删除</string>
     <string name="r55_delete_for_everyone_subtitle">为所有使用 K 的人将其从此房间移除。</string>
     <string name="r55_delete_for_everyone_q">要为所有人删除吗？</string>

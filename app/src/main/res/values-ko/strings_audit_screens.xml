@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Audit 2026-11-27 screens (iOS d88891ea): the Explorer's 64-character ids looked up only on Search (L5). -->
+<resources>
+    <string name="ex_look_up_this_id">이 ID 조회</string>
+    <string name="ex_own_private_key">회원님의 개인 키 중 하나입니다. K는 이 키를 어디에도 보내지 않습니다. 공유하지 마세요.</string>
+</resources>

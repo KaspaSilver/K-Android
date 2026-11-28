@@ -12,6 +12,15 @@ object KaPostsConversation {
      * the poster's own posts, each under their previous one; anyone else's reply is a comment,
      * never part of the thread, even when it's the only one (iOS `loadSelfThreadChain`).
      */
+    /**
+     * The thread root (local id) your sent reply to your own post [parentId] continues, or null
+     * (iOS 01f71184 T4 `extendSelfThreadChain`): the root whose chain ends at the parent, or the
+     * parent itself when it has no chain yet. [chains] is root local id -> its chain's local ids.
+     */
+    fun selfThreadChainRoot(chains: Map<String, List<String>>, parentId: String): String? =
+        chains.entries.firstOrNull { it.value.lastOrNull() == parentId }?.key
+            ?: if (chains[parentId].isNullOrEmpty()) parentId else null
+
     fun selfThreadNext(replies: List<KaPostDraft>, poster: String): KaPostDraft? =
         replies.filter { it.posterAddress == poster && it.remoteId != null }.minByOrNull { it.timestamp }
 

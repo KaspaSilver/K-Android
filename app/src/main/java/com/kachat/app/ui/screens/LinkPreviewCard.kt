@@ -1189,11 +1189,11 @@ fun KaChatInternalLinkCard(
     }
     val kaPostFallbackTitle = stringResource(R.string.a_post_on_kapost)
     val kaPostFallbackSubtitle = stringResource(R.string.tap_to_open_it_in_kapost)
-    // A room link: curated rooms and rooms already in the list just open; anything else is
-    // joined on tap (after asking), so the card says so first (iOS 148a5331).
+    // A room link: a room already in the list just opens; anything else asks to join on tap
+    // (default rooms too since iOS 824a30bb), so the card says so first.
     val roomChannel = (ref as? KaChatLinkRef.PublicChatRoom)?.channel
     val roomKnown by androidx.compose.runtime.produceState(
-        initialValue = roomChannel != null && roomChannel in com.kachat.app.models.FeaturedBroadcastChannels.CURATED_NAMES,
+        initialValue = false,
         roomChannel,
     ) {
         if (roomChannel != null && !value) value = PublicChatLinkRouter.isListed(context, roomChannel)
@@ -1213,10 +1213,11 @@ fun KaChatInternalLinkCard(
         is KaChatLinkRef.HubSection -> ref.tab.hubIcon
     }
     val eyebrow = when (ref) {
-        is KaChatLinkRef.Profile -> "KaChat Profile"
+        // translated, and "Post" rather than the old "KaPost" (iOS d88891ea)
+        is KaChatLinkRef.Profile -> stringResource(R.string.link_card_kachat_profile)
         is KaChatLinkRef.PaymentRequest -> payEyebrow
-        is KaChatLinkRef.KaPost -> "KaPost"
-        is KaChatLinkRef.PublicChatRoom -> "Public Chat Room"
+        is KaChatLinkRef.KaPost -> stringResource(R.string.kpui_post)
+        is KaChatLinkRef.PublicChatRoom -> stringResource(R.string.link_card_public_chat_room)
         is KaChatLinkRef.HubSection -> stringResource(R.string.shell_kaspa_hub)
     }
     val title = when (ref) {

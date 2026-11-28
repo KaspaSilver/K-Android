@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">Añadir sala</string>
+    <string name="roomsoptin_indexer_rooms_footer">Salas que guarda el indexador: su historial se conserva y pueden avisarte aunque K esté cerrado.</string>
+    <string name="roomsoptin_other_languages">Otros idiomas</string>
+    <string name="roomsoptin_create_title">Cómo funciona una sala que creas</string>
+    <string name="roomsoptin_create_point_name">Quien escriba el mismo nombre entra en la misma sala. No tiene dueño ni invitación.</string>
+    <string name="roomsoptin_create_point_history">Ningún indexador guarda su historial. K lo lee de la red Kaspa mientras la sala está abierta y guarda hasta 3 días en tu teléfono.</string>
+    <string name="roomsoptin_create_point_bell">Sin notificaciones con K cerrado. Con la campana activada, K te avisa solo mientras está abierto.</string>
+    <string name="roomsoptin_create_point_public">Todo lo que se dice allí es público: cualquiera puede leerlo en la red Kaspa.</string>
+    <string name="roomsoptin_create_room">Crear sala</string>
+    <string name="roomsoptin_name_your_room">Ponle nombre a tu sala</string>
+    <string name="roomsoptin_empty_title">Aún no hay chats públicos</string>
+    <string name="roomsoptin_empty_body">Añade salas que guarda el indexador, como #kaspa, o crea la tuya. No se añade nada sin que lo elijas.</string>
+    <string name="roomsoptin_removed_toast">#%1$s eliminada. Vuelve a añadirla cuando quieras desde Añadir sala.</string>
+    <string name="roomsoptin_bulk_delete_message">Las salas que guarda el indexador se pueden volver a añadir desde Añadir sala. Las salas que creaste se borran de este dispositivo con sus mensajes.</string>
+    <string name="roomsoptin_not_in_list_add">Esta sala no está en tus chats públicos. ¿Añadirla?</string>
+    <string name="roomsoptin_room_info_curated">Una sala que guarda el indexador. La añadiste tú, y cualquiera en K puede publicar en ella.</string>
+</resources>

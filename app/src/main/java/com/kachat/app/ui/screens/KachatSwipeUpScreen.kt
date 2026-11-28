@@ -664,6 +664,8 @@ private fun SendProgressScreen(
                 modifier = Modifier.fillMaxSize().alpha(dagAlpha),
                 // still once faded behind the outcome (audit 2026-11-25 R5)
                 paused = dagSettled(finished, dagAlpha),
+                // 60 fps, not the display's 120 (iOS 01f71184, smoothness audit T6)
+                minimumIntervalMs = SEND_DAG_FRAME_MS,
             )
             androidx.compose.animation.AnimatedVisibility(visible = done, enter = scaleIn(initialScale = 0.4f) + fadeIn(), exit = fadeOut()) {
                 // iOS "checkmark.circle.fill" in black on the accent
@@ -763,7 +765,12 @@ private fun SendProgressScreen(
                             .fillMaxWidth()
                             .sendKaspaGlass(14.dp)
                             // No browser (or none that takes the link) throws: never crash on Sent.
-                            .clickable { runCatching { uriHandler.openUri(url) } }
+                            .clickable {
+                                // K's own Explorer (iOS bfb902b7): the sheet closes, or its page
+                                // would open behind it.
+                                if (com.kachat.app.services.explorer.ExplorerDeepLink.openIfLink(url)) onDone()
+                                else runCatching { uriHandler.openUri(url) }
+                            }
                             .padding(horizontal = 14.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,

@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">Rechercher dans les discussions publiques</string>
-    <string name="r55_no_public_chats">Aucune discussion publique</string>
-    <string name="r55_no_public_chats_hint">Touchez + pour rejoindre ou créer un salon public.</string>
     <string name="r55_page_cycle_hint">Bascule entre vos discussions et les discussions publiques</string>
-    <string name="r55_more_rooms">Autres salons</string>
-    <string name="r55_more_rooms_footer">Salons ajoutés sur l\'indexeur où K lit les discussions publiques.</string>
     <string name="r55_delete_one_public_chat">Supprimer 1 discussion publique ?</string>
     <string name="r55_delete_n_public_chats">Supprimer %1$d discussions publiques ?</string>
-    <string name="r55_delete_public_chats_message">Les discussions publiques par défaut sont désactivées (réactivez-les dans Modifier les chats publics par défaut). Les salons que vous avez ajoutés sont supprimés avec leurs messages sur cet appareil.</string>
     <string name="r55_delete_for_everyone">Supprimer pour tous</string>
     <string name="r55_delete_for_everyone_subtitle">Le retire de ce salon pour tous les utilisateurs de K.</string>
     <string name="r55_delete_for_everyone_q">Supprimer pour tous ?</string>

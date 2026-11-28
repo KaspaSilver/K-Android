@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">Ahora no se encuentra la publicación de este borrador, así que aún no se puede publicar. Seguirá en tus borradores.</string>
     <string name="kaposts_likes">Me gusta</string>
     <string name="kaposts_no_tips_yet">Aún no hay propinas.</string>
-    <string name="kaposts_not_on_testnet">KaPost aún no está disponible en Testnet</string>
-    <string name="kaposts_not_on_testnet_sub">No hay un indexador de KaPost para testnet. Desactiva Testnet en Ajustes > Conexión para leer y publicar en mainnet.</string>
+    <string name="kaposts_not_on_testnet">Las publicaciones aún no están disponibles en Testnet</string>
+    <string name="kaposts_not_on_testnet_sub">No hay un indexador de Publicaciones para testnet. Desactiva Testnet en Ajustes &gt; Configuración de conexión para leer y publicar en mainnet.</string>
     <string name="kaposts_poll_days_left">quedan %1$d d</string>
     <string name="kaposts_poll_final_results">%1$s · Resultados finales</string>
     <string name="kaposts_poll_hours_left">quedan %1$d h</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">Esta publicación se está enviando ahora mismo, así que no se puede cancelar.</string>
     <string name="kaposts_scheduled_reminder_title">Publicación programada</string>
     <string name="kaposts_scheduled_sending_soon">Se enviará en cuanto responda la red</string>
-    <string name="kaposts_server_not_answering">El servidor de KaPost no responde. Se muestran publicaciones guardadas y nuevas de la red.</string>
+    <string name="kaposts_server_not_answering">El servidor de Publicaciones no responde. Se muestran las publicaciones guardadas y las nuevas de la red.</string>
     <string name="kaposts_thread_not_confirmed">La red no confirmó parte de tu hilo, así que el resto no se envió. ¿Guardar lo que queda como borrador? Puede que su primera publicación ya se haya enviado, así que compruébalo antes de publicarla de nuevo.</string>
     <string name="kaposts_tip_from_chatting_note">Desde tu Chatting Address la propina cuenta en la publicación y apareces como quien dio propina.</string>
     <string name="kaposts_tip_from_private_note">Desde otra dirección la propina es privada: el autor la recibe y la ve en vuestro chat, pero no cuenta en la publicación ni te nombra.</string>

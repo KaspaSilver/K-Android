@@ -398,17 +398,17 @@ class ExplorerLive @Inject constructor(
 
     private fun publishStats() {
         val slow = slow ?: return
-        val anchor = daaAnchor ?: return
+        // still waits for the first block, as when the DAA score was part of it
+        if (daaAnchor == null) return
         val next = ExplorerNetworkStats(
-            daaScore = anchor.first,
-            blueScore = blueScore ?: 0L,
             blocksPerSecond = blocksPerSecond,
             hashrate = slow.hashrate,
             mempoolSize = mempool,
             normalFeerate = slow.feerate,
             priorityFeerate = slow.priority,
-            // not in kaspa.stream's API: the demo, shown only when Kaspalytics hasn't answered
-            averageFee24h = ExplorerDemo.averageFee24h(System.currentTimeMillis()),
+            // not in kaspa.stream's API: the demo's in debug builds, 0 (shown as "–") in release
+            // (iOS 01f71184 `demoAverageFee`)
+            averageFee24h = if (ExplorerDemo.allowed) ExplorerDemo.averageFee24h(System.currentTimeMillis()) else 0L,
             circulatingSupply = slow.circulating,
             maxSupply = slow.max,
             priceUSD = slow.price,

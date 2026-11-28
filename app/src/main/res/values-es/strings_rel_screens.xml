@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4, iOS 01f71184 (release audit 2026-11-27): chat, group and Explorer screens. Translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="rs_group_refresh_invites">Volviendo a leer tus invitaciones a grupos</string>
+    <string name="rs_group_refresh_control">Volviendo a leer los miembros y las claves de época</string>
+    <string name="rs_group_refresh_messages">Volviendo a descargar mensajes (%1$d de %2$d miembros)</string>
+    <string name="rs_group_refresh_decrypting">Descifrando el historial</string>
+    <string name="rs_group_you_changed_photo">Cambiaste la foto del grupo</string>
+    <string name="rs_group_you_removed_photo">Quitaste la foto del grupo</string>
+    <string name="rs_group_you_renamed">Cambiaste el nombre del grupo a \"%1$s\"</string>
+    <string name="rs_group_changed_photo">%1$s cambió la foto del grupo</string>
+    <string name="rs_group_removed_photo">%1$s quitó la foto del grupo</string>
+    <string name="rs_group_renamed">%1$s cambió el nombre del grupo a \"%2$s\"</string>
+    <string name="rs_own_account_not_contact">Esa dirección es de una de tus propias cuentas, así que no se puede añadir como contacto.</string>
+    <string name="ex_kind_kaposts">Publicaciones</string>
+</resources>

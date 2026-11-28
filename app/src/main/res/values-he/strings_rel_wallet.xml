@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">זהב</string>
+    <string name="rel_wallet_silver">כסף</string>
+    <string name="rel_wallet_pair_bitcoin">מחיר Kaspa בביטקוין</string>
+    <string name="rel_wallet_pair_voo">יחידות של קרן ה-S&amp;P 500 ETF של Vanguard</string>
+    <string name="rel_wallet_pair_gold">אונקיות טרוי של זהב</string>
+    <string name="rel_wallet_pair_silver">אונקיות טרוי של כסף</string>
+    <string name="rel_wallet_cold_storage_n">אחסון קר %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">אין UTXOs להוצאה בכתובת הזו</string>
+    <string name="rel_wallet_insufficient_plus_fee">אין מספיק יתרה לסכום הזה ולעמלת הרשת</string>
+    <string name="rel_wallet_too_many_inputs">השליחה הזו תדרוש %1$d UTXOs, אבל KasSigner תומך רק ב-%2$d קלטים לעסקה. שלח סכום קטן יותר או אחד קודם את הכתובת הזו.</string>
+    <string name="rel_wallet_cancelled">בוטל.</string>
+    <string name="rel_wallet_err_no_internet">אין חיבור לאינטרנט. בדוק את החיבור ונסה שוב.</string>
+    <string name="rel_wallet_err_timed_out">תם הזמן לחיבור. בדוק את החיבור ונסה שוב.</string>
+    <string name="rel_wallet_err_cant_reach">לא ניתן היה להגיע לשרת. בדוק את הכתובת בהגדרות ואת החיבור.</string>
+    <string name="rel_wallet_err_secure">לא ניתן היה ליצור חיבור מאובטח לשרת.</string>
+    <string name="rel_wallet_err_network">אירעה שגיאת רשת. בדוק את החיבור ונסה שוב.</string>
+    <string name="rel_wallet_err_unreadable">השרת שלח משהו שהאפליקציה לא הצליחה לקרוא. נסה שוב; אם זה ממשיך, עדכן את האפליקציה.</string>
+    <string name="rel_wallet_err_node">צומת Kaspa החזיר שגיאה. האפליקציה תנסה צומת אחר; נסה שוב בעוד רגע.</string>
+    <string name="rel_wallet_err_unknown">אירעה שגיאה לא ידועה.</string>
+    <string name="rel_wallet_err_no_spendable_available">אין UTXOs זמינים להוצאה</string>
+    <string name="rel_wallet_err_no_private_key">לא ניתן היה לקבל את המפתח הפרטי</string>
+    <string name="rel_wallet_err_insufficient_payment">אין מספיק יתרה לתשלום</string>
+    <string name="rel_wallet_err_insufficient_after_fee">אין מספיק יתרה אחרי העמלה</string>
+    <string name="rel_wallet_err_insufficient_handshake">אין מספיק יתרה ללחיצת היד</string>
+    <string name="rel_wallet_err_insufficient_self_stash">אין מספיק יתרה לעמלת השמירה העצמית</string>
+    <string name="rel_wallet_err_group_secrets">חסרים סודות הקבוצה - נסה להצטרף שוב לקבוצה.</string>
+    <string name="rel_wallet_err_admin_secrets">חסרים סודות המנהל של הקבוצה.</string>
+</resources>

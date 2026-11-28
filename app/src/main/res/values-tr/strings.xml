@@ -50,7 +50,6 @@
     <string name="close">Kapat</string>
     <string name="confirm">Onayla</string>
     <string name="confirm_selection">Seçimi Onayla</string>
-    <string name="connect_to_a_node">Bir Duguma Baglan</string>
     <string name="connected_only_to_this_node">Yalnizca bu duguma bagli</string>
     <string name="connection_settings">Bağlantı Ayarları</string>
     <string name="connection_status">Bağlantı Durumu</string>
@@ -75,7 +74,6 @@
     <string name="failed_to_send">Gonderilemedi</string>
     <string name="fee_kas">Ucret (KAS)</string>
     <string name="from">Gonderen</string>
-    <string name="fund_your_chatting_address">Sohbet Adresinizi Fonlayin</string>
     <string name="group_info">Grup Bilgisi</string>
     <string name="group_name_2">Grup adi</string>
     <string name="hidden_addresses">Gizli Adresler</string>
@@ -84,7 +82,6 @@
     <string name="import_account">Hesabı İçe Aktar</string>
     <string name="import_existing_account">Mevcut Hesabı İçe Aktar</string>
     <string name="incoming_notifications">Gelen Bildirimler</string>
-    <string name="kachat_needs_to_connect_to_a">K\'in bir duguma baglanmasi gerekiyor. Nasil baglanmak istersiniz?</string>
     <string name="kaspa_explorer">Kaspa Kesif Motoru</string>
     <string name="label_optional">Etiket (istege bagli)</string>
     <string name="last_message">Son Mesaj</string>
@@ -185,7 +182,6 @@
     <string name="created">Oluşturuldu</string>
     <string name="customization">Kisisellestirme</string>
     <string name="diagnostics">Tanılama</string>
-    <string name="discover_addresses">Adresleri Kesfet</string>
     <string name="email">E-posta</string>
     <string name="explorer">Kesif Motoru</string>
     <string name="github">GitHub</string>
@@ -236,14 +232,8 @@
     <string name="how_kachat_uses_kaspa">K, Kaspa\'yi Nasil Kullanir</string>
     <string name="kachat_lets_you_send_and_receive">K, mesajlarinizi dogrudan Kaspa agi uzerinden gondermenizi ve almanizi saglar. Mesajlarinizi gonderirken ucret odemek icin Kaspa gereklidir. Odediginiz ucret, agi guvence altina alan madencilere gider.</string>
     <string name="finish">Bitir</string>
-    <string name="recommended">Onerilen</string>
-    <string name="connect_your_own_node">Kendi Node\'unuzu Baglayin</string>
-    <string name="enter_a_node_address_you_trust">Guvendiginiz bir node adresi girin</string>
-    <string name="auto_search_for_nodes">Node\'lari Otomatik Ara</string>
-    <string name="most_taxing_on_the_device_not_as">Cihaz icin en yorucu olani, o kadar guvenilir degil - yasadiginiz yere bagli</string>
     <string name="choose_your_language">Dilinizi Secin</string>
     <string name="select_the_language_youd_like_to">K\'te kullanmak istediginiz dili secin.</string>
-    <string name="best">En iyi</string>
     <string name="receive_kaspa">Kaspa Al</string>
     <string name="currency">Para Birimi</string>
     <string name="choose_your_currency">Para Biriminizi Secin</string>
@@ -319,7 +309,6 @@
     <string name="new_message_request">Yeni mesaj isteği</string>
     <string name="wants_to_chat_with_you">%1$s seninle sohbet etmek istiyor.</string>
     <!-- Welcome Guide: .kachat and Message Requests (iOS 5c15ca0) -->
-    <string name="welcome_fund_chatting_body">5 Kaspa yaklaşık 2500 mesaja yeter.</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">Testnet</string>
     <string name="testnet_restart_to_testnet">Testnet\'e geçişi tamamlamak için K\'i tamamen kapatıp yeniden aç.</string>
@@ -646,7 +635,7 @@
     <string name="ab_export_failed">Dışa aktarma başarısız. Dosya yazılamadı.</string>
     <string name="ab_already_up_to_date">Zaten güncel. Dosyadaki tüm adresler kayıtlı.</string>
     <string name="ab_imported_counts">İçe aktarıldı: %1$d eklendi, %2$d güncellendi.</string>
-    <string name="ab_err_not_an_export">Bu dosya bir KaChat kişiler dışa aktarımı değil.</string>
+    <string name="ab_err_not_an_export">Bu dosya bir K kişi dışa aktarımı değil.</string>
     <string name="ab_err_export_empty">Bu kişiler dışa aktarımında kişi yok.</string>
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">Ağa gönderildi</string>
@@ -874,7 +863,6 @@
     <string name="wallet_spending">Harcama</string>
     <string name="wallet_send">Gonder</string>
     <string name="wallet_receive">Al</string>
-    <string name="wallet_request">İste</string>
     <string name="profile_share_profile">Profili Paylaş</string>
     <string name="settings_back_up_account">Hesabı Yedekle</string>
     <string name="settings_complete_your_backup">Yedeklemeni Tamamla</string>
@@ -1404,12 +1392,9 @@
     <string name="chess_tc_1_1_subtitle">Herkese bir dakika, hamle başına bir saniye.</string>
     <string name="chess_tc_casual">Serbest</string>
     <string name="chess_tc_no_timer">Süresiz.</string>
-    <string name="check_off_every_address_you_want_on_the_list">Listede olmasını istediğiniz her adresi tek seferde işaretleyin.</string>
-    <string name="close_and_keep_scanning">Kapat ve Taramaya Devam Et</string>
     <string name="recents">Son kullanılanlar</string>
     <string name="initial_sync_starting">Başlatılıyor</string>
     <string name="initial_sync_finished">Bitti</string>
-    <string name="downloading_message_history">Mesaj geçmişi indiriliyor</string>
     <string name="wiping_incoming_messages">Gelen mesajlar siliniyor...</string>
     <string name="finishing_up">Tamamlanıyor...</string>
     <string name="re_syncing_chats_progress">Yeniden senkronize ediliyor... %1$d / %2$d sohbet</string>
@@ -1460,12 +1445,7 @@
     <string name="notification_mode_default">Varsayılan (%1$s)</string>
     <string name="checking_address_n">Adres #%1$d kontrol ediliyor</string>
     <string name="n_found_so_far">Şimdiye kadar %1$d bulundu</string>
-    <string name="checks_the_first_thousand_addresses">İlk bin adresi aradaki boşluklara bakmadan kontrol eder, sonra bulmaya devam ettiği sürece devam eder.</string>
     <string name="first_sync_all_set">Hazırsınız</string>
-    <string name="first_sync_up_to_date">Sohbetlerin ve geçmişin güncel.</string>
-    <string name="first_sync_setting_up">Hesabın kuruluyor</string>
-    <string name="first_sync_downloading_footer">Bu hesabın zincirdeki her şeyi indiriliyor. Bu kadar uzun sürmesi yalnızca bir kez olur.</string>
-    <string name="first_sync_continue_anyway">Yine de devam et</string>
     <string name="nc_use_all_files">Tüm Dosyaları Kullan</string>
     <string name="nc_use_this_folder">Bu Klasörü Kullan</string>
     <string name="nc_no_subfolders">Alt klasör yok.</string>
@@ -1542,10 +1522,6 @@
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">Paylaşım Bağlantısını Kopyala</string>
     <string name="share_link_copied">Paylaşım bağlantısı kopyalandı.</string>
-    <string name="generate_non_quantum_address">Kuantum Olmayan Adres Oluştur</string>
-    <string name="generate_non_quantum_address_subtitle">Al’ın verdiği gibi normal bir adres. kUSDT dahil her şeyle çalışır.</string>
-    <string name="generate_quantum_resistant_address">Kuantuma Dayanıklı Adres Oluştur</string>
-    <string name="generate_quantum_resistant_address_subtitle">Harcayana kadar anahtarını gizli tutar. Yalnızca Kaspa için: buradan kUSDT işlem yapılamaz.</string>
     <string name="kaspa">Kaspa</string>
     <string name="kusdt_balances">kUSDT Bakiyeleri</string>
     <string name="kusdt_listed_stays_here">Bu adres kUSDT listenizde, bu yüzden burada kalır. Önce kUSDT Yönet ekranından gizleyin.</string>
@@ -1570,14 +1546,12 @@
     <string name="tap_to_manage">Yönetmek için dokun</string>
     <string name="token_about_kusdt">kUSDT, Ethereum ve BNB Chain’den gelen, Trestly’nin kasasında 1:1 tutulan ve Kaspa üzerinde token olarak çıkarılan USDT’dir. Tether tarafından çıkarılmaz ve onu yeniden USDT’ye yalnızca Trestly çevirebilir.</string>
     <string name="token_about_title">%1$s Hakkında</string>
-    <string name="token_actions_title">%1$s İşlemleri</string>
     <string name="token_activity_bridged_in">Köprüyle Geldi</string>
     <string name="token_activity_combined_coins">Coin’ler Birleştirildi</string>
     <string name="token_activity_swapped">Takas Edildi</string>
     <string name="token_add_for_fee_and_change">Ücret ve Para Üstü Coin İçin %1$s Ekle</string>
     <string name="token_add_for_network_fee">Ağ Ücreti İçin %1$s Ekle</string>
     <string name="token_add_more">%1$s Daha Ekle</string>
-    <string name="token_address_visibility_subtitle">kUSDT tutan hangi adreslerin listede olacağını işaretle.</string>
     <string name="token_address_visibility_title">%1$s Adres Görünürlüğü</string>
     <string name="token_amount_accessibility">Tutar (%1$s)</string>
     <string name="token_available">Kullanılabilir: %1$s</string>
@@ -1594,23 +1568,20 @@
     <string name="token_combine_explainer">Her %1$s coin’i %2$s tutar. Onları tek coin’de birleştirince fazla KAS, ağ ücreti düşülerek bu adrese normal KAS olarak döner. %3$s miktarın aynı kalır.</string>
     <string name="token_combine_limit">Bir seferde en fazla %1$d coin birleşir. Kalanlar için yeniden birleştir.</string>
     <string name="token_combined">Birleştirilen</string>
-    <string name="token_couldnt_check">%1$@ şu an kontrol edilemedi: %2$@ Yeniden denemek için aşağı çek.</string>
-    <string name="token_discover_addresses">kUSDT Adreslerini Bul</string>
-    <string name="token_discover_addresses_subtitle">kUSDT tutan adreslerini bulur.</string>
+    <string name="token_couldnt_check">%1$s şu an kontrol edilemedi: %2$s Yeniden denemek için aşağı çek.</string>
     <string name="token_every_coin_goes_to_recipient">Her %1$s coini %2$s içerir. Bu KAS, %3$s ile birlikte alıcıya gider, böylece kaybolmaz.</string>
     <string name="token_every_coin_holds_kas">Her kUSDT coini 1.5 KAS içerir. Gönderdiğinde kUSDT ile birlikte gider.</string>
     <string name="token_fee">Ücret %1$s</string>
     <string name="token_fee_from_token_kas">Bu adreste KAS yoktu, bu yüzden ağ ücreti kUSDT ile giden KAS’tan alındı.</string>
     <string name="token_fee_same_address_note">Ücretin KAS’ı aynı adresten gelir, böylece gönderim onu diğer adreslerine bağlamaz.</string>
-    <string name="token_found_addresses">%2$@ olan %1$d adres bulundu.</string>
+    <string name="token_found_addresses">%2$s olan %1$d adres bulundu.</string>
     <string name="token_fund_hint">KAS’ın hangi adresinden geleceğini seç, yukarı kaydır, sonra buraya dönersin.</string>
-    <string name="token_generate_new_address_subtitle">Bu listeye yepyeni, normal bir adresini ekler.</string>
     <string name="token_goes_with_it">Birlikte Gider</string>
     <string name="token_held_on">Tutulduğu Yer</string>
     <string name="token_held_with_it">Yanında %1$s var</string>
     <string name="token_hidden_count">%1$d gizli: yine de toplama dahil.</string>
     <string name="token_hide_address_subtitle">Bu listeden kaldırır. %1$s Adres Görünürlüğü’nden yeniden aç.</string>
-    <string name="token_hide_all_message">%1$@ Yönet yalnızca sohbet adresinle yeniden başlar. Hiçbir şey kaybolmaz: istediğin adresi buradan geri getir, %2$@ toplamında sayılmaya devam eder.</string>
+    <string name="token_hide_all_message">%1$s Yönet yalnızca sohbet adresinle yeniden başlar. Hiçbir şey kaybolmaz: istediğin adresi buradan geri getir, %2$s toplamında sayılmaya devam eder.</string>
     <string name="token_history_from_now_on">Bu telefondaki gönderimler, alımlar ve birleştirmeler bundan sonra burada görünür.</string>
     <string name="token_history_title">%1$s Geçmişi</string>
     <string name="token_kas_for_send">Bir %1$s gönderimi için KAS</string>
@@ -1629,8 +1600,6 @@
     <string name="token_receive_no_usdt_warning">Bu adrese Ethereum, BNB Chain ya da bir borsadan USDT gönderme: kaybolur. Önce Trestly’de Kaspa’ya köprüle.</string>
     <string name="token_receive_only">Buraya yalnızca Kaspa üzerindeki %1$s veya KAS gönderilebilir.</string>
     <string name="token_receive_title">%1$s Al</string>
-    <string name="token_rename_label_placeholder">Etiket</string>
-    <string name="token_rename_message">Tanimaniza yardimci olmasi icin bu adrese bir etiket verin.</string>
     <string name="token_script_address_error">%1$s yalnızca normal bir Kaspa adresine gidebilir; kuantum güvenli veya başka bir betik adresine gidemez.</string>
     <string name="token_send_title">%1$s Gönder</string>
     <string name="token_send_to_chatting_subtitle">Bu adresteki kUSDT’yı Sohbet Adresine taşır.</string>

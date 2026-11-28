@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">वेबसाइटें</string>
     <string name="shell_kaspa_websites">Kaspa वेबसाइटें</string>
     <string name="shell_terms_of_use">उपयोग की शर्तें</string>
-    <string name="shell_message_indexer_footer">KaPost, सार्वजनिक चैट और शतरंज भी इसी इंडेक्सर से पढ़े जाते हैं।</string>
+    <string name="shell_message_indexer_footer">पोस्ट, सार्वजनिक चैट और शतरंज भी इसी इंडेक्सर से पढ़े जाते हैं।</string>
 </resources>

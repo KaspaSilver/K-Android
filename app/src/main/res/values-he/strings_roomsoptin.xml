@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">הוספת חדר</string>
+    <string name="roomsoptin_indexer_rooms_footer">חדרים שהאינדקסר שומר: ההיסטוריה שלהם נשמרת והם יכולים להתריע גם כש-K סגור.</string>
+    <string name="roomsoptin_other_languages">שפות אחרות</string>
+    <string name="roomsoptin_create_title">איך עובד חדר שאתה יוצר</string>
+    <string name="roomsoptin_create_point_name">כל מי שמקליד אותו שם נכנס לאותו חדר. אין לו בעלים ואין הזמנה.</string>
+    <string name="roomsoptin_create_point_history">שום אינדקסר לא שומר את ההיסטוריה שלו. K קורא אותה מרשת Kaspa כשהחדר פתוח, ושומר עד 3 ימים בטלפון שלך.</string>
+    <string name="roomsoptin_create_point_bell">אין התראות כש-K סגור. עם הפעמון דולק, K מתריע רק כשהוא פתוח.</string>
+    <string name="roomsoptin_create_point_public">כל מה שנאמר שם ציבורי: כל אחד יכול לקרוא אותו ברשת Kaspa.</string>
+    <string name="roomsoptin_create_room">יצירת חדר</string>
+    <string name="roomsoptin_name_your_room">תן שם לחדר שלך</string>
+    <string name="roomsoptin_empty_title">אין עדיין צ\'אטים ציבוריים</string>
+    <string name="roomsoptin_empty_body">הוסף חדרים שהאינדקסר שומר, כמו #kaspa, או צור חדר משלך. שום דבר לא נוסף בלי שתבחר בו.</string>
+    <string name="roomsoptin_removed_toast">#%1$s הוסר. אפשר להוסיף אותו שוב בכל עת מהוספת חדר.</string>
+    <string name="roomsoptin_bulk_delete_message">חדרים שהאינדקסר שומר אפשר להוסיף שוב מהוספת חדר. חדרים שיצרת נמחקים מהמכשיר יחד עם ההודעות שלהם.</string>
+    <string name="roomsoptin_not_in_list_add">החדר הזה לא נמצא בצ\'אטים הציבוריים שלך. להוסיף אותו?</string>
+    <string name="roomsoptin_room_info_curated">חדר שהאינדקסר שומר. אתה הוספת אותו, וכל אחד ב-K יכול לפרסם בו.</string>
+</resources>

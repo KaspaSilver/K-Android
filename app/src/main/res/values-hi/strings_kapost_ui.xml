@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">जुड़ा हुआ है, और इसमें इस रूम के संदेश हैं।</string>
     <string name="kpui_room_indexer_footer">पब्लिक चैट Kaspa blockDAG पर रहती है, इसलिए उसी नेटवर्क को देखने वाला कोई भी इंडेक्सर वही रूम दिखाता है। इसे जहाँ चाहें वहाँ सेट करें - अपना या किसी और का - बाकी सभी रूम जो इंडेक्सर इस्तेमाल करते हैं उसे बदले बिना।</string>
     <string name="kpui_use_app_indexer">ऐप के इंडेक्सर का उपयोग करें</string>
-    <string name="kpui_room_switched_off_footer">बंद किया गया रूम अब पब्लिक चैट में नहीं दिखता और कभी सूचना नहीं भेजता। इसे कभी भी फिर से चालू करें।</string>
-    <string name="kpui_languages">भाषाएँ</string>
-    <string name="kpui_languages_footer">बंद करने पर हर भाषा का रूम पब्लिक चैट से हट जाता है। चालू होने पर, जो नहीं चाहिए उन्हें बंद कर दें।</string>
     <string name="kpui_notifications_off">सूचनाएं बंद</string>
     <string name="kpui_notifications_on">सूचनाएं चालू</string>
     <string name="kpui_room_notified_closed">यहाँ के नए संदेशों की सूचना आपको मिलती है, ऐप बंद होने पर भी।</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">यहाँ अभी कुछ नहीं</string>
     <string name="kpui_engagement_empty">जब कोई इस पोस्ट पर प्रतिक्रिया देगा, वह यहाँ दिखेगा।</string>
     <string name="kpui_instant_tip_limit">तुरंत टिप 10 KAS तक सीमित हैं। इसे भेजने के लिए ऊपर स्वाइप करें।</string>
-    <string name="kpui_kapost_settings">KaPost सेटिंग्स</string>
     <string name="kpui_cool_down">पोस्ट करने से पहले थोड़ा रुकें</string>
     <string name="kpui_cooldown_on">पोस्ट, टिप्पणियां, लाइक, रीपोस्ट, वोट, संपादन और डिलीट चेन पर जाने से पहले 5 सेकंड रुकते हैं, पूर्ववत करने के विकल्प के साथ।</string>
     <string name="kpui_cooldown_off">पोस्ट, टिप्पणियां, लाइक, रीपोस्ट, वोट, संपादन और डिलीट तुरंत चेन पर चले जाते हैं, पूर्ववत करने का विकल्प नहीं मिलता।</string>

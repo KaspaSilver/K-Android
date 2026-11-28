@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification and banner previews (iOS 01f71184, audit 2026-11-27 R7). -->
+<resources>
+    <string name="rel_bell_reacted_to_your_message">Đã bày tỏ cảm xúc %1$s với tin nhắn của bạn</string>
+    <string name="rel_bell_removed_reaction">Đã gỡ cảm xúc %1$s</string>
+    <string name="rel_bell_replied_to_message">Đã trả lời một tin nhắn</string>
+    <string name="rel_bell_edited_message">Đã sửa một tin nhắn</string>
+    <string name="rel_bell_reacted">Đã bày tỏ cảm xúc %1$s</string>
+</resources>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">Купить Kaspa</string>
+    <string name="buykaspa_swap_to_kaspa">Обменять на Kaspa</string>
+    <string name="buykaspa_waiting_payment">Ожидание вашей оплаты</string>
+    <string name="buykaspa_paid">Оплачено. Ваши USDC уже в пути.</string>
+    <string name="buykaspa_bridging">Перевод в Kaspa как kUSDT, обычно около 20 минут</string>
+    <string name="buykaspa_arrived">%1$s поступили. Обменяйте на Kaspa.</string>
+    <string name="buykaspa_sign_again">Откройте, чтобы снова подписать мост</string>
+    <string name="buykaspa_rejected">Stripe отклонил эту покупку. Ничего не списано.</string>
+    <string name="buykaspa_refunded">Мост не сработал, поэтому USDC вернули. Откройте, чтобы перевести снова.</string>
+    <string name="buykaspa_expired">Не оплачено. Ничего не списано.</string>
+    <string name="buykaspa_where_land">Куда должны поступить ваши kUSDT?</string>
+    <string name="buykaspa_needs_words">Чтобы покупать картой, K нужны слова восстановления этого аккаунта на этом телефоне.</string>
+    <string name="buykaspa_stripe_note">Stripe продаёт покупателям в США и ЕС. Комиссия карты и сетевые комиссии показаны на следующей странице, до оплаты.</string>
+    <string name="buykaspa_lands_on_format">kUSDT поступят на: %1$s</string>
+    <string name="buykaspa_can_close">Это можно закрыть. K продолжит следить за заказом на вкладке «Кошелёк».</string>
+    <string name="buykaspa_approve_bridge">Одобрить мост</string>
+    <string name="buykaspa_sign_explainer">Одна подпись позволяет мосту Trestly взять до этой суммы USDC с Ethereum-адреса K и зачислить её в Kaspa как kUSDT. ETH не нужен, и Kaspa не покидает ваш кошелёк.</string>
+    <string name="buykaspa_up_to">До</string>
+    <string name="buykaspa_lands_on">kUSDT поступят на</string>
+    <string name="buykaspa_ends">Действует до</string>
+    <string name="buykaspa_bridge">Мост</string>
+    <string name="buykaspa_eth_note">Ethereum-адрес K получается из слов этого аккаунта, так же как его создал бы любой Ethereum-кошелёк.</string>
+    <string name="buykaspa_fresh_note">Новый, ещё не использованный адрес, чтобы эта покупка была отделена от вашего имени пользователя и чатов.</string>
+    <string name="buykaspa_chatting_note">Адрес, на который вам пишут и платят.</string>
+    <string name="buykaspa_fresh_address">Новый адрес</string>
+    <string name="buykaspa_reload">Обновить</string>
+</resources>

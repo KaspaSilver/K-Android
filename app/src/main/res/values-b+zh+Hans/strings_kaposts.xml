@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">暂时找不到此草稿对应的帖子，因此还无法发布。它会保留在你的草稿中。</string>
     <string name="kaposts_likes">点赞</string>
     <string name="kaposts_no_tips_yet">暂无打赏。</string>
-    <string name="kaposts_not_on_testnet">KaPost 暂不支持测试网</string>
-    <string name="kaposts_not_on_testnet_sub">测试网还没有 KaPost 索引器。在“设置 > 连接”中关闭测试网，即可在主网阅读和发帖。</string>
+    <string name="kaposts_not_on_testnet">测试网暂不支持帖子</string>
+    <string name="kaposts_not_on_testnet_sub">测试网还没有帖子索引器。在“设置 &gt; 连接设置”中关闭测试网，即可在主网阅读和发帖。</string>
     <string name="kaposts_poll_days_left">剩余 %1$d 天</string>
     <string name="kaposts_poll_final_results">%1$s · 最终结果</string>
     <string name="kaposts_poll_hours_left">剩余 %1$d 小时</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">此帖子正在发送中，无法取消。</string>
     <string name="kaposts_scheduled_reminder_title">定时帖子</string>
     <string name="kaposts_scheduled_sending_soon">网络响应后立即发送</string>
-    <string name="kaposts_server_not_answering">KaPost 服务器没有响应。正在显示已保存的帖子和来自网络的新帖子。</string>
+    <string name="kaposts_server_not_answering">帖子服务器没有响应。正在显示已保存的帖子和网络上的新帖子。</string>
     <string name="kaposts_thread_not_confirmed">网络未确认你的部分串内容，因此其余内容未发送。要将剩余内容存为草稿吗？其第一条帖子可能已发出，再次发布前请先检查。</string>
     <string name="kaposts_tip_from_chatting_note">从你的 Chatting Address 打赏会计入帖子，你也会出现在打赏者名单中。</string>
     <string name="kaposts_tip_from_private_note">从其他地址打赏是私密的：作者会收到，并在你们的聊天中看到，但不会计入帖子，也不会显示你的名字。</string>

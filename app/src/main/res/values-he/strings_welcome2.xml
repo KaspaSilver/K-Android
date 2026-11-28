@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K מאפשר לך לשלוח ולקבל הודעות ישירות ברשת Kaspa עצמה. נדרש Kaspa כדי לשלם עמלות בעת שליחת ההודעות שלך. העמלה שאתה משלם הולכת לכורים המאבטחים את הרשת. 5 Kaspa מאפשרים לשלוח כ-2,500 הודעות.</string>
+    <string name="welcome2_get_username">השג שם משתמש</string>
+    <string name="welcome2_get_username_caption">שריין שם משתמש, כמו @alice, כדי שאנשים ימצאו אותך ויכתבו לך בלי הכתובת הארוכה. השג אחד ב-Kaspa Hub &gt; שמות משתמש.</string>
+    <string name="welcome2_share_title">שתף את כתובת הצ\'אט שלך</string>
+    <string name="welcome2_share_body">שלח אותה למישהו כדי שיוכל למצוא אותך ולכתוב לך ב-K.</string>
+</resources>

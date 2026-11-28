@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">इस पब्लिक चैट के लिए सूचनाएं बंद हैं</string>
     <string name="pc_notifications_on_closed_toast">आपको इस पब्लिक चैट के नए संदेशों की सूचनाएं मिलेंगी, ऐप बंद होने पर भी</string>
     <string name="pc_notifications_on_open_toast">जब तक आपका ऐप खुला रहेगा, आपको इस पब्लिक चैट के नए संदेशों की सूचना मिलेगी</string>
-    <string name="pc_default_room_off_toast">#%1$s बंद है - डिफ़ॉल्ट सार्वजनिक चैट बदलें में इसे फिर चालू करें</string>
     <string name="pc_delete_room_title">#%1$s हटाएं?</string>
     <string name="pc_delete_room_message">इस डिवाइस पर इस रूम के लिए कैश किया गया हर संदेश हटा दिया जाता है। इसे पूर्ववत नहीं किया जा सकता - बाद में फिर जुड़ने पर कोई इतिहास नहीं होगा।</string>
     <string name="pc_delete_room_row_subtitle">इस रूम और उसके संदेशों को इस डिवाइस से हटाता है।</string>
     <string name="pc_keep">रखें</string>
     <string name="pc_keep_subtitle">रूम को जैसा है वैसा ही रहने दें।</string>
-    <string name="pc_new_public_chat">नई सार्वजनिक चैट</string>
-    <string name="pc_edit_default_public_chats">डिफ़ॉल्ट सार्वजनिक चैट बदलें</string>
-    <string name="pc_new_public_chat_explainer">जो कोई भी उसी चैनल नाम से जुड़ता है वह वहाँ संदेश देख और पोस्ट कर सकता है - कोई मालिक नहीं है और कोई आमंत्रण नहीं।</string>
     <string name="pc_join">शामिल हों</string>
     <string name="pc_channel_name_rules">चैनल का नाम 1-%1$d अक्षरों का हो, बिना स्पेस या कोलन के।</string>
     <string name="pc_join_failed">उस चैनल से जुड़ते समय कुछ गलत हो गया।</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">अपमानजनक या आपत्तिजनक सामग्री की रिपोर्ट करें। यह संदेश संलग्न करके एक ईमेल खोलता है।</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">उनकी पोस्ट और रूम संदेश छिपाता है, और उन्हें आपसे इंटरैक्ट करने से रोकता है।</string>
-    <string name="pc_sender_view_profile_subtitle">उनकी KaPost प्रोफ़ाइल: पोस्ट, जवाब और फ़ॉलोअर्स।</string>
+    <string name="pc_sender_view_profile_subtitle">उनकी प्रोफ़ाइल: पोस्ट, जवाब और फ़ॉलोअर्स।</string>
     <string name="pc_sender_send_kaspa_subtitle">उनके पते पर Kaspa भेजें।</string>
     <string name="pc_sender_copy_address_subtitle">उनका Kaspa पता कॉपी करें।</string>
     <string name="pc_original_message_not_loaded">मूल संदेश लोड नहीं हुआ</string>

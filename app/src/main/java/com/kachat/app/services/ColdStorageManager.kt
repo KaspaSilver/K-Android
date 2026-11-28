@@ -154,11 +154,11 @@ class ColdStorageManager @Inject constructor(
         return gson.fromJson(json, type)
     }
 
-    private fun saveAccounts(accounts: List<ColdAccount>) {
+    private fun saveAccounts(accounts: List<ColdAccount>, addressesMayChange: Boolean = true) {
         val json = gson.toJson(accounts)
         sharedPrefs.edit().putString(PREF_ACCOUNTS, json).apply()
         // the push registration's Received KAS addresses follow (iOS 428a797b coldStorageAccountsChanged)
-        AddressActivityNotifier.watchOnlyChanges.value += 1
+        if (addressesMayChange) AddressActivityNotifier.watchOnlyChanges.value += 1
     }
 
     /**
@@ -195,8 +195,16 @@ class ColdStorageManager @Inject constructor(
         return Result.success(account)
     }
 
+    /** Renames an account; an empty name keeps the old one (iOS `renameAccount`, which the
+     *  in-place rename on the account's card saves once, when the rename ends: iOS d88891ea).
+     *  The name is no part of the addresses: nothing re-registers or re-derives for it (audit
+     *  2026-11-27 M6, the label out of the cache fingerprint). */
     fun renameAccount(id: String, newName: String) {
-        saveAccounts(getAllAccounts().map { if (it.id == id) it.copy(name = newName) else it })
+        val trimmed = newName.trim()
+        if (trimmed.isEmpty()) return
+        val all = getAllAccounts()
+        if (all.none { it.id == id && it.name != trimmed }) return
+        saveAccounts(all.map { if (it.id == id) it.copy(name = trimmed) else it }, addressesMayChange = false)
     }
 
     /** Turns receive notifications for one cold account on or off (iOS ba352a2). */
@@ -379,9 +387,6 @@ class ColdStorageManager @Inject constructor(
         }
         return null
     }
-
-    /** Whether [address] is one of any account's quantum addresses. */
-    fun isQuantumAddress(address: String): Boolean = quantumAddressRecord(address) != null
 
     /** The name a quantum address shows: the person's label, else its default by chain and number. */
     fun quantumDisplayLabel(address: String): String? {

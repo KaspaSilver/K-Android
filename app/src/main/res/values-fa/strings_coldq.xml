@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">این آدرس از قبل در این حساب هست.</string>
     <string name="coldq_error_in_other_account">این آدرس از قبل در حساب Cold Storage «%1$s» شما هست.</string>
     <string name="coldq_added_toast">آدرس مقاوم در برابر کوانتوم اضافه شد.</string>
-    <string name="coldq_add_action">افزودن آدرس مقاوم در برابر کوانتوم</string>
     <string name="coldq_add_action_subtitle">یک آدرس KCC-3 را از صفحهٔ آدرس KasSigner اسکن کنید.</string>
     <string name="coldq_stop_watching">توقف نظارت</string>
     <string name="coldq_stop_watching_subtitle">این آدرس کوانتومی را از حساب حذف می‌کند. برای افزودن دوباره، آن را دوباره اسکن کنید.</string>

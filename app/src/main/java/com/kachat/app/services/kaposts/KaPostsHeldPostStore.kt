@@ -33,6 +33,11 @@ class KaPostsHeldPostStore @Inject constructor(
      *  stays under that account even after a switch. */
     private val active = mutableMapOf<String, String>()
 
+    /** Posts [abandon]ed this run, with their account: [recover] may make them drafts, but one
+     *  still going out (a send or a thread the switch didn't stop) can still [release] or
+     *  re-[hold] its words under the account that wrote it, never the one open now. */
+    private val abandoned = mutableMapOf<String, String>()
+
     private fun currentAddress(): String? =
         try { walletManager.getAddress().takeIf { it.isNotEmpty() } } catch (_: Exception) { null }
 
@@ -64,8 +69,8 @@ class KaPostsHeldPostStore @Inject constructor(
         quotedRemoteId: String? = null,
         replyRemoteId: String? = null,
     ) {
-        val key = active[id] ?: currentKey() ?: return
-        active[id] = key
+        val key = active[id] ?: abandoned[id] ?: currentKey() ?: return
+        if (id !in abandoned) active[id] = key
         val entries = load(key).filterNot { it.id == id } +
             Entry(id, text, threadSegments, quotedRemoteId, replyRemoteId)
         store(entries, key)
@@ -81,25 +86,26 @@ class KaPostsHeldPostStore @Inject constructor(
     /** The post landed, or was taken back: nothing left to keep. */
     @Synchronized
     fun release(id: String) {
-        val key = active.remove(id) ?: return
+        val key = active.remove(id) ?: abandoned.remove(id) ?: return
         store(load(key).filterNot { it.id == id }, key)
     }
 
     /**
      * A held post this run will not send after all: its 5-second countdown was dropped by an
-     * account switch, or with its view model. Its words stay under the account that wrote it, and
+     * account switch, or with its view model; or a failed, Not confirmed or in-flight post (or
+     * thread) whose card an account switch took off screen. Its words stay under the account that wrote it, and
      * that account's next [recover] (a switch back to it, or the next launch) makes them a draft.
      * Kept as "active" instead, they were skipped until a cold start.
      */
     @Synchronized
     fun abandon(id: String) {
-        active.remove(id)
+        active.remove(id)?.let { abandoned[id] = it }
     }
 
     /** Hands one kept post to the Drafts screen now. Stays kept if its account isn't the open one. */
     @Synchronized
     fun saveAsDraft(id: String) {
-        val key = active[id] ?: return
+        val key = active[id] ?: abandoned[id] ?: return
         val address = currentAddress() ?: return
         if (key != key(address)) return
         val entry = load(key).firstOrNull { it.id == id } ?: return
@@ -116,6 +122,7 @@ class KaPostsHeldPostStore @Inject constructor(
         val leftovers = entries.filter { it.id !in active }
         if (leftovers.isEmpty()) return
         leftovers.forEach { saveDraft(it, address) }
+        leftovers.forEach { abandoned.remove(it.id) }
         store(entries.filter { it.id in active }, key)
     }
 

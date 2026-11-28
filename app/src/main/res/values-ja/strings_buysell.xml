@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">購入</string>
+    <string name="buysell_sell">売却</string>
+    <string name="buysell_history">購入/売却の履歴</string>
+    <string name="buysell_buy_kaspa">Kaspaを購入</string>
+    <string name="buysell_sell_kaspa">Kaspaを売る</string>
+    <string name="buysell_buy_with_crypto">暗号資産でKaspaを買う</string>
+    <string name="buysell_buy_with_crypto_sub">kUSDTやBitcoinなど、別のコインで支払います。</string>
+    <string name="buysell_buy_with_debit_card">デビットカードでKaspaを購入</string>
+    <string name="buysell_debit_card_sub">カードで支払います。kUSDTとして届き、それでKaspaを買います。</string>
+    <string name="buysell_pay_with_question">何で支払いますか？</string>
+    <string name="buysell_sell_for_question">Kaspaを何に換えますか？</string>
+    <string name="buysell_sell_kaspa_for">Kaspaを売って%1$sにする</string>
+    <string name="buysell_buy_kaspa_with">%1$sでKaspaを買う</string>
+    <string name="buysell_on_networks">%2$d個のネットワークの%1$s</string>
+    <string name="buysell_you_pay">支払う額</string>
+    <string name="buysell_where_land">Kaspaの受け取り先はどこにしますか？</string>
+    <string name="buysell_kusdt_one_address">kUSDTは1つのアドレスから支払われ、Kaspaは同じアドレスに届きます。</string>
+    <string name="buysell_fresh_note">一度も使われていない新しいアドレス。この購入をユーザー名やチャットと切り離せます。</string>
+    <string name="buysell_send_payment">支払いを送信</string>
+    <string name="buysell_send_amount_coin">%1$s %2$sを送金</string>
+    <string name="buysell_to_buy_kaspa">Kaspaを買うために</string>
+    <string name="buysell_to_sell_for">売って%1$sにするために</string>
+    <string name="buysell_copy_amount">金額をコピー</string>
+    <string name="buysell_amount_copied">金額をコピーしました</string>
+    <string name="buysell_send_kas_from_k">KからKASを送金</string>
+    <string name="buysell_transaction_id">取引ID</string>
+    <string name="buysell_copy_id">IDをコピー</string>
+    <string name="buysell_you_get_about">約%1$s %2$sを受け取り、%3$sに送られます。</string>
+    <string name="buysell_payment_received">支払いを受け取りました</string>
+    <string name="buysell_waiting_confirm">承認を待っています。</string>
+    <string name="buysell_converting">ChangeNOWがコインを換えています。</string>
+    <string name="buysell_sending_your">%1$sを送金中</string>
+    <string name="buysell_almost_done">もうすぐ完了します。</string>
+    <string name="buysell_failed_detail">ChangeNOWはこの注文を完了できませんでした。ChangeNOWで確認してください。</string>
+    <string name="buysell_refunded_detail">ChangeNOWがコインを返金しました。</string>
+    <string name="buysell_expired_detail">期限内に入金がありませんでした。新しい注文を始めてください。</string>
+    <string name="buysell_verifying_detail">ChangeNOWがこの注文を確認しています。</string>
+    <string name="buysell_waiting_payment">支払い待ち</string>
+    <string name="buysell_waiting_payment_detail">上記の金額を送金してください。この画面は自動で更新されます。</string>
+    <string name="buysell_purchase_complete">購入完了</string>
+    <string name="buysell_sale_complete">売却完了</string>
+    <string name="buysell_you_paid">%1$s %2$sを支払いました</string>
+    <string name="buysell_you_got_about">約%1$s %2$sを受け取りました</string>
+    <string name="buysell_added_to_portfolio">ポートフォリオに追加しました</string>
+    <string name="buysell_order_sent">注文を送信しました</string>
+</resources>

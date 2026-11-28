@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Received KAS notices and in-app Posts banners in the app's language (iOS audit 2026-11-27 M10) -->
+    <string name="notice_received">تم استلام %1$s</string>
+    <string name="notice_balance_increased">زاد الرصيد بمقدار %1$s</string>
+    <string name="notice_chatting_address">عنوان الدردشة %1$s</string>
+    <string name="notice_spending_address">عنوان الإنفاق %1$s</string>
+    <string name="notice_cold_storage_address">عنوان التخزين البارد %1$s (%2$s)</string>
+    <string name="notice_post_liked">أعجبه منشورك</string>
+    <string name="notice_post_disliked">لم يعجبه منشورك</string>
+    <string name="notice_post_tipped">أرسل إكرامية لمنشورك</string>
+    <string name="notice_post_tipped_amount">أرسل إكرامية على منشورك: %1$s</string>
+    <string name="notice_post_replied">ردّ على منشورك</string>
+    <string name="notice_post_quoted">اقتبس منشورك</string>
+    <string name="notice_post_reposted">أعاد نشر منشورك</string>
+    <string name="notice_followed_you">تابعك</string>
+    <string name="notice_post_mentioned">أشار إليك في منشور</string>
+    <string name="notice_post_interacted">تفاعل مع منشورك</string>
+</resources>

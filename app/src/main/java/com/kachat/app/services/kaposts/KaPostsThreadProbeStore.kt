@@ -139,19 +139,56 @@ class KaPostsThreadProbeStore @Inject constructor(
         return roots.toSet()
     }
 
-    /** One write per burst of claims, not one per revealed row. */
+    /** A save waiting for [scheduleSave]'s delay. */
+    @Volatile private var savePending = false
+    private var backgroundWatchStarted = false
+
+    /** One write per burst of claims, not one per revealed row. Every 10 s at most: a second
+     *  apart, scrolling a feed kept writing the three 2,048-entry lists (iOS 01f71184 P10). A
+     *  save still waiting goes out when the app goes to the background. */
     private fun scheduleSave() {
+        watchBackground()
         if (saveJob?.isActive == true) return
+        savePending = true
         saveJob = scope.launch {
-            delay(1_000)
-            val (claimedSnapshot, rootsSnapshot, expirySnapshot) = synchronized(this@KaPostsThreadProbeStore) {
-                Triple(order.toList(), roots.toList(), expiry.toMap())
+            delay(SAVE_DELAY_MS)
+            saveNow()
+        }
+    }
+
+    private fun saveNow() {
+        if (!savePending) return
+        savePending = false
+        val (claimedSnapshot, rootsSnapshot, expirySnapshot) = synchronized(this) {
+            Triple(order.toList(), roots.toList(), expiry.toMap())
+        }
+        prefs.edit()
+            .putString(CLAIMED_KEY, JSONArray(claimedSnapshot).toString())
+            .putString(ROOTS_KEY, JSONArray(rootsSnapshot).toString())
+            .putString(EXPIRY_KEY, JSONObject(expirySnapshot).toString())
+            .apply()
+    }
+
+    /** The app going to the background writes a save still waiting (iOS
+     *  `didEnterBackgroundNotification`). Started on the first save, on the main thread. */
+    @Synchronized
+    private fun watchBackground() {
+        if (backgroundWatchStarted) return
+        backgroundWatchStarted = true
+        scope.launch(Dispatchers.Main) {
+            try {
+                androidx.lifecycle.ProcessLifecycleOwner.get().lifecycle.addObserver(
+                    object : androidx.lifecycle.DefaultLifecycleObserver {
+                        override fun onStop(owner: androidx.lifecycle.LifecycleOwner) {
+                            if (!savePending) return
+                            saveJob?.cancel()
+                            scope.launch { saveNow() }
+                        }
+                    },
+                )
+            } catch (_: Exception) {
+                // no process lifecycle (a unit test): the timed save still runs
             }
-            prefs.edit()
-                .putString(CLAIMED_KEY, JSONArray(claimedSnapshot).toString())
-                .putString(ROOTS_KEY, JSONArray(rootsSnapshot).toString())
-                .putString(EXPIRY_KEY, JSONObject(expirySnapshot).toString())
-                .apply()
         }
     }
 
@@ -161,6 +198,7 @@ class KaPostsThreadProbeStore @Inject constructor(
         private const val EXPIRY_KEY = "expiry_v2"
         private val LEGACY_KEYS = listOf("claimed", "roots", "expiry")
         private const val CAPACITY = 2048
+        private const val SAVE_DELAY_MS = 10_000L
         private const val DAY_MS = 86_400_000L
 
         /** How long "no thread" holds for a post this old: as long as the post has existed, from

@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">接続済みで、このルームのメッセージがあります。</string>
     <string name="kpui_room_indexer_footer">パブリックチャットは Kaspa blockDAG 上にあるため、同じネットワークを監視するインデクサーであればどれでも同じルームを提供します。このルームだけ、ほかのルームが使うインデクサーを変えずに、自分のものでも他の人のものでも好きなものに向けられます。</string>
     <string name="kpui_use_app_indexer">アプリのインデクサーを使う</string>
-    <string name="kpui_room_switched_off_footer">オフにしたルームはパブリックチャットに表示されず、通知も届きません。いつでもオンに戻せます。</string>
-    <string name="kpui_languages">言語</string>
-    <string name="kpui_languages_footer">オフにすると、すべての言語ルームがパブリックチャットから外れます。オンにした上で、不要なものをオフにしてください。</string>
     <string name="kpui_notifications_off">通知オフ</string>
     <string name="kpui_notifications_on">通知オン</string>
     <string name="kpui_room_notified_closed">アプリを閉じていても、ここの新着メッセージが通知されます。</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">ここにはまだ何もありません</string>
     <string name="kpui_engagement_empty">誰かがこの投稿に反応すると、ここに表示されます。</string>
     <string name="kpui_instant_tip_limit">インスタントチップは 10 KAS までです。このチップを送るには上にスワイプしてください。</string>
-    <string name="kpui_kapost_settings">KaPost 設定</string>
     <string name="kpui_cool_down">投稿前に少し待つ</string>
     <string name="kpui_cooldown_on">投稿、コメント、いいね、リポスト、投票、編集、削除は、チェーンに記録される前に5秒間待機し、その間は元に戻せます。</string>
     <string name="kpui_cooldown_off">投稿、コメント、いいね、リポスト、投票、編集、削除は、取り消しなしですぐにチェーンに記録されます。</string>

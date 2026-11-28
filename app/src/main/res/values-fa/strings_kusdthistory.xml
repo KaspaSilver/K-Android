@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- kUSDT swaps in Buy/Sell History (iOS b49a021d) -->
+<resources>
+    <string name="swap_swapped_through">تبادل از طریق</string>
+    <string name="swap_trestly_kusdt_pool">استخر kUSDT ترستلی روی کسپا</string>
+    <string name="swap_couldnt_reach_network">دسترسی به شبکه ممکن نشد - دوباره تلاش کنید</string>
+</resources>

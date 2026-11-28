@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">Raum hinzufügen</string>
+    <string name="roomsoptin_indexer_rooms_footer">Räume, die der Indexer führt: Ihr Verlauf bleibt gespeichert, und sie können dich benachrichtigen, auch wenn K geschlossen ist.</string>
+    <string name="roomsoptin_other_languages">Weitere Sprachen</string>
+    <string name="roomsoptin_create_title">So funktioniert ein selbst erstellter Raum</string>
+    <string name="roomsoptin_create_point_name">Wer denselben Namen eingibt, landet im selben Raum. Er hat keinen Besitzer und keine Einladung.</string>
+    <string name="roomsoptin_create_point_history">Kein Indexer speichert seinen Verlauf. K liest ihn aus dem Kaspa-Netzwerk, solange der Raum offen ist, und behält bis zu 3 Tage auf deinem Telefon.</string>
+    <string name="roomsoptin_create_point_bell">Keine Benachrichtigungen, solange K geschlossen ist. Mit eingeschalteter Glocke benachrichtigt dich K nur, solange es offen ist.</string>
+    <string name="roomsoptin_create_point_public">Alles, was dort geschrieben wird, ist öffentlich: Jeder kann es im Kaspa-Netzwerk lesen.</string>
+    <string name="roomsoptin_create_room">Raum erstellen</string>
+    <string name="roomsoptin_name_your_room">Benenne deinen Raum</string>
+    <string name="roomsoptin_empty_title">Noch keine öffentlichen Chats</string>
+    <string name="roomsoptin_empty_body">Füge Räume hinzu, die der Indexer führt, etwa #kaspa, oder erstelle einen eigenen. Nichts wird hinzugefügt, ohne dass du es auswählst.</string>
+    <string name="roomsoptin_removed_toast">#%1$s entfernt. Du kannst ihn jederzeit über Raum hinzufügen wieder hinzufügen.</string>
+    <string name="roomsoptin_bulk_delete_message">Räume, die der Indexer führt, kannst du über Raum hinzufügen wieder hinzufügen. Selbst erstellte Räume werden mit ihren Nachrichten von diesem Gerät gelöscht.</string>
+    <string name="roomsoptin_not_in_list_add">Dieser Raum ist nicht in deinen öffentlichen Chats. Hinzufügen?</string>
+    <string name="roomsoptin_room_info_curated">Ein Raum, den der Indexer führt. Du hast ihn hinzugefügt, und jeder auf K kann dort posten.</string>
+</resources>

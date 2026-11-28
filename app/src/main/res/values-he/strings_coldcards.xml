@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage account cards, in-place rename (iOS b49a021d) -->
+<resources>
+    <string name="cold_hide_funded_refused">כתובת שמחזיקה קאספה נשארת ברשימה.</string>
+    <string name="cold_remove_account">הסרת החשבון</string>
+    <string name="cold_kpub_qr">QR של kpub</string>
+    <string name="cold_alerts_on">התראות פועלות</string>
+    <string name="cold_alerts_off">התראות כבויות</string>
+    <string name="cold_tap_to_view_addresses">הקש כדי לראות כתובות</string>
+    <string name="cold_alerts_on_toast">תקבל התראה כשהחשבון הזה יקבל קאספה.</string>
+    <string name="cold_alerts_off_toast">לא יהיו עוד התראות כשהחשבון הזה יקבל קאספה.</string>
+    <string name="cold_kpub_copied">ה-kpub הועתק ללוח.</string>
+    <string name="cold_watch_this_account">מעקב אחר החשבון הזה</string>
+    <string name="cold_kpub_qr_warning">מי שסורק אותו רואה כל כתובת, יתרה ותשלום של החשבון הזה. הצג אותו רק למכשירים שאתה סומך עליהם.</string>
+</resources>

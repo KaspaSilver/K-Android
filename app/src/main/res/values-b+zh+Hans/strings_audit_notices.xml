@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Received KAS notices and in-app Posts banners in the app's language (iOS audit 2026-11-27 M10) -->
+    <string name="notice_received">已收到 %1$s</string>
+    <string name="notice_balance_increased">余额增加了 %1$s</string>
+    <string name="notice_chatting_address">聊天地址 %1$s</string>
+    <string name="notice_spending_address">支出地址 %1$s</string>
+    <string name="notice_cold_storage_address">冷存储地址 %1$s（%2$s）</string>
+    <string name="notice_post_liked">赞了你的帖子</string>
+    <string name="notice_post_disliked">踩了你的帖子</string>
+    <string name="notice_post_tipped">打赏了你的帖子</string>
+    <string name="notice_post_tipped_amount">打赏了你的帖子：%1$s</string>
+    <string name="notice_post_replied">回复了你的帖子</string>
+    <string name="notice_post_quoted">引用了你的帖子</string>
+    <string name="notice_post_reposted">转发了你的帖子</string>
+    <string name="notice_followed_you">关注了你</string>
+    <string name="notice_post_mentioned">在帖子中提到了你</string>
+    <string name="notice_post_interacted">与你的帖子互动了</string>
+</resources>

@@ -129,17 +129,6 @@ class ChessBotLeaderboardService @Inject constructor(
         return rows.sortedWith(compareBy({ it.moves }, { it.at }, { it.address })).distinctBy { it.address.lowercase() }
     }
 
-    /** Has anyone played this bot, as far as this phone can tell? */
-    fun hasBeenPlayed(
-        bot: ChessBot,
-        boards: Map<ChessLeaderboardPeriod, Map<Int, Board>> = _boards.value,
-        records: Map<String, Map<Int, ChessBotProgress.Record>> = progress.records.value,
-    ): Boolean {
-        val record = progress.record(bot, records)
-        if (record.wins + record.losses + record.draws > 0) return true
-        return (boards[ChessLeaderboardPeriod.ALL_TIME]?.get(bot.level)?.games ?: 0) > 0
-    }
-
     private companion object {
         const val REFRESH_INTERVAL_MS = 20_000L
     }

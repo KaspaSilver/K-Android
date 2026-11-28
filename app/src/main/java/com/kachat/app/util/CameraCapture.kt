@@ -9,7 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -40,7 +40,21 @@ fun createCaptureUri(context: Context): Uri {
 @Composable
 fun rememberCameraCaptureLauncher(onDenied: (MediaAccess) -> Unit = {}, onCaptured: (Uri) -> Unit): () -> Unit {
     val context = LocalContext.current
-    var pendingCaptureUri by remember { mutableStateOf<Uri?>(null) }
+    // Saved with the screen: the camera app often outlives K's process, and the photo it took
+    // is still sent when K comes back.
+    var pendingCaptureUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+
+    /** Opens the camera app; a phone with none (or with it disabled) just doesn't open. */
+    fun launchCamera(launcher: androidx.activity.result.ActivityResultLauncher<Uri>) {
+        val uri = createCaptureUri(context)
+        pendingCaptureUri = uri
+        try {
+            launcher.launch(uri)
+        } catch (e: android.content.ActivityNotFoundException) {
+            android.util.Log.w("CameraCapture", "no camera app to take the photo")
+            pendingCaptureUri = null
+        }
+    }
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
@@ -53,18 +67,12 @@ fun rememberCameraCaptureLauncher(onDenied: (MediaAccess) -> Unit = {}, onCaptur
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         // A fresh Don't Allow just closes: they've only now said no.
-        if (granted) {
-            val uri = createCaptureUri(context)
-            pendingCaptureUri = uri
-            cameraLauncher.launch(uri)
-        }
+        if (granted) launchCamera(cameraLauncher)
     }
 
     return {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            val uri = createCaptureUri(context)
-            pendingCaptureUri = uri
-            cameraLauncher.launch(uri)
+            launchCamera(cameraLauncher)
         } else {
             MediaAccess.CAMERA.request(context, permissionLauncher, onDenied)
         }

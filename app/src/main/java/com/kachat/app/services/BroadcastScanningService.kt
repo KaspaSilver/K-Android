@@ -299,10 +299,16 @@ class BroadcastScanningService @Inject constructor(
      * that is not open asks the indexer for its newest rows instead (one small request per room,
      * sequential); the open room keeps its own 8s poll and the block scan stays the fast path
      * (iOS 3c14b46).
+     *
+     * With push working, a room the push covers is swept only every 5 minutes, as a safety net
+     * (iOS audit 2026-11-27 B4, as KaPost): its push fetches it at once. Rooms the push doesn't
+     * cover keep every beat, and push off keeps this cadence.
      */
     @Synchronized
     private fun startForegroundSweep() {
         if (sweepJob?.isActive == true) return
+        // Back in the foreground: the first sweep covers every room again.
+        lastPushCoveredSweepAt = 0L
         sweepJob = scope.launch {
             while (true) {
                 if (notificationHelper.isAppInForeground) sweepClosedRooms()
@@ -369,14 +375,33 @@ class BroadcastScanningService @Inject constructor(
     private fun systemNotificationsOn(): Boolean =
         runCatching { androidx.core.app.NotificationManagerCompat.from(appContext).areNotificationsEnabled() }.getOrDefault(true)
 
+    /** When the last foreground sweep included the rooms push covers (0: none yet). */
+    @Volatile private var lastPushCoveredSweepAt = 0L
+
+    /** A room the push registration watches (indexer-tracked, bell on - PushRegistrationManager
+     *  `collectFeatureFields`) and that is read from the app-wide indexer, which sends its pushes
+     *  (iOS `pushCoversRoom`). */
+    private fun pushCoversRoom(channelName: String): Boolean {
+        if (!FeaturedBroadcastChannels.isIndexerTracked(channelName)) return false
+        val overrides = roomIndexerCoverage?.overrides ?: return true
+        return overrides[channelName.trim().lowercase()]
+            ?.takeUnless { BroadcastRepository.isCleartextHttp(it) }
+            .isNullOrBlank()
+    }
+
     /** One pass over the bell-on rooms: in front, those not open (on the beat); in the background
      *  without push, those an indexer keeps ([updateBackgroundPoll]). */
     private suspend fun sweepClosedRooms(background: Boolean = false) {
         // Signed out: no rooms to sweep (iOS b78fdb0 `startForegroundSweep`).
         if (!broadcastRepository.isSignedIn()) return
+        // In front with push working: the rooms it covers every 5 minutes only (iOS B4).
+        val now = System.currentTimeMillis()
+        val coveredDue = background || isPushCoveredSweepDue(pushState.isActive, lastPushCoveredSweepAt, now)
+        if (!background && coveredDue) lastPushCoveredSweepAt = now
         val targets = synchronized(this) { notifyEnabledChannelNames.toList() }
             .filter { it !in FeaturedBroadcastChannels.SERVICE_CHANNELS }
             .filter { if (background) indexerServesRoom(it) else !broadcastNotifier.isViewingChannel(it) }
+            .filter { coveredDue || !pushCoversRoom(it) || it !in sweptChannels }
         for (channel in targets) {
             val stillWanted = if (background) {
                 !notificationHelper.isAppInForeground && !pushState.isActive
@@ -796,14 +821,23 @@ class BroadcastScanningService @Inject constructor(
     )
 
     companion object {
+        /** With push working, how often the foreground sweep includes the rooms it covers (iOS
+         *  `pushSafetyNetInterval`, audit 2026-11-27 B4). */
+        internal const val PUSH_SAFETY_NET_MS = 5 * 60_000L
+
+        /** Whether this sweep includes the rooms push covers: always without push, else every
+         *  [PUSH_SAFETY_NET_MS] (less five seconds of slack) since [lastCoveredAt] (0: never). */
+        internal fun isPushCoveredSweepDue(pushActive: Boolean, lastCoveredAt: Long, nowMs: Long): Boolean =
+            !pushActive || lastCoveredAt == 0L || nowMs - lastCoveredAt >= PUSH_SAFETY_NET_MS - 5_000L
+
         /** A breath between rooms, so a sweep is a drizzle rather than a burst. */
         private const val SWEEP_SPACING_MS = 150L
         /** Rows older than this are backlog, not news, and never banner. */
         private const val SWEEP_BANNER_WINDOW_MS = 3 * 60 * 1000L
 
         /** Without push, how often the background asks the indexer about bell-on rooms: the 1:1
-         *  background pace without push. */
-        private const val BACKGROUND_POLL_MS = 60_000L
+         *  background pace without push (5 minutes). */
+        private const val BACKGROUND_POLL_MS = com.kachat.app.repository.ChatPollSchedule.BACKGROUND_LIGHT_INTERVAL_MS
         /** The cached-row sender re-check waits for startup to settle, then for the REST client. */
         private const val REVERIFY_START_DELAY_MS = 10_000L
         private const val REVERIFY_REST_WAIT_MS = 60_000L

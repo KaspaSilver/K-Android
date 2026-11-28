@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage account cards, in-place rename (iOS b49a021d) -->
+<resources>
+    <string name="cold_hide_funded_refused">آدرسی که کسپا دارد در فهرست می‌ماند.</string>
+    <string name="cold_remove_account">حذف حساب</string>
+    <string name="cold_kpub_qr">QR کلید kpub</string>
+    <string name="cold_alerts_on">هشدار روشن</string>
+    <string name="cold_alerts_off">هشدار خاموش</string>
+    <string name="cold_tap_to_view_addresses">برای دیدن آدرس‌ها بزنید</string>
+    <string name="cold_alerts_on_toast">وقتی این حساب کسپا دریافت کند به شما اطلاع داده می‌شود.</string>
+    <string name="cold_alerts_off_toast">دیگر وقتی این حساب کسپا دریافت کند اطلاعی داده نمی‌شود.</string>
+    <string name="cold_kpub_copied">kpub در کلیپ‌بورد کپی شد.</string>
+    <string name="cold_watch_this_account">دنبال کردن این حساب</string>
+    <string name="cold_kpub_qr_warning">هر کس آن را اسکن کند همه آدرس‌ها، موجودی‌ها و پرداخت‌های این حساب را می‌بیند. فقط به دستگاه‌های مورد اعتماد نشان دهید.</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage account cards, in-place rename (iOS b49a021d) -->
+<resources>
+    <string name="cold_hide_funded_refused">Una dirección con Kaspa se queda en la lista.</string>
+    <string name="cold_remove_account">Quitar cuenta</string>
+    <string name="cold_kpub_qr">QR del kpub</string>
+    <string name="cold_alerts_on">Avisos activados</string>
+    <string name="cold_alerts_off">Avisos desactivados</string>
+    <string name="cold_tap_to_view_addresses">Toca para ver las direcciones</string>
+    <string name="cold_alerts_on_toast">Te avisaremos cuando esta cuenta reciba Kaspa.</string>
+    <string name="cold_alerts_off_toast">Ya no habrá avisos cuando esta cuenta reciba Kaspa.</string>
+    <string name="cold_kpub_copied">kpub copiado al portapapeles.</string>
+    <string name="cold_watch_this_account">Vigilar esta cuenta</string>
+    <string name="cold_kpub_qr_warning">Quien lo escanee verá cada dirección, saldo y pago de esta cuenta. Muéstralo solo a dispositivos de confianza.</string>
+</resources>

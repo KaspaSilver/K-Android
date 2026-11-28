@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">ההתראות כבויות עבור הצ\'אט הציבורי הזה</string>
     <string name="pc_notifications_on_closed_toast">תקבל התראות על הודעות חדשות בצ\'אט הציבורי הזה, גם כשהאפליקציה סגורה</string>
     <string name="pc_notifications_on_open_toast">תקבל התראה על הודעות חדשות בצ\'אט הציבורי הזה כל עוד האפליקציה שלך נשארת פתוחה</string>
-    <string name="pc_default_room_off_toast">‎#%1$s כבוי - הפעילו אותו שוב בעריכת צ׳אטים ציבוריים ברירת מחדל</string>
     <string name="pc_delete_room_title">למחוק את #%1$s?</string>
     <string name="pc_delete_room_message">כל ההודעות ששמורות במטמון עבור החדר הזה במכשיר הזה נמחקות. אי אפשר לבטל את זה - הצטרפות מחדש בהמשך תתחיל בלי היסטוריה.</string>
     <string name="pc_delete_room_row_subtitle">מסיר את החדר הזה ואת ההודעות שלו מהמכשיר הזה.</string>
     <string name="pc_keep">השאר</string>
     <string name="pc_keep_subtitle">השאר את החדר כפי שהוא.</string>
-    <string name="pc_new_public_chat">צ\'אט ציבורי חדש</string>
-    <string name="pc_edit_default_public_chats">עריכת צ׳אטים ציבוריים ברירת מחדל</string>
-    <string name="pc_new_public_chat_explainer">כל מי שמצטרף לאותו שם ערוץ יכול לראות ולפרסם שם הודעות - אין בעלים ואין הזמנה.</string>
     <string name="pc_join">הצטרף</string>
     <string name="pc_channel_name_rules">שמות ערוצים חייבים להיות באורך 1-%1$d תווים, בלי רווחים או נקודתיים.</string>
     <string name="pc_join_failed">משהו השתבש בהצטרפות לערוץ הזה.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">דווח על תוכן פוגעני או לא ראוי. פותח אימייל עם ההודעה הזו מצורפת.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">מסתיר את הפוסטים והודעות החדר שלהם, ומונע מהם לתקשר איתך.</string>
-    <string name="pc_sender_view_profile_subtitle">הפרופיל שלהם ב-KaPost: פוסטים, תגובות ועוקבים.</string>
+    <string name="pc_sender_view_profile_subtitle">הפרופיל שלו: פוסטים, תגובות ועוקבים.</string>
     <string name="pc_sender_send_kaspa_subtitle">שלח Kaspa לכתובת שלהם.</string>
     <string name="pc_sender_copy_address_subtitle">העתק את כתובת ה-Kaspa שלו.</string>
     <string name="pc_original_message_not_loaded">ההודעה המקורית לא נטענה</string>

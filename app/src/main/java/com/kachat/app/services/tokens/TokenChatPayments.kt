@@ -40,10 +40,26 @@ class TokenChatPayments @Inject constructor(
      * outcome was unknown can report in twice. If the notice can't go (an empty chatting address),
      * it is kept, under the account that paid, and sent once there's KAS. [index] is the payee's
      * coin's output (0 for a kUSDT send). Returns at once; the work runs in the background.
+     *
+     * [expectedOwner]: the account the send was made from ([currentOwner] when it started). A
+     * report arriving after a switch to another account is dropped, never filed in (or announced
+     * from) that one (audit 2026-11-27 R5: the "Not confirmed" watcher reports up to three
+     * minutes later).
      */
-    fun recordTokenPayment(contactAddress: String, token: WalletToken, txId: String, index: Int, amount: Long) {
-        val owner = runCatching { walletManager.getAddress() }.getOrNull()?.takeIf { it.isNotBlank() } ?: return
+    fun recordTokenPayment(
+        contactAddress: String,
+        token: WalletToken,
+        txId: String,
+        index: Int,
+        amount: Long,
+        expectedOwner: String? = null,
+    ) {
+        val owner = currentOwner() ?: return
         if (walletManager.isLoggedOut) return
+        if (!isSameOwner(expectedOwner, owner)) {
+            Log.i(TAG, "Dropped a token payment report for ${txId.take(12)}: another account is active")
+            return
+        }
         val id = txId.trim().lowercase()
         scope.launch(NonCancellable) {
             val fresh = chatRepository.insertOwnTokenBubble(
@@ -76,7 +92,15 @@ class TokenChatPayments @Inject constructor(
         }
     }
 
-    private companion object {
-        const val TAG = "TokenChatPayments"
+    /** The active account, the owner a send records under; null when there is none. */
+    fun currentOwner(): String? = runCatching { walletManager.getAddress() }.getOrNull()?.takeIf { it.isNotBlank() }
+
+    internal companion object {
+        private const val TAG = "TokenChatPayments"
+
+        /** Whether a report for [expectedOwner] (null: whoever is active) may be filed with
+         *  [current] active (audit 2026-11-27 R5). */
+        fun isSameOwner(expectedOwner: String?, current: String): Boolean =
+            expectedOwner == null || expectedOwner.trim().equals(current.trim(), ignoreCase = true)
     }
 }

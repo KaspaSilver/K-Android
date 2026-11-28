@@ -110,7 +110,9 @@ object ImagePrep {
         }
 
         val results = HashMap<Int, ByteArray>()
-        for (budget in budgets.toSortedSet().reversed()) {
+        // Not `toSortedSet().reversed()`: with JDK 21 that is Java's SortedSet.reversed(), API 35,
+        // a NoSuchMethodError on every older Android.
+        for (budget in budgets.distinct().sortedDescending()) {
             var chosen: ByteArray? = null
             for (edge in edges) {
                 val known = minQualitySize[edge]

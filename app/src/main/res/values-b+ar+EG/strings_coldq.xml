@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">هذا العنوان موجود بالفعل في هذا الحساب.</string>
     <string name="coldq_error_in_other_account">هذا العنوان موجود بالفعل في حساب Cold Storage «%1$s».</string>
     <string name="coldq_added_toast">تمت إضافة العنوان المقاوم للحوسبة الكمّية.</string>
-    <string name="coldq_add_action">إضافة عنوان مقاوم للحوسبة الكمّية</string>
     <string name="coldq_add_action_subtitle">امسح عنوان KCC-3 من شاشة العناوين في KasSigner.</string>
     <string name="coldq_stop_watching">إيقاف المراقبة</string>
     <string name="coldq_stop_watching_subtitle">يزيل هذا العنوان الكمّي من الحساب. امسحه مرة أخرى لإعادة إضافته.</string>

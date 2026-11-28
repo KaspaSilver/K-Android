@@ -192,7 +192,8 @@ object LinkPreviewService {
     /** [previewImageLoader] with the original file's higher cap, for the full-screen photo viewer. */
     fun fullImageLoader(context: Context): ImageLoader = fullLoader ?: synchronized(this) {
         fullLoader ?: context.applicationContext.imageLoader.newBuilder()
-            .okHttpClient(downloadClient.newBuilder().withRedirectRules().addInterceptor(CappedBodyInterceptor(MAX_FULL_IMAGE_BYTES)).build())
+            // downloadClient: the public-only DNS and the redirect rules are already on it
+            .okHttpClient(downloadClient.newBuilder().addInterceptor(CappedBodyInterceptor(MAX_FULL_IMAGE_BYTES)).build())
             .components { add(PixelCapDecoderFactory()) }
             .build()
             .also { fullLoader = it }
@@ -226,8 +227,8 @@ object LinkPreviewService {
     /** The profile pictures' client: each download records what the host said about it
      *  ([ProfileImageStore.ValidatorRecorder]), then the redirect rules and the size cap. */
     fun profileHttpClient(): OkHttpClient = profileClient ?: synchronized(this) {
+        // downloadClient carries the public-only DNS and the redirect rules
         profileClient ?: ProfileImageStore.withRecorder(downloadClient.newBuilder())
-            .withRedirectRules()
             .addInterceptor(CappedBodyInterceptor(MAX_PROFILE_IMAGE_BYTES))
             .build()
             .also { profileClient = it }
@@ -595,17 +596,27 @@ object LinkPreviewService {
         url: String,
         maxBytes: Long = 50_000_000L
     ): java.io.File? = withContext(Dispatchers.IO) {
+        var temp: java.io.File? = null
         try {
+            val dir = java.io.File(context.cacheDir, "nextcloud_previews").apply { mkdirs() }
+            val file = java.io.File(dir, cacheFileName(url))
+            // Only ever renamed into place whole, so one that is there is complete: opened again
+            // without a second download (and kept fresh for the stale-file sweep).
+            if (file.isFile && file.length() in 1..maxBytes) {
+                file.setLastModified(System.currentTimeMillis())
+                return@withContext file
+            }
             val request = Request.Builder().url(url).build()
             downloadClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return@withContext null
                 val body = response.body ?: return@withContext null
                 if (body.contentLength() > maxBytes) return@withContext null
-                val dir = java.io.File(context.cacheDir, "nextcloud_previews").apply { mkdirs() }
-                val file = java.io.File(dir, "share-${url.hashCode()}.bin")
+                // Written to a file of its own, so two viewers of one share (or a download cut
+                // off) never leave a half file under the real name.
+                val part = java.io.File.createTempFile("share-", ".part", dir).also { temp = it }
                 // Counted as it comes: Content-Length can be absent, or lie.
                 var total = 0L
-                val withinLimit = file.outputStream().use { out ->
+                val withinLimit = part.outputStream().use { out ->
                     body.byteStream().use { input ->
                         val buffer = ByteArray(64 * 1024)
                         while (true) {
@@ -618,21 +629,38 @@ object LinkPreviewService {
                     }
                     total <= maxBytes
                 }
-                if (withinLimit) {
+                if (!withinLimit || total == 0L) return@withContext null
+                if (part.renameTo(file)) {
+                    temp = null
+                    file
+                } else if (file.isFile && file.length() > 0) {
+                    // another download of the same share got there first
                     file
                 } else {
-                    file.delete()
                     null
                 }
             }
         } catch (e: Exception) {
             null
+        } finally {
+            temp?.delete()
         }
     }
 
+    /** The cache file for a share [url]: its SHA-256, so two URLs never share a file the way two
+     *  equal `hashCode()`s did. */
+    internal fun cacheFileName(url: String): String {
+        val digest = java.security.MessageDigest.getInstance("SHA-256").digest(url.toByteArray(Charsets.UTF_8))
+        return "share-" + digest.joinToString("") { "%02x".format(it) } + ".bin"
+    }
+
+    /** [client]'s rules - redirects only where [isAllowedRedirect] says, and never into the
+     *  reader's own network ([PublicOnlyDns]) - with a longer read timeout for whole files. */
     private val downloadClient = OkHttpClient.Builder()
         .connectTimeout(FETCH_TIMEOUT_SECONDS, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
+        .withRedirectRules()
+        .dns(PublicOnlyDns)
         .build()
 
     /** Pulls the shared file's name out of `Content-Disposition: attachment; filename="x.jpg"`

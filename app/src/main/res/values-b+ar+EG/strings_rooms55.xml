@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">البحث في المحادثات العامة</string>
-    <string name="r55_no_public_chats">مفيش محادثات عامة</string>
-    <string name="r55_no_public_chats_hint">دوس + عشان تدخل أوضة عامة أو تعمل واحدة.</string>
     <string name="r55_page_cycle_hint">بيبدّل بين محادثاتك والمحادثات العامة</string>
-    <string name="r55_more_rooms">أوض تانية</string>
-    <string name="r55_more_rooms_footer">أوض اتضافت على المفهرس اللي K بيقرا منه المحادثات العامة.</string>
     <string name="r55_delete_one_public_chat">حذف شات عام واحد؟</string>
     <string name="r55_delete_n_public_chats">حذف %1$d من الشاتات العامة؟</string>
-    <string name="r55_delete_public_chats_message">الشاتات العامة الافتراضية هتتقفل (شغّلها تاني من تعديل الشاتات العامة الافتراضية). والأوض اللي ضفتها هتتمسح مع رسايلها من الجهاز ده.</string>
     <string name="r55_delete_for_everyone">امسح عند الكل</string>
     <string name="r55_delete_for_everyone_subtitle">بتشيلها من الأوضة دي عند كل اللي بيستخدموا K.</string>
     <string name="r55_delete_for_everyone_q">تمسح عند الكل؟</string>

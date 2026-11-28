@@ -28,6 +28,12 @@ interface GroupDao {
     @Query("UPDATE groups SET lastReadAt = :timestamp WHERE groupId = :groupId AND walletAddress = :walletAddress")
     suspend fun markGroupRead(groupId: String, walletAddress: String, timestamp: Long)
 
+    /** History caught up on a group never opened here: its read marker goes at [timestamp] (the
+     *  account's import moment), only while it has none, so genuine unread state is left alone
+     *  (iOS `seedImportReadMarker`). */
+    @Query("UPDATE groups SET lastReadAt = :timestamp WHERE groupId = :groupId AND walletAddress = :walletAddress AND lastReadAt IS NULL")
+    suspend fun seedGroupReadMarker(groupId: String, walletAddress: String, timestamp: Long)
+
     /** Forces a group back to "unread" - clears lastReadAt to NULL, same state as never opened. */
     @Query("UPDATE groups SET lastReadAt = NULL WHERE groupId = :groupId AND walletAddress = :walletAddress")
     suspend fun markGroupUnread(groupId: String, walletAddress: String)
@@ -118,6 +124,13 @@ interface GroupDao {
      *  1 when claimed, 0 otherwise. */
     @Query("UPDATE group_messages SET deliveryStatus = 'pending' WHERE txId = :txId AND walletAddress = :walletAddress AND isOutgoing = 1 AND deliveryStatus = 'failed'")
     suspend fun claimFailedForRetry(txId: String, walletAddress: String): Int
+
+    /** A Retry's re-seal, written into the claimed row before it goes out: the delivered copy
+     *  (and the launch settle's [hasDeliveredCopy]) find the placeholder by the NEW msg_id, so a
+     *  Not confirmed retry or one killed mid-send doesn't leave a second bubble or get resent.
+     *  1 when the row was there to update. */
+    @Query("UPDATE group_messages SET senderIdHex = :senderIdHex, epoch = :epoch, msgIdHex = :msgIdHex, contentEncryptedHex = :contentEncryptedHex WHERE txId = :txId AND walletAddress = :walletAddress")
+    suspend fun rekeyRetryPlaceholder(txId: String, walletAddress: String, senderIdHex: String, epoch: Long, msgIdHex: String, contentEncryptedHex: String): Int
 
     @Query("DELETE FROM groups WHERE walletAddress = :walletAddress")
     suspend fun deleteAllGroups(walletAddress: String)

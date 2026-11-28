@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K vous permet d\'envoyer et de recevoir des messages sur le reseau Kaspa lui-meme. Kaspa est necessaire pour payer les frais lors de l\'envoi de vos messages. Les frais que vous payez vont aux mineurs qui securisent le reseau. 5 Kaspa vous permettent d\'envoyer environ 2 500 messages.</string>
+    <string name="welcome2_get_username">Obtenez un nom d\'utilisateur</string>
+    <string name="welcome2_get_username_caption">Réservez un nom d\'utilisateur, comme @alice, pour qu\'on vous trouve et vous écrive sans votre longue adresse. Obtenez-le dans Kaspa Hub &gt; Noms d\'utilisateur.</string>
+    <string name="welcome2_share_title">Partagez votre adresse de discussion</string>
+    <string name="welcome2_share_body">Envoyez-la à quelqu\'un pour qu\'il puisse vous trouver et vous écrire sur K.</string>
+</resources>

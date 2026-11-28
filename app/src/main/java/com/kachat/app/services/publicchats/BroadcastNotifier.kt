@@ -131,8 +131,13 @@ class BroadcastNotifier @Inject constructor(
 
         /** What a room message reads as in a banner: never an envelope's raw JSON. */
         fun notificationText(content: String): String {
-            com.kachat.app.util.MessageReaction.parseOrNull(content)?.let { return "Reacted ${it.emoji}" }
-            if (com.kachat.app.util.MessageEdit.parseOrNull(content) != null) return "Edited a message"
+            // in the app's language (iOS audit 2026-11-27 R7); English where none is set up (tests)
+            com.kachat.app.util.MessageReaction.parseOrNull(content)?.let { reaction ->
+                return runCatching { com.kachat.app.util.tr(com.kachat.app.R.string.rel_bell_reacted, reaction.emoji) }.getOrDefault("Reacted ${reaction.emoji}")
+            }
+            if (com.kachat.app.util.MessageEdit.parseOrNull(content) != null) {
+                return runCatching { com.kachat.app.util.tr(com.kachat.app.R.string.rel_bell_edited_message) }.getOrDefault("Edited a message")
+            }
             val unwrapped = com.kachat.app.util.MessageReply.parseOrNull(content)?.text ?: content
             com.kachat.app.util.InlineMediaSniff.mimeType(unwrapped)?.let { mime ->
                 return when {

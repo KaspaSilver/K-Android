@@ -65,7 +65,7 @@ class ChessTournamentService @Inject constructor(
     private val notificationHelper: NotificationHelper,
     @ApplicationContext context: Context,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + com.kachat.app.util.StartupSafety.logOnlyHandler(TAG))
 
     init {
         // The chess sentences are looked up by their English (KaPlayText); the app context may
@@ -271,8 +271,19 @@ class ChessTournamentService @Inject constructor(
         }
     }
 
-    /** One second of the arena: the clock, then everything that runs on it (iOS 32e6392). */
+    /** One second of the arena: the clock, then everything that runs on it (iOS 32e6392). A
+     *  second that throws is logged and the next one runs: uncaught, it stopped the clock. */
     private fun tick() {
+        try {
+            tickOnce()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.w(TAG, "Arena tick failed", e)
+        }
+    }
+
+    private fun tickOnce() {
         ChessClock.set(System.currentTimeMillis())
         refreshTimeState()
         expirePendingMoves()
@@ -329,7 +340,19 @@ class ChessTournamentService @Inject constructor(
             arena.messages(ChessTournamentCodec.ARENA_CHANNEL)
                 .distinctUntilChanged()
                 .conflate()
-                .collect { rows -> reduceMutex.withLock { reduce(rows) } }
+                .collect { rows ->
+                    reduceMutex.withLock {
+                        // A pass that throws (a malformed public row) is logged and the next
+                        // change reduces again; uncaught, it ended the reducer, or the app.
+                        try {
+                            reduce(rows)
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Arena reduce failed", e)
+                        }
+                    }
+                }
         }
     }
 
@@ -398,7 +421,8 @@ class ChessTournamentService @Inject constructor(
     private fun reduce(rows: List<ChessArenaRow>) {
         val events = rows.mapNotNull { row ->
             if (row.deliveryStatus != "sent" || row.id.startsWith("pending_")) return@mapNotNull null
-            val message = ChessTournamentCodec.decode(row.content) ?: return@mapNotNull null
+            // Anyone can post to the public arena: a row that fails to decode is skipped, alone.
+            val message = try { ChessTournamentCodec.decode(row.content) } catch (e: Exception) { null } ?: return@mapNotNull null
             ChessArenaEvent(row.id, row.senderAddress, row.blockTimestamp, message)
         }
         val mineAddress = myAddress

@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">Conectado, y tiene los mensajes de esta sala.</string>
     <string name="kpui_room_indexer_footer">Un chat público vive en el blockDAG de Kaspa, así que cualquier indexador que vigile la misma red sirve la misma sala. Apunta esta a donde quieras (la tuya o la de otra persona) sin cambiar el indexador que usan las demás salas.</string>
     <string name="kpui_use_app_indexer">Usar el indexador de la app</string>
-    <string name="kpui_room_switched_off_footer">Una sala desactivada ya no aparece en Chats públicos y nunca envía una notificación. Vuelve a activarla cuando quieras.</string>
-    <string name="kpui_languages">Idiomas</string>
-    <string name="kpui_languages_footer">Desactivado quita todas las salas de idiomas de Chats públicos. Activado, desactiva las que no quieras.</string>
     <string name="kpui_notifications_off">Notificaciones desactivadas</string>
     <string name="kpui_notifications_on">Notificaciones activadas</string>
     <string name="kpui_room_notified_closed">Recibes avisos de mensajes nuevos aquí, incluso con la app cerrada.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">Aún no hay nada aquí</string>
     <string name="kpui_engagement_empty">Cuando alguien interactúe con esta publicación, aparecerá aquí.</string>
     <string name="kpui_instant_tip_limit">Las propinas instantáneas están limitadas a 10 KAS. Desliza hacia arriba para enviar esta.</string>
-    <string name="kpui_kapost_settings">Ajustes de KaPost</string>
     <string name="kpui_cool_down">Espera antes de publicar</string>
     <string name="kpui_cooldown_on">Las publicaciones, comentarios, me gusta, reposts, votos, ediciones y eliminaciones esperan 5 segundos, con opción de Deshacer, antes de ir a la cadena.</string>
     <string name="kpui_cooldown_off">Las publicaciones, comentarios, me gusta, reposts, votos, ediciones y eliminaciones van a la cadena de inmediato, sin Deshacer.</string>

@@ -729,10 +729,18 @@ class WalletManager @Inject constructor(
     /** A user-given nickname for one spending-chain address, shown in Manage Addresses in place of the default "Address #N" — same flat (walletAddress, index) keying as [HiddenSpendingAddress]. */
     private data class SpendingAddressLabel(val walletAddress: String, val index: Int, val label: String)
 
+    /** [getAllSpendingAddressLabels], decoded once per change: address history rows ask for
+     *  labels while drawing (iOS 01f71184 `spendingLabelsCache`, smoothness audit L5). Keyed by
+     *  the stored text, so any write shows at once. */
+    @Volatile private var spendingLabelsCache: Pair<String, List<SpendingAddressLabel>>? = null
+
     private fun getAllSpendingAddressLabels(): List<SpendingAddressLabel> {
         val json = sharedPrefs.getString(PREF_SPENDING_ADDRESS_LABELS, null) ?: return emptyList()
+        spendingLabelsCache?.let { (text, labels) -> if (text == json) return labels }
         val type = object : TypeToken<List<SpendingAddressLabel>>() {}.type
-        return gson.fromJson(json, type)
+        val decoded: List<SpendingAddressLabel> = gson.fromJson(json, type) ?: emptyList()
+        spendingLabelsCache = json to decoded
+        return decoded
     }
 
     private fun saveSpendingAddressLabels(labels: List<SpendingAddressLabel>) {
@@ -1991,9 +1999,13 @@ class WalletManager @Inject constructor(
         return deriveSpendingAddresses(listOf(index), account)[index]
     }
 
-    /** The signing key of spending index [index], on whichever chain it lives. */
+    /** The signing key of spending index [index], on whichever chain it lives. Signed out: no key,
+     *  as [getPrivateKeyBytes] - a send still running after Log Out must not sign as the old
+     *  account. */
     fun getSpendingPrivateKeyBytes(index: Int): ByteArray =
-        if (isQuantumIndex(index)) {
+        if (isLoggedOut) {
+            throw IllegalStateException("Signed out")
+        } else if (isQuantumIndex(index)) {
             HDKeyDerivation.deriveChildKey(quantumChainKey(), ChildNumber(index - QUANTUM_INDEX_BASE, false)).privKeyBytes
         } else {
             deriveKey(activeMnemonicWords(), accountIndex = 1, addressIndex = index, passphrase = activePassphrase(), form = activePassphraseForm()).privKeyBytes

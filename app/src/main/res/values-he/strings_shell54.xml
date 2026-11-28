@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">כל אחד יכול לראות את הכתובת הזו ואת היתרה שלה ברשת Kaspa, אבל אף אחד לא יכול לקרוא את ההודעות שלכם. השתמשו בה רק לצ\'אט ולשמות משתמש.</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... או שם משתמש</string>
     <string name="shell54_looking_up_username">מחפש שם משתמש...</string>
-    <string name="shell54_portfolio_add_address_footer">הזינו כתובת Kaspa או שם משתמש כמו name.kachat. כל עסקה שהתקבלה בכתובת הזו הופכת לקנייה, וכל עסקה שנשלחה למכירה, לפי מחיר ה-KAS ההיסטורי באותו יום. הוספה חוזרת של אותה כתובת בהמשך מייבאת רק עסקאות שנמצאו מאז הייבוא האחרון.</string>
+    <string name="shell54_portfolio_add_address_footer">הזינו כתובת Kaspa או שם משתמש כמו @name. כל עסקה שהתקבלה בכתובת הזו הופכת לקנייה, וכל עסקה שנשלחה למכירה, לפי מחיר ה-KAS ההיסטורי באותו יום. הוספה חוזרת של אותה כתובת בהמשך מייבאת רק עסקאות שנמצאו מאז הייבוא האחרון.</string>
     <string name="shell54_report_copied">הדיווח הועתק</string>
     <string name="shell54_report_no_mail_app">אף אפליקציית דואר לא הצליחה לפתוח אותו. הדביקו את הדיווח בהודעת אימייל אל %1$s.</string>
     <string name="shell54_show_amounts">הצג סכומים</string>

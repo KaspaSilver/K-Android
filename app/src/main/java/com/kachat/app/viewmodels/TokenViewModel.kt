@@ -194,10 +194,13 @@ class TokenViewModel @Inject constructor(
         if (!isCombine && !KusdtTransfer.matches(prepared, fromId, recipient, amount)) {
             return SendOutcome.Changed(null, transfer.sendChanged().message.orEmpty())
         }
+        // The account that sends it: a report after a switch would land in the other account's
+        // chat and go from its chatting address (audit 2026-11-27 R5).
+        val owner = chatPayments.currentOwner()
         return try {
             val txid = transfer.send(prepared)
             // the recipient's coin is output 0 (`KusdtTransfer.Prepared.recipient`)
-            if (chatContact != null) chatPayments.recordTokenPayment(chatContact, token, txid, 0, prepared.amount)
+            if (chatContact != null) chatPayments.recordTokenPayment(chatContact, token, txid, 0, prepared.amount, expectedOwner = owner)
             SendOutcome.Sent(txid, prepared)
         } catch (e: CancellationException) {
             throw e
@@ -205,11 +208,13 @@ class TokenViewModel @Inject constructor(
             // It may have landed. Its coins stay in the balances: a send built again picks one of
             // them first, so the two conflict and at most one lands. From a chat: if it did land,
             // the chat still gets its bubble and notice, even once the screen is closed.
-            if (chatContact != null) {
+            if (chatContact != null && owner != null) {
                 val txid = prepared.txid
                 val sentAmount = prepared.amount
                 wallet.launchDetached {
-                    if (transfer.awaitAccepted(txid)) chatPayments.recordTokenPayment(chatContact, token, txid, 0, sentAmount)
+                    if (transfer.awaitAccepted(txid)) {
+                        chatPayments.recordTokenPayment(chatContact, token, txid, 0, sentAmount, expectedOwner = owner)
+                    }
                 }
             }
             SendOutcome.NotConfirmed(prepared, context.getString(R.string.kusdt_not_confirmed))

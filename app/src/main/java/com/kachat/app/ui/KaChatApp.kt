@@ -128,7 +128,7 @@ object SettingsShellRoutes {
 
 /** Wallet's pushed pages (Manage Addresses and its address pages, Your Domains). */
 private val walletPushedRoutes = setOf(
-    "manage_addresses", "identity_address_detail", "spending_address_detail/{index}", "kns_domains",
+    "manage_addresses", "identity_address_detail", "spending_address_detail/{index}?sendReceive={sendReceive}", "kns_domains",
 )
 
 /** Portfolio's chart pages (iOS NavigationLinks inside PortfolioView: the tab bar stays). */
@@ -205,6 +205,21 @@ fun KaChatApp(
     val isLoggedIn by walletViewModel.isLoggedIn.collectAsState()
     val startupResolved by walletViewModel.startupResolved.collectAsState()
     val pendingAccountSwitch by walletViewModel.pendingAccountSwitch.collectAsState()
+
+    // Log Out (an account switch is one too): the next account starts with Kaspa Hub's menu, not
+    // the last one's section, and with none of its expired usernames (iOS d88891ea, audit
+    // 2026-11-27 L15 and M5).
+    val signOutExpiredNames: com.kachat.app.ui.screens.KachatExpiredNamesViewModel = hiltViewModel()
+    var shellWasSignedIn by remember { mutableStateOf(false) }
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn) {
+            shellWasSignedIn = true
+        } else if (shellWasSignedIn) {
+            shellWasSignedIn = false
+            HubRouter.reset()
+            signOutExpiredNames.model.reset()
+        }
+    }
 
     if (!startupResolved) {
         // Cold start, routing decision still loading (the async biometrics-for-login read that
@@ -320,15 +335,40 @@ fun MainShell(
     val localTabOrder = dockTabs
     val currentTopRoute = currentDestination?.route
 
+    /** Kaspa Hub's glass menu over the dock's left side (iOS bfb902b7 `KaspaHubMenu`, owner
+     *  2026-11-26). */
+    var showHubMenu by remember { mutableStateOf(false) }
+    /** The dock tab you were on before a Hub section opened: where its close (Kasshi's X, Back)
+     *  goes back (iOS `tabBeforeHub`). */
+    var tabBeforeHub by remember { mutableStateOf(AppTab.CHATS) }
+    fun onHubRoute(): Boolean =
+        navController.currentDestination?.hierarchy?.any { it.route == AppTab.HUB.route } == true
+    /** The dock tab whose page is showing, a pushed page counting as its tab's. */
+    fun currentDockTab(): AppTab? = navController.currentBackStack.value.asReversed()
+        .firstNotNullOfOrNull { entry -> AppTab.fromRoute(entry.destination.route)?.takeIf { it in DockLayout.dock.value } }
+    // The clock for forgetting the Hub's section (iOS `HubRouter.rememberFor`, owner 2026-11-27):
+    // it starts when Kaspa Hub's page is left for another tab and stops when it's back.
+    val onHubNow = currentDestination?.hierarchy?.any { it.route == AppTab.HUB.route } == true
+    LaunchedEffect(onHubNow) {
+        if (onHubNow) HubRouter.noteEntered() else HubRouter.noteLeft()
+    }
+    /** Leaving for a Hub section: remember where from. */
+    fun noteTabBeforeHub() {
+        if (onHubRoute()) return
+        currentDockTab()?.takeIf { it != AppTab.HUB }?.let { tabBeforeHub = it }
+    }
+
     /**
      * Puts [tab] on screen: its dock slot, or Kaspa Hub with it open there (iOS
      * `MainTabView.show`). Reads the dock and the route as they are now, so a collector started
      * once can call it.
      */
     fun show(tab: AppTab) {
+        showHubMenu = false
         val target = if (tab in DockLayout.dock.value) {
             tab
         } else {
+            noteTabBeforeHub()
             HubRouter.open(tab)
             AppTab.HUB
         }
@@ -336,80 +376,18 @@ fun MainShell(
         if (!onOwnRoute) navigateToTab(navController, target.route)
     }
 
-    // Blocking progress for the account's first full sync, which the setup wizard deferred.
-    // Escapable on purpose: a sync can stall on a slow indexer, and a dialog with no way out
-    // would be worse than an incomplete chat list.
-    val initialSyncPhase by chatViewModel.initialSyncPhase.collectAsState()
-    if (initialSyncPhase != null) {
-        val finished = initialSyncPhase == ChatViewModel.InitialSyncPhase.Finished
-        var canSkip by remember { mutableStateOf(false) }
-        LaunchedEffect(Unit) { kotlinx.coroutines.delay(20_000); canSkip = true }
-        Dialog(
-            onDismissRequest = { if (finished) chatViewModel.clearInitialSyncPhase() },
-            properties = DialogProperties(dismissOnBackPress = finished, dismissOnClickOutside = false)
-        ) {
-            Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(LocalAppColors.current.surface)
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (finished) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = LocalAppColors.current.success, modifier = Modifier.size(38.dp))
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.first_sync_all_set), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text(stringResource(R.string.first_sync_up_to_date), color = LocalAppColors.current.textSecondary, fontSize = 13.sp)
-                    Spacer(Modifier.height(16.dp))
-                    // iOS's .borderedProminent: white on an accent capsule.
-                    Button(
-                        onClick = { chatViewModel.clearInitialSyncPhase() },
-                        colors = ButtonDefaults.buttonColors(containerColor = KaspaTeal, contentColor = Color.White),
-                    ) {
-                        Text(stringResource(R.string.done), color = Color.White)
-                    }
-                } else {
-                    com.kachat.app.ui.theme.IosActivityIndicator(color = KaspaTeal, strokeWidth = 3.dp, modifier = Modifier.size(36.dp))
-                    Spacer(Modifier.height(14.dp))
-                    Text(stringResource(R.string.first_sync_setting_up), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    // Looked up as iOS does (4f8e14bb). Groups and Balance are Android's own phases,
-                    // with no iOS text to translate them from.
-                    Text(
-                        when (initialSyncPhase) {
-                            null -> stringResource(R.string.initial_sync_starting)
-                            ChatViewModel.InitialSyncPhase.Messages -> stringResource(R.string.downloading_message_history)
-                            ChatViewModel.InitialSyncPhase.Finished -> stringResource(R.string.initial_sync_finished)
-                            else -> initialSyncPhase?.label.orEmpty()
-                        },
-                        color = LocalAppColors.current.textSecondary,
-                        fontSize = 13.sp,
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        stringResource(R.string.first_sync_downloading_footer),
-                        color = LocalAppColors.current.textSecondary,
-                        fontSize = 11.sp,
-                        textAlign = TextAlign.Center
-                    )
-                    if (canSkip) {
-                        Spacer(Modifier.height(10.dp))
-                        TextButton(onClick = { chatViewModel.clearInitialSyncPhase() }) {
-                            Text(stringResource(R.string.first_sync_continue_anyway), color = KaspaTeal)
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // No progress screen for the first sync any more (iOS 824a30bb, owner 2026-11-26): it runs
+    // during the Welcome Guide, and chats and history fill in as they sync.
 
     // Tapping a notification for a message/handshake/payment jumps straight to that
     // conversation, matching what a real chat app does — otherwise you'd land on the
     // chat list and have to go find it yourself.
     LaunchedEffect(pendingContactId) {
         if (pendingContactId != null) {
-            navController.navigate("chat/$pendingContactId")
+            // Already in that chat: a second copy of it isn't pushed on top.
+            val current = navController.currentBackStackEntry
+            val inThatChat = com.kachat.app.util.ConversationOwnership.isChatWith(current?.destination?.route, current?.arguments?.getString("contactId"), pendingContactId)
+            if (!inThatChat) navController.navigate("chat/$pendingContactId")
             onPendingContactHandled()
         }
     }
@@ -579,13 +557,25 @@ fun MainShell(
     SideEffect {
         KaPlayRoutes.gamesTabRoute = if (AppTab.GAMES in dockTabs) AppTab.GAMES.route else AppTab.HUB.route
     }
-    // The tab on screen left the dock: Kaspa Hub, where it now lives (iOS `onChange(layout.dock)`).
+    // The tab on screen left the dock: Chats, as Kaspa Hub has no screen of its own (iOS `onChange(layout.dock)`).
     LaunchedEffect(dockTabs) {
         val onTab = AppTab.fromRoute(navController.currentDestination?.route) ?: return@LaunchedEffect
         if (onTab !in dockTabs) {
-            HubRouter.open(onTab)
-            navigateToTab(navController, AppTab.HUB.route)
+            // Kaspa Hub is a menu, with no screen of its own to land on: Chats (iOS bfb902b7)
+            show(AppTab.CHATS)
         }
+    }
+    // A section closed (Kasshi's X, Back): back to the tab you came from, never a Hub screen
+    // (iOS bfb902b7 `tabBeforeHub`).
+    LaunchedEffect(hubOpenSection) {
+        if (hubOpenSection != null) return@LaunchedEffect
+        if (navController.currentDestination?.route != AppTab.HUB.route) return@LaunchedEffect
+        val dock = DockLayout.dock.value
+        val back = tabBeforeHub.takeIf { it in dock && it != AppTab.HUB }
+            ?: AppTab.CHATS.takeIf { it in dock }
+            ?: dock.firstOrNull { it != AppTab.HUB }
+            ?: return@LaunchedEffect
+        navigateToTab(navController, back.route)
     }
 
     // A "Received" receipt that named one of your addresses: that address's History, in a sheet
@@ -593,6 +583,17 @@ fun MainShell(
     // exists, so a cold start (still on the loading route when the tap arrived) lands here too -
     // iOS's OwnAddressRoute.pending.
     var ownAddressSheet by remember { mutableStateOf<String?>(null) }
+    // A K Explorer link (iOS bfb902b7 `ExplorerDeepLink.open`): the sheets and KaPost's covers
+    // close first, or the Explorer would open behind them, then the Explorer, wherever it lives,
+    // takes the waiting page. One waiting from a cold start too.
+    LaunchedEffect(Unit) {
+        if (com.kachat.app.services.explorer.ExplorerDeepLink.pending.value != null) show(AppTab.EXPLORER)
+        com.kachat.app.services.explorer.ExplorerDeepLink.opens.collect {
+            ownAddressSheet = null
+            com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+            show(AppTab.EXPLORER)
+        }
+    }
     LaunchedEffect(pendingOwnAddress) {
         val address = pendingOwnAddress
         if (address != null) {
@@ -782,9 +783,33 @@ fun MainShell(
     LaunchedEffect(dockNotifAddress) {
         dockNotifVm.store.reloadIfNeeded()
     }
+    // Wallet's dot: your usernames in grace (iOS b49a021d `DockBadgeSync`, owner 2026-11-27),
+    // loaded here so it shows from any tab - on appear (each sign-in rebuilds the shell), on every
+    // registry change, and when the app comes back.
+    val expiredNamesVm: com.kachat.app.ui.screens.KachatExpiredNamesViewModel = hiltViewModel()
+    val expiredNames by expiredNamesVm.model.expired.collectAsState()
+    val kachatNamesRevision by expiredNamesVm.model.revision.collectAsState()
+    // bumped each time the app comes back to the foreground
+    var expiredNamesComeBacks by remember { mutableIntStateOf(0) }
+    LaunchedEffect(dockNotifAddress, kachatNamesRevision, expiredNamesComeBacks) { expiredNamesVm.model.load() }
+    val expiredNamesLifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(expiredNamesLifecycle) {
+        var started = false
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_START) {
+                // the first start is the appear above; later ones are the app coming back
+                if (started) expiredNamesComeBacks++
+                started = true
+            }
+        }
+        expiredNamesLifecycle.lifecycle.addObserver(observer)
+        onDispose { expiredNamesLifecycle.lifecycle.removeObserver(observer) }
+    }
     fun badgeCount(tab: AppTab): Int = when (tab) {
         AppTab.PROFILE -> profileBadge
         AppTab.CHATS -> dockChatsUnread + dockGroupsUnread
+        // a name of yours expired and is in grace: a red dot until it's renewed or lapses
+        AppTab.WALLET -> expiredNames.size
         AppTab.HUB -> hubTabs.sumOf { if (it == AppTab.HUB) 0 else badgeCount(it) }
         else -> 0
     }
@@ -810,15 +835,68 @@ fun MainShell(
         localTabOrder.indexOf(owner).takeIf { it >= 0 } ?: localTabOrder.indexOf(AppTab.HUB)
     }
 
+    val shellHaptic = com.kachat.app.util.rememberHaptics()
+
+    /**
+     * A Hub section on screen as a Hub section: the Kaspa Hub tab, lit on the dock, with it open
+     * (iOS bfb902b7 `openHubSection`). Not as a tap on Kaspa Hub, which in a section brings the
+     * menu up.
+     */
+    fun openHubSection(tab: AppTab) {
+        showHubMenu = false
+        com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+        val leaving = !onHubRoute()
+        noteTabBeforeHub()
+        HubRouter.open(tab)
+        if (leaving) navigateToTab(navController, AppTab.HUB.route)
+    }
+
+    /**
+     * Kaspa Hub tapped, on the dock or its copy over KaPost's screens (iOS bfb902b7 `hubTapped`,
+     * owner 2026-11-27): the section you last picked is what Kaspa Hub shows, as any tab would,
+     * and tapping it while you're in it brings up the menu to pick another:
+     * - menu up: it closes;
+     * - on another tab, with a section picked before: back to that section, as you left it;
+     * - in the section, or nothing picked yet: the menu.
+     */
+    fun hubTapped() {
+        shellHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+        if (showHubMenu) {
+            showHubMenu = false
+            return
+        }
+        // left over a minute ago (owner, 2026-11-27): forgotten, and this tap is the menu
+        if (!onHubRoute()) HubRouter.forgetIfStale()
+        if (!onHubRoute() && HubRouter.openSection.value != null) {
+            com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
+            noteTabBeforeHub()
+            navigateToTab(navController, AppTab.HUB.route)
+            return
+        }
+        showHubMenu = true
+    }
+
     /** What a tap on a dock tab does (iOS `handleTabSelectionChange`) - shared by the dock, a
      *  slide along it, and the copy of it over KaPost's screens. */
     fun goToDockTab(tab: AppTab) {
+        // Kaspa Hub is a menu (iOS bfb902b7): never a Hub screen of its own.
+        if (tab == AppTab.HUB) {
+            hubTapped()
+            return
+        }
+        if (showHubMenu) {
+            showHubMenu = false
+            // The tab on screen tapped with the menu up only closes the menu (it read as "tapped
+            // again", flipping Chats to Public Chats, iOS 2026-11-26); another tab goes there.
+            if (localTabOrder.getOrNull(selectedDockIndex) == tab) return
+        }
         // Every KaPost full-screen screen closes, so the tab is what shows.
         com.kachat.app.ui.screens.KaPostsDock.closeCovers.tryEmit(Unit)
         // KaPost tapped: the feed back to its top.
         com.kachat.app.ui.screens.KaPostsDock.tabTapped(kaPostsTab = tab == AppTab.KAPOSTS)
         val onOwnRoute = navController.currentDestination?.hierarchy?.any { it.route == tab.route } == true
-        // Kaspa Hub tapped again: back to its grid, the way out of a section opened there.
+        // Kaspa Hub tapped again: back to its grid, the way out of a section opened there (only
+        // with the Hub as a screen: as a menu, a Hub tap never gets here).
         if (tab == AppTab.HUB && (onOwnRoute || localTabOrder.getOrNull(selectedDockIndex) == AppTab.HUB)) {
             HubRouter.close()
         }
@@ -1027,7 +1105,18 @@ fun MainShell(
                                         // How many are waiting, not just that some are (iOS
                                         // AppTabBadge.dockLabel): "99+" past 99.
                                         val badgeCount = badgeCount(tab)
-                                        if (badgeCount > 0) {
+                                        if (badgeCount > 0 && tab == AppTab.WALLET) {
+                                            // Wallet's is a dot, not a number: an expired username
+                                            // needs renewing (iOS b49a021d `AppTabBadge.dot`).
+                                            Box(
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                                    .offset(x = 4.dp, y = (-2).dp)
+                                                    .size(10.dp)
+                                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                                    .background(LocalAppColors.current.danger),
+                                            )
+                                        } else if (badgeCount > 0) {
                                             // A box with a minimum square size, so one digit is a
                                             // circle and only a longer label stretches it into a pill.
                                             Box(
@@ -1125,14 +1214,45 @@ fun MainShell(
             AppTab.APPS -> KaspaWebsitesScreen()
             // kasshi.io in the in-app browser, its X back to the grid (iOS 35b112ce). Android's
             // browser never pauses the node, so iOS's `powersDown: false` needs nothing here.
-            AppTab.KASSHI -> com.kachat.app.ui.screens.InAppBrowserScreen(
-                url = "https://kasshi.io",
-                title = stringResource(R.string.kasshi),
-                onClose = { HubRouter.close() },
-            )
+            // Just the site, with no dock (iOS 896e8194 `.toolbar(.hidden, for: .tabBar)`).
+            AppTab.KASSHI -> {
+                com.kachat.app.ui.screens.CoverDock()
+                com.kachat.app.ui.screens.InAppBrowserScreen(
+                    url = "https://kasshi.io",
+                    title = stringResource(R.string.kasshi),
+                    // It asks first which address signs you in (iOS b49a021d, owner 2026-11-27),
+                    // then Kasshi's own connect and sign-in go through with no more sheets.
+                    signInFirst = true,
+                    onClose = { HubRouter.close() },
+                )
+            }
         }
     }
 
+    // "View in Explorer" with K's own Explorer picked (iOS bfb902b7): its kachat:// link opens
+    // the Explorer's page here; every other link goes on as before.
+    val platformUriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    // A link no app on the phone handles (a kachat:// host K doesn't know, posted by anyone in a
+    // room) throws from the platform handler: say so instead of crashing (audit 2026-11-27).
+    val uriContext = androidx.compose.ui.platform.LocalContext.current
+    val shellUriHandler = remember(platformUriHandler, uriContext) {
+        object : androidx.compose.ui.platform.UriHandler {
+            override fun openUri(uri: String) {
+                if (com.kachat.app.services.explorer.ExplorerDeepLink.openIfLink(uri)) return
+                try {
+                    platformUriHandler.openUri(uri)
+                } catch (e: android.content.ActivityNotFoundException) {
+                    android.widget.Toast.makeText(uriContext, uriContext.getString(R.string.no_app_to_open_link), android.widget.Toast.LENGTH_SHORT).show()
+                } catch (e: IllegalArgumentException) {
+                    android.widget.Toast.makeText(uriContext, uriContext.getString(R.string.no_app_to_open_link), android.widget.Toast.LENGTH_SHORT).show()
+                } catch (e: SecurityException) {
+                    android.widget.Toast.makeText(uriContext, uriContext.getString(R.string.no_app_to_open_link), android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    CompositionLocalProvider(androidx.compose.ui.platform.LocalUriHandler provides shellUriHandler) {
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         containerColor = LocalAppColors.current.background,
         bottomBar = {
@@ -1176,7 +1296,7 @@ fun MainShell(
                     // Runs on under the dock, as iOS's content runs on under its tab bar.
                     CompositionLocalProvider(com.kachat.app.ui.screens.LocalDockInset provides dockInset) {
                         if (tab == AppTab.HUB) {
-                            KaspaHubScreen(badgeCount = { badgeCount(it) }, content = { section -> tabContent(section) })
+                            KaspaHubScreen(content = { section -> tabContent(section) })
                         } else {
                             tabContent(tab)
                         }
@@ -1275,8 +1395,13 @@ fun MainShell(
             // --------------------------------------------------------------------------------
 
             composable(
-                "spending_address_detail/{index}",
-                arguments = listOf(navArgument("index") { type = NavType.IntType })
+                "spending_address_detail/{index}?sendReceive={sendReceive}",
+                arguments = listOf(
+                    navArgument("index") { type = NavType.IntType },
+                    // From Hidden Addresses, with no Manage Addresses card behind it: Send and
+                    // Receive on the page itself (iOS 824a30bb `showsSendReceive`).
+                    navArgument("sendReceive") { type = NavType.BoolType; defaultValue = false },
+                )
             ) { backStackEntry ->
                 // Deliberately its OWN route/screen rather than reusing
                 // "cold_storage_tx_history/{address}" (which Manage Addresses used to route
@@ -1291,6 +1416,7 @@ fun MainShell(
                         onBack = { navController.popBackStack() },
                         viewModel = walletViewModel,
                         onOpenChat = { address -> navController.navigate("chat/$address") },
+                        showsSendReceive = backStackEntry.arguments?.getBoolean("sendReceive") ?: false,
                     )
                 }
             }
@@ -1331,7 +1457,7 @@ fun MainShell(
                 ManageAddressesHiddenScreen(
                     viewModel = walletViewModel,
                     onBack = { navController.popBackStack() },
-                    onNavigateToTxHistory = { index -> navController.navigate("spending_address_detail/$index") }
+                    onNavigateToTxHistory = { index -> navController.navigate("spending_address_detail/$index?sendReceive=true") }
                 )
             }
 
@@ -1356,10 +1482,9 @@ fun MainShell(
                         // The import run is over — a later Help replay of this same guide must not
                         // offer "Change Chatting Address" again (see WelcomeGuideFundingStep).
                         walletViewModel.clearJustImportedWallet()
-                        // Everything the account owns starts syncing now, behind a dialog: a
-                        // half-populated chat list invites taps on chats whose history has not
-                        // landed yet.
-                        chatViewModel.runInitialSyncAfterOnboarding()
+                        // The first sync already ran during the guide, in the background: no
+                        // progress screen and no "You're all set" (iOS 824a30bb, owner 2026-11-26).
+                        chatViewModel.finishOnboardingGuide()
                         navController.popBackStack()
                     }
                 )
@@ -1575,8 +1700,11 @@ fun MainShell(
                     // Replaces this screen rather than stacking on it, so Back from the chat
                     // returns where User Info was opened from instead of to User Info again.
                     onOpenChat = { id ->
+                        // Opened from that very chat: back to it, not a second copy on top.
+                        val previous = navController.previousBackStackEntry
+                        val fromThatChat = com.kachat.app.util.ConversationOwnership.isChatWith(previous?.destination?.route, previous?.arguments?.getString("contactId"), id)
                         navController.popBackStack()
-                        navController.navigate("chat/$id")
+                        if (!fromThatChat) navController.navigate("chat/$id")
                     },
                     onNavigateToNotificationSettings = { id -> navController.navigate("contact_notification_settings/$id") },
                 )
@@ -1605,6 +1733,16 @@ fun MainShell(
             },
         )
     }
+    // Kaspa Hub's glass menu, rising from the dock's left side like iMessage's + (iOS bfb902b7):
+    // over everything, the dock included; a section picked opens as a Hub section.
+    com.kachat.app.ui.screens.KaspaHubMenu(
+        isPresented = showHubMenu,
+        onDismiss = { showHubMenu = false },
+        badgeCount = { badgeCount(it) },
+        onPick = { openHubSection(it) },
+    )
+    } // Box
+    } // LocalUriHandler
 }
 
 /**
@@ -1687,6 +1825,7 @@ private fun OwnAddressHistorySheet(
                             viewModel = walletViewModel,
                             onOpenChat = onOpenChat,
                             closesWithDone = true,
+                            showsSendReceive = true,
                         )
                         is OwnAddressResolution.Spending -> SpendingAddressTxHistoryScreen(
                             index = target.entry.index,
@@ -1695,6 +1834,7 @@ private fun OwnAddressHistorySheet(
                             onOpenChat = onOpenChat,
                             fallbackEntry = target.entry,
                             closesWithDone = true,
+                            showsSendReceive = true,
                         )
                         OwnAddressResolution.Unknown, OwnAddressResolution.BalanceUnavailable, null -> Column(Modifier.fillMaxSize()) {
                             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {

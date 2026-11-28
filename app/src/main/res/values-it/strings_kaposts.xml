@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">Il post a cui si riferisce questa bozza non è reperibile al momento, quindi non si può ancora pubblicare. Resta nelle tue bozze.</string>
     <string name="kaposts_likes">Mi piace</string>
     <string name="kaposts_no_tips_yet">Ancora nessuna mancia.</string>
-    <string name="kaposts_not_on_testnet">KaPost non è ancora disponibile sulla Testnet</string>
-    <string name="kaposts_not_on_testnet_sub">Non esiste un indicizzatore KaPost per la testnet. Disattiva Testnet in Impostazioni > Connessione per leggere e pubblicare sulla mainnet.</string>
+    <string name="kaposts_not_on_testnet">I post non sono ancora disponibili su Testnet</string>
+    <string name="kaposts_not_on_testnet_sub">Non esiste un indicizzatore dei Post per la testnet. Disattiva Testnet in Impostazioni &gt; Impostazioni di connessione per leggere e pubblicare sulla mainnet.</string>
     <string name="kaposts_poll_days_left">%1$d g rimanenti</string>
     <string name="kaposts_poll_final_results">%1$s · Risultati finali</string>
     <string name="kaposts_poll_hours_left">%1$d h rimanenti</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">Questo post è in invio proprio ora, quindi non si può annullare.</string>
     <string name="kaposts_scheduled_reminder_title">Post programmato</string>
     <string name="kaposts_scheduled_sending_soon">Invio appena la rete risponde</string>
-    <string name="kaposts_server_not_answering">Il server di KaPost non risponde. Vengono mostrati i post salvati e quelli nuovi dalla rete.</string>
+    <string name="kaposts_server_not_answering">Il server dei Post non risponde. Vengono mostrati i post salvati e quelli nuovi dalla rete.</string>
     <string name="kaposts_thread_not_confirmed">La rete non ha confermato parte del tuo thread, quindi il resto non è stato inviato. Salvare ciò che resta come bozza? Il suo primo post potrebbe essere già stato pubblicato, quindi controlla prima di pubblicarlo di nuovo.</string>
     <string name="kaposts_tip_from_chatting_note">Dal tuo Chatting Address la mancia conta sul post e compari tra chi ha lasciato mance.</string>
     <string name="kaposts_tip_from_private_note">Da un altro indirizzo la mancia è privata: l\'autore la riceve e la vede nella vostra chat, ma non conta sul post e non ti nomina.</string>

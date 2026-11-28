@@ -19,7 +19,6 @@
     <string name="enter_kpub">kpubを入力</string>
     <string name="export_csv">CSVをエクスポート</string>
     <string name="fee_usd_optional">手数料 (任意)</string>
-    <string name="generate_more_addresses">アドレスをさらに生成</string>
     <string name="holdings">保有資産</string>
     <string name="import_action">インポート</string>
     <string name="import_csv">CSVをインポート</string>
@@ -36,12 +35,8 @@
     <string name="kp_address_hidden_reenable">アドレスを非表示にしました。アドレスの表示設定で再表示できます。</string>
     <string name="kp_address_lld_64ab3">アドレス #%1$s</string>
     <string name="kp_address_number_ready">アドレス #%1$d の準備ができました。</string>
-    <string name="kp_address_row_copy_subtitle">アドレス全体をクリップボードにコピーします。</string>
     <string name="kp_address_row_hide_subtitle">この一覧から外します。「アドレスの表示」で再表示できます。</string>
-    <string name="kp_address_row_qr_subtitle">別の端末で読み取れるよう全画面で表示します。</string>
-    <string name="kp_address_row_rename_subtitle">このアドレスに自分のラベルを付けます。</string>
     <string name="kp_address_visibility_9c9a7">アドレスの表示設定</string>
-    <string name="kp_address_visibility_subtitle">リストに表示したいアドレスをまとめてチェックします。</string>
     <string name="kp_already_added_26837">追加済み</string>
     <string name="kp_amount_and_price_08599">金額と価格</string>
     <string name="kp_and_its_transactions_will_be_deleted_3c57d">「%1$s」とその取引が削除されます。この操作は取り消せません。</string>
@@ -55,8 +50,6 @@
     <string name="kp_check_address_history_before_trying_again">もう一度試す前にアドレスの履歴を確認してください。</string>
     <string name="kp_trade_may_have_gone_through">取引はすでに成立している可能性があります。</string>
     <string name="kp_checking_address_lld_5b84c">アドレス #%1$s を確認中</string>
-    <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">途中に空きがあっても最初の1,000個のアドレスを確認し、その後も見つかる限り続けます。</string>
-    <string name="kp_close_and_keep_scanning_b66cc">閉じてスキャンを続ける</string>
     <string name="kp_close_bbfa7">閉じる</string>
     <string name="kp_coin_just_spent">送金で使用済み</string>
     <string name="kp_coin_locked_by_covenant">コベナントでロック済み</string>
@@ -128,7 +121,6 @@
     <string name="kp_mining_per_week">1週間あたり</string>
     <string name="kp_new_portfolio_5c1c7">新しいポートフォリオ</string>
     <string name="kp_no_addresses_discovered_yet_15738">まだアドレスが検出されていません。</string>
-    <string name="kp_no_used_addresses_yet">使用済みのアドレスはまだありません</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">履歴がまだ足りません - 数日間の取引後にもう一度確認してください。</string>
     <string name="kp_note_optional_4e395">メモ（任意）</string>
     <string name="kp_nothing_can_change_now_this_is_8bf3a">これ以降は何も変更できません。これがKasSignerで署名されたトランザクションです。</string>
@@ -216,7 +208,6 @@
     <string name="kp_you_receive">受け取る額</string>
     <string name="kp_you_receive_about">受け取る額（約）</string>
     <string name="kp_you_saw">前回の表示</string>
-    <string name="kpub">kpub</string>
     <string name="kpub_2">kpub...</string>
     <string name="name_this_address">このアドレスに名前を付ける</string>
     <string name="no_app_to_open_link">このスマートフォンにはリンクを開けるアプリがありません</string>
@@ -271,22 +262,17 @@
     <string name="total_invested">総投資額</string>
     <string name="total_p_l">合計損益</string>
     <string name="transactions">取引</string>
-    <string name="kp_changes_the_name_shown_for_this_account_kc">このアカウントに表示される名前を変更します。</string>
     <string name="kp_compound_utxos_description_kc">このアドレスのすべてのUTXOを1つにまとめ、今後の送信で必要な入力の数を減らします。</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">同じ単語を使う他のアプリにも同じ kUSDT が表示され、送ることもできます。スワップはここで行います。</string>
     <string name="kp_kusdt_guide_swapping_detail_kc">KASとkUSDTのスワップやプールへの追加は、ウォレットタブの「ステーブルコインをスワップ」でkUSDTを選んでください。選んだアドレスにつながった状態で、Trestly自身のサイトがK内で開きます。</string>
     <string name="kp_more_stablecoins_will_show_here_kc">Kが追加すると、ほかのステーブルコインもここに表示されます。</string>
-    <string name="kp_notifies_you_when_this_account_kc">このアカウントがKaspaを受け取ると通知します。</string>
     <string name="kp_on_trestly_inside_kachat_kc">K内のTrestlyで</string>
-    <string name="kp_puts_the_extended_public_key_kc">拡張公開鍵をクリップボードにコピーします。</string>
     <string name="kp_reveals_next_unused_address_account_kc">このアカウントの次の未使用アドレスを表示します。</string>
     <string name="kp_scan_it_into_another_device_kc">別のデバイスでスキャンすると、そこでこのアカウントを見守れます。</string>
     <string name="kp_scan_this_on_your_kassigner_kc">KasSignerでこれをスキャンしてください</string>
     <string name="kp_selected_one_utxo_kc">選択中: %1$s（1 UTXO）</string>
     <string name="kp_selected_utxos_kc">選択中: %1$s（%2$d UTXO）</string>
-    <string name="kp_show_kpub_qr_kc">kpubのQRを表示</string>
     <string name="kp_something_went_wrong_kc">問題が発生しました</string>
-    <string name="kp_stops_notifying_when_this_account_kc">このアカウントがKaspaを受け取っても通知しなくなります。ほかのアカウントはそのままです。</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">これはKのウォッチリストから削除するだけです。KasSignerデバイスや保有する資金には影響しません。</string>
     <string name="kp_token_empty_state_swap_kc">新しいアドレスで受け取るか、ウォレットタブの「ステーブルコインをスワップ」で購入してください。</string>
     <string name="kp_trestly_asks_kachat_to_kc">TrestlyがKに依頼：</string>
@@ -296,8 +282,5 @@
     <string name="kp_trestly_site_kc">Trestly サイト</string>
     <string name="kp_trestly_site_url_kc">Trestly サイト URL</string>
     <string name="kp_trestly_swap_note_kc">K内でTrestly自身のコードが作成・確認します。先にプールが動いた場合は再見積もりし、この見積もり以上でのみ進め、下回るときは再確認し、サイトの最低額を下回ることはありません。</string>
-    <string name="kp_turn_off_receive_notifications_kc">受信通知をオフ</string>
-    <string name="kp_turn_on_receive_notifications_kc">受信通知をオン</string>
-    <string name="cold_copy_kpub_reveals_all_addresses">このアカウントの kpub をクリップボードにコピーします。すべてのアドレスが分かります。</string>
     <string name="cold_not_a_valid_kpub">有効な kpub ではありません</string>
 </resources>

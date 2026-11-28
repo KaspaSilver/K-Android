@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">Oda Ekle</string>
+    <string name="roomsoptin_indexer_rooms_footer">Dizinleyicinin tuttuğu odalar: geçmişleri saklanır ve K kapalıyken bile bildirim gönderebilirler.</string>
+    <string name="roomsoptin_other_languages">Diğer Diller</string>
+    <string name="roomsoptin_create_title">Oluşturduğunuz Oda Nasıl Çalışır</string>
+    <string name="roomsoptin_create_point_name">Aynı adı yazan herkes aynı odaya katılır. Sahibi ve daveti yoktur.</string>
+    <string name="roomsoptin_create_point_history">Geçmişini hiçbir dizinleyici tutmaz. Oda açıkken K onu Kaspa ağından okur ve telefonunuzda en fazla 3 gün saklar.</string>
+    <string name="roomsoptin_create_point_bell">K kapalıyken bildirim gelmez. Zili açıkken K yalnızca açıkken bildirir.</string>
+    <string name="roomsoptin_create_point_public">Orada söylenen her şey herkese açıktır: herkes Kaspa ağında okuyabilir.</string>
+    <string name="roomsoptin_create_room">Oda Oluştur</string>
+    <string name="roomsoptin_name_your_room">Odanıza Ad Verin</string>
+    <string name="roomsoptin_empty_title">Henüz herkese açık sohbet yok</string>
+    <string name="roomsoptin_empty_body">#kaspa gibi dizinleyicinin tuttuğu odaları ekleyin veya kendinizinkini oluşturun. Siz seçmeden hiçbir şey eklenmez.</string>
+    <string name="roomsoptin_removed_toast">#%1$s kaldırıldı. Oda Ekle\'den istediğiniz zaman tekrar ekleyin.</string>
+    <string name="roomsoptin_bulk_delete_message">Dizinleyicinin tuttuğu odalar Oda Ekle\'den tekrar eklenebilir. Oluşturduğunuz odalar mesajlarıyla birlikte bu cihazdan silinir.</string>
+    <string name="roomsoptin_not_in_list_add">Bu oda herkese açık sohbetlerinizde yok. Eklensin mi?</string>
+    <string name="roomsoptin_room_info_curated">Dizinleyicinin tuttuğu bir oda. Siz eklediniz ve K\'deki herkes buraya yazabilir.</string>
+</resources>

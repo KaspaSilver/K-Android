@@ -13,11 +13,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,8 +48,12 @@ import androidx.navigation.NavController
 import com.kachat.app.R
 import com.kachat.app.services.tokens.WalletToken
 import com.kachat.app.ui.screens.tokens.BalancePagePills
+import com.kachat.app.ui.screens.tokens.BuyKaspaSheet
+import com.kachat.app.ui.screens.tokens.DebitCardBuyOffer
 import com.kachat.app.ui.screens.tokens.SendAssetChooser
 import com.kachat.app.ui.screens.tokens.SlidingCardPager
+import com.kachat.app.ui.screens.tokens.SwapCover
+import com.kachat.app.ui.screens.tokens.SwapStart
 import com.kachat.app.ui.screens.tokens.TapToManageLabel
 import com.kachat.app.ui.screens.tokens.TokenBalanceCard
 import com.kachat.app.ui.screens.tokens.TokenManageScreen
@@ -63,14 +69,36 @@ import com.kachat.app.viewmodels.WalletViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
-/** What Wallet's three round buttons open (iOS bfe9f022 `WalletView.WalletAction`). */
+/** What Wallet's Send and Receive buttons and its Request Payment card open (iOS bfe9f022
+ *  `WalletView.WalletAction`). */
 private enum class WalletAction { SEND, RECEIVE, REQUEST }
+
+/** This process, for [SwapStartSaver]: a saved Buy / Sell from another one comes back without
+ *  what [SwapService] held for it. */
+private val swapStartProcess: String = java.util.UUID.randomUUID().toString()
+
+/** Buy / Sell, saved with the process it was opened in. */
+internal fun savedSwapStart(start: SwapStart?, process: String): String = start?.let { "${it.name}@$process" } ?: ""
+
+/** Buy / Sell to reopen from [saved] in [process]. FORM is the kUSDT sell [SwapService] was
+ *  prepared with (a singleton's state, gone with a recreated process), so from another process
+ *  it comes back closed; the others open from nothing. */
+internal fun restoredSwapStart(saved: String, process: String): SwapStart? {
+    val start = SwapStart.entries.firstOrNull { it.name == saved.substringBefore('@') } ?: return null
+    return start.takeIf { it != SwapStart.FORM || saved.substringAfter('@', "") == process }
+}
+
+private val SwapStartSaver = androidx.compose.runtime.saveable.Saver<SwapStart?, String>(
+    save = { savedSwapStart(it, swapStartProcess) },
+    restore = { restoredSwapStart(it, swapStartProcess) },
+)
 
 /**
  * The Wallet tab (iOS 5b7c772c `WalletView`, laid out as KaPay's Wallet tab): everything this
  * account holds and what you can do with it. The total up top, split into the chatting and
- * spending addresses, swiping to a card per token (kUSDT); Send, Receive and Request under it;
- * Backup Hygiene when due; then the Chatting Address, Your Domains and Notifications as cards.
+ * spending addresses, swiping to a card per token (kUSDT); Send, Receive, Buy and Sell under it
+ * (iOS 824a30bb); Backup Hygiene when due; then the Chatting Address, Request Payment, Your
+ * Usernames and Buy/Sell History as cards.
  * Manage Addresses opens from the balance card's Tap to Manage, a token's Manage screen from its
  * card. Own-address receipts that name no one address land here (MainShell), and a "Received
  * kUSDT" notification opens Manage kUSDT ([WalletViewModel.pendingTokenRoute]).
@@ -98,10 +126,33 @@ fun WalletScreen(
     var showNotifications by remember { mutableStateOf(false) }
     /** A token's page of the balance card, tapped: Manage kUSDT (`TokenManageView`), pushed. */
     var openToken by remember { mutableStateOf<WalletToken?>(null) }
-    /** Swap (iOS 518fdc8c, owner's call 2026-11-23: it replaced Swap Stablecoins): the agreements
-     *  the first time, then the swap screen, full screen. Saved, so it is there again after Go to
-     *  Spending Addresses and back. */
-    var showSwap by rememberSaveable { mutableStateOf(false) }
+    /** Buy / Sell (iOS 824a30bb `swapCover`, owner 2026-11-26): the agreements the first time,
+     *  then the swap screens, full screen, opening where this says. An item, not a flag beside a
+     *  separate start, so Buy/Sell History never opens on Buy. FORM isn't kept past a recreated
+     *  process: the kUSDT sell it was prepared with lived only in [SwapService] ([SwapStartSaver]). */
+    var swapStart by rememberSaveable(stateSaver = SwapStartSaver) { mutableStateOf<SwapStart?>(null) }
+    /** The Buy button's half sheet (iOS `BuyKaspaSheet`): Buy Kaspa with Crypto or with Debit Card
+     *  (mainnet; elsewhere Buy goes straight to crypto). */
+    var showBuyChoice by remember { mutableStateOf(false) }
+    /** Buy Kaspa with Debit Card (iOS `buyKaspaCover`), full screen; [buyKaspaResume] is an order
+     *  still on its way, which opens on its page. */
+    var showBuyKaspa by remember { mutableStateOf(false) }
+    var buyKaspaResume by remember { mutableStateOf<com.kachat.app.services.tokens.CardBuy?>(null) }
+    val cardBuyTracker = com.kachat.app.ui.screens.tokens.rememberCardBuyTracker()
+    val followedCardBuy by cardBuyTracker.buy.collectAsState()
+    // The Wallet tab keeps the order followed (iOS `.task(id: currentWallet)` ensurePolling).
+    LaunchedEffect(address) { cardBuyTracker.ensurePolling() }
+    val swapService = hiltViewModel<com.kachat.app.viewmodels.SwapViewModel>().service
+    val openSwapForm: (com.kachat.app.services.tokens.TrestlyTarget, Long) -> Unit = { target, units ->
+        swapService.prepareKusdtSell(target, units)
+        swapStart = SwapStart.FORM
+    }
+    val openDebitCardBuy: () -> Unit = {
+        com.kachat.app.ui.screens.tokens.DebitCardBuy.open(cardBuyTracker, openSwap = openSwapForm, openPage = { resume ->
+            buyKaspaResume = resume
+            showBuyKaspa = true
+        })
+    }
     /** The balance card's page: 0 is Kaspa, then one per token (`TokenWallet.tokens`). */
     var balancePage by rememberSaveable { mutableIntStateOf(0) }
     /** The pull's address sweep is still going (it runs on after the spinner ends). */
@@ -192,7 +243,11 @@ fun WalletScreen(
         val owner = address ?: return@LaunchedEffect
         viewModel.watchKachatOwnedCount(owner) { kachatOwnedCount = it }
     }
-    val domainsCount = kachatOwnedCount
+    // Names of yours in grace (iOS b49a021d, the app-wide model the dock's dot reads): a red
+    // "1 Expired" beside the count until they're renewed; the count is at least that many.
+    val expiredNamesVm: KachatExpiredNamesViewModel = hiltViewModel()
+    val expiredNames by expiredNamesVm.model.expired.collectAsState()
+    val domainsCount = com.kachat.app.services.kachatnames.KachatExpiredNamesModel.usernamesCount(kachatOwnedCount, expiredNames.size)
 
     // Notifications (Kaspa and kUSDT received), for the Notifications page.
     val notifCenterVm: com.kachat.app.viewmodels.NotificationCenterViewModel = hiltViewModel()
@@ -289,9 +344,12 @@ fun WalletScreen(
                     ) {
                         WalletActionButton(stringResource(R.string.wallet_send), Icons.Filled.ArrowUpward, Modifier.weight(1f)) { action = WalletAction.SEND }
                         WalletActionButton(stringResource(R.string.wallet_receive), Icons.Filled.ArrowDownward, Modifier.weight(1f)) { action = WalletAction.RECEIVE }
-                        WalletActionButton(stringResource(R.string.wallet_request), Icons.Outlined.Description, Modifier.weight(1f)) { action = WalletAction.REQUEST }
-                        // Swap (iOS 518fdc8c, SF Symbols "arrow.left.arrow.right")
-                        WalletActionButton(stringResource(R.string.swap_title), Icons.Filled.SwapHoriz, Modifier.weight(1f)) { showSwap = true }
+                        // Buy and Sell, each its own button (iOS 824a30bb, SF Symbols "plus" / "minus");
+                        // Request is a card below
+                        WalletActionButton(stringResource(R.string.buysell_buy), Icons.Filled.Add, Modifier.weight(1f)) {
+                            if (DebitCardBuyOffer.isOffered()) showBuyChoice = true else swapStart = SwapStart.BUY
+                        }
+                        WalletActionButton(stringResource(R.string.buysell_sell), Icons.Filled.Remove, Modifier.weight(1f)) { swapStart = SwapStart.SELL }
                     }
                     if (remember(current, backupConfirmedAt, backupPendingAddresses) { viewModel.accountBackupStatus.isHygieneDue(current) }) {
                         BackupHygieneCard { navController.navigate("backup_hygiene") }
@@ -310,12 +368,31 @@ fun WalletScreen(
                         icon = Icons.Filled.QrCode,
                         onClick = { showChattingQr = true },
                     )
+                    // Request moved off the button row into the list (iOS 824a30bb, "doc.text")
+                    WalletLinkCard(
+                        label = stringResource(R.string.pr_request_payment),
+                        icon = Icons.Outlined.Description,
+                        onClick = { action = WalletAction.REQUEST },
+                    )
                     // Your Usernames (iOS 518fdc8c YourDomainsCard), as KaPay's Wallet tab has it.
                     WalletLinkCard(
                         label = stringResource(R.string.names54_your_usernames),
                         icon = Icons.Filled.AlternateEmail,
                         onClick = { navController.navigate("kns_domains") },
-                        trailing = { WalletCardCount("$domainsCount") },
+                        trailing = {
+                            // one of them expired and is in grace (iOS b49a021d, owner 2026-11-27)
+                            if (expiredNames.isNotEmpty()) {
+                                KachatExpiredCountPill(expiredNames.size)
+                                Spacer(Modifier.width(8.dp))
+                            }
+                            WalletCardCount("$domainsCount")
+                        },
+                    )
+                    // iOS 824a30bb, "clock.arrow.circlepath"
+                    WalletLinkCard(
+                        label = stringResource(R.string.buysell_history),
+                        icon = Icons.Filled.History,
+                        onClick = { swapStart = SwapStart.HISTORY },
                     )
                     // Notifications are behind Profile's bell since iOS 148a5331, with KaPost's.
                 }
@@ -351,7 +428,35 @@ fun WalletScreen(
             }
         }
     }
-    com.kachat.app.ui.screens.tokens.SwapCover(visible = showSwap, onDismiss = { showSwap = false }, navController = navController)
+    SwapCover(start = swapStart, onDismiss = { swapStart = null })
+    if (showBuyChoice) {
+        BuyKaspaSheet(
+            onDismiss = { showBuyChoice = false },
+            onBuyWithCrypto = {
+                showBuyChoice = false
+                swapStart = SwapStart.BUY
+            },
+            onBuyWithDebitCard = {
+                showBuyChoice = false
+                openDebitCardBuy()
+            },
+            debitCardSubtitle = com.kachat.app.ui.screens.tokens.DebitCardBuy.shownOrder(followedCardBuy)
+                ?.let { com.kachat.app.ui.screens.tokens.BuyKaspaStatus.line(it) },
+        )
+    }
+    if (showBuyKaspa) {
+        com.kachat.app.ui.screens.tokens.FullScreenCoverDialog(onDismiss = { showBuyKaspa = false }) {
+            com.kachat.app.ui.screens.tokens.BuyKaspaScreen(
+                resume = buyKaspaResume,
+                onClose = { showBuyKaspa = false },
+                // the kUSDT landed: Buy Kaspa with it takes the page's place
+                onSwapToKaspa = { target, units ->
+                    showBuyKaspa = false
+                    openSwapForm(target, units)
+                },
+            )
+        }
+    }
     when (action) {
         // "What are you sending?" first: Kaspa or a token (iOS 5b7c772c SendAssetChooser).
         WalletAction.SEND -> SendAssetChooser(
@@ -393,9 +498,10 @@ private fun WalletBalanceCard(
     val price by priceViewModel.currentPriceUsd.collectAsState()
     val currency by priceViewModel.currency.collectAsState()
     val total = if (chattingSompi != null && spendingSompi != null) chattingSompi + spendingSompi else null
-    // What the total is worth in your currency. Testnet coins aren't worth anything.
+    // What the total is worth in your currency. Testnet coins aren't worth anything. Two
+    // decimals, as Manage Addresses' cards (AddressBalanceCard) show it (iOS 01f71184, release audit).
     val fiat = price?.takeIf { total != null && !KaspaNetwork.isTestnet && it > 0.0 }?.let { p ->
-        formatFiatAmount((total ?: 0L) / 100_000_000.0 * p, currency, decimals = 4)
+        formatFiatAmount((total ?: 0L) / 100_000_000.0 * p, currency)
     }
     val shape = RoundedCornerShape(22.dp)
     Column(
@@ -451,7 +557,7 @@ private fun WalletBalancePart(title: String, sompi: Long?, modifier: Modifier = 
     }
 }
 
-/** One of Send, Receive and Request (iOS `actionButton`): a 60 accent circle with a black symbol
+/** One of Send, Receive, Buy and Sell (iOS `actionButton`): a 60 accent circle with a black symbol
  *  over its subheadline title. */
 @Composable
 private fun WalletActionButton(title: String, icon: ImageVector, modifier: Modifier = Modifier, onClick: () -> Unit) {

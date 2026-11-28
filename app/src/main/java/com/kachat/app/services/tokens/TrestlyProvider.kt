@@ -93,7 +93,7 @@ class TrestlyApproval(
             if (!p.isNumber) return null
             val d = try { java.math.BigDecimal(p.asString) } catch (e: Exception) { return null }
             if (d.signum() < 0) return null
-            return try { d.toBigIntegerExact().longValueExact() } catch (e: ArithmeticException) { null }
+            return try { d.longValueExact() } catch (e: ArithmeticException) { null }
         }
     }
 }
@@ -306,7 +306,7 @@ class TrestlyProvider internal constructor(
         if (data == null || data.length > MAX_MESSAGE_CHARS) return
         val message = parseStrict(data)?.takeIf { it.isJsonObject }?.asJsonObject ?: return
         val id = message.get("id")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.let {
-            try { it.asBigDecimal.toBigIntegerExact().longValueExact() } catch (e: ArithmeticException) { null }
+            try { it.asBigDecimal.longValueExact() } catch (e: ArithmeticException) { null }
         } ?: return
         fun send(result: JsonElement?, error: ProviderError?) {
             val out = JsonObject()

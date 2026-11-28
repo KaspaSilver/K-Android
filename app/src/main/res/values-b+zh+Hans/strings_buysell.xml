@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">购买</string>
+    <string name="buysell_sell">卖出</string>
+    <string name="buysell_history">买入/卖出记录</string>
+    <string name="buysell_buy_kaspa">购买 Kaspa</string>
+    <string name="buysell_sell_kaspa">卖出 Kaspa</string>
+    <string name="buysell_buy_with_crypto">用加密货币买入 Kaspa</string>
+    <string name="buysell_buy_with_crypto_sub">用其他币付款，例如 kUSDT 或比特币。</string>
+    <string name="buysell_buy_with_debit_card">用借记卡购买 Kaspa</string>
+    <string name="buysell_debit_card_sub">用银行卡付款。到账为 kUSDT，再用它买入 Kaspa。</string>
+    <string name="buysell_pay_with_question">你想用什么付款？</string>
+    <string name="buysell_sell_for_question">你的 Kaspa 想换成什么？</string>
+    <string name="buysell_sell_kaspa_for">卖出 Kaspa 换 %1$s</string>
+    <string name="buysell_buy_kaspa_with">用 %1$s 买入 Kaspa</string>
+    <string name="buysell_on_networks">%2$d 个网络上的 %1$s</string>
+    <string name="buysell_you_pay">你支付</string>
+    <string name="buysell_where_land">你的 Kaspa 要到账到哪里？</string>
+    <string name="buysell_kusdt_one_address">kUSDT 从一个地址付款，你的 Kaspa 会到账到同一个地址。</string>
+    <string name="buysell_fresh_note">一个从未使用过的新地址,让这笔购买与你的用户名和聊天分开。</string>
+    <string name="buysell_send_payment">发送付款</string>
+    <string name="buysell_send_amount_coin">发送 %1$s %2$s</string>
+    <string name="buysell_to_buy_kaspa">以买入 Kaspa</string>
+    <string name="buysell_to_sell_for">以卖出换 %1$s</string>
+    <string name="buysell_copy_amount">复制金额</string>
+    <string name="buysell_amount_copied">已复制金额</string>
+    <string name="buysell_send_kas_from_k">从 K 发送 KAS</string>
+    <string name="buysell_transaction_id">交易 ID</string>
+    <string name="buysell_copy_id">复制 ID</string>
+    <string name="buysell_you_get_about">你将收到约 %1$s %2$s，发送至 %3$s。</string>
+    <string name="buysell_payment_received">已收到付款</string>
+    <string name="buysell_waiting_confirm">正在等待确认。</string>
+    <string name="buysell_converting">ChangeNOW 正在转换你的币。</string>
+    <string name="buysell_sending_your">正在发送你的 %1$s</string>
+    <string name="buysell_almost_done">即将完成。</string>
+    <string name="buysell_failed_detail">ChangeNOW 无法完成此订单。请在 ChangeNOW 上查看。</string>
+    <string name="buysell_refunded_detail">ChangeNOW 已退回这些币。</string>
+    <string name="buysell_expired_detail">未按时收到付款。请开始新的订单。</string>
+    <string name="buysell_verifying_detail">ChangeNOW 正在核查此订单。</string>
+    <string name="buysell_waiting_payment">等待付款</string>
+    <string name="buysell_waiting_payment_detail">发送上面的金额。此页面会自动更新。</string>
+    <string name="buysell_purchase_complete">购买完成</string>
+    <string name="buysell_sale_complete">出售完成</string>
+    <string name="buysell_you_paid">你支付了 %1$s %2$s</string>
+    <string name="buysell_you_got_about">你收到了约 %1$s %2$s</string>
+    <string name="buysell_added_to_portfolio">已添加到投资组合</string>
+    <string name="buysell_order_sent">订单已发送</string>
+</resources>

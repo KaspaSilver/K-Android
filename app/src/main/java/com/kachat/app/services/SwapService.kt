@@ -55,6 +55,9 @@ class SwapService @Inject constructor(
     private val trestlyTrade: TrestlyTrade,
     private val tokenWallet: com.kachat.app.services.tokens.TokenWallet,
     private val nodePoolManager: NodePoolManager,
+    /** Refresh Status on a kUSDT swap asks the network whether its transaction was accepted
+     *  (iOS `KachatNamesRegistry.isAccepted`). Lazy: only a Refresh reads it. */
+    private val namesRegistry: dagger.Lazy<com.kachat.app.services.kachatnames.KachatNamesRegistry>,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val prefs by lazy { context.getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
@@ -110,6 +113,10 @@ class SwapService @Inject constructor(
     /** Where swap-received KAS lands: null previews the next never-used spending address (reserved
      *  only when the swap is made); an index reuses that address. */
     var toAddressOverrideIndex by mutableStateOf<Int?>(null)
+        private set
+    /** Bought Kaspa lands on the Chatting Address (picked on Buy's "where" step, iOS 824a30bb
+     *  `toChatting`). */
+    var toChatting by mutableStateOf(false)
         private set
     var toAddress by mutableStateOf("")
         private set
@@ -184,6 +191,7 @@ class SwapService @Inject constructor(
         kusdtFrom = null
         kusdtQuote = null
         toAddressOverrideIndex = null
+        toChatting = false
         payoutAddressText = ""
         payoutExtraIdText = ""
         amountText = ""
@@ -277,10 +285,25 @@ class SwapService @Inject constructor(
         rescheduleEstimate()
     }
 
-    /** Swap from another address (kUSDT): the quote is that address's to make again. */
+    /** Swap from another address (kUSDT): the quote is that address's to make again (iOS
+     *  `setKusdtFrom`). */
     fun chooseKusdtFrom(target: TrestlyTarget?) {
         kusdtFrom = target
         rescheduleEstimate()
+    }
+
+    /**
+     * Buy Kaspa with Debit Card's last step (iOS bc0e6ba9 `prepareKusdtSell(from:units:)`): kUSDT
+     * for KAS, from the address the card's kUSDT landed on, "You Pay" filled with what landed. Open
+     * Swap at [com.kachat.app.ui.screens.tokens.SwapStart.FORM] after it.
+     */
+    fun prepareKusdtSell(from: TrestlyTarget, units: Long) {
+        clearCreatedSwap()
+        kasIsSendSide = false
+        chooseOtherCoin(SwapCoin.KUSDT)
+        kusdtFrom = from
+        typeAmount(TokenAmount.typed(units, WalletToken.KUSDT))
+        refreshKusdtBalances()
     }
 
     private fun clearQuotedAmount() {
@@ -312,6 +335,21 @@ class SwapService @Inject constructor(
 
     fun selectToSpendingAddress(index: Int) {
         toAddressOverrideIndex = index
+        toChatting = false
+        refreshToAddress()
+    }
+
+    /** Bought Kaspa lands on a fresh address (the default, iOS 824a30bb `useFreshToAddress`). */
+    fun useFreshToAddress() {
+        toAddressOverrideIndex = null
+        toChatting = false
+        refreshToAddress()
+    }
+
+    /** Bought Kaspa lands on the Chatting Address (iOS 824a30bb `useChattingToAddress`). */
+    fun useChattingToAddress() {
+        toAddressOverrideIndex = null
+        toChatting = true
         refreshToAddress()
     }
 
@@ -320,13 +358,18 @@ class SwapService @Inject constructor(
         walletManager.getActiveAccount()?.let { WalletManager.legacyMaxSpendingIndex(it) + 1 }
 
     fun refreshToAddress() {
+        if (toChatting) {
+            toAddress = walletManager.activeAddressFlow.value ?: ""
+            return
+        }
         val override = toAddressOverrideIndex
         scope.launch {
             val address = withContext(Dispatchers.Default) {
                 val index = override ?: nextFreshSpendingIndex() ?: return@withContext ""
                 try { walletManager.deriveSpendingAddress(index) } catch (e: Exception) { "" }
             }
-            if (override == toAddressOverrideIndex) toAddress = address
+            // still the choice it was worked out for (not the Chatting Address meanwhile)
+            if (!toChatting && override == toAddressOverrideIndex) toAddress = address
         }
     }
 
@@ -488,13 +531,18 @@ class SwapService @Inject constructor(
         }
         createSwapState = CreateSwapUiState(CreateSwapStatus.CREATING)
         val overrideIndex = toAddressOverrideIndex
+        val landOnChatting = toChatting
+        val chattingAddress = walletManager.activeAddressFlow.value
         val typedPayout = payoutAddressText.trim()
 
         scope.launch {
             // Into KAS: a fresh, never-used spending address by default (so exchange-received coins
             // can't be chain-linked to everyday spending), unless one was picked. Out of KAS: the
             // address typed for the other coin.
-            val payoutAddress = if (to.ticker == "kas") {
+            val payoutAddress = if (to.ticker == "kas" && landOnChatting) {
+                // picked on Buy's "where" step (iOS 824a30bb)
+                chattingAddress ?: ""
+            } else if (to.ticker == "kas") {
                 withContext(Dispatchers.Default) {
                     try {
                         val index = overrideIndex ?: walletService.generateNextSpendingAddress()
@@ -561,6 +609,7 @@ class SwapService @Inject constructor(
                 editedSide = AmountSide.SEND
                 estimateState = EstimateUiState()
                 toAddressOverrideIndex = null
+                toChatting = false
                 refreshToAddress()
             } catch (e: CancellationException) {
                 throw e
@@ -621,12 +670,51 @@ class SwapService @Inject constructor(
         }
     }
 
-    fun refreshSwapStatus(id: String) {
-        scope.launch { refreshSwapStatusNow(id) }
+    /**
+     * A kUSDT swap through Trestly's pool, into Buy/Sell History (iOS b49a021d `recordKusdtSwap`,
+     * owner 2026-11-27). Amounts as people type them ("10", "0.26"); "finished" once the network
+     * accepted it, "sending" while it may still land (Refresh Status checks the network, not
+     * ChangeNOW).
+     */
+    fun recordKusdtSwap(
+        txid: String, bought: Boolean, amountIn: Long, amountOut: Long, address: String, confirmed: Boolean,
+        /** The account signed in when the trade started ([TrestlyTrade.Done.account]). */
+        forAccount: String? = null,
+    ) {
+        val owner = (forAccount ?: account)?.lowercase() ?: return
+        val swap = kusdtSwapTransaction(txid, bought, amountIn, amountOut, address, confirmed, System.currentTimeMillis())
+        // Accounts switched while the trade ran: it goes into the history of the account that made
+        // it, never the one now signed in (iOS d88891ea, audit 2026-11-27 L3).
+        if (owner != account) {
+            if (loadHistory(owner).any { it.id == txid }) return
+            appendToStoredHistory(swap, owner)
+            return
+        }
+        if (history.any { it.id == txid }) return
+        history = listOf(swap) + history
+        saveHistory()
     }
 
-    /** For the detail page's Refresh: the fresh status on success (history updated either way). */
+    /** K sent the deposit for this swap ("Send KAS from K"): kept on the swap, so the deposit
+     *  screen stops offering a second payment (iOS d88891ea `recordDepositSent`, audit 2026-11-27
+     *  M1). An empty [txId] (a send cancelled mid-submit, which may still land) counts too. */
+    fun recordDepositSent(swapId: String, txId: String) {
+        if (history.none { it.id == swapId }) return
+        history = history.map { if (it.id == swapId) it.copy(kasSendTxId = txId) else it }
+        saveHistory()
+    }
+
+    /** For the detail page's Refresh: the fresh status on success (history updated either way).
+     *  A kUSDT swap asks the network whether its transaction was accepted. */
     suspend fun refreshSwapStatusNow(id: String): String? {
+        history.firstOrNull { it.id == id }?.takeIf { it.isTrestly }?.let { swap ->
+            if (!namesRegistry.get().isAccepted(id)) return swap.status
+            if (history.any { it.id == id }) {
+                history = history.map { if (it.id == id) it.copy(status = "finished") else it }
+                saveHistory()
+            }
+            return "finished"
+        }
         val status = try {
             ChangeNowApiClient.getTransactionStatus(id).status
         } catch (e: CancellationException) {
@@ -634,7 +722,9 @@ class SwapService @Inject constructor(
         } catch (e: Exception) {
             null
         } ?: return null
-        if (history.any { it.id == id }) {
+        // only a change is written: each write re-saved the whole history, every 10 s on the
+        // deposit screen (iOS d88891ea, audit 2026-11-27 L18)
+        if (history.any { it.id == id && it.status != status }) {
             history = history.map { if (it.id == id) it.copy(status = status) else it }
             saveHistory()
         }
@@ -771,9 +861,40 @@ class SwapService @Inject constructor(
                 amountKas = amountKas,
                 fiatValue = fiatValue,
                 timestampMillis = swap.createdAtMillis,
-                notes = "ChangeNOW swap ${swap.id}",
+                notes = if (swap.isTrestly) "kUSDT swap (Trestly) ${swap.id}" else "ChangeNOW swap ${swap.id}",
             )
         }
+
+        /** What [recordKusdtSwap] files: a [SwapTransaction] from Trestly ([SwapTransaction.TRESTLY]),
+         *  its Kaspa txid as the id, both addresses the one it traded from. */
+        fun kusdtSwapTransaction(
+            txid: String, bought: Boolean, amountIn: Long, amountOut: Long,
+            address: String, confirmed: Boolean, createdAtMillis: Long,
+        ): SwapTransaction {
+            val kas = KaspaUnit.plain(if (bought) amountIn else amountOut)
+            val kusdt = TokenAmount.typed(if (bought) amountOut else amountIn, WalletToken.KUSDT)
+            return SwapTransaction(
+                id = txid,
+                fromTicker = if (bought) "kas" else "kusdt", fromNetwork = "kaspa",
+                toTicker = if (bought) "kusdt" else "kas", toNetwork = "kaspa",
+                fromAmount = if (bought) kas else kusdt, toAmount = if (bought) kusdt else kas,
+                payinAddress = address, payoutAddress = address,
+                status = if (confirmed) "finished" else "sending",
+                createdAtMillis = createdAtMillis,
+                kasSendTxId = txid,
+                provider = SwapTransaction.TRESTLY,
+            )
+        }
+
+        /** A ChangeNOW status after which nothing more happens (iOS d88891ea `isEndStatus`). */
+        fun isEndStatus(status: String): Boolean = status.lowercase() in END_STATUSES
+
+        private val END_STATUSES = setOf("finished", "failed", "refunded", "expired")
+
+        /** "Send KAS from K" shows only while ChangeNOW still waits for the deposit and K hasn't
+         *  sent it: a second tap paid it twice (iOS d88891ea, audit 2026-11-27 M1). */
+        fun offersDepositSend(status: String, kasSendTxId: String?): Boolean =
+            kasSendTxId == null && status.lowercase() in setOf("new", "waiting")
 
         /** The key a ChangeNOW swap is recorded under in Portfolio (iOS `swapSourceTxId`). */
         fun swapSourceTxId(swapId: String): String = "changenow:$swapId"

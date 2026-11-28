@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4, iOS 01f71184 (release audit 2026-11-27): chat, group and Explorer screens. Translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="rs_group_refresh_invites">グループ招待を再読み込み中</string>
+    <string name="rs_group_refresh_control">メンバー一覧とエポック鍵を再読み込み中</string>
+    <string name="rs_group_refresh_messages">メッセージを再取得中（%1$d/%2$d人）</string>
+    <string name="rs_group_refresh_decrypting">履歴を復号中</string>
+    <string name="rs_group_you_changed_photo">グループの写真を変更しました</string>
+    <string name="rs_group_you_removed_photo">グループの写真を削除しました</string>
+    <string name="rs_group_you_renamed">グループ名を「%1$s」に変更しました</string>
+    <string name="rs_group_changed_photo">%1$sがグループの写真を変更しました</string>
+    <string name="rs_group_removed_photo">%1$sがグループの写真を削除しました</string>
+    <string name="rs_group_renamed">%1$sがグループ名を「%2$s」に変更しました</string>
+    <string name="rs_own_account_not_contact">このアドレスはあなた自身のアカウントのため、連絡先に追加できません。</string>
+    <string name="ex_kind_kaposts">投稿</string>
+</resources>

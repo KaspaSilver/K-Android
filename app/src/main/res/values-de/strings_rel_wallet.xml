@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">Gold</string>
+    <string name="rel_wallet_silver">Silber</string>
+    <string name="rel_wallet_pair_bitcoin">Kaspa in Bitcoin bewertet</string>
+    <string name="rel_wallet_pair_voo">Anteile am S&amp;P-500-ETF von Vanguard</string>
+    <string name="rel_wallet_pair_gold">Feinunzen Gold</string>
+    <string name="rel_wallet_pair_silver">Feinunzen Silber</string>
+    <string name="rel_wallet_cold_storage_n">Kaltlagerung %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">Keine ausgebbaren UTXOs an dieser Adresse</string>
+    <string name="rel_wallet_insufficient_plus_fee">Guthaben reicht für diesen Betrag plus Netzwerkgebühr nicht aus</string>
+    <string name="rel_wallet_too_many_inputs">Diese Überweisung bräuchte %1$d UTXOs, KasSigner unterstützt aber nur %2$d Eingänge pro Transaktion. Sende einen kleineren Betrag oder fasse diese Adresse zuerst zusammen.</string>
+    <string name="rel_wallet_cancelled">Abgebrochen.</string>
+    <string name="rel_wallet_err_no_internet">Keine Internetverbindung. Prüfe deine Verbindung und versuche es erneut.</string>
+    <string name="rel_wallet_err_timed_out">Zeitüberschreitung der Verbindung. Prüfe deine Verbindung und versuche es erneut.</string>
+    <string name="rel_wallet_err_cant_reach">Der Server war nicht erreichbar. Prüfe die Adresse in den Einstellungen und deine Verbindung.</string>
+    <string name="rel_wallet_err_secure">Es konnte keine sichere Verbindung zum Server hergestellt werden.</string>
+    <string name="rel_wallet_err_network">Ein Netzwerkfehler ist aufgetreten. Prüfe deine Verbindung und versuche es erneut.</string>
+    <string name="rel_wallet_err_unreadable">Der Server hat etwas gesendet, das die App nicht lesen konnte. Versuche es erneut; wenn es weiter passiert, aktualisiere die App.</string>
+    <string name="rel_wallet_err_node">Der Kaspa-Node hat einen Fehler gemeldet. Die App versucht einen anderen Node; versuche es gleich noch einmal.</string>
+    <string name="rel_wallet_err_unknown">Ein unbekannter Fehler ist aufgetreten.</string>
+    <string name="rel_wallet_err_no_spendable_available">Keine ausgebbaren UTXOs verfügbar</string>
+    <string name="rel_wallet_err_no_private_key">Privater Schlüssel nicht verfügbar</string>
+    <string name="rel_wallet_err_insufficient_payment">Guthaben reicht für die Zahlung nicht aus</string>
+    <string name="rel_wallet_err_insufficient_after_fee">Nach der Gebühr reicht das Guthaben nicht aus</string>
+    <string name="rel_wallet_err_insufficient_handshake">Guthaben reicht für den Handshake nicht aus</string>
+    <string name="rel_wallet_err_insufficient_self_stash">Guthaben reicht für die Self-Stash-Gebühr nicht aus</string>
+    <string name="rel_wallet_err_group_secrets">Gruppenschlüssel fehlen - versuche, der Gruppe erneut beizutreten.</string>
+    <string name="rel_wallet_err_admin_secrets">Admin-Schlüssel der Gruppe fehlen.</string>
+</resources>

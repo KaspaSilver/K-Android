@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">O post deste rascunho não foi encontrado agora, então ele ainda não pode ser postado. Ele continua nos seus rascunhos.</string>
     <string name="kaposts_likes">Curtidas</string>
     <string name="kaposts_no_tips_yet">Ainda sem gorjetas.</string>
-    <string name="kaposts_not_on_testnet">O KaPost ainda não está disponível na Testnet</string>
-    <string name="kaposts_not_on_testnet_sub">Não há um indexador KaPost para a testnet. Desative a Testnet em Ajustes > Conexão para ler e publicar na mainnet.</string>
+    <string name="kaposts_not_on_testnet">Os posts ainda não estão disponíveis na Testnet</string>
+    <string name="kaposts_not_on_testnet_sub">Não há um indexador de Publicações para a testnet. Desative a Testnet em Ajustes &gt; Configurações de conexão para ler e publicar na mainnet.</string>
     <string name="kaposts_poll_days_left">faltam %1$d d</string>
     <string name="kaposts_poll_final_results">%1$s · Resultado final</string>
     <string name="kaposts_poll_hours_left">faltam %1$d h</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">Este post está sendo enviado agora, então não pode ser cancelado.</string>
     <string name="kaposts_scheduled_reminder_title">Post agendado</string>
     <string name="kaposts_scheduled_sending_soon">Enviando assim que a rede responder</string>
-    <string name="kaposts_server_not_answering">O servidor do KaPost não está respondendo. Mostrando publicações salvas e novas da rede.</string>
+    <string name="kaposts_server_not_answering">O servidor de Publicações não está respondendo. Mostrando publicações salvas e novas da rede.</string>
     <string name="kaposts_thread_not_confirmed">A rede não confirmou parte da sua thread, então o resto não foi enviado. Salvar o que sobrou como rascunho? O primeiro post pode já ter sido enviado, então verifique antes de postar de novo.</string>
     <string name="kaposts_tip_from_chatting_note">Do seu Chatting Address a gorjeta conta na publicação e você aparece entre quem deu gorjeta.</string>
     <string name="kaposts_tip_from_private_note">De outro endereço a gorjeta é privada: o autor recebe e vê no chat de vocês, mas ela não conta na publicação nem cita você.</string>

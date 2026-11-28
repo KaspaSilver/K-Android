@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">اضغط لعرض السجل</string>
+    <string name="addrcard_quantum_protected">محمي من الكم</string>
+    <string name="addrcard_not_quantum_protected">غير محمي من الكم</string>
+    <string name="addrcard_new_address">عنوان جديد</string>
+    <string name="addrcard_regular_address">عنوان عادي</string>
+    <string name="addrcard_regular_address_subtitle">يعمل مع كل شيء: كاسبا وkUSDT.</string>
+    <string name="addrcard_quantum_protected_address">عنوان محمي من الكم</string>
+    <string name="addrcard_quantum_protected_address_subtitle">يُبقي مفتاحه مخفيًا حتى يُنفق منه. كاسبا فقط.</string>
+    <string name="addrcard_no_kusdt_on_quantum">لا يمكن إرسال kUSDT إلى عنوان محمي من الكم أو استلامه عليه.</string>
+</resources>

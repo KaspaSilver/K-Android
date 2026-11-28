@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">웹사이트</string>
     <string name="shell_kaspa_websites">Kaspa 웹사이트</string>
     <string name="shell_terms_of_use">이용 약관</string>
-    <string name="shell_message_indexer_footer">KaPost, 공개 채팅, 체스도 이 인덱서에서 읽어 옵니다.</string>
+    <string name="shell_message_indexer_footer">게시물, 공개 채팅, 체스도 이 인덱서에서 읽어 옵니다.</string>
 </resources>

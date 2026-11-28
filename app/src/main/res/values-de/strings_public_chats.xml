@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">Benachrichtigungen sind für diesen öffentlichen Chat aus</string>
     <string name="pc_notifications_on_closed_toast">Du wirst über neue Nachrichten in diesem öffentlichen Chat benachrichtigt, auch wenn die App geschlossen ist</string>
     <string name="pc_notifications_on_open_toast">Du wirst über neue Nachrichten in diesem öffentlichen Chat benachrichtigt, solange deine App geöffnet bleibt</string>
-    <string name="pc_default_room_off_toast">#%1$s ist aus - schalte ihn unter „Standard-Chats bearbeiten“ wieder ein</string>
     <string name="pc_delete_room_title">#%1$s löschen?</string>
     <string name="pc_delete_room_message">Alle für diesen Raum auf diesem Gerät zwischengespeicherten Nachrichten werden gelöscht. Das kann nicht rückgängig gemacht werden - wenn du später wieder beitrittst, beginnst du ohne Verlauf.</string>
     <string name="pc_delete_room_row_subtitle">Entfernt diesen Raum und seine Nachrichten von diesem Gerät.</string>
     <string name="pc_keep">Behalten</string>
     <string name="pc_keep_subtitle">Den Raum so lassen, wie er ist.</string>
-    <string name="pc_new_public_chat">Neuer öffentlicher Chat</string>
-    <string name="pc_edit_default_public_chats">Standard-Chats bearbeiten</string>
-    <string name="pc_new_public_chat_explainer">Jeder, der demselben Kanalnamen beitritt, kann dort Nachrichten sehen und posten - es gibt keinen Besitzer und keine Einladung.</string>
     <string name="pc_join">Beitreten</string>
     <string name="pc_channel_name_rules">Kanalnamen müssen 1-%1$d Zeichen lang sein, ohne Leerzeichen oder Doppelpunkte.</string>
     <string name="pc_join_failed">Beim Beitreten zu diesem Kanal ist etwas schiefgelaufen.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">Melde missbräuchliche oder anstößige Inhalte. Öffnet eine E-Mail mit dieser Nachricht im Anhang.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">Versteckt ihre Beiträge und Raumnachrichten und verhindert, dass sie mit dir interagieren.</string>
-    <string name="pc_sender_view_profile_subtitle">Ihr KaPost-Profil: Beiträge, Antworten und Follower.</string>
+    <string name="pc_sender_view_profile_subtitle">Das Profil: Beiträge, Antworten und Follower.</string>
     <string name="pc_sender_send_kaspa_subtitle">Sende Kaspa an ihre Adresse.</string>
     <string name="pc_sender_copy_address_subtitle">Ihre Kaspa-Adresse kopieren.</string>
     <string name="pc_original_message_not_loaded">Originalnachricht nicht geladen</string>

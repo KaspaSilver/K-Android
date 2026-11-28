@@ -25,12 +25,11 @@ import javax.inject.Singleton
 
 /**
  * The public rooms' unread counts, outside any screen (iOS 148a5331 `PublicChatUnreadBadge`,
- * `PublicChatService.unreadCount(forChannel:)` and `totalUnreadCount`):
+ * `PublicChatService.unreadCount(forChannel:)`):
  * - [bellOnUnreadCount]: the rooms with their bell on - the red count on the KaChat title's
  *   Chats / Public Chats button, and what the app icon adds in; not the dock's KaChat badge, which
  *   counts chats and groups only (iOS 961fc05a badge split, owner 2026-11-25:
  *   `AppTabBadge.publicRoomUnreadCount`, `appIconCount`).
- * - [totalUnreadCount]: every listed room's unread count.
  *
  * A room counts messages from other people newer than its read marker, a long voice note once;
  * one marked unread by hand counts at least one; the room on screen and a default room switched
@@ -92,13 +91,6 @@ class PublicChatUnreadBadge @Inject constructor(
     /** Unread messages in rooms whose bell is on (see the class comment). */
     val bellOnUnreadCount: StateFlow<Int> = roomCounts
         .map { counts -> counts.filter { it.bellOn }.sumOf { it.unread } }
-        .debounce(300)
-        .distinctUntilChanged()
-        .stateIn(scope, SharingStarted.WhileSubscribed(5_000), 0)
-
-    /** Every listed room's unread messages (iOS `totalUnreadCount`). */
-    val totalUnreadCount: StateFlow<Int> = roomCounts
-        .map { counts -> counts.sumOf { it.unread } }
         .debounce(300)
         .distinctUntilChanged()
         .stateIn(scope, SharingStarted.WhileSubscribed(5_000), 0)

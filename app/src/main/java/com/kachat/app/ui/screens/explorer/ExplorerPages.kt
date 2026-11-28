@@ -80,7 +80,6 @@ import com.kachat.app.services.explorer.ExplorerIO
 import com.kachat.app.services.explorer.ExplorerRoute
 import com.kachat.app.services.explorer.ExplorerTransaction
 import com.kachat.app.services.explorer.ExplorerTxKind
-import com.kachat.app.services.tokens.TokenAmount
 import com.kachat.app.services.tokens.WalletToken
 import com.kachat.app.ui.components.PageCycleBar
 import com.kachat.app.ui.screens.ContactAvatar
@@ -535,7 +534,11 @@ private fun ExplorerAddressView(viewModel: ExplorerViewModel, info: ExplorerAddr
     var loadingMore by remember { mutableStateOf(false) }
     // unaccepted mining rewards are left out (owner, 2026-11-25): every block merging a found block
     // carries one, and only one counts; other unaccepted transactions stay, marked
-    val history = (info.transactions + morePages).filter { !(it.kind == ExplorerTxKind.COINBASE && it.isNotAccepted) }
+    // (iOS 01f71184 `shown`): the first page filtered once, later pages as they load, rather than
+    // the whole history on every recomposition
+    fun shown(txs: List<ExplorerTransaction>) = txs.filter { !(it.kind == ExplorerTxKind.COINBASE && it.isNotAccepted) }
+    val firstPage = remember(info) { shown(info.transactions) }
+    val history = remember(firstPage, morePages) { firstPage + morePages }
 
     fun loadMore() {
         val before = nextBefore ?: return
@@ -545,7 +548,7 @@ private fun ExplorerAddressView(viewModel: ExplorerViewModel, info: ExplorerAddr
             try {
                 val (txs, next) = viewModel.api.addressPage(info.address, before)
                 val known = history.map { it.id }.toHashSet()
-                morePages = morePages + txs.filter { it.id !in known }
+                morePages = morePages + shown(txs.filter { it.id !in known })
                 nextBefore = next
             } catch (e: CancellationException) {
                 throw e
@@ -599,7 +602,7 @@ private fun ExplorerAddressView(viewModel: ExplorerViewModel, info: ExplorerAddr
                     ExplorerDivider(0.dp)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TokenIcon(WalletToken.KUSDT, size = 20.dp)
-                        Text(TokenAmount.amount(units, WalletToken.KUSDT), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, style = Tabular)
+                        Text(ExplorerFormat.kusdt(units), color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, style = Tabular)
                     }
                 }
             }
@@ -667,7 +670,7 @@ private fun ExplorerAddressView(viewModel: ExplorerViewModel, info: ExplorerAddr
                     AssetRow(
                         name = "kUSDT",
                         detail = stringResource(R.string.ex_kusdt_coin),
-                        amount = TokenAmount.amount(units, WalletToken.KUSDT),
+                        amount = ExplorerFormat.kusdt(units),
                         value = ExplorerFormat.usdValue(units / 1_000_000.0),
                     ) {
                         TokenIcon(WalletToken.KUSDT, size = 36.dp)

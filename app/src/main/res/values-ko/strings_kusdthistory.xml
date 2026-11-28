@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- kUSDT swaps in Buy/Sell History (iOS b49a021d) -->
+<resources>
+    <string name="swap_swapped_through">교환 경로</string>
+    <string name="swap_trestly_kusdt_pool">Kaspa의 Trestly kUSDT 풀</string>
+    <string name="swap_couldnt_reach_network">네트워크에 연결할 수 없습니다. 다시 시도하세요</string>
+</resources>

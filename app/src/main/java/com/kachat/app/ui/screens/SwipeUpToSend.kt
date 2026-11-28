@@ -422,6 +422,8 @@ private fun SendProgressScreen(
                 highlight = isSending && failure == null,
                 modifier = Modifier.fillMaxSize().alpha(dagAlpha),
                 paused = dagSettled(finished, dagAlpha),
+                // 60 fps, not the display's 120 (iOS 01f71184, smoothness audit T6)
+                minimumIntervalMs = SEND_DAG_FRAME_MS,
             )
             // Not the ColumnScope overload: this sits in a Box.
             androidx.compose.animation.AnimatedVisibility(visible = done, enter = scaleIn(initialScale = 0.4f) + fadeIn()) {
@@ -513,7 +515,11 @@ private fun SendProgressScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .sendKaspaGlass(14.dp)
-                            .clickable { uriHandler.openUri(url) }
+                            .clickable {
+                                // K's own Explorer (iOS bfb902b7): the sheet closes, or its page
+                                // would open behind it.
+                                if (com.kachat.app.services.explorer.ExplorerDeepLink.openIfLink(url)) onDone() else uriHandler.openUri(url)
+                            }
                             .padding(horizontal = 14.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
@@ -571,6 +577,9 @@ private fun kasText(sompi: Long): String {
  *  has finished (audit 2026-11-25 R5). */
 internal fun dagSettled(finished: Boolean, alpha: Float): Boolean = finished && alpha <= 0.35f + 0.005f
 
+/** The send screens' DAG: 60 fps (iOS 01f71184 `minimumInterval: 1.0 / 60`). */
+const val SEND_DAG_FRAME_MS = 16L
+
 /**
  * Kaspa's BlockDAG drifting right to left (iOS 7abc06e `BlockDAGAnimationView`): columns of
  * blocks, each pointing back at one or two blocks of the column before (several parents, not a
@@ -585,8 +594,8 @@ fun BlockDagAnimation(
     /** Stops drawing new frames (iOS 961fc05a, audit 2026-11-25 B2): the Explorer's card sets it
      *  while its Hub section is hidden or the app isn't in front. */
     paused: Boolean = false,
-    /** The shortest time between frames; null draws at the display's rate (the send screens). The
-     *  Explorer's small card asks for 30 fps. */
+    /** The shortest time between frames; null draws at the display's rate. The send screens ask
+     *  for 60 fps ([SEND_DAG_FRAME_MS]), the Explorer's small card for 30. */
     minimumIntervalMs: Long? = null,
 ) {
     val density = LocalDensity.current
@@ -603,9 +612,17 @@ fun BlockDagAnimation(
         // on again from where it stood
         val resumedAt = elapsed
         val start = withFrameNanos { it }
+        // A frame is drawn only once the interval has passed (a little slack for vsync jitter), so
+        // 60 fps on a 120 Hz screen and 30 for the Explorer's card (iOS 01f71184 `minimumInterval`).
+        val minimumNs = minimumIntervalMs?.let { it * 1_000_000L - 2_000_000L } ?: 0L
+        var lastDrawn = start
         while (true) {
-            withFrameNanos { now -> elapsed = resumedAt + (now - start) / 1_000_000_000f }
-            if (minimumIntervalMs != null) kotlinx.coroutines.delay(minimumIntervalMs)
+            withFrameNanos { now ->
+                if (now - lastDrawn >= minimumNs) {
+                    lastDrawn = now
+                    elapsed = resumedAt + (now - start) / 1_000_000_000f
+                }
+            }
         }
     }
     /** When [highlight] turned on: the block entering on the right then is the transaction's. */

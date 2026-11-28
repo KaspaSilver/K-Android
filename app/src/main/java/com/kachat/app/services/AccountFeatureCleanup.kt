@@ -110,8 +110,15 @@ class AccountFeatureCleanup @Inject constructor(
                 // joined rooms the indexer listed
                 .remove("rooms_auto_joined_v1_$lowered")
                 .remove("rooms_indexer_listed_v1_$lowered")
+                // Public Chats' one-time clear of the rooms K had added (iOS 824a30bb)
+                .remove("rooms_opt_in_v1_$lowered")
                 .remove("featured_notify_default_$lowered")
                 .apply()
+            // the listed rooms of each custom indexer too (`rooms_indexer_listed_v1_<wallet>@host`)
+            context.getSharedPreferences(ROOM_READ_STATE_PREFS, Context.MODE_PRIVATE).let { prefs ->
+                val perIndexer = prefs.all.keys.filter { it.startsWith("rooms_indexer_listed_v1_$lowered@") }
+                if (perIndexer.isNotEmpty()) prefs.edit().apply { perIndexer.forEach { remove(it) } }.apply()
+            }
             // rooms' deletes for everyone (iOS `kachat_room_deletes_<wallet>`, RoomDeleteStore)
             context.getSharedPreferences(com.kachat.app.services.publicchats.RoomDeleteStore.PREFS, Context.MODE_PRIVATE).edit()
                 .remove("kachat_room_deletes_v2_$lowered")
@@ -141,6 +148,12 @@ class AccountFeatureCleanup @Inject constructor(
         // filed under the lowercased address (iOS 518fdc8c `SwapService.removeAllData`, audit
         // 2026-11-24 #5).
         step("Swap") { SwapService.removeAllData(context, variant) }
+        // Buy Kaspa with Debit Card's order being followed (iOS bc0e6ba9 `CardBuyTracker.storagePrefix`)
+        step("card buy") {
+            context.getSharedPreferences(com.kachat.app.services.tokens.CardBuyTracker.PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .remove(com.kachat.app.services.tokens.CardBuyTracker.STORAGE_PREFIX + variant.lowercase())
+                .apply()
+        }
     }
 
     /** iOS 428a797b `KachatNamesActions.removeAllLocalData(forWallet:addresses:)`, in this app's

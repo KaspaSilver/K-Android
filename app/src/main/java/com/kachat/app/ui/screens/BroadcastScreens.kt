@@ -115,15 +115,12 @@ import kotlinx.coroutines.launch
  * Broadcast room share links (`kachat://broadcast/<channel>`,
  * `https://kachat.app/broadcast/<channel>`) land here — from an inbound system intent
  * (MainActivity) or from a tap on an in-app invite card ([openKaChatLink]). MainShell watches
- * [pendingChannel] and navigates; the room screen itself consumes [consumeJoinRequest] so a room
- * the user isn't in yet is created/joined before it opens, landing in their own channel list.
+ * [pendingChannel] and navigates; a room the user isn't in yet is joined only once they say so
+ * (iOS 824a30bb: [PublicChatLinkRouter] and the Chats list's handoff ask first).
  */
 object BroadcastDeepLink {
     private val _pendingChannel = MutableStateFlow<String?>(null)
     val pendingChannel: StateFlow<String?> = _pendingChannel.asStateFlow()
-
-    /** Channels a link asked for that aren't curated — joined on open so they stick around. */
-    private val joinRequests = java.util.Collections.synchronizedSet(mutableSetOf<String>())
 
     /**
      * Gates an untrusted channel name through [com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel] (which is
@@ -133,8 +130,8 @@ object BroadcastDeepLink {
      */
     fun request(rawName: String): Boolean {
         val name = com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(rawName) ?: return false
-        // Curated rooms are permanent fixtures that always exist, so they just open.
-        if (name !in FeaturedBroadcastChannels.CURATED_NAMES) joinRequests.add(name)
+        // Nothing joins here (iOS 824a30bb): a link joins once asked before it lands, and a room
+        // not in the list is asked about by the Chats list's handoff.
         _pendingChannel.value = name
         return true
     }
@@ -143,142 +140,7 @@ object BroadcastDeepLink {
         _pendingChannel.value = null
     }
 
-    fun consumeJoinRequest(channelName: String): Boolean = joinRequests.remove(channelName)
 }
-/**
- * The customize sheet, behind the button at the top left of the Public Chats tab: every default
- * room with a switch. On means the room is in the list (switching it on joins it); off takes it
- * out and silences it. The Languages switch turns every language room off at once; while it is
- * on, each language has its own switch. Mirrors iOS KaPosts' PublicChatsSettingsView (d37f64d).
- */
-@Composable
-fun PublicChatsSettingsSheet(
-    onDismiss: () -> Unit,
-    broadcastViewModel: BroadcastViewModel = hiltViewModel(),
-) {
-    val hidden by broadcastViewModel.hiddenCuratedRooms.collectAsState()
-    val joinedChannels by broadcastViewModel.joinedChannels.collectAsState()
-    val joinedNames = remember(joinedChannels) { joinedChannels.map { it.channelName }.toSet() }
-    // The indexer's rooms (More Rooms) follow its list as it changes.
-    val trackedRoomsVersion by com.kachat.app.services.IndexerTrackedRooms.changes.collectAsState()
-    // A room just added on the indexer shows here within a minute (iOS 961fc05a).
-    LaunchedEffect(Unit) { broadcastViewModel.refreshIndexerRoomsSoon() }
-    // iOS presents it as a full-height sheet holding a Form (PublicChatsSettingsView): an inline
-    // bar with the title and Done on glass, each section's rooms on an inset-grouped card with
-    // inset separators, the headers in the iOS 26 Form style and the footer under its card.
-    androidx.compose.ui.window.Dialog(
-        onDismissRequest = onDismiss,
-        properties = androidx.compose.ui.window.DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false,
-        ),
-    ) {
-        IosSheetPage(grouped = true) {
-            val colors = LocalAppColors.current
-            SheetNavBar(
-                title = stringResource(R.string.pc_broadcasts),
-                trailing = { SheetBarButton(stringResource(R.string.done), onClick = onDismiss) },
-            )
-
-            @Composable
-            fun roomSwitch(name: String, showDivider: Boolean) {
-                val language = com.kachat.app.models.FeaturedBroadcastChannels.languageDisplayName(name)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 52.dp)
-                        .padding(horizontal = 16.dp, vertical = 11.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("#$name", color = colors.textPrimary, fontSize = 17.sp)
-                        if (language != null) Text(language, color = colors.textSecondary, fontSize = 12.sp)
-                    }
-                    com.kachat.app.ui.theme.IosSwitch(
-                        // On only when the room really is in the list: joined and not switched
-                        // off. Every default room is joined, so in practice "not switched off".
-                        checked = name !in hidden && name in joinedNames,
-                        onCheckedChange = { shown -> broadcastViewModel.setCuratedRoomShown(name, shown) }
-                    )
-                }
-                if (showDivider) SettingsDivider()
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(22.dp),
-            ) {
-                Column {
-                    SettingsSection(title = stringResource(R.string.l53_feed_tab_popular)) {
-                        val names = com.kachat.app.models.FeaturedBroadcastChannels.NAMES
-                        names.forEachIndexed { i, name -> roomSwitch(name, showDivider = i < names.size - 1) }
-                    }
-                    Text(
-                        stringResource(R.string.kpui_room_switched_off_footer),
-                        color = colors.textSecondary,
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp),
-                    )
-                }
-                Column {
-                    val names = com.kachat.app.models.FeaturedBroadcastChannels.LANGUAGE_NAMES
-                    // On while at least one language room is.
-                    val anyLanguageOn = names.any { it !in hidden && it in joinedNames }
-                    SettingsSection(title = null) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 52.dp)
-                                .padding(horizontal = 16.dp, vertical = 11.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(stringResource(R.string.kpui_languages), color = colors.textPrimary, fontSize = 17.sp, modifier = Modifier.weight(1f))
-                            com.kachat.app.ui.theme.IosSwitch(
-                                checked = anyLanguageOn,
-                                onCheckedChange = { on -> broadcastViewModel.setAllLanguageRoomsShown(on) },
-                            )
-                        }
-                        if (anyLanguageOn) {
-                            SettingsDivider()
-                            names.forEachIndexed { i, name -> roomSwitch(name, showDivider = i < names.size - 1) }
-                        }
-                    }
-                    Text(
-                        stringResource(R.string.kpui_languages_footer),
-                        color = colors.textSecondary,
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp),
-                    )
-                }
-                // Rooms added on the indexer (iOS 961fc05a `indexerDefaultChannels`): they come
-                // and go with it.
-                val more = remember(trackedRoomsVersion) { com.kachat.app.models.FeaturedBroadcastChannels.indexerDefaultNames() }
-                if (more.isNotEmpty()) {
-                    Column {
-                        SettingsSection(title = stringResource(R.string.r55_more_rooms)) {
-                            more.forEachIndexed { i, name -> roomSwitch(name, showDivider = i < more.size - 1) }
-                        }
-                        Text(
-                            stringResource(R.string.r55_more_rooms_footer),
-                            color = colors.textSecondary,
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp,
-                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp),
-                        )
-                    }
-                }
-                Spacer(Modifier.navigationBarsPadding().height(24.dp))
-            }
-        }
-    }
-}
-
 /**
  * One room, laid out like a chat in the Chats list: a # avatar, the room name, the newest message
  * with who sent it and when, a bell-off mark, and the unread badge. Mirrors iOS's PublicChatRow.
@@ -598,6 +460,11 @@ fun BroadcastChannelScreen(
     val coroutineScope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
     var highlightedMessageId by remember { mutableStateOf<String?>(null) }
+    // The latest settle at the newest message (iOS 01f71184 `settleAtBottom`, release audit T1):
+    // asked for after the first scroll there; a jump, older messages loading or the header band
+    // retire it.
+    var bottomSettleRequest by remember(channelName) { mutableStateOf(0) }
+    var bottomSettleActive by remember(channelName) { mutableStateOf(false) }
     // "Load earlier messages" is the list's first item while there is more: every message sits
     // one further down the list than its index in [messages].
     val listOffset = if (messageWindow.hasMore) 1 else 0
@@ -609,6 +476,7 @@ fun BroadcastChannelScreen(
             // A room's toast: up for 3 s, as iOS PublicChatChannelView.showToast.
             IosToasts.show(com.kachat.app.util.tr(R.string.original_message_not_available), durationMs = IosToastDuration.LONG)
         } else {
+            bottomSettleActive = false
             coroutineScope.launch {
                 listState.animateScrollToItem(index + listOffset)
                 highlightedMessageId = targetId
@@ -665,7 +533,11 @@ fun BroadcastChannelScreen(
     LaunchedEffect(channelName, messages.lastOrNull()?.id) {
         if (messages.isEmpty()) return@LaunchedEffect
         if (!hasPositionedAtLatest) {
-            if (!listHasAppeared || wasAtBottomWhenHidden) listState.scrollToItem(messages.size - 1 + listOffset)
+            if (!listHasAppeared || wasAtBottomWhenHidden) {
+                listState.scrollToItem(messages.size - 1 + listOffset)
+                bottomSettleActive = true
+                bottomSettleRequest++
+            }
             hasPositionedAtLatest = true
             listHasAppeared = true
         } else {
@@ -689,6 +561,8 @@ fun BroadcastChannelScreen(
         val lastVisibleKey = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.key
         if (lastVisibleKey == messages.last().id && !listState.isScrollInProgress) {
             listState.scrollToItem(messages.size - 1 + listOffset)
+            bottomSettleActive = true
+            bottomSettleRequest++
         }
     }
     // A mention of you tapped in Profile's bell (iOS d089011f `takeJumpRoute`): once the room has
@@ -760,6 +634,27 @@ fun BroadcastChannelScreen(
             // scrolling immediately lands short of the bottom.
             kotlinx.coroutines.delay(120)
             listState.animateScrollToItem(messages.size - 1 + listOffset)
+        }
+    }
+
+    // The first scroll to the newest runs while the lazy rows are still being measured (photos,
+    // link previews), so a room opened for the first time landed a few messages short of it
+    // (iOS 01f71184 `settleAtBottom`, release audit T1). A few more unanimated scrolls in the
+    // next second finish the job, unless something else has taken the scroll meanwhile: a jump,
+    // older messages loading, the composer or the reader's finger. One second is short enough
+    // not to fight a reader scrolling up.
+    val settleTargetIndex by rememberUpdatedState(if (messages.isEmpty()) -1 else messages.size - 1 + listOffset)
+    LaunchedEffect(bottomSettleRequest) {
+        if (bottomSettleRequest == 0) return@LaunchedEffect
+        var elapsed = 0L
+        for (at in longArrayOf(250L, 600L, 1_100L)) {
+            delay(at - elapsed)
+            elapsed = at
+            if (!bottomSettleActive || keepInPlaceId != null || pendingMentionJump != null ||
+                highlightedMessageId != null || composerFocused || listState.isScrollInProgress ||
+                settleTargetIndex < 0
+            ) continue
+            listState.scrollToItem(settleTargetIndex)
         }
     }
 
@@ -835,16 +730,6 @@ fun BroadcastChannelScreen(
     // Voice-note playback is owned per bubble; the room going away is what ends it.
     DisposableEffect(Unit) { onDispose { VoicePlayback.stopAllAfterChildrenDispose() } }
 
-    // Opened from a share link for a room the user isn't in: create/join it first so it lands in
-    // "Your Channels" instead of vanishing the moment they navigate away. Curated rooms never
-    // register a join request (they always exist), so they just open. joinChannel is idempotent
-    // (INSERT IGNORE) and re-validates the name itself, so a stale request can't do damage.
-    LaunchedEffect(channelName) {
-        if (BroadcastDeepLink.consumeJoinRequest(channelName)) {
-            broadcastViewModel.joinChannel(channelName)
-        }
-    }
-
     LaunchedEffect(myAddress) {
         myAddress?.let { broadcastViewModel.ensureSenderProfileFetched(it) }
     }
@@ -875,7 +760,10 @@ fun BroadcastChannelScreen(
                     .chatHeaderTapBand(
                         headerTapBand,
                         onChip = { navController.navigate(PublicChatRoutes.roomInfo(channelName)) },
-                        onBand = { coroutineScope.launch { listState.scrollToItem(0) } },
+                        onBand = {
+                            bottomSettleActive = false
+                            coroutineScope.launch { listState.scrollToItem(0) }
+                        },
                     )
             ) {
                 // The chat thread's bar (ChatNavBar): Back on the left, the room's connection dot
@@ -962,7 +850,8 @@ fun BroadcastChannelScreen(
                     .imePadding()
                     .padding(bottom = 2.dp)
             ) {
-            if (fundingGate.active) {
+            // the card stays while its Buy Kaspa flow is open, or the flow closes with it (iOS 824a30bb)
+            if (fundingGate.active || com.kachat.app.ui.screens.tokens.BuyKaspaFlowPresence.isOpen) {
                 ZeroBalanceFundingCard(
                     walletAddress = fundingGate.chattingAddress,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
@@ -1327,6 +1216,7 @@ fun BroadcastChannelScreen(
                                     indication = null,
                                 ) {
                                     if (!isLoadingEarlier) {
+                                        bottomSettleActive = false
                                         keepInPlaceId = messages.firstOrNull()?.id
                                         broadcastViewModel.loadEarlier(channelName)
                                     }

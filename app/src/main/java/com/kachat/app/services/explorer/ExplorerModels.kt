@@ -18,7 +18,7 @@ import kotlin.math.sin
 /** What a transaction is, as K reads it: Kaspa's plain kinds and K's own protocols (iOS `ExplorerTxKind`). */
 enum class ExplorerTxKind(
     @StringRes val title: Int,
-    /** The kind counted ("KaChat Messages"), for K's activity card. */
+    /** The kind counted ("K Messages"), for K's activity card. */
     @StringRes val plural: Int,
     /** What the explorer can say about it without anyone's keys. */
     @StringRes val explanation: Int,
@@ -129,9 +129,10 @@ data class ExplorerAddress(
     val nextPageBefore: Long? = null,
 )
 
+/** No DAA or blue score here: they change with every block, and publishing them recomposed the
+ *  whole Explorer home each second. [ExplorerLive.daaScore] and [ExplorerLive.currentBlueScore]
+ *  give them live (iOS 01f71184, smoothness audit L9). */
 data class ExplorerNetworkStats(
-    val daaScore: Long,
-    val blueScore: Long,
     val blocksPerSecond: Double,
     /** Hashes per second. */
     val hashrate: Double,
@@ -151,7 +152,7 @@ data class ExplorerNetworkStats(
 ) {
     companion object {
         /** Before kaspa.stream's first answer: drawn as placeholders. */
-        val EMPTY = ExplorerNetworkStats(0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0, 1, 0.0, 0, 0)
+        val EMPTY = ExplorerNetworkStats(0.0, 0.0, 0, 0.0, 0.0, 0, 0, 1, 0.0, 0, 0)
     }
 }
 
@@ -189,8 +190,10 @@ data class ExplorerKActivity(
     val activeAddresses: Int? = null,
     /** Network fees K's transactions paid, in sompi; null when not served. */
     val fees: Long? = null,
-    /** Made-up numbers (shown only until K's indexer first answers). */
+    /** Made-up numbers (debug builds only, until K's indexer first answers). */
     val isDemo: Boolean = false,
+    /** Nothing served yet (a release build, before K's indexer answers): the total reads "–". */
+    val unavailable: Boolean = false,
 ) {
     val total: Int get() = counts.values.fold(0) { s, v -> ExplorerMath.addInt(s, v) }
 
@@ -233,6 +236,36 @@ enum class ExplorerChartMetric(
 }
 
 data class ExplorerChartPoint(val date: Long, val value: Double)
+
+/** The point under the finger on a chart (iOS 01f71184 `ExplorerChartSelection`), found by binary
+ *  search: the points are oldest first. */
+object ExplorerChartPick {
+    /** The point nearest [date]; the earlier one on a tie. */
+    fun nearest(points: List<ExplorerChartPoint>, date: Long): ExplorerChartPoint? {
+        if (points.isEmpty()) return null
+        var low = 0
+        var high = points.size - 1
+        while (low < high) {
+            val mid = (low + high) ushr 1
+            if (points[mid].date < date) low = mid + 1 else high = mid
+        }
+        if (low == 0) return points[0]
+        val before = points[low - 1]
+        val after = points[low]
+        return if (kotlin.math.abs(before.date - date) <= kotlin.math.abs(after.date - date)) before else after
+    }
+
+    /** The last point at or before [date] (the bar whose span holds it), else the first. */
+    fun spanning(points: List<ExplorerChartPoint>, date: Long): ExplorerChartPoint? {
+        var low = 0
+        var high = points.size
+        while (low < high) {
+            val mid = (low + high) ushr 1
+            if (points[mid].date <= date) low = mid + 1 else high = mid
+        }
+        return if (low > 0) points[low - 1] else points.firstOrNull()
+    }
+}
 
 /** What the explorer can open: a page each. Written as text so the page stack survives in saved state. */
 sealed class ExplorerRoute {
@@ -301,12 +334,18 @@ object ExplorerMath {
 // MARK: - Demo data
 
 /**
- * What K shows while a number isn't served yet (iOS `ExplorerDemo`): K Activity until K's indexer
- * first answers, and the fee chart when Kaspalytics doesn't answer, each saying so. Also the
+ * What K shows while a number isn't served yet (iOS `ExplorerDemo`), in debug builds only ([allowed]):
+ * K Activity until K's indexer first answers, and the fee chart when Kaspalytics doesn't answer,
+ * each saying so; a release build shows "–" instead. Also the
  * emission schedule the Block Reward chart draws, which is real, and the market cap worked back
  * from a price history.
  */
 object ExplorerDemo {
+    /** Made-up numbers stand in for an unserved source only in debug builds; a release build shows
+     *  "–" (iOS 01f71184 `#if DEBUG`, release audit R8: a wallet shouldn't ship random-walk
+     *  numbers). The emission schedule and the market cap aren't made up, and stay. */
+    val allowed: Boolean get() = com.kachat.app.BuildConfig.DEBUG
+
     /** A deterministic generator: the same seed, the same numbers (FNV-1a, then xorshift). */
     class Seeded(seed: String) {
         private var state: ULong

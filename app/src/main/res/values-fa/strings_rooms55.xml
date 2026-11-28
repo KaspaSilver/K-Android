@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">جستجوی گفتگوهای عمومی</string>
-    <string name="r55_no_public_chats">گفتگوی عمومی‌ای نیست</string>
-    <string name="r55_no_public_chats_hint">برای پیوستن به یک اتاق عمومی یا ساختن آن، + را بزنید.</string>
     <string name="r55_page_cycle_hint">بین گفتگوهای شما و گفتگوهای عمومی جابه‌جا می‌شود</string>
-    <string name="r55_more_rooms">اتاق‌های بیشتر</string>
-    <string name="r55_more_rooms_footer">اتاق‌هایی که روی ایندکسری اضافه شده‌اند که K گفتگوهای عمومی را از آن می‌خواند.</string>
     <string name="r55_delete_one_public_chat">۱ گفتگوی عمومی حذف شود؟</string>
     <string name="r55_delete_n_public_chats">%1$d گفتگوی عمومی حذف شود؟</string>
-    <string name="r55_delete_public_chats_message">گفتگوهای عمومی پیش‌فرض خاموش می‌شوند (در ویرایش گفتگوهای عمومی پیش‌فرض دوباره روشنشان کنید). اتاق‌هایی که خودتان افزوده‌اید همراه پیام‌هایشان از این دستگاه حذف می‌شوند.</string>
     <string name="r55_delete_for_everyone">حذف برای همه</string>
     <string name="r55_delete_for_everyone_subtitle">آن را برای همهٔ کاربران K از این اتاق حذف می‌کند.</string>
     <string name="r55_delete_for_everyone_q">برای همه حذف شود؟</string>

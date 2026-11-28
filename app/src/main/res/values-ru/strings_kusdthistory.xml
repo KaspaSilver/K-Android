@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- kUSDT swaps in Buy/Sell History (iOS b49a021d) -->
+<resources>
+    <string name="swap_swapped_through">Обмен через</string>
+    <string name="swap_trestly_kusdt_pool">Пул kUSDT от Trestly в Kaspa</string>
+    <string name="swap_couldnt_reach_network">Не удалось связаться с сетью — попробуйте ещё раз</string>
+</resources>

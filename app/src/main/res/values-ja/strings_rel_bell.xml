@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification and banner previews (iOS 01f71184, audit 2026-11-27 R7). -->
+<resources>
+    <string name="rel_bell_reacted_to_your_message">あなたのメッセージに %1$s でリアクションしました</string>
+    <string name="rel_bell_removed_reaction">%1$s のリアクションを取り消しました</string>
+    <string name="rel_bell_replied_to_message">メッセージに返信しました</string>
+    <string name="rel_bell_edited_message">メッセージを編集しました</string>
+    <string name="rel_bell_reacted">%1$s でリアクションしました</string>
+</resources>

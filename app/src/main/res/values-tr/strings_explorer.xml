@@ -3,7 +3,6 @@
 <resources>
     <string name="ex_kind_payment">Ödeme</string>
     <string name="ex_kind_handshake">İletişim isteği</string>
-    <string name="ex_kind_kapost">KaPost</string>
     <string name="ex_kind_username">Kullanıcı adı</string>
     <string name="ex_kind_swap">Takas</string>
     <string name="ex_kind_other">İşlem</string>

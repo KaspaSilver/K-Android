@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K, mesajlarinizi dogrudan Kaspa agi uzerinden gondermenizi ve almanizi saglar. Mesajlarinizi gonderirken ucret odemek icin Kaspa gereklidir. Odediginiz ucret, agi guvence altina alan madencilere gider. 5 Kaspa ile yaklaşık 2.500 mesaj gönderebilirsiniz.</string>
+    <string name="welcome2_get_username">Kullanıcı Adı Alın</string>
+    <string name="welcome2_get_username_caption">\@alice gibi bir kullanıcı adı alın; böylece insanlar uzun adresiniz olmadan sizi bulup mesaj atabilir. Kaspa Hub &gt; Kullanıcı Adları\'ndan alın.</string>
+    <string name="welcome2_share_title">Sohbet Adresinizi Paylaşın</string>
+    <string name="welcome2_share_body">Birine gönderin; K\'de sizi bulup mesaj atabilsin.</string>
+</resources>

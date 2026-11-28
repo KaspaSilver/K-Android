@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">הקש כדי לראות את ההיסטוריה</string>
+    <string name="addrcard_quantum_protected">מוגן מפני קוונטים</string>
+    <string name="addrcard_not_quantum_protected">לא מוגן מפני קוונטים</string>
+    <string name="addrcard_new_address">כתובת חדשה</string>
+    <string name="addrcard_regular_address">כתובת רגילה</string>
+    <string name="addrcard_regular_address_subtitle">עובדת עם הכול: Kaspa ו-kUSDT.</string>
+    <string name="addrcard_quantum_protected_address">כתובת מוגנת מפני קוונטים</string>
+    <string name="addrcard_quantum_protected_address_subtitle">שומרת את המפתח שלה מוסתר עד שהיא מוציאה. Kaspa בלבד.</string>
+    <string name="addrcard_no_kusdt_on_quantum">אי אפשר לשלוח kUSDT לכתובת מוגנת מפני קוונטים או לקבל עליה.</string>
+</resources>

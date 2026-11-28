@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage account cards, in-place rename (iOS b49a021d) -->
+<resources>
+    <string name="cold_hide_funded_refused">يبقى العنوان الذي يحتوي على كاسبا في القائمة.</string>
+    <string name="cold_remove_account">إزالة الحساب</string>
+    <string name="cold_kpub_qr">رمز QR لـ kpub</string>
+    <string name="cold_alerts_on">التنبيهات مفعّلة</string>
+    <string name="cold_alerts_off">التنبيهات متوقفة</string>
+    <string name="cold_tap_to_view_addresses">اضغط لعرض العناوين</string>
+    <string name="cold_alerts_on_toast">سيصلك إشعار عندما يستقبل هذا الحساب كاسبا.</string>
+    <string name="cold_alerts_off_toast">لا مزيد من الإشعارات عندما يستقبل هذا الحساب كاسبا.</string>
+    <string name="cold_kpub_copied">تم نسخ kpub إلى الحافظة.</string>
+    <string name="cold_watch_this_account">متابعة هذا الحساب</string>
+    <string name="cold_kpub_qr_warning">من يمسحه يرى كل عنوان ورصيد ودفعة في هذا الحساب. اعرضه فقط على أجهزة تثق بها.</string>
+</resources>

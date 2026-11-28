@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K 让您可以直接在 Kaspa 网络上发送和接收消息。发送消息时需要使用 Kaspa 支付手续费。您支付的手续费将支付给保护网络安全的矿工。5 Kaspa 大约可以发送 2,500 条消息。</string>
+    <string name="welcome2_get_username">获取用户名</string>
+    <string name="welcome2_get_username_caption">注册一个用户名，例如 @alice，别人无需你那串长地址就能找到你并发消息。在 Kaspa Hub &gt; 用户名 中获取。</string>
+    <string name="welcome2_share_title">分享你的聊天地址</string>
+    <string name="welcome2_share_body">发送给别人，他们就能在 K 上找到你并给你发消息。</string>
+</resources>

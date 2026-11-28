@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">Sites</string>
     <string name="shell_kaspa_websites">Sites da Kaspa</string>
     <string name="shell_terms_of_use">Termos de uso</string>
-    <string name="shell_message_indexer_footer">KaPost, os chats públicos e o xadrez também são lidos deste indexador.</string>
+    <string name="shell_message_indexer_footer">Publicações, Chats públicos e Xadrez também são lidos deste indexador.</string>
 </resources>

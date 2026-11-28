@@ -60,15 +60,57 @@ import androidx.compose.runtime.getValue
  * redirect to another http(s) site opens in the phone's browser, other schemes are refused
  * (iOS audit 2026-11-21 #2; security audit L3). A site [KaChatSiteWallet] allows (Kasshi) gets K
  * as its wallet, `window.kachat`, and its requests as sheets over the page (iOS 48f5c357).
+ *
+ * [signInFirst] (Kasshi from Kaspa Hub, iOS b49a021d, owner 2026-11-27) asks which address to sign
+ * in with before the page does: the site's connect then answers at once and its sign-in is signed
+ * with no second sheet ([KaChatSiteWallet.preConnect]). Cancel browses signed out.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClose: () -> Unit) {
+fun InAppBrowserScreen(
+    url: String,
+    title: String,
+    notice: String? = null,
+    signInFirst: Boolean = false,
+    onClose: () -> Unit,
+) {
     val colors = LocalAppColors.current
     var currentUrl by remember(url) { mutableStateOf(url) }
     var isLoading by remember(url) { mutableStateOf(true) }
+    /** The header's refresh button (iOS 896e8194 `WebPageReloader`). */
+    val reloader = remember(url) { WebPageReloader() }
     /** K as the page's wallet (`window.kachat`), on the sites [KaChatSiteWallet] allows (Kasshi). */
     val siteWallet = rememberSiteWallet(url)
+    /** K's own sign-in sheet, up when the page opens ([signInFirst]); asked once per browser. */
+    var showSignIn by remember(url) { mutableStateOf(false) }
+    var signInAsked by remember(url) { mutableStateOf(false) }
+    /** The sign-in sheet is on its way (iOS 01f71184 `signInWaiting`): the page's own requests
+     *  wait for it. */
+    var signInWaiting by remember(url) { mutableStateOf(false) }
+    val signInScope = androidx.compose.runtime.rememberCoroutineScope()
+    /** The picked sign-in address couldn't connect: said, not a silent sign-in that never happened
+     *  (iOS d88891ea, audit 2026-11-27 L1). */
+    var signInFailed by remember(url) { mutableStateOf(false) }
+    // Only reopened here (iOS b49a021d): a browser hidden and brought back keeps its page; it is
+    // closed for good when the web view goes (onRelease below).
+    OnScreenPresence(
+        appear = {
+            siteWallet?.reopen()
+            if (signInFirst && !signInAsked && siteWallet != null && siteWallet.connection.value == null) {
+                signInAsked = true
+                // a moment after the screen is up, not in the same pass that builds it and the web
+                // view, so the Hub's close and the sheet's rise don't stall each other (iOS
+                // 01f71184, smoothness audit T1)
+                signInWaiting = true
+                signInScope.launch {
+                    kotlinx.coroutines.delay(400)
+                    signInWaiting = false
+                    showSignIn = true
+                }
+            }
+        },
+        disappear = {},
+    )
     val headerHost = remember(currentUrl) {
         val shown = runCatching { android.net.Uri.parse(currentUrl) }.getOrNull()
         val host = shown?.host.orEmpty()
@@ -97,11 +139,8 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            Box(modifier = Modifier.size(34.dp), contentAlignment = Alignment.Center) {
-                if (isLoading) {
-                    androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = KaspaTeal)
-                }
-            }
+            // reload, a spinner while the page loads (iOS 896e8194 `WebPageRefreshButton`)
+            WebPageRefreshButton(isLoading = isLoading) { reloader.reload() }
         }
         // Optional strip under the top bar (Claim Testnet Kaspa: "your address is copied",
         // iOS 2a81767).
@@ -135,6 +174,14 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
             }
             onClose()
         }
+        // The page's renderer died (killed for memory, or crashed): that WebView can't be used
+        // again, so it is thrown away and a new one loads the site; a third death in one visit
+        // closes the browser. Without this Android kills K along with the renderer.
+        var browserGeneration by remember(url) { androidx.compose.runtime.mutableIntStateOf(0) }
+        val goneViews = remember(url) {
+            java.util.Collections.newSetFromMap(java.util.WeakHashMap<WebView, Boolean>())
+        }
+        androidx.compose.runtime.key(browserGeneration) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { context ->
@@ -151,11 +198,24 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
                     settings.domStorageEnabled = true
                     // before the first load, so the script is there at document start
                     siteWallet?.install(this)
+                    reloader.webView = this
+                    reloader.startUrl = url
                     webViewClient = InAppBrowserClient(
                         startUrl = url,
                         onPage = { now -> if (!now.startsWith("about:", ignoreCase = true)) currentUrl = now },
                         onLoading = { isLoading = it },
                         onStarted = { view, started -> siteWallet?.injectOnPageStarted(view, started) },
+                        // signed in from K's own sheet before the page was there: tell the page now
+                        onFinished = { siteWallet?.pageLoaded() },
+                        onGone = { dead ->
+                            goneViews.add(dead)
+                            if (reloader.webView === dead) reloader.webView = null
+                            // a sheet the dead page asked for is declined; the new page is answered
+                            siteWallet?.close()
+                            siteWallet?.reopen()
+                            isLoading = true
+                            if (browserGeneration < 2) browserGeneration++ else onClose()
+                        },
                     )
                     loadUrl(url)
                 }
@@ -163,14 +223,37 @@ fun InAppBrowserScreen(url: String, title: String, notice: String? = null, onClo
             // Closing the browser frees the page (its renderer, timers and media) instead of
             // leaving it to the garbage collector.
             onRelease = { view ->
+                // the browser is gone: a sheet still up is declined, and the page gets no more
+                // answers (iOS b49a021d `dismantleUIView`)
+                val rebuilt = (view as? WebView)?.let { it in goneViews } == true
+                if (!rebuilt) siteWallet?.close()
                 (view as? WebView)?.let { webView ->
-                    webView.stopLoading()
-                    webView.destroy()
+                    if (reloader.webView === webView) reloader.webView = null
+                    runCatching { webView.stopLoading() }
+                    runCatching { webView.destroy() }
+                }
+            },
+        )
+        }
+    }
+    // a request the page makes while K's own sign-in sheet is up shows once that closes
+    siteWallet?.let { SiteWalletSheetHost(it, held = showSignIn || signInWaiting) }
+    if (showSignIn && siteWallet != null) {
+        val signInHost = remember(url) { runCatching { android.net.Uri.parse(url).host }.getOrNull().orEmpty() }
+        SiteSignInSheet(siteWallet, host = signInHost, onDone = { showSignIn = false }, onFailed = { signInFailed = true })
+    }
+    if (signInFailed) {
+        com.kachat.app.ui.theme.IosAlertDialog(
+            onDismissRequest = { signInFailed = false },
+            title = { Text(androidx.compose.ui.res.stringResource(com.kachat.app.R.string.audit_money_signin_failed_title)) },
+            text = { Text(androidx.compose.ui.res.stringResource(com.kachat.app.R.string.audit_money_signin_failed_message)) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { signInFailed = false }) {
+                    Text(androidx.compose.ui.res.stringResource(com.kachat.app.R.string.ok), color = KaspaTeal, fontWeight = FontWeight.SemiBold)
                 }
             },
         )
     }
-    siteWallet?.let { SiteWalletSheetHost(it) }
 }
 
 /**
@@ -188,6 +271,10 @@ private class InAppBrowserClient(
     /** A main-frame page started loading: the site wallet's script on a WebView without
      *  document-start scripts ([KaChatSiteWallet.injectOnPageStarted]). */
     private val onStarted: ((WebView, String?) -> Unit)? = null,
+    /** A main-frame page finished loading ([KaChatSiteWallet.pageLoaded]). */
+    private val onFinished: (() -> Unit)? = null,
+    /** The page's renderer process died: this WebView is unusable and must be replaced. */
+    private val onGone: ((WebView) -> Unit)? = null,
 ) : WebViewClient() {
     /** The site the browser was opened on, without a leading "www.". */
     private val siteHost: String = run {
@@ -235,10 +322,19 @@ private class InAppBrowserClient(
     override fun onPageFinished(view: WebView, url: String?) {
         onLoading(false)
         (view.url ?: url)?.let(onPage)
+        onFinished?.invoke()
     }
 
     override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
         url?.let(onPage)
+    }
+
+    /** The renderer was killed or crashed: returning true keeps K alive; the screen drops this
+     *  view (destroyed in its onRelease) and builds a new one, or closes ([onGone]). */
+    override fun onRenderProcessGone(view: WebView, detail: android.webkit.RenderProcessGoneDetail): Boolean {
+        android.util.Log.w("InAppBrowser", "page renderer gone (crash=${detail.didCrash()})")
+        onGone?.invoke(view)
+        return true
     }
 }
 

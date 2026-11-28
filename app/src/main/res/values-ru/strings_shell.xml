@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">Сайты</string>
     <string name="shell_kaspa_websites">Сайты Kaspa</string>
     <string name="shell_terms_of_use">Условия использования</string>
-    <string name="shell_message_indexer_footer">KaPost, публичные чаты и шахматы тоже читаются с этого индексатора.</string>
+    <string name="shell_message_indexer_footer">Посты, публичные чаты и шахматы тоже читаются с этого индексатора.</string>
 </resources>

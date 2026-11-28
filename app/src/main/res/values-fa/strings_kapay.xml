@@ -19,7 +19,6 @@
     <string name="enter_kpub">وارد کردن kpub</string>
     <string name="export_csv">صدور CSV</string>
     <string name="fee_usd_optional">کارمزد (اختیاری)</string>
-    <string name="generate_more_addresses">ایجاد آدرس‌های بیشتر</string>
     <string name="holdings">دارایی‌ها</string>
     <string name="import_action">وارد کردن</string>
     <string name="import_csv">وارد کردن CSV</string>
@@ -36,12 +35,8 @@
     <string name="kp_address_hidden_reenable">آدرس پنهان شد. آن را در نمایان بودن آدرس دوباره فعال کنید.</string>
     <string name="kp_address_lld_64ab3">آدرس شماره %1$s</string>
     <string name="kp_address_number_ready">آدرس شماره %1$d آماده است.</string>
-    <string name="kp_address_row_copy_subtitle">کل آدرس را در کلیپ‌بورد کپی می‌کند.</string>
     <string name="kp_address_row_hide_subtitle">آن را از این فهرست برمی‌دارد. در نمایش آدرس‌ها دوباره فعالش کنید.</string>
-    <string name="kp_address_row_qr_subtitle">تمام‌صفحه، برای اسکن با دستگاهی دیگر.</string>
-    <string name="kp_address_row_rename_subtitle">به این آدرس برچسبی از خودتان می‌دهد.</string>
     <string name="kp_address_visibility_9c9a7">نمایان بودن آدرس</string>
-    <string name="kp_address_visibility_subtitle">هر آدرسی را که در فهرست می‌خواهید، یک‌جا علامت بزنید.</string>
     <string name="kp_already_added_26837">قبلاً اضافه شده</string>
     <string name="kp_amount_and_price_08599">مبلغ و قیمت</string>
     <string name="kp_and_its_transactions_will_be_deleted_3c57d">\'%1$s\' و تراکنش‌هایش حذف خواهند شد. این کار برگشت‌پذیر نیست.</string>
@@ -55,8 +50,6 @@
     <string name="kp_check_address_history_before_trying_again">پیش از تلاش دوباره، تاریخچهٔ نشانی را بررسی کنید.</string>
     <string name="kp_trade_may_have_gone_through">ممکن است معامله انجام شده باشد.</string>
     <string name="kp_checking_address_lld_5b84c">در حال بررسی آدرس شماره %1$s</string>
-    <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">هزار آدرس اول را بدون توجه به فاصله‌های خالی بررسی می‌کند و تا وقتی مورد جدیدی پیدا شود ادامه می‌دهد.</string>
-    <string name="kp_close_and_keep_scanning_b66cc">بستن و ادامه اسکن</string>
     <string name="kp_close_bbfa7">بستن</string>
     <string name="kp_coin_just_spent">همین حالا در یک ارسال خرج شد</string>
     <string name="kp_coin_locked_by_covenant">قفل‌شده با یک کاوننت</string>
@@ -128,7 +121,6 @@
     <string name="kp_mining_per_week">هفتگی</string>
     <string name="kp_new_portfolio_5c1c7">سبد دارایی جدید</string>
     <string name="kp_no_addresses_discovered_yet_15738">هنوز هیچ آدرسی کشف نشده است.</string>
-    <string name="kp_no_used_addresses_yet">هنوز آدرس استفاده‌شده‌ای نیست</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">هنوز سابقه کافی نیست - پس از چند روز فعالیت دوباره سر بزنید.</string>
     <string name="kp_note_optional_4e395">یادداشت (اختیاری)</string>
     <string name="kp_nothing_can_change_now_this_is_8bf3a">دیگر چیزی تغییر نمی‌کند: این همان تراکنشی است که KasSigner امضا کرده است.</string>
@@ -216,7 +208,6 @@
     <string name="kp_you_receive">دریافتی شما</string>
     <string name="kp_you_receive_about">دریافتی شما حدود</string>
     <string name="kp_you_saw">آنچه دیدید</string>
-    <string name="kpub">kpub</string>
     <string name="kpub_2">kpub...</string>
     <string name="name_this_address">نام‌گذاری این آدرس</string>
     <string name="no_app_to_open_link">هیچ برنامه‌ای روی این گوشی نمی‌تواند پیوند را باز کند</string>
@@ -271,22 +262,17 @@
     <string name="total_invested">مجموع سرمایه‌گذاری‌شده</string>
     <string name="total_p_l">سود و زیان کل</string>
     <string name="transactions">تراکنش‌ها</string>
-    <string name="kp_changes_the_name_shown_for_this_account_kc">نامی را که برای این حساب نشان داده می‌شود تغییر می‌دهد.</string>
     <string name="kp_compound_utxos_description_kc">همه UTXOهای این آدرس را در یکی ادغام می‌کند تا تعداد ورودی‌های لازم برای ارسال‌های بعدی کمتر شود.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">برنامه‌های دیگر شما با همین کلمات همان kUSDT را نشان می‌دهند و می‌توانند آن را بفرستند. مبادله همین‌جا انجام می‌شود.</string>
     <string name="kp_kusdt_guide_swapping_detail_kc">برای مبادلهٔ KAS و kUSDT یا افزودن به استخر، در زبانهٔ کیف پول روی «سوآپ استیبل‌کوین» بزنید و kUSDT را انتخاب کنید. سایت خود Trestly درون K و متصل به نشانی انتخابی شما باز می‌شود.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">با اضافه شدن استیبل‌کوین‌های دیگر به K، اینجا نمایش داده می‌شوند.</string>
-    <string name="kp_notifies_you_when_this_account_kc">وقتی این حساب Kaspa دریافت کند به شما اطلاع می‌دهد.</string>
     <string name="kp_on_trestly_inside_kachat_kc">در Trestly، درون K</string>
-    <string name="kp_puts_the_extended_public_key_kc">کلید عمومی گسترش‌یافته را در کلیپ‌بورد کپی می‌کند.</string>
     <string name="kp_reveals_next_unused_address_account_kc">آدرس استفاده‌نشدهٔ بعدی این حساب را نشان می‌دهد.</string>
     <string name="kp_scan_it_into_another_device_kc">آن را روی دستگاه دیگری اسکن کنید تا این حساب را آنجا دنبال کنید.</string>
     <string name="kp_scan_this_on_your_kassigner_kc">این را روی KasSigner خود اسکن کنید</string>
     <string name="kp_selected_one_utxo_kc">انتخاب‌شده: %1$s (۱ UTXO)</string>
     <string name="kp_selected_utxos_kc">انتخاب‌شده: %1$s (%2$d UTXO)</string>
-    <string name="kp_show_kpub_qr_kc">نمایش QR مربوط به kpub</string>
     <string name="kp_something_went_wrong_kc">مشکلی پیش آمد</string>
-    <string name="kp_stops_notifying_when_this_account_kc">دیگر هنگام دریافت Kaspa در این حساب اعلان نمی‌دهد. حساب‌های دیگر اعلان‌های خود را دارند.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">این فقط آن را از فهرست نظارت K حذف می‌کند. هیچ تأثیری بر دستگاه KasSigner یا وجوهی که نگه می‌دارد ندارد.</string>
     <string name="kp_token_empty_state_swap_kc">آن را روی یک نشانی تازه دریافت کنید، یا از «سوآپ استیبل‌کوین» در زبانهٔ کیف پول بخرید.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly از K می‌خواهد:</string>
@@ -296,8 +282,5 @@
     <string name="kp_trestly_site_kc">سایت Trestly</string>
     <string name="kp_trestly_site_url_kc">نشانی سایت Trestly</string>
     <string name="kp_trestly_swap_note_kc">با کد خود Trestly درون K ساخته و بررسی شده است. اگر استخر زودتر تغییر کند، دوباره قیمت می‌دهد: فقط با همین قیمت یا بهتر ادامه می‌دهد، برای کمتر دوباره می‌پرسد و هرگز زیر حداقل سایت نمی‌رود.</string>
-    <string name="kp_turn_off_receive_notifications_kc">خاموش کردن اعلان‌های دریافت</string>
-    <string name="kp_turn_on_receive_notifications_kc">روشن کردن اعلان‌های دریافت</string>
-    <string name="cold_copy_kpub_reveals_all_addresses">kpub این حساب را در کلیپ‌بورد می‌گذارد. همه آدرس‌هایش را آشکار می‌کند.</string>
     <string name="cold_not_a_valid_kpub">kpub معتبر نیست</string>
 </resources>

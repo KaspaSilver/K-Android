@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">金</string>
+    <string name="rel_wallet_silver">銀</string>
+    <string name="rel_wallet_pair_bitcoin">ビットコイン建てのKaspa</string>
+    <string name="rel_wallet_pair_voo">VanguardのS&amp;P 500 ETFの口数</string>
+    <string name="rel_wallet_pair_gold">金のトロイオンス</string>
+    <string name="rel_wallet_pair_silver">銀のトロイオンス</string>
+    <string name="rel_wallet_cold_storage_n">コールドストレージ %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">このアドレスに使用可能なUTXOがありません</string>
+    <string name="rel_wallet_insufficient_plus_fee">この金額とネットワーク手数料に必要な残高が足りません</string>
+    <string name="rel_wallet_too_many_inputs">この送金には%1$d個のUTXOが必要ですが、KasSignerは1件の取引につき%2$d個の入力までしか対応していません。金額を減らすか、先にこのアドレスを統合してください。</string>
+    <string name="rel_wallet_cancelled">取り消しました。</string>
+    <string name="rel_wallet_err_no_internet">インターネットに接続されていません。接続を確認してもう一度お試しください。</string>
+    <string name="rel_wallet_err_timed_out">接続がタイムアウトしました。接続を確認してもう一度お試しください。</string>
+    <string name="rel_wallet_err_cant_reach">サーバーに接続できませんでした。設定のアドレスと接続を確認してください。</string>
+    <string name="rel_wallet_err_secure">サーバーと安全に接続できませんでした。</string>
+    <string name="rel_wallet_err_network">ネットワークエラーが発生しました。接続を確認してもう一度お試しください。</string>
+    <string name="rel_wallet_err_unreadable">サーバーからアプリが読み取れない応答がありました。もう一度お試しください。繰り返す場合はアプリを更新してください。</string>
+    <string name="rel_wallet_err_node">Kaspaノードがエラーを返しました。アプリは別のノードを試します。しばらくしてからもう一度お試しください。</string>
+    <string name="rel_wallet_err_unknown">不明なエラーが発生しました。</string>
+    <string name="rel_wallet_err_no_spendable_available">使用可能なUTXOがありません</string>
+    <string name="rel_wallet_err_no_private_key">秘密鍵を取得できませんでした</string>
+    <string name="rel_wallet_err_insufficient_payment">支払いに必要な残高が足りません</string>
+    <string name="rel_wallet_err_insufficient_after_fee">手数料を差し引くと残高が足りません</string>
+    <string name="rel_wallet_err_insufficient_handshake">ハンドシェイクに必要な残高が足りません</string>
+    <string name="rel_wallet_err_insufficient_self_stash">セルフスタッシュの手数料に必要な残高が足りません</string>
+    <string name="rel_wallet_err_group_secrets">グループの秘密鍵がありません。このグループに参加し直してください。</string>
+    <string name="rel_wallet_err_admin_secrets">グループ管理者の秘密鍵がありません。</string>
+</resources>

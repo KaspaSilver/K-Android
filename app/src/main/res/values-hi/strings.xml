@@ -50,7 +50,6 @@
     <string name="close">बंद करें</string>
     <string name="confirm">पुष्टि करें</string>
     <string name="confirm_selection">चयन की पुष्टि करें</string>
-    <string name="connect_to_a_node">एक नोड से कनेक्ट करें</string>
     <string name="connected_only_to_this_node">केवल इस नोड से जुड़ा हुआ</string>
     <string name="connection_settings">कनेक्शन सेटिंग्स</string>
     <string name="connection_status">कनेक्शन स्थिति</string>
@@ -75,7 +74,6 @@
     <string name="failed_to_send">भेजना विफल</string>
     <string name="fee_kas">शुल्क (KAS)</string>
     <string name="from">से</string>
-    <string name="fund_your_chatting_address">अपना चैट पता फंड करें</string>
     <string name="group_info">समूह जानकारी</string>
     <string name="group_name_2">समूह का नाम</string>
     <string name="hidden_addresses">छिपे हुए पते</string>
@@ -84,7 +82,6 @@
     <string name="import_account">खाता आयात करें</string>
     <string name="import_existing_account">मौजूदा खाता आयात करें</string>
     <string name="incoming_notifications">आने वाली सूचनाएं</string>
-    <string name="kachat_needs_to_connect_to_a">K को एक नोड से जुड़ने की आवश्यकता है। आप कैसे कनेक्ट करना चाहेंगे?</string>
     <string name="kaspa_explorer">कास्पा एक्सप्लोरर</string>
     <string name="label_optional">लेबल (वैकल्पिक)</string>
     <string name="last_message">अंतिम संदेश</string>
@@ -185,7 +182,6 @@
     <string name="created">बनाया गया</string>
     <string name="customization">अनुकूलन</string>
     <string name="diagnostics">डायग्नोस्टिक्स</string>
-    <string name="discover_addresses">पते खोजें</string>
     <string name="email">ईमेल</string>
     <string name="explorer">एक्सप्लोरर</string>
     <string name="github">GitHub</string>
@@ -236,14 +232,8 @@
     <string name="how_kachat_uses_kaspa">K, Kaspa का उपयोग कैसे करता है</string>
     <string name="kachat_lets_you_send_and_receive">K आपको सीधे Kaspa नेटवर्क पर संदेश भेजने और प्राप्त करने देता है। अपने संदेश भेजते समय शुल्क चुकाने के लिए Kaspa आवश्यक है। आप जो शुल्क चुकाते हैं वह नेटवर्क को सुरक्षित रखने वाले माइनर्स के पास जाता है।</string>
     <string name="finish">समाप्त करें</string>
-    <string name="recommended">अनुशंसित</string>
-    <string name="connect_your_own_node">अपना खुद का नोड कनेक्ट करें</string>
-    <string name="enter_a_node_address_you_trust">एक नोड पता दर्ज करें जिस पर आप भरोसा करते हैं</string>
-    <string name="auto_search_for_nodes">नोड्स की स्वतः खोज करें</string>
-    <string name="most_taxing_on_the_device_not_as">डिवाइस पर सबसे अधिक बोझ, उतना विश्वसनीय नहीं - यह इस पर निर्भर करता है कि आप कहां रहते हैं</string>
     <string name="choose_your_language">अपनी भाषा चुनें</string>
     <string name="select_the_language_youd_like_to">वह भाषा चुनें जिसे आप K में उपयोग करना चाहते हैं।</string>
-    <string name="best">सर्वश्रेष्ठ</string>
     <string name="receive_kaspa">Kaspa प्राप्त करें</string>
     <string name="currency">मुद्रा</string>
     <string name="choose_your_currency">अपनी मुद्रा चुनें</string>
@@ -319,7 +309,6 @@
     <string name="new_message_request">नया मैसेज अनुरोध</string>
     <string name="wants_to_chat_with_you">%1$s आपसे चैट करना चाहते हैं।</string>
     <!-- Welcome Guide: .kachat and Message Requests (iOS 5c15ca0) -->
-    <string name="welcome_fund_chatting_body">5 Kaspa लगभग 2500 मैसेज के लिए काफ़ी हैं।</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">टेस्टनेट</string>
     <string name="testnet_restart_to_testnet">टेस्टनेट पर स्विच पूरा करने के लिए K को पूरी तरह बंद करके फिर खोलें।</string>
@@ -646,7 +635,7 @@
     <string name="ab_export_failed">एक्सपोर्ट विफल। फ़ाइल लिखी नहीं जा सकी।</string>
     <string name="ab_already_up_to_date">पहले से अद्यतन। फ़ाइल के सभी पते सहेजे हुए हैं।</string>
     <string name="ab_imported_counts">इंपोर्ट हुआ: %1$d जोड़े, %2$d अपडेट।</string>
-    <string name="ab_err_not_an_export">यह फ़ाइल KaChat संपर्क एक्सपोर्ट नहीं है।</string>
+    <string name="ab_err_not_an_export">यह फ़ाइल K का संपर्क एक्सपोर्ट नहीं है।</string>
     <string name="ab_err_export_empty">इस संपर्क एक्सपोर्ट में कोई संपर्क नहीं है।</string>
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">नेटवर्क को भेजा गया</string>
@@ -874,7 +863,6 @@
     <string name="wallet_spending">खर्च</string>
     <string name="wallet_send">भेजें</string>
     <string name="wallet_receive">प्राप्त करें</string>
-    <string name="wallet_request">अनुरोध</string>
     <string name="profile_share_profile">प्रोफ़ाइल साझा करें</string>
     <string name="settings_back_up_account">खाते का बैकअप लें</string>
     <string name="settings_complete_your_backup">अपना बैकअप पूरा करें</string>
@@ -1404,12 +1392,9 @@
     <string name="chess_tc_1_1_subtitle">हर खिलाड़ी को एक मिनट, और हर चाल पर एक सेकंड।</string>
     <string name="chess_tc_casual">कैज़ुअल</string>
     <string name="chess_tc_no_timer">कोई टाइमर नहीं।</string>
-    <string name="check_off_every_address_you_want_on_the_list">सूची में जो भी पते चाहिए, उन्हें एक बार में चुन लें।</string>
-    <string name="close_and_keep_scanning">बंद करें और स्कैन जारी रखें</string>
     <string name="recents">हाल के</string>
     <string name="initial_sync_starting">शुरू हो रहा है</string>
     <string name="initial_sync_finished">पूरा हुआ</string>
-    <string name="downloading_message_history">संदेश इतिहास डाउनलोड हो रहा है</string>
     <string name="wiping_incoming_messages">आने वाले संदेश मिटाए जा रहे हैं...</string>
     <string name="finishing_up">पूरा किया जा रहा है...</string>
     <string name="re_syncing_chats_progress">पुनः सिंक हो रहा है... %1$d / %2$d चैट</string>
@@ -1460,12 +1445,7 @@
     <string name="notification_mode_default">डिफ़ॉल्ट (%1$s)</string>
     <string name="checking_address_n">पता #%1$d जांचा जा रहा है</string>
     <string name="n_found_so_far">अब तक %1$d मिले</string>
-    <string name="checks_the_first_thousand_addresses">पहले एक हज़ार पते जांचता है, चाहे बीच में खाली पते हों, फिर जब तक कुछ मिलता रहता है तब तक आगे बढ़ता रहता है।</string>
     <string name="first_sync_all_set">सब तैयार है</string>
-    <string name="first_sync_up_to_date">आपकी चैट और हिस्ट्री अप-टू-डेट हैं।</string>
-    <string name="first_sync_setting_up">आपका खाता सेट किया जा रहा है</string>
-    <string name="first_sync_downloading_footer">इस खाते का चेन पर जो कुछ भी है, उसे डाउनलोड किया जा रहा है। इसमें इतना समय सिर्फ़ एक बार लगता है।</string>
-    <string name="first_sync_continue_anyway">फिर भी जारी रखें</string>
     <string name="nc_use_all_files">सभी फ़ाइलें उपयोग करें</string>
     <string name="nc_use_this_folder">यह फ़ोल्डर उपयोग करें</string>
     <string name="nc_no_subfolders">कोई सबफ़ोल्डर नहीं।</string>
@@ -1542,10 +1522,6 @@
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">शेयर लिंक कॉपी करें</string>
     <string name="share_link_copied">शेयर लिंक कॉपी हो गया।</string>
-    <string name="generate_non_quantum_address">नॉन-क्वांटम पता बनाएँ</string>
-    <string name="generate_non_quantum_address_subtitle">एक साधारण पता, जैसा प्राप्त करें देता है। kUSDT समेत हर चीज़ के साथ काम करता है।</string>
-    <string name="generate_quantum_resistant_address">क्वांटम-प्रतिरोधी पता बनाएँ</string>
-    <string name="generate_quantum_resistant_address_subtitle">खर्च करने तक अपनी कुंजी छिपाकर रखता है। सिर्फ़ Kaspa के लिए: इससे kUSDT का ट्रेड नहीं हो सकता।</string>
     <string name="kaspa">Kaspa</string>
     <string name="kusdt_balances">kUSDT बैलेंस</string>
     <string name="kusdt_listed_stays_here">यह पता आपकी kUSDT सूची में है, इसलिए यह यहीं रहता है। पहले इसे kUSDT प्रबंधित करें से छिपाएं।</string>
@@ -1570,14 +1546,12 @@
     <string name="tap_to_manage">प्रबंधित करने के लिए टैप करें</string>
     <string name="token_about_kusdt">kUSDT, Ethereum और BNB Chain का USDT है, जिसे Trestly के वॉल्ट में 1:1 रखा जाता है और Kaspa पर टोकन के रूप में जारी किया जाता है। इसे Tether जारी नहीं करता, और सिर्फ़ Trestly ही इसे वापस USDT में बदल सकता है।</string>
     <string name="token_about_title">%1$s के बारे में</string>
-    <string name="token_actions_title">%1$s कार्रवाइयाँ</string>
     <string name="token_activity_bridged_in">ब्रिज से आया</string>
     <string name="token_activity_combined_coins">कॉइन मिलाए गए</string>
     <string name="token_activity_swapped">स्वैप किया</string>
     <string name="token_add_for_fee_and_change">शुल्क और बचे कॉइन के लिए %1$s जोड़ें</string>
     <string name="token_add_for_network_fee">नेटवर्क शुल्क के लिए %1$s जोड़ें</string>
     <string name="token_add_more">%1$s और जोड़ें</string>
-    <string name="token_address_visibility_subtitle">चुनें कि kUSDT वाले कौन-से पते सूची में दिखें।</string>
     <string name="token_address_visibility_title">%1$s पतों की दृश्यता</string>
     <string name="token_amount_accessibility">राशि (%1$s)</string>
     <string name="token_available">उपलब्ध: %1$s</string>
@@ -1594,23 +1568,20 @@
     <string name="token_combine_explainer">हर %1$s कॉइन में %2$s रहता है। इन्हें एक कॉइन में मिलाने पर बचा KAS, नेटवर्क शुल्क घटाकर, साधारण KAS के रूप में इस पते पर लौट आता है। आपका %3$s उतना ही रहता है।</string>
     <string name="token_combine_limit">एक बार में %1$d कॉइन तक मिलते हैं। बाकी के लिए फिर से मिलाएँ।</string>
     <string name="token_combined">मिलाया गया</string>
-    <string name="token_couldnt_check">अभी %1$@ जाँच नहीं पाए: %2$@ फिर कोशिश करने के लिए नीचे खींचें।</string>
-    <string name="token_discover_addresses">kUSDT पते खोजें</string>
-    <string name="token_discover_addresses_subtitle">kUSDT रखने वाले आपके पते खोजता है।</string>
+    <string name="token_couldnt_check">अभी %1$s जाँच नहीं पाए: %2$s फिर कोशिश करने के लिए नीचे खींचें।</string>
     <string name="token_every_coin_goes_to_recipient">हर %1$s कॉइन में %2$s होता है। यह KAS %3$s के साथ प्राप्तकर्ता तक जाता है, इसलिए खोता नहीं।</string>
     <string name="token_every_coin_holds_kas">हर kUSDT कॉइन में 1.5 KAS होता है। जब आप kUSDT भेजते हैं, तो यह उसके साथ जाता है।</string>
     <string name="token_fee">शुल्क %1$s</string>
     <string name="token_fee_from_token_kas">इस पते पर KAS नहीं था, इसलिए नेटवर्क शुल्क kUSDT के साथ जाने वाले KAS से लिया गया।</string>
     <string name="token_fee_same_address_note">शुल्क का KAS उसी पते से जाता है, इसलिए यह भेजना उसे आपके दूसरे पतों से नहीं जोड़ता।</string>
-    <string name="token_found_addresses">%2$@ वाले %1$d पते मिले।</string>
+    <string name="token_found_addresses">%2$s वाले %1$d पते मिले।</string>
     <string name="token_fund_hint">चुनें कि KAS आपके किस पते से आए, ऊपर स्वाइप करें, और आप यहीं वापस आ जाएँगे।</string>
-    <string name="token_generate_new_address_subtitle">इस सूची में आपका एक बिल्कुल नया साधारण पता जोड़ता है।</string>
     <string name="token_goes_with_it">साथ जाता है</string>
     <string name="token_held_on">कहाँ रखा है</string>
     <string name="token_held_with_it">साथ में %1$s रखा</string>
     <string name="token_hidden_count">%1$d छिपे हैं: फिर भी कुल में गिने जाते हैं।</string>
     <string name="token_hide_address_subtitle">इसे इस सूची से हटाता है। %1$s पतों की दृश्यता में फिर चालू करें।</string>
-    <string name="token_hide_all_message">%1$@ प्रबंधित करें सिर्फ़ आपके चैटिंग पते से फिर शुरू होगा। कुछ नहीं खोता: कोई भी पता यहाँ वापस लाएँ, और उसका %2$@ आपके कुल में गिना जाता रहेगा।</string>
+    <string name="token_hide_all_message">%1$s प्रबंधित करें सिर्फ़ आपके चैटिंग पते से फिर शुरू होगा। कुछ नहीं खोता: कोई भी पता यहाँ वापस लाएँ, और उसका %2$s आपके कुल में गिना जाता रहेगा।</string>
     <string name="token_history_from_now_on">अब से इस फ़ोन पर भेजना, पाना और मिलाना यहाँ दिखेगा।</string>
     <string name="token_history_title">%1$s इतिहास</string>
     <string name="token_kas_for_send">%1$s भेजने के लिए KAS</string>
@@ -1629,8 +1600,6 @@
     <string name="token_receive_no_usdt_warning">इस पते पर Ethereum, BNB Chain या किसी एक्सचेंज से USDT न भेजें: वह खो जाएगा। पहले Trestly पर Kaspa में ब्रिज करें।</string>
     <string name="token_receive_only">यहाँ सिर्फ़ Kaspa पर %1$s या KAS भेजा जा सकता है।</string>
     <string name="token_receive_title">%1$s प्राप्त करें</string>
-    <string name="token_rename_label_placeholder">लेबल</string>
-    <string name="token_rename_message">इसे पहचानने में मदद के लिए इस पते को एक लेबल दें।</string>
     <string name="token_script_address_error">%1$s सिर्फ़ सामान्य Kaspa पते पर जा सकता है, क्वांटम-सुरक्षित या किसी अन्य स्क्रिप्ट पते पर नहीं।</string>
     <string name="token_send_title">%1$s भेजें</string>
     <string name="token_send_to_chatting_subtitle">इस पते से kUSDT आपके चैट पते पर भेजता है।</string>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">افزودن اتاق</string>
+    <string name="roomsoptin_indexer_rooms_footer">اتاق‌هایی که ایندکسر نگه می‌دارد: تاریخچه‌شان ذخیره می‌شود و حتی وقتی K بسته است می‌توانند به شما اعلان بدهند.</string>
+    <string name="roomsoptin_other_languages">زبان‌های دیگر</string>
+    <string name="roomsoptin_create_title">اتاقی که می‌سازید چطور کار می‌کند</string>
+    <string name="roomsoptin_create_point_name">هر کس همان نام را بنویسد وارد همان اتاق می‌شود. مالک و دعوت‌نامه ندارد.</string>
+    <string name="roomsoptin_create_point_history">هیچ ایندکسری تاریخچه‌اش را نگه نمی‌دارد. K وقتی اتاق باز است آن را از شبکه کسپا می‌خواند و تا ۳ روز روی گوشی شما نگه می‌دارد.</string>
+    <string name="roomsoptin_create_point_bell">وقتی K بسته است اعلانی نیست. با زنگ روشن، K فقط وقتی باز است اعلان می‌دهد.</string>
+    <string name="roomsoptin_create_point_public">هر چه آنجا گفته شود عمومی است: هر کسی می‌تواند آن را در شبکه کسپا بخواند.</string>
+    <string name="roomsoptin_create_room">ساخت اتاق</string>
+    <string name="roomsoptin_name_your_room">برای اتاقتان نام بگذارید</string>
+    <string name="roomsoptin_empty_title">هنوز گفتگوی عمومی ندارید</string>
+    <string name="roomsoptin_empty_body">اتاق‌هایی را که ایندکسر نگه می‌دارد، مثل #kaspa، اضافه کنید یا اتاق خودتان را بسازید. چیزی بدون انتخاب شما اضافه نمی‌شود.</string>
+    <string name="roomsoptin_removed_toast">#%1$s حذف شد. هر وقت خواستید از افزودن اتاق دوباره اضافه‌اش کنید.</string>
+    <string name="roomsoptin_bulk_delete_message">اتاق‌هایی که ایندکسر نگه می‌دارد را می‌توان از افزودن اتاق دوباره اضافه کرد. اتاق‌هایی که ساخته‌اید با پیام‌هایشان از این دستگاه حذف می‌شوند.</string>
+    <string name="roomsoptin_not_in_list_add">این اتاق در گفتگوهای عمومی شما نیست. اضافه شود؟</string>
+    <string name="roomsoptin_room_info_curated">اتاقی که ایندکسر نگه می‌دارد. شما آن را اضافه کرده‌اید و هر کسی در K می‌تواند در آن پست بگذارد.</string>
+</resources>

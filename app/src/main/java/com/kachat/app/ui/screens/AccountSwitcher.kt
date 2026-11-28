@@ -20,7 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material3.Icon
@@ -193,12 +193,13 @@ internal fun accountsCurrentFirst(accounts: List<WalletManager.Account>, current
 }
 
 /**
- * The account chip beside Profile's title (iOS 8cb4c88e `ProfileAccountChip`): your picture and
- * your username (or your short address), in glass; a tap opens [AccountSwitcherSheet].
+ * The account switcher at Profile's top left (iOS 824a30bb `ProfileAccountChip`, owner
+ * 2026-11-26): your picture with a switch symbol, in glass (it was a chip with your username
+ * beside the title); a tap opens [AccountSwitcherSheet]. TalkBack reads your username or short
+ * address.
  */
 @Composable
 fun ProfileAccountChip(address: String) {
-    val colors = LocalAppColors.current
     val haptic = com.kachat.app.util.rememberHaptics()
     var showSwitcher by remember { mutableStateOf(false) }
     // re-read when a name lands
@@ -216,24 +217,17 @@ fun ProfileAccountChip(address: String) {
                 showSwitcher = true
             }
             .semantics(mergeDescendants = true) { contentDescription = label }
-            .padding(start = 5.dp, end = 12.dp, top = 5.dp, bottom = 5.dp),
+            .padding(start = 4.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        ContactAvatar(imageUrl = null, fallbackText = label, size = 24.dp, address = address.takeIf { it.isNotEmpty() })
-        Text(
-            label,
-            color = colors.textPrimary,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        ContactAvatar(imageUrl = null, fallbackText = label, size = 26.dp, address = address.takeIf { it.isNotEmpty() })
+        // iOS's arrow.triangle.2.circlepath, footnote bold, in the accent colour
         Icon(
-            Icons.Filled.KeyboardArrowDown,
+            Icons.Filled.Sync,
             contentDescription = null,
-            tint = colors.textSecondary,
-            modifier = Modifier.size(14.dp),
+            tint = KaspaTeal,
+            modifier = Modifier.size(16.dp),
         )
     }
     if (showSwitcher) {
@@ -242,36 +236,35 @@ fun ProfileAccountChip(address: String) {
 }
 
 /**
- * Profile's top-left Share button (iOS 8cb4c88e: swapped with the account chip): the icon and the
- * word both, on glass; TalkBack reads "Share Profile".
+ * Share Profile beside Profile's title (iOS 824a30bb `ProfileShareChip`, owner 2026-11-26), in
+ * the same glass as the switcher: the share icon and "Share Profile".
  */
 @Composable
-fun ProfileShareToolbarButton(onClick: () -> Unit) {
+fun ProfileShareChip(onClick: () -> Unit) {
+    val colors = LocalAppColors.current
     val haptic = com.kachat.app.util.rememberHaptics()
-    val description = stringResource(R.string.profile_share_profile)
-    ToolbarGlassGroup {
-        Row(
-            modifier = Modifier
-                .heightIn(min = 44.dp)
-                .clip(CircleShape)
-                .clickable(role = Role.Button) {
-                    haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
-                    onClick()
-                }
-                .semantics(mergeDescendants = true) { contentDescription = description }
-                .padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-        ) {
-            Icon(Icons.Outlined.IosShare, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(17.dp))
-            Text(
-                stringResource(R.string.share),
-                color = KaspaTeal,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-            )
-        }
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .toolbarGlass()
+            .clickable(role = Role.Button) {
+                haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                onClick()
+            }
+            .semantics(mergeDescendants = true) {}
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(Icons.Outlined.IosShare, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(17.dp))
+        Text(
+            stringResource(R.string.profile_share_profile),
+            color = colors.textPrimary,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

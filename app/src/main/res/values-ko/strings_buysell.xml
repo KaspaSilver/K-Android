@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">구매</string>
+    <string name="buysell_sell">판매</string>
+    <string name="buysell_history">구매/판매 내역</string>
+    <string name="buysell_buy_kaspa">Kaspa 구매</string>
+    <string name="buysell_sell_kaspa">Kaspa 판매</string>
+    <string name="buysell_buy_with_crypto">암호화폐로 Kaspa 구매</string>
+    <string name="buysell_buy_with_crypto_sub">kUSDT나 비트코인 같은 다른 코인으로 결제하세요.</string>
+    <string name="buysell_buy_with_debit_card">직불카드로 Kaspa 구매</string>
+    <string name="buysell_debit_card_sub">카드로 결제하세요. kUSDT로 받은 뒤 그것으로 Kaspa를 삽니다.</string>
+    <string name="buysell_pay_with_question">무엇으로 결제하시겠어요?</string>
+    <string name="buysell_sell_for_question">Kaspa 대신 무엇을 받으시겠어요?</string>
+    <string name="buysell_sell_kaspa_for">%1$s 받고 Kaspa 판매</string>
+    <string name="buysell_buy_kaspa_with">%1$s(으)로 Kaspa 구매</string>
+    <string name="buysell_on_networks">%2$d개 네트워크의 %1$s</string>
+    <string name="buysell_you_pay">지불할 금액</string>
+    <string name="buysell_where_land">Kaspa를 어디로 받으시겠어요?</string>
+    <string name="buysell_kusdt_one_address">kUSDT는 한 주소에서 결제되고, Kaspa는 같은 주소로 들어옵니다.</string>
+    <string name="buysell_fresh_note">한 번도 쓰지 않은 새 주소라서 이 구매가 사용자 이름과 채팅과 분리됩니다.</string>
+    <string name="buysell_send_payment">결제 보내기</string>
+    <string name="buysell_send_amount_coin">%1$s %2$s 보내기</string>
+    <string name="buysell_to_buy_kaspa">Kaspa를 사려면</string>
+    <string name="buysell_to_sell_for">%1$s 받고 팔려면</string>
+    <string name="buysell_copy_amount">금액 복사</string>
+    <string name="buysell_amount_copied">금액을 복사했습니다</string>
+    <string name="buysell_send_kas_from_k">K에서 KAS 보내기</string>
+    <string name="buysell_transaction_id">거래 ID</string>
+    <string name="buysell_copy_id">ID 복사</string>
+    <string name="buysell_you_get_about">약 %1$s %2$s을(를) 받으며, %3$s(으)로 보내집니다.</string>
+    <string name="buysell_payment_received">결제를 받았습니다</string>
+    <string name="buysell_waiting_confirm">확인을 기다리는 중입니다.</string>
+    <string name="buysell_converting">ChangeNOW가 코인을 변환하고 있습니다.</string>
+    <string name="buysell_sending_your">%1$s 보내는 중</string>
+    <string name="buysell_almost_done">거의 완료되었습니다.</string>
+    <string name="buysell_failed_detail">ChangeNOW가 이 주문을 완료하지 못했습니다. ChangeNOW에서 확인하세요.</string>
+    <string name="buysell_refunded_detail">ChangeNOW가 코인을 돌려보냈습니다.</string>
+    <string name="buysell_expired_detail">제시간에 입금되지 않았습니다. 새 주문을 시작하세요.</string>
+    <string name="buysell_verifying_detail">ChangeNOW가 이 주문을 확인하고 있습니다.</string>
+    <string name="buysell_waiting_payment">결제 대기 중</string>
+    <string name="buysell_waiting_payment_detail">위 금액을 보내세요. 이 화면은 자동으로 업데이트됩니다.</string>
+    <string name="buysell_purchase_complete">구매 완료</string>
+    <string name="buysell_sale_complete">판매 완료</string>
+    <string name="buysell_you_paid">%1$s %2$s을(를) 결제했습니다</string>
+    <string name="buysell_you_got_about">약 %1$s %2$s을(를) 받았습니다</string>
+    <string name="buysell_added_to_portfolio">포트폴리오에 추가됨</string>
+    <string name="buysell_order_sent">주문 전송됨</string>
+</resources>

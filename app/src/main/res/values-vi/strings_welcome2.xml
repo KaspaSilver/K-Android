@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K cho phep ban gui va nhan tin nhan truc tiep tren mang luoi Kaspa. Can co Kaspa de tra phi khi gui tin nhan cua ban. Phi ban tra se den tay cac thợ dao bao mat mang luoi. 5 Kaspa cho phép bạn gửi khoảng 2.500 tin nhắn.</string>
+    <string name="welcome2_get_username">Lấy tên người dùng</string>
+    <string name="welcome2_get_username_caption">Đăng ký tên người dùng, như @alice, để mọi người tìm và nhắn cho bạn mà không cần địa chỉ dài. Lấy tại Kaspa Hub &gt; Tên người dùng.</string>
+    <string name="welcome2_share_title">Chia sẻ địa chỉ trò chuyện</string>
+    <string name="welcome2_share_body">Gửi cho ai đó để họ có thể tìm và nhắn tin cho bạn trên K.</string>
+</resources>

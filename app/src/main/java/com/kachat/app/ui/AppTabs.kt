@@ -168,19 +168,80 @@ object DockLayout {
 
 /**
  * Which Hub section is open (iOS `HubRouter`). Shared, so a link or a notification for a tab that
- * lives in the Hub can open it there. Tapping the Kaspa Hub tab again goes back to the grid.
+ * lives in the Hub can open it there. Reset at sign-out and on an account switch ([reset]).
  */
 object HubRouter {
     private val _openSection = MutableStateFlow<AppTab?>(null)
     val openSection: StateFlow<AppTab?> = _openSection.asStateFlow()
 
+    /** Bumped when the remembered section is forgotten for being left too long: the Hub drops
+     *  its kept-alive sections too, so the next one picked starts fresh (iOS `forgetCount`). */
+    private val _forgetCount = MutableStateFlow(0)
+    val forgetCount: StateFlow<Int> = _forgetCount.asStateFlow()
+
+    /** When you left the Hub's tab for another (null while you're on it), elapsedRealtime ms. */
+    private var leftAt: Long? = null
+
+    /** How long Kaspa Hub remembers the section you left (iOS `rememberFor`, owner 2026-11-27):
+     *  after a minute on other tabs, Kaspa Hub's first tap is the menu again. */
+    const val REMEMBER_FOR_MS = 60_000L
+
+    /** The clock, replaceable in tests. */
+    internal var now: () -> Long = { android.os.SystemClock.elapsedRealtime() }
+
+    /** The Kaspa Hub tab is the one showing (set with [noteEntered] / [noteLeft]). */
+    @Volatile var hubOnScreen: Boolean = false
+        private set
+
     fun open(tab: AppTab) {
         if (tab == AppTab.HUB) return
         _openSection.value = tab
+        // Opened while another tab shows (a link, a push): its clock starts now, so it can still
+        // be forgotten; going to the Hub clears it (iOS d88891ea, audit 2026-11-27 L15).
+        leftAt = if (hubOnScreen) null else now()
+    }
+
+    /** A sign-out or an account switch: nothing of the last account's Hub is kept (iOS
+     *  d88891ea, audit 2026-11-27 L15). The kept sections go with it ([forgetCount]). */
+    fun reset() {
+        _openSection.value = null
+        leftAt = null
+        _forgetCount.value = _forgetCount.value + 1
     }
 
     fun close() {
         _openSection.value = null
+    }
+
+    /** The Hub's tab was left for another; [noteEntered] when it's back on screen. */
+    fun noteLeft() {
+        hubOnScreen = false
+        if (_openSection.value != null && leftAt == null) leftAt = now()
+    }
+
+    fun noteEntered() {
+        hubOnScreen = true
+        leftAt = null
+    }
+
+    /** The section was left more than [REMEMBER_FOR_MS] ago. */
+    val isStale: Boolean
+        get() {
+            if (_openSection.value == null) return false
+            val left = leftAt ?: return false
+            return now() - left > REMEMBER_FOR_MS
+        }
+
+    /** Forgets a stale section: Kaspa Hub reverts to nothing, and its next tap opens the menu. */
+    fun forgetIfStale(): Boolean {
+        // a section with no clock while the Hub isn't showing counts as left now (audit
+        // 2026-11-27 L15): it can be forgotten a minute from here
+        if (_openSection.value != null && leftAt == null && !hubOnScreen) leftAt = now()
+        if (!isStale) return false
+        _openSection.value = null
+        leftAt = null
+        _forgetCount.value = _forgetCount.value + 1
+        return true
     }
 }
 

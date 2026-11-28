@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">此公共聊天的通知已关闭</string>
     <string name="pc_notifications_on_closed_toast">即使应用已关闭，此公共聊天有新消息时你也会收到通知</string>
     <string name="pc_notifications_on_open_toast">只要应用保持打开，此公共聊天有新消息时你就会收到通知</string>
-    <string name="pc_default_room_off_toast">#%1$s 已关闭 - 可在“编辑默认公开聊天”中重新开启</string>
     <string name="pc_delete_room_title">删除 #%1$s？</string>
     <string name="pc_delete_room_message">此设备上缓存的该房间的所有消息都会被删除。此操作无法撤销，之后重新加入时将没有历史记录。</string>
     <string name="pc_delete_room_row_subtitle">从此设备移除此房间及其消息。</string>
     <string name="pc_keep">保留</string>
     <string name="pc_keep_subtitle">保持房间不变。</string>
-    <string name="pc_new_public_chat">新公共聊天</string>
-    <string name="pc_edit_default_public_chats">编辑默认公开聊天</string>
-    <string name="pc_new_public_chat_explainer">任何加入同名频道的人都可以在其中查看和发布消息。没有所有者，也不需要邀请。</string>
     <string name="pc_join">加入</string>
     <string name="pc_channel_name_rules">频道名称须为 1-%1$d 个字符，不含空格或冒号。</string>
     <string name="pc_join_failed">加入该频道时出错。</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">举报滥用或不良内容。将打开一封附带此消息的邮件。</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">隐藏对方的帖子和房间消息，并阻止对方与你互动。</string>
-    <string name="pc_sender_view_profile_subtitle">对方的 KaPost 个人资料：帖子、回复和粉丝。</string>
+    <string name="pc_sender_view_profile_subtitle">其主页：帖子、回复和关注者。</string>
     <string name="pc_sender_send_kaspa_subtitle">向对方的地址发送 Kaspa。</string>
     <string name="pc_sender_copy_address_subtitle">复制对方的 Kaspa 地址。</string>
     <string name="pc_original_message_not_loaded">原消息未加载</string>

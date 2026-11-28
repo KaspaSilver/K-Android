@@ -197,6 +197,9 @@ object CrashRecorder {
     /** Every recorded crash, newest first. */
     fun crashFiles(context: Context): List<File> {
         val dir = File(context.filesDir, DIR)
-        return dir.listFiles { f -> f.isFile && f.name.startsWith("crash-") }?.sortedByDescending { it.name }.orEmpty()
+        // Newest first by time, not name: "crash-exit-..." sorts above "crash-2026-...", so a
+        // name sort pruned the app's own Java traces first once 5 exit records were on file.
+        return dir.listFiles { f -> f.isFile && f.name.startsWith("crash-") }
+            ?.sortedWith(compareByDescending<File> { it.lastModified() }.thenByDescending { it.name }).orEmpty()
     }
 }

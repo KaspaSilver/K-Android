@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS d88891ea, audit 2026-11-27: Swap's deposit sent from K (M1), Kasshi sign-in that couldn't connect (L1) -->
+<resources>
+    <string name="audit_money_sent_from_k">Envoyé depuis K</string>
+    <string name="audit_money_signin_failed_title">Connexion impossible</string>
+    <string name="audit_money_signin_failed_message">K n\'a pas pu utiliser cette adresse pour vous connecter. Essayez-en une autre.</string>
+</resources>

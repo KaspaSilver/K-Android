@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">任何人都能在 Kaspa 网络上看到此地址及其余额，但无法读取你的消息。只将它用于聊天和用户名。</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... 或用户名</string>
     <string name="shell54_looking_up_username">正在查找用户名...</string>
-    <string name="shell54_portfolio_add_address_footer">输入 Kaspa 地址或用户名，例如 name.kachat。该地址上每笔收到的交易都记为买入，每笔发出的交易都记为卖出，按当天的历史 KAS 价格计价。之后再次添加同一地址，只会导入自上次导入以来的交易。</string>
+    <string name="shell54_portfolio_add_address_footer">输入 Kaspa 地址或用户名，例如 @name。该地址上每笔收到的交易都记为买入，每笔发出的交易都记为卖出，按当天的历史 KAS 价格计价。之后再次添加同一地址，只会导入自上次导入以来的交易。</string>
     <string name="shell54_report_copied">举报内容已复制</string>
     <string name="shell54_report_no_mail_app">没有邮件应用能打开它。请将举报内容粘贴到发给 %1$s 的邮件中。</string>
     <string name="shell54_show_amounts">显示金额</string>

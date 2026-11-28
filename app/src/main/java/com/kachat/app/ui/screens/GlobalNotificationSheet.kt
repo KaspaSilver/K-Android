@@ -72,6 +72,12 @@ private fun routeNotificationEntry(
         }
         // A room or group @mention of you: the room at the message, or the group (iOS d089011f).
         GlobalNotificationCenterStore.SOURCE_MENTION -> openMentionEntry(entry, close)
+        // A .kachat name event: that name, on the Usernames tab, where Renew is (iOS b49a021d, as
+        // the Wallet tab's banner opens it).
+        GlobalNotificationCenterStore.SOURCE_KACHAT -> {
+            if (target.isBlank()) return
+            close { com.kachat.app.ui.screens.KachatDeepLink.pendingName.value = target }
+        }
         // A token received: that token's Manage screen, on the Wallet tab (iOS 5b7c772c TokenRoute).
         "token" -> close {
             walletViewModel.openTokenRoute(target.ifEmpty { com.kachat.app.services.tokens.WalletToken.KUSDT.id })
@@ -218,6 +224,8 @@ private fun sourceIcon(source: String): ImageVector = when (source) {
     "token" -> Icons.Outlined.MonetizationOn
     // at (iOS d089011f `.mention`)
     GlobalNotificationCenterStore.SOURCE_MENTION -> Icons.Outlined.AlternateEmail
+    // at (iOS `.kachat`)
+    GlobalNotificationCenterStore.SOURCE_KACHAT -> Icons.Outlined.AlternateEmail
     "kaposts" -> Icons.Outlined.Campaign
     "group" -> Icons.Outlined.Groups
     else -> Icons.Outlined.Sensors

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- KaPost and Kaspa Hub card links (iOS 961fc05a, 2026-11-25). -->
 <resources>
-    <string name="kp55_link_copied">Bağlantı kopyalandı</string>
     <string name="kp55_hub_link_subtitle">Bu kartı K\'de açan bir bağlantı.</string>
     <string name="kp55_open">Aç</string>
     <string name="kp55_opens_this_card">Bu kartı açar.</string>

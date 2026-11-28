@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">Geçmişi görmek için dokunun</string>
+    <string name="addrcard_quantum_protected">Kuantuma Karşı Korumalı</string>
+    <string name="addrcard_not_quantum_protected">Kuantuma Karşı Korumasız</string>
+    <string name="addrcard_new_address">Yeni Adres</string>
+    <string name="addrcard_regular_address">Normal Adres</string>
+    <string name="addrcard_regular_address_subtitle">Her şeyle çalışır: Kaspa ve kUSDT.</string>
+    <string name="addrcard_quantum_protected_address">Kuantuma Karşı Korumalı Adres</string>
+    <string name="addrcard_quantum_protected_address_subtitle">Harcama yapana kadar anahtarını gizli tutar. Yalnızca Kaspa.</string>
+    <string name="addrcard_no_kusdt_on_quantum">kUSDT, kuantuma karşı korumalı bir adrese gönderilemez veya orada alınamaz.</string>
+</resources>

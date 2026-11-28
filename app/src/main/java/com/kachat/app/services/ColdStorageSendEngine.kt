@@ -113,7 +113,7 @@ class ColdStorageSendEngine @Inject constructor(
             // earlier send from here already spent: the fetch can still list them (AND-015).
             val utxos = spendableCoins(fromAddress, api)
             if (utxos.isEmpty()) {
-                return@withLock Result.failure(IllegalStateException("No spendable UTXOs at this address"))
+                return@withLock Result.failure(IllegalStateException(tr(R.string.rel_wallet_no_spendable_at_address)))
             }
 
             val feeRateSompiPerGram = feeRateOverride?.coerceAtLeast(KaspaMass.MINIMUM_FEE_RATE_SOMPI_PER_GRAM)
@@ -183,15 +183,13 @@ class ColdStorageSendEngine @Inject constructor(
             }
             if (selection.totalSelected < selection.requiredAmount) {
                 return@withLock Result.failure(
-                    IllegalStateException("Insufficient funds: needed ${selection.requiredAmount}, have ${selection.totalSelected}")
+                    IllegalStateException(tr(R.string.rel_wallet_insufficient_plus_fee))
                 )
             }
             if (selection.selectedUtxos.size > KsptCodec.MAX_INPUTS) {
                 return@withLock Result.failure(
-                    IllegalStateException(
-                        "This send would need ${selection.selectedUtxos.size} UTXOs, but KasSigner only supports " +
-                            "${KsptCodec.MAX_INPUTS} inputs per transaction. Send a smaller amount or consolidate this address first."
-                    )
+                    // in the app's language (iOS 01f71184)
+                    IllegalStateException(tr(R.string.rel_wallet_too_many_inputs, selection.selectedUtxos.size, KsptCodec.MAX_INPUTS))
                 )
             }
 

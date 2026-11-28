@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">Tocca per vedere la cronologia</string>
+    <string name="addrcard_quantum_protected">Protetto dai quanti</string>
+    <string name="addrcard_not_quantum_protected">Non protetto dai quanti</string>
+    <string name="addrcard_new_address">Nuovo indirizzo</string>
+    <string name="addrcard_regular_address">Indirizzo normale</string>
+    <string name="addrcard_regular_address_subtitle">Funziona con tutto: Kaspa e kUSDT.</string>
+    <string name="addrcard_quantum_protected_address">Indirizzo protetto dai quanti</string>
+    <string name="addrcard_quantum_protected_address_subtitle">Tiene nascosta la sua chiave finché non spende. Solo Kaspa.</string>
+    <string name="addrcard_no_kusdt_on_quantum">Non si possono inviare o ricevere kUSDT su un indirizzo protetto dai quanti.</string>
+</resources>

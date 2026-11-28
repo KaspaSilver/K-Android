@@ -19,7 +19,6 @@
     <string name="enter_kpub">Entrer la kpub</string>
     <string name="export_csv">Exporter en CSV</string>
     <string name="fee_usd_optional">Frais (optionnel)</string>
-    <string name="generate_more_addresses">Générer plus d\'adresses</string>
     <string name="holdings">Avoirs</string>
     <string name="import_action">Importer</string>
     <string name="import_csv">Importer un CSV</string>
@@ -36,12 +35,8 @@
     <string name="kp_address_hidden_reenable">Adresse masquée. Réactivez-la dans Visibilité de l\'adresse.</string>
     <string name="kp_address_lld_64ab3">Adresse n° %1$s</string>
     <string name="kp_address_number_ready">L\'adresse n° %1$d est prête.</string>
-    <string name="kp_address_row_copy_subtitle">Copie l’adresse complète dans le presse-papiers.</string>
     <string name="kp_address_row_hide_subtitle">La retire de cette liste. Réactivez-la dans Visibilité des adresses.</string>
-    <string name="kp_address_row_qr_subtitle">En plein écran, pour la scanner avec un autre appareil.</string>
-    <string name="kp_address_row_rename_subtitle">Donne à cette adresse une étiquette à vous.</string>
     <string name="kp_address_visibility_9c9a7">Visibilité de l\'adresse</string>
-    <string name="kp_address_visibility_subtitle">Cochez en une fois chaque adresse que vous voulez dans la liste.</string>
     <string name="kp_already_added_26837">Déjà ajouté</string>
     <string name="kp_amount_and_price_08599">Montant et prix</string>
     <string name="kp_and_its_transactions_will_be_deleted_3c57d">\'%1$s\' et ses transactions seront supprimés. Cette action est irréversible.</string>
@@ -55,8 +50,6 @@
     <string name="kp_check_address_history_before_trying_again">Vérifiez l\'historique de l\'adresse avant de réessayer.</string>
     <string name="kp_trade_may_have_gone_through">L\'échange a peut-être abouti.</string>
     <string name="kp_checking_address_lld_5b84c">Vérification de l\'adresse n° %1$s</string>
-    <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">Vérifie les mille premières adresses, même s\'il y a des trous, puis continue tant qu\'il trouve quelque chose.</string>
-    <string name="kp_close_and_keep_scanning_b66cc">Fermer et continuer à scanner</string>
     <string name="kp_close_bbfa7">Fermer</string>
     <string name="kp_coin_just_spent">Vient d\'être dépensé par un envoi</string>
     <string name="kp_coin_locked_by_covenant">Verrouillée par un covenant</string>
@@ -128,7 +121,6 @@
     <string name="kp_mining_per_week">Par semaine</string>
     <string name="kp_new_portfolio_5c1c7">Nouveau portefeuille</string>
     <string name="kp_no_addresses_discovered_yet_15738">Aucune adresse découverte pour l\'instant.</string>
-    <string name="kp_no_used_addresses_yet">Aucune adresse utilisée pour l\'instant</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Pas encore assez d\'historique - revenez après quelques jours d\'activité.</string>
     <string name="kp_note_optional_4e395">Note (facultatif)</string>
     <string name="kp_nothing_can_change_now_this_is_8bf3a">Plus rien ne peut changer : voici la transaction signée par KasSigner.</string>
@@ -216,7 +208,6 @@
     <string name="kp_you_receive">Vous recevez</string>
     <string name="kp_you_receive_about">Vous recevez environ</string>
     <string name="kp_you_saw">Vous aviez vu</string>
-    <string name="kpub">kpub</string>
     <string name="kpub_2">kpub...</string>
     <string name="name_this_address">Nommer cette adresse</string>
     <string name="no_app_to_open_link">Aucune app de ce téléphone ne peut ouvrir le lien</string>
@@ -271,22 +262,17 @@
     <string name="total_invested">Total investi</string>
     <string name="total_p_l">P&amp;L total</string>
     <string name="transactions">Transactions</string>
-    <string name="kp_changes_the_name_shown_for_this_account_kc">Modifie le nom affiché pour ce compte.</string>
     <string name="kp_compound_utxos_description_kc">Regroupe tous les UTXO de cette adresse en un seul, pour réduire le nombre d\'entrées dont un futur envoi a besoin.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">Vos autres apps avec les mêmes mots affichent les mêmes kUSDT et peuvent les envoyer. L’échange se fait ici.</string>
     <string name="kp_kusdt_guide_swapping_detail_kc">Pour échanger des KAS et des kUSDT, ou ajouter au pool, touchez Échanger des stablecoins dans l\'onglet Portefeuille et choisissez kUSDT. Le site de Trestly s\'ouvre dans K, connecté à l\'adresse choisie.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">D\'autres stablecoins apparaîtront ici quand K les ajoutera.</string>
-    <string name="kp_notifies_you_when_this_account_kc">Vous avertit quand ce compte reçoit des Kaspa.</string>
     <string name="kp_on_trestly_inside_kachat_kc">Sur Trestly, dans K</string>
-    <string name="kp_puts_the_extended_public_key_kc">Copie la clé publique étendue dans le presse-papiers.</string>
     <string name="kp_reveals_next_unused_address_account_kc">Affiche la prochaine adresse inutilisée de ce compte.</string>
     <string name="kp_scan_it_into_another_device_kc">Scannez-le sur un autre appareil pour y suivre ce compte.</string>
     <string name="kp_scan_this_on_your_kassigner_kc">Scannez ceci sur votre KasSigner</string>
     <string name="kp_selected_one_utxo_kc">Sélection : %1$s (1 UTXO)</string>
     <string name="kp_selected_utxos_kc">Sélection : %1$s (%2$d UTXO)</string>
-    <string name="kp_show_kpub_qr_kc">Afficher le QR de la kpub</string>
     <string name="kp_something_went_wrong_kc">Un probleme est survenu</string>
-    <string name="kp_stops_notifying_when_this_account_kc">N\'avertit plus quand ce compte reçoit des Kaspa. Les autres comptes gardent les leurs.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">Cela le retire uniquement de la liste de surveillance de K. Cela n\'a aucun effet sur l\'appareil KasSigner ni sur les fonds qu\'il detient.</string>
     <string name="kp_token_empty_state_swap_kc">Recevez-en sur une nouvelle adresse, ou achetez-en avec Échanger des stablecoins dans l\'onglet Portefeuille.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly demande à K de :</string>
@@ -296,8 +282,5 @@
     <string name="kp_trestly_site_kc">Site Trestly</string>
     <string name="kp_trestly_site_url_kc">URL du site Trestly</string>
     <string name="kp_trestly_swap_note_kc">Construit et vérifié par le propre code de Trestly dans K. Si le pool bouge avant, il recote : il ne continue qu\'à ce prix ou mieux, vous redemande pour moins, et ne descend jamais sous le minimum du site.</string>
-    <string name="kp_turn_off_receive_notifications_kc">Désactiver les notifications de réception</string>
-    <string name="kp_turn_on_receive_notifications_kc">Activer les notifications de réception</string>
-    <string name="cold_copy_kpub_reveals_all_addresses">Copie le kpub de ce compte dans le presse-papiers. Il révèle toutes ses adresses.</string>
     <string name="cold_not_a_valid_kpub">Ce n\'est pas un kpub valide</string>
 </resources>

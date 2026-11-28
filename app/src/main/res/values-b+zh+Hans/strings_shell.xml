@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">网站</string>
     <string name="shell_kaspa_websites">Kaspa 网站</string>
     <string name="shell_terms_of_use">使用条款</string>
-    <string name="shell_message_indexer_footer">KaPost、公共聊天和国际象棋也从此索引器读取。</string>
+    <string name="shell_message_indexer_footer">帖子、公共聊天和国际象棋也从此索引器读取。</string>
 </resources>

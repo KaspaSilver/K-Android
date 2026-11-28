@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">Bu adresi ve bakiyesini Kaspa ağında herkes görebilir ama mesajlarını kimse okuyamaz. Yalnızca sohbet ve kullanıcı adları için kullan.</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... veya kullanıcı adı</string>
     <string name="shell54_looking_up_username">Kullanıcı adı aranıyor...</string>
-    <string name="shell54_portfolio_add_address_footer">Bir Kaspa adresi veya name.kachat gibi bir kullanıcı adı gir. Bu adrese gelen her işlem alım, gönderilen her işlem satım olur ve o günün geçmiş KAS fiyatıyla fiyatlanır. Aynı adresi daha sonra tekrar eklemek yalnızca son içe aktarmadan bu yana bulunan işlemleri içe aktarır.</string>
+    <string name="shell54_portfolio_add_address_footer">Bir Kaspa adresi veya @name gibi bir kullanıcı adı gir. Bu adrese gelen her işlem alım, gönderilen her işlem satım olur ve o günün geçmiş KAS fiyatıyla fiyatlanır. Aynı adresi daha sonra tekrar eklemek yalnızca son içe aktarmadan bu yana bulunan işlemleri içe aktarır.</string>
     <string name="shell54_report_copied">Bildirim Kopyalandı</string>
     <string name="shell54_report_no_mail_app">Hiçbir e-posta uygulaması açamadı. Bildirimi %1$s adresine bir e-postaya yapıştır.</string>
     <string name="shell54_show_amounts">Tutarları göster</string>

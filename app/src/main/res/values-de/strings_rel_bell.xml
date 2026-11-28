@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification and banner previews (iOS 01f71184, audit 2026-11-27 R7). -->
+<resources>
+    <string name="rel_bell_reacted_to_your_message">Hat mit %1$s auf deine Nachricht reagiert</string>
+    <string name="rel_bell_removed_reaction">Hat die Reaktion %1$s entfernt</string>
+    <string name="rel_bell_replied_to_message">Hat auf eine Nachricht geantwortet</string>
+    <string name="rel_bell_edited_message">Hat eine Nachricht bearbeitet</string>
+    <string name="rel_bell_reacted">Hat mit %1$s reagiert</string>
+</resources>

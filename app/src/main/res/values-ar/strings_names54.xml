@@ -5,9 +5,8 @@
     <string name="names54_no_username_found">لم يُعثر على اسم المستخدم</string>
     <string name="names54_use_their_username">استخدام اسم المستخدم الخاص به</string>
     <string name="names54_kaspa_address_or_username">عنوان Kaspa أو اسم مستخدم</string>
-    <string name="names54_enter_address_or_username_example">أدخل عنوان Kaspa (kaspa:...) أو اسم مستخدم (مثل alice.kachat).</string>
+    <string name="names54_enter_address_or_username_example">أدخل عنوان Kaspa (kaspa:...) أو اسم مستخدم (مثل @alice).</string>
     <string name="names54_members_footer">اختر أشخاصًا من جهات اتصالك، أو أضف أي شخص بعنوان Kaspa أو اسم مستخدم.</string>
-    <string name="names54_finds_addresses_balance_or_username">يعثر على العناوين التي بها رصيد أو اسم مستخدم.</string>
     <string name="names54_no_addresses_balance_or_username_found">لم يُعثر على عناوين بها رصيد أو اسم مستخدم.</string>
     <string name="names54_found_one_address_balance_username">تم العثور على عنوان واحد به رصيد أو اسم مستخدم.</string>
     <string name="names54_found_n_addresses_balance_username">عدد العناوين التي بها رصيد أو اسم مستخدم: %1$d.</string>

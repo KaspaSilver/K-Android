@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">Oro</string>
+    <string name="rel_wallet_silver">Plata</string>
+    <string name="rel_wallet_pair_bitcoin">Kaspa con precio en bitcoin</string>
+    <string name="rel_wallet_pair_voo">Participaciones del ETF S&amp;P 500 de Vanguard</string>
+    <string name="rel_wallet_pair_gold">Onzas troy de oro</string>
+    <string name="rel_wallet_pair_silver">Onzas troy de plata</string>
+    <string name="rel_wallet_cold_storage_n">Almacenamiento en frío %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">No hay UTXOs para gastar en esta dirección</string>
+    <string name="rel_wallet_insufficient_plus_fee">Fondos insuficientes para cubrir esa cantidad más la comisión de red</string>
+    <string name="rel_wallet_too_many_inputs">Este envío necesitaría %1$d UTXOs, pero KasSigner solo admite %2$d entradas por transacción. Envía una cantidad menor o consolida antes esta dirección.</string>
+    <string name="rel_wallet_cancelled">Cancelado.</string>
+    <string name="rel_wallet_err_no_internet">No hay conexión a internet. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="rel_wallet_err_timed_out">Se agotó el tiempo de conexión. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="rel_wallet_err_cant_reach">No se pudo contactar con el servidor. Comprueba la dirección en Ajustes y tu conexión.</string>
+    <string name="rel_wallet_err_secure">No se pudo establecer una conexión segura con el servidor.</string>
+    <string name="rel_wallet_err_network">Se produjo un error de red. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="rel_wallet_err_unreadable">El servidor envió algo que la app no pudo leer. Inténtalo de nuevo; si sigue pasando, actualiza la app.</string>
+    <string name="rel_wallet_err_node">El nodo de Kaspa devolvió un error. La app probará otro nodo; inténtalo de nuevo en un momento.</string>
+    <string name="rel_wallet_err_unknown">Se produjo un error desconocido.</string>
+    <string name="rel_wallet_err_no_spendable_available">No hay UTXOs disponibles para gastar</string>
+    <string name="rel_wallet_err_no_private_key">No se pudo obtener la clave privada</string>
+    <string name="rel_wallet_err_insufficient_payment">Fondos insuficientes para el pago</string>
+    <string name="rel_wallet_err_insufficient_after_fee">Fondos insuficientes tras la comisión</string>
+    <string name="rel_wallet_err_insufficient_handshake">Fondos insuficientes para el handshake</string>
+    <string name="rel_wallet_err_insufficient_self_stash">Fondos insuficientes para la comisión de autoguardado</string>
+    <string name="rel_wallet_err_group_secrets">Faltan las claves del grupo: prueba a volver a unirte a este grupo.</string>
+    <string name="rel_wallet_err_admin_secrets">Faltan las claves de administrador del grupo.</string>
+</resources>

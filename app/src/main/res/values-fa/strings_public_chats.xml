@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">اعلان‌ها برای این گفتگوی عمومی خاموش است</string>
     <string name="pc_notifications_on_closed_toast">برای پیام‌های جدید این گفتگوی عمومی اعلان می‌گیرید، حتی وقتی برنامه بسته است</string>
     <string name="pc_notifications_on_open_toast">تا وقتی برنامه باز بماند، برای پیام‌های جدید این گفتگوی عمومی اعلان می‌گیرید</string>
-    <string name="pc_default_room_off_toast">#%1$s خاموش است - از ویرایش گفتگوهای عمومی پیش‌فرض دوباره روشنش کنید</string>
     <string name="pc_delete_room_title">#%1$s حذف شود؟</string>
     <string name="pc_delete_room_message">همه پیام‌های ذخیره‌شده برای این اتاق روی این دستگاه حذف می‌شوند. این کار قابل بازگشت نیست - پیوستن دوباره بعداً بدون هیچ تاریخچه‌ای شروع می‌شود.</string>
     <string name="pc_delete_room_row_subtitle">این اتاق و پیام‌هایش را از این دستگاه حذف می‌کند.</string>
     <string name="pc_keep">نگه دار</string>
     <string name="pc_keep_subtitle">اتاق را همان‌طور که هست بگذارید.</string>
-    <string name="pc_new_public_chat">گفتگوی عمومی جدید</string>
-    <string name="pc_edit_default_public_chats">ویرایش گفتگوهای عمومی پیش‌فرض</string>
-    <string name="pc_new_public_chat_explainer">هر کسی به همان نام کانال بپیوندد می‌تواند پیام‌ها را آنجا ببیند و ارسال کند - مالک و دعوتی در کار نیست.</string>
     <string name="pc_join">پیوستن</string>
     <string name="pc_channel_name_rules">نام کانال باید ۱ تا %1$d نویسه، بدون فاصله یا دونقطه باشد.</string>
     <string name="pc_join_failed">هنگام پیوستن به آن کانال مشکلی پیش آمد.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">محتوای توهین‌آمیز یا نامناسب را گزارش دهید. یک ایمیل با این پیام پیوست‌شده باز می‌کند.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">پست‌ها و پیام‌های اتاق آن‌ها را پنهان می‌کند و جلوی تعامل‌شان با شما را می‌گیرد.</string>
-    <string name="pc_sender_view_profile_subtitle">نمایه KaPost آن‌ها: پست‌ها، پاسخ‌ها و دنبال‌کنندگان.</string>
+    <string name="pc_sender_view_profile_subtitle">نمایه او: پست‌ها، پاسخ‌ها و دنبال‌کنندگان.</string>
     <string name="pc_sender_send_kaspa_subtitle">Kaspa را به آدرس آن‌ها بفرستید.</string>
     <string name="pc_sender_copy_address_subtitle">آدرس Kaspa او را کپی کنید.</string>
     <string name="pc_original_message_not_loaded">پیام اصلی بارگیری نشده است</string>

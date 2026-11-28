@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">Kaspaを購入</string>
+    <string name="buykaspa_swap_to_kaspa">Kaspaにスワップ</string>
+    <string name="buykaspa_waiting_payment">お支払いを待っています</string>
+    <string name="buykaspa_paid">支払い済み。USDCを送金中です。</string>
+    <string name="buykaspa_bridging">kUSDTとしてKaspaへブリッジ中(通常約20分)</string>
+    <string name="buykaspa_arrived">%1$sが届きました。Kaspaにスワップしましょう。</string>
+    <string name="buykaspa_sign_again">開いてブリッジにもう一度署名</string>
+    <string name="buykaspa_rejected">Stripeがこの購入を拒否しました。請求はありません。</string>
+    <string name="buykaspa_refunded">ブリッジを実行できなかったため、USDCは返却されました。開いてもう一度ブリッジしてください。</string>
+    <string name="buykaspa_expired">未払いです。請求はありません。</string>
+    <string name="buykaspa_where_land">kUSDTをどこに受け取りますか?</string>
+    <string name="buykaspa_needs_words">カードで購入するには、このアカウントのリカバリーワードがこのスマートフォンに必要です。</string>
+    <string name="buykaspa_stripe_note">Stripeは米国とEUの購入者に販売しています。カード手数料とネットワーク手数料は、支払う前に次のページに表示されます。</string>
+    <string name="buykaspa_lands_on_format">kUSDTの受け取り先: %1$s</string>
+    <string name="buykaspa_can_close">閉じても大丈夫です。Kはウォレットタブで注文を追い続けます。</string>
+    <string name="buykaspa_approve_bridge">ブリッジを承認</string>
+    <string name="buykaspa_sign_explainer">1回の署名で、TrestlyのブリッジがKのEthereumアドレスからこの金額までのUSDCを受け取り、kUSDTとしてKaspaに入金できます。ETHは不要で、ウォレットからKaspaは出ていきません。</string>
+    <string name="buykaspa_up_to">上限</string>
+    <string name="buykaspa_lands_on">kUSDTの受け取り先</string>
+    <string name="buykaspa_ends">期限</string>
+    <string name="buykaspa_bridge">ブリッジ</string>
+    <string name="buykaspa_eth_note">KのEthereumアドレスは、どのEthereumウォレットでも同じように、このアカウントのワードから作られます。</string>
+    <string name="buykaspa_fresh_note">一度も使われていない新しいアドレス。この購入をユーザー名やチャットと切り離せます。</string>
+    <string name="buykaspa_chatting_note">みんながあなたにメッセージや支払いを送るアドレスです。</string>
+    <string name="buykaspa_fresh_address">新しいアドレス</string>
+    <string name="buykaspa_reload">再読み込み</string>
+</resources>

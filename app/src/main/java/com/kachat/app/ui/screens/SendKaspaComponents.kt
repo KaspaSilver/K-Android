@@ -319,18 +319,9 @@ private fun SendRecipientStatusLine(
             Icon(Icons.Default.Cancel, contentDescription = null, tint = colors.danger, modifier = Modifier.size(14.dp))
             Text(lookupError, color = colors.danger, fontSize = 12.sp)
         }
-        resolvedAddress != null -> Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = colors.success, modifier = Modifier.size(14.dp))
-                Text(stringResource(R.string.resolved_name, resolvedName ?: ""), color = colors.success, fontSize = 12.sp)
-            }
-            MiddleEllipsisText(
-                resolvedAddress,
-                color = colors.textSecondary,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-            )
-        }
+        // The card above already shows the name and its address: a "Resolved: name" line under
+        // it said the name twice (iOS 01f71184, release audit).
+        resolvedAddress != null -> Unit
         else -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             val tint = if (isValidAddress) colors.success else colors.danger
             Icon(
@@ -953,9 +944,20 @@ fun OwnAddressList(
         loaded = true
     }
     val entries = remember(allEntries, excludeQuantum) {
-        allEntries.filter { !it.hidden || it.balanceSompi > 0 }
-            .filter { !excludeQuantum || !it.isQuantum }
-            .sortedBy { it.index }
+        ownAddressListOrder(allEntries.filter { !it.hidden || it.balanceSompi > 0 }
+            .filter { !excludeQuantum || !it.isQuantum }) { it.isQuantum to it.index }
+    }
+    // Each quantum address's tag, worked out once when the list loads, from this phone's spend
+    // marks as Manage Addresses first shows them (iOS 01f71184, release audit: the quantum #0
+    // showed beside the regular #0 with nothing to tell them apart).
+    val quantumTags = remember(entries) {
+        entries.filter { it.isQuantum }.associate {
+            it.address to QuantumProtection.of(
+                isQuantum = true,
+                spent = walletViewModel.isQuantumAddressSpentLocally(it.address),
+                balanceSompi = it.balanceSompi,
+            )
+        }
     }
     /** Used / unused per address; missing while its lookup is out (or failed). */
     val used = remember { androidx.compose.runtime.mutableStateMapOf<String, Boolean>() }
@@ -965,14 +967,30 @@ fun OwnAddressList(
     }
     LaunchedEffect(items) {
         val toProbe = mutableListOf<String>()
+        val known = HashMap<String, Boolean>()
         for ((address, balance) in items) {
             if (used[address] == true) continue
             if (balance > 0L) {
-                used[address] = true
+                known[address] = true
                 continue
             }
             val cached = walletViewModel.cachedSpendingAddressUsedState(address)
-            if (cached != null) used[address] = cached else toProbe.add(address)
+            if (cached != null) known[address] = cached else toProbe.add(address)
+        }
+        known.forEach { (address, value) -> if (used[address] != value) used[address] = value }
+        if (toProbe.isEmpty()) return@LaunchedEffect
+        // Let the step's slide finish before the answers start redrawing the list (iOS 01f71184).
+        delay(350)
+        // Answers are written in batches, at most every 0.3 s, so the list redraws a few times
+        // rather than once per answer (iOS 01f71184, smoothness audit L2).
+        val batch = HashMap<String, Boolean>()
+        var lastFlush = System.currentTimeMillis()
+        fun flush() {
+            synchronized(batch) {
+                batch.forEach { (address, value) -> used[address] = value }
+                batch.clear()
+            }
+            lastFlush = System.currentTimeMillis()
         }
         // a few at a time, like Manage Addresses (a burst gets rate-limited)
         val gate = kotlinx.coroutines.sync.Semaphore(8)
@@ -982,13 +1000,17 @@ fun OwnAddressList(
                     gate.acquire()
                     try {
                         // a failed lookup leaves it Checking, never a guessed Unused
-                        walletViewModel.spendingAddressUsedState(address)?.let { used[address] = it }
+                        walletViewModel.spendingAddressUsedState(address)?.let { answer ->
+                            synchronized(batch) { batch[address] = answer }
+                        }
+                        if (System.currentTimeMillis() - lastFlush >= 300L) flush()
                     } finally {
                         gate.release()
                     }
                 }
             }
         }
+        flush()
     }
 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1017,6 +1039,7 @@ fun OwnAddressList(
                     address = entry.address,
                     balance = entry.balanceSompi,
                     used = used[entry.address],
+                    quantum = quantumTags[entry.address],
                     isSelected = entry.address == selected,
                     onClick = { onPick(SendSource.Spending(entry.index, entry.address, label)) },
                 )
@@ -1044,6 +1067,7 @@ private fun OwnAddressCard(
     used: Boolean?,
     isSelected: Boolean,
     onClick: () -> Unit,
+    quantum: QuantumProtection? = null,
 ) {
     val colors = LocalAppColors.current
     val haptic = com.kachat.app.util.rememberHaptics()
@@ -1075,6 +1099,7 @@ private fun OwnAddressCard(
                 )
                 OwnAddressUsedTag(used)
             }
+            if (quantum != null) QuantumProtectionTag(quantum)
             Text(
                 if (address.length > 20) "${address.take(14)}...${address.takeLast(6)}" else address,
                 color = colors.textSecondary,
@@ -1100,6 +1125,11 @@ private fun OwnAddressCard(
         )
     }
 }
+
+/** Choose an Address's order (iOS 01f71184): the regular addresses by number, then the quantum
+ *  ones by number - not #2, #8, #0. [key] gives each entry's (is quantum, index). */
+internal fun <T> ownAddressListOrder(entries: List<T>, key: (T) -> Pair<Boolean, Int>): List<T> =
+    entries.sortedWith(compareBy<T>({ if (key(it).first) 1 else 0 }, { key(it).second }))
 
 /** Used / Unused, or Checking while the lookup is out (iOS `usedTag`, 338d9f5). */
 @Composable

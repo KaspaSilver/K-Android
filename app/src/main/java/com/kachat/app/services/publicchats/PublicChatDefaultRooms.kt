@@ -71,10 +71,48 @@ object DroppedDefaultRooms {
 }
 
 /**
- * Every default room in this account's list (iOS 961fc05a `PublicChatService
- * .ensureDefaultChannelsJoined`), run as the account's rooms load and whenever the app-wide
- * indexer's list of rooms changes (iOS `IndexerTrackedRooms.didChange`: a room just added on the
- * indexer joins at once, bell off):
+ * Public Chats starts empty (iOS 824a30bb `PublicChatService.clearAutoAddedRoomsOnceIfNeeded`,
+ * owner 2026-11-26: nothing may feel added without the person's say). Pure, for tests.
+ */
+object AutoAddedRooms {
+    /**
+     * The rooms the one-time clear leaves: every joined room older builds joined for everyone
+     * ([curated]: the default and language rooms and the rooms the indexer lists now, plus the
+     * [switchedOff] ones), unless the person showed they want it - a bell they turned on or a pin
+     * in [pins]. A switched-off room goes even with a bell or pin. Rooms joined by name stay
+     * (unless the indexer lists that name now). Machinery rooms ([service]) are never touched.
+     * [joined]: each joined room's name and whether its bell is on.
+     */
+    fun toLeave(
+        joined: List<Pair<String, Boolean>>,
+        curated: Set<String>,
+        switchedOff: Set<String>,
+        pins: Set<String>,
+        service: Set<String>,
+    ): List<String> {
+        val autoAdded = curated + switchedOff
+        return joined.filter { (name, notify) ->
+            if (name !in autoAdded || name in service) return@filter false
+            val wanted = name !in switchedOff && (notify || name in pins)
+            !wanted
+        }.map { it.first }
+    }
+
+    /**
+     * Whether a join turns the room's bell on (iOS 824a30bb `joinChannel(notify:)`): a room the
+     * person adds starts with its bell ON (they chose it); a room already joined keeps the bell it
+     * has, and machinery rooms (chess, the bots, the arcade) stay silent.
+     */
+    fun bellOnJoin(name: String, alreadyJoined: Boolean, notify: Boolean): Boolean =
+        !alreadyJoined && notify && name !in FeaturedBroadcastChannels.SERVICE_CHANNELS &&
+            name !in FeaturedBroadcastChannels.HIDDEN_INDEXER_ROOMS
+}
+
+/**
+ * The account's room upkeep (iOS 961fc05a `PublicChatService.ensureDefaultChannelsJoined`), run
+ * as the account's rooms load and whenever the app-wide indexer's list of rooms changes (iOS
+ * `IndexerTrackedRooms.didChange`). Since iOS 824a30bb (owner, 2026-11-26) no room is joined for
+ * anyone: Public Chats starts empty and fills only with rooms the person adds.
  *  - an account that had a retired default room (#kachat-bugs) is moved to its replacement
  *    (#report-bugs): the bell, the pin in the Chats circles and the switched-off state carry
  *    over, and the old room is left;
@@ -82,7 +120,8 @@ object DroppedDefaultRooms {
  *  - any joined room the indexer listed (remembered per account) that it no longer lists is left,
  *    pin too, after [DroppedDefaultRooms.AUTO_GRACE_MS], even one joined by name or posted in
  *    (iOS 35b112ce); a room the indexer never listed stays;
- *  - every default room not switched off is joined (silenced, as every room starts).
+ *  - once per account, the rooms older builds joined for everyone leave ([AutoAddedRooms]),
+ *    after the one-time silencing, so a bell an old build turned on by itself doesn't count.
  */
 @Singleton
 class PublicChatDefaultRooms @Inject constructor(
@@ -96,7 +135,7 @@ class PublicChatDefaultRooms @Inject constructor(
     private val mutex = Mutex()
 
     init {
-        // A room the operator just added (or dropped) on the indexer joins (or leaves).
+        // A room the operator dropped on the indexer leaves (one just added joins nothing).
         scope.launch { IndexerTrackedRooms.changes.drop(1).collect { ensureJoined() } }
     }
 
@@ -123,8 +162,35 @@ class PublicChatDefaultRooms @Inject constructor(
                 removeRoomPin(address, name)
             }
         }
-        repository.ensureDefaultChannelsJoined(readState.state.value.hiddenCurated, curated)
+        // No room is joined for the person any more (iOS 824a30bb): Public Chats starts empty.
         silenceRoomsOnceIfNeeded()
+        clearAutoAddedRoomsOnceIfNeeded(address)
+    }
+
+    /**
+     * Once per account, on the first launch of this build (iOS 824a30bb
+     * `clearAutoAddedRoomsOnceIfNeeded`, `kachat_rooms_opt_in_v1_<wallet>`): the rooms older builds
+     * joined for everyone leave, unless their bell is on or they're pinned ([AutoAddedRooms.toLeave]).
+     * The switched-off record goes with them: there are no switches any more.
+     */
+    private suspend fun clearAutoAddedRoomsOnceIfNeeded(address: String) {
+        if (readState.roomsOptInDone()) return
+        val pins = appSettings.roomPins(address).first().toSet()
+        val joined = repository.joinedChannelsNow().map { it.channelName to it.notifyEnabled }
+        val left = AutoAddedRooms.toLeave(
+            joined = joined,
+            curated = FeaturedBroadcastChannels.CURATED_NAMES.toSet(),
+            switchedOff = readState.state.value.hiddenCurated,
+            pins = pins,
+            service = FeaturedBroadcastChannels.SERVICE_CHANNELS + FeaturedBroadcastChannels.HIDDEN_INDEXER_ROOMS,
+        )
+        for (name in left) {
+            leave(name)
+            removeRoomPin(address, name)
+        }
+        readState.updateHiddenCurated { emptySet() }
+        readState.markRoomsOptInDone()
+        if (left.isNotEmpty()) android.util.Log.i("PublicChatDefaultRooms", "Public Chats starts empty: left ${left.size} room(s) K had added")
     }
 
     /** Adds the rooms on the indexer's list now; forgets ones off it that aren't joined (iOS

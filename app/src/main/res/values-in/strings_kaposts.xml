@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">Postingan yang dimaksud draf ini tidak dapat ditemukan saat ini, jadi draf belum bisa diposting. Draf tetap ada di Draf Anda.</string>
     <string name="kaposts_likes">Suka</string>
     <string name="kaposts_no_tips_yet">Belum ada tip.</string>
-    <string name="kaposts_not_on_testnet">KaPost belum tersedia di Testnet</string>
-    <string name="kaposts_not_on_testnet_sub">Belum ada indexer KaPost untuk testnet. Matikan Testnet di Pengaturan > Koneksi untuk membaca dan memposting di mainnet.</string>
+    <string name="kaposts_not_on_testnet">Postingan belum tersedia di Testnet</string>
+    <string name="kaposts_not_on_testnet_sub">Belum ada indexer Postingan untuk testnet. Matikan Testnet di Pengaturan &gt; Pengaturan Koneksi untuk membaca dan memposting di mainnet.</string>
     <string name="kaposts_poll_days_left">%1$d hr lagi</string>
     <string name="kaposts_poll_final_results">%1$s · Hasil akhir</string>
     <string name="kaposts_poll_hours_left">%1$d jam lagi</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">Postingan ini sedang dikirim, jadi tidak dapat dibatalkan.</string>
     <string name="kaposts_scheduled_reminder_title">Postingan terjadwal</string>
     <string name="kaposts_scheduled_sending_soon">Dikirim begitu jaringan merespons</string>
-    <string name="kaposts_server_not_answering">Server KaPost tidak merespons. Menampilkan postingan tersimpan dan yang baru dari jaringan.</string>
+    <string name="kaposts_server_not_answering">Server Postingan tidak merespons. Menampilkan postingan tersimpan dan yang baru dari jaringan.</string>
     <string name="kaposts_thread_not_confirmed">Jaringan tidak mengonfirmasi sebagian utas Anda, jadi sisanya tidak dikirim. Simpan sisanya sebagai draf? Postingan pertamanya mungkin sudah terkirim, jadi periksa dulu sebelum mempostingnya lagi.</string>
     <string name="kaposts_tip_from_chatting_note">Dari Chatting Address, tip dihitung di postingan dan Anda tercantum sebagai pemberi tip.</string>
     <string name="kaposts_tip_from_private_note">Dari alamat lain, tip bersifat privat: penulis menerimanya dan melihatnya di chat kalian, tapi tidak dihitung di postingan dan tidak menyebut Anda.</string>

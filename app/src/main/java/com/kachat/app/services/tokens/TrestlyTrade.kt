@@ -48,6 +48,9 @@ class TrestlyTrade @Inject constructor(
     private val addressActivityNotifier: AddressActivityNotifier,
     private val notificationCenter: GlobalNotificationCenterStore,
     private val settings: AppSettingsRepository,
+    /** Buy/Sell History, where every kUSDT swap goes too (iOS b49a021d). Lazy: [SwapService]
+     *  needs this class itself. */
+    private val swapService: dagger.Lazy<com.kachat.app.services.SwapService>,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -57,6 +60,9 @@ class TrestlyTrade @Inject constructor(
         /** The `prepare` the person approved (the last one, after any requote). */
         val prepared: JsonObject,
         val fee: JsonElement?,
+        /** The account signed in when the trade started (its history gets it; iOS d88891ea,
+         *  audit 2026-11-27 L3). */
+        val account: String? = null,
     )
 
     /** The address's side of a request to Trestly's code (no key: that is added only on Approve). */
@@ -92,6 +98,7 @@ class TrestlyTrade @Inject constructor(
         ask: suspend (TrestlyApproval) -> Boolean,
         isClosed: () -> Boolean = { false },
     ): Done {
+        val startAccount = walletManager.activeAddressFlow.value?.lowercase()
         heldMinutes(target.address)?.let { minutes ->
             throw TrestlyProvider.ProviderError(Code.BUSY, "Your last trade from this address gave no answer and may still go through. Check the address's history. K takes trades from it again once that one shows on the network, or in about $minutes min.")
         }
@@ -202,7 +209,7 @@ class TrestlyTrade @Inject constructor(
                 // TokenWallet looks again once the pool's new coins can be listed (iOS: 4 s)
                 refreshTokensSoon()
             }
-            return Done(result, prepared, done.get("fee"))
+            return Done(result, prepared, done.get("fee"), startAccount)
         }
     }
 
@@ -270,6 +277,14 @@ class TrestlyTrade @Inject constructor(
                 units = if (bought) amountOut else amountIn, sold = !bought, fee = TrestlyApproval.number(done.fee),
             )
         }
+        // and in Buy/Sell History, with the ChangeNOW swaps (owner, 2026-11-27); on the main
+        // thread, where the Swap screen reads its history
+        scope.launch {
+            swapService.get().recordKusdtSwap(
+                txid = txid, bought = bought, amountIn = amountIn, amountOut = amountOut,
+                address = target.address, confirmed = confirmed, forAccount = done.account,
+            )
+        }
         return text
     }
 
@@ -302,7 +317,10 @@ class TrestlyTrade @Inject constructor(
     // Trades that may have gone out
 
     /** Minutes left on this address's hold, or null when it may trade: no hold, the hold ran out,
-     *  or a coin it had before is gone from the node (the earlier trade landed). iOS `heldMinutes`. */
+     *  or a coin it had before is gone from the node (the earlier trade landed). iOS `heldMinutes`.
+     *  A gone coin counts only while this run still reserves the hold's coins: then no send of K's
+     *  could have spent it. After a relaunch the reservation is gone, a send may have taken one,
+     *  and the hold lasts its ten minutes (iOS 01f71184, release audit 2026-11-27, Low). */
     suspend fun heldMinutes(address: String): Int? {
         val held = loadHolds()[address] ?: return null
         val left = held.until - System.currentTimeMillis()
@@ -310,7 +328,7 @@ class TrestlyTrade @Inject constructor(
             saveHolds(loadHolds() - address)
             return null
         }
-        if (held.outpoints.isNotEmpty()) {
+        if (held.outpoints.isNotEmpty() && allStillReserved(held.outpoints)) {
             val now = try {
                 withContext(Dispatchers.IO) { nodePoolManager.getUtxosByAddressesFromNode(listOf(address)) }
             } catch (e: CancellationException) {
@@ -338,6 +356,7 @@ class TrestlyTrade @Inject constructor(
     }
 
     private class MaybeSentHold(val until: Long, val outpoints: List<String>)
+
 
     private fun holdsPrefs() = com.kachat.app.util.AppText.context()
         .getSharedPreferences(HOLDS_PREFS, android.content.Context.MODE_PRIVATE)
@@ -387,6 +406,17 @@ class TrestlyTrade @Inject constructor(
     }
 
     companion object {
+        /** Every "txid:index" in [keys] is still held by this run's own sends ([isHeld]); an unreadable
+         *  key counts as not held. */
+        internal fun allStillReserved(
+            keys: List<String>,
+            isHeld: (String, Int) -> Boolean = UnknownOutcomeOutpoints::isHeld,
+        ): Boolean = keys.all { key ->
+            val txid = key.substringBeforeLast(':', "")
+            val index = key.substringAfterLast(':', "").toIntOrNull()
+            txid.isNotEmpty() && index != null && isHeld(txid, index)
+        }
+
         private const val REFRESH_AFTER_TRADE_MS = 4_000L
         /** How long an address that may have a trade out takes no new one (iOS `holdSeconds`). */
         private const val HOLD_MS = 600_000L

@@ -91,6 +91,11 @@ class KaChatApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var addressActivityNotifier: dagger.Lazy<com.kachat.app.services.AddressActivityNotifier>
 
+    // Profile's bell: its coalesced save goes out as the app leaves the foreground (iOS audit
+    // 2026-11-27 P9).
+    @Inject
+    lateinit var globalNotificationCenter: dagger.Lazy<com.kachat.app.services.GlobalNotificationCenterStore>
+
     // Continuous automatic Nextcloud sync: its init block observes the connected account +
     // Automatic Sync toggle (schedules or cancels the 6h WorkManager fallback) and the active
     // wallet (silent one-time auto-restore of the shared backup file). Built on the app's first
@@ -380,6 +385,8 @@ class KaChatApplication : Application(), Configuration.Provider {
                 // Android's notification switch as the background starts (the loops' gate).
                 owner.lifecycleScope.launch(Dispatchers.IO + logOnly) { pushState.get().refreshSystemNotifications() }
                 startupStep("address activity: background") { addressActivityNotifier.get().onAppBackground() }
+                // a bell save still waiting is written before Android may end the process
+                startupStep("bell: save") { globalNotificationCenter.get().flushPendingSave() }
                 startupStep("profile rescans: background") { contactProfileRescanner.get().stop() }
                 startupStep("kUSDT poll: background") { tokenWallet.get().stopPolling() }
                 // KaPost's in-app activity poller runs only while the app is active (iOS 148a5331).

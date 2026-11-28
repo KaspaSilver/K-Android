@@ -106,6 +106,36 @@ object UtxoMath {
     }
 
     /**
+     * [runningTotal] + [amount] over a REST transaction's amounts (a user-set server's), or null
+     * when that is no real sum: a negative value (a uint64 past Long.MAX) or a sum past Long.MAX
+     * (iOS `addingReportingOverflow`, audit 2026-11-27 R6). Kotlin's `+` would wrap silently into
+     * a plausible-looking number; the caller skips the transaction instead.
+     */
+    fun restSumOrNull(runningTotal: Long, amount: Long): Long? {
+        if (runningTotal < 0 || amount < 0) return null
+        return try {
+            Math.addExact(runningTotal, amount)
+        } catch (e: ArithmeticException) {
+            null
+        }
+    }
+
+    /**
+     * Whether a REST transaction's output amounts and input amounts each sum without overflow or a
+     * negative amount. A transaction that fails is skipped in address history, as on iPhone
+     * (release audit 2026-11-27 R6), instead of showing a wrapped amount.
+     */
+    fun restAmountsFit(outputs: Iterable<Long>, inputs: Iterable<Long>): Boolean =
+        restTotalOrNull(outputs) != null && restTotalOrNull(inputs) != null
+
+    /** The sum of a REST transaction's [amounts] by [restSumOrNull]: null when it is no real sum. */
+    fun restTotalOrNull(amounts: Iterable<Long>): Long? {
+        var total = 0L
+        for (amount in amounts) total = restSumOrNull(total, amount) ?: return null
+        return total
+    }
+
+    /**
      * Whether a coinbase output at [blockDaaScore] is spendable at [virtualDaaScore]:
      * `blockDaaScore + maturity < virtualDaaScore`. A negative score (a uint64 past Long.MAX) or a
      * sum that overflows counts as not yet mature - a wrapped sum would otherwise come out

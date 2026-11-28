@@ -212,17 +212,6 @@ object GroupMentionCodec {
         return com.kachat.app.util.UsernameMention.encodeGroupMentions(text, named)
     }
 
-    fun encodeForSending(text: String, members: List<GroupMember>, resolveDisplayName: (String) -> String): String {
-        var result = text
-        // Longest name first, so e.g. "@Alice2" doesn't get partially clobbered by a "@Alice" replacement first.
-        for (member in members.sortedByDescending { resolveDisplayName(it.address).length }) {
-            val name = resolveDisplayName(member.address)
-            if (name.isBlank()) continue
-            result = result.replace("@$name", "@${member.address}")
-        }
-        return result
-    }
-
     fun decodeForDisplay(text: String, members: List<GroupMember>, resolveDisplayName: (String) -> String): String {
         // Every mention is "@kaspa:..." / "@kaspatest:...". Rows decode often, sometimes a photo
         // or voice note's base64: one scan, not a name lookup and a full replace per member
@@ -293,13 +282,17 @@ fun GroupChatThreadScreen(
     val groupReactionsFlow = remember(groupId) { chatViewModel.getGroupReactions(groupId) }
     val groupReactions by groupReactionsFlow.collectAsStateWhileStarted(initial = emptyList())
     val groupReactionsByTxId = remember(groupReactions) { groupReactions.groupBy { it.targetTxId } }
-    val groupReplyingTo by chatViewModel.groupReplyingTo.collectAsState()
+    // The one ChatViewModel serves every group: a reply, edit or staged photo started in another
+    // group is never shown or sent here.
+    val anyGroupReplyingTo by chatViewModel.groupReplyingTo.collectAsState()
+    val groupReplyingTo = anyGroupReplyingTo?.takeIf { it.groupId == groupId }
     // The newest edit per message (see MessageEdit) - applied to the bubble as it is drawn.
     val groupEditsFlow = remember(groupId) { chatViewModel.getGroupEdits(groupId) }
     val groupEdits by groupEditsFlow.collectAsStateWhileStarted(initial = emptyList())
     val acceptedContacts by chatViewModel.acceptedContactAddresses.collectAsState()
     val groupEditsByTxId = remember(groupEdits) { groupEdits.associateBy { it.targetTxId } }
-    val groupEditingMessage by chatViewModel.groupEditingMessage.collectAsState()
+    val anyGroupEditingMessage by chatViewModel.groupEditingMessage.collectAsState()
+    val groupEditingMessage = anyGroupEditingMessage?.takeIf { it.groupId == groupId }
     // Merged contact+KNS maps: group members are usually not saved contacts, so their avatar/KNS
     // name come from the address-keyed KNS cache, not just contact rows (see the VM's
     // groupMemberAvatarsByAddress/groupMemberNamesByAddress). This is what makes group chats show
@@ -309,7 +302,8 @@ fun GroupChatThreadScreen(
     // Address Book names show in mentions too: the bubbles' memo follows them (iOS
     // `GroupDisplayNamesRevision`, audit 2026-11-24 #10).
     val groupAddressBookEntries = rememberAddressBookEntries()
-    val pendingPhotoUri by chatViewModel.groupPendingPhotoUri.collectAsState()
+    val anyPendingPhotoUri by chatViewModel.groupPendingPhotoUri.collectAsState()
+    val pendingPhotoUri = anyPendingPhotoUri?.takeIf { chatViewModel.groupPendingPhotoBelongsTo(groupId) }
     // An animated GIF going on chain: "GIF Quality", its tiers GIFs, a GIF badge (iOS d7c56280).
     val pendingPhotoIsGif by chatViewModel.groupPendingPhotoIsGif.collectAsState()
     val nextcloudStaged by chatViewModel.groupNextcloudStaged.collectAsState()
@@ -435,7 +429,7 @@ fun GroupChatThreadScreen(
         val currentFeeSompi = estimatedFeeRaw ?: 0L
         if (currentFeeSompi > 0 && effectiveRate > 0) {
             val impliedMass = currentFeeSompi / effectiveRate
-            chatViewModel.setFeeRateOverride(kotlin.math.ceil(desiredFeeSompi / impliedMass).toLong())
+            chatViewModel.setFeeRateOverride(kotlin.math.ceil(desiredFeeSompi / impliedMass).toLong(), com.kachat.app.util.ConversationOwnership.group(groupId))
         } else {
             chatViewModel.setFeeRateOverride(null)
         }
@@ -479,6 +473,7 @@ fun GroupChatThreadScreen(
     }
     // Voice-note playback is owned per bubble; the thread going away is what ends it.
     DisposableEffect(Unit) { onDispose { VoicePlayback.stopAllAfterChildrenDispose() } }
+    val threadEntry = androidx.compose.ui.platform.LocalLifecycleOwner.current as? androidx.navigation.NavBackStackEntry
     DisposableEffect(groupId) {
         chatViewModel.setActiveGroup(groupId)
         onDispose {
@@ -486,6 +481,11 @@ fun GroupChatThreadScreen(
             // Leaving ends a recording, as in 1:1 (iOS 83806b3d): the mic must not stay on behind
             // another screen (a member's 1:1 chat opened from here), and its files go with it.
             chatViewModel.cancelGroupVoiceRecording()
+            // Popped (not just covered by Group Info or a member's chat): what was staged in this
+            // group's composer goes with it.
+            if (threadEntry == null || navController.currentBackStack.value.none { it.id == threadEntry.id }) {
+                chatViewModel.clearGroupComposer(groupId)
+            }
         }
     }
     // A snapshotFlow, not LaunchedEffect(draft.text): reading the text here made every keystroke
@@ -619,10 +619,13 @@ fun GroupChatThreadScreen(
     // Same deliberate-scroll-away detection as ChatThreadScreen's showScrollToBottom in
     // Screens.kt: not canScrollForward (which flips for a frame whenever the viewport merely
     // shrinks), and with the same 1-item tolerance for transient resizes.
+    // The newest list size as state: a plain `messages` read here would stay the first (empty)
+    // list forever, and the button would never show (as BroadcastScreens' room).
+    val latestLastIndex by rememberUpdatedState(messages.lastIndex)
     val showScrollToBottom by remember {
         derivedStateOf {
             val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-            lastVisibleIndex != null && lastVisibleIndex < messages.lastIndex - 1
+            lastVisibleIndex != null && lastVisibleIndex < latestLastIndex - 1
         }
     }
 
@@ -734,7 +737,8 @@ fun GroupChatThreadScreen(
                     )
                     .imePadding()
             ) {
-            if (fundingGate.active) {
+            // the card stays while its Buy Kaspa flow is open, or the flow closes with it (iOS 824a30bb)
+            if (fundingGate.active || com.kachat.app.ui.screens.tokens.BuyKaspaFlowPresence.isOpen) {
                 ZeroBalanceFundingCard(
                     walletAddress = fundingGate.chattingAddress,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
@@ -1247,7 +1251,7 @@ fun GroupChatThreadScreen(
                                 {
                                     chatViewModel.startGroupEditing(message)
                                     // Mentions read as names while editing, exactly as they are
-                                    // typed - encodeForSending puts the wire form back on send.
+                                    // typed - encodeUsernames puts the wire form back on send.
                                     draft = TextFieldValue(
                                         GroupMentionCodec.decodeForDisplay(
                                             com.kachat.app.util.MessageEdit.unwrappedText(message.content),
@@ -2089,7 +2093,7 @@ fun GroupChatInfoScreen(
                     Spacer(Modifier.height(14.dp))
                     Text(stringResource(R.string.rebuilding_this_group), color = LocalAppColors.current.textPrimary, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(6.dp))
-                    Text(state.label, color = LocalAppColors.current.textSecondary, fontSize = 13.sp, textAlign = TextAlign.Center)
+                    Text(state.label(androidx.compose.ui.platform.LocalContext.current), color = LocalAppColors.current.textSecondary, fontSize = 13.sp, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(10.dp))
                     Text(
                         stringResource(R.string.re_reading_the_whole_group_from_the),
@@ -2992,7 +2996,10 @@ fun GroupChatInfoScreen(
                 TextButton(onClick = {
                     chatViewModel.deleteGroupChat(groupId)
                     showDeleteConfirmation = false
-                    navController.popBackStack("chats", inclusive = false)
+                    // Back to Chats: its dock slot, or Kaspa Hub when Chats lives there (as
+                    // KaChatApp's chatsHome) - "chats" alone isn't on the stack then.
+                    val chatsHome = if (com.kachat.app.ui.AppTab.CHATS in com.kachat.app.ui.DockLayout.dock.value) com.kachat.app.ui.AppTab.CHATS.route else com.kachat.app.ui.AppTab.HUB.route
+                    if (!navController.popBackStack(chatsHome, inclusive = false)) com.kachat.app.ui.navigateToTab(navController, chatsHome)
                 }) {
                     Text(stringResource(R.string.delete), color = LocalAppColors.current.danger, fontWeight = FontWeight.Bold)
                 }

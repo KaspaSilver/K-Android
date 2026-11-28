@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -154,13 +155,18 @@ fun Modifier.zeroBalanceComposerGate(active: Boolean): Modifier =
 /** The funding-gate card itself (iOS ZeroBalanceFundingCardView): the headline in subheadline
  *  semibold, a 140 QR of the chatting address on a white plate (padded 8, corners 12 - the white
  *  is what keeps it scannable in dark mode), then the address in caption2 monospaced beside a
- *  copy button, 14 between each, padded 16 on glassBackground(cornerRadius: 20). [title] is the
- *  headline; null = "Fund your chatting address to start chatting" (iOS 2b45d6e). */
+ *  copy button, then Buy Kaspa (iOS 824a30bb: the Wallet's Buy choices, landing on the Chatting
+ *  Address), 14 between each, padded 16 on glassBackground(cornerRadius: 20). [title] is the
+ *  headline; null = "Fund your chatting address to start chatting" (iOS 2b45d6e). Hosts keep the
+ *  card while its Buy flow is open ([com.kachat.app.ui.screens.tokens.BuyKaspaFlowPresence]). */
 @Composable
 fun ZeroBalanceFundingCard(walletAddress: String?, modifier: Modifier = Modifier, title: String? = null) {
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     val colors = LocalAppColors.current
+    val haptic = com.kachat.app.util.rememberHaptics()
+    val buyKaspa = com.kachat.app.ui.screens.tokens.rememberBuyKaspaFlowState()
+    com.kachat.app.ui.screens.tokens.BuyKaspaFlow(buyKaspa, toChatting = true)
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -220,6 +226,29 @@ fun ZeroBalanceFundingCard(walletAddress: String?, modifier: Modifier = Modifier
                     )
                 }
             }
+        }
+        // Buy Kaspa (iOS 824a30bb): Label("Buy Kaspa", systemImage: "plus"), subheadline semibold,
+        // black on an accent capsule 44 high
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(KaspaTeal)
+                .clickable {
+                    haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                    buyKaspa.open()
+                },
+        ) {
+            Icon(Icons.Filled.Add, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
+            Text(
+                stringResource(R.string.buysell_buy_kaspa),
+                color = Color.Black,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+            )
         }
     }
 }

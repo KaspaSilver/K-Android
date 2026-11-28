@@ -341,6 +341,11 @@ class ShareShortcutsManager @Inject constructor(
             return ShortcutTarget(owner = owner.takeIf { it.isNotEmpty() }, contactId = contactId)
         }
 
+        /** The chat a shared item may be routed to: the shortcut's contact, only when it is a
+         *  well-formed Kaspa address (MainActivity is exported, so any app can send any id). */
+        fun routableContactId(target: ShortcutTarget?): String? =
+            target?.contactId?.takeIf { com.kachat.app.util.KaspaAddress.isValid(it) }
+
         private const val TAG = "ShareShortcuts"
         const val SHARE_TARGET_CATEGORY = "com.kachat.app.category.SHARE_TARGET"
         private const val MAX_SHORTCUTS = 8

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">Comprar</string>
+    <string name="buysell_sell">Vender</string>
+    <string name="buysell_history">Histórico de compra/venda</string>
+    <string name="buysell_buy_kaspa">Comprar Kaspa</string>
+    <string name="buysell_sell_kaspa">Vender Kaspa</string>
+    <string name="buysell_buy_with_crypto">Comprar Kaspa com cripto</string>
+    <string name="buysell_buy_with_crypto_sub">Pague com outra moeda, como kUSDT ou Bitcoin.</string>
+    <string name="buysell_buy_with_debit_card">Comprar Kaspa com cartão de débito</string>
+    <string name="buysell_debit_card_sub">Pague com cartão. Chega como kUSDT, e com ele você compra Kaspa.</string>
+    <string name="buysell_pay_with_question">Com o que você quer pagar?</string>
+    <string name="buysell_sell_for_question">O que você quer pelos seus Kaspa?</string>
+    <string name="buysell_sell_kaspa_for">Vender Kaspa por %1$s</string>
+    <string name="buysell_buy_kaspa_with">Comprar Kaspa com %1$s</string>
+    <string name="buysell_on_networks">%1$s em %2$d redes</string>
+    <string name="buysell_you_pay">Você paga</string>
+    <string name="buysell_where_land">Onde seus Kaspa devem chegar?</string>
+    <string name="buysell_kusdt_one_address">O kUSDT é pago de um endereço, e seus Kaspa chegam nesse mesmo endereço.</string>
+    <string name="buysell_fresh_note">Um endereço novo, nunca usado, para que esta compra fique separada do seu nome de usuário e das suas conversas.</string>
+    <string name="buysell_send_payment">Enviar pagamento</string>
+    <string name="buysell_send_amount_coin">Envie %1$s %2$s</string>
+    <string name="buysell_to_buy_kaspa">para comprar Kaspa</string>
+    <string name="buysell_to_sell_for">para vendê-los por %1$s</string>
+    <string name="buysell_copy_amount">Copiar valor</string>
+    <string name="buysell_amount_copied">Valor copiado</string>
+    <string name="buysell_send_kas_from_k">Enviar KAS pelo K</string>
+    <string name="buysell_transaction_id">ID da transação</string>
+    <string name="buysell_copy_id">Copiar ID</string>
+    <string name="buysell_you_get_about">Você recebe cerca de %1$s %2$s, enviados para %3$s.</string>
+    <string name="buysell_payment_received">Pagamento recebido</string>
+    <string name="buysell_waiting_confirm">Aguardando confirmação.</string>
+    <string name="buysell_converting">A ChangeNOW está convertendo suas moedas.</string>
+    <string name="buysell_sending_your">Enviando seu %1$s</string>
+    <string name="buysell_almost_done">Quase pronto.</string>
+    <string name="buysell_failed_detail">A ChangeNOW não conseguiu concluir esta ordem. Confira na ChangeNOW.</string>
+    <string name="buysell_refunded_detail">A ChangeNOW devolveu as moedas.</string>
+    <string name="buysell_expired_detail">Nada chegou a tempo. Comece uma nova ordem.</string>
+    <string name="buysell_verifying_detail">A ChangeNOW está verificando esta ordem.</string>
+    <string name="buysell_waiting_payment">Aguardando pagamento</string>
+    <string name="buysell_waiting_payment_detail">Envie o valor acima. Esta tela se atualiza sozinha.</string>
+    <string name="buysell_purchase_complete">Compra concluída</string>
+    <string name="buysell_sale_complete">Venda concluída</string>
+    <string name="buysell_you_paid">Você pagou %1$s %2$s</string>
+    <string name="buysell_you_got_about">Você recebeu cerca de %1$s %2$s</string>
+    <string name="buysell_added_to_portfolio">Adicionado ao portfólio</string>
+    <string name="buysell_order_sent">Ordem enviada</string>
+</resources>

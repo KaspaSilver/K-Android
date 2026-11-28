@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cold Storage account cards, in-place rename (iOS b49a021d) -->
+<resources>
+    <string name="cold_hide_funded_refused">持有 Kaspa 的地址会保留在列表中。</string>
+    <string name="cold_remove_account">移除账户</string>
+    <string name="cold_kpub_qr">kpub 二维码</string>
+    <string name="cold_alerts_on">通知已开</string>
+    <string name="cold_alerts_off">通知已关</string>
+    <string name="cold_tap_to_view_addresses">轻点查看地址</string>
+    <string name="cold_alerts_on_toast">此账户收到 Kaspa 时会通知你。</string>
+    <string name="cold_alerts_off_toast">此账户收到 Kaspa 时将不再通知。</string>
+    <string name="cold_kpub_copied">kpub 已复制到剪贴板。</string>
+    <string name="cold_watch_this_account">关注此账户</string>
+    <string name="cold_kpub_qr_warning">扫描它的人能看到此账户的每个地址、余额和付款。只给你信任的设备扫描。</string>
+</resources>

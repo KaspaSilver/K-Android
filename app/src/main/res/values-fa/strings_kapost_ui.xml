@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">متصل است و پیام‌های این اتاق را دارد.</string>
     <string name="kpui_room_indexer_footer">یک گفتگوی عمومی روی Kaspa blockDAG قرار دارد، پس هر ایندکسری که همان شبکه را زیر نظر دارد همان اتاق را ارائه می‌دهد. این اتاق را به هر ایندکسری که می‌خواهید وصل کنید - مال خودتان یا دیگران - بدون اینکه ایندکسر مورد استفاده بقیه اتاق‌ها عوض شود.</string>
     <string name="kpui_use_app_indexer">استفاده از ایندکسر برنامه</string>
-    <string name="kpui_room_switched_off_footer">اتاقی که خاموش باشد دیگر در گفتگوهای عمومی نمایش داده نمی‌شود و هیچ اعلانی نمی‌فرستد. هر زمان بخواهید می‌توانید دوباره روشنش کنید.</string>
-    <string name="kpui_languages">زبان‌ها</string>
-    <string name="kpui_languages_footer">خاموش، همه اتاق‌های زبان را از گفتگوهای عمومی برمی‌دارد. روشن، آن‌هایی را که نمی‌خواهید خاموش کنید.</string>
     <string name="kpui_notifications_off">اعلان‌ها خاموش</string>
     <string name="kpui_notifications_on">اعلان‌ها روشن</string>
     <string name="kpui_room_notified_closed">حتی وقتی برنامه بسته است از پیام‌های جدید اینجا باخبر می‌شوید.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">هنوز چیزی اینجا نیست</string>
     <string name="kpui_engagement_empty">وقتی کسی با این پست تعامل کند، اینجا نمایش داده می‌شود.</string>
     <string name="kpui_instant_tip_limit">انعام‌های فوری به 10 KAS محدودند. برای ارسال این انعام، به بالا بکشید.</string>
-    <string name="kpui_kapost_settings">تنظیمات KaPost</string>
     <string name="kpui_cool_down">مکث پیش از ارسال پست</string>
     <string name="kpui_cooldown_on">پست‌ها، نظرها، پسندها، بازنشرها، رأی‌ها، ویرایش‌ها و حذف‌ها ۵ ثانیه، با امکان بازگشت، صبر می‌کنند و بعد روی زنجیره می‌روند.</string>
     <string name="kpui_cooldown_off">پست‌ها، نظرها، پسندها، بازنشرها، رأی‌ها، ویرایش‌ها و حذف‌ها بلافاصله روی زنجیره می‌روند، بدون امکان بازگشت.</string>

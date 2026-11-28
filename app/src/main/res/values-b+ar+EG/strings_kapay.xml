@@ -19,7 +19,6 @@
     <string name="enter_kpub">إدخال kpub</string>
     <string name="export_csv">تصدير CSV</string>
     <string name="fee_usd_optional">الرسوم (اختياري)</string>
-    <string name="generate_more_addresses">إنشاء المزيد من العناوين</string>
     <string name="holdings">الممتلكات</string>
     <string name="import_action">استيراد</string>
     <string name="import_csv">استيراد CSV</string>
@@ -36,12 +35,8 @@
     <string name="kp_address_hidden_reenable">تم إخفاء العنوان. أعد تفعيله من ظهور العنوان.</string>
     <string name="kp_address_lld_64ab3">العنوان رقم %1$s</string>
     <string name="kp_address_number_ready">العنوان رقم %1$d جاهز.</string>
-    <string name="kp_address_row_copy_subtitle">بينسخ العنوان كله للحافظة.</string>
     <string name="kp_address_row_hide_subtitle">بيشيله من القايمة دي. رجّعه من ظهور العناوين.</string>
-    <string name="kp_address_row_qr_subtitle">على الشاشة كلها، علشان يتمسح بجهاز تاني.</string>
-    <string name="kp_address_row_rename_subtitle">بيدي العنوان ده اسم من عندك.</string>
     <string name="kp_address_visibility_9c9a7">ظهور العنوان</string>
-    <string name="kp_address_visibility_subtitle">علّم مرة واحدة على كل عنوان عايزه في القائمة.</string>
     <string name="kp_already_added_26837">متضاف قبل كده</string>
     <string name="kp_amount_and_price_08599">المبلغ والسعر</string>
     <string name="kp_and_its_transactions_will_be_deleted_3c57d">\'%1$s\' ومعاملاتها هيتمسحوا. مينفعش ترجع في ده.</string>
@@ -55,8 +50,6 @@
     <string name="kp_check_address_history_before_trying_again">راجع سجل العنوان قبل المحاولة مرة أخرى.</string>
     <string name="kp_trade_may_have_gone_through">ممكن تكون عملية التداول اتمت.</string>
     <string name="kp_checking_address_lld_5b84c">بنفحص العنوان رقم %1$s</string>
-    <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">بيفحص أول ألف عنوان مهما كان فيه فجوات، وبعدين بيكمّل طول ما بيلاقي حاجة.</string>
-    <string name="kp_close_and_keep_scanning_b66cc">إغلاق وكمّل الفحص</string>
     <string name="kp_close_bbfa7">إغلاق</string>
     <string name="kp_coin_just_spent">اتصرف حالاً في عملية إرسال</string>
     <string name="kp_coin_locked_by_covenant">مقفولة بعهد</string>
@@ -128,7 +121,6 @@
     <string name="kp_mining_per_week">أسبوعيًا</string>
     <string name="kp_new_portfolio_5c1c7">محفظة استثمارية جديدة</string>
     <string name="kp_no_addresses_discovered_yet_15738">لم يتم اكتشاف أي عناوين بعد.</string>
-    <string name="kp_no_used_addresses_yet">لسه مفيش عناوين مستخدمة</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">السجل لسه مش كفاية - ارجع بعد كام يوم من النشاط.</string>
     <string name="kp_note_optional_4e395">ملاحظة (اختياري)</string>
     <string name="kp_nothing_can_change_now_this_is_8bf3a">مفيش حاجة ممكن تتغير دلوقتي: دي المعاملة اللي KasSigner وقّعها.</string>
@@ -216,7 +208,6 @@
     <string name="kp_you_receive">ستتلقى</string>
     <string name="kp_you_receive_about">ستتلقى نحو</string>
     <string name="kp_you_saw">ما رأيته</string>
-    <string name="kpub">kpub</string>
     <string name="kpub_2">kpub...</string>
     <string name="name_this_address">تسمية هذا العنوان</string>
     <string name="no_app_to_open_link">مفيش تطبيق على الموبايل ده يقدر يفتح اللينك</string>
@@ -271,22 +262,17 @@
     <string name="total_invested">إجمالي المستثمر</string>
     <string name="total_p_l">إجمالي الأرباح والخسائر</string>
     <string name="transactions">المعاملات</string>
-    <string name="kp_changes_the_name_shown_for_this_account_kc">بيغيّر الاسم اللي بيظهر للحساب ده.</string>
     <string name="kp_compound_utxos_description_kc">بيدمج كل الـ UTXOs اللي في العنوان ده في واحدة، علشان يقلل عدد المدخلات اللي أي إرسال جاي محتاجها.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">تطبيقاتك التانية بنفس الكلمات بتظهر نفس kUSDT وتقدر تبعته. التبديل بيحصل هنا.</string>
     <string name="kp_kusdt_guide_swapping_detail_kc">علشان تبدّل KAS وkUSDT أو تضيف للمجمع، دوس «مبادلة العملات المستقرة» في تبويب المحفظة واختار kUSDT. موقع Trestly نفسه هيفتح جوه K، متوصل بالعنوان اللي تختاره.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">هتظهر هنا عملات مستقرة تانية لما K يضيفها.</string>
-    <string name="kp_notifies_you_when_this_account_kc">بيبلغك لما الحساب ده يستلم Kaspa.</string>
     <string name="kp_on_trestly_inside_kachat_kc">على Trestly، جوه K</string>
-    <string name="kp_puts_the_extended_public_key_kc">بينسخ المفتاح العام الموسّع للحافظة.</string>
     <string name="kp_reveals_next_unused_address_account_kc">بيظهر العنوان اللي بعده اللي لسه ما اتستخدمش في الحساب ده.</string>
     <string name="kp_scan_it_into_another_device_kc">امسحه بجهاز تاني عشان تتابع الحساب ده هناك.</string>
     <string name="kp_scan_this_on_your_kassigner_kc">امسح ده على الـ KasSigner بتاعك</string>
     <string name="kp_selected_one_utxo_kc">المختار: %1$s (UTXO واحد)</string>
     <string name="kp_selected_utxos_kc">المختار: %1$s (%2$d UTXO)</string>
-    <string name="kp_show_kpub_qr_kc">عرض رمز QR بتاع kpub</string>
     <string name="kp_something_went_wrong_kc">حدث خطأ ما</string>
-    <string name="kp_stops_notifying_when_this_account_kc">مش هيبعتلك إشعار لما الحساب ده يستلم Kaspa. باقي الحسابات إشعاراتها زي ما هي.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">هذا يزيله فقط من قائمة مراقبة K. لا تأثير له على جهاز KasSigner أو أي أموال يحتفظ بها.</string>
     <string name="kp_token_empty_state_swap_kc">استلمه على عنوان جديد، أو اشتريه من «مبادلة العملات المستقرة» في تبويب المحفظة.</string>
     <string name="kp_trestly_asks_kachat_to_kc">يطلب Trestly من K:</string>
@@ -296,8 +282,5 @@
     <string name="kp_trestly_site_kc">موقع Trestly</string>
     <string name="kp_trestly_site_url_kc">رابط موقع Trestly</string>
     <string name="kp_trestly_swap_note_kc">بُني وفُحص بشيفرة Trestly نفسها داخل K. إن تحرّك المجمع أولًا يُعاد التسعير: يمضي فقط بهذا السعر أو أفضل، ويسألك مجددًا إن قلّ، ولا ينزل أبدًا تحت الحد الأدنى للموقع.</string>
-    <string name="kp_turn_off_receive_notifications_kc">اقفل إشعارات الاستلام</string>
-    <string name="kp_turn_on_receive_notifications_kc">شغّل إشعارات الاستلام</string>
-    <string name="cold_copy_kpub_reveals_all_addresses">بينسخ kpub الحساب ده للحافظة. بيكشف كل عناوينه.</string>
     <string name="cold_not_a_valid_kpub">ده مش kpub صالح</string>
 </resources>

@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
+import com.kachat.app.R
 import com.kachat.app.util.KaPostsProtocol
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +32,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class KaPostsNotificationPoller @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context,
     private val kaPostsService: KaPostsService,
     private val walletManager: WalletManager,
     private val notificationHelper: KaPostsNotifier,
@@ -323,15 +325,19 @@ class KaPostsNotificationPoller @Inject constructor(
         private const val MAX_UNSEEN_COUNT_PAGES = 10
     }
 
+    // in the app's language (iOS audit 2026-11-27 M10)
     private fun actionText(contentType: String?, voteType: String?, text: String, tipAmountSompi: Long? = null): String = when (contentType) {
-        "vote" -> if (voteType == "downvote") "disliked your post" else "liked your post"
+        "vote" -> if (voteType == "downvote") notice(R.string.notice_post_disliked) else notice(R.string.notice_post_liked)
         // "tipped your post: 1.5 KAS" (iOS 09f6ae0)
-        "tip" -> tipAmountSompi?.let { "tipped your post: ${com.kachat.app.util.KaspaUnit.plain(it)} ${com.kachat.app.util.KaspaUnit.symbol}" }
-            ?: "tipped your post"
-        "reply" -> "replied to your post"
-        "quote" -> if (text.isEmpty()) "reposted your post" else "quoted your post"
-        "follow" -> "followed you"
-        "mention" -> "mentioned you in a post"
-        else -> "interacted with your post"
+        "tip" -> tipAmountSompi?.let { notice(R.string.notice_post_tipped_amount, "${com.kachat.app.util.KaspaUnit.plain(it)} ${com.kachat.app.util.KaspaUnit.symbol}") }
+            ?: notice(R.string.notice_post_tipped)
+        "reply" -> notice(R.string.notice_post_replied)
+        "quote" -> if (text.isEmpty()) notice(R.string.notice_post_reposted) else notice(R.string.notice_post_quoted)
+        "follow" -> notice(R.string.notice_followed_you)
+        "mention" -> notice(R.string.notice_post_mentioned)
+        else -> notice(R.string.notice_post_interacted)
     }
+
+    private fun notice(res: Int, vararg args: Any): String =
+        runCatching { com.kachat.app.util.tr(res, *args) }.getOrElse { appContext.getString(res, *args) }
 }

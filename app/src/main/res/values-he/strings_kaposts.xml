@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">לא ניתן למצוא כרגע את הפוסט שהטיוטה הזו מתייחסת אליו, ולכן עדיין אי אפשר לפרסם אותה. היא נשארת בטיוטות שלכם.</string>
     <string name="kaposts_likes">לייקים</string>
     <string name="kaposts_no_tips_yet">עדיין אין טיפים.</string>
-    <string name="kaposts_not_on_testnet">KaPost עדיין לא זמין ברשת הבדיקה</string>
-    <string name="kaposts_not_on_testnet_sub">אין אינדקסר KaPost לרשת הבדיקה. כבה את רשת הבדיקה בהגדרות > חיבור כדי לקרוא ולפרסם ברשת הראשית.</string>
+    <string name="kaposts_not_on_testnet">פוסטים עדיין לא זמינים ב-Testnet</string>
+    <string name="kaposts_not_on_testnet_sub">אין אינדקסר פוסטים לרשת הבדיקה. כבה את רשת הבדיקה בהגדרות &gt; הגדרות חיבור כדי לקרוא ולפרסם ברשת הראשית.</string>
     <string name="kaposts_poll_days_left">נותרו %1$d ימ׳</string>
     <string name="kaposts_poll_final_results">%1$s · תוצאות סופיות</string>
     <string name="kaposts_poll_hours_left">נותרו %1$d שע׳</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">הפוסט הזה נמצא כרגע בדרך, ולכן אי אפשר לבטל אותו.</string>
     <string name="kaposts_scheduled_reminder_title">פוסט מתוזמן</string>
     <string name="kaposts_scheduled_sending_soon">יישלח ברגע שהרשת תגיב</string>
-    <string name="kaposts_server_not_answering">השרת של KaPost לא מגיב. מוצגים פוסטים שמורים ופוסטים חדשים מהרשת.</string>
+    <string name="kaposts_server_not_answering">השרת של הפוסטים לא עונה. מוצגים פוסטים שמורים וחדשים מהרשת.</string>
     <string name="kaposts_thread_not_confirmed">הרשת לא אישרה חלק מהשרשור שלכם, ולכן השאר לא נשלח. לשמור את מה שנותר כטיוטה? ייתכן שהפוסט הראשון בה כבר פורסם, אז כדאי לבדוק לפני שמפרסמים אותו שוב.</string>
     <string name="kaposts_tip_from_chatting_note">טיפ מה-Chatting Address נספר בפוסט, ואתה מופיע ברשימת נותני הטיפים.</string>
     <string name="kaposts_tip_from_private_note">טיפ מכתובת אחרת הוא פרטי: הכותב מקבל אותו ורואה אותו בצ\'אט שלכם, אבל הוא לא נספר בפוסט ולא מזכיר את שמך.</string>

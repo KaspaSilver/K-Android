@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">Нажмите, чтобы открыть историю</string>
+    <string name="addrcard_quantum_protected">Защищён от квантовых атак</string>
+    <string name="addrcard_not_quantum_protected">Не защищён от квантовых атак</string>
+    <string name="addrcard_new_address">Новый адрес</string>
+    <string name="addrcard_regular_address">Обычный адрес</string>
+    <string name="addrcard_regular_address_subtitle">Работает со всем: Kaspa и kUSDT.</string>
+    <string name="addrcard_quantum_protected_address">Адрес с защитой от квантовых атак</string>
+    <string name="addrcard_quantum_protected_address_subtitle">Скрывает свой ключ до первой отправки. Только Kaspa.</string>
+    <string name="addrcard_no_kusdt_on_quantum">kUSDT нельзя отправить на адрес с защитой от квантовых атак или получить на него.</string>
+</resources>

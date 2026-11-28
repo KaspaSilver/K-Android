@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">연결되었고, 이 방의 메시지가 있습니다.</string>
     <string name="kpui_room_indexer_footer">공개 채팅은 Kaspa blockDAG 위에 있어서, 같은 네트워크를 보는 인덱서라면 어느 것이든 같은 방을 제공합니다. 다른 방이 쓰는 인덱서는 그대로 두고, 이 방만 내 인덱서든 다른 사람의 인덱서든 원하는 곳으로 지정할 수 있습니다.</string>
     <string name="kpui_use_app_indexer">앱의 인덱서 사용</string>
-    <string name="kpui_room_switched_off_footer">꺼 둔 방은 공개 채팅에 표시되지 않고 알림도 보내지 않습니다. 언제든 다시 켤 수 있습니다.</string>
-    <string name="kpui_languages">언어</string>
-    <string name="kpui_languages_footer">끄면 모든 언어 방이 공개 채팅에서 빠집니다. 켠 다음 원하지 않는 방을 끄세요.</string>
     <string name="kpui_notifications_off">알림 꺼짐</string>
     <string name="kpui_notifications_on">알림 켜짐</string>
     <string name="kpui_room_notified_closed">앱이 닫혀 있어도 여기의 새 메시지가 알림으로 옵니다.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">아직 여기에 아무것도 없습니다</string>
     <string name="kpui_engagement_empty">누군가 이 게시물에 반응하면 여기에 표시됩니다.</string>
     <string name="kpui_instant_tip_limit">즉시 팁은 10 KAS까지만 가능합니다. 이 팁을 보내려면 위로 스와이프하세요.</string>
-    <string name="kpui_kapost_settings">KaPost 설정</string>
     <string name="kpui_cool_down">게시 전 대기</string>
     <string name="kpui_cooldown_on">게시물, 댓글, 좋아요, 리포스트, 투표, 편집, 삭제는 체인에 기록되기 전에 5초 동안 대기하며, 그동안 실행 취소할 수 있습니다.</string>
     <string name="kpui_cooldown_off">게시물, 댓글, 좋아요, 리포스트, 투표, 편집, 삭제는 실행 취소 없이 바로 체인에 기록됩니다.</string>

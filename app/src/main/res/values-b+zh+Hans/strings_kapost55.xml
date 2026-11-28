@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- KaPost and Kaspa Hub card links (iOS 961fc05a, 2026-11-25). -->
 <resources>
-    <string name="kp55_link_copied">链接已复制</string>
     <string name="kp55_hub_link_subtitle">在 K 中打开此卡片的链接。</string>
     <string name="kp55_open">打开</string>
     <string name="kp55_opens_this_card">打开此卡片。</string>

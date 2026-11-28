@@ -128,7 +128,12 @@ internal fun CameraQrScanner(modifier: Modifier = Modifier, onResult: (Result) -
             val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
             cameraProviderFuture.addListener({
                 if (disposed[0]) return@addListener
-                val cameraProvider = cameraProviderFuture.get()
+                // CameraX failed to start (no camera, its service down): no preview, not a crash
+                val cameraProvider = try {
+                    cameraProviderFuture.get()
+                } catch (e: Exception) {
+                    return@addListener
+                }
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }

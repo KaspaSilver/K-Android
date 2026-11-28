@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">Kでは、Kaspaネットワーク上で直接メッセージを送受信できます。メッセージを送信する際の手数料を支払うためにKaspaが必要です。支払った手数料は、ネットワークを保護するマイナーに渡ります。5 Kaspaで約2,500件のメッセージを送れます。</string>
+    <string name="welcome2_get_username">ユーザー名を取得</string>
+    <string name="welcome2_get_username_caption">\@aliceのようなユーザー名を取得すると、長いアドレスなしで見つけてもらい、メッセージを受け取れます。Kaspa Hub &gt; ユーザー名から取得できます。</string>
+    <string name="welcome2_share_title">チャットアドレスを共有</string>
+    <string name="welcome2_share_body">相手に送れば、Kであなたを見つけてメッセージを送れます。</string>
+</resources>

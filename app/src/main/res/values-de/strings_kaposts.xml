@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">Der Beitrag zu diesem Entwurf wurde gerade nicht gefunden, daher kann er noch nicht gepostet werden. Er bleibt in deinen Entwürfen.</string>
     <string name="kaposts_likes">Likes</string>
     <string name="kaposts_no_tips_yet">Noch keine Trinkgelder.</string>
-    <string name="kaposts_not_on_testnet">KaPost ist im Testnet noch nicht verfügbar</string>
-    <string name="kaposts_not_on_testnet_sub">Für das Testnet gibt es keinen KaPost-Indexer. Schalte Testnet unter Einstellungen > Verbindung aus, um im Mainnet zu lesen und zu posten.</string>
+    <string name="kaposts_not_on_testnet">Beiträge sind im Testnet noch nicht verfügbar</string>
+    <string name="kaposts_not_on_testnet_sub">Für das Testnet gibt es keinen Beiträge-Indexer. Schalte Testnet unter Einstellungen &gt; Verbindungseinstellungen aus, um im Mainnet zu lesen und zu posten.</string>
     <string name="kaposts_poll_days_left">noch %1$d T.</string>
     <string name="kaposts_poll_final_results">%1$s · Endergebnis</string>
     <string name="kaposts_poll_hours_left">noch %1$d Std.</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">Dieser Beitrag wird gerade gesendet und kann daher nicht abgebrochen werden.</string>
     <string name="kaposts_scheduled_reminder_title">Geplanter Beitrag</string>
     <string name="kaposts_scheduled_sending_soon">Wird gesendet, sobald das Netzwerk antwortet</string>
-    <string name="kaposts_server_not_answering">Der KaPost-Server antwortet nicht. Gespeicherte Beiträge und neue aus dem Netzwerk werden angezeigt.</string>
+    <string name="kaposts_server_not_answering">Der Server für Beiträge antwortet nicht. Gespeicherte Beiträge und neue aus dem Netzwerk werden angezeigt.</string>
     <string name="kaposts_thread_not_confirmed">Das Netzwerk hat einen Teil deines Threads nicht bestätigt, daher wurde der Rest nicht gesendet. Den Rest als Entwurf speichern? Der erste Beitrag daraus wurde möglicherweise schon veröffentlicht, prüfe das also, bevor du ihn erneut postest.</string>
     <string name="kaposts_tip_from_chatting_note">Von deiner Chatting Address zählt das Trinkgeld beim Beitrag, und du stehst in der Liste der Trinkgeldgeber.</string>
     <string name="kaposts_tip_from_private_note">Von einer anderen Adresse ist das Trinkgeld privat: Der Autor erhält es und sieht es in eurem Chat, aber es zählt nicht beim Beitrag und nennt dich nicht als Trinkgeldgeber.</string>

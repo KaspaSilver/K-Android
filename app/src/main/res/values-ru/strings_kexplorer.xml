@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- iOS bfb902b7: K's own Explorer, the default "View in Explorer" target -->
+    <string name="k_explorer">Обозреватель K</string>
+</resources>

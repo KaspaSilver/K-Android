@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">Bu adres zaten bu hesapta.</string>
     <string name="coldq_error_in_other_account">Bu adres zaten “%1$s” Cold Storage hesabında.</string>
     <string name="coldq_added_toast">Kuantuma dayanıklı adres eklendi.</string>
-    <string name="coldq_add_action">Kuantuma Dayanıklı Adres Ekle</string>
     <string name="coldq_add_action_subtitle">KasSigner\'ın adres ekranından bir KCC-3 adresi tara.</string>
     <string name="coldq_stop_watching">İzlemeyi Durdur</string>
     <string name="coldq_stop_watching_subtitle">Bu kuantum adresini hesaptan kaldırır. Geri eklemek için tekrar tara.</string>

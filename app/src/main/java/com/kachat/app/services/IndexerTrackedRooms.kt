@@ -35,6 +35,10 @@ object IndexerTrackedRooms {
     private var loadedSuffix: String? = null
     private var reported: Set<String> = emptySet()
     private val served = HashMap<String, Long>()
+    /** The app-wide indexer's part of the key ([indexerSuffix]), remembered for the next launch. */
+    @Volatile private var indexerPart: String = ""
+    /** A big drop from the list waits for a second answer saying the same (in memory). */
+    private var pendingShrink: Set<String>? = null
 
     private val _changes = MutableStateFlow(0L)
     /**
@@ -48,11 +52,50 @@ object IndexerTrackedRooms {
     fun init(context: Context) {
         if (prefs != null) return
         prefs = (context.applicationContext ?: context).getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        indexerPart = prefs?.getString(KEY_INDEXER, null).orEmpty()
         // Anything learned in memory before the prefs were reachable is reloaded from disk.
         synchronized(lock) { loadedSuffix = null }
     }
 
-    private val suffix: String get() = if (KaspaNetwork.isTestnet) ".testnet" else ""
+    /** Per network, and per indexer once it isn't the default one: another indexer's list is its
+     *  own, so changing the URL never leaves rooms the old one listed (iOS audit 2026-11-27 L12). */
+    private val suffix: String get() = (if (KaspaNetwork.isTestnet) ".testnet" else "") + indexerPart
+    private const val KEY_INDEXER = "indexer_suffix"
+
+    /** "" for the default indexer (and none), else "@host" (iOS `indexerSuffix`). Pure. */
+    fun indexerSuffix(url: String): String {
+        val base = url.trim().trimEnd('/')
+        if (base.isEmpty() || base.equals(com.kachat.app.repository.AppSettingsRepository.DEFAULT_INDEXER_URL, ignoreCase = true)) return ""
+        val host = runCatching { java.net.URI(base).host }.getOrNull()?.takeIf { it.isNotEmpty() }
+        return "@" + (host ?: base).lowercase()
+    }
+
+    /** The app-wide indexer's part of the keys: the per-account listed-rooms record follows it
+     *  too ([com.kachat.app.services.BroadcastReadStateStore.indexerListedRooms]). */
+    fun currentIndexerSuffix(): String = indexerPart
+
+    /** The app-wide indexer in use, before its list is read: a new one has its own sets. */
+    fun setIndexer(url: String) {
+        val part = indexerSuffix(url)
+        val changed = synchronized(lock) {
+            if (part == indexerPart) return@synchronized false
+            indexerPart = part
+            loadedSuffix = null
+            pendingShrink = null
+            prefs?.edit()?.putString(KEY_INDEXER, part)?.apply()
+            true
+        }
+        if (changed) postChange()
+    }
+
+    /**
+     * Whether [names] is an answer believed only when the next one says the same (iOS audit
+     * 2026-11-27 L12): an empty list, or one missing more than half of [reported]. One bad answer
+     * used to make every joined indexer room leave two hours later. Pure.
+     */
+    fun needsSecondAnswer(reported: Set<String>, names: Set<String>): Boolean =
+        (names.isEmpty() && reported.isNotEmpty()) ||
+            (reported.size >= 2 && (reported - names).size * 2 > reported.size)
     private fun reportedKey(suffix: String) = "reported$suffix"
     private fun servedKey(suffix: String) = "served$suffix"
 
@@ -96,6 +139,11 @@ object IndexerTrackedRooms {
         val names = channels.map(MessageProtocol::normalizeChannelName).filter { it.isNotEmpty() }.toSet()
         val changed = synchronized(lock) {
             loadIfNeeded()
+            if (needsSecondAnswer(reported, names) && pendingShrink != names) {
+                pendingShrink = names
+                return@synchronized false
+            }
+            pendingShrink = null
             val changed = names != reported
             if (changed) {
                 reported = names

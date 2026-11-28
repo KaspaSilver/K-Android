@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">That address is already in this account.</string>
     <string name="coldq_error_in_other_account">That address is already in your Cold Storage account “%1$s”.</string>
     <string name="coldq_added_toast">Quantum-resistant address added.</string>
-    <string name="coldq_add_action">Add Quantum-Resistant Address</string>
     <string name="coldq_add_action_subtitle">Scan a KCC-3 address from KasSigner\'s address screen.</string>
     <string name="coldq_stop_watching">Stop Watching</string>
     <string name="coldq_stop_watching_subtitle">Removes this quantum address from the account. Scan it again to add it back.</string>

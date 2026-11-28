@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">이 주소는 이미 이 계정에 있습니다.</string>
     <string name="coldq_error_in_other_account">이 주소는 이미 Cold Storage 계정 ‘%1$s’에 있습니다.</string>
     <string name="coldq_added_toast">양자 내성 주소를 추가했습니다.</string>
-    <string name="coldq_add_action">양자 내성 주소 추가</string>
     <string name="coldq_add_action_subtitle">KasSigner의 주소 화면에서 KCC-3 주소를 스캔하세요.</string>
     <string name="coldq_stop_watching">감시 중지</string>
     <string name="coldq_stop_watching_subtitle">이 양자 주소를 계정에서 제거합니다. 다시 추가하려면 다시 스캔하세요.</string>

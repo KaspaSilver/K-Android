@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">O K permite enviar e receber mensagens diretamente na rede Kaspa. E necessario Kaspa para pagar as taxas ao enviar suas mensagens. A taxa que voce paga vai para os mineradores que protegem a rede. Com 5 Kaspa você envia cerca de 2.500 mensagens.</string>
+    <string name="welcome2_get_username">Pegue um nome de usuário</string>
+    <string name="welcome2_get_username_caption">Reserve um nome de usuário, como @alice, para que as pessoas encontrem você e mandem mensagens sem o seu endereço longo. Pegue o seu em Kaspa Hub &gt; Nomes de usuário.</string>
+    <string name="welcome2_share_title">Compartilhe seu endereço de conversa</string>
+    <string name="welcome2_share_body">Envie para alguém para que essa pessoa encontre você e mande mensagens no K.</string>
+</resources>

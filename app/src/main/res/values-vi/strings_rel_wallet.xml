@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">Vàng</string>
+    <string name="rel_wallet_silver">Bạc</string>
+    <string name="rel_wallet_pair_bitcoin">Giá Kaspa tính bằng bitcoin</string>
+    <string name="rel_wallet_pair_voo">Chứng chỉ quỹ ETF S&amp;P 500 của Vanguard</string>
+    <string name="rel_wallet_pair_gold">Troy ounce vàng</string>
+    <string name="rel_wallet_pair_silver">Troy ounce bạc</string>
+    <string name="rel_wallet_cold_storage_n">Lưu trữ lạnh %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">Không có UTXO có thể chi tiêu ở địa chỉ này</string>
+    <string name="rel_wallet_insufficient_plus_fee">Không đủ số dư cho số tiền này cộng phí mạng</string>
+    <string name="rel_wallet_too_many_inputs">Lần gửi này cần %1$d UTXO, nhưng KasSigner chỉ hỗ trợ %2$d đầu vào mỗi giao dịch. Hãy gửi số tiền nhỏ hơn hoặc gộp địa chỉ này trước.</string>
+    <string name="rel_wallet_cancelled">Đã hủy.</string>
+    <string name="rel_wallet_err_no_internet">Không có kết nối internet. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="rel_wallet_err_timed_out">Kết nối đã hết thời gian chờ. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="rel_wallet_err_cant_reach">Không kết nối được máy chủ. Hãy kiểm tra địa chỉ trong Cài đặt và kết nối của bạn.</string>
+    <string name="rel_wallet_err_secure">Không thể tạo kết nối bảo mật tới máy chủ.</string>
+    <string name="rel_wallet_err_network">Đã xảy ra lỗi mạng. Hãy kiểm tra kết nối và thử lại.</string>
+    <string name="rel_wallet_err_unreadable">Máy chủ đã gửi dữ liệu mà ứng dụng không đọc được. Hãy thử lại; nếu vẫn xảy ra, hãy cập nhật ứng dụng.</string>
+    <string name="rel_wallet_err_node">Nút Kaspa trả về lỗi. Ứng dụng sẽ thử nút khác; hãy thử lại sau giây lát.</string>
+    <string name="rel_wallet_err_unknown">Đã xảy ra lỗi không xác định.</string>
+    <string name="rel_wallet_err_no_spendable_available">Không có UTXO nào có thể chi tiêu</string>
+    <string name="rel_wallet_err_no_private_key">Không lấy được khóa riêng</string>
+    <string name="rel_wallet_err_insufficient_payment">Không đủ số dư để thanh toán</string>
+    <string name="rel_wallet_err_insufficient_after_fee">Không đủ số dư sau khi trừ phí</string>
+    <string name="rel_wallet_err_insufficient_handshake">Không đủ số dư cho bắt tay</string>
+    <string name="rel_wallet_err_insufficient_self_stash">Không đủ số dư cho phí tự lưu</string>
+    <string name="rel_wallet_err_group_secrets">Thiếu khóa bí mật của nhóm - hãy thử tham gia lại nhóm này.</string>
+    <string name="rel_wallet_err_admin_secrets">Thiếu khóa bí mật quản trị nhóm.</string>
+</resources>

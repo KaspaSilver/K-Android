@@ -19,7 +19,6 @@
     <string name="enter_kpub">kpub 입력</string>
     <string name="export_csv">CSV 내보내기</string>
     <string name="fee_usd_optional">수수료 (선택 사항)</string>
-    <string name="generate_more_addresses">주소 더 생성</string>
     <string name="holdings">보유 자산</string>
     <string name="import_action">가져오기</string>
     <string name="import_csv">CSV 가져오기</string>
@@ -36,12 +35,8 @@
     <string name="kp_address_hidden_reenable">주소를 숨겼습니다. 주소 공개 설정에서 다시 켤 수 있습니다.</string>
     <string name="kp_address_lld_64ab3">주소 #%1$s</string>
     <string name="kp_address_number_ready">주소 #%1$d이(가) 준비되었습니다.</string>
-    <string name="kp_address_row_copy_subtitle">주소 전체를 클립보드에 복사해요.</string>
     <string name="kp_address_row_hide_subtitle">이 목록에서 빼요. 주소 표시에서 다시 켤 수 있어요.</string>
-    <string name="kp_address_row_qr_subtitle">다른 기기로 스캔할 수 있게 전체 화면으로 보여줘요.</string>
-    <string name="kp_address_row_rename_subtitle">이 주소에 나만의 이름을 붙여요.</string>
     <string name="kp_address_visibility_9c9a7">주소 공개 설정</string>
-    <string name="kp_address_visibility_subtitle">목록에 둘 주소를 한 번에 모두 체크하세요.</string>
     <string name="kp_already_added_26837">이미 추가됨</string>
     <string name="kp_amount_and_price_08599">금액 및 가격</string>
     <string name="kp_and_its_transactions_will_be_deleted_3c57d">\'%1$s\'과(와) 거래가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</string>
@@ -55,8 +50,6 @@
     <string name="kp_check_address_history_before_trying_again">다시 시도하기 전에 주소의 기록을 확인하세요.</string>
     <string name="kp_trade_may_have_gone_through">거래가 이미 처리되었을 수 있어요.</string>
     <string name="kp_checking_address_lld_5b84c">주소 #%1$s 확인 중</string>
-    <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">중간에 빈 곳이 있어도 처음 1,000개 주소를 확인하고, 계속 발견되는 동안 이어서 확인합니다.</string>
-    <string name="kp_close_and_keep_scanning_b66cc">닫고 계속 스캔</string>
     <string name="kp_close_bbfa7">닫기</string>
     <string name="kp_coin_just_spent">방금 전송에 사용됨</string>
     <string name="kp_coin_locked_by_covenant">커버넌트로 잠김</string>
@@ -128,7 +121,6 @@
     <string name="kp_mining_per_week">주간</string>
     <string name="kp_new_portfolio_5c1c7">새 포트폴리오</string>
     <string name="kp_no_addresses_discovered_yet_15738">아직 발견된 주소가 없습니다.</string>
-    <string name="kp_no_used_addresses_yet">아직 사용된 주소가 없습니다</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">아직 내역이 충분하지 않습니다 - 며칠간 활동한 후 다시 확인하세요.</string>
     <string name="kp_note_optional_4e395">메모 (선택)</string>
     <string name="kp_nothing_can_change_now_this_is_8bf3a">이제 아무것도 변경할 수 없습니다. 이것이 KasSigner가 서명한 거래입니다.</string>
@@ -216,7 +208,6 @@
     <string name="kp_you_receive">받을 금액</string>
     <string name="kp_you_receive_about">받을 금액(약)</string>
     <string name="kp_you_saw">이전에 본 금액</string>
-    <string name="kpub">kpub</string>
     <string name="kpub_2">kpub...</string>
     <string name="name_this_address">이 주소 이름 지정</string>
     <string name="no_app_to_open_link">이 휴대폰에는 링크를 열 수 있는 앱이 없습니다</string>
@@ -271,22 +262,17 @@
     <string name="total_invested">총 투자액</string>
     <string name="total_p_l">총 손익</string>
     <string name="transactions">거래</string>
-    <string name="kp_changes_the_name_shown_for_this_account_kc">이 계정에 표시되는 이름을 바꿉니다.</string>
     <string name="kp_compound_utxos_description_kc">이 주소의 모든 UTXO를 하나로 합쳐, 이후 보내기에 필요한 입력 수를 줄입니다.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">같은 단어를 쓰는 다른 앱에도 같은 kUSDT가 보이고 보낼 수 있습니다. 스왑은 여기서 합니다.</string>
     <string name="kp_kusdt_guide_swapping_detail_kc">KAS와 kUSDT를 스왑하거나 풀에 추가하려면 지갑 탭에서 스테이블코인 스왑을 누르고 kUSDT를 선택하세요. 선택한 주소에 연결된 Trestly 사이트가 K 안에서 열립니다.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">K가 추가하면 다른 스테이블코인도 여기에 표시됩니다.</string>
-    <string name="kp_notifies_you_when_this_account_kc">이 계정이 Kaspa를 받으면 알려줍니다.</string>
     <string name="kp_on_trestly_inside_kachat_kc">K 안의 Trestly에서</string>
-    <string name="kp_puts_the_extended_public_key_kc">확장 공개 키를 클립보드에 복사합니다.</string>
     <string name="kp_reveals_next_unused_address_account_kc">이 계정의 다음 미사용 주소를 보여줍니다.</string>
     <string name="kp_scan_it_into_another_device_kc">다른 기기에서 스캔하면 그곳에서 이 계정을 볼 수 있습니다.</string>
     <string name="kp_scan_this_on_your_kassigner_kc">KasSigner에서 이것을 스캔하세요</string>
     <string name="kp_selected_one_utxo_kc">선택됨: %1$s (UTXO 1개)</string>
     <string name="kp_selected_utxos_kc">선택됨: %1$s (UTXO %2$d개)</string>
-    <string name="kp_show_kpub_qr_kc">kpub QR 보기</string>
     <string name="kp_something_went_wrong_kc">문제가 발생했습니다</string>
-    <string name="kp_stops_notifying_when_this_account_kc">이 계정이 Kaspa를 받아도 더 이상 알리지 않습니다. 다른 계정은 그대로입니다.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">이는 K의 감시 목록에서만 제거합니다. KasSigner 기기나 보유한 자금에는 영향을 미치지 않습니다.</string>
     <string name="kp_token_empty_state_swap_kc">새 주소로 받거나 지갑 탭의 스테이블코인 스왑으로 구매하세요.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly가 K에 요청:</string>
@@ -296,8 +282,5 @@
     <string name="kp_trestly_site_kc">Trestly 사이트</string>
     <string name="kp_trestly_site_url_kc">Trestly 사이트 URL</string>
     <string name="kp_trestly_swap_note_kc">K 안에서 Trestly 자체 코드가 만들고 확인합니다. 풀이 먼저 움직이면 다시 견적을 내며, 이 견적 이상일 때만 진행하고, 더 적으면 다시 묻고, 사이트의 최소 아래로는 절대 가지 않습니다.</string>
-    <string name="kp_turn_off_receive_notifications_kc">수신 알림 끄기</string>
-    <string name="kp_turn_on_receive_notifications_kc">수신 알림 켜기</string>
-    <string name="cold_copy_kpub_reveals_all_addresses">이 계정의 kpub을 클립보드에 복사합니다. 모든 주소가 드러납니다.</string>
     <string name="cold_not_a_valid_kpub">유효한 kpub이 아닙니다</string>
 </resources>

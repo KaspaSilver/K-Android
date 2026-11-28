@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">Подключено, и в нём есть сообщения этой комнаты.</string>
     <string name="kpui_room_indexer_footer">Публичный чат живёт в blockDAG Kaspa, поэтому любой индексатор, следящий за той же сетью, отдаёт ту же комнату. Укажите для этой комнаты любой индексатор - свой или чужой - не меняя индексатор, который используют все остальные комнаты.</string>
     <string name="kpui_use_app_indexer">Использовать индексатор приложения</string>
-    <string name="kpui_room_switched_off_footer">Выключенная комната больше не показывается в Публичных чатах и никогда не присылает уведомлений. Её можно включить снова в любой момент.</string>
-    <string name="kpui_languages">Языки</string>
-    <string name="kpui_languages_footer">Если выключить, все языковые комнаты уберутся из Публичных чатов. Если включить, отключите те, которые не нужны.</string>
     <string name="kpui_notifications_off">Уведомления выключены</string>
     <string name="kpui_notifications_on">Уведомления включены</string>
     <string name="kpui_room_notified_closed">Вы получаете уведомления о новых сообщениях здесь, даже когда приложение закрыто.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">Пока здесь ничего нет</string>
     <string name="kpui_engagement_empty">Когда кто-то взаимодействует с этим постом, он появится здесь.</string>
     <string name="kpui_instant_tip_limit">Мгновенные чаевые ограничены 10 KAS. Смахните вверх, чтобы отправить эти.</string>
-    <string name="kpui_kapost_settings">Настройки KaPost</string>
     <string name="kpui_cool_down">Пауза перед постом</string>
     <string name="kpui_cooldown_on">Посты, комментарии, лайки, репосты, голоса, правки и удаления ждут 5 секунд, с возможностью отмены, прежде чем попасть в блокчейн.</string>
     <string name="kpui_cooldown_off">Посты, комментарии, лайки, репосты, голоса, правки и удаления сразу попадают в блокчейн, без возможности отмены.</string>

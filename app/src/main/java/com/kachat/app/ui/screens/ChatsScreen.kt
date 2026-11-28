@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import android.util.Base64
 import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -165,25 +166,39 @@ fun ChatsScreen(
     val haptic = com.kachat.app.util.rememberHaptics()
     // The bottom-right + : New Chat or New Group Chat, in one sheet (iOS d1844582).
     var showNewSheet by remember { mutableStateOf(false) }
-    /** The New sheet opens on New Public Chat (the Public Chats page's +, iOS 961fc05a). */
+    /** The New sheet opens on Add Room (the Public Chats page's +, iOS 824a30bb). */
     var newSheetStartsOnPublicChat by remember { mutableStateOf(false) }
-    // Public rooms (iOS 148a5331 ChatListView): every default room listed from the start (switched
-    // off ones aside), by latest activity with the chats; a room handed over by a tapped
-    // notification or a room link opens here.
+    // Public rooms (iOS 148a5331 ChatListView): only the ones the person added (none at the start
+    // since iOS 824a30bb), by latest activity; a room handed over by a tapped notification or a
+    // room link opens here.
     val listedRooms by broadcastViewModel.listedChannels.collectAsState()
     val roomSummaries by broadcastViewModel.roomSummaries.collectAsState()
     val roomSenderAliases by broadcastViewModel.contactAliases.collectAsState()
     /** Unread in the rooms with their bell on: the red count on the page button (iOS 961fc05a). */
     val bellOnRoomUnread by broadcastViewModel.bellOnRoomUnread.collectAsState()
-    /** A room you added, waiting on its delete confirmation (a default room is only switched off). */
+    /** A room you made, waiting on its delete confirmation (one the indexer keeps leaves at once:
+     *  it can be added again from Add Room). */
     var roomToLeave by remember { mutableStateOf<String?>(null) }
-    /** Edit Default Public Chats, from the gear on the Public Chats page. */
-    var showPublicChatsSettings by remember { mutableStateOf(false) }
     /** Chats or Public Chats (iOS 961fc05a `listPage`). */
     var listPage by rememberSaveable { mutableStateOf(ChatsListPage.CHATS) }
     val onChats = listPage == ChatsListPage.CHATS
     // A room link or push switches to the rooms page (iOS `openRoomFromHandoff`).
     PublicRoomHandoffEffect(navController, broadcastViewModel, onHandoff = { listPage = ChatsListPage.PUBLIC_CHATS })
+    // Chats tapped again on the dock (iOS 824a30bb `.chatsTabReselected`, owner 2026-11-26): an
+    // open chat, group or room closes back to the list (the dock's own navigation pops it); on
+    // the list, it switches Private Chats / Public Chats as the button beside the title does. The
+    // list starts from the taps made before it showed, so coming back from a chat doesn't switch.
+    // Not saved: the counter starts again with a recreated process, so a saved one would ignore
+    // the next taps until it caught up.
+    val tabReselectSignal by walletViewModel.tabReselectSignal.collectAsState()
+    var handledReselect by remember { mutableStateOf(tabReselectSignal.first) }
+    LaunchedEffect(tabReselectSignal) {
+        if (tabReselectSignal.first <= handledReselect) return@LaunchedEffect
+        handledReselect = tabReselectSignal.first
+        if (tabReselectSignal.second != com.kachat.app.ui.Screen.Chats.route) return@LaunchedEffect
+        showNewSheet = false
+        listPage = if (listPage == ChatsListPage.CHATS) ChatsListPage.PUBLIC_CHATS else ChatsListPage.CHATS
+    }
 
     // What is pinned in the circles row, newest pin first, saved per wallet: bots ("b:<address>")
     // pinned to its front, and chats ("c:<address>") pinned up out of the list into the row (iOS
@@ -259,8 +274,8 @@ fun ChatsScreen(
     fun dropRoomPin(channelName: String) {
         myAddress?.let { chatViewModel.dropRoomPin(it, channelName) }
     }
-    /** Delete on a room (iOS `deleteRoom`): a default room is switched off (and unpinned) at
-     *  once, a room you added asks first. */
+    /** Delete on a room (iOS 824a30bb `deleteRoom`): a room the indexer keeps leaves (and is
+     *  unpinned) at once, a room you made asks first. */
     fun deleteRoom(channelName: String) {
         if (deletePublicRoomNeedsConfirmation(context, channelName, broadcastViewModel)) {
             roomToLeave = channelName
@@ -415,12 +430,11 @@ fun ChatsScreen(
         // against the indexer, so a deleted message leaves a preview too (iOS d089011f).
         if (listPage == ChatsListPage.PUBLIC_CHATS) broadcastViewModel.checkListedRoomsAgainstIndexer()
     }
-    /** Select mode's Delete on the Public Chats page, already confirmed (iOS `deleteRooms`): a
-     *  default room is switched off, as its swipe does; a room you added is left and its cached
-     *  messages go. Either drops its pin. */
+    /** Select mode's Delete on the Public Chats page, already confirmed (iOS 824a30bb
+     *  `deleteRooms`): every room is left and its cached messages go, and its pin. */
     fun deleteRooms(names: List<String>) {
         for (name in names) {
-            broadcastViewModel.removeFromList(name)
+            broadcastViewModel.leaveChannel(name)
             dropRoomPin(name)
         }
     }
@@ -491,20 +505,9 @@ fun ChatsScreen(
                         onSelectAllClick = {
                             selectedEntryIds = if (isEverythingSelected) emptySet() else allEntries.map { it.id }.toSet()
                         },
-                        // Public Chats' settings (iOS 8cb4c88e, owner 2026-11-24: here, not in the
-                        // + sheet): the default rooms and the language rooms on or off. Only on the
-                        // Public Chats page (iOS 961fc05a), and not while selecting.
-                        leadingContent = if (isSelectionMode || onChats) null else {
-                            {
-                                ToolbarGlassGroup {
-                                    ToolbarIconButton(
-                                        Icons.Outlined.Settings,
-                                        stringResource(R.string.pc_edit_default_public_chats),
-                                        onClick = { showPublicChatsSettings = true },
-                                    )
-                                }
-                            }
-                        },
+                        // No gear for Public Chats any more (iOS 824a30bb, owner 2026-11-26):
+                        // nothing is added by default, so there's nothing to switch off. Rooms
+                        // come from Add Room (the +).
                     )
                 }
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -585,7 +588,7 @@ fun ChatsScreen(
                 modifier = Modifier.padding(bottom = dockInset),
                 onClick = {
                     haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
-                    // the Public Chats page's + is New Public Chat itself (iOS 961fc05a)
+                    // the Public Chats page's + is Add Room (iOS 824a30bb `PublicRoomBrowserView`)
                     newSheetStartsOnPublicChat = !onChats
                     showNewSheet = true
                 },
@@ -689,9 +692,25 @@ fun ChatsScreen(
             var addressBookTarget by remember { mutableStateOf<com.kachat.app.models.ContactEntity?>(null) }
             val addressBookEntries = rememberAddressBookEntries()
 
+            // Each page is its own list, faded in, from its top (iOS 01f71184 `.id(listPage)` +
+            // `.transition(.opacity)`, audit 2026-11-27 C5): the switch is a fade, not one list's
+            // rows swapped in place.
+            val pageFade = remember { androidx.compose.animation.core.Animatable(1f) }
+            var shownPage by remember { mutableStateOf(listPage) }
+            LaunchedEffect(listPage) {
+                if (shownPage == listPage) return@LaunchedEffect
+                shownPage = listPage
+                pageFade.snapTo(0f)
+                chatListState.scrollToItem(0)
+                pageFade.animateTo(1f, androidx.compose.animation.core.tween(durationMillis = 250))
+            }
+            // Today, for the rows' "Yesterday" / day labels; moved on at midnight (iOS 01f71184
+            // `rowDayStamp`, release audit C2).
+            val chatDayStamp = com.kachat.app.util.rememberChatDayStamp()
+            androidx.compose.runtime.CompositionLocalProvider(com.kachat.app.util.LocalChatDayStamp provides chatDayStamp) {
             LazyColumn(
                 state = chatListState,
-                modifier = Modifier.fillMaxSize().dismissKeyboardOnScroll(),
+                modifier = Modifier.fillMaxSize().graphicsLayer { alpha = pageFade.value }.dismissKeyboardOnScroll(),
                 // The last row scrolls clear of the dock it runs under (none while selecting:
                 // the selection bar sits above the dock and the Scaffold pads the list above it).
                 contentPadding = PaddingValues(bottom = if (isSelectionMode) 0.dp else dockInset),
@@ -958,6 +977,7 @@ fun ChatsScreen(
                     }
                 }
             }
+            }
 
             menuContactId?.let { menuId -> conversations.firstOrNull { it.contact.id == menuId } }?.let { convo ->
                 // A sheet, not a dropdown: each option carries a line saying
@@ -1050,10 +1070,17 @@ fun ChatsScreen(
             // Below the circles row rather than over it, and only when there are no chats at all:
             // a search that matches nothing leaves the list empty, as iOS does (ChatListView
             // emptyStateView, centred in the list and 120 lower).
-            // Each page its own (iOS 961fc05a): no chats, or every room switched off or left.
+            // Each page its own (iOS 961fc05a): no chats, or no rooms. Public Chats': centred (no
+            // circles row) and tappable for its Add Room (iOS 824a30bb).
             val pageHasPinned = if (onChats) pinnedChats.isNotEmpty() || pinnedGroups.isNotEmpty() else pinnedRooms.isNotEmpty()
             if (allEntries.isEmpty() && searchQuery.isEmpty() && !pageHasPinned && !onChats) {
-                PublicChatsEmptyView(modifier = Modifier.align(Alignment.Center).padding(top = 120.dp).padding(16.dp))
+                PublicChatsEmptyView(
+                    onAddRoom = {
+                        newSheetStartsOnPublicChat = true
+                        showNewSheet = true
+                    },
+                    modifier = Modifier.align(Alignment.Center),
+                )
             } else if (allEntries.isEmpty() && searchQuery.isEmpty() && !pageHasPinned) {
                 Column(
                     modifier = Modifier
@@ -1136,8 +1163,7 @@ fun ChatsScreen(
         // One confirmation for the whole selection (iOS `bulkDeleteAlertTitle`).
         if (showBulkDeleteConfirmation) {
             val chats = selectedEntryIds.size
-            // The Public Chats page's: default rooms are switched off, rooms you added deleted
-            // (iOS 961fc05a).
+            // The Public Chats page's: every room is left (iOS 824a30bb).
             val rooms = selectedRoomNames(selectedEntryIds)
             com.kachat.app.ui.theme.IosAlertDialog(
                 onDismissRequest = { showBulkDeleteConfirmation = false },
@@ -1154,7 +1180,7 @@ fun ChatsScreen(
                 },
                 text = {
                     Text(
-                        stringResource(if (onChats) R.string.this_permanently_deletes_every_message_in_each else R.string.r55_delete_public_chats_message),
+                        stringResource(if (onChats) R.string.this_permanently_deletes_every_message_in_each else R.string.roomsoptin_bulk_delete_message),
                         color = LocalAppColors.current.textSecondary
                     )
                 },
@@ -1334,15 +1360,7 @@ fun ChatsScreen(
             startsOnPublicChat = newSheetStartsOnPublicChat,
         )
     }
-    // Edit Default Public Chats (iOS `PublicChatsSettingsView`), from the gear at the top left:
-    // each default room and the language rooms on or off.
-    if (showPublicChatsSettings) {
-        PublicChatsSettingsSheet(
-            onDismiss = { showPublicChatsSettings = false },
-            broadcastViewModel = broadcastViewModel,
-        )
-    }
-    // Deleting a room you added asks first (iOS `leaveRoomSheet`).
+    // Deleting a room you made asks first (iOS `leaveRoomSheet`).
     roomToLeave?.let { room ->
         LeavePublicRoomSheet(
             channelName = room,
@@ -1866,10 +1884,14 @@ internal fun ConversationRow(
                 }
                 // When the last message came: the time today, "Yesterday", else the day (iOS
                 // formatDate - caption, secondary).
+                // Drawn again when the day moves on, so "10:15 PM" becomes "Yesterday" at midnight
+                // (iOS 01f71184 `dayStamp`, release audit C2).
+                val dayStamp = com.kachat.app.util.LocalChatDayStamp.current
                 convo.lastMessage?.let { last ->
                     Spacer(Modifier.width(8.dp))
+                    val yesterdayLabel = stringResource(R.string.chat_day_yesterday)
                     Text(
-                        text = chatListDate(last.blockTimestamp, stringResource(R.string.chat_day_yesterday)),
+                        text = remember(last.blockTimestamp, dayStamp, yesterdayLabel) { chatListDate(last.blockTimestamp, yesterdayLabel) },
                         fontSize = 12.sp,
                         color = LocalAppColors.current.textSecondary,
                         maxLines = 1,
@@ -2354,9 +2376,9 @@ private fun ChatsNewSheet(
     onDismiss: () -> Unit,
     onChatCreated: (String) -> Unit,
     onGroupCreated: (String) -> Unit,
-    /** New Public Chat joined a room: it opens (iOS 148a5331 `joinRoomFromCreateSheet`). */
+    /** Add Room's Open, or a room just created: it opens (iOS 824a30bb `onOpenRoom`). */
     onPublicRoomJoined: (String) -> Unit,
-    /** Opened by the Public Chats page's +: New Public Chat itself (iOS 961fc05a). */
+    /** Opened by the Public Chats page's + (or its empty page's Add Room): Add Room itself. */
     startsOnPublicChat: Boolean = false,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -2406,13 +2428,13 @@ private fun ChatsNewSheet(
                         )
                     }
                     ChatsNewPage.NEW_PUBLIC_CHAT -> Box(Modifier.fillMaxHeight().padding(top = 10.dp)) {
-                        // Only the Public Chats page's + opens it (iOS ef760cfa), so there's no
-                        // New menu behind it: Cancel closes the sheet.
-                        NewPublicChatPage(
+                        // Add Room (iOS 824a30bb): every room the indexer keeps with Join, Other
+                        // Languages, and Create. Only the Public Chats page opens it, so Done
+                        // closes the sheet.
+                        PublicRoomBrowserPage(
                             broadcastViewModel = broadcastViewModel,
-                            onBack = { close() },
-                            onJoined = { room -> close { onPublicRoomJoined(room) } },
-                            backLabel = stringResource(R.string.cancel),
+                            onOpenRoom = { room -> close { onPublicRoomJoined(room) } },
+                            onClose = { close() },
                         )
                     }
                     ChatsNewPage.MENU -> Column(

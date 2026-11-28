@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">همه می‌توانند این آدرس و موجودی‌اش را در شبکه‌ی Kaspa ببینند، اما نمی‌توانند پیام‌هایتان را بخوانند. فقط برای گفت‌وگو و نام‌های کاربری از آن استفاده کنید.</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... یا نام کاربری</string>
     <string name="shell54_looking_up_username">در حال جست‌وجوی نام کاربری...</string>
-    <string name="shell54_portfolio_add_address_footer">یک آدرس Kaspa یا نام کاربری مثل name.kachat وارد کنید. هر تراکنش دریافتی در این آدرس خرید و هر تراکنش ارسالی فروش حساب می‌شود، با قیمت تاریخی KAS در همان روز. افزودن دوباره‌ی همین آدرس در آینده فقط تراکنش‌های پیدا‌شده از آخرین ورود را وارد می‌کند.</string>
+    <string name="shell54_portfolio_add_address_footer">یک آدرس Kaspa یا نام کاربری مثل @name وارد کنید. هر تراکنش دریافتی در این آدرس خرید و هر تراکنش ارسالی فروش حساب می‌شود، با قیمت تاریخی KAS در همان روز. افزودن دوباره‌ی همین آدرس در آینده فقط تراکنش‌های پیدا‌شده از آخرین ورود را وارد می‌کند.</string>
     <string name="shell54_report_copied">گزارش کپی شد</string>
     <string name="shell54_report_no_mail_app">هیچ برنامه‌ی ایمیلی نتوانست آن را باز کند. گزارش را در ایمیلی به %1$s جای‌گذاری کنید.</string>
     <string name="shell54_show_amounts">نمایش مبالغ</string>

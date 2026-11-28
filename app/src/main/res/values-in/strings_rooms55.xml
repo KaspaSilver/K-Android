@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">Cari obrolan publik</string>
-    <string name="r55_no_public_chats">Tidak Ada Obrolan Publik</string>
-    <string name="r55_no_public_chats_hint">Ketuk + untuk bergabung atau membuat ruang publik.</string>
     <string name="r55_page_cycle_hint">Beralih antara obrolan Anda dan obrolan publik</string>
-    <string name="r55_more_rooms">Ruang Lainnya</string>
-    <string name="r55_more_rooms_footer">Ruang yang ditambahkan di indexer tempat K membaca obrolan publik.</string>
     <string name="r55_delete_one_public_chat">Hapus 1 obrolan publik?</string>
     <string name="r55_delete_n_public_chats">Hapus %1$d obrolan publik?</string>
-    <string name="r55_delete_public_chats_message">Obrolan publik bawaan dimatikan (nyalakan lagi di Edit Obrolan Publik Bawaan). Ruang yang kamu tambahkan dihapus beserta pesannya dari perangkat ini.</string>
     <string name="r55_delete_for_everyone">Hapus untuk Semua</string>
     <string name="r55_delete_for_everyone_subtitle">Menghapusnya dari ruang ini untuk semua pengguna K.</string>
     <string name="r55_delete_for_everyone_q">Hapus untuk Semua?</string>

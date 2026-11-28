@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">黄金</string>
+    <string name="rel_wallet_silver">白银</string>
+    <string name="rel_wallet_pair_bitcoin">以比特币计价的 Kaspa</string>
+    <string name="rel_wallet_pair_voo">先锋标普 500 ETF 份额</string>
+    <string name="rel_wallet_pair_gold">黄金金衡盎司</string>
+    <string name="rel_wallet_pair_silver">白银金衡盎司</string>
+    <string name="rel_wallet_cold_storage_n">冷存储 %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">此地址没有可花费的 UTXO</string>
+    <string name="rel_wallet_insufficient_plus_fee">余额不足以支付该金额和网络费用</string>
+    <string name="rel_wallet_too_many_inputs">此次发送需要 %1$d 个 UTXO，但 KasSigner 每笔交易最多支持 %2$d 个输入。请减少金额，或先合并此地址。</string>
+    <string name="rel_wallet_cancelled">已取消。</string>
+    <string name="rel_wallet_err_no_internet">没有网络连接。请检查网络后重试。</string>
+    <string name="rel_wallet_err_timed_out">连接超时。请检查网络后重试。</string>
+    <string name="rel_wallet_err_cant_reach">无法连接服务器。请检查设置中的地址和你的网络。</string>
+    <string name="rel_wallet_err_secure">无法与服务器建立安全连接。</string>
+    <string name="rel_wallet_err_network">发生网络错误。请检查网络后重试。</string>
+    <string name="rel_wallet_err_unreadable">服务器发送了应用无法读取的内容。请重试；如果持续出现，请更新应用。</string>
+    <string name="rel_wallet_err_node">Kaspa 节点返回了错误。应用将尝试其他节点；请稍后重试。</string>
+    <string name="rel_wallet_err_unknown">发生未知错误。</string>
+    <string name="rel_wallet_err_no_spendable_available">没有可花费的 UTXO</string>
+    <string name="rel_wallet_err_no_private_key">无法获取私钥</string>
+    <string name="rel_wallet_err_insufficient_payment">余额不足以完成付款</string>
+    <string name="rel_wallet_err_insufficient_after_fee">扣除手续费后余额不足</string>
+    <string name="rel_wallet_err_insufficient_handshake">余额不足以发送握手</string>
+    <string name="rel_wallet_err_insufficient_self_stash">余额不足以支付自存费用</string>
+    <string name="rel_wallet_err_group_secrets">缺少群组密钥 - 请尝试重新加入此群组。</string>
+    <string name="rel_wallet_err_admin_secrets">缺少群组管理员密钥。</string>
+</resources>

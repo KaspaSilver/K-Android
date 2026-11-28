@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">পাবলিক চ্যাট খুঁজুন</string>
-    <string name="r55_no_public_chats">কোনো পাবলিক চ্যাট নেই</string>
-    <string name="r55_no_public_chats_hint">একটি পাবলিক রুমে যোগ দিতে বা তৈরি করতে + ট্যাপ করুন।</string>
     <string name="r55_page_cycle_hint">আপনার চ্যাট ও পাবলিক চ্যাটের মধ্যে বদলায়</string>
-    <string name="r55_more_rooms">আরও রুম</string>
-    <string name="r55_more_rooms_footer">K যে ইনডেক্সার থেকে পাবলিক চ্যাট পড়ে, সেখানে যোগ করা রুম।</string>
     <string name="r55_delete_one_public_chat">১টি পাবলিক চ্যাট মুছবেন?</string>
     <string name="r55_delete_n_public_chats">%1$dটি পাবলিক চ্যাট মুছবেন?</string>
-    <string name="r55_delete_public_chats_message">ডিফল্ট পাবলিক চ্যাট বন্ধ করা হয় (ডিফল্ট পাবলিক চ্যাট সম্পাদনা থেকে আবার চালু করুন)। আপনার যোগ করা রুমগুলো তাদের মেসেজসহ এই ডিভাইস থেকে মুছে যায়।</string>
     <string name="r55_delete_for_everyone">সবার জন্য মুছুন</string>
     <string name="r55_delete_for_everyone_subtitle">K ব্যবহারকারী সবার জন্য এটি এই রুম থেকে সরায়।</string>
     <string name="r55_delete_for_everyone_q">সবার জন্য মুছবেন?</string>

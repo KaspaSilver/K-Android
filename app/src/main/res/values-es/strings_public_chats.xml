@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">Las notificaciones están desactivadas para este chat público</string>
     <string name="pc_notifications_on_closed_toast">Recibirás notificaciones de mensajes nuevos en este chat público, incluso con la app cerrada</string>
     <string name="pc_notifications_on_open_toast">Recibirás una notificación de mensajes nuevos en este chat público mientras la app siga abierta</string>
-    <string name="pc_default_room_off_toast">#%1$s está desactivada - vuelve a activarla en Editar chats públicos predeterminados</string>
     <string name="pc_delete_room_title">¿Eliminar #%1$s?</string>
     <string name="pc_delete_room_message">Se eliminan todos los mensajes de esta sala guardados en este dispositivo. No se puede deshacer: si te unes de nuevo más tarde, empezarás sin historial.</string>
     <string name="pc_delete_room_row_subtitle">Quita esta sala y sus mensajes de este dispositivo.</string>
     <string name="pc_keep">Mantener</string>
     <string name="pc_keep_subtitle">Deja la sala como está.</string>
-    <string name="pc_new_public_chat">Nuevo chat público</string>
-    <string name="pc_edit_default_public_chats">Editar chats públicos predeterminados</string>
-    <string name="pc_new_public_chat_explainer">Cualquiera que se una al mismo nombre de canal puede ver y publicar mensajes ahí: no hay propietario ni invitación.</string>
     <string name="pc_join">Unirse</string>
     <string name="pc_channel_name_rules">Los nombres de canal deben tener de 1 a %1$d caracteres, sin espacios ni dos puntos.</string>
     <string name="pc_join_failed">Algo salió mal al unirse a ese canal.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">Denuncia contenido abusivo u ofensivo. Abre un correo con este mensaje adjunto.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">Oculta sus publicaciones y mensajes de sala, y les impide interactuar contigo.</string>
-    <string name="pc_sender_view_profile_subtitle">Su perfil de KaPost: publicaciones, respuestas y seguidores.</string>
+    <string name="pc_sender_view_profile_subtitle">Su perfil: publicaciones, respuestas y seguidores.</string>
     <string name="pc_sender_send_kaspa_subtitle">Envía Kaspa a su dirección.</string>
     <string name="pc_sender_copy_address_subtitle">Copia su dirección de Kaspa.</string>
     <string name="pc_original_message_not_loaded">Mensaje original no cargado</string>

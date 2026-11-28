@@ -128,26 +128,42 @@ class BroadcastReadStateStore @Inject constructor(
         prefs.edit().putBoolean("rooms_silenced_once_v1_$key", true).apply()
     }
 
+    /** Whether this account's rooms K had added were cleared once (iOS 824a30bb
+     *  `kachat_rooms_opt_in_v1_<wallet>`, Public Chats starts empty). True with no account, so
+     *  nothing happens. */
+    fun roomsOptInDone(): Boolean = synchronized(lock) {
+        val key = wallet ?: return@synchronized true
+        prefs.getBoolean("rooms_opt_in_v1_$key", false)
+    }
+
+    fun markRoomsOptInDone() = synchronized(lock) {
+        val key = wallet ?: return@synchronized
+        prefs.edit().putBoolean("rooms_opt_in_v1_$key", true).apply()
+    }
+
     /**
      * The rooms this account has joined that the indexer's `/broadcast-channels` listed, per
      * account (iOS 35b112ce `kachat_rooms_indexer_listed_v1_<wallet>`): the ones that leave when
      * the indexer drops them ([com.kachat.app.services.publicchats.PublicChatDefaultRooms]). A
      * room off the list and not joined is forgotten, so joining it later by name makes it an
-     * ordinary room.
+     * ordinary room. Per indexer once it isn't the default one (iOS audit 2026-11-27 L12).
      */
     fun indexerListedRooms(): Set<String> = synchronized(lock) {
         val key = wallet ?: return@synchronized emptySet()
-        prefs.getStringSet("rooms_indexer_listed_v1_$key", null)?.toSet().orEmpty()
+        prefs.getStringSet(indexerListedKey(key), null)?.toSet().orEmpty()
     }
 
     /** Changes the indexer-listed rooms; [change] gets the saved set. */
     fun updateIndexerListed(change: (Set<String>) -> Set<String>) = synchronized(lock) {
         val key = wallet ?: return@synchronized
-        val stored = prefs.getStringSet("rooms_indexer_listed_v1_$key", null)?.toSet().orEmpty()
+        val stored = prefs.getStringSet(indexerListedKey(key), null)?.toSet().orEmpty()
         val next = change(stored)
         if (next == stored) return@synchronized
-        prefs.edit().putStringSet("rooms_indexer_listed_v1_$key", next).apply()
+        prefs.edit().putStringSet(indexerListedKey(key), next).apply()
     }
+
+    private fun indexerListedKey(wallet: String) =
+        "rooms_indexer_listed_v1_$wallet" + com.kachat.app.services.IndexerTrackedRooms.currentIndexerSuffix()
 
     /**
      * Before iOS 35b112ce (2026-11-26) only the rooms K joined for the person were kept

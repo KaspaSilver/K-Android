@@ -50,7 +50,6 @@
     <string name="close">إغلاق</string>
     <string name="confirm">تأكيد</string>
     <string name="confirm_selection">تأكيد التحديد</string>
-    <string name="connect_to_a_node">الاتصال بعقدة</string>
     <string name="connected_only_to_this_node">متصل بهذه العقدة فقط</string>
     <string name="connection_settings">إعدادات الاتصال</string>
     <string name="connection_status">حالة الاتصال</string>
@@ -75,7 +74,6 @@
     <string name="failed_to_send">فشل الإرسال</string>
     <string name="fee_kas">الرسوم (KAS)</string>
     <string name="from">من</string>
-    <string name="fund_your_chatting_address">موّل عنوان الدردشة الخاص بك</string>
     <string name="group_info">معلومات المجموعة</string>
     <string name="group_name_2">اسم المجموعة</string>
     <string name="hidden_addresses">العناوين المخفية</string>
@@ -84,7 +82,6 @@
     <string name="import_account">استيراد حساب</string>
     <string name="import_existing_account">استيراد حساب موجود</string>
     <string name="incoming_notifications">الإخطارات الواردة</string>
-    <string name="kachat_needs_to_connect_to_a">يحتاج K إلى الاتصال بعقدة. كيف تريد الاتصال؟</string>
     <string name="kaspa_explorer">مستكشف كاسبا</string>
     <string name="label_optional">التسمية (اختياري)</string>
     <string name="last_message">الرسالة الأخيرة</string>
@@ -185,7 +182,6 @@
     <string name="created">تم الإنشاء</string>
     <string name="customization">التخصيص</string>
     <string name="diagnostics">التشخيصات</string>
-    <string name="discover_addresses">اكتشاف العناوين</string>
     <string name="email">البريد الإلكتروني</string>
     <string name="explorer">المستكشف</string>
     <string name="github">GitHub</string>
@@ -236,14 +232,8 @@
     <string name="how_kachat_uses_kaspa">كيف يستخدم K شبكة Kaspa</string>
     <string name="kachat_lets_you_send_and_receive">يتيح لك K إرسال واستقبال الرسائل مباشرة عبر شبكة Kaspa نفسها. يلزم استخدام Kaspa لدفع الرسوم عند إرسال رسائلك. تذهب الرسوم التي تدفعها إلى المعدّنين الذين يؤمّنون الشبكة.</string>
     <string name="finish">إنهاء</string>
-    <string name="recommended">موصى به</string>
-    <string name="connect_your_own_node">اتصل بعقدتك الخاصة</string>
-    <string name="enter_a_node_address_you_trust">أدخل عنوان عقدة تثق بها</string>
-    <string name="auto_search_for_nodes">البحث التلقائي عن العقد</string>
-    <string name="most_taxing_on_the_device_not_as">الأكثر إرهاقًا للجهاز، وأقل موثوقية - يعتمد على مكان إقامتك</string>
     <string name="choose_your_language">اختر لغتك</string>
     <string name="select_the_language_youd_like_to">اختر اللغة التي ترغب في استخدامها في K.</string>
-    <string name="best">الأفضل</string>
     <string name="receive_kaspa">استلام Kaspa</string>
     <string name="currency">العملة</string>
     <string name="choose_your_currency">اختر عملتك</string>
@@ -319,7 +309,6 @@
     <string name="new_message_request">طلب رسالة جديد</string>
     <string name="wants_to_chat_with_you">يريد %1$s الدردشة معك.</string>
     <!-- Welcome Guide: .kachat and Message Requests (iOS 5c15ca0) -->
-    <string name="welcome_fund_chatting_body">تكفي 5 Kaspa لنحو 2500 رسالة.</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">الشبكة التجريبية</string>
     <string name="testnet_restart_to_testnet">أغلق K تمامًا ثم افتحه مجددًا لإتمام التبديل إلى الشبكة التجريبية.</string>
@@ -646,7 +635,7 @@
     <string name="ab_export_failed">فشل التصدير. تعذّرت كتابة الملف.</string>
     <string name="ab_already_up_to_date">محدّث بالفعل. كل العناوين في الملف محفوظة.</string>
     <string name="ab_imported_counts">تم الاستيراد: أُضيف %1$d، وحُدّث %2$d.</string>
-    <string name="ab_err_not_an_export">هذا الملف ليس تصدير جهات اتصال من KaChat.</string>
+    <string name="ab_err_not_an_export">هذا الملف ليس تصديرًا لجهات اتصال K.</string>
     <string name="ab_err_export_empty">لا يحتوي ملف التصدير هذا على جهات اتصال.</string>
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">أُرسلت إلى الشبكة</string>
@@ -874,7 +863,6 @@
     <string name="wallet_spending">الإنفاق</string>
     <string name="wallet_send">إرسال</string>
     <string name="wallet_receive">استلام</string>
-    <string name="wallet_request">طلب</string>
     <string name="profile_share_profile">مشاركة الملف الشخصي</string>
     <string name="settings_back_up_account">نسخ الحساب احتياطيًا</string>
     <string name="settings_complete_your_backup">أكمل نسختك الاحتياطية</string>
@@ -1408,12 +1396,9 @@
     <string name="chess_tc_1_1_subtitle">دقيقة واحدة لكل لاعب، مع ثانية لكل نقلة.</string>
     <string name="chess_tc_casual">ودّية</string>
     <string name="chess_tc_no_timer">بلا مؤقت.</string>
-    <string name="check_off_every_address_you_want_on_the_list">حدد دفعة واحدة كل عنوان تريده في القائمة.</string>
-    <string name="close_and_keep_scanning">إغلاق ومواصلة الفحص</string>
     <string name="recents">الأخيرة</string>
     <string name="initial_sync_starting">جارٍ البدء</string>
     <string name="initial_sync_finished">اكتمل</string>
-    <string name="downloading_message_history">جارٍ تنزيل سجل الرسائل</string>
     <string name="wiping_incoming_messages">جارٍ مسح الرسائل الواردة...</string>
     <string name="finishing_up">جارٍ الإنهاء...</string>
     <string name="re_syncing_chats_progress">جارٍ إعادة المزامنة... %1$d من %2$d دردشة</string>
@@ -1464,12 +1449,7 @@
     <string name="notification_mode_default">افتراضي (%1$s)</string>
     <string name="checking_address_n">جارٍ فحص العنوان رقم %1$d</string>
     <string name="n_found_so_far">تم العثور على %1$d حتى الآن</string>
-    <string name="checks_the_first_thousand_addresses">يفحص أول ألف عنوان مهما كانت الفجوات، ثم يواصل ما دام يجد المزيد.</string>
     <string name="first_sync_all_set">أنت جاهز</string>
-    <string name="first_sync_up_to_date">محادثاتك وسجلها محدّثة.</string>
-    <string name="first_sync_setting_up">جارٍ إعداد حسابك</string>
-    <string name="first_sync_downloading_footer">جارٍ تنزيل كل ما لدى هذا الحساب على السلسلة. يستغرق هذا وقتًا طويلًا مرة واحدة فقط.</string>
-    <string name="first_sync_continue_anyway">المتابعة على أي حال</string>
     <string name="nc_use_all_files">استخدام كل الملفات</string>
     <string name="nc_use_this_folder">استخدام هذا المجلد</string>
     <string name="nc_no_subfolders">لا توجد مجلدات فرعية.</string>
@@ -1550,10 +1530,6 @@
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">نسخ رابط المشاركة</string>
     <string name="share_link_copied">تم نسخ رابط المشاركة.</string>
-    <string name="generate_non_quantum_address">إنشاء عنوان غير كمّي</string>
-    <string name="generate_non_quantum_address_subtitle">عنوان عادي، مثل الذي يعطيه الاستلام. يعمل مع كل شيء، بما في ذلك kUSDT.</string>
-    <string name="generate_quantum_resistant_address">إنشاء عنوان مقاوم للحوسبة الكمّية</string>
-    <string name="generate_quantum_resistant_address_subtitle">يبقي مفتاحه مخفيًا حتى يُنفق منه. لـ Kaspa فقط: لا يمكن تداول kUSDT منه.</string>
     <string name="kaspa">Kaspa</string>
     <string name="kusdt_balances">أرصدة kUSDT</string>
     <string name="kusdt_listed_stays_here">هذا العنوان في قائمة kUSDT لديك، لذا يبقى هنا. أخفِه أولًا من إدارة kUSDT.</string>
@@ -1578,14 +1554,12 @@
     <string name="tap_to_manage">انقر للإدارة</string>
     <string name="token_about_kusdt">kUSDT هي USDT من Ethereum وBNB Chain، محفوظة بنسبة 1:1 في خزنة Trestly ومُصدرة كرمز على Kaspa. لا تُصدرها Tether، ولا يمكن إلا لـ Trestly تحويلها مرة أخرى إلى USDT.</string>
     <string name="token_about_title">حول %1$s</string>
-    <string name="token_actions_title">إجراءات %1$s</string>
     <string name="token_activity_bridged_in">وارد عبر الجسر</string>
     <string name="token_activity_combined_coins">تم دمج العملات</string>
     <string name="token_activity_swapped">تمت المبادلة</string>
     <string name="token_add_for_fee_and_change">إضافة %1$s للرسوم وعملة الباقي</string>
     <string name="token_add_for_network_fee">إضافة %1$s لرسوم الشبكة</string>
     <string name="token_add_more">إضافة %1$s أخرى</string>
-    <string name="token_address_visibility_subtitle">حدّد أي العناوين التي تحمل kUSDT تظهر في القائمة.</string>
     <string name="token_address_visibility_title">ظهور عناوين %1$s</string>
     <string name="token_amount_accessibility">المبلغ (%1$s)</string>
     <string name="token_available">المتاح: %1$s</string>
@@ -1602,23 +1576,20 @@
     <string name="token_combine_explainer">كل عملة %1$s تحمل %2$s. عند دمجها في عملة واحدة يعود KAS الزائد إلى هذا العنوان كـ KAS عادي بعد خصم رسوم الشبكة. يبقى رصيد %3$s كما هو.</string>
     <string name="token_combine_limit">يمكن دمج %1$d عملات كحد أقصى في المرة الواحدة. ادمج مرة أخرى للباقي.</string>
     <string name="token_combined">المدموج</string>
-    <string name="token_couldnt_check">تعذّر التحقق من %1$@ الآن: %2$@ اسحب لأسفل لإعادة المحاولة.</string>
-    <string name="token_discover_addresses">اكتشاف عناوين kUSDT</string>
-    <string name="token_discover_addresses_subtitle">يجد عناوينك التي تحمل kUSDT.</string>
+    <string name="token_couldnt_check">تعذّر التحقق من %1$s الآن: %2$s اسحب لأسفل لإعادة المحاولة.</string>
     <string name="token_every_coin_goes_to_recipient">كل عملة %1$s تحمل %2$s. تنتقل هذه الـ KAS إلى المستلم مع %3$s، لذا لا تضيع.</string>
     <string name="token_every_coin_holds_kas">كل عملة kUSDT تحمل 1.5 KAS. تنتقل مع kUSDT عند إرسالها.</string>
     <string name="token_fee">رسوم %1$s</string>
     <string name="token_fee_from_token_kas">لم يكن في هذا العنوان KAS، لذا أُخذت رسوم الشبكة من KAS المرافق لـ kUSDT.</string>
     <string name="token_fee_same_address_note">تأتي KAS الخاصة بالرسوم من العنوان نفسه، فلا يربطه الإرسال بعناوينك الأخرى.</string>
-    <string name="token_found_addresses">تم العثور على %1$d عناوين بها %2$@.</string>
+    <string name="token_found_addresses">تم العثور على %1$d عناوين بها %2$s.</string>
     <string name="token_fund_hint">اختر من أي عنوان يأتي KAS، اسحب للأعلى، وستعود إلى هنا.</string>
-    <string name="token_generate_new_address_subtitle">يضيف إلى هذه القائمة عنوانًا عاديًا جديدًا تمامًا لك.</string>
     <string name="token_goes_with_it">يُرسل معها</string>
     <string name="token_held_on">محفوظ على</string>
     <string name="token_held_with_it">%1$s محفوظة معه</string>
     <string name="token_hidden_count">%1$d مخفية: ما زالت تُحسب في الإجمالي.</string>
     <string name="token_hide_address_subtitle">يزيله من هذه القائمة. أعد تفعيله من ظهور عناوين %1$s.</string>
-    <string name="token_hide_all_message">ستبدأ إدارة %1$@ من جديد بعنوان الدردشة فقط. لا شيء يضيع: أعد أي عنوان من هنا، ويبقى %2$@ الخاص به محسوبًا في إجماليك.</string>
+    <string name="token_hide_all_message">ستبدأ إدارة %1$s من جديد بعنوان الدردشة فقط. لا شيء يضيع: أعد أي عنوان من هنا، ويبقى %2$s الخاص به محسوبًا في إجماليك.</string>
     <string name="token_history_from_now_on">من الآن ستظهر هنا عمليات الإرسال والاستلام والدمج على هذا الهاتف.</string>
     <string name="token_history_title">سجل %1$s</string>
     <string name="token_kas_for_send">KAS لإرسال %1$s</string>
@@ -1637,8 +1608,6 @@
     <string name="token_receive_no_usdt_warning">لا ترسل USDT من Ethereum أو BNB Chain أو منصة تداول إلى هذا العنوان: سيضيع. انقله أولًا إلى Kaspa عبر جسر Trestly.</string>
     <string name="token_receive_only">لا يمكن إرسال سوى %1$s على Kaspa، أو KAS، إلى هنا.</string>
     <string name="token_receive_title">استلام %1$s</string>
-    <string name="token_rename_label_placeholder">تسمية</string>
-    <string name="token_rename_message">أعطِ هذا العنوان تسمية لمساعدتك على التعرف عليه.</string>
     <string name="token_script_address_error">لا يمكن إرسال %1$s إلا إلى عنوان Kaspa عادي، وليس إلى عنوان مقاوم للكم أو عنوان سكربت آخر.</string>
     <string name="token_send_title">إرسال %1$s</string>
     <string name="token_send_to_chatting_subtitle">ينقل kUSDT من هذا العنوان إلى عنوان الدردشة الخاص بك.</string>

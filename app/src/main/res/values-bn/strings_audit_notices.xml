@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Received KAS notices and in-app Posts banners in the app's language (iOS audit 2026-11-27 M10) -->
+    <string name="notice_received">%1$s পাওয়া গেছে</string>
+    <string name="notice_balance_increased">ব্যালান্স %1$s বেড়েছে</string>
+    <string name="notice_chatting_address">চ্যাটিং ঠিকানা %1$s</string>
+    <string name="notice_spending_address">খরচের ঠিকানা %1$s</string>
+    <string name="notice_cold_storage_address">কোল্ড স্টোরেজ ঠিকানা %1$s (%2$s)</string>
+    <string name="notice_post_liked">আপনার পোস্টে লাইক দিয়েছেন</string>
+    <string name="notice_post_disliked">আপনার পোস্টে ডিসলাইক দিয়েছেন</string>
+    <string name="notice_post_tipped">আপনার পোস্টে টিপ দিয়েছেন</string>
+    <string name="notice_post_tipped_amount">আপনার পোস্টে টিপ দিয়েছেন: %1$s</string>
+    <string name="notice_post_replied">আপনার পোস্টে উত্তর দিয়েছেন</string>
+    <string name="notice_post_quoted">আপনার পোস্ট উদ্ধৃত করেছেন</string>
+    <string name="notice_post_reposted">আপনার পোস্ট রিপোস্ট করেছেন</string>
+    <string name="notice_followed_you">আপনাকে ফলো করেছেন</string>
+    <string name="notice_post_mentioned">একটি পোস্টে আপনাকে উল্লেখ করেছেন</string>
+    <string name="notice_post_interacted">আপনার পোস্টে প্রতিক্রিয়া জানিয়েছেন</string>
+</resources>

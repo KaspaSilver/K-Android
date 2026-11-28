@@ -91,6 +91,33 @@ object PaymentNoticeProof {
         else -> Verdict.Invalid("its payer isn't the contact, and the notice came long after the payment")
     }
 
+    /** Whether the REST API's covenant id for the paid coin ([restCovenant]) already rules it
+     *  out: present and not [expectedCovenant] (audit 2026-11-27 C7). */
+    fun restCovenantRefuses(restCovenant: String?, expectedCovenant: String): Boolean {
+        val rest = restCovenant?.trim()?.lowercase().orEmpty()
+        return rest.isNotEmpty() && rest != expectedCovenant.lowercase()
+    }
+
+    /**
+     * Whether a token notice's coin is the real token (iOS `checkTokenNoticeOnChain`, audit
+     * 2026-11-27 C7). The node decides while the coin is unspent ([coinOnNode]: listed, and
+     * [coinMatches]: its script and covenant id are the token's); the REST API's covenant id is
+     * only a hint. Spent since (a notice read back from history, or the payee moved it first), the
+     * node can't show it any more, so the REST API's matching id is all there is to go on. Called
+     * once the node answered; [restCovenantRefuses] has already refused a wrong REST id.
+     */
+    fun tokenCoinVerdict(
+        restCovenant: String?,
+        expectedCovenant: String,
+        coinOnNode: Boolean,
+        coinMatches: Boolean,
+        symbol: String,
+    ): Verdict {
+        if (coinOnNode) return if (coinMatches) Verdict.Valid else Verdict.Invalid("the coin isn't $symbol")
+        val rest = restCovenant?.trim()?.lowercase().orEmpty()
+        return if (rest.isNotEmpty() && rest == expectedCovenant.lowercase()) Verdict.Valid else Verdict.Unknown()
+    }
+
     /** Whether an unverified notice bubble filed at [filedAt] should go, given [verdict]. */
     fun shouldGiveUp(verdict: Verdict, filedAt: Long, now: Long): Boolean =
         verdict is Verdict.Unknown && verdict.settled && filedAt > 0L && now - filedAt >= UNVERIFIED_GIVE_UP_MS

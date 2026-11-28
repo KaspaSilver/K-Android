@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">Notifikasi dimatikan untuk obrolan publik ini</string>
     <string name="pc_notifications_on_closed_toast">Anda akan mendapat notifikasi pesan baru di obrolan publik ini, bahkan saat aplikasi ditutup</string>
     <string name="pc_notifications_on_open_toast">Anda akan mendapat notifikasi pesan baru di obrolan publik ini selama aplikasi tetap terbuka</string>
-    <string name="pc_default_room_off_toast">#%1$s mati - nyalakan lagi di Edit Obrolan Publik Bawaan</string>
     <string name="pc_delete_room_title">Hapus #%1$s?</string>
     <string name="pc_delete_room_message">Semua pesan yang tersimpan untuk ruang ini di perangkat ini dihapus. Tindakan ini tidak bisa dibatalkan - bergabung lagi nanti akan dimulai tanpa riwayat.</string>
     <string name="pc_delete_room_row_subtitle">Menghapus ruang ini dan pesannya dari perangkat ini.</string>
     <string name="pc_keep">Simpan</string>
     <string name="pc_keep_subtitle">Biarkan ruang seperti semula.</string>
-    <string name="pc_new_public_chat">Obrolan Publik Baru</string>
-    <string name="pc_edit_default_public_chats">Edit Obrolan Publik Bawaan</string>
-    <string name="pc_new_public_chat_explainer">Siapa pun yang bergabung dengan nama kanal yang sama bisa melihat dan mengirim pesan di sana - tidak ada pemilik dan tidak perlu undangan.</string>
     <string name="pc_join">Gabung</string>
     <string name="pc_channel_name_rules">Nama kanal harus 1-%1$d karakter tanpa spasi atau titik dua.</string>
     <string name="pc_join_failed">Terjadi kesalahan saat bergabung ke kanal itu.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">Laporkan konten yang kasar atau tidak pantas. Membuka email dengan pesan ini terlampir.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">Menyembunyikan postingan dan pesan ruang mereka, dan menghentikan mereka berinteraksi dengan Anda.</string>
-    <string name="pc_sender_view_profile_subtitle">Profil KaPost mereka: postingan, balasan, dan pengikut.</string>
+    <string name="pc_sender_view_profile_subtitle">Profilnya: postingan, balasan, dan pengikut.</string>
     <string name="pc_sender_send_kaspa_subtitle">Kirim Kaspa ke alamat mereka.</string>
     <string name="pc_sender_copy_address_subtitle">Salin alamat Kaspa mereka.</string>
     <string name="pc_original_message_not_loaded">Pesan asli belum dimuat</string>

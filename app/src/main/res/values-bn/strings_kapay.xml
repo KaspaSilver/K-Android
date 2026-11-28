@@ -19,7 +19,6 @@
     <string name="enter_kpub">kpub লিখুন</string>
     <string name="export_csv">CSV এক্সপোর্ট করুন</string>
     <string name="fee_usd_optional">ফি (ঐচ্ছিক)</string>
-    <string name="generate_more_addresses">আরও ঠিকানা তৈরি করুন</string>
     <string name="holdings">হোল্ডিংস</string>
     <string name="import_action">ইমপোর্ট করুন</string>
     <string name="import_csv">CSV ইম্পোর্ট করুন</string>
@@ -36,12 +35,8 @@
     <string name="kp_address_hidden_reenable">ঠিকানা লুকানো হয়েছে। ঠিকানার দৃশ্যমানতা থেকে আবার চালু করুন।</string>
     <string name="kp_address_lld_64ab3">ঠিকানা #%1$s</string>
     <string name="kp_address_number_ready">ঠিকানা #%1$d প্রস্তুত।</string>
-    <string name="kp_address_row_copy_subtitle">পুরো ঠিকানা ক্লিপবোর্ডে কপি করে।</string>
     <string name="kp_address_row_hide_subtitle">এটি এই তালিকা থেকে সরায়। ঠিকানার দৃশ্যমানতায় আবার চালু করুন।</string>
-    <string name="kp_address_row_qr_subtitle">পূর্ণ স্ক্রিনে, অন্য ডিভাইস দিয়ে স্ক্যান করার জন্য।</string>
-    <string name="kp_address_row_rename_subtitle">এই ঠিকানাকে আপনার নিজের লেবেল দেয়।</string>
     <string name="kp_address_visibility_9c9a7">ঠিকানার দৃশ্যমানতা</string>
-    <string name="kp_address_visibility_subtitle">তালিকায় যে ঠিকানাগুলো চান, একবারে সব টিক দিন।</string>
     <string name="kp_already_added_26837">ইতিমধ্যে যোগ করা হয়েছে</string>
     <string name="kp_amount_and_price_08599">পরিমাণ ও দাম</string>
     <string name="kp_and_its_transactions_will_be_deleted_3c57d">\'%1$s\' এবং এর লেনদেনগুলো মুছে ফেলা হবে। এটি পূর্বাবস্থায় ফেরানো যাবে না।</string>
@@ -55,8 +50,6 @@
     <string name="kp_check_address_history_before_trying_again">আবার চেষ্টা করার আগে ঠিকানার ইতিহাস দেখুন।</string>
     <string name="kp_trade_may_have_gone_through">ট্রেডটি হয়তো সম্পন্ন হয়েছে।</string>
     <string name="kp_checking_address_lld_5b84c">ঠিকানা #%1$s যাচাই করা হচ্ছে</string>
-    <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">মাঝে ফাঁকা থাকলেও প্রথম এক হাজার ঠিকানা দেখে, তারপর যতক্ষণ কিছু পাওয়া যায় ততক্ষণ এগিয়ে যায়।</string>
-    <string name="kp_close_and_keep_scanning_b66cc">বন্ধ করুন ও স্ক্যান চালিয়ে যান</string>
     <string name="kp_close_bbfa7">বন্ধ করুন</string>
     <string name="kp_coin_just_spent">এইমাত্র একটি পাঠানোয় খরচ হয়েছে</string>
     <string name="kp_coin_locked_by_covenant">একটি কভেন্যান্ট দ্বারা লক করা</string>
@@ -128,7 +121,6 @@
     <string name="kp_mining_per_week">প্রতি সপ্তাহে</string>
     <string name="kp_new_portfolio_5c1c7">নতুন পোর্টফোলিও</string>
     <string name="kp_no_addresses_discovered_yet_15738">এখনও কোনো ঠিকানা আবিষ্কৃত হয়নি।</string>
-    <string name="kp_no_used_addresses_yet">এখনো কোনো ব্যবহৃত ঠিকানা নেই</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">এখনো যথেষ্ট ইতিহাস নেই - কয়েক দিনের কার্যকলাপের পরে আবার দেখুন।</string>
     <string name="kp_note_optional_4e395">নোট (ঐচ্ছিক)</string>
     <string name="kp_nothing_can_change_now_this_is_8bf3a">এখন আর কিছু বদলানো যাবে না: এটিই KasSigner-এর স্বাক্ষর করা লেনদেন।</string>
@@ -216,7 +208,6 @@
     <string name="kp_you_receive">আপনি পাবেন</string>
     <string name="kp_you_receive_about">আপনি প্রায় পাবেন</string>
     <string name="kp_you_saw">আপনি দেখেছিলেন</string>
-    <string name="kpub">kpub</string>
     <string name="kpub_2">kpub...</string>
     <string name="name_this_address">এই ঠিকানার নাম দিন</string>
     <string name="no_app_to_open_link">এই ফোনে লিঙ্কটি খুলতে পারে এমন কোনো অ্যাপ নেই</string>
@@ -271,22 +262,17 @@
     <string name="total_invested">মোট বিনিয়োগ</string>
     <string name="total_p_l">মোট লাভ/ক্ষতি</string>
     <string name="transactions">লেনদেন</string>
-    <string name="kp_changes_the_name_shown_for_this_account_kc">এই অ্যাকাউন্টের জন্য দেখানো নাম বদলায়।</string>
     <string name="kp_compound_utxos_description_kc">এই ঠিকানার সব UTXO একটিতে মিলিয়ে দেয়, যাতে ভবিষ্যতে পাঠানোর সময় কম ইনপুট লাগে।</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">একই শব্দের আপনার অন্য অ্যাপগুলো একই kUSDT দেখায় ও পাঠাতে পারে। সোয়াপ এখানেই হয়।</string>
     <string name="kp_kusdt_guide_swapping_detail_kc">KAS ও kUSDT অদলবদল করতে বা পুলে যোগ করতে ওয়ালেট ট্যাবে স্টেবলকয়েন সোয়াপ করুন ট্যাপ করে kUSDT বেছে নিন। Trestly-র নিজস্ব সাইট K-এর ভেতরে আপনার বেছে নেওয়া ঠিকানার সাথে যুক্ত হয়ে খোলে।</string>
     <string name="kp_more_stablecoins_will_show_here_kc">K আরও স্টেবলকয়েন যোগ করলে সেগুলো এখানে দেখাবে।</string>
-    <string name="kp_notifies_you_when_this_account_kc">এই অ্যাকাউন্টে Kaspa এলে আপনাকে জানায়।</string>
     <string name="kp_on_trestly_inside_kachat_kc">Trestly-তে, K-এর ভেতরে</string>
-    <string name="kp_puts_the_extended_public_key_kc">সম্প্রসারিত পাবলিক কী ক্লিপবোর্ডে কপি করে।</string>
     <string name="kp_reveals_next_unused_address_account_kc">এই অ্যাকাউন্টের পরের অব্যবহৃত ঠিকানাটি দেখায়।</string>
     <string name="kp_scan_it_into_another_device_kc">অন্য ডিভাইসে স্ক্যান করুন, সেখানে এই অ্যাকাউন্ট দেখতে পাবেন।</string>
     <string name="kp_scan_this_on_your_kassigner_kc">এটি আপনার KasSigner-এ স্ক্যান করুন</string>
     <string name="kp_selected_one_utxo_kc">বাছাই করা: %1$s (১টি UTXO)</string>
     <string name="kp_selected_utxos_kc">বাছাই করা: %1$s (%2$dটি UTXO)</string>
-    <string name="kp_show_kpub_qr_kc">kpub QR দেখান</string>
     <string name="kp_something_went_wrong_kc">কিছু ভুল হয়েছে</string>
-    <string name="kp_stops_notifying_when_this_account_kc">এই অ্যাকাউন্টে Kaspa এলে আর জানাবে না। অন্য অ্যাকাউন্টগুলোর নোটিফিকেশন থাকবে।</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">এটি শুধুমাত্র K-এর ওয়াচ তালিকা থেকে এটি সরায়। এর KasSigner ডিভাইস বা এতে থাকা কোনো তহবিলের উপর কোনো প্রভাব নেই।</string>
     <string name="kp_token_empty_state_swap_kc">নতুন ঠিকানায় নিন, অথবা ওয়ালেট ট্যাবের স্টেবলকয়েন সোয়াপ করুন থেকে কিনুন।</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly, K-কে বলছে:</string>
@@ -296,8 +282,5 @@
     <string name="kp_trestly_site_kc">Trestly সাইট</string>
     <string name="kp_trestly_site_url_kc">Trestly সাইট URL</string>
     <string name="kp_trestly_swap_note_kc">K-এর ভেতরে Trestly-র নিজস্ব কোড দিয়ে তৈরি ও যাচাই। পুল আগে বদলালে আবার দাম নেয়: শুধু এই দাম বা ভালো হলে এগোয়, কম হলে আবার জিজ্ঞেস করে এবং সাইটের ন্যূনতমের নিচে কখনো যায় না।</string>
-    <string name="kp_turn_off_receive_notifications_kc">প্রাপ্তির নোটিফিকেশন বন্ধ করুন</string>
-    <string name="kp_turn_on_receive_notifications_kc">প্রাপ্তির নোটিফিকেশন চালু করুন</string>
-    <string name="cold_copy_kpub_reveals_all_addresses">এই অ্যাকাউন্টের kpub ক্লিপবোর্ডে রাখে। এটি এর সব ঠিকানা প্রকাশ করে।</string>
     <string name="cold_not_a_valid_kpub">বৈধ kpub নয়</string>
 </resources>

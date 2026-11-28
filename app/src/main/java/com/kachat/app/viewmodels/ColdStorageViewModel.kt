@@ -71,7 +71,11 @@ class ColdStorageViewModel @Inject constructor(
     /** [scannedText] is whatever the QR scanner handed back — validated as a real kpub before saving. */
     fun importKpub(scannedText: String, name: String) {
         _importState.value = ImportUiState(status = ImportStatus.VALIDATING)
-        coldStorageManager.saveAccount(name.ifBlank { "Cold Storage" }, scannedText.trim()).fold(
+        coldStorageManager.saveAccount(
+            // iOS 01f71184: "Cold Storage %lld", the next number, in the app's language
+            name.ifBlank { com.kachat.app.util.tr(com.kachat.app.R.string.rel_wallet_cold_storage_n, coldStorageManager.getAccounts().size + 1) },
+            scannedText.trim(),
+        ).fold(
             onSuccess = {
                 _accounts.value = coldStorageManager.getAccounts()
                 _importState.value = ImportUiState(status = ImportStatus.SUCCESS)
@@ -103,6 +107,7 @@ class ColdStorageViewModel @Inject constructor(
     fun deleteAccount(id: String) {
         coldStorageManager.deleteAccount(id)
         _accounts.value = coldStorageManager.getAccounts()
+        _accountBalances.value = _accountBalances.value - id
     }
 
     // -------------------------------------------------------------------------
@@ -132,9 +137,108 @@ class ColdStorageViewModel @Inject constructor(
         /** The row's name: its label, else "Quantum Address #n" for a quantum one, else
          *  "Address #n" (iOS `ColdStorageAddressEntry.displayLabel`). */
         val displayLabel: String
-            get() = label?.takeIf { it.isNotBlank() }
-                ?: if (isQuantum) ColdStorageManager.ColdQuantumAddress.defaultLabel(quantumChain, unitIndex)
+            get() = label?.takeIf { it.isNotBlank() } ?: defaultLabel
+
+        /** The name it goes by with no label of its own (iOS b49a021d `defaultLabel`): the
+         *  placeholder while its card is renamed. */
+        val defaultLabel: String
+            get() = if (isQuantum) ColdStorageManager.ColdQuantumAddress.defaultLabel(quantumChain, unitIndex)
                 else com.kachat.app.util.tr(com.kachat.app.R.string.kp_address_lld_64ab3, index)
+    }
+
+    companion object {
+        /** [rows] with each address's balance as just read; an address the read left out keeps
+         *  its figure. A balance also proves the address used (used-ness only ever grows). */
+        fun mergeBalances(rows: List<AddressRow>, balances: Map<String, Long>): List<AddressRow> = rows.map { row ->
+            val live = balances[row.address] ?: return@map row
+            // an address that held coins before was used (iOS 01f71184)
+            row.copy(balanceSompi = live, hasHistory = row.hasHistory || live > 0L || row.balanceSompi > 0L, liveChecked = true)
+        }
+
+        /** How soon after a full load an appear reloads balances only (iOS `quickReturn`, 120 s). */
+        const val QUICK_RETURN_MS = 120_000L
+
+        fun isQuickReturn(lastFullLoadMs: Long?, nowMs: Long): Boolean =
+            lastFullLoadMs != null && nowMs - lastFullLoadMs in 0 until QUICK_RETURN_MS
+
+        /** A balances-only reload's Used probes (iOS 01f71184, release audit C1): the rows still
+         *  unused and empty whose balance moved, or whose last probe failed ([unknown]). */
+        fun balancesOnlyProbes(before: List<AddressRow>, after: List<AddressRow>, unknown: Set<String>): List<String> {
+            val balanceBefore = before.associate { it.address to it.balanceSompi }
+            return after.filter { row ->
+                !row.hasHistory && row.balanceSompi == 0L &&
+                    (balanceBefore[row.address] != row.balanceSompi || row.address in unknown)
+            }.map { it.address }
+        }
+
+        /** An account's balance: every address, hidden ones too, as its card on the list and
+         *  Manage Addresses count it (iOS d88891ea, audit 2026-11-27 L16), summed without
+         *  overflowing (L4). */
+        fun totalSompi(rows: List<AddressRow>): Long =
+            rows.fold(0L) { sum, row -> com.kachat.app.services.explorer.ExplorerMath.add(sum, maxOf(0L, row.balanceSompi)) }
+
+        /**
+         * Manage Addresses' order for an account's cards (iOS b49a021d `visibleEntries`, owner
+         * 2026-11-27: Cold Storage gets the same update): the visible rows, unused first, newest
+         * first, so a freshly generated address lands at the top, then the used ones in number
+         * order. Used is a history, a balance or a username ([domainOwners]).
+         */
+        fun sortedForList(rows: List<AddressRow>, domainOwners: Set<String>): List<AddressRow> {
+            fun used(row: AddressRow) = row.hasHistory || row.balanceSompi > 0L || row.address in domainOwners
+            return rows.filterNot { it.hidden }.sortedWith { a, b ->
+                val aUsed = used(a)
+                val bUsed = used(b)
+                when {
+                    aUsed != bUsed -> if (aUsed) 1 else -1
+                    aUsed -> a.index.compareTo(b.index)
+                    else -> b.index.compareTo(a.index)
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // The list's account cards: each account's balance (iOS b49a021d `loadBalances`)
+    // -------------------------------------------------------------------------
+
+    private val _accountBalances = MutableStateFlow<Map<String, Long>>(emptyMap())
+    /** Each account's balance, its addresses summed: the last known at once, then read live.
+     *  Missing until either is known. */
+    val accountBalances: StateFlow<Map<String, Long>> = _accountBalances.asStateFlow()
+
+    /** The account's balance as last read (every address; a hidden one is always empty), for its
+     *  card to show at once while the live read runs (iOS b49a021d `lastKnownBalance`). Null
+     *  before any read. */
+    private fun lastKnownBalance(accountId: String): Long? =
+        snapshotRows(accountId)?.let { totalSompi(it) }
+
+    /**
+     * Every account's balance for its card on the list: the last known at once, then each read
+     * live with one batched call over its addresses (0...maxDerivedIndex and the quantum ones), as
+     * [refreshAddresses]' first pass reads them. A read that fails keeps what was shown.
+     */
+    suspend fun loadAccountBalances() {
+        val accounts = coldStorageManager.getAccounts()
+        val known = _accountBalances.value.toMutableMap()
+        known.keys.retainAll(accounts.map { it.id }.toSet())
+        for (account in accounts) {
+            if (account.id !in known) lastKnownBalance(account.id)?.let { known[account.id] = it }
+        }
+        _accountBalances.value = known.toMap()
+        for (account in accounts) {
+            val rootKey = withContext(Dispatchers.Default) { rootKeyFor(account.id) } ?: continue
+            val derived = withContext(Dispatchers.Default) {
+                (0..account.maxDerivedIndex).mapNotNull { index ->
+                    runCatching { KaspaExtendedPublicKey.deriveChildAddress(rootKey, chain = 0, index = index) }.getOrNull()
+                }
+            }
+            val quantum = coldStorageManager.currentQuantumAddresses(account.id).map { it.address }
+            val balances = runCatching { addressDiscovery.fetchBalances(derived + quantum) }.getOrNull() ?: continue
+            // A per-address fallback may leave some out: only a full answer replaces the figure.
+            if (balances.size < (derived + quantum).toSet().size && account.id in _accountBalances.value) continue
+            _accountBalances.value = _accountBalances.value +
+                (account.id to balances.values.fold(0L) { sum, v -> com.kachat.app.services.explorer.ExplorerMath.add(sum, maxOf(0L, v)) })
+        }
     }
 
     private val _addresses = MutableStateFlow<List<AddressRow>>(emptyList())
@@ -342,14 +446,97 @@ class ColdStorageViewModel @Inject constructor(
             // (same rate-limit reasoning as iOS's loadEntries backfill), then persist the
             // snapshot so the next open paints instantly.
             val rows = loaded ?: return@launch
+            val failed = HashSet<String>()
             for (row in rows) {
                 if (row.balanceSompi > 0L || row.hasHistory) continue
-                val used = addressDiscovery.hasHistory(row.address) ?: continue
+                val used = addressDiscovery.hasHistory(row.address)
+                if (used == null) {
+                    failed += row.address
+                    continue
+                }
                 if (used) {
                     _addresses.value = _addresses.value.map { if (it.index == row.index) it.copy(hasHistory = true) else it }
                 }
             }
+            if (loadedAccountId == accountId) {
+                unknownUsedAddresses = failed
+                lastFullLoadMs[accountId] = System.currentTimeMillis()
+            }
             try { coldStorageManager.setAddressSnapshot(accountId, gson.toJson(_addresses.value)) } catch (e: Exception) { /* best-effort */ }
+        }
+    }
+
+    /** Zero-balance addresses whose last Used probe failed: the next balances-only reload asks
+     *  again (iOS `unknownUsedAddresses`, release audit 2026-11-27 C1). */
+    private var unknownUsedAddresses: Set<String> = emptySet()
+
+    /** When each account's last full load (scan, used checks, name lookups) finished, ms. */
+    private val lastFullLoadMs = HashMap<String, Long>()
+
+    /**
+     * The account's screen shows (iOS 01f71184 `onScreenPresence`): coming back within
+     * [QUICK_RETURN_MS] of the last full load reloads balances only, so the rows don't
+     * reshuffle (smoothness audit L1); otherwise the full load.
+     */
+    fun screenAppeared(accountId: String) {
+        val last = lastFullLoadMs[accountId]
+        val quick = isQuickReturn(last, System.currentTimeMillis()) &&
+            loadedAccountId == accountId && _addresses.value.isNotEmpty()
+        if (quick) refreshBalances(accountId) else refreshAddresses(accountId)
+    }
+
+    /**
+     * Coins moved on one of the account's addresses: its balances again, one batched read, without
+     * the discovery scan, the per-address used checks or the name lookups, which run on appear and
+     * pull (iOS d88891ea `loadEntries(balancesOnly:)`, audit 2026-11-27 L21: a full reload on
+     * every UTXO change). What the earlier checks found (used, labels, hidden) stays; a failed
+     * read keeps what is shown.
+     */
+    fun refreshBalances(accountId: String) {
+        val account = coldStorageManager.getAccounts().find { it.id == accountId } ?: return
+        if (loadedAccountId != accountId || _addresses.value.isEmpty()) {
+            refreshAddresses(accountId)
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val rootKey = rootKeyFor(accountId) ?: return@launch
+                val derived = withContext(Dispatchers.Default) {
+                    (0..account.maxDerivedIndex).mapNotNull { index ->
+                        runCatching { KaspaExtendedPublicKey.deriveChildAddress(rootKey, chain = 0, index = index) }
+                            .getOrNull()?.let { index to it }
+                    }
+                }
+                val quantum = coldStorageManager.currentQuantumAddresses(accountId)
+                val balances = addressDiscovery.fetchBalances(derived.map { it.second } + quantum.map { it.address })
+                    ?: return@launch
+                // another account opened meanwhile: not its rows
+                if (loadedAccountId != accountId) return@launch
+                val before = _addresses.value
+                _addresses.value = mergeBalances(before, balances)
+                // Still probe the rows whose balance moved and the ones whose last probe failed,
+                // so a just-used change address doesn't stay Unused until a pull (iOS 01f71184,
+                // release audit 2026-11-27 C1).
+                val toProbe = balancesOnlyProbes(before, _addresses.value, unknownUsedAddresses)
+                if (toProbe.isEmpty()) return@launch
+                val usedNow = HashSet<String>()
+                val stillUnknown = HashSet<String>()
+                for (address in toProbe) {
+                    val used = addressDiscovery.hasHistory(address)
+                    if (loadedAccountId != accountId) return@launch
+                    when (used) {
+                        null -> stillUnknown += address
+                        true -> usedNow += address
+                        false -> Unit
+                    }
+                }
+                if (usedNow.isNotEmpty()) {
+                    _addresses.value = _addresses.value.map { if (it.address in usedNow) it.copy(hasHistory = true) else it }
+                }
+                unknownUsedAddresses = (unknownUsedAddresses - toProbe.toSet()) + stillUnknown
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+            }
         }
     }
 

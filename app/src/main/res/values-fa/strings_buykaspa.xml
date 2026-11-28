@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">خرید Kaspa</string>
+    <string name="buykaspa_swap_to_kaspa">سوآپ به Kaspa</string>
+    <string name="buykaspa_waiting_payment">در انتظار پرداخت شما</string>
+    <string name="buykaspa_paid">پرداخت شد. USDC شما در راه است.</string>
+    <string name="buykaspa_bridging">در حال انتقال به Kaspa به‌صورت kUSDT، معمولاً حدود ۲۰ دقیقه</string>
+    <string name="buykaspa_arrived">%1$s رسید. آن را با Kaspa سوآپ کنید.</string>
+    <string name="buykaspa_sign_again">برای امضای دوبارهٔ پل باز کنید</string>
+    <string name="buykaspa_rejected">Stripe این خرید را رد کرد. هیچ مبلغی کسر نشد.</string>
+    <string name="buykaspa_refunded">پل اجرا نشد، پس USDC برگردانده شد. برای انتقال دوباره باز کنید.</string>
+    <string name="buykaspa_expired">پرداخت نشد. هیچ مبلغی کسر نشد.</string>
+    <string name="buykaspa_where_land">kUSDT شما به کدام نشانی برسد؟</string>
+    <string name="buykaspa_needs_words">K برای خرید با کارت به واژه‌های بازیابی این حساب روی این گوشی نیاز دارد.</string>
+    <string name="buykaspa_stripe_note">Stripe به خریداران در آمریکا و اتحادیهٔ اروپا می‌فروشد. کارمزد کارت و کارمزدهای شبکه پیش از پرداخت در صفحهٔ بعد نشان داده می‌شوند.</string>
+    <string name="buykaspa_lands_on_format">kUSDT به این نشانی می‌رسد: %1$s</string>
+    <string name="buykaspa_can_close">می‌توانید این را ببندید. K سفارش شما را در زبانهٔ کیف پول دنبال می‌کند.</string>
+    <string name="buykaspa_approve_bridge">تأیید پل</string>
+    <string name="buykaspa_sign_explainer">یک امضا به پل Trestly اجازه می‌دهد تا این مقدار USDC را از نشانی اتریوم K بردارد و به‌صورت kUSDT در Kaspa واریز کند. به ETH نیازی نیست و هیچ Kaspa از کیف پول شما خارج نمی‌شود.</string>
+    <string name="buykaspa_up_to">تا سقف</string>
+    <string name="buykaspa_lands_on">kUSDT به این نشانی می‌رسد</string>
+    <string name="buykaspa_ends">پایان</string>
+    <string name="buykaspa_bridge">پل</string>
+    <string name="buykaspa_eth_note">نشانی اتریوم K از واژه‌های این حساب ساخته می‌شود، همان‌طور که هر کیف پول اتریومی می‌سازد.</string>
+    <string name="buykaspa_fresh_note">نشانی تازه‌ای که هرگز استفاده نشده، تا این خرید از نام کاربری و گفتگوهای شما جدا بماند.</string>
+    <string name="buykaspa_chatting_note">نشانی‌ای که دیگران به آن پیام می‌دهند و پرداخت می‌کنند.</string>
+    <string name="buykaspa_fresh_address">آدرس تازه</string>
+    <string name="buykaspa_reload">بارگذاری دوباره</string>
+</resources>

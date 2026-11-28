@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K به شما امکان می‌دهد پیام‌ها را مستقیماً در شبکه Kaspa ارسال و دریافت کنید. برای پرداخت کارمزد هنگام ارسال پیام‌هایتان به Kaspa نیاز است. کارمزدی که می‌پردازید به استخراج‌کنندگانی می‌رسد که شبکه را ایمن نگه می‌دارند. با ۵ کسپا می‌توانید حدود ۲٬۵۰۰ پیام بفرستید.</string>
+    <string name="welcome2_get_username">یک نام کاربری بگیرید</string>
+    <string name="welcome2_get_username_caption">یک نام کاربری مثل @alice بگیرید تا دیگران بدون نشانی طولانی شما پیدایتان کنند و پیام بدهند. آن را از Kaspa Hub &gt; نام‌های کاربری بگیرید.</string>
+    <string name="welcome2_share_title">نشانی گفتگوی خود را به اشتراک بگذارید</string>
+    <string name="welcome2_share_body">آن را برای کسی بفرستید تا بتواند شما را در K پیدا کند و پیام بدهد.</string>
+</resources>

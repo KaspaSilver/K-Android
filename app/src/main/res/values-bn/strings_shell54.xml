@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">Kaspa নেটওয়ার্কে যে কেউ এই ঠিকানা ও এর ব্যালেন্স দেখতে পারে, কিন্তু আপনার বার্তা পড়তে পারে না। এটি শুধু চ্যাট ও ব্যবহারকারীর নামের জন্য ব্যবহার করুন।</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... বা ব্যবহারকারীর নাম</string>
     <string name="shell54_looking_up_username">ব্যবহারকারীর নাম খোঁজা হচ্ছে...</string>
-    <string name="shell54_portfolio_add_address_footer">একটি Kaspa ঠিকানা বা name.kachat-এর মতো একটি ব্যবহারকারীর নাম লিখুন। এই ঠিকানায় প্রতিটি প্রাপ্ত লেনদেন একটি ক্রয় এবং প্রতিটি পাঠানো লেনদেন একটি বিক্রয় হবে, সেই দিনের ঐতিহাসিক KAS দামে। পরে একই ঠিকানা আবার যোগ করলে শুধু শেষ ইমপোর্টের পর পাওয়া লেনদেনগুলো ইমপোর্ট হয়।</string>
+    <string name="shell54_portfolio_add_address_footer">একটি Kaspa ঠিকানা বা @name-এর মতো একটি ব্যবহারকারীর নাম লিখুন। এই ঠিকানায় প্রতিটি প্রাপ্ত লেনদেন একটি ক্রয় এবং প্রতিটি পাঠানো লেনদেন একটি বিক্রয় হবে, সেই দিনের ঐতিহাসিক KAS দামে। পরে একই ঠিকানা আবার যোগ করলে শুধু শেষ ইমপোর্টের পর পাওয়া লেনদেনগুলো ইমপোর্ট হয়।</string>
     <string name="shell54_report_copied">রিপোর্ট কপি হয়েছে</string>
     <string name="shell54_report_no_mail_app">কোনো মেইল অ্যাপ এটি খুলতে পারেনি। রিপোর্টটি %1$s-এ একটি ইমেলে পেস্ট করুন।</string>
     <string name="shell54_show_amounts">পরিমাণ দেখান</string>

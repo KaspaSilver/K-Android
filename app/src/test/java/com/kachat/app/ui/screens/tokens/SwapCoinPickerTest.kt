@@ -5,33 +5,65 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Swap's coin picker (iOS 518fdc8c `SwapCoinPickerView.rootRows` / `filteredRows`). */
+/** Buy / Sell's coin screens (iOS 824a30bb `SwapCoinChoiceList`): kUSDT, then USD Coin and Tether
+ *  folded by network, then the rest. */
 class SwapCoinPickerTest {
 
+    private val coins = SwapCoinChoices.everyCoin(includingKaspa = false)
+
     @Test
-    fun `kUSDT first, then USD Coin and Tether folded, then the rest`() {
-        val rows = swapCoinPickerRows(emptySet(), "")
-        assertEquals(SwapCoin.KUSDT, rows[0].second)
-        assertEquals("group-usdc", rows[1].first)
-        assertEquals("group-usdt", rows[2].first)
-        assertEquals(SwapCoin.BTC, rows[3].second)
-        assertTrue(rows.none { it.second?.ticker == "usdc" || it.second?.ticker == "usdt" })
+    fun `every coin, kUSDT first, then USD Coin's and Tether's networks, then the rest`() {
+        assertEquals(SwapCoin.KUSDT, coins[0])
+        assertTrue(coins.none { it == SwapCoin.KAS })
+        val usdc = SwapCoin.CURATED.filter { it.ticker == "usdc" }
+        val usdt = SwapCoin.CURATED.filter { it.ticker == "usdt" }
+        assertEquals(usdc, coins.subList(1, 1 + usdc.size))
+        assertEquals(usdt, coins.subList(1 + usdc.size, 1 + usdc.size + usdt.size))
+        assertEquals(SwapCoin.BTC, coins[1 + usdc.size + usdt.size])
+        assertEquals(1 + SwapCoin.CURATED.size, coins.size)
+        assertEquals(SwapCoin.KAS, SwapCoinChoices.everyCoin(includingKaspa = true).first())
+    }
+
+    @Test
+    fun `USD Coin and Tether are one row each, folded by network`() {
+        val rows = SwapCoinChoices.rows(coins, emptySet(), "")
+        assertEquals("c-kusdt-kaspa-trestly", rows[0].id)
+        assertEquals("g-usdc", rows[1].id)
+        assertEquals("g-usdt", rows[2].id)
+        assertEquals("c-btc-btc", rows[3].id)
+        assertTrue(rows.none { it is SwapCoinChoices.Row.Coin && (it.coin.ticker == "usdc" || it.coin.ticker == "usdt") })
         assertEquals(1 + 2 + 14, rows.size)
     }
 
     @Test
     fun `an opened group lists its networks under it`() {
-        val rows = swapCoinPickerRows(setOf("usdt"), "")
-        val start = rows.indexOfFirst { it.first == "group-usdt" }
-        val networks = rows.drop(start + 1).takeWhile { it.first.startsWith("network-usdt") }
+        val rows = SwapCoinChoices.rows(coins, setOf("usdt"), "")
+        val start = rows.indexOfFirst { it.id == "g-usdt" }
+        val networks = rows.drop(start + 1).takeWhile { it is SwapCoinChoices.Row.Network }
         assertEquals(7, networks.size)
-        assertEquals(SwapCoin.USDT_ETH, networks.first().second)
+        assertEquals(SwapCoin.USDT_ETH, (networks.first() as SwapCoinChoices.Row.Network).coin)
+        // the other group stays shut
+        assertTrue(rows.none { it is SwapCoinChoices.Row.Network && it.coin.ticker == "usdc" })
     }
 
     @Test
-    fun `search matches names and tickers`() {
-        assertEquals(listOf(SwapCoin.XRP), swapCoinPickerRows(emptySet(), "xrp").map { it.second })
-        assertEquals(listOf("group-usdt"), swapCoinPickerRows(emptySet(), "teth").map { it.first })
-        assertEquals(SwapCoin.KUSDT, swapCoinPickerRows(emptySet(), "kusdt").single().second)
+    fun `a ticker on one network is never folded`() {
+        val rows = SwapCoinChoices.rows(listOf(SwapCoin.KUSDT, SwapCoin.USDC_POLYGON, SwapCoin.BTC), emptySet(), "")
+        assertEquals(listOf("c-kusdt-kaspa-trestly", "c-usdc-matic", "c-btc-btc"), rows.map { it.id })
+    }
+
+    @Test
+    fun `search lists matching coins flat, by name or ticker`() {
+        assertEquals(listOf(SwapCoin.XRP), SwapCoinChoices.rows(coins, emptySet(), "xrp").map { (it as SwapCoinChoices.Row.Coin).coin })
+        val tether = SwapCoinChoices.rows(coins, emptySet(), " Teth ")
+        assertEquals(7, tether.size)
+        assertTrue(tether.all { it is SwapCoinChoices.Row.Coin && it.coin.ticker == "usdt" })
+        assertEquals(SwapCoin.KUSDT, (SwapCoinChoices.rows(coins, emptySet(), "KUSDT").single() as SwapCoinChoices.Row.Coin).coin)
+    }
+
+    @Test
+    fun `the symbol under a coin's name`() {
+        assertEquals("kUSDT", SwapCoinChoices.symbol(SwapCoin.KUSDT))
+        assertEquals("USDT", SwapCoinChoices.symbol(SwapCoin.USDT_TRX))
     }
 }

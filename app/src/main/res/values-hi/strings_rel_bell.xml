@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification and banner previews (iOS 01f71184, audit 2026-11-27 R7). -->
+<resources>
+    <string name="rel_bell_reacted_to_your_message">आपके संदेश पर %1$s से प्रतिक्रिया दी</string>
+    <string name="rel_bell_removed_reaction">अपनी %1$s प्रतिक्रिया हटा दी</string>
+    <string name="rel_bell_replied_to_message">एक संदेश का जवाब दिया</string>
+    <string name="rel_bell_edited_message">एक संदेश संपादित किया</string>
+    <string name="rel_bell_reacted">%1$s से प्रतिक्रिया दी</string>
+</resources>

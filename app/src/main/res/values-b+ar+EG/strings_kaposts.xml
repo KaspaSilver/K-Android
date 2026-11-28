@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">مش لاقيين المنشور اللي المسودة دي عنه دلوقتي، فمش هينفع تتنشر لسه. هتفضل في المسودات بتاعتك.</string>
     <string name="kaposts_likes">الإعجابات</string>
     <string name="kaposts_no_tips_yet">لا توجد إكراميات بعد.</string>
-    <string name="kaposts_not_on_testnet">KaPost لسه مش متاحة على الشبكة التجريبية</string>
-    <string name="kaposts_not_on_testnet_sub">مفيش مفهرس KaPost للشبكة التجريبية. اقفل الشبكة التجريبية من الإعدادات > الاتصال علشان تقرا وتنشر على الشبكة الرئيسية.</string>
+    <string name="kaposts_not_on_testnet">البوستات لسه مش متاحة على التست نت</string>
+    <string name="kaposts_not_on_testnet_sub">مفيش مفهرس للبوستات على الشبكة التجريبية. اقفل الشبكة التجريبية من الإعدادات &gt; إعدادات الاتصال علشان تقرا وتنشر على الشبكة الرئيسية.</string>
     <string name="kaposts_poll_days_left">فاضل %1$d ي</string>
     <string name="kaposts_poll_final_results">%1$s · النتايج النهائية</string>
     <string name="kaposts_poll_hours_left">فاضل %1$d س</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">المنشور ده في طريقه دلوقتي، فمش هينفع يتلغي.</string>
     <string name="kaposts_scheduled_reminder_title">منشور متجدول</string>
     <string name="kaposts_scheduled_sending_soon">هيتبعت أول ما الشبكة ترد</string>
-    <string name="kaposts_server_not_answering">سيرفر KaPost مش بيرد. بنعرض البوستات المحفوظة والجديدة من الشبكة.</string>
+    <string name="kaposts_server_not_answering">سيرفر البوستات مش بيرد. بنعرض البوستات المحفوظة والجديدة من الشبكة.</string>
     <string name="kaposts_thread_not_confirmed">الشبكة ماأكدتش جزء من السلسلة بتاعتك، فالباقي ماتبعتش. تحفظ اللي فاضل كمسودة؟ ممكن يكون أول منشور فيها اتنشر، فاتأكد قبل ما تنشره تاني.</string>
     <string name="kaposts_tip_from_chatting_note">البقشيش من Chatting Address بيتحسب على البوست، وبتظهر في قايمة اللي ادّوا بقشيش.</string>
     <string name="kaposts_tip_from_private_note">البقشيش من عنوان تاني خاص: الكاتب بيستلمه ويشوفه في الشات بتاعكم، بس مش بيتحسب على البوست ومش بيذكر اسمك.</string>

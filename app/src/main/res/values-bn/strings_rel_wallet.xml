@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">সোনা</string>
+    <string name="rel_wallet_silver">রুপা</string>
+    <string name="rel_wallet_pair_bitcoin">বিটকয়েনে Kaspa-র দাম</string>
+    <string name="rel_wallet_pair_voo">Vanguard-এর S&amp;P 500 ETF-এর শেয়ার</string>
+    <string name="rel_wallet_pair_gold">সোনার ট্রয় আউন্স</string>
+    <string name="rel_wallet_pair_silver">রুপার ট্রয় আউন্স</string>
+    <string name="rel_wallet_cold_storage_n">কোল্ড স্টোরেজ %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">এই ঠিকানায় খরচযোগ্য কোনো UTXO নেই</string>
+    <string name="rel_wallet_insufficient_plus_fee">এই পরিমাণ ও নেটওয়ার্ক ফি দেওয়ার মতো পর্যাপ্ত ব্যালেন্স নেই</string>
+    <string name="rel_wallet_too_many_inputs">এই পাঠাতে %1$d টি UTXO লাগবে, কিন্তু KasSigner প্রতি লেনদেনে মাত্র %2$d টি ইনপুট সমর্থন করে। কম পরিমাণ পাঠান বা আগে এই ঠিকানা একত্র করুন।</string>
+    <string name="rel_wallet_cancelled">বাতিল হয়েছে।</string>
+    <string name="rel_wallet_err_no_internet">ইন্টারনেট সংযোগ নেই। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।</string>
+    <string name="rel_wallet_err_timed_out">সংযোগের সময় শেষ হয়ে গেছে। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।</string>
+    <string name="rel_wallet_err_cant_reach">সার্ভারে পৌঁছানো যায়নি। সেটিংসে ঠিকানা ও আপনার সংযোগ পরীক্ষা করুন।</string>
+    <string name="rel_wallet_err_secure">সার্ভারের সাথে নিরাপদ সংযোগ করা যায়নি।</string>
+    <string name="rel_wallet_err_network">নেটওয়ার্ক ত্রুটি ঘটেছে। সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।</string>
+    <string name="rel_wallet_err_unreadable">সার্ভার এমন কিছু পাঠিয়েছে যা অ্যাপ পড়তে পারেনি। আবার চেষ্টা করুন; বারবার হলে অ্যাপ আপডেট করুন।</string>
+    <string name="rel_wallet_err_node">Kaspa নোড একটি ত্রুটি দিয়েছে। অ্যাপ অন্য নোড চেষ্টা করবে; একটু পরে আবার চেষ্টা করুন।</string>
+    <string name="rel_wallet_err_unknown">একটি অজানা ত্রুটি ঘটেছে।</string>
+    <string name="rel_wallet_err_no_spendable_available">খরচযোগ্য কোনো UTXO নেই</string>
+    <string name="rel_wallet_err_no_private_key">প্রাইভেট কী পাওয়া যায়নি</string>
+    <string name="rel_wallet_err_insufficient_payment">পেমেন্টের জন্য পর্যাপ্ত ব্যালেন্স নেই</string>
+    <string name="rel_wallet_err_insufficient_after_fee">ফি দেওয়ার পর পর্যাপ্ত ব্যালেন্স নেই</string>
+    <string name="rel_wallet_err_insufficient_handshake">হ্যান্ডশেকের জন্য পর্যাপ্ত ব্যালেন্স নেই</string>
+    <string name="rel_wallet_err_insufficient_self_stash">সেলফ-স্ট্যাশ ফির জন্য পর্যাপ্ত ব্যালেন্স নেই</string>
+    <string name="rel_wallet_err_group_secrets">গ্রুপের গোপন কী নেই - এই গ্রুপে আবার যোগ দেওয়ার চেষ্টা করুন।</string>
+    <string name="rel_wallet_err_admin_secrets">গ্রুপ অ্যাডমিনের গোপন কী নেই।</string>
+</resources>

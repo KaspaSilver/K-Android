@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">Add Room</string>
+    <string name="roomsoptin_indexer_rooms_footer">Rooms the indexer keeps: their history is saved and they can notify you even when K is closed.</string>
+    <string name="roomsoptin_other_languages">Other Languages</string>
+    <string name="roomsoptin_create_title">How a Room You Create Works</string>
+    <string name="roomsoptin_create_point_name">Anyone who types the same name joins the same room. It has no owner and no invite.</string>
+    <string name="roomsoptin_create_point_history">No indexer keeps its history. K reads it from the Kaspa network while the room is open, and keeps up to 3 days on your phone.</string>
+    <string name="roomsoptin_create_point_bell">No notifications while K is closed. With its bell on, K notifies you only while it\'s open.</string>
+    <string name="roomsoptin_create_point_public">Everything said there is public: anyone can read it on the Kaspa network.</string>
+    <string name="roomsoptin_create_room">Create Room</string>
+    <string name="roomsoptin_name_your_room">Name Your Room</string>
+    <string name="roomsoptin_empty_title">No public chats yet</string>
+    <string name="roomsoptin_empty_body">Add rooms the indexer keeps, like #kaspa, or create your own. Nothing is added unless you choose it.</string>
+    <string name="roomsoptin_removed_toast">#%1$s removed. Add it again anytime from Add Room.</string>
+    <string name="roomsoptin_bulk_delete_message">Rooms the indexer keeps can be added again from Add Room. Rooms you made are deleted with their messages on this device.</string>
+    <string name="roomsoptin_not_in_list_add">This room isn\'t in your Public Chats. Add it?</string>
+    <string name="roomsoptin_room_info_curated">A room the indexer keeps. You added it, and anyone on K can post to it.</string>
+</resources>

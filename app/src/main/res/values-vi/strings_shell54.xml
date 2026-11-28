@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">Ai cũng có thể thấy địa chỉ này và số dư của nó trên mạng Kaspa, nhưng không ai đọc được tin nhắn của bạn. Chỉ dùng nó để trò chuyện và cho tên người dùng.</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... hoặc tên người dùng</string>
     <string name="shell54_looking_up_username">Đang tra cứu tên người dùng...</string>
-    <string name="shell54_portfolio_add_address_footer">Nhập địa chỉ Kaspa hoặc tên người dùng như name.kachat. Mỗi giao dịch nhận vào địa chỉ này thành một lần mua, mỗi giao dịch gửi đi thành một lần bán, theo giá KAS lịch sử của ngày đó. Thêm lại cùng địa chỉ sau này chỉ nhập các giao dịch tìm thấy kể từ lần nhập trước.</string>
+    <string name="shell54_portfolio_add_address_footer">Nhập địa chỉ Kaspa hoặc tên người dùng như @name. Mỗi giao dịch nhận vào địa chỉ này thành một lần mua, mỗi giao dịch gửi đi thành một lần bán, theo giá KAS lịch sử của ngày đó. Thêm lại cùng địa chỉ sau này chỉ nhập các giao dịch tìm thấy kể từ lần nhập trước.</string>
     <string name="shell54_report_copied">Đã sao chép báo cáo</string>
     <string name="shell54_report_no_mail_app">Không ứng dụng thư nào mở được. Hãy dán báo cáo vào email gửi tới %1$s.</string>
     <string name="shell54_show_amounts">Hiện số tiền</string>

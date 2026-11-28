@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">सोना</string>
+    <string name="rel_wallet_silver">चाँदी</string>
+    <string name="rel_wallet_pair_bitcoin">बिटकॉइन में Kaspa की कीमत</string>
+    <string name="rel_wallet_pair_voo">Vanguard के S&amp;P 500 ETF के शेयर</string>
+    <string name="rel_wallet_pair_gold">सोने के ट्रॉय औंस</string>
+    <string name="rel_wallet_pair_silver">चाँदी के ट्रॉय औंस</string>
+    <string name="rel_wallet_cold_storage_n">कोल्ड स्टोरेज %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">इस पते पर खर्च करने योग्य कोई UTXO नहीं</string>
+    <string name="rel_wallet_insufficient_plus_fee">इस राशि और नेटवर्क शुल्क के लिए पर्याप्त राशि नहीं</string>
+    <string name="rel_wallet_too_many_inputs">इस भेजने में %1$d UTXO लगेंगे, लेकिन KasSigner प्रति लेनदेन केवल %2$d इनपुट सपोर्ट करता है। कम राशि भेजें या पहले इस पते को समेकित करें।</string>
+    <string name="rel_wallet_cancelled">रद्द हो गया।</string>
+    <string name="rel_wallet_err_no_internet">इंटरनेट कनेक्शन नहीं है। अपना कनेक्शन जाँचें और फिर से कोशिश करें।</string>
+    <string name="rel_wallet_err_timed_out">कनेक्शन का समय समाप्त हो गया। अपना कनेक्शन जाँचें और फिर से कोशिश करें।</string>
+    <string name="rel_wallet_err_cant_reach">सर्वर तक नहीं पहुँच सके। सेटिंग्स में पता और अपना कनेक्शन जाँचें।</string>
+    <string name="rel_wallet_err_secure">सर्वर से सुरक्षित कनेक्शन नहीं बन सका।</string>
+    <string name="rel_wallet_err_network">नेटवर्क त्रुटि हुई। अपना कनेक्शन जाँचें और फिर से कोशिश करें।</string>
+    <string name="rel_wallet_err_unreadable">सर्वर ने कुछ ऐसा भेजा जिसे ऐप पढ़ नहीं सका। फिर से कोशिश करें; बार-बार हो तो ऐप अपडेट करें।</string>
+    <string name="rel_wallet_err_node">Kaspa नोड ने त्रुटि लौटाई। ऐप दूसरा नोड आज़माएगा; थोड़ी देर में फिर से कोशिश करें।</string>
+    <string name="rel_wallet_err_unknown">एक अज्ञात त्रुटि हुई।</string>
+    <string name="rel_wallet_err_no_spendable_available">खर्च करने योग्य कोई UTXO उपलब्ध नहीं</string>
+    <string name="rel_wallet_err_no_private_key">निजी कुंजी नहीं मिल सकी</string>
+    <string name="rel_wallet_err_insufficient_payment">भुगतान के लिए पर्याप्त राशि नहीं</string>
+    <string name="rel_wallet_err_insufficient_after_fee">शुल्क के बाद पर्याप्त राशि नहीं</string>
+    <string name="rel_wallet_err_insufficient_handshake">हैंडशेक के लिए पर्याप्त राशि नहीं</string>
+    <string name="rel_wallet_err_insufficient_self_stash">सेल्फ-स्टैश शुल्क के लिए पर्याप्त राशि नहीं</string>
+    <string name="rel_wallet_err_group_secrets">समूह की गुप्त कुंजियाँ नहीं हैं - इस समूह में फिर से शामिल होकर देखें।</string>
+    <string name="rel_wallet_err_admin_secrets">समूह व्यवस्थापक की गुप्त कुंजियाँ नहीं हैं।</string>
+</resources>

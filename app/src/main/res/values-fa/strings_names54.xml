@@ -5,9 +5,8 @@
     <string name="names54_no_username_found">نام کاربری پیدا نشد</string>
     <string name="names54_use_their_username">استفاده از نام کاربری او</string>
     <string name="names54_kaspa_address_or_username">آدرس Kaspa یا نام کاربری</string>
-    <string name="names54_enter_address_or_username_example">یک آدرس Kaspa (kaspa:...) یا نام کاربری وارد کنید (مثلاً alice.kachat).</string>
+    <string name="names54_enter_address_or_username_example">یک آدرس Kaspa (kaspa:...) یا نام کاربری وارد کنید (مثلاً @alice).</string>
     <string name="names54_members_footer">افرادی را از مخاطبانتان انتخاب کنید، یا هر کسی را با آدرس Kaspa یا نام کاربری اضافه کنید.</string>
-    <string name="names54_finds_addresses_balance_or_username">آدرس‌هایی را که موجودی یا نام کاربری دارند پیدا می‌کند.</string>
     <string name="names54_no_addresses_balance_or_username_found">آدرسی با موجودی یا نام کاربری پیدا نشد.</string>
     <string name="names54_found_one_address_balance_username">۱ آدرس با موجودی یا نام کاربری پیدا شد.</string>
     <string name="names54_found_n_addresses_balance_username">%1$d آدرس با موجودی یا نام کاربری پیدا شد.</string>

@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">已连接，并且有此房间的消息。</string>
     <string name="kpui_room_indexer_footer">公共聊天存在于 Kaspa blockDAG 上，因此任何监视同一网络的索引器都会提供同一个房间。你可以把这个房间指向任何你想要的索引器，无论是自己的还是别人的，而不会改变其他房间使用的索引器。</string>
     <string name="kpui_use_app_indexer">使用应用的索引器</string>
-    <string name="kpui_room_switched_off_footer">关闭的房间不再显示在公共聊天中，也不会发送通知。你可以随时重新开启。</string>
-    <string name="kpui_languages">语言</string>
-    <string name="kpui_languages_footer">关闭后，所有语言房间都会从公共聊天中移除。开启后，再关闭你不想要的房间。</string>
     <string name="kpui_notifications_off">通知已关闭</string>
     <string name="kpui_notifications_on">通知已开启</string>
     <string name="kpui_room_notified_closed">即使应用已关闭，这里有新消息时也会通知你。</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">这里还没有内容</string>
     <string name="kpui_engagement_empty">有人与此帖子互动时，会显示在这里。</string>
     <string name="kpui_instant_tip_limit">即时打赏上限为 10 KAS。上滑即可发送这一笔。</string>
-    <string name="kpui_kapost_settings">KaPost 设置</string>
     <string name="kpui_cool_down">发帖前冷却</string>
     <string name="kpui_cooldown_on">帖子、评论、点赞、转发、投票、编辑和删除会等待 5 秒后才上链，期间可以撤销。</string>
     <string name="kpui_cooldown_off">帖子、评论、点赞、转发、投票、编辑和删除会立即上链，无法撤销。</string>

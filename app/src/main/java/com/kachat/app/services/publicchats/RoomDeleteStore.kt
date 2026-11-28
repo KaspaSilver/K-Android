@@ -33,10 +33,12 @@ class RoomDeleteStore @Inject constructor(
         return set
     }
 
-    /** Records a delete for [wallet]'s account; true when it's new. */
-    fun record(wallet: String, channel: String, targetTxId: String, sender: String): Boolean = synchronized(lock) {
+    /** Records a delete for [wallet]'s account; true when it's new. [held]: the message is on
+     *  the phone and its sender was checked; otherwise only within [RoomDeletes.acceptsUnheld]. */
+    fun record(wallet: String, channel: String, targetTxId: String, sender: String, held: Boolean = true): Boolean = synchronized(lock) {
         val owner = wallet.lowercase()
         val set = load(owner)
+        if (!held && !RoomDeletes.acceptsUnheld(set, targetTxId, sender)) return@synchronized false
         if (!RoomDeletes.remember(set, RoomDeletes.entry(channel, targetTxId, sender))) return@synchronized false
         prefs.edit().putString(key(owner), JSONArray(set.toList()).toString()).apply()
         true
@@ -69,6 +71,20 @@ object RoomDeletes {
     /** "room|txid|sender", the room normalized and the rest lowercased (iOS `deleteEntry`). */
     fun entry(channel: String, txId: String, sender: String): String =
         "${com.kachat.app.util.MessageProtocol.normalizeChannelName(channel)}|${txId.lowercase()}|${sender.lowercase()}"
+
+    /** The most deletes kept per sender for messages not on the phone (iOS audit 2026-11-27 L7). */
+    const val UNHELD_PER_SENDER = 100
+
+    /**
+     * Whether a delete for a message not on the phone (yet) may be kept: it can't be checked
+     * against its sender, so only a txid-shaped target, and at most [UNHELD_PER_SENDER] entries
+     * per sender, so a flood of fake deletes can't push out real ones (iOS audit 2026-11-27 L7).
+     */
+    fun acceptsUnheld(set: Collection<String>, targetTxId: String, sender: String): Boolean {
+        if (!com.kachat.app.repository.PushBannerFetch.isTxIdShaped(targetTxId)) return false
+        val tail = "|" + sender.lowercase()
+        return set.count { it.endsWith(tail) } < UNHELD_PER_SENDER
+    }
 
     /** Adds [entry] (newest last), dropping the oldest past [limit]; false when already there. */
     fun remember(set: LinkedHashSet<String>, entry: String, limit: Int = LIMIT): Boolean {

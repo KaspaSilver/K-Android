@@ -50,7 +50,6 @@
     <string name="close">Đóng</string>
     <string name="confirm">Xác nhận</string>
     <string name="confirm_selection">Xác nhận lựa chọn</string>
-    <string name="connect_to_a_node">Kết nối với một nút</string>
     <string name="connected_only_to_this_node">Chỉ kết nối với nút này</string>
     <string name="connection_settings">Cài đặt kết nối</string>
     <string name="connection_status">Trạng thái kết nối</string>
@@ -75,7 +74,6 @@
     <string name="failed_to_send">Gửi không thành công</string>
     <string name="fee_kas">Phí (KAS)</string>
     <string name="from">Từ</string>
-    <string name="fund_your_chatting_address">Nạp tiền cho địa chỉ trò chuyện của bạn</string>
     <string name="group_info">Thông tin nhóm</string>
     <string name="group_name_2">Tên nhóm</string>
     <string name="hidden_addresses">Địa chỉ đã ẩn</string>
@@ -84,7 +82,6 @@
     <string name="import_account">Nhập tài khoản</string>
     <string name="import_existing_account">Nhập tài khoản hiện có</string>
     <string name="incoming_notifications">Thông báo đến</string>
-    <string name="kachat_needs_to_connect_to_a">K cần kết nối với một nút. Bạn muốn kết nối như thế nào?</string>
     <string name="kaspa_explorer">Trình khám phá Kaspa</string>
     <string name="label_optional">Nhãn (tùy chọn)</string>
     <string name="last_message">Tin nhắn cuối cùng</string>
@@ -185,7 +182,6 @@
     <string name="created">Đã tạo</string>
     <string name="customization">Tùy chỉnh</string>
     <string name="diagnostics">Chẩn đoán</string>
-    <string name="discover_addresses">Khám phá địa chỉ</string>
     <string name="email">Email</string>
     <string name="explorer">Trình khám phá</string>
     <string name="github">GitHub</string>
@@ -236,14 +232,8 @@
     <string name="how_kachat_uses_kaspa">Cach K su dung Kaspa</string>
     <string name="kachat_lets_you_send_and_receive">K cho phep ban gui va nhan tin nhan truc tiep tren mang luoi Kaspa. Can co Kaspa de tra phi khi gui tin nhan cua ban. Phi ban tra se den tay cac thợ dao bao mat mang luoi.</string>
     <string name="finish">Hoan tat</string>
-    <string name="recommended">Duoc de xuat</string>
-    <string name="connect_your_own_node">Ket noi node cua rieng ban</string>
-    <string name="enter_a_node_address_you_trust">Nhap dia chi node ma ban tin tuong</string>
-    <string name="auto_search_for_nodes">Tu dong tim kiem node</string>
-    <string name="most_taxing_on_the_device_not_as">Ton hao thiet bi nhieu nhat, khong dang tin cay bang - tuy thuoc vao noi ban song</string>
     <string name="choose_your_language">Chon ngon ngu cua ban</string>
     <string name="select_the_language_youd_like_to">Chon ngon ngu ban muon su dung trong K.</string>
-    <string name="best">Tot nhat</string>
     <string name="receive_kaspa">Nhan Kaspa</string>
     <string name="currency">Loai tien te</string>
     <string name="choose_your_currency">Chon loai tien te cua ban</string>
@@ -319,7 +309,6 @@
     <string name="new_message_request">Yêu cầu nhắn tin mới</string>
     <string name="wants_to_chat_with_you">%1$s muốn trò chuyện với bạn.</string>
     <!-- Welcome Guide: .kachat and Message Requests (iOS 5c15ca0) -->
-    <string name="welcome_fund_chatting_body">5 Kaspa đủ cho khoảng 2500 tin nhắn.</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">Testnet</string>
     <string name="testnet_restart_to_testnet">Đóng hẳn K rồi mở lại để hoàn tất chuyển sang Testnet.</string>
@@ -646,7 +635,7 @@
     <string name="ab_export_failed">Xuất thất bại. Không ghi được tệp.</string>
     <string name="ab_already_up_to_date">Đã cập nhật. Mọi địa chỉ trong tệp đều đã được lưu.</string>
     <string name="ab_imported_counts">Đã nhập: thêm %1$d, cập nhật %2$d.</string>
-    <string name="ab_err_not_an_export">Tệp đó không phải tệp xuất danh bạ của KaChat.</string>
+    <string name="ab_err_not_an_export">Tệp này không phải bản xuất danh bạ của K.</string>
     <string name="ab_err_export_empty">Tệp xuất danh bạ đó không có liên hệ nào.</string>
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">Đã gửi lên mạng</string>
@@ -874,7 +863,6 @@
     <string name="wallet_spending">Chi tiêu</string>
     <string name="wallet_send">Gửi</string>
     <string name="wallet_receive">Nhận</string>
-    <string name="wallet_request">Yêu cầu</string>
     <string name="profile_share_profile">Chia sẻ hồ sơ</string>
     <string name="settings_back_up_account">Sao lưu tài khoản</string>
     <string name="settings_complete_your_backup">Hoàn tất sao lưu</string>
@@ -1403,12 +1391,9 @@
     <string name="chess_tc_1_1_subtitle">Mỗi bên một phút, cộng một giây mỗi nước đi.</string>
     <string name="chess_tc_casual">Giao hữu</string>
     <string name="chess_tc_no_timer">Không tính giờ.</string>
-    <string name="check_off_every_address_you_want_on_the_list">Đánh dấu một lượt mọi địa chỉ bạn muốn có trong danh sách.</string>
-    <string name="close_and_keep_scanning">Đóng và tiếp tục quét</string>
     <string name="recents">Gần đây</string>
     <string name="initial_sync_starting">Đang bắt đầu</string>
     <string name="initial_sync_finished">Đã xong</string>
-    <string name="downloading_message_history">Đang tải lịch sử tin nhắn</string>
     <string name="wiping_incoming_messages">Đang xóa tin nhắn đến...</string>
     <string name="finishing_up">Đang hoàn tất...</string>
     <string name="re_syncing_chats_progress">Đang đồng bộ lại... %1$d trên %2$d cuộc trò chuyện</string>
@@ -1459,12 +1444,7 @@
     <string name="notification_mode_default">Mặc định (%1$s)</string>
     <string name="checking_address_n">Đang kiểm tra địa chỉ #%1$d</string>
     <string name="n_found_so_far">Đã tìm thấy %1$d cho đến nay</string>
-    <string name="checks_the_first_thousand_addresses">Kiểm tra một nghìn địa chỉ đầu tiên dù có khoảng trống, rồi tiếp tục chừng nào còn tìm thấy.</string>
     <string name="first_sync_all_set">Đã xong</string>
-    <string name="first_sync_up_to_date">Các cuộc trò chuyện và lịch sử của bạn đã được cập nhật.</string>
-    <string name="first_sync_setting_up">Đang thiết lập tài khoản của bạn</string>
-    <string name="first_sync_downloading_footer">Đang tải xuống mọi thứ tài khoản này có trên chuỗi. Chỉ mất thời gian lâu như vậy một lần.</string>
-    <string name="first_sync_continue_anyway">Vẫn tiếp tục</string>
     <string name="nc_use_all_files">Dùng tất cả tệp</string>
     <string name="nc_use_this_folder">Dùng thư mục này</string>
     <string name="nc_no_subfolders">Không có thư mục con.</string>
@@ -1540,10 +1520,6 @@
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">Sao chép liên kết chia sẻ</string>
     <string name="share_link_copied">Đã sao chép liên kết chia sẻ.</string>
-    <string name="generate_non_quantum_address">Tạo địa chỉ không lượng tử</string>
-    <string name="generate_non_quantum_address_subtitle">Một địa chỉ thường, như Nhận cung cấp. Dùng được cho mọi thứ, kể cả kUSDT.</string>
-    <string name="generate_quantum_resistant_address">Tạo địa chỉ chống lượng tử</string>
-    <string name="generate_quantum_resistant_address_subtitle">Giữ kín khóa cho đến khi chi tiêu. Chỉ dành cho Kaspa: không giao dịch kUSDT từ địa chỉ này được.</string>
     <string name="kaspa">Kaspa</string>
     <string name="kusdt_balances">Số dư kUSDT</string>
     <string name="kusdt_listed_stays_here">Địa chỉ này nằm trong danh sách kUSDT của bạn nên vẫn ở đây. Hãy ẩn nó trong Quản lý kUSDT trước.</string>
@@ -1568,14 +1544,12 @@
     <string name="tap_to_manage">Chạm để quản lý</string>
     <string name="token_about_kusdt">kUSDT là USDT từ Ethereum và BNB Chain, được giữ 1:1 trong kho của Trestly và phát hành dưới dạng token trên Kaspa. kUSDT không do Tether phát hành, và chỉ Trestly mới có thể đổi lại thành USDT.</string>
     <string name="token_about_title">Về %1$s</string>
-    <string name="token_actions_title">Thao tác %1$s</string>
     <string name="token_activity_bridged_in">Nhận qua cầu nối</string>
     <string name="token_activity_combined_coins">Đã gộp đồng</string>
     <string name="token_activity_swapped">Đã hoán đổi</string>
     <string name="token_add_for_fee_and_change">Thêm %1$s cho phí và đồng tiền thối</string>
     <string name="token_add_for_network_fee">Thêm %1$s cho phí mạng</string>
     <string name="token_add_more">Thêm %1$s nữa</string>
-    <string name="token_address_visibility_subtitle">Đánh dấu những địa chỉ có kUSDT hiện trong danh sách.</string>
     <string name="token_address_visibility_title">Hiển thị địa chỉ %1$s</string>
     <string name="token_amount_accessibility">Số tiền (%1$s)</string>
     <string name="token_available">Khả dụng: %1$s</string>
@@ -1592,9 +1566,7 @@
     <string name="token_combine_explainer">Mỗi đồng %1$s giữ %2$s. Gộp chúng thành một đồng sẽ trả phần KAS dư về địa chỉ này dưới dạng KAS thường, trừ phí mạng. Số %3$s của bạn không đổi.</string>
     <string name="token_combine_limit">Mỗi lần gộp tối đa %1$d đồng. Gộp lại lần nữa cho phần còn lại.</string>
     <string name="token_combined">Đã gộp</string>
-    <string name="token_couldnt_check">Chưa kiểm tra được %1$@: %2$@ Kéo xuống để thử lại.</string>
-    <string name="token_discover_addresses">Tìm địa chỉ kUSDT</string>
-    <string name="token_discover_addresses_subtitle">Tìm các địa chỉ của bạn đang giữ kUSDT.</string>
+    <string name="token_couldnt_check">Chưa kiểm tra được %1$s: %2$s Kéo xuống để thử lại.</string>
     <string name="token_every_coin_goes_to_recipient">Mỗi đồng %1$s giữ %2$s. Số KAS này đi cùng %3$s đến người nhận, nên không bị mất.</string>
     <string name="token_every_coin_holds_kas">Mỗi đồng kUSDT giữ 1.5 KAS. Số KAS này đi cùng kUSDT khi bạn gửi.</string>
     <string name="token_fee">Phí %1$s</string>
@@ -1602,13 +1574,12 @@
     <string name="token_fee_same_address_note">KAS trả phí lấy từ cùng địa chỉ, nên lần gửi không liên kết nó với các địa chỉ khác của bạn.</string>
     <string name="token_found_addresses">Đã tìm thấy %1$d địa chỉ có %2$s.</string>
     <string name="token_fund_hint">Chọn địa chỉ của bạn gửi KAS, vuốt lên, rồi bạn quay lại đây.</string>
-    <string name="token_generate_new_address_subtitle">Thêm vào danh sách này một địa chỉ thường hoàn toàn mới của bạn.</string>
     <string name="token_goes_with_it">Đi kèm</string>
     <string name="token_held_on">Lưu giữ tại</string>
     <string name="token_held_with_it">%1$s giữ kèm</string>
     <string name="token_hidden_count">Đã ẩn %1$d: vẫn được tính vào tổng.</string>
     <string name="token_hide_address_subtitle">Gỡ khỏi danh sách này. Bật lại trong Hiển thị địa chỉ %1$s.</string>
-    <string name="token_hide_all_message">Quản lý %1$@ bắt đầu lại chỉ với địa chỉ trò chuyện của bạn. Không mất gì: đưa bất kỳ địa chỉ nào trở lại tại đây, và %2$@ của nó vẫn được tính vào tổng.</string>
+    <string name="token_hide_all_message">Quản lý %1$s bắt đầu lại chỉ với địa chỉ trò chuyện của bạn. Không mất gì: đưa bất kỳ địa chỉ nào trở lại tại đây, và %2$s của nó vẫn được tính vào tổng.</string>
     <string name="token_history_from_now_on">Từ giờ, các lần gửi, nhận và gộp trên điện thoại này sẽ hiện ở đây.</string>
     <string name="token_history_title">Lịch sử %1$s</string>
     <string name="token_kas_for_send">KAS cho một lần gửi %1$s</string>
@@ -1627,8 +1598,6 @@
     <string name="token_receive_no_usdt_warning">Đừng gửi USDT từ Ethereum, BNB Chain hay sàn giao dịch đến địa chỉ này: sẽ bị mất. Hãy chuyển cầu sang Kaspa trên Trestly trước.</string>
     <string name="token_receive_only">Chỉ có thể gửi %1$s trên Kaspa, hoặc KAS, đến đây.</string>
     <string name="token_receive_title">Nhận %1$s</string>
-    <string name="token_rename_label_placeholder">Nhãn</string>
-    <string name="token_rename_message">Đặt nhãn cho địa chỉ này để giúp bạn nhận ra nó.</string>
     <string name="token_script_address_error">%1$s chỉ có thể gửi đến địa chỉ Kaspa thông thường, không phải địa chỉ an toàn lượng tử hay địa chỉ script khác.</string>
     <string name="token_send_title">Gửi %1$s</string>
     <string name="token_send_to_chatting_subtitle">Chuyển kUSDT từ địa chỉ này sang địa chỉ trò chuyện của bạn.</string>

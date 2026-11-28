@@ -71,6 +71,14 @@ fun IosFullSheet(
     content: @Composable (close: () -> Unit) -> Unit,
 ) {
     val latestSwipe by rememberUpdatedState(swipeToDismiss)
+    // While it can't be swiped away, a K Explorer link from another app doesn't close it (iOS
+    // d88891ea, audit 2026-11-27 L6).
+    if (!swipeToDismiss) {
+        DisposableEffect(Unit) {
+            com.kachat.app.services.explorer.ExplorerDeepLink.sheetLocked()
+            onDispose { com.kachat.app.services.explorer.ExplorerDeepLink.sheetUnlocked() }
+        }
+    }
     val latestDismissed by rememberUpdatedState(onDismissed)
     val confirm = remember { { value: SheetValue -> value != SheetValue.Hidden || latestSwipe } }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = confirm)

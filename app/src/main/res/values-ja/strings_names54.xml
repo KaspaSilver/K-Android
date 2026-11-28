@@ -5,9 +5,8 @@
     <string name="names54_no_username_found">ユーザー名が見つかりません</string>
     <string name="names54_use_their_username">相手のユーザー名を使う</string>
     <string name="names54_kaspa_address_or_username">Kaspaアドレスまたはユーザー名</string>
-    <string name="names54_enter_address_or_username_example">Kaspaアドレス（kaspa:...）またはユーザー名（例: alice.kachat）を入力してください。</string>
+    <string name="names54_enter_address_or_username_example">Kaspaアドレス（kaspa:...）またはユーザー名（例: @alice）を入力してください。</string>
     <string name="names54_members_footer">連絡先から選ぶか、Kaspaアドレスまたはユーザー名で誰でも追加できます。</string>
-    <string name="names54_finds_addresses_balance_or_username">残高またはユーザー名のあるアドレスを探します。</string>
     <string name="names54_no_addresses_balance_or_username_found">残高またはユーザー名のあるアドレスは見つかりませんでした。</string>
     <string name="names54_found_one_address_balance_username">残高またはユーザー名のあるアドレスが1件見つかりました。</string>
     <string name="names54_found_n_addresses_balance_username">残高またはユーザー名のあるアドレスが%1$d件見つかりました。</string>

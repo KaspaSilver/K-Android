@@ -614,11 +614,96 @@ fun NextcloudPhotoViewerDialog(
 }
 
 /**
+ * An open PDF for [NextcloudPdfViewerDialog]: the file stays open while the viewer shows, and a
+ * page is rendered only when it is asked for, so a long or large PDF never needs every page in
+ * memory at once. [PdfRenderer][android.graphics.pdf.PdfRenderer] takes one page at a time from
+ * one thread, so every use holds this object's lock.
+ */
+private class PdfDocumentPages private constructor(
+    private val pfd: android.os.ParcelFileDescriptor,
+    private val renderer: android.graphics.pdf.PdfRenderer,
+) : java.io.Closeable {
+    private var closed = false
+
+    /** Each page's size in points, read without rendering, for its place in the column. */
+    val pageSizes: List<Pair<Int, Int>> = synchronized(this) {
+        (0 until renderer.pageCount).map { index ->
+            val page = renderer.openPage(index)
+            try { page.width.coerceAtLeast(1) to page.height.coerceAtLeast(1) } finally { page.close() }
+        }
+    }
+
+    /** Page [index] as a bitmap at 2x its point size, at most [MAX_WIDTH] wide and [MAX_PIXELS]
+     *  in all (a poster-sized page would otherwise need hundreds of MB); null once closed or
+     *  when it can't be rendered. Call off the main thread. */
+    fun render(index: Int): android.graphics.Bitmap? = synchronized(this) {
+        if (closed || index !in pageSizes.indices) return null
+        var page: android.graphics.pdf.PdfRenderer.Page? = null
+        try {
+            page = renderer.openPage(index)
+            val (pointsWide, pointsHigh) = pageSizes[index]
+            val scale = minOf(
+                2.0,
+                MAX_WIDTH.toDouble() / pointsWide,
+                kotlin.math.sqrt(MAX_PIXELS.toDouble() / (pointsWide.toDouble() * pointsHigh)),
+            )
+            val width = (pointsWide * scale).toInt().coerceAtLeast(1)
+            val height = (pointsHigh * scale).toInt().coerceAtLeast(1)
+            val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+            bitmap.eraseColor(android.graphics.Color.WHITE)
+            page.render(bitmap, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            bitmap
+        } catch (e: Exception) {
+            null
+        } catch (e: OutOfMemoryError) {
+            // not caught by Exception: the page shows blank instead of K going down
+            null
+        } finally {
+            runCatching { page?.close() }
+        }
+    }
+
+    override fun close() {
+        synchronized(this) {
+            if (closed) return
+            closed = true
+            runCatching { renderer.close() }
+            runCatching { pfd.close() }
+        }
+    }
+
+    companion object {
+        private const val MAX_WIDTH = 2048
+        /** 4 MP: 16 MB per page bitmap. */
+        private const val MAX_PIXELS = 4_000_000L
+
+        /** Null for a file that isn't a PDF PdfRenderer can open. */
+        fun open(file: java.io.File): PdfDocumentPages? {
+            val pfd = try {
+                android.os.ParcelFileDescriptor.open(file, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
+            } catch (e: Exception) {
+                return null
+            }
+            var renderer: android.graphics.pdf.PdfRenderer? = null
+            return try {
+                renderer = android.graphics.pdf.PdfRenderer(pfd)
+                PdfDocumentPages(pfd, renderer)
+            } catch (e: Exception) {
+                runCatching { renderer?.close() }
+                runCatching { pfd.close() }
+                null
+            }
+        }
+    }
+}
+
+/**
  * Full-screen in-app viewer for a tapped Nextcloud PDF share — downloads the file to app cache
- * (public `/download` endpoint, no credentials needed), then renders every page as a bitmap in a
- * scrollable column via the platform's own [android.graphics.pdf.PdfRenderer] — no new
- * dependency. There is deliberately no way out to the share link: the point of sharing through
- * your own cloud is that the URL stays between the two of you.
+ * (public `/download` endpoint, no credentials needed), then shows its pages in a scrollable
+ * column via the platform's own [android.graphics.pdf.PdfRenderer] — no new dependency. Each page
+ * is rendered as it scrolls into view, off the main thread, and let go as it scrolls away.
+ * There is deliberately no way out to the share link: the point of sharing through your own
+ * cloud is that the URL stays between the two of you.
  */
 @Composable
 fun NextcloudPdfViewerDialog(
@@ -627,38 +712,32 @@ fun NextcloudPdfViewerDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    var pages by remember { mutableStateOf<List<android.graphics.Bitmap>?>(null) }
+    var document by remember { mutableStateOf<PdfDocumentPages?>(null) }
     var loadFailed by remember { mutableStateOf(false) }
 
     LaunchedEffect(downloadUrl) {
-        pages = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                val file = com.kachat.app.services.LinkPreviewService.downloadToCacheFile(context, downloadUrl)
-                    ?: return@withContext null
-                android.os.ParcelFileDescriptor.open(file, android.os.ParcelFileDescriptor.MODE_READ_ONLY).use { pfd ->
-                    android.graphics.pdf.PdfRenderer(pfd).use { renderer ->
-                        (0 until renderer.pageCount).map { index ->
-                            val page = renderer.openPage(index)
-                            try {
-                                // Render at 2x the page's point size (capped) so text stays
-                                // legible when the column scales pages to screen width.
-                                val width = (page.width * 2).coerceAtMost(2048)
-                                val height = (page.height.toLong() * width / page.width).toInt()
-                                val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
-                                bitmap.eraseColor(android.graphics.Color.WHITE)
-                                page.render(bitmap, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                                bitmap
-                            } finally {
-                                page.close()
-                            }
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                null
+        val file = com.kachat.app.services.LinkPreviewService.downloadToCacheFile(context, downloadUrl)
+        val opened = file?.let {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable + kotlinx.coroutines.Dispatchers.IO) {
+                PdfDocumentPages.open(it)
             }
         }
-        if (pages == null) loadFailed = true
+        if (coroutineContext[kotlinx.coroutines.Job]?.isActive == false) {
+            opened?.close()
+            return@LaunchedEffect
+        }
+        document = opened
+        if (opened == null) loadFailed = true
+    }
+    // the file stays open while the viewer shows, and is closed with it
+    androidx.compose.runtime.DisposableEffect(document) {
+        val shown = document
+        onDispose {
+            if (shown != null) {
+                // after any page still rendering, which holds the document's lock
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch { shown.close() }
+            }
+        }
     }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -667,21 +746,40 @@ fun NextcloudPdfViewerDialog(
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
-            val renderedPages = pages
+            val openDocument = document
             when {
-                renderedPages != null -> {
+                openDocument != null -> {
+                    val pageSizes = openDocument.pageSizes
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(top = 64.dp, bottom = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        itemsIndexed(renderedPages) { _, page ->
-                            Image(
-                                bitmap = page.asImageBitmap(),
-                                contentDescription = null,
-                                contentScale = ContentScale.FillWidth,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                        items(count = pageSizes.size) { index ->
+                            val (pointsWide, pointsHigh) = pageSizes[index]
+                            // only the pages on screen (and the few the list keeps near it) hold
+                            // a bitmap; one scrolled away is dropped with its item
+                            var bitmap by remember(openDocument, index) { mutableStateOf<android.graphics.Bitmap?>(null) }
+                            LaunchedEffect(openDocument, index) {
+                                bitmap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                    openDocument.render(index)
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .aspectRatio(pointsWide.toFloat() / pointsHigh)
+                                    .background(Color.White)
+                            ) {
+                                bitmap?.let { page ->
+                                    Image(
+                                        bitmap = page.asImageBitmap(),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.FillWidth,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
                         }
                     }
                 }

@@ -20,6 +20,10 @@ import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.imeAnimationTarget
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,10 +60,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.ProfileStore
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.kachat.app.R
+import com.kachat.app.services.tokens.CardBuyEthereumProvider
 import com.kachat.app.services.tokens.TrestlyProvider
 import com.kachat.app.services.tokens.TrestlyProviderFactory
 import com.kachat.app.services.tokens.TrestlySite
@@ -67,6 +75,8 @@ import com.kachat.app.services.tokens.TrestlyTarget
 import com.kachat.app.ui.screens.IosBarTextButton
 import com.kachat.app.ui.screens.IosFullSheet
 import com.kachat.app.ui.screens.IosToastWhile
+import com.kachat.app.ui.screens.WebPageRefreshButton
+import com.kachat.app.ui.screens.WebPageReloader
 import com.kachat.app.ui.theme.IosActivityIndicator
 import com.kachat.app.ui.theme.KaspaTeal
 import com.kachat.app.ui.theme.LocalAppColors
@@ -125,6 +135,8 @@ fun TrestlyBrowserScreen(target: TrestlyTarget, onDone: () -> Unit) {
     var isLoading by remember { mutableStateOf(true) }
     var webView by remember { mutableStateOf<WebView?>(null) }
     var unavailable by remember { mutableStateOf(false) }
+    /** The header's refresh button (iOS 896e8194 `WebPageReloader`). */
+    val reloader = remember { WebPageReloader() }
     val latestDone by rememberUpdatedState(onDone)
     val done: () -> Unit = remember(provider) {
         {
@@ -170,8 +182,9 @@ fun TrestlyBrowserScreen(target: TrestlyTarget, onDone: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            // reload, a spinner while the page loads (iOS 896e8194 `WebPageRefreshButton`)
             Box(Modifier.width(76.dp), contentAlignment = Alignment.Center) {
-                if (isLoading) IosActivityIndicator(color = colors.textSecondary, modifier = Modifier.size(18.dp))
+                WebPageRefreshButton(isLoading = isLoading, tint = KaspaTeal) { reloader.reload() }
             }
         }
 
@@ -214,9 +227,10 @@ fun TrestlyBrowserScreen(target: TrestlyTarget, onDone: () -> Unit) {
             )
         } else {
             AndroidView(
-                modifier = Modifier.fillMaxWidth().weight(1f),
+                // the keyboard moves the page once ([trestlyKeyboardPadding])
+                modifier = Modifier.fillMaxWidth().weight(1f).trestlyKeyboardPadding(),
                 factory = { ctx ->
-                    val view = makeTrestlyWebView(ctx, provider, startUrl, onLoading = { isLoading = it }, onGone = done)
+                    val view = makeTrestlyWebView(ctx, provider, startUrl, onLoading = { isLoading = it }, onGone = done, reloader = reloader)
                     if (view == null) {
                         unavailable = true
                         isLoading = false
@@ -227,6 +241,7 @@ fun TrestlyBrowserScreen(target: TrestlyTarget, onDone: () -> Unit) {
                     }
                 },
                 onRelease = { view ->
+                    if (reloader.webView === view) reloader.webView = null
                     if (view is WebView) releaseTrestlyWebView(view, siteUrl)
                     webView = null
                 },
@@ -256,13 +271,38 @@ fun TrestlyBrowserScreen(target: TrestlyTarget, onDone: () -> Unit) {
  * can't reach the provider). Null when this WebView lacks the document-start script or the
  * origin-bound message listener the provider needs, or can't be made at all.
  */
+/**
+ * Whether a camera request from [scheme]://[host]:[port] may be asked about on Buy Kaspa's page:
+ * https only, from the Trestly site ([trestlyHost], [trestlyPort]) or Stripe's own frames inside
+ * it (`stripe.com` / `stripe.network` and their subdomains), where its identity check runs.
+ * [port] -1 (or 0) is https's default, 443.
+ */
+internal fun trestlyCameraOriginAllowed(scheme: String?, host: String?, port: Int, trestlyHost: String, trestlyPort: Int): Boolean {
+    if (scheme?.lowercase() != "https") return false
+    val h = host?.lowercase()?.trimEnd('.') ?: return false
+    if (h.isEmpty()) return false
+    val p = if (port <= 0) 443 else port
+    if (h == trestlyHost.lowercase() && p == trestlyPort) return true
+    return p == 443 && STRIPE_CAMERA_DOMAINS.any { h == it || h.endsWith(".$it") }
+}
+
+private val STRIPE_CAMERA_DOMAINS = listOf("stripe.com", "stripe.network")
+
 @SuppressLint("SetJavaScriptEnabled", "RequiresFeature")
-private fun makeTrestlyWebView(
+internal fun makeTrestlyWebView(
     context: Context,
     provider: TrestlyProvider,
     startUrl: String,
     onLoading: (Boolean) -> Unit,
     onGone: () -> Unit,
+    /** Buy Kaspa's page: K's Ethereum side too (iOS bc0e6ba9 `TrestlyWebView.ethereum`). */
+    ethereum: CardBuyEthereumProvider? = null,
+    /** The header's refresh button. */
+    reloader: WebPageReloader? = null,
+    /** Buy Kaspa's page: the page asked for the camera (Stripe's identity check, shown in the
+     *  page); answer with [PermissionRequest.grant] or [PermissionRequest.deny]. Elsewhere the
+     *  page gets no device access. */
+    onCameraRequest: ((PermissionRequest) -> Unit)? = null,
 ): WebView? {
     val supported = try {
         WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) &&
@@ -271,6 +311,7 @@ private fun makeTrestlyWebView(
         false
     }
     if (!supported || provider.allowedHost.isEmpty()) return null
+    if (ethereum != null && ethereum.originRule != provider.originRule) return null
     val ownProfile = try { WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE) } catch (e: Exception) { false }
     if (ownProfile) {
         // whatever an earlier session left (the app killed while it was open) goes first
@@ -309,7 +350,9 @@ private fun makeTrestlyWebView(
         javaScriptCanOpenWindowsAutomatically = false
         setSupportMultipleWindows(false)
         setGeolocationEnabled(false)
-        mediaPlaybackRequiresUserGesture = true
+        // Stripe's identity check (Buy Kaspa) plays the camera in the page (iOS bc0e6ba9
+        // `allowsInlineMediaPlayback`; Android plays video inline already)
+        mediaPlaybackRequiresUserGesture = ethereum == null
         mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
     }
     try {
@@ -324,6 +367,14 @@ private fun makeTrestlyWebView(
             }
         }
         WebViewCompat.addDocumentStartJavaScript(view, provider.script, setOf(origin))
+        if (ethereum != null) {
+            WebViewCompat.addWebMessageListener(view, CardBuyEthereumProvider.BRIDGE_NAME, setOf(origin)) { _, message, sourceOrigin, isMainFrame, replyProxy ->
+                ethereum.handle(message.data, sourceOrigin.scheme, sourceOrigin.host, sourceOrigin.port, isMainFrame) { answer ->
+                    replyProxy.postMessage(answer)
+                }
+            }
+            WebViewCompat.addDocumentStartJavaScript(view, ethereum.script, setOf(origin))
+        }
     } catch (e: Exception) {
         Log.w(TAG, "the Trestly provider couldn't be installed: ${e.javaClass.simpleName}")
         view.destroy()
@@ -381,20 +432,51 @@ private fun makeTrestlyWebView(
         }
     }
     view.webChromeClient = object : WebChromeClient() {
-        // no camera, microphone, location or other device access for the page
-        override fun onPermissionRequest(request: PermissionRequest) = request.deny()
+        // no camera, microphone, location or other device access for the page; on Buy Kaspa's
+        // page only the camera alone, for Stripe's identity check, and only once asked - and
+        // only from the Trestly site itself or Stripe's frames inside it
+        override fun onPermissionRequest(request: PermissionRequest) {
+            val origin = request.origin
+            val cameraOnly = request.resources.isNotEmpty() &&
+                request.resources.all { it == PermissionRequest.RESOURCE_VIDEO_CAPTURE } &&
+                trestlyCameraOriginAllowed(origin?.scheme, origin?.host, origin?.port ?: -1, provider.allowedHost, provider.allowedPort)
+            if (onCameraRequest != null && cameraOnly) onCameraRequest(request) else request.deny()
+        }
         override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: GeolocationPermissions.Callback) =
             callback.invoke(origin, false, false)
     }
+    // The keyboard moves the page once: the screen shrinks the view for it
+    // ([trestlyKeyboardPadding]), so the view itself is never told about the keyboard as well.
+    // Both at once made Trestly's page jump on every tap in Stripe's fields on iOS, so Paste,
+    // AutoFill and a texted code couldn't land (iOS 896e8194, owner 2026-11-26).
+    ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+        val withoutKeyboard = WindowInsetsCompat.Builder(insets)
+            .setInsets(WindowInsetsCompat.Type.ime(), Insets.NONE)
+            .build()
+        ViewCompat.onApplyWindowInsets(v, withoutKeyboard)
+    }
+    reloader?.webView = view
+    reloader?.startUrl = startUrl
     view.loadUrl(startUrl)
     return view
 }
+
+/**
+ * Trestly's and Buy Kaspa's page make room for the keyboard once, where it will end up (iOS
+ * 896e8194 `.ignoresSafeArea(.keyboard)` on `TrestlyWebView`): one resize as the keyboard starts
+ * to show or hide, never a resize on every frame of its slide, and the view itself doesn't move
+ * the page for it too (its own IME insets are cleared in [makeTrestlyWebView]). The keyboard
+ * stays over what the system bars already took (the sheet's navigation bar padding).
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun Modifier.trestlyKeyboardPadding(): Modifier = this.windowInsetsPadding(WindowInsets.imeAnimationTarget)
 
 /** The browser closed: the page goes, and so does everything it kept (iOS's data store is
  *  non-persistent): its profile's cookies and storage, then the profile itself. Without profiles
  *  (an older WebView) the site's own cookies and storage are cleared in the shared one. */
 @SuppressLint("RequiresFeature")
-private fun releaseTrestlyWebView(view: WebView, siteUrl: String) {
+internal fun releaseTrestlyWebView(view: WebView, siteUrl: String) {
     val ownProfile = try { WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE) } catch (e: Exception) { false }
     try {
         if (ownProfile) {

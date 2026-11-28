@@ -5,10 +5,10 @@
 <resources>
     <!-- what a transaction is -->
     <string name="ex_kind_payment">Payment</string>
-    <string name="ex_kind_message">KaChat Message</string>
+    <string name="ex_kind_message">K Message</string>
     <string name="ex_kind_handshake">Handshake</string>
     <string name="ex_kind_payment_notice">Payment Notice</string>
-    <string name="ex_kind_kapost">KaPost</string>
+    <string name="ex_kind_kapost">Post</string>
     <string name="ex_kind_public_chat">Public Chat</string>
     <string name="ex_kind_username">Username</string>
     <string name="ex_kind_kusdt">kUSDT Transfer</string>
@@ -18,10 +18,10 @@
     <string name="ex_kind_coinbase">Mining Reward</string>
     <string name="ex_kind_other">Transaction</string>
     <string name="ex_kind_payments">Payments</string>
-    <string name="ex_kind_messages">KaChat Messages</string>
+    <string name="ex_kind_messages">K Messages</string>
     <string name="ex_kind_handshakes">Handshakes</string>
     <string name="ex_kind_payment_notices">Payment Notices</string>
-    <string name="ex_kind_kaposts">KaPosts</string>
+    <string name="ex_kind_kaposts">Posts</string>
     <string name="ex_kind_public_chats">Public Chat Messages</string>
     <string name="ex_kind_usernames">Username Actions</string>
     <string name="ex_kind_kusdts">kUSDT Transfers</string>
@@ -39,8 +39,8 @@
     <string name="ex_kind_username_about">A .kachat username registered, renewed or traded on the registry.</string>
     <string name="ex_kind_kusdt_about">kUSDT, a dollar token on Kaspa, moved between addresses.</string>
     <string name="ex_kind_swap_about">KAS and kUSDT swapped through Trestly\'s pool.</string>
-    <string name="ex_kind_chess_about">A move in an online chess game, played in KaPlay.</string>
-    <string name="ex_kind_arcade_about">A KaPlay arcade score, stamped on chain so anyone can replay it.</string>
+    <string name="ex_kind_chess_about">A move in an online chess game, played in Arcade.</string>
+    <string name="ex_kind_arcade_about">An Arcade score, stamped on chain so anyone can replay it.</string>
     <string name="ex_kind_coinbase_about">New KAS paid to miners for the blocks they found.</string>
     <string name="ex_kind_other_about">A Kaspa transaction.</string>
 

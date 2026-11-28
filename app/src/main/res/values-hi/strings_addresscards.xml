@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">इतिहास देखने के लिए टैप करें</string>
+    <string name="addrcard_quantum_protected">क्वांटम सुरक्षित</string>
+    <string name="addrcard_not_quantum_protected">क्वांटम सुरक्षित नहीं</string>
+    <string name="addrcard_new_address">नया पता</string>
+    <string name="addrcard_regular_address">सामान्य पता</string>
+    <string name="addrcard_regular_address_subtitle">हर चीज़ के साथ काम करता है: कैस्पा और kUSDT।</string>
+    <string name="addrcard_quantum_protected_address">क्वांटम सुरक्षित पता</string>
+    <string name="addrcard_quantum_protected_address_subtitle">खर्च होने तक अपनी कुंजी छिपाए रखता है। केवल कैस्पा।</string>
+    <string name="addrcard_no_kusdt_on_quantum">क्वांटम सुरक्षित पते पर kUSDT भेजा या प्राप्त नहीं किया जा सकता।</string>
+</resources>

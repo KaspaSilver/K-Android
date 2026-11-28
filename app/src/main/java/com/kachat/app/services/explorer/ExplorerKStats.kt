@@ -200,7 +200,8 @@ object ExplorerKStatsParsing {
     fun kinds(values: Map<String, Int>): Map<ExplorerTxKind, Int> {
         val counts = mutableMapOf<ExplorerTxKind, Int>()
         for ((key, kind) in CATEGORIES) {
-            values[key]?.let { counts[kind] = ExplorerMath.addInt(counts[kind] ?: 0, it) }
+            // a server's numbers never wrap, and never count down (iOS d88891ea, audit 2026-11-27 L4)
+            values[key]?.let { counts[kind] = ExplorerMath.addInt(counts[kind] ?: 0, maxOf(0, it)) }
         }
         return counts
     }

@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">Hiện không tìm thấy bài đăng liên quan đến bản nháp này nên chưa thể đăng. Bản nháp vẫn nằm trong mục Bản nháp của bạn.</string>
     <string name="kaposts_likes">Lượt thích</string>
     <string name="kaposts_no_tips_yet">Chưa có tiền tip.</string>
-    <string name="kaposts_not_on_testnet">KaPost chưa khả dụng trên Testnet</string>
-    <string name="kaposts_not_on_testnet_sub">Chưa có trình lập chỉ mục KaPost cho testnet. Tắt Testnet trong Cài đặt > Kết nối để đọc và đăng trên mainnet.</string>
+    <string name="kaposts_not_on_testnet">Bài viết chưa có trên Testnet</string>
+    <string name="kaposts_not_on_testnet_sub">Chưa có trình lập chỉ mục Bài đăng cho testnet. Tắt Testnet trong Cài đặt &gt; Cài đặt kết nối để đọc và đăng trên mainnet.</string>
     <string name="kaposts_poll_days_left">còn %1$d ngày</string>
     <string name="kaposts_poll_final_results">%1$s · Kết quả cuối cùng</string>
     <string name="kaposts_poll_hours_left">còn %1$d giờ</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">Bài đăng này đang được gửi nên không thể hủy.</string>
     <string name="kaposts_scheduled_reminder_title">Bài đăng đã lên lịch</string>
     <string name="kaposts_scheduled_sending_soon">Sẽ gửi ngay khi mạng phản hồi</string>
-    <string name="kaposts_server_not_answering">Máy chủ KaPost không phản hồi. Đang hiển thị bài đã lưu và bài mới từ mạng.</string>
+    <string name="kaposts_server_not_answering">Máy chủ Bài đăng không phản hồi. Đang hiển thị bài đã lưu và bài mới từ mạng.</string>
     <string name="kaposts_thread_not_confirmed">Mạng chưa xác nhận một phần chuỗi của bạn nên phần còn lại chưa được gửi. Lưu phần còn lại làm bản nháp? Bài đăng đầu tiên có thể đã được gửi, hãy kiểm tra trước khi đăng lại.</string>
     <string name="kaposts_tip_from_chatting_note">Từ Chatting Address, tiền tip được tính trên bài đăng và bạn có tên trong danh sách người tip.</string>
     <string name="kaposts_tip_from_private_note">Từ địa chỉ khác, tiền tip là riêng tư: tác giả nhận và thấy trong cuộc trò chuyện, nhưng không tính trên bài đăng và không nêu tên bạn.</string>

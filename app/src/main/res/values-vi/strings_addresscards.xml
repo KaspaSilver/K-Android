@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">Chạm để xem lịch sử</string>
+    <string name="addrcard_quantum_protected">Được bảo vệ lượng tử</string>
+    <string name="addrcard_not_quantum_protected">Không được bảo vệ lượng tử</string>
+    <string name="addrcard_new_address">Địa chỉ mới</string>
+    <string name="addrcard_regular_address">Địa chỉ thường</string>
+    <string name="addrcard_regular_address_subtitle">Dùng được cho mọi thứ: Kaspa và kUSDT.</string>
+    <string name="addrcard_quantum_protected_address">Địa chỉ được bảo vệ lượng tử</string>
+    <string name="addrcard_quantum_protected_address_subtitle">Giữ khóa ẩn cho đến khi chi tiêu. Chỉ Kaspa.</string>
+    <string name="addrcard_no_kusdt_on_quantum">Không thể gửi hoặc nhận kUSDT trên địa chỉ được bảo vệ lượng tử.</string>
+</resources>

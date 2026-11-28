@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Messaging and chess core, iOS 01f71184 (release audit 2026-11-27 R7): the 1:1 chess status
+     sentences, looked up by their English text through util/KaPlayText.kt (`kp_` and 12 hex of
+     the SHA-1 of the English). Translations from the iPhone Localizable.strings. -->
+<resources>
+    <string name="kp_5aef51fe1d56" formatted="false">Esperando respuesta</string>
+    <string name="kp_05c4963982e5" formatted="false">Partida rechazada</string>
+    <string name="kp_8a4e60471b34" formatted="false">Tu turno</string>
+    <string name="kp_4359fcb0e687" formatted="false">Su turno</string>
+    <string name="kp_391d5d74dbe2" formatted="false">Jaque mate - Ganan blancas</string>
+    <string name="kp_a534bb864737" formatted="false">Jaque mate - Ganan negras</string>
+    <string name="kp_0f9e5bb6b743" formatted="false">Jaque mate - ¡Ganaste!</string>
+    <string name="kp_2a7ac7c63195" formatted="false">Jaque mate - Perdiste</string>
+    <string name="kp_6749d67e4cd9" formatted="false">Ahogado - tablas</string>
+    <string name="kp_c18f3c99c790" formatted="false">Tablas - no hay piezas suficientes para dar mate</string>
+    <string name="kp_bcdfd3342e87" formatted="false">Blancas perdieron por tiempo</string>
+    <string name="kp_fe8f09db78ac" formatted="false">Negras perdieron por tiempo</string>
+    <string name="kp_a1fbe5b06f5c" formatted="false">Perdiste por tiempo</string>
+    <string name="kp_8f6cbd69632b" formatted="false">Tu rival perdió por tiempo</string>
+    <string name="kp_ca7ec66b40dd" formatted="false">Blancas abandonaron</string>
+    <string name="kp_132872205f44" formatted="false">Negras abandonaron</string>
+    <string name="kp_fb49f7dcd5a0" formatted="false">Abandonaste</string>
+    <string name="kp_1b3b9e398740" formatted="false">Tu rival abandonó</string>
+</resources>

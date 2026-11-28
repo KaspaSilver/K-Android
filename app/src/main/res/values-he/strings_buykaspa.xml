@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">קניית Kaspa</string>
+    <string name="buykaspa_swap_to_kaspa">החלפה ל-Kaspa</string>
+    <string name="buykaspa_waiting_payment">ממתינים לתשלום שלך</string>
+    <string name="buykaspa_paid">שולם. ה-USDC שלך בדרך.</string>
+    <string name="buykaspa_bridging">מועבר ל-Kaspa כ-kUSDT, בדרך כלל כ-20 דקות</string>
+    <string name="buykaspa_arrived">%1$s הגיעו. החליפו ל-Kaspa.</string>
+    <string name="buykaspa_sign_again">פתחו כדי לחתום שוב על הגשר</string>
+    <string name="buykaspa_rejected">Stripe דחתה את הרכישה הזו. לא חויב דבר.</string>
+    <string name="buykaspa_refunded">הגשר לא הצליח לפעול, ולכן ה-USDC הוחזר. פתחו כדי להעביר אותו שוב.</string>
+    <string name="buykaspa_expired">לא שולם. לא חויב דבר.</string>
+    <string name="buykaspa_where_land">לאן להגיע ה-kUSDT שלך?</string>
+    <string name="buykaspa_needs_words">כדי לקנות בכרטיס, K צריכה את מילות השחזור של החשבון הזה בטלפון הזה.</string>
+    <string name="buykaspa_stripe_note">Stripe מוכרת לקונים בארה״ב ובאיחוד האירופי. עמלת הכרטיס ועמלות הרשת מוצגות בעמוד הבא, לפני התשלום.</string>
+    <string name="buykaspa_lands_on_format">ה-kUSDT מגיע אל: %1$s</string>
+    <string name="buykaspa_can_close">אפשר לסגור את זה. K ממשיכה לעקוב אחר ההזמנה בכרטיסייה ארנק.</string>
+    <string name="buykaspa_approve_bridge">אישור הגשר</string>
+    <string name="buykaspa_sign_explainer">חתימה אחת מאפשרת לגשר של Trestly לקחת עד סכום ה-USDC הזה מכתובת ה-Ethereum של K ולהפקיד אותו ב-Kaspa כ-kUSDT. אין צורך ב-ETH, ושום Kaspa לא יוצא מהארנק שלך.</string>
+    <string name="buykaspa_up_to">עד</string>
+    <string name="buykaspa_lands_on">ה-kUSDT מגיע אל</string>
+    <string name="buykaspa_ends">מסתיים</string>
+    <string name="buykaspa_bridge">גשר</string>
+    <string name="buykaspa_eth_note">כתובת ה-Ethereum של K נוצרת ממילות החשבון הזה, כפי שכל ארנק Ethereum היה יוצר אותה.</string>
+    <string name="buykaspa_fresh_note">כתובת חדשה שמעולם לא נעשה בה שימוש, כדי שהרכישה הזו תישאר נפרדת משם המשתמש ומהצ\'אטים שלך.</string>
+    <string name="buykaspa_chatting_note">הכתובת שאליה שולחים לך הודעות ותשלומים.</string>
+    <string name="buykaspa_fresh_address">כתובת חדשה</string>
+    <string name="buykaspa_reload">טעינה מחדש</string>
+</resources>

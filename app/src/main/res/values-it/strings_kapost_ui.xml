@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">Connesso, e contiene i messaggi di questa stanza.</string>
     <string name="kpui_room_indexer_footer">Una chat pubblica vive sul blockDAG di Kaspa, quindi qualsiasi indicizzatore che osserva la stessa rete fornisce la stessa stanza. Puntala dove vuoi - il tuo o quello di qualcun altro - senza cambiare l\'indicizzatore usato da tutte le altre stanze.</string>
     <string name="kpui_use_app_indexer">Usa l\'indicizzatore dell\'app</string>
-    <string name="kpui_room_switched_off_footer">Una stanza disattivata non compare più nelle chat pubbliche e non invia mai notifiche. Puoi riattivarla in qualsiasi momento.</string>
-    <string name="kpui_languages">Lingue</string>
-    <string name="kpui_languages_footer">Disattivato toglie tutte le stanze delle lingue dalle chat pubbliche. Attivato, disattiva quelle che non vuoi.</string>
     <string name="kpui_notifications_off">Notifiche disattivate</string>
     <string name="kpui_notifications_on">Notifiche attivate</string>
     <string name="kpui_room_notified_closed">Qui ricevi notifiche dei nuovi messaggi, anche con l\'app chiusa.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">Ancora niente qui</string>
     <string name="kpui_engagement_empty">Quando qualcuno interagisce con questo post, comparirà qui.</string>
     <string name="kpui_instant_tip_limit">Le mance istantanee sono limitate a 10 KAS. Scorri verso l\'alto per inviare questa.</string>
-    <string name="kpui_kapost_settings">Impostazioni KaPost</string>
     <string name="kpui_cool_down">Calmati prima di pubblicare</string>
     <string name="kpui_cooldown_on">Post, commenti, like, repost, voti, modifiche ed eliminazioni attendono 5 secondi, con un Annulla, prima di andare on-chain.</string>
     <string name="kpui_cooldown_off">Post, commenti, like, repost, voti, modifiche ed eliminazioni vanno subito on-chain, senza Annulla.</string>

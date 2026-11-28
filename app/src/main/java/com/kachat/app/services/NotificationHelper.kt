@@ -34,7 +34,9 @@ class NotificationHelper @Inject constructor(
 ) {
     /** The localized words a 1:1 banner body uses (dmNotificationText), in the app's language. */
     fun dmNotificationLabels(): com.kachat.app.util.DmNotificationLabels =
-        com.kachat.app.util.DmNotificationLabels.from(context)
+        // Settings > Language's choice (AppText), as iOS's AppLocalization; the app's own resources
+        // when that isn't set up yet
+        com.kachat.app.util.DmNotificationLabels.from(runCatching { com.kachat.app.util.AppText.context() }.getOrDefault(context))
 
     // Suppresses a notification for whichever contact's thread is currently on screen —
     // set by ChatViewModel as ChatThreadScreen opens/closes.

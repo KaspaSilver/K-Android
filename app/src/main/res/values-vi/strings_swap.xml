@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">Hoán đổi</string>
-    <string name="swap_history">Lịch sử hoán đổi</string>
-    <string name="swap_started">Đã bắt đầu hoán đổi</string>
     <string name="swap_failed">Hoán đổi thất bại</string>
     <string name="swap_couldnt_read_amounts">Không đọc được số tiền của lần hoán đổi này</string>
     <string name="swap_already_holds">Đã có giao dịch hoán đổi này - thêm lần nữa sẽ tính hai lần.</string>
     <string name="swap_lands_in_portfolio">Giao dịch hoán đổi sẽ vào danh mục này.</string>
     <string name="swap_delete_title">Xóa giao dịch hoán đổi này?</string>
     <string name="swap_delete_message">Thao tác này chỉ xóa khỏi lịch sử trên máy - không ảnh hưởng đến giao dịch hoán đổi thực tế.</string>
-    <string name="swap_you_send">Bạn gửi</string>
     <string name="swap_you_get">Bạn nhận</string>
-    <string name="swap_switch_direction">Đổi chiều</string>
-    <string name="swap_get_deposit_address">Lấy địa chỉ nạp</string>
     <string name="swap_receive_coin_at">Nhận %1$s tại</string>
     <string name="swap_destination_tag_optional">Thẻ đích (không bắt buộc)</string>
     <string name="swap_destination_tag_hint">Chỉ khi địa chỉ nhận cần, như hầu hết các sàn. Nếu thiếu, sàn không thể ghi có coin cho bạn.</string>
     <string name="swap_from_kusdt_lands">Hoán đổi từ (kUSDT về đây)</string>
     <string name="swap_from_kas_lands">Hoán đổi từ (KAS về đây)</string>
-    <string name="swap_receiving_kas_at">Nhận KAS tại</string>
     <string name="swap_change">Đổi</string>
     <string name="swap_powered_by_trestly">Cung cấp bởi Trestly</string>
     <string name="swap_powered_by_changenow">Cung cấp bởi ChangeNOW</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">Bán %1$s KAS với giá %2$s - chọn danh mục để thêm vào.</string>
     <string name="swap_rate">Tỷ giá</string>
     <string name="swap_unavailable">Không khả dụng</string>
-    <string name="swap_go_to_spending_addresses">Đến Địa chỉ chi tiêu</string>
-    <string name="swap_send_coin_to_address">Gửi %1$s đến địa chỉ này</string>
     <string name="swap_amount_to_send">Số tiền cần gửi</string>
     <string name="swap_destination_tag_copied">Đã sao chép thẻ đích</string>
     <string name="swap_payout_address">Địa chỉ nhận thanh toán</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">Địa chỉ nạp</string>
     <string name="swap_couldnt_reach_changenow">Không kết nối được ChangeNOW - hãy thử lại</string>
     <string name="swap_details">Chi tiết hoán đổi</string>
-    <string name="swap_picker_footer">Hoán đổi trả về một địa chỉ bạn chưa từng dùng, để khoản nhận không thể liên kết với hoạt động trước đây của bạn. Hãy tạo một địa chỉ nếu không còn địa chỉ trống.</string>
-    <string name="swap_picker_all_used">Mọi địa chỉ ở đây đều đã dùng. Hãy tạo địa chỉ mới ở trên.</string>
-    <string name="swap_unused_addresses">Địa chỉ chưa dùng</string>
-    <string name="swap_choose_address">Chọn địa chỉ</string>
     <string name="swap_used">Đã dùng</string>
     <string name="swap_unused">Chưa dùng</string>
-    <string name="swap_check_history_before">Kiểm tra lịch sử của địa chỉ này trước khi gửi hoán đổi đến đó.</string>
-    <string name="swap_use_for_this_swap">Dùng cho lần hoán đổi này</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW trả số KAS đã hoán đổi về địa chỉ này.</string>
     <string name="swap_search_coins">Tìm coin</string>
-    <string name="swap_choose_coin">Chọn coin</string>
     <string name="swap_agreements_intro">Hoán đổi dùng hai dịch vụ không do K vận hành. Hãy đọc và đồng ý với cả hai trước khi tiếp tục.</string>
     <string name="swap_coins_on_other_networks">Coin trên mạng khác</string>
     <string name="swap_changenow_agreement">Hoán đổi giữa Kaspa và coin trên các mạng khác (Bitcoin, Ethereum, USDC, USDT và các coin khác) do ChangeNOW, một sàn giao dịch bên thứ ba, thực hiện. K chỉ hỏi ChangeNOW báo giá và địa chỉ nạp, rồi hiển thị trạng thái hoán đổi; ChangeNOW thực hiện hoán đổi và gửi coin. K không chịu trách nhiệm cho các lần hoán đổi thất bại, chậm trễ hoặc bị mất. Nếu một lần không hoàn tất, hãy liên hệ bộ phận hỗ trợ của ChangeNOW.</string>

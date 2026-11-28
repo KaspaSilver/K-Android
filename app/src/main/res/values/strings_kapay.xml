@@ -19,7 +19,6 @@
     <string name="enter_kpub">Enter kpub</string>
     <string name="export_csv">Export CSV</string>
     <string name="fee_usd_optional">Fee (optional)</string>
-    <string name="generate_more_addresses">Generate More Addresses</string>
     <string name="holdings">Holdings</string>
     <string name="import_action">Import</string>
     <string name="import_csv">Import CSV</string>
@@ -36,12 +35,8 @@
     <string name="kp_address_hidden_reenable">Address hidden. Re-enable it in Address Visibility.</string>
     <string name="kp_address_lld_64ab3">Address #%1$s</string>
     <string name="kp_address_number_ready">Address #%1$d is ready.</string>
-    <string name="kp_address_row_copy_subtitle">Puts the full address on the clipboard.</string>
     <string name="kp_address_row_hide_subtitle">Removes it from this list. Re-enable it in Address Visibility.</string>
-    <string name="kp_address_row_qr_subtitle">Full screen, for scanning with another device.</string>
-    <string name="kp_address_row_rename_subtitle">Gives this address a label of your own.</string>
     <string name="kp_address_visibility_9c9a7">Address Visibility</string>
-    <string name="kp_address_visibility_subtitle">Check off every address you want on the list, in one sitting.</string>
     <string name="kp_already_added_26837">Already added</string>
     <string name="kp_amount_and_price_08599">Amount and price</string>
     <string name="kp_and_its_transactions_will_be_deleted_3c57d">\'%1$s\' and its transactions will be deleted. This can\'t be undone.</string>
@@ -55,8 +50,6 @@
     <string name="kp_check_address_history_before_trying_again">Check the address\'s history before trying again.</string>
     <string name="kp_trade_may_have_gone_through">The trade may have gone through.</string>
     <string name="kp_checking_address_lld_5b84c">Checking address #%1$s</string>
-    <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">Checks the first thousand addresses whatever the gaps, then keeps going while it keeps finding.</string>
-    <string name="kp_close_and_keep_scanning_b66cc">Close and Keep Scanning</string>
     <string name="kp_close_bbfa7">Close</string>
     <string name="kp_coin_just_spent">Just spent by a send</string>
     <string name="kp_coin_locked_by_covenant">Locked by a covenant</string>
@@ -128,7 +121,6 @@
     <string name="kp_mining_per_week">Per week</string>
     <string name="kp_new_portfolio_5c1c7">New Portfolio</string>
     <string name="kp_no_addresses_discovered_yet_15738">No addresses discovered yet.</string>
-    <string name="kp_no_used_addresses_yet">No used addresses yet</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Not enough history yet - check back after a few days of activity.</string>
     <string name="kp_note_optional_4e395">Note (optional)</string>
     <string name="kp_nothing_can_change_now_this_is_8bf3a">Nothing can change now: this is the transaction KasSigner signed.</string>
@@ -216,7 +208,6 @@
     <string name="kp_you_receive">You Receive</string>
     <string name="kp_you_receive_about">You Receive About</string>
     <string name="kp_you_saw">You Saw</string>
-    <string name="kpub">kpub</string>
     <string name="kpub_2">kpub...</string>
     <string name="name_this_address">Name This Address</string>
     <string name="no_app_to_open_link">No app on this phone can open the link</string>
@@ -271,22 +262,17 @@
     <string name="total_invested">Total Invested</string>
     <string name="total_p_l">Total P&amp;L</string>
     <string name="transactions">Transactions</string>
-    <string name="kp_changes_the_name_shown_for_this_account_kc">Changes the name shown for this account.</string>
     <string name="kp_compound_utxos_description_kc">Combines all UTXOs at this address into a single one, to reduce the number of inputs a future send needs.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">Your other apps on the same words show the same kUSDT and can send it. Swapping happens here.</string>
     <string name="kp_kusdt_guide_swapping_detail_kc">To swap KAS and kUSDT, or add to the pool, tap Swap Stablecoins on the Wallet tab and choose kUSDT. Trestly\'s own site opens inside K, connected to the address you pick.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">More stablecoins will show here as K adds them.</string>
-    <string name="kp_notifies_you_when_this_account_kc">Notifies you when this account receives Kaspa.</string>
     <string name="kp_on_trestly_inside_kachat_kc">On Trestly, inside K</string>
-    <string name="kp_puts_the_extended_public_key_kc">Puts the extended public key on the clipboard.</string>
     <string name="kp_reveals_next_unused_address_account_kc">Reveals the next unused address in this account.</string>
     <string name="kp_scan_it_into_another_device_kc">Scan it into another device to watch this account there.</string>
     <string name="kp_scan_this_on_your_kassigner_kc">Scan this on your KasSigner</string>
     <string name="kp_selected_one_utxo_kc">Selected: %1$s (1 UTXO)</string>
     <string name="kp_selected_utxos_kc">Selected: %1$s (%2$d UTXOs)</string>
-    <string name="kp_show_kpub_qr_kc">Show kpub QR</string>
     <string name="kp_something_went_wrong_kc">Something Went Wrong</string>
-    <string name="kp_stops_notifying_when_this_account_kc">Stops notifying when this account receives Kaspa. Other accounts keep theirs.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">This only removes it from K\'s watch list. It has no effect on the KasSigner device or any funds it holds.</string>
     <string name="kp_token_empty_state_swap_kc">Receive it on a fresh address, or buy it with Swap Stablecoins on the Wallet tab.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly asks K to</string>
@@ -296,8 +282,5 @@
     <string name="kp_trestly_site_kc">Trestly Site</string>
     <string name="kp_trestly_site_url_kc">Trestly Site URL</string>
     <string name="kp_trestly_swap_note_kc">Built and checked by Trestly\'s own code inside K. If the pool moves first, it quotes again: it goes ahead only at this quote or better, asks you again for less, and never goes below the site\'s minimum.</string>
-    <string name="kp_turn_off_receive_notifications_kc">Turn Off Receive Notifications</string>
-    <string name="kp_turn_on_receive_notifications_kc">Turn On Receive Notifications</string>
-    <string name="cold_copy_kpub_reveals_all_addresses">Puts this account\'s kpub on the clipboard. It reveals all its addresses.</string>
     <string name="cold_not_a_valid_kpub">Not a valid kpub</string>
 </resources>

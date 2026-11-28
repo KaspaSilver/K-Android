@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">添加房间</string>
+    <string name="roomsoptin_indexer_rooms_footer">索引器保存的房间：会保留历史记录，即使 K 关闭也能通知你。</string>
+    <string name="roomsoptin_other_languages">其他语言</string>
+    <string name="roomsoptin_create_title">你创建的房间如何运作</string>
+    <string name="roomsoptin_create_point_name">输入相同名称的人都会进入同一个房间。它没有所有者，也无需邀请。</string>
+    <string name="roomsoptin_create_point_history">没有索引器保存它的历史。房间打开时 K 从 Kaspa 网络读取，并在手机上最多保留 3 天。</string>
+    <string name="roomsoptin_create_point_bell">K 关闭时不会通知。打开铃铛后，K 仅在打开时通知你。</string>
+    <string name="roomsoptin_create_point_public">在那里说的一切都是公开的：任何人都能在 Kaspa 网络上读到。</string>
+    <string name="roomsoptin_create_room">创建房间</string>
+    <string name="roomsoptin_name_your_room">给房间命名</string>
+    <string name="roomsoptin_empty_title">还没有公开聊天</string>
+    <string name="roomsoptin_empty_body">添加索引器保存的房间（例如 #kaspa），或创建你自己的。不经你选择，不会添加任何内容。</string>
+    <string name="roomsoptin_removed_toast">已移除 #%1$s。随时可在“添加房间”中重新添加。</string>
+    <string name="roomsoptin_bulk_delete_message">索引器保存的房间可在“添加房间”中重新添加。你创建的房间会连同消息从此设备删除。</string>
+    <string name="roomsoptin_not_in_list_add">此房间不在你的公开聊天中。要添加吗？</string>
+    <string name="roomsoptin_room_info_curated">索引器保存的房间。由你添加，K 上任何人都能在此发言。</string>
+</resources>

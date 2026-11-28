@@ -1902,8 +1902,8 @@ internal fun ChartPairSheet(
                                     modifier = Modifier.size(32.dp).padding(end = 6.dp),
                                 )
                                 Column(Modifier.weight(1f)) {
-                                    Text(pair.title, color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-                                    Text(pair.subtitle, color = colors.textSecondary, fontSize = 12.sp)
+                                    Text(chartPairTitle(pair), color = colors.textPrimary, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                                    Text(chartPairSubtitle(pair), color = colors.textSecondary, fontSize = 12.sp)
                                 }
                                 com.kachat.app.ui.theme.IosSwitch(
                                     checked = selected == pair,
@@ -1917,6 +1917,26 @@ internal fun ChartPairSheet(
         }
     }
 }
+
+/** A pair's name in the app's language (iOS 01f71184 `ChartPair.title`): Bitcoin and VOO stay as
+ *  they are. */
+@Composable
+private fun chartPairTitle(pair: com.kachat.app.services.ChartPair): String = when (pair) {
+    com.kachat.app.services.ChartPair.GOLD -> stringResource(R.string.rel_wallet_gold)
+    com.kachat.app.services.ChartPair.SILVER -> stringResource(R.string.rel_wallet_silver)
+    else -> pair.title
+}
+
+/** What a pair's amounts are, in the app's language (iOS 01f71184 `ChartPair.subtitle`). */
+@Composable
+private fun chartPairSubtitle(pair: com.kachat.app.services.ChartPair): String = stringResource(
+    when (pair) {
+        com.kachat.app.services.ChartPair.BITCOIN -> R.string.rel_wallet_pair_bitcoin
+        com.kachat.app.services.ChartPair.VOO -> R.string.rel_wallet_pair_voo
+        com.kachat.app.services.ChartPair.GOLD -> R.string.rel_wallet_pair_gold
+        com.kachat.app.services.ChartPair.SILVER -> R.string.rel_wallet_pair_silver
+    }
+)
 
 private fun chartPairIcon(pair: com.kachat.app.services.ChartPair) = when (pair) {
     com.kachat.app.services.ChartPair.BITCOIN -> Icons.Default.CurrencyBitcoin

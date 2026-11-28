@@ -31,7 +31,8 @@ class PublicChatsChessArena @Inject constructor(
         deliveryStatus = deliveryStatus,
     )
 
-    override suspend fun joinChannel(channel: String) = repository.joinChannel(channel)
+    // silent: the arena is machinery, never a room whose bell goes on (iOS 824a30bb notify: false)
+    override suspend fun joinChannel(channel: String) = repository.joinChannel(channel, notify = false)
 
     override fun startLiveViewing(channel: String): AutoCloseable = scanning.startLiveViewing(channel)
 

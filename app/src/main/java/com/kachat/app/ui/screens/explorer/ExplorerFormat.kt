@@ -101,16 +101,39 @@ object ExplorerFormat {
     /** What a transaction moved: kUSDT for a token transaction, else KAS; "–" when it can't be
      *  told (a transaction read off the node, whose change isn't known). */
     fun amountLine(tx: ExplorerTransaction, short: Boolean = false): String {
-        tx.tokenUnits?.let { return TokenAmount.amount(it, WalletToken.KUSDT) }
+        tx.tokenUnits?.let { return kusdt(it) }
         val sompi = tx.movedAmount ?: return "–"
         return if (short) shortKAS(sompi) else kas(sompi)
     }
 
-    /** A row's amount: "1.25 KAS", "12.3K KAS". */
+    /** A row's amount: "1.25 KAS", "12.3K KAS". Under 0.01 KAS by its first digits ("0.0001 KAS"):
+     *  a post's or handshake's net is only its fee, which read "−0 KAS" (iOS 01f71184, release
+     *  audit). */
     fun shortKAS(sompi: Long): String {
         val kas = sompi / 100_000_000.0
-        val text = if (kas >= 1000) compact(kas, 1) else decimal(kas, 0, 2)
+        val text = when {
+            kas >= 1000 -> compact(kas, 1)
+            sompi > 0 && kas < 0.01 -> {
+                // one to three significant digits
+                val value = java.math.BigDecimal.valueOf(sompi).movePointLeft(8)
+                    .round(java.math.MathContext(3)).stripTrailingZeros()
+                decimal(value.toDouble(), 0, value.scale().coerceIn(0, 8))
+            }
+            else -> decimal(kas, 0, 2)
+        }
         return "$text ${KaspaUnit.symbol}"
+    }
+
+    /** kUSDT to the cent ("2.66 kUSDT"), as the app's dollar amounts read; an amount under a cent
+     *  keeps its digits rather than reading 0 (iOS 01f71184, release audit: "2.659812"). */
+    fun kusdt(units: Long): String {
+        val token = WalletToken.KUSDT
+        if (token.decimals <= 2) return TokenAmount.amount(units, token)
+        var step = 1L
+        repeat(token.decimals - 2) { step *= 10 }
+        val cents = units / step + (if (units % step >= step / 2) 1 else 0)
+        if (cents <= 0) return TokenAmount.amount(units, token)
+        return TokenAmount.amount(cents * step, token)
     }
 
     /** "4.2%", "15.1%", "27,743%": big changes lose their decimals. */

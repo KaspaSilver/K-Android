@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">Уведомления для этого публичного чата выключены</string>
     <string name="pc_notifications_on_closed_toast">Вы будете получать уведомления о новых сообщениях в этом публичном чате, даже когда приложение закрыто</string>
     <string name="pc_notifications_on_open_toast">Вы будете получать уведомления о новых сообщениях в этом публичном чате, пока приложение открыто</string>
-    <string name="pc_default_room_off_toast">#%1$s выключена — включите её снова в разделе «Изменить общие чаты по умолчанию»</string>
     <string name="pc_delete_room_title">Удалить #%1$s?</string>
     <string name="pc_delete_room_message">Все сообщения этой комнаты, сохранённые на этом устройстве, будут удалены. Это нельзя отменить - если вы вернётесь позже, истории не будет.</string>
     <string name="pc_delete_room_row_subtitle">Удаляет эту комнату и её сообщения с этого устройства.</string>
     <string name="pc_keep">Оставить</string>
     <string name="pc_keep_subtitle">Оставить комнату как есть.</string>
-    <string name="pc_new_public_chat">Новый публичный чат</string>
-    <string name="pc_edit_default_public_chats">Изменить общие чаты по умолчанию</string>
-    <string name="pc_new_public_chat_explainer">Любой, кто зайдёт в канал с тем же названием, увидит и сможет писать сообщения - у канала нет владельца и не нужно приглашений.</string>
     <string name="pc_join">Присоединиться</string>
     <string name="pc_channel_name_rules">Название канала: 1–%1$d символов, без пробелов и двоеточий.</string>
     <string name="pc_join_failed">Не удалось присоединиться к этому каналу.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">Сообщить о недопустимом или оскорбительном контенте. Открывает письмо с этим сообщением во вложении.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">Скрывает их посты и сообщения в комнатах и не даёт им взаимодействовать с вами.</string>
-    <string name="pc_sender_view_profile_subtitle">Их профиль в KaPost: посты, ответы и подписчики.</string>
+    <string name="pc_sender_view_profile_subtitle">Профиль: посты, ответы и подписчики.</string>
     <string name="pc_sender_send_kaspa_subtitle">Отправить Kaspa на их адрес.</string>
     <string name="pc_sender_copy_address_subtitle">Скопировать его адрес Kaspa.</string>
     <string name="pc_original_message_not_loaded">Исходное сообщение не загружено</string>

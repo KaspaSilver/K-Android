@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">এই পাবলিক চ্যাটের জন্য নোটিফিকেশন বন্ধ</string>
     <string name="pc_notifications_on_closed_toast">এই পাবলিক চ্যাটের নতুন বার্তার নোটিফিকেশন পাবেন, অ্যাপ বন্ধ থাকলেও</string>
     <string name="pc_notifications_on_open_toast">আপনার অ্যাপ খোলা থাকা পর্যন্ত এই পাবলিক চ্যাটের নতুন বার্তার নোটিফিকেশন পাবেন</string>
-    <string name="pc_default_room_off_toast">#%1$s বন্ধ - ডিফল্ট পাবলিক চ্যাট সম্পাদনা থেকে আবার চালু করুন</string>
     <string name="pc_delete_room_title">#%1$s মুছবেন?</string>
     <string name="pc_delete_room_message">এই ডিভাইসে এই রুমের জন্য ক্যাশ করা প্রতিটি বার্তা মুছে ফেলা হয়। এটি ফেরানো যায় না - পরে আবার যোগ দিলে কোনো ইতিহাস থাকবে না।</string>
     <string name="pc_delete_room_row_subtitle">এই রুম ও তার বার্তা এই ডিভাইস থেকে সরায়।</string>
     <string name="pc_keep">রাখুন</string>
     <string name="pc_keep_subtitle">রুমটি যেমন আছে তেমনই রাখুন।</string>
-    <string name="pc_new_public_chat">নতুন পাবলিক চ্যাট</string>
-    <string name="pc_edit_default_public_chats">ডিফল্ট পাবলিক চ্যাট সম্পাদনা</string>
-    <string name="pc_new_public_chat_explainer">একই চ্যানেল নামে যোগ দেওয়া যে কেউ সেখানে বার্তা দেখতে ও পোস্ট করতে পারে - কোনো মালিক নেই, কোনো আমন্ত্রণও নেই।</string>
     <string name="pc_join">যোগ দিন</string>
     <string name="pc_channel_name_rules">চ্যানেলের নাম ১-%1$d অক্ষরের হতে হবে, স্পেস বা কোলন ছাড়া।</string>
     <string name="pc_join_failed">ওই চ্যানেলে যোগ দেওয়ার সময় কিছু ভুল হয়েছে।</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">অপমানজনক বা আপত্তিকর কনটেন্টের রিপোর্ট করুন। এই বার্তা সংযুক্ত করে একটি ইমেইল খোলে।</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">তাদের পোস্ট ও রুমের বার্তা লুকায়, এবং তাদের আপনার সাথে ইন্টারঅ্যাক্ট করা বন্ধ করে।</string>
-    <string name="pc_sender_view_profile_subtitle">তাদের KaPost প্রোফাইল: পোস্ট, উত্তর ও ফলোয়ার।</string>
+    <string name="pc_sender_view_profile_subtitle">তাদের প্রোফাইল: পোস্ট, উত্তর ও অনুসরণকারী।</string>
     <string name="pc_sender_send_kaspa_subtitle">তাদের ঠিকানায় Kaspa পাঠান।</string>
     <string name="pc_sender_copy_address_subtitle">তাদের Kaspa ঠিকানা কপি করুন।</string>
     <string name="pc_original_message_not_loaded">মূল বার্তা লোড হয়নি</string>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release audit 2026-11-27 (iOS 01f71184): wallet, money and site signing -->
+<resources>
+    <string name="rel_wallet_gold">طلا</string>
+    <string name="rel_wallet_silver">نقره</string>
+    <string name="rel_wallet_pair_bitcoin">قیمت Kaspa به بیت‌کوین</string>
+    <string name="rel_wallet_pair_voo">سهام ETF شاخص S&amp;P 500 ونگارد</string>
+    <string name="rel_wallet_pair_gold">اونس تروی طلا</string>
+    <string name="rel_wallet_pair_silver">اونس تروی نقره</string>
+    <string name="rel_wallet_cold_storage_n">ذخیره سرد %1$d</string>
+    <string name="rel_wallet_no_spendable_at_address">هیچ UTXO قابل خرجی در این آدرس نیست</string>
+    <string name="rel_wallet_insufficient_plus_fee">موجودی برای این مبلغ به‌علاوه کارمزد شبکه کافی نیست</string>
+    <string name="rel_wallet_too_many_inputs">این ارسال به %1$d UTXO نیاز دارد، اما KasSigner فقط %2$d ورودی در هر تراکنش را پشتیبانی می‌کند. مبلغ کمتری بفرستید یا ابتدا این آدرس را تجمیع کنید.</string>
+    <string name="rel_wallet_cancelled">لغو شد.</string>
+    <string name="rel_wallet_err_no_internet">اتصال اینترنت برقرار نیست. اتصال خود را بررسی و دوباره تلاش کنید.</string>
+    <string name="rel_wallet_err_timed_out">زمان اتصال به پایان رسید. اتصال خود را بررسی و دوباره تلاش کنید.</string>
+    <string name="rel_wallet_err_cant_reach">دسترسی به سرور ممکن نشد. آدرس را در تنظیمات و اتصال خود بررسی کنید.</string>
+    <string name="rel_wallet_err_secure">اتصال امن با سرور برقرار نشد.</string>
+    <string name="rel_wallet_err_network">خطای شبکه رخ داد. اتصال خود را بررسی و دوباره تلاش کنید.</string>
+    <string name="rel_wallet_err_unreadable">سرور چیزی فرستاد که برنامه نتوانست آن را بخواند. دوباره تلاش کنید؛ اگر تکرار شد، برنامه را به‌روزرسانی کنید.</string>
+    <string name="rel_wallet_err_node">نود Kaspa خطا برگرداند. برنامه نود دیگری را امتحان می‌کند؛ کمی بعد دوباره تلاش کنید.</string>
+    <string name="rel_wallet_err_unknown">خطای ناشناخته‌ای رخ داد.</string>
+    <string name="rel_wallet_err_no_spendable_available">هیچ UTXO قابل خرجی موجود نیست</string>
+    <string name="rel_wallet_err_no_private_key">کلید خصوصی دریافت نشد</string>
+    <string name="rel_wallet_err_insufficient_payment">موجودی برای پرداخت کافی نیست</string>
+    <string name="rel_wallet_err_insufficient_after_fee">موجودی پس از کارمزد کافی نیست</string>
+    <string name="rel_wallet_err_insufficient_handshake">موجودی برای دست‌دهی کافی نیست</string>
+    <string name="rel_wallet_err_insufficient_self_stash">موجودی برای کارمزد ذخیره شخصی کافی نیست</string>
+    <string name="rel_wallet_err_group_secrets">کلیدهای گروه موجود نیست - دوباره به این گروه بپیوندید.</string>
+    <string name="rel_wallet_err_admin_secrets">کلیدهای مدیر گروه موجود نیست.</string>
+</resources>

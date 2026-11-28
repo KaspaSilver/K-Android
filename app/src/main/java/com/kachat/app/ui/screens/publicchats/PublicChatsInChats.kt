@@ -17,7 +17,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -156,6 +158,7 @@ internal fun PublicRoomChatsRow(
     val unread = summary?.unreadCount ?: 0
     val youLabel = stringResource(R.string.pc_you)
     val yesterday = stringResource(R.string.pc_yesterday)
+    val dayStamp = com.kachat.app.util.LocalChatDayStamp.current
     val last = summary?.lastMessage
     // Worked out once per message (iOS `PublicChatRoomSummaries.previewMemo`): by id and content.
     // An edited message previews with its newest text, as in the room (iOS 961fc05a).
@@ -225,7 +228,8 @@ internal fun PublicRoomChatsRow(
                     notifyOff = muted,
                     preview = preview,
                     emptyText = stringResource(R.string.pc_no_messages_yet),
-                    timeText = last?.let { publicRoomTime(it.blockTimestamp, yesterday) },
+                    // drawn again when the day moves on (iOS 01f71184, release audit C2)
+                    timeText = last?.let { remember(it.blockTimestamp, dayStamp, yesterday) { publicRoomTime(it.blockTimestamp, yesterday) } },
                     unread = unread,
                     onClick = { if (isSelectionMode) onToggleSelection() else onOpen() },
                     onLongClick = null,
@@ -262,18 +266,19 @@ internal fun togglePublicRoomNotify(
 }
 
 /**
- * Delete on a room (iOS `deleteRoom`): a default room is never really deleted - it is switched
- * off, like its switch in Edit Default Public Chats, which brings it back; a room you added asks
- * first ([LeavePublicRoomSheet]). Returns true when the caller should ask.
+ * Delete on a room (iOS 824a30bb `deleteRoom`): a room the indexer keeps leaves at once (Add Room
+ * brings it back, history and all), with a toast saying so; a room you made asks first
+ * ([LeavePublicRoomSheet]): its messages on this device go. Returns true when the caller should
+ * ask.
  */
 internal fun deletePublicRoomNeedsConfirmation(
     context: android.content.Context,
     channelName: String,
     broadcastViewModel: BroadcastViewModel,
 ): Boolean {
-    if (channelName in FeaturedBroadcastChannels.CURATED_NAMES) {
+    if (FeaturedBroadcastChannels.isIndexerTracked(channelName)) {
         broadcastViewModel.removeFromList(channelName)
-        IosToasts.show(context.getString(R.string.pc_default_room_off_toast, channelName))
+        IosToasts.show(context.getString(R.string.roomsoptin_removed_toast, channelName))
         return false
     }
     return true
@@ -306,112 +311,10 @@ internal fun LeavePublicRoomSheet(
 }
 
 /**
- * New Public Chat, the Public Chats page's + (iOS `createJoinRoom`; the Chats page's New sheet has
- * no room row since ef760cfa): join or create a room by name - anyone who joins the same name sees
- * and posts there. Joining opens the room ([onJoined]).
- */
-@Composable
-internal fun NewPublicChatPage(
-    broadcastViewModel: BroadcastViewModel,
-    onBack: () -> Unit,
-    onJoined: (String) -> Unit,
-    /** The bar's leading button: Cancel since iOS ef760cfa (only the Public Chats page's + opens
-     *  it, so it closes the sheet). */
-    backLabel: String = stringResource(R.string.cancel),
-) {
-    val colors = LocalAppColors.current
-    var name by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
-    val focus = remember { FocusRequester() }
-    val haptic = com.kachat.app.util.rememberHaptics()
-    val isEmpty = name.trim().isEmpty()
-    fun join() {
-        if (isEmpty) return
-        broadcastViewModel.joinFromCreateSheet(
-            rawName = name,
-            onError = { error = it },
-            onJoined = { joined ->
-                haptic(com.kachat.app.util.IosHaptic.SUCCESS)
-                onJoined(joined)
-            },
-        )
-    }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    Column(modifier = Modifier.fillMaxSize()) {
-        SheetNavBar(
-            title = stringResource(R.string.pc_new_public_chat),
-            leading = { SheetBarButton(backLabel, onClick = onBack) },
-        )
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                stringResource(R.string.pc_new_public_chat_explainer),
-                color = colors.textSecondary,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colors.surfaceVariant, RoundedCornerShape(16.dp))
-                    .padding(horizontal = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text("#", color = colors.textSecondary, fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
-                TextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        error = null
-                    },
-                    placeholder = { Text("channel-name", color = colors.textTertiary) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.None,
-                        autoCorrect = false,
-                        imeAction = ImeAction.Go,
-                    ),
-                    keyboardActions = KeyboardActions(onGo = { join() }),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedTextColor = colors.textPrimary,
-                        unfocusedTextColor = colors.textPrimary,
-                        cursorColor = KaspaTeal,
-                    ),
-                    modifier = Modifier.weight(1f).focusRequester(focus),
-                )
-            }
-            error?.let {
-                Text(it, color = colors.danger, fontSize = 13.sp, textAlign = TextAlign.Center)
-            }
-            Text(
-                stringResource(R.string.pc_join),
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(KaspaTeal.copy(alpha = if (isEmpty) 0.4f else 1f), RoundedCornerShape(16.dp))
-                    .clickable(enabled = !isEmpty) { join() }
-                    .padding(vertical = 14.dp),
-            )
-            Spacer(Modifier.size(0.dp))
-        }
-    }
-}
-
-/**
- * A room handed over from outside - a tapped room notification, or a room link - opens here, in
- * the Chats list's navigation (iOS `openRoomFromHandoff`, `pendingPublicChatNavigation`): the
- * name is checked again and a room with no row is joined first.
+ * A room handed over from outside - a tapped room notification, a room link, an @mention in
+ * Profile's bell - opens here, in the Chats list's navigation (iOS `openRoomFromHandoff`,
+ * `pendingPublicChatNavigation`): the name is checked again, and a room not in the list is asked
+ * about first (iOS 824a30bb `askToJoinRoom`: no room is added unasked).
  */
 @Composable
 internal fun PublicRoomHandoffEffect(
@@ -421,13 +324,22 @@ internal fun PublicRoomHandoffEffect(
     onHandoff: () -> Unit = {},
 ) {
     val pending by BroadcastDeepLink.pendingChannel.collectAsState()
+    val context = LocalContext.current
     LaunchedEffect(pending) {
         val raw = pending ?: return@LaunchedEffect
         BroadcastDeepLink.consumePending()
-        broadcastViewModel.openRoomFromHandoff(raw) { name ->
-            onHandoff()
-            navController.navigate(PublicChatRoutes.room(name)) { launchSingleTop = true }
-        }
+        broadcastViewModel.openRoomFromHandoff(
+            raw,
+            open = { name ->
+                onHandoff()
+                navController.navigate(PublicChatRoutes.room(name)) { launchSingleTop = true }
+            },
+            // Join comes back through here, the room then in the list
+            ask = { name ->
+                onHandoff()
+                PublicChatLinkRouter.askToJoinRoom(context, name)
+            },
+        )
     }
 }
 
@@ -494,34 +406,49 @@ internal fun SilencedPill(modifier: Modifier = Modifier) {
     )
 }
 
-/** The Public Chats page with every room switched off or left (iOS 961fc05a `emptyRoomsView`). */
+/**
+ * The Public Chats page with no rooms (iOS 824a30bb `emptyRoomsView`, how it starts since
+ * 2026-11-26), laid out as Contacts' empty page: what goes here, and Add Room ([onAddRoom]).
+ */
 @Composable
-internal fun PublicChatsEmptyView(modifier: Modifier = Modifier) {
+internal fun PublicChatsEmptyView(onAddRoom: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalAppColors.current
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        modifier = modifier.padding(32.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
             Icons.Default.Tag,
             contentDescription = null,
-            tint = colors.textSecondary,
-            modifier = Modifier.size(60.dp),
+            tint = KaspaTeal,
+            modifier = Modifier.size(44.dp),
         )
         Text(
-            stringResource(R.string.r55_no_public_chats),
+            stringResource(R.string.roomsoptin_empty_title),
             color = colors.textPrimary,
-            fontSize = 22.sp,
+            fontSize = 17.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
         )
         Text(
-            stringResource(R.string.r55_no_public_chats_hint),
+            stringResource(R.string.roomsoptin_empty_body),
             color = colors.textSecondary,
             fontSize = 15.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp),
         )
+        // iOS's .borderedProminent: white on an accent capsule, "+ Add Room"
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(percent = 50))
+                .background(KaspaTeal)
+                .clickable(onClick = onAddRoom)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            Text(stringResource(R.string.roomsoptin_add_room), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        }
     }
 }

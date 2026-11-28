@@ -652,8 +652,8 @@ class TokenWallet @Inject constructor(
      * A token coin doesn't land on your address (it sits at its own contract address), so the
      * Kaspa watch never sees it arrive. Instead each refresh compares the coins it found with the
      * ones known before (kept per account on this phone) and announces the new ones as Received,
-     * like Kaspa: a local notification and the Notifications list, behind Settings > Notifications
-     * > Address Activity. Never announced: the first look on this phone (it only learns what's
+     * like Kaspa: the Notifications list always, and a local notification behind Settings >
+     * Notifications > Address Activity. Never announced: the first look on this phone (it only learns what's
      * there), what Discover finds, and coins from your own transfers (the transaction spent a coin
      * of yours, or paid from one of your addresses). A contact's Send Dollars the chat already
      * showed (a token_payment_notice's bubble) is recorded but not bannered again, and a new coin
@@ -718,8 +718,9 @@ class TokenWallet @Inject constructor(
                         coin.state.amount, "", at ?: System.currentTimeMillis(), holdingId = holdingId), token, account)
                 }
             }
-            if (received.isEmpty() || !notificationsEnabled()) return
-            postReceived(received, token, ring = anyCurrent, happenedAtMs = newest)
+            // The bell always gets it; only the ping follows the switches (iOS 01f71184, owner 2026-11-27).
+            if (received.isEmpty()) return
+            postReceived(received, token, ring = anyCurrent && notificationsEnabled(), happenedAtMs = newest)
         } finally {
             rememberSeen(current.filter { it.outpointKey !in held }, account, token)
         }
@@ -785,7 +786,8 @@ class TokenWallet @Inject constructor(
     /** While the app is open and signed in, the balances are checked on every foreground beat
      *  ([com.kachat.app.services.ForegroundBeat]: 30 s on Wi-Fi, 60 s on a metered path, 1.5 s
      *  after the room sweep, so the radio wakes once per beat; iOS 961fc05a, audit 2026-11-25 B4),
-     *  so a token that arrives is announced - only with Address Activity notifications on; the
+     *  so a token that arrives is announced. With Address Activity notifications off, every 5
+     *  minutes, so the bell still gets Received kUSDT (iOS 01f71184, owner 2026-11-27); the
      *  screens refresh themselves either way. Started on foreground by KaChatApplication. */
     fun startPolling() {
         if (pollJob?.isActive == true) return
@@ -798,8 +800,8 @@ class TokenWallet @Inject constructor(
                     pollJob = null
                     return@launch
                 }
-                if (!notificationHelper.isAppInForeground || !notificationsEnabled()) continue
-                refreshIfStale(maxAgeMs = POLL_MAX_AGE_MS, background = true)
+                if (!notificationHelper.isAppInForeground) continue
+                refreshIfStale(maxAgeMs = pollMaxAgeMs(notificationsEnabled()), background = true)
             }
         }
     }
@@ -1014,6 +1016,12 @@ class TokenWallet @Inject constructor(
         internal const val POLL_INTERVAL_MS = 30_000L
         /** The poll's refreshIfStale(maxAge: 25) on iOS. */
         internal const val POLL_MAX_AGE_MS = 25_000L
+        /** With Address Activity off: iOS 01f71184 `refreshIfStale(maxAge: 290)`, about every 5 minutes. */
+        internal const val QUIET_POLL_MAX_AGE_MS = 290_000L
+
+        /** How stale the balances may be before the poll looks again. */
+        internal fun pollMaxAgeMs(notificationsOn: Boolean): Long =
+            if (notificationsOn) POLL_MAX_AGE_MS else QUIET_POLL_MAX_AGE_MS
 
         /** How long a new coin on the Chatting Address waits for its chat notice before the
          *  wallet announces it itself (iOS `TokenWallet.noticeWait`, 120 s). */

@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">Terhubung, dan memiliki pesan ruang ini.</string>
     <string name="kpui_room_indexer_footer">Obrolan publik berada di blockDAG Kaspa, jadi setiap pengindeks yang memantau jaringan yang sama menyajikan ruang yang sama. Arahkan ruang ini ke mana pun Anda mau - milik Anda sendiri atau milik orang lain - tanpa mengubah pengindeks yang dipakai ruang lainnya.</string>
     <string name="kpui_use_app_indexer">Gunakan pengindeks aplikasi</string>
-    <string name="kpui_room_switched_off_footer">Ruang yang dimatikan tidak lagi muncul di Obrolan Publik dan tidak pernah mengirim notifikasi. Nyalakan kembali kapan saja.</string>
-    <string name="kpui_languages">Bahasa</string>
-    <string name="kpui_languages_footer">Mati mengeluarkan semua ruang bahasa dari Obrolan Publik. Nyala, matikan yang tidak Anda inginkan.</string>
     <string name="kpui_notifications_off">Notifikasi mati</string>
     <string name="kpui_notifications_on">Notifikasi nyala</string>
     <string name="kpui_room_notified_closed">Anda diberi tahu pesan baru di sini, bahkan saat aplikasi ditutup.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">Belum ada apa-apa di sini</string>
     <string name="kpui_engagement_empty">Saat seseorang berinteraksi dengan postingan ini, mereka akan muncul di sini.</string>
     <string name="kpui_instant_tip_limit">Tip instan dibatasi hingga 10 KAS. Geser ke atas untuk mengirim yang ini.</string>
-    <string name="kpui_kapost_settings">Pengaturan KaPost</string>
     <string name="kpui_cool_down">Jeda sebelum memposting</string>
     <string name="kpui_cooldown_on">Postingan, komentar, suka, repost, vote, suntingan, dan penghapusan menunggu 5 detik, dengan opsi Urungkan, sebelum masuk ke chain.</string>
     <string name="kpui_cooldown_off">Postingan, komentar, suka, repost, vote, suntingan, dan penghapusan langsung masuk ke chain, tanpa Urungkan.</string>

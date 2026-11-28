@@ -83,8 +83,18 @@ class KaPostsViewModel @Inject constructor(
     private val tipSender: com.kachat.app.services.KaPostTipSender,
     /** A self-follow checked on chain before an unfollow of it is paid for (audit L9). */
     private val chainPosts: com.kachat.app.services.KaPostsChainPosts,
+    /** What a plain repost reposted, for a repost of a repost's card (iOS 01f71184). */
+    private val repostOrigins: com.kachat.app.services.KaPostRepostOrigins,
     @dagger.hilt.android.qualifiers.ApplicationContext private val appContext: android.content.Context,
 ) : ViewModel() {
+
+    // MARK: - Repost of a repost (iOS 01f71184 `KaPostQuotedEmbed`)
+
+    /** The original a plain repost card shows, when already found (no lookup). */
+    fun cachedRepostOrigin(quoted: KaPostDraft.QuotedRef): KaPostDraft.QuotedRef? = repostOrigins.cached(quoted)
+
+    /** Looks up the post a plain repost reposted (following reposts of reposts), or null. */
+    suspend fun repostOrigin(quoted: KaPostDraft.QuotedRef): KaPostDraft.QuotedRef? = repostOrigins.original(quoted)
 
     // MARK: - Tips (iOS 148a5331: through `ChatService.sendPayment(tip:)`)
 
@@ -486,6 +496,8 @@ class KaPostsViewModel @Inject constructor(
             requests++
             val page = try {
                 fetch(cursor)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.w(TAG, "Page fetch failed", e)
                 error = UserFacingError.message(e, "Could not load more")
@@ -733,6 +745,11 @@ class KaPostsViewModel @Inject constructor(
     /** More than a page arrived, so splicing the pending posts in would leave a hole below them:
      *  the pill refreshes the feed instead (iOS ee5ec98). */
     private var pendingNewPostsHaveGap = false
+
+    /** The feed source not on screen's new-posts pill, as it was left, by [feedKey]: switching
+     *  Following <-> Feed brings it back with its posts and paging (iOS 01f71184 P1
+     *  `stashedFeeds`). Posts and paging are already kept per source here. */
+    private val stashedPendingNewPosts = HashMap<String, Pair<List<KaPostDraft>, Boolean>>()
 
     private var checkingForNewPosts = false
 
@@ -1473,19 +1490,38 @@ class KaPostsViewModel @Inject constructor(
      * Refresh control is what resets to page one.
      */
     fun selectFeed(tab: FeedTab) {
-        // The new-posts pill belongs to the feed it was found for (iOS clears it when the feed
-        // changes): carried over, its posts were spliced into the other tab.
-        if (tab != _selectedFeed.value) _pendingNewPosts.value = emptyList()
+        // The new-posts pill belongs to the source it was found for: Feed and Popular share the
+        // global feed and keep it; Following <-> Feed sets it aside with its source and brings
+        // back the other's, as it was left (iOS 01f71184 P1 `switchFeedSource`).
+        val previousKey = feedKey(_selectedFeed.value)
+        val key = feedKey(tab)
+        val sourceChanged = key != previousKey
+        if (sourceChanged) {
+            stashedPendingNewPosts[previousKey] = _pendingNewPosts.value to pendingNewPostsHaveGap
+            val saved = stashedPendingNewPosts.remove(key)
+            _pendingNewPosts.value = saved?.first ?: emptyList()
+            pendingNewPostsHaveGap = saved?.second ?: false
+        }
         _selectedFeed.value = tab
         // Popular still needs its window deepened before its order is meaningful, and Feed ranks
         // it in the background on an unmetered network ([popularSweepAllowed] decides).
-        if (!surfaceLoaded(feedKey(tab))) {
-            viewModelScope.launch {
+        when {
+            !surfaceLoaded(key) -> viewModelScope.launch {
                 loadFeed(tab)
                 deepenPopularRanking()
             }
-        } else {
-            deepenPopularRanking()
+            // Back to a source left a moment ago: only the newer posts are looked for, as coming
+            // back to the tab does. Gone stale (or empty): page one (iOS `FeedLoadGates.isFresh`).
+            sourceChanged && (feedFlow(tab).value.isEmpty() || !isLoadFresh(pageOneLoadedAt[key] ?: 0L)) ->
+                viewModelScope.launch {
+                    loadFeed(tab)
+                    deepenPopularRanking()
+                }
+            sourceChanged -> {
+                checkForNewPosts(tab)
+                deepenPopularRanking()
+            }
+            else -> deepenPopularRanking()
         }
     }
 
@@ -1649,6 +1685,10 @@ class KaPostsViewModel @Inject constructor(
                 // A post dropped in its countdown comes back as a draft when its account is
                 // open again, not only after a cold start (audit L7).
                 abandonCountdowns()
+                // So are the failed, Not confirmed and still-going-out posts and threads: their
+                // cards leave the screen below, so nothing this run can Retry them now, and kept
+                // "active" they were skipped by recover until a cold start.
+                abandonUnsentLocalPosts()
                 undoJobs.values.forEach { it.cancel() }
                 undoJobs.clear()
                 _undoDeadlines.value = emptyMap()
@@ -1674,6 +1714,7 @@ class KaPostsViewModel @Inject constructor(
                 _globalPosts.value = emptyList()
                 _followingPosts.value = emptyList()
                 _pendingNewPosts.value = emptyList()
+                stashedPendingNewPosts.clear()
                 _chainPosts.value = emptyList()
                 _myProfilePosts.value = emptyList()
                 _myProfileReplies.value = emptyList()
@@ -1699,6 +1740,13 @@ class KaPostsViewModel @Inject constructor(
     private fun abandonCountdowns() {
         val ids = undoJobs.keys.map { it.substringAfter(':') } + _undoToasts.value.map { it.postId }
         ids.toSet().forEach { heldPosts.abandon(it) }
+    }
+
+    /** Every local post not on chain yet, in every list and comment tree, and every thread with
+     *  segments left ([KaPostsHeldPostStore.abandon]; a no-op for ids it doesn't hold). */
+    private fun abandonUnsentLocalPosts() {
+        val ids = unsentPostIds(allPostLists().map { it.value } + _threadChains.value.values) + threadRemainders.keys
+        ids.forEach { heldPosts.abandon(it) }
     }
 
     /**
@@ -1861,8 +1909,9 @@ class KaPostsViewModel @Inject constructor(
                 feedFlow(tab).value = carryingUnsentComments(feedFlow(tab).value, result.items)
                 pageOneLoadedAt[key] = System.currentTimeMillis()
                 // A refresh just delivered whatever was being offered; leaving the pill up would
-                // promise posts that are already on screen.
-                clearPendingNewPosts()
+                // promise posts that are already on screen. The pill of the source set aside is
+                // its own.
+                if (key == feedKey(_selectedFeed.value)) clearPendingNewPosts() else stashedPendingNewPosts.remove(key)
                 if (key == PAGE_GLOBAL_FEED) {
                     // Page one is fresh again, and a refresh re-arms Popular's deep sweep: the
                     // window it ranked was just thrown away.
@@ -2594,6 +2643,9 @@ class KaPostsViewModel @Inject constructor(
                     kotlinx.coroutines.delay(1_500) // let the previous change settle (~1s blocks)
                     if (myAddress() != owner) {
                         Log.i(TAG, "Thread stopped: the account changed mid-chain")
+                        // What's left is a draft at the owner's next recover, not held as
+                        // "active" until a cold start.
+                        heldPosts.abandon(localId)
                         return@launch
                     }
                     val segmentMentions = mentionedPubkeys(segment)
@@ -3051,11 +3103,34 @@ class KaPostsViewModel @Inject constructor(
                 val txId = kaPostsService.submitReply(text, parentRemoteId, parent.posterPubkey, mentionedPubkeys(text), expectedOwner = myAddress)
                 heldPosts.release(comment.id)
                 mutateEverywhere(comment.id) { it.copy(remoteId = txId, deliveryStatus = KaPostDraft.Delivery.SENT) }
+                if (parent.posterAddress == myAddress) extendSelfThreadChain(parent.id, comment.id)
             } catch (e: Exception) {
                 mutateEverywhere(comment.id) { it.copy(deliveryStatus = failureStatus(e)) }
                 Log.w(TAG, "Reply submit failed", e)
             }
         }
+    }
+
+    /**
+     * Your reply to your own post, once sent, joins the post's thread as an indexed self-reply
+     * does (iOS 01f71184, release audit T4): the chain was walked only when the post opened, so
+     * the reply showed as a comment with no thread line until the post was opened again. It
+     * continues the chain when it answers the root with no chain yet, or the chain's last post.
+     */
+    private fun extendSelfThreadChain(parentId: String, replyId: String) {
+        val reply = findPost(replyId)?.takeIf { it.remoteId != null } ?: return
+        val chains = _threadChains.value
+        val rootId = KaPostsConversation.selfThreadChainRoot(chains.mapValues { (_, chain) -> chain.map { it.id } }, parentId) ?: return
+        val root = findPost(rootId) ?: return
+        val rootRemote = root.remoteId ?: return
+        if (root.posterAddress != reply.posterAddress) return
+        val chain = chains[rootId].orEmpty()
+        if (chain.any { it.id == reply.id }) return
+        _threadChains.value = chains + (rootId to chain + reply)
+        // a root now, as when walking the chain finds one
+        threadProbeStore.claim(rootRemote)
+        threadProbeStore.markRoot(rootRemote)
+        _threadRootFlags.value = _threadRootFlags.value + (rootRemote to true)
     }
 
     // MARK: - Votes (5s in-icon countdown, then on-chain; un-like submits the fork's unvote)
@@ -4617,4 +4692,18 @@ internal object KaPostsActionHolds {
     @Synchronized fun isReposting(remoteId: String?): Boolean = remoteId != null && remoteId in reposting
     @Synchronized fun beginRepost(remoteId: String) { reposting.add(remoteId) }
     @Synchronized fun endRepost(remoteId: String) { reposting.remove(remoteId) }
+}
+
+/** Ids of every post in [lists] (comments included, at any depth) not on chain yet: pending,
+ *  failed or Not confirmed - what an account switch takes off screen unsent. */
+internal fun unsentPostIds(lists: Collection<List<KaPostDraft>>): Set<String> {
+    val ids = mutableSetOf<String>()
+    fun walk(items: List<KaPostDraft>) {
+        for (post in items) {
+            if (post.deliveryStatus != KaPostDraft.Delivery.SENT) ids += post.id
+            walk(post.comments)
+        }
+    }
+    lists.forEach(::walk)
+    return ids
 }

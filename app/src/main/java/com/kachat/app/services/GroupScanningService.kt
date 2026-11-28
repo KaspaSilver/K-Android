@@ -64,7 +64,10 @@ class GroupScanningService @Inject constructor(
     private val nodePoolManager: NodePoolManager,
     private val groupRepository: GroupRepository,
     private val notificationHelper: NotificationHelper,
-    private val meteredNetwork: MeteredNetwork
+    private val meteredNetwork: MeteredNetwork,
+    /** Whether push delivers: with it watching every group, the full pass is a 5-minute safety
+     *  net (iOS audit 2026-11-27 B4). */
+    private val pushState: PushState,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + com.kachat.app.util.StartupSafety.logOnlyHandler("GroupScanningService"))
     private var scanJob: Job? = null
@@ -159,33 +162,46 @@ class GroupScanningService @Inject constructor(
     }
 
     private suspend fun runLivePoll() {
-        // The full pass runs on the shared foreground beat, with a group open too (audit
-        // 2026-11-25 B3): it used to count 30 s from its own last run while a group was open, a
-        // phase of its own. The first pass runs at once.
-        var nextFullPassAt = 0L
+        // Every group once per shared beat, with a group open too (audit 2026-11-25 B3, iOS
+        // audit 2026-11-27 B5). With push covering every group, every 5 minutes as a safety net
+        // (iOS audit 2026-11-27 B4): a group push runs the catch-up at once
+        // (KaChatFirebaseMessagingService `handleGroupMessagePush`). The first pass runs at once.
+        var lastFullPassAt = 0L
+        var lastFullBeat: Long? = null
         while (true) {
             val metered = meteredNetwork.isMetered
-            if (System.currentTimeMillis() >= nextFullPassAt) {
+            val now = System.currentTimeMillis()
+            val beat = livePollBeat(now, ForegroundBeat.intervalMs)
+            val full = isFullPassDue(beat, lastFullBeat, pushCoversGroupTraffic(), now - lastFullPassAt)
+            if (full) {
+                lastFullPassAt = now
+                lastFullBeat = beat
                 if (!applyLivePoll(onlyGroupId = null, includeControl = true, openGroup = false)) return
-                val done = System.currentTimeMillis()
-                nextFullPassAt = done + ForegroundBeat.delayToNextBeat(ForegroundBeat.intervalMs, FULL_PASS_BEAT_OFFSET_MS, done)
             } else {
                 val open = notificationHelper.viewingGroupId
                 if (open != null && !applyLivePoll(onlyGroupId = open, includeControl = false, openGroup = true)) return
             }
+            val toBeat = ForegroundBeat.delayToNextBeat(ForegroundBeat.intervalMs, FULL_PASS_BEAT_OFFSET_MS, System.currentTimeMillis())
             if (notificationHelper.viewingGroupId == null) {
-                // No group open: nothing to do until the next full pass (iOS 961fc05a, audit
+                // No group open: nothing to do until the next beat (iOS 961fc05a, audit
                 // 2026-11-25 B4, B16; it used to tick every 5 s for nothing). Opening a group ends
-                // the sleep for its fast poll; it doesn't bring the full pass forward, which made
-                // each open cost a sweep of every group (audit 2026-11-25 M7).
-                val wait = (nextFullPassAt - System.currentTimeMillis()).coerceAtLeast(0L)
-                kotlinx.coroutines.withTimeoutOrNull(wait) {
+                // the sleep for its fast poll; that wake is still in the same beat, so it brings
+                // the open group's poll, not a pass over every group (audit 2026-11-25 M7).
+                kotlinx.coroutines.withTimeoutOrNull(toBeat) {
                     notificationHelper.viewingGroupIdFlow.first { it != null }
                 }
             } else {
-                delay(LIVE_POLL_OPEN_GROUP_MS * (if (metered) 3 else 1))
+                // The open group's own cadence, cut short at the beat so the full pass lands on it.
+                delay(minOf(LIVE_POLL_OPEN_GROUP_MS * (if (metered) 3 else 1), toBeat))
             }
         }
+    }
+
+    /** Push is registered and watches every group (a silenced group or a quiet member gets no
+     *  push, [GroupRepository.pushWatchesEveryGroup]): the full pass can wait for the safety net. */
+    private suspend fun pushCoversGroupTraffic(): Boolean {
+        if (!pushState.isActive) return false
+        return runCatching { groupRepository.pushWatchesEveryGroup() }.getOrDefault(false)
     }
 
     /** One pass on the right cursor. False once the indexer turns out not to serve the reads. */
@@ -367,6 +383,20 @@ class GroupScanningService @Inject constructor(
         /** The full pass's place in the shared beat, after the room sweep and KaPost. */
         private const val FULL_PASS_BEAT_OFFSET_MS = 3_000L
 
+        /** With push covering every group, how often the full pass runs anyway (iOS
+         *  `livePollPushSafetyNetSeconds`). */
+        internal const val PUSH_SAFETY_NET_MS = 5 * 60_000L
+
+        /** Which shared beat it is at [nowMs] (half a second of slack, so a wake right at the
+         *  beat counts as it - iOS `currentLivePollBeat`). */
+        internal fun livePollBeat(nowMs: Long, intervalMs: Long): Long =
+            Math.floorDiv(nowMs - FULL_PASS_BEAT_OFFSET_MS + 500L, intervalMs)
+
+        /** Whether this wake runs the pass over every group: once per beat, and with push
+         *  covering every group only every [PUSH_SAFETY_NET_MS] (less five seconds of slack). */
+        internal fun isFullPassDue(beat: Long, lastFullBeat: Long?, pushCovers: Boolean, sinceLastFullMs: Long): Boolean =
+            beat != lastFullBeat && (!pushCovers || sinceLastFullMs >= PUSH_SAFETY_NET_MS - 5_000L)
+
         /** The wait before the next subscribe after [failures] failed or short-lived tries in a
          *  row: 5 s for the first, then doubling to 2 minutes. */
         internal fun retryDelayMs(failures: Int): Long {
@@ -379,9 +409,6 @@ class GroupScanningService @Inject constructor(
 
 /** The open group's live poll interval (tripled on a metered network) - iOS livePollOpenGroupSeconds. */
 private const val LIVE_POLL_OPEN_GROUP_MS = 5_000L
-
-/** Every group plus control (doubled on a metered network) - iOS livePollAllGroupsSeconds. */
-private const val LIVE_POLL_ALL_GROUPS_MS = 30_000L
 
 /** A cursor's first pass looks back this far - iOS livePollStartLookbackMs. */
 private const val LIVE_POLL_START_LOOKBACK_MS = 2 * 60 * 1000L

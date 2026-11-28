@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">Đã kết nối, và có tin nhắn của phòng này.</string>
     <string name="kpui_room_indexer_footer">Phòng trò chuyện công khai nằm trên blockDAG của Kaspa, nên mọi bộ lập chỉ mục theo dõi cùng mạng đều phục vụ cùng một phòng. Hãy trỏ phòng này tới bất kỳ đâu bạn muốn - của bạn hoặc của người khác - mà không đổi bộ lập chỉ mục mà các phòng khác đang dùng.</string>
     <string name="kpui_use_app_indexer">Dùng bộ lập chỉ mục của ứng dụng</string>
-    <string name="kpui_room_switched_off_footer">Phòng bị tắt sẽ không còn hiện trong Trò chuyện công khai và không bao giờ gửi thông báo. Bạn có thể bật lại bất cứ lúc nào.</string>
-    <string name="kpui_languages">Ngôn ngữ</string>
-    <string name="kpui_languages_footer">Tắt sẽ gỡ mọi phòng ngôn ngữ khỏi Trò chuyện công khai. Bật, hãy tắt những phòng bạn không muốn.</string>
     <string name="kpui_notifications_off">Thông báo tắt</string>
     <string name="kpui_notifications_on">Thông báo bật</string>
     <string name="kpui_room_notified_closed">Bạn được thông báo tin nhắn mới ở đây, kể cả khi ứng dụng đã đóng.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">Ở đây chưa có gì</string>
     <string name="kpui_engagement_empty">Khi ai đó tương tác với bài đăng này, họ sẽ hiện ở đây.</string>
     <string name="kpui_instant_tip_limit">Tip tức thì giới hạn ở 10 KAS. Vuốt lên để gửi khoản tip này.</string>
-    <string name="kpui_kapost_settings">Cài đặt KaPost</string>
     <string name="kpui_cool_down">Chờ một lúc trước khi đăng</string>
     <string name="kpui_cooldown_on">Bài đăng, bình luận, lượt thích, đăng lại, phiếu bầu, chỉnh sửa và xóa chờ 5 giây, kèm Hoàn tác, trước khi được ghi lên chuỗi.</string>
     <string name="kpui_cooldown_off">Bài đăng, bình luận, lượt thích, đăng lại, phiếu bầu, chỉnh sửa và xóa được ghi lên chuỗi ngay lập tức, không thể Hoàn tác.</string>

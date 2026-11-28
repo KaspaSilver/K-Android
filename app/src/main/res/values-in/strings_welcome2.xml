@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K memungkinkan Anda mengirim dan menerima pesan di jaringan Kaspa itu sendiri. Kaspa diperlukan untuk membayar biaya saat mengirim pesan. Biaya yang Anda bayar diberikan kepada penambang yang mengamankan jaringan. 5 Kaspa cukup untuk mengirim sekitar 2.500 pesan.</string>
+    <string name="welcome2_get_username">Dapatkan Nama Pengguna</string>
+    <string name="welcome2_get_username_caption">Klaim nama pengguna, seperti @alice, agar orang bisa menemukan dan mengirim pesan kepada Anda tanpa alamat yang panjang. Dapatkan di Kaspa Hub &gt; Nama Pengguna.</string>
+    <string name="welcome2_share_title">Bagikan Alamat Obrolan Anda</string>
+    <string name="welcome2_share_body">Kirimkan ke seseorang agar mereka bisa menemukan dan mengirim pesan kepada Anda di K.</string>
+</resources>

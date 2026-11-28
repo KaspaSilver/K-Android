@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K te permite enviar y recibir mensajes en la propia red de Kaspa. Se requiere Kaspa para pagar las comisiones al enviar tus mensajes. La comision que pagas va a los mineros que protegen la red. Con 5 Kaspa puedes enviar unos 2.500 mensajes.</string>
+    <string name="welcome2_get_username">Consigue un nombre de usuario</string>
+    <string name="welcome2_get_username_caption">Reserva un nombre de usuario, como @alice, para que te encuentren y te escriban sin tu dirección larga. Consíguelo en Kaspa Hub &gt; Nombres de usuario.</string>
+    <string name="welcome2_share_title">Comparte tu dirección de chat</string>
+    <string name="welcome2_share_body">Envíasela a alguien para que pueda encontrarte y escribirte en K.</string>
+</resources>

@@ -136,8 +136,13 @@ class PaymentNoticeOutbox @Inject constructor(
 
     /**
      * Sends the notices that failed for want of KAS on the chatting address - called when its
-     * balance turns positive. One at a time; any that still fails stays for next time, and one
-     * whose contact is gone is dropped (iOS `sendUnsentPaymentNotices`).
+     * balance turns positive. One at a time; any that still fails stays for next time, and so
+     * does one whose contact isn't loaded (iOS `sendUnsentPaymentNotices`).
+     *
+     * The account is fixed for the whole run (audit 2026-11-27 R4): after a switch mid-run its
+     * notices stay under its own key, never written under (or sent from) the other account's. At
+     * the end the list is read again and only the notices this run settled leave it, so one kept
+     * while these were sending stays ([finishRun]).
      */
     suspend fun sendUnsentPaymentNotices() {
         if (!sending.tryLock()) return
@@ -147,11 +152,10 @@ class PaymentNoticeOutbox @Inject constructor(
             if (pending.isEmpty()) return
             val done = mutableSetOf<String>()
             for (notice in pending) {
-                if (currentKey() != key) return
-                if (chatRepository.getContact(notice.contactAddress) == null) {
-                    done += notice.txId
-                    continue
-                }
+                // a switch mid-run: what was sent so far still leaves the list below
+                if (currentKey() != key) break
+                // a contact not loaded yet keeps its notice for a later try
+                if (chatRepository.getContact(notice.contactAddress) == null) continue
                 try {
                     // Untagged, like iOS sendEnvelopeInternal: kchat:1:comm:, never a first-contact dm.
                     walletServiceLazy.get().sendKasiaMessage(notice.contactAddress, notice.payload, firstContactTag = false)
@@ -165,11 +169,13 @@ class PaymentNoticeOutbox @Inject constructor(
                     Log.w(TAG, "Kept payment_notice ${notice.txId.take(12)} still not sent: ${e.message}")
                 }
             }
-            synchronized(listLock) { write(key, read(key).filterNot { it.txId in done }) }
+            if (done.isEmpty()) return
+            synchronized(listLock) { write(key, finishRun(read(key), done)) }
         } finally {
             sending.unlock()
         }
     }
+
 
     /** The timing of [scheduleUnsentNoticeRetry] (iOS `scheduleUnsentNoticeRetry`). */
     internal object UnsentNoticeRetry {
@@ -191,10 +197,15 @@ class PaymentNoticeOutbox @Inject constructor(
         }
     }
 
-    private companion object {
-        const val TAG = "PaymentNoticeOutbox"
-        const val PREFS_NAME = "kachat_unsent_payment_notices"
-        const val KEY_PREFIX = "kachat_unsent_payment_notices."
-        const val MAX_KEPT = 50
+    internal companion object {
+        private const val TAG = "PaymentNoticeOutbox"
+        private const val PREFS_NAME = "kachat_unsent_payment_notices"
+        private const val KEY_PREFIX = "kachat_unsent_payment_notices."
+        private const val MAX_KEPT = 50
+
+        /** The list as it is at the end of a run ([current], read again) less the notices the run
+         *  settled ([done]): one kept while the run was sending stays (audit 2026-11-27 R4). */
+        fun finishRun(current: List<UnsentPaymentNotice>, done: Set<String>): List<UnsentPaymentNotice> =
+            current.filterNot { it.txId in done }
     }
 }

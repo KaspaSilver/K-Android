@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">Verbunden, und er hat die Nachrichten dieses Raums.</string>
     <string name="kpui_room_indexer_footer">Ein öffentlicher Chat lebt auf dem Kaspa-BlockDAG, daher liefert jeder Indexer, der dasselbe Netzwerk beobachtet, denselben Raum. Richte diesen auf einen beliebigen aus - deinen eigenen oder den eines anderen - ohne den Indexer zu ändern, den alle anderen Räume nutzen.</string>
     <string name="kpui_use_app_indexer">Indexer der App verwenden</string>
-    <string name="kpui_room_switched_off_footer">Ein ausgeschalteter Raum erscheint nicht mehr in den öffentlichen Chats und sendet nie eine Benachrichtigung. Du kannst ihn jederzeit wieder einschalten.</string>
-    <string name="kpui_languages">Sprachen</string>
-    <string name="kpui_languages_footer">Aus nimmt alle Sprachräume aus den öffentlichen Chats. Bei An schaltest du die aus, die du nicht willst.</string>
     <string name="kpui_notifications_off">Benachrichtigungen aus</string>
     <string name="kpui_notifications_on">Benachrichtigungen an</string>
     <string name="kpui_room_notified_closed">Du wirst hier über neue Nachrichten benachrichtigt, auch wenn die App geschlossen ist.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">Hier ist noch nichts</string>
     <string name="kpui_engagement_empty">Wenn jemand mit diesem Beitrag interagiert, erscheint er hier.</string>
     <string name="kpui_instant_tip_limit">Sofort-Trinkgelder sind auf 10 KAS begrenzt. Wische nach oben, um dieses zu senden.</string>
-    <string name="kpui_kapost_settings">KaPost-Einstellungen</string>
     <string name="kpui_cool_down">Kurz abkühlen vor dem Posten</string>
     <string name="kpui_cooldown_on">Beiträge, Kommentare, Likes, Reposts, Stimmen, Bearbeitungen und Löschungen warten 5 Sekunden mit einem Rückgängig, bevor sie on-chain gehen.</string>
     <string name="kpui_cooldown_off">Beiträge, Kommentare, Likes, Reposts, Stimmen, Bearbeitungen und Löschungen gehen sofort on-chain, ohne Rückgängig.</string>

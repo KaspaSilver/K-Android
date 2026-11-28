@@ -26,6 +26,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -833,8 +836,10 @@ private fun KaPostsFeedScreen(
     var draftSourceFailedId by remember { mutableStateOf<String?>(null) }
     /** The reply box under the opened post. Lives here rather than in the thread overlay so it
      *  survives walking up and down the thread stack; cleared only when the thread closes (iOS
-     *  replyText / closeThread). */
-    var threadReplyText by remember { mutableStateOf(TextFieldValue("")) }
+     *  replyText / closeThread). Handed down as the state itself and read only by the box: read
+     *  here, every keystroke recomposed this whole screen and the thread (iOS 01f71184 P2
+     *  `KaPostThreadReplyBar`). */
+    val threadReplyText = remember { mutableStateOf(TextFieldValue("")) }
     // Anything handed back by Undo reopens its composer with the words still in it - a post or
     // thread reopens the composer, a quote reopens the quote composer on its target, and an
     // undone comment reopens the Reply composer with its parent attached (iOS restoreDraft).
@@ -1065,7 +1070,7 @@ private fun KaPostsFeedScreen(
     val threadOpen = threadStack.isNotEmpty()
     LaunchedEffect(threadOpen) {
         // Out of the thread entirely: the reply box starts empty next time (iOS closeThread).
-        if (!threadOpen) threadReplyText = TextFieldValue("")
+        if (!threadOpen) threadReplyText.value = TextFieldValue("")
     }
 
     /** Already reading a thread: push, so Back returns here. Re-opening the post already on top
@@ -1276,12 +1281,49 @@ private fun KaPostsFeedScreen(
             // the dock hidden (a thread is open) by the system bar alone.
             val dockHidden by walletViewModel.hideBottomBar.collectAsState()
             val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-            com.kachat.app.ui.theme.IosGlassFab(
-                onClick = { if (fundingGate.active) showFundingGate = true else showComposer = true },
-                icon = SquareAndPencilLarge,
-                contentDescription = stringResource(R.string.kpui_new_post),
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(bottom = if (dockHidden) navBarBottom else dockInset),
-            )
+            ) {
+                // Back to the top of the feed (iOS 5d731967 `backToTopButton`, owner 2026-11-27):
+                // the chat's jump-to-newest button turned up, above the compose button, once the
+                // feed's top has scrolled away.
+                if (rootMode == KaPostsRootMode.FEED) {
+                    val feedState = feedListStates[KaPostsFeedTabs.indexOf(selectedFeed).coerceAtLeast(0)]
+                    val awayFromTop by remember(feedState) { derivedStateOf { feedState.firstVisibleItemIndex > 0 } }
+                    val backToTopScope = rememberCoroutineScope()
+                    val backToTopHaptic = com.kachat.app.util.rememberHaptics()
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = awayFromTop,
+                        enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(initialScale = 0.8f),
+                        exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut(targetScale = 0.8f),
+                    ) {
+                        val backToTopLabel = stringResource(R.string.kpui_back_to_top)
+                        Box(
+                            modifier = Modifier
+                                .padding(bottom = 12.dp)
+                                .size(40.dp)
+                                .shadow(10.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.12f), spotColor = Color.Black.copy(alpha = 0.12f))
+                                .clip(CircleShape)
+                                .background(colors.surface.copy(alpha = 0.92f))
+                                .border(0.8.dp, Color.White.copy(alpha = 0.18f), CircleShape)
+                                .clickable {
+                                    backToTopHaptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
+                                    backToTopScope.launch { feedState.animateScrollToItem(0) }
+                                }
+                                .semantics { contentDescription = backToTopLabel },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = null, tint = colors.textPrimary, modifier = Modifier.size(24.dp))
+                        }
+                    }
+                }
+                com.kachat.app.ui.theme.IosGlassFab(
+                    onClick = { if (fundingGate.active) showFundingGate = true else showComposer = true },
+                    icon = SquareAndPencilLarge,
+                    contentDescription = stringResource(R.string.kpui_new_post),
+                )
+            }
         },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -1290,23 +1332,23 @@ private fun KaPostsFeedScreen(
                 Column(modifier = Modifier.fillMaxSize()) {
                     // Every notification, KaPost's and the wallet's, behind the bell top right
                     // (iOS 148a5331 `AllNotificationsBell`); Help moved to Settings.
-                    // Share Profile top left (iOS 8cb4c88e, owner 2026-11-24: swapped with the
-                    // account chip); Edit Profile and Log Out stay under your name
+                    // The account switcher top left, your picture with a switch symbol (iOS
+                    // 824a30bb, owner 2026-11-26: swapped back); Edit Profile and Log Out stay
+                    // under your name
                     var showTitleShare by remember { mutableStateOf(false) }
                     val myAddress = viewModel.myAddress() ?: ""
                     KaPostsOverlayStatusBar(
                         leading = if (myAddress.isEmpty()) null else ({
-                            ProfileShareToolbarButton(onClick = { showTitleShare = true })
+                            ProfileAccountChip(address = myAddress)
                         }),
                         trailing = { AllNotificationsBell(onClick = { showAllNotifications = true }) },
                     )
-                    // you, in glass, beside the title: a tap switches to another saved account
-                    // (iOS 8cb4c88e `ProfileAccountChip`)
+                    // Share Profile beside the title (iOS 824a30bb `ProfileShareChip`)
                     KaPostsFixedTitle(
                         stringResource(R.string.profile),
                         onOpenBackup = { navController.navigate("account_backup") },
                         accessory = if (myAddress.isEmpty()) null else ({
-                            ProfileAccountChip(address = myAddress)
+                            ProfileShareChip(onClick = { showTitleShare = true })
                         }),
                     )
                     if (showTitleShare && myAddress.isNotEmpty()) {
@@ -1662,7 +1704,8 @@ private fun KaPostsFeedScreen(
 
     // Also conditioned on the gate itself so the dialog vanishes reactively the moment the
     // chatting balance confirms as funded (funds land while it's open).
-    if (showFundingGate && fundingGate.active) {
+    // ...but not under its own Buy Kaspa flow, which would close with it (iOS 824a30bb)
+    if (showFundingGate && (fundingGate.active || com.kachat.app.ui.screens.tokens.BuyKaspaFlowPresence.isOpen)) {
         ZeroBalanceFundingDialog(
             walletAddress = fundingGate.chattingAddress,
             onDismiss = { showFundingGate = false },
@@ -1964,7 +2007,6 @@ private fun KaPostsFeedScreen(
             focusReplyRemoteId = threadFocusReplyId,
             onFocusReplyHandled = { threadFocusReplyId = null },
             replyText = threadReplyText,
-            onReplyTextChange = { threadReplyText = it },
         )
         }
     }
@@ -2214,7 +2256,8 @@ private fun KaPostsScheduledOverlay(viewModel: KaPostsViewModel, onClose: () -> 
         cancelError?.let { messageRes ->
             com.kachat.app.ui.theme.IosAlertDialog(
                 onDismissRequest = { viewModel.clearScheduledCancelError() },
-                title = { Text("KaPost", color = colors.textPrimary) },
+                // "Posts", not the old name (iOS 01f71184 release audit)
+                title = { Text(stringResource(R.string.tab_posts), color = colors.textPrimary) },
                 text = { Text(stringResource(messageRes), color = colors.textSecondary) },
                 confirmButton = {
                     TextButton(onClick = { viewModel.clearScheduledCancelError() }) {
@@ -3106,11 +3149,27 @@ fun KaPostCell(
         }
         post.quoted?.let { quoted ->
             Spacer(modifier = Modifier.height(6.dp))
+            // A plain repost is a quote with no words, so a repost OF a repost used to show the
+            // middle reposter's name over an empty card. A card whose post has no words shows
+            // the post that one reposted instead, as X does, looked up once
+            // ([com.kachat.app.services.KaPostRepostOrigins]); a tap opens that original
+            // (iOS 01f71184 `KaPostQuotedEmbed`).
+            var original by remember(quoted.remoteId) { mutableStateOf<KaPostDraft.QuotedRef?>(null) }
+            var looking by remember(quoted.remoteId) { mutableStateOf(false) }
+            LaunchedEffect(quoted.remoteId) {
+                if (original != null || !com.kachat.app.services.KaPostRepostOrigins.isPlainRepost(quoted) ||
+                    viewModel.cachedRepostOrigin(quoted) != null
+                ) return@LaunchedEffect
+                looking = true
+                original = viewModel.repostOrigin(quoted)
+                looking = false
+            }
+            val shown = original ?: viewModel.cachedRepostOrigin(quoted) ?: quoted
             // The feeds drop a hidden person's own posts, but someone else quoting them
             // put their text and avatar back in front of you (iOS 369794e). Changes only
-            // on a mute or block.
-            val quotedMuted by viewModel.muted.collectSelectedAsState(quoted.posterAddress) { quoted.posterAddress in it }
-            val quotedBlocked by viewModel.blocked.collectSelectedAsState(quoted.posterAddress) { quoted.posterAddress in it }
+            // on a mute or block. The author checked is the one the card shows.
+            val quotedMuted by viewModel.muted.collectSelectedAsState(shown.posterAddress) { shown.posterAddress in it }
+            val quotedBlocked by viewModel.blocked.collectSelectedAsState(shown.posterAddress) { shown.posterAddress in it }
             if (quotedMuted || quotedBlocked) {
                 // Someone you muted or blocked: no text, name or avatar, and no way in.
                 Text(
@@ -3125,15 +3184,16 @@ fun KaPostCell(
                 )
             } else {
                 // Same per-address slices for the quoted author as for the cell's own.
-                val quotedName = posterDisplayNameState(viewModel, quoted.posterAddress)
+                val quotedName = posterDisplayNameState(viewModel, shown.posterAddress)
                 Box(
-                    modifier = Modifier.clickable(enabled = quoted.remoteId != null) {
-                        quoted.remoteId?.let(onOpenQuoted)
+                    modifier = Modifier.clickable(enabled = shown.remoteId != null) {
+                        shown.remoteId?.let(onOpenQuoted)
                     },
                 ) {
                     QuotedEmbedCard(
-                        quoted = quoted,
+                        quoted = shown,
                         displayName = quotedName,
+                        loading = looking && com.kachat.app.services.KaPostRepostOrigins.isPlainRepost(shown),
                     )
                 }
             }
@@ -3324,6 +3384,11 @@ private fun QuotedEmbedCard(
     displayName: String,
     /** 20 inside a cell's embed, 22 under the composer's editor (iOS). */
     avatarSize: androidx.compose.ui.unit.Dp = 20.dp,
+    /** The post a plain repost reposted is being looked up: a spinner where its words go. */
+    loading: Boolean = false,
+    /** The composer's card carries the quoted post's time on its name line (iOS
+     *  `quotedPostCard`); the feed's doesn't. */
+    timeMs: Long? = null,
 ) {
     val colors = LocalAppColors.current
     Column(
@@ -3352,20 +3417,33 @@ private fun QuotedEmbedCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            // No time on a quoted card's name line - the quote is context, and its own card
-            // carries the moment it was written (iOS b31ff59).
+            // No time on a feed quote card's name line - the quote is context, and its own card
+            // carries the moment it was written (iOS b31ff59). The composer's card has one.
+            if (timeMs != null) {
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = remember(timeMs) { relativePostTime(timeMs) },
+                    color = colors.textSecondary,
+                    // iOS caption2
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                )
+            }
         }
         Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            // Styled markdown preview, links inert. A plain repost has no text and renders as
-            // an empty body, as on iOS.
-            text = remember(quoted.text) { markdownPreview(quoted.text) },
-            color = colors.textPrimary,
-            // iOS subheadline
-            fontSize = 15.sp,
-            maxLines = 5,
-            overflow = TextOverflow.Ellipsis,
-        )
+        if (loading) {
+            com.kachat.app.ui.theme.IosActivityIndicator(modifier = Modifier.size(18.dp))
+        } else {
+            Text(
+                // Styled markdown preview, links inert.
+                text = remember(quoted.text) { markdownPreview(quoted.text) },
+                color = colors.textPrimary,
+                // iOS subheadline
+                fontSize = 15.sp,
+                maxLines = 5,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
@@ -4065,8 +4143,7 @@ fun KaPostComposerDialog(
     // Only with mentions on: off, there are no suggestions to look anything up for (audit M15).
     val mentionQuery = remember(text.text) {
         if (!com.kachat.app.util.MentionsFeature.ENABLED) return@remember null
-        MENTION_QUERY_REGEX
-            .find(text.text)?.groupValues?.get(2)?.lowercase()
+        com.kachat.app.util.KaPostsMentionToken.query(text.text)
     }
     // Anyone with a .kachat name: debounce-resolve the typed query live (iOS 518fdc8c).
     var resolvedAnyDomain by remember { mutableStateOf<String?>(null) }
@@ -4622,10 +4699,28 @@ fun KaPostComposerDialog(
             }
             // Live network-fee estimate while typing (Settings > Show Fee Estimate), matching
             // the chat composer's behaviour (iOS feeEstimateRow).
+            // Worked out once typing pauses (the first letter at once), and when the challenge
+            // or the setting changes: it encodes the post and prices it, which ran on every
+            // keystroke (iOS 01f71184 P6 `refreshFeeEstimate`).
             val trimmedForFee = KaPostComposerChallenge.postBody(text.text, attachedChallenge)
-            val fee = if (showFeeEstimate && trimmedForFee.isNotEmpty() && viewModel != null) {
-                remember(trimmedForFee) { viewModel.estimatePostFeeSompi(trimmedForFee) }
-            } else null
+            var feeEstimate by remember { mutableStateOf<Long?>(null) }
+            var feeSourceSeen by remember { mutableStateOf(false) }
+            fun refreshFeeEstimate() {
+                val body = KaPostComposerChallenge.postBody(text.text, attachedChallenge)
+                val estimate = if (showFeeEstimate && body.isNotEmpty() && viewModel != null) viewModel.estimatePostFeeSompi(body) else null
+                if (estimate != feeEstimate) feeEstimate = estimate
+            }
+            LaunchedEffect(text.text) {
+                if (!feeSourceSeen && text.text.isNotEmpty()) {
+                    feeSourceSeen = true
+                    refreshFeeEstimate()
+                    return@LaunchedEffect
+                }
+                delay(500)
+                refreshFeeEstimate()
+            }
+            LaunchedEffect(attachedChallenge, showFeeEstimate) { refreshFeeEstimate() }
+            val fee = if (showFeeEstimate && trimmedForFee.isNotEmpty()) feeEstimate else null
             if (fee != null) {
                 Text(
                     KaspaUnit.label(stringResource(R.string.kpui_est_fee, "%.8f".format(java.util.Locale.US, fee / 100_000_000.0))),
@@ -4637,16 +4732,22 @@ fun KaPostComposerDialog(
             }
             Spacer(modifier = Modifier.height(2.dp))
             quoted?.let {
+                // Quoting a plain repost (no words of its own) shows the post it reposted, as the
+                // feed's quote card does (iOS 01f71184 `quotedPostCard`).
+                val reposted = if (it.text.isBlank()) it.quoted else null
+                val address = reposted?.posterAddress ?: it.posterAddress
+                val name = reposted?.let { r -> viewModel?.posterDisplayName(r.posterAddress) } ?: quotedDisplayName
                 Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                     QuotedEmbedCard(
                         quoted = KaPostDraft.QuotedRef(
-                            remoteId = it.remoteId,
-                            text = it.text,
-                            posterAddress = it.posterAddress,
-                            timestamp = it.timestamp,
+                            remoteId = reposted?.remoteId ?: it.remoteId,
+                            text = reposted?.text ?: it.text,
+                            posterAddress = address,
+                            timestamp = if (reposted == null) it.timestamp else reposted.timestamp,
                         ),
-                        displayName = quotedDisplayName,
+                        displayName = name,
                         avatarSize = 22.dp,
+                        timeMs = if (reposted == null) it.timestamp else reposted.timestamp,
                     )
                 }
             }
@@ -4883,9 +4984,9 @@ fun KaPostThreadOverlay(
      *  and hand the reply's txid through here). */
     focusReplyRemoteId: String? = null,
     onFocusReplyHandled: () -> Unit = {},
-    /** The reply box's text, hoisted so it survives walking up and down the thread (iOS). */
-    replyText: TextFieldValue = TextFieldValue(""),
-    onReplyTextChange: (TextFieldValue) -> Unit = {},
+    /** The reply box's text, hoisted so it survives walking up and down the thread (iOS); read
+     *  only inside the box ([ThreadReplyComposer]). */
+    replyText: androidx.compose.runtime.MutableState<TextFieldValue>,
 ) {
     val colors = LocalAppColors.current
     // Resolving against the post tree (rather than taking a KaPostDraft parameter) is what
@@ -5204,8 +5305,7 @@ fun KaPostThreadOverlay(
             // funded" rule as the New Post button.
             ThreadReplyComposer(
                 viewModel = viewModel,
-                text = replyText,
-                onTextChange = onReplyTextChange,
+                textState = replyText,
                 fundingGateActive = fundingGate.active,
                 onShowFundingGate = { showFundingGate = true },
                 onSubmit = { text -> viewModel.submitReply(post, text) },
@@ -5224,7 +5324,8 @@ fun KaPostThreadOverlay(
 
     // Also conditioned on the gate itself so the dialog vanishes reactively the moment the
     // chatting balance confirms as funded (funds land while it's open).
-    if (showFundingGate && fundingGate.active) {
+    // ...but not under its own Buy Kaspa flow, which would close with it (iOS 824a30bb)
+    if (showFundingGate && (fundingGate.active || com.kachat.app.ui.screens.tokens.BuyKaspaFlowPresence.isOpen)) {
         ZeroBalanceFundingDialog(
             walletAddress = fundingGate.chattingAddress,
             onDismiss = { showFundingGate = false },
@@ -5455,7 +5556,8 @@ private fun KaPostsActionErrorAlert(viewModel: KaPostsViewModel) {
             // the held rest of the thread.
             onDismissRequest = {},
             properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
-            title = { Text("KaPost", color = colors.textPrimary) },
+                // "Posts", not the old name (iOS 01f71184 release audit)
+                title = { Text(stringResource(R.string.tab_posts), color = colors.textPrimary) },
             text = { Text(stringResource(R.string.kaposts_thread_not_confirmed), color = colors.textSecondary) },
             confirmButton = {
                 TextButton(onClick = { viewModel.settleUnconfirmedThread(saveDraft = true) }) {
@@ -5475,7 +5577,8 @@ private fun KaPostsActionErrorAlert(viewModel: KaPostsViewModel) {
     val message = if (raw == KaPostsViewModel.REPLY_NOT_ON_NETWORK) stringResource(R.string.kaposts_reply_not_on_network) else raw
     com.kachat.app.ui.theme.IosAlertDialog(
         onDismissRequest = { viewModel.clearActionError() },
-        title = { Text("KaPost", color = colors.textPrimary) },
+                // "Posts", not the old name (iOS 01f71184 release audit)
+                title = { Text(stringResource(R.string.tab_posts), color = colors.textPrimary) },
         text = { Text(message, color = colors.textSecondary) },
         confirmButton = {
             TextButton(onClick = { viewModel.clearActionError() }) {
@@ -5513,13 +5616,14 @@ private fun KaPostsToastLayer(viewModel: KaPostsViewModel, modifier: Modifier = 
 @Composable
 private fun ThreadReplyComposer(
     viewModel: KaPostsViewModel,
-    text: TextFieldValue,
-    onTextChange: (TextFieldValue) -> Unit,
+    textState: androidx.compose.runtime.MutableState<TextFieldValue>,
     fundingGateActive: Boolean,
     onShowFundingGate: () -> Unit,
     onSubmit: (String) -> Unit,
 ) {
     val colors = LocalAppColors.current
+    val text = textState.value
+    val onTextChange: (TextFieldValue) -> Unit = { textState.value = it }
     val replyText = text.text
     val charCount = remember(replyText) { KaPostDraft.postLength(replyText) }
     val canSend = replyText.isNotBlank()
@@ -5537,8 +5641,7 @@ private fun ThreadReplyComposer(
             // only with mentions on (audit M15), as in the post composer
             val replyMentionQuery = remember(replyText) {
                 if (!com.kachat.app.util.MentionsFeature.ENABLED) return@remember null
-                MENTION_QUERY_REGEX
-                    .find(replyText)?.groupValues?.get(2)?.lowercase()
+                com.kachat.app.util.KaPostsMentionToken.query(replyText)
             }
             var replyResolvedAnyDomain by remember { mutableStateOf<String?>(null) }
             LaunchedEffect(replyMentionQuery) {
@@ -6766,7 +6869,6 @@ private fun notificationKindTint(kind: KaPostsViewModel.NotificationItem.Kind, s
 }
 
 /** @mention machinery, hoisted: these were compiled per keystroke inside remember blocks. */
-private val MENTION_QUERY_REGEX = Regex("(^|[\\s(\\[{<\"'])@([a-z0-9-]*)$", RegexOption.IGNORE_CASE)
 private val MENTION_REPLACE_REGEX = Regex("@[a-z0-9-]*$", RegexOption.IGNORE_CASE)
 
 /** Annotation tag carried by @mention ranges - ClickableText resolves it to a profile. */
@@ -7634,7 +7736,7 @@ fun KaPostsTippingSettingsScreen(onBack: () -> Unit) =
 @Composable
 fun KaPostsSettingsOverlay(
     onClose: () -> Unit,
-    /** Settings > KaPost: "KaPost" with a back chevron rather than "KaPost Settings". */
+    /** Settings > Posts: with a back chevron (both are titled "Posts" since iOS d88891ea). */
     embedded: Boolean = false,
     /** The cool down (Settings > KaPost) or Tipping (Settings > Customization > Tipping). */
     part: KaPostsSettingsPart = KaPostsSettingsPart.KAPOST,
@@ -7804,8 +7906,8 @@ fun KaPostsSettingsOverlay(
 
     val pageTitle = when {
         part == KaPostsSettingsPart.TIPPING -> stringResource(R.string.kpui_tipping)
-        embedded -> stringResource(R.string.tab_posts)
-        else -> stringResource(R.string.kpui_kapost_settings)
+        // "Posts" either way, no longer "KaPost Settings" (iOS d88891ea)
+        else -> stringResource(R.string.tab_posts)
     }
     KaPostsOverlayScaffold(title = pageTitle, onClose = onClose, backBar = embedded) {
         Column(
@@ -8778,9 +8880,10 @@ private fun KaPostsFeedMenuButton(onSelect: (KaPostsFeedMenuItem) -> Unit) {
 }
 
 /**
- * The feed's hamburger menu: a card that slides out from the left over nearly the whole screen
- * (the dock included), with the feed dimmed in the strip beside it. Tap that strip, tap the
- * close button or drag the card back to the left to close it (iOS KaPosts `KaPostsFeedDrawer`).
+ * The feed's hamburger menu: a glass card that slides out from the left at the top of the
+ * screen, only as tall as its rows (iOS b49a021d, owner 2026-11-27), with the feed dimmed around
+ * it. Tap outside it, tap the close button or drag the card back to the left to close it (iOS
+ * KaPosts `KaPostsFeedDrawer`).
  *
  * A Dialog window, so it sits above the dock. Picking a row closes the card and then opens the
  * item's screen, once the card has slid away.
@@ -8825,29 +8928,33 @@ private fun KaPostsFeedDrawer(
         }
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val closeMenuLabel = stringResource(R.string.kpui_close_menu)
-            // Most of the screen, with enough of the feed left showing to tap it closed.
-            val panelWidth = minOf(maxWidth * 0.86f, 440.dp)
+            // A glass card from the top, only as tall as its rows (owner, 2026-11-27: "top to
+            // halfway down the screen enough to fit everything"), with the feed showing around it.
+            val panelWidth = minOf(maxWidth * 0.74f, 340.dp)
             val panelPx = with(density) { panelWidth.toPx() }
-            val offsetPx = -(panelPx + with(density) { 16.dp.toPx() }) * (1f - shown.value) + dragPx.coerceAtMost(0f)
+            val offsetPx = -(panelPx + with(density) { 32.dp.toPx() }) * (1f - shown.value) + dragPx.coerceAtMost(0f)
             val progress = (shown.value * (1f + dragPx.coerceAtMost(0f) / panelPx)).coerceIn(0f, 1f)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.45f * progress))
+                    .background(Color.Black.copy(alpha = 0.3f * progress))
                     .clickable(
                         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                         indication = null,
                     ) { close() }
                     .semantics { contentDescription = closeMenuLabel },
             )
+            val cardShape = RoundedCornerShape(26.dp)
             Column(
                 modifier = Modifier
-                    .width(panelWidth)
-                    .fillMaxHeight()
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Start))
+                    .padding(start = 12.dp, top = 6.dp)
                     .offset { androidx.compose.ui.unit.IntOffset(offsetPx.roundToInt(), 0) }
-                    .shadow(12.dp, RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp))
-                    .clip(RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp))
-                    .background(colors.background)
+                    .width(panelWidth)
+                    .shadow(18.dp, cardShape, ambientColor = Color.Black.copy(alpha = 0.3f), spotColor = Color.Black.copy(alpha = 0.3f))
+                    .clip(cardShape)
+                    .background(com.kachat.app.ui.screens.toolbarGlassFill().copy(alpha = 0.94f).compositeOver(colors.background))
+                    .border(0.8.dp, com.kachat.app.ui.screens.toolbarGlassEdge(), cardShape)
                     .pointerInput(Unit) {
                         detectHorizontalDragGestures(
                             onDragEnd = {
@@ -8866,24 +8973,24 @@ private fun KaPostsFeedDrawer(
                             dragPx = (dragPx + amount).coerceAtMost(0f)
                         }
                     }
-                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Bottom + WindowInsetsSides.Start)),
+                    .padding(bottom = 10.dp),
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         stringResource(R.string.tab_posts),
                         color = colors.textPrimary,
-                        fontSize = LargeTitleSize,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f),
                     )
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(30.dp)
                             .clip(CircleShape)
-                            .background(colors.surface)
+                            .background(colors.textPrimary.copy(alpha = 0.1f))
                             .clickable {
                                 haptic(com.kachat.app.util.IosHaptic.SELECTION)
                                 close()
@@ -8891,26 +8998,31 @@ private fun KaPostsFeedDrawer(
                             .semantics { contentDescription = closeMenuLabel },
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Close, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(16.dp))
                     }
                 }
-                HorizontalDivider(color = colors.surfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
                 KaPostsFeedMenuItem.entries.forEach { item ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 56.dp)
+                            .heightIn(min = 50.dp)
                             .clickable {
                                 haptic(com.kachat.app.util.IosHaptic.IMPACT_LIGHT)
                                 picked = item
                                 close()
                             }
-                            .padding(horizontal = 20.dp),
+                            .padding(horizontal = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Icon(item.icon, contentDescription = null, tint = KaspaTeal, modifier = Modifier.width(30.dp).size(26.dp))
-                        Text(stringResource(item.title), color = colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                        // As the Kaspa Hub menu draws its rows: the icon in a tinted circle, then the name.
+                        Box(
+                            Modifier.size(34.dp).clip(CircleShape).background(KaspaTeal.copy(alpha = 0.18f)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(item.icon, contentDescription = null, tint = KaspaTeal, modifier = Modifier.size(18.dp))
+                        }
+                        Text(stringResource(item.title), color = colors.textPrimary, fontSize = 17.sp, fontWeight = FontWeight.Medium)
                     }
                 }
             }

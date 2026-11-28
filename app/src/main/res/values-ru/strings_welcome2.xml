@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K позволяет отправлять и получать сообщения прямо в сети Kaspa. Kaspa требуется для оплаты комиссий при отправке сообщений. Комиссия, которую вы платите, идёт майнерам, защищающим сеть. 5 Kaspa хватает примерно на 2 500 сообщений.</string>
+    <string name="welcome2_get_username">Получите имя пользователя</string>
+    <string name="welcome2_get_username_caption">Займите имя пользователя, например @alice, чтобы вас находили и писали вам без длинного адреса. Получить его можно в Kaspa Hub &gt; Имена пользователей.</string>
+    <string name="welcome2_share_title">Поделитесь адресом для чата</string>
+    <string name="welcome2_share_body">Отправьте его кому-нибудь, чтобы вас могли найти и написать вам в K.</string>
+</resources>

@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kachat.app.R
 import com.kachat.app.services.explorer.ExplorerChartMetric
+import com.kachat.app.services.explorer.ExplorerChartPick
 import com.kachat.app.services.explorer.ExplorerChartPoint
 import com.kachat.app.services.explorer.ExplorerDemo
 import com.kachat.app.services.explorer.ExplorerKPeriod
@@ -110,7 +111,9 @@ internal fun ExplorerChartScreen(viewModel: ExplorerViewModel, metric: ExplorerC
     val colors = LocalAppColors.current
     val periods = metric.periods
     var period by rememberSaveable { mutableStateOf(ExplorerKPeriod.MONTH) }
-    var selected by remember { mutableStateOf<ExplorerChartPoint?>(null) }
+    // Held, not read here: only the headline and the chart read it, so a drag doesn't recompose
+    // the whole screen (the summary, the Mining Estimate; iOS 01f71184, smoothness audit L7).
+    val selection = remember { mutableStateOf<ExplorerChartPoint?>(null) }
     var points by remember { mutableStateOf<List<ExplorerChartPoint>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     /** Where the fees chart's points came from (the credit under it, or the demo pill). */
@@ -119,7 +122,7 @@ internal fun ExplorerChartScreen(viewModel: ExplorerViewModel, metric: ExplorerC
     val stats by viewModel.live.stats.collectAsState()
 
     LaunchedEffect(period, attempt) {
-        selected = null
+        selection.value = null
         loading = true
         val wanted = period
         val now = System.currentTimeMillis()
@@ -132,15 +135,19 @@ internal fun ExplorerChartScreen(viewModel: ExplorerViewModel, metric: ExplorerC
                 ExplorerDemo.marketCap(prices, supplyNow)
             }
             ExplorerChartMetric.NETWORK_FEES -> {
-                // Kaspalytics' daily history; the demo last, and saying so
+                // Kaspalytics' daily history; the demo last, and saying so - in debug builds only:
+                // a release build says the chart couldn't load (iOS 01f71184, release audit R8)
                 viewModel.kStats.refresh()
                 val real = viewModel.kStats.feeSeries(wanted)
                 if (real != null) {
                     feeSource = real.second
                     real.first
-                } else {
+                } else if (ExplorerDemo.allowed) {
                     feeSource = ExplorerKStats.FeeSource.DEMO
                     ExplorerDemo.feeTotals(wanted, now)
+                } else {
+                    feeSource = null
+                    emptyList()
                 }
             }
             ExplorerChartMetric.BLOCK_REWARD -> ExplorerDemo.rewardSeries(wanted, now)
@@ -167,7 +174,7 @@ internal fun ExplorerChartScreen(viewModel: ExplorerViewModel, metric: ExplorerC
                 Box(Modifier.fillMaxWidth().padding(top = 6.dp), contentAlignment = Alignment.Center) { DemoPill() }
             }
             ExplorerRedaction(redacted = points.isEmpty()) {
-                Headline(metric, period, points, selected)
+                Headline(metric, period, points, selection)
             }
             ExplorerCard(Modifier.padding(horizontal = 16.dp)) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -187,8 +194,7 @@ internal fun ExplorerChartScreen(viewModel: ExplorerViewModel, metric: ExplorerC
                                 metric = metric,
                                 period = period,
                                 points = points,
-                                selected = selected,
-                                onSelect = { selected = it },
+                                selection = selection,
                                 modifier = Modifier.fillMaxSize().alpha(if (loading) 0.4f else 1f),
                             )
                         }
@@ -275,8 +281,9 @@ private fun pointDate(period: ExplorerKPeriod, date: Long): String {
 }
 
 @Composable
-private fun Headline(metric: ExplorerChartMetric, period: ExplorerKPeriod, points: List<ExplorerChartPoint>, selected: ExplorerChartPoint?) {
+private fun Headline(metric: ExplorerChartMetric, period: ExplorerKPeriod, points: List<ExplorerChartPoint>, selection: androidx.compose.runtime.State<ExplorerChartPoint?>) {
     val colors = LocalAppColors.current
+    val selected = selection.value
     val shown = selected ?: points.lastOrNull()
     val first = points.firstOrNull()?.value ?: 0.0
     val change = if (first > 0) ((shown?.value ?: first) - first) / first * 100 else 0.0
@@ -341,8 +348,9 @@ private fun MetricChart(
     metric: ExplorerChartMetric,
     period: ExplorerKPeriod,
     points: List<ExplorerChartPoint>,
-    selected: ExplorerChartPoint?,
-    onSelect: (ExplorerChartPoint?) -> Unit,
+    /** The point under the finger. Read only where it's drawn: the bars, and the rule and dot
+     *  over a line, so a drag never rebuilds the line's path. */
+    selection: androidx.compose.runtime.MutableState<ExplorerChartPoint?>,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalAppColors.current
@@ -367,30 +375,25 @@ private fun MetricChart(
     val start = points.first().date
     val end = points.last().date.coerceAtLeast(start + 1)
     val currentPoints by rememberUpdatedState(points)
-    val currentSelected by rememberUpdatedState(selected)
     val title = stringResource(metric.title)
 
     fun pick(x: Float, plotWidth: Float) {
         val pts = currentPoints
         if (pts.isEmpty() || plotWidth <= 0) return
         val date = start + ((x / plotWidth).coerceIn(0f, 1f) * (end - start)).toLong()
-        val hit = if (metric.isBars) {
-            // the bar whose span holds the finger
-            pts.lastOrNull { it.date <= date } ?: pts.first()
-        } else {
-            pts.minByOrNull { abs(it.date - date) }
-        }
-        if (hit != currentSelected) {
-            onSelect(hit)
+        // the bar whose span holds the finger, else the nearest point (binary searches)
+        val hit = if (metric.isBars) ExplorerChartPick.spanning(pts, date) else ExplorerChartPick.nearest(pts, date)
+        if (hit != selection.value) {
+            selection.value = hit
             haptic(IosHaptic.SELECTION)
         }
     }
 
     Column(modifier.semantics { contentDescription = title }) {
+      Box(Modifier.fillMaxWidth().weight(1f)) {
         Canvas(
             Modifier
-                .fillMaxWidth()
-                .weight(1f)
+                .fillMaxSize()
                 .pointerInput(points, metric) {
                     val plotWidth = size.width - axisWidth.toPx()
                     // touch and drag along the chart to read any point; letting go clears it
@@ -404,7 +407,7 @@ private fun MetricChart(
                             pick(change.position.x, plotWidth)
                             change.consume()
                         }
-                        onSelect(null)
+                        selection.value = null
                     }
                 },
         ) {
@@ -422,6 +425,8 @@ private fun MetricChart(
             if (metric.isBars) {
                 val slot = plotWidth / points.size
                 val barWidth = (slot * 0.72f).coerceAtLeast(1f)
+                // the bars dim around the one under the finger; there are only a few dozen
+                val selected = selection.value
                 points.forEachIndexed { i, point ->
                     val top = y(point.value)
                     val alpha = if (selected == null || selected == point) 1f else 0.35f
@@ -460,19 +465,28 @@ private fun MetricChart(
                 }
                 drawPath(area, Brush.verticalGradient(listOf(KaspaTeal.copy(alpha = 0.35f), KaspaTeal.copy(alpha = 0.02f)), startY = 0f, endY = plotHeight))
                 drawPath(line, KaspaTeal, style = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-                selected?.let { point ->
-                    val sx = x(point.date)
-                    drawLine(
-                        colors.textSecondary.copy(alpha = 0.5f),
-                        Offset(sx, 0f),
-                        Offset(sx, plotHeight),
-                        strokeWidth = 1.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 3.dp.toPx())),
-                    )
-                    drawCircle(KaspaTeal, radius = 5.dp.toPx(), center = Offset(sx, y(point.value)))
-                }
             }
         }
+        // The dashed rule and dot under the finger, drawn over the line: only this redraws as the
+        // finger moves (iOS 01f71184 `ExplorerChartScrub`).
+        if (!metric.isBars) {
+            Canvas(Modifier.matchParentSize()) {
+                val point = selection.value ?: return@Canvas
+                val plotWidth = size.width - axisWidth.toPx()
+                val plotHeight = size.height
+                val sx = ((point.date - start).toDouble() / (end - start) * plotWidth).toFloat()
+                val sy = (plotHeight - (point.value - domainLow) / (domainHigh - domainLow) * plotHeight).toFloat()
+                drawLine(
+                    colors.textSecondary.copy(alpha = 0.5f),
+                    Offset(sx, 0f),
+                    Offset(sx, plotHeight),
+                    strokeWidth = 1.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 3.dp.toPx())),
+                )
+                drawCircle(KaspaTeal, radius = 5.dp.toPx(), center = Offset(sx, sy))
+            }
+        }
+      }
         // three dates under the plot
         Row(Modifier.fillMaxWidth().padding(top = 4.dp, end = axisWidth)) {
             val marks = listOf(start, start + (end - start) / 2, end)

@@ -19,7 +19,6 @@
     <string name="enter_kpub">Nhập kpub</string>
     <string name="export_csv">Xuất CSV</string>
     <string name="fee_usd_optional">Phí (tùy chọn)</string>
-    <string name="generate_more_addresses">Tạo thêm địa chỉ</string>
     <string name="holdings">Tài sản nắm giữ</string>
     <string name="import_action">Nhập</string>
     <string name="import_csv">Nhập CSV</string>
@@ -36,12 +35,8 @@
     <string name="kp_address_hidden_reenable">Đã ẩn địa chỉ. Bật lại trong Hiển thị địa chỉ.</string>
     <string name="kp_address_lld_64ab3">Địa chỉ #%1$s</string>
     <string name="kp_address_number_ready">Địa chỉ #%1$d đã sẵn sàng.</string>
-    <string name="kp_address_row_copy_subtitle">Sao chép toàn bộ địa chỉ vào bộ nhớ tạm.</string>
     <string name="kp_address_row_hide_subtitle">Gỡ khỏi danh sách này. Bật lại trong Hiển thị địa chỉ.</string>
-    <string name="kp_address_row_qr_subtitle">Toàn màn hình, để quét bằng thiết bị khác.</string>
-    <string name="kp_address_row_rename_subtitle">Đặt cho địa chỉ này một nhãn của riêng bạn.</string>
     <string name="kp_address_visibility_9c9a7">Hiển thị địa chỉ</string>
-    <string name="kp_address_visibility_subtitle">Đánh dấu cùng lúc mọi địa chỉ bạn muốn có trong danh sách.</string>
     <string name="kp_already_added_26837">Đã thêm rồi</string>
     <string name="kp_amount_and_price_08599">Số tiền và giá</string>
     <string name="kp_and_its_transactions_will_be_deleted_3c57d">\'%1$s\' và các giao dịch của nó sẽ bị xóa. Không thể hoàn tác.</string>
@@ -55,8 +50,6 @@
     <string name="kp_check_address_history_before_trying_again">Hãy kiểm tra lịch sử của địa chỉ trước khi thử lại.</string>
     <string name="kp_trade_may_have_gone_through">Giao dịch có thể đã được thực hiện.</string>
     <string name="kp_checking_address_lld_5b84c">Đang kiểm tra địa chỉ #%1$s</string>
-    <string name="kp_checks_the_first_thousand_addresses_whatever_90acf">Kiểm tra một nghìn địa chỉ đầu tiên dù có khoảng trống, rồi tiếp tục chừng nào còn tìm thấy.</string>
-    <string name="kp_close_and_keep_scanning_b66cc">Đóng và tiếp tục quét</string>
     <string name="kp_close_bbfa7">Đóng</string>
     <string name="kp_coin_just_spent">Vừa được chi bởi một lần gửi</string>
     <string name="kp_coin_locked_by_covenant">Bị khóa bởi covenant</string>
@@ -128,7 +121,6 @@
     <string name="kp_mining_per_week">Mỗi tuần</string>
     <string name="kp_new_portfolio_5c1c7">Danh mục mới</string>
     <string name="kp_no_addresses_discovered_yet_15738">Chưa khám phá được địa chỉ nào.</string>
-    <string name="kp_no_used_addresses_yet">Chưa có địa chỉ nào đã dùng</string>
     <string name="kp_not_enough_history_yet_check_back_7c2eb">Chưa đủ lịch sử - hãy quay lại sau vài ngày hoạt động.</string>
     <string name="kp_note_optional_4e395">Ghi chú (tùy chọn)</string>
     <string name="kp_nothing_can_change_now_this_is_8bf3a">Giờ không thể thay đổi gì nữa: đây là giao dịch KasSigner đã ký.</string>
@@ -216,7 +208,6 @@
     <string name="kp_you_receive">Bạn nhận</string>
     <string name="kp_you_receive_about">Bạn nhận khoảng</string>
     <string name="kp_you_saw">Bạn đã thấy</string>
-    <string name="kpub">kpub</string>
     <string name="kpub_2">kpub...</string>
     <string name="name_this_address">Đặt tên cho địa chỉ này</string>
     <string name="no_app_to_open_link">Không có ứng dụng nào trên điện thoại này mở được liên kết</string>
@@ -271,22 +262,17 @@
     <string name="total_invested">Tổng đầu tư</string>
     <string name="total_p_l">Tổng lãi/lỗ</string>
     <string name="transactions">Giao dịch</string>
-    <string name="kp_changes_the_name_shown_for_this_account_kc">Đổi tên hiển thị cho tài khoản này.</string>
     <string name="kp_compound_utxos_description_kc">Gộp tất cả UTXO tại địa chỉ này thành một, để giảm số đầu vào mà lần gửi sau cần.</string>
     <string name="kp_kusdt_guide_other_apps_detail_kc">Các ứng dụng khác của bạn dùng cùng bộ từ sẽ hiển thị cùng kUSDT và có thể gửi. Hoán đổi diễn ra ở đây.</string>
     <string name="kp_kusdt_guide_swapping_detail_kc">Để hoán đổi KAS và kUSDT, hoặc thêm vào pool, hãy chạm Hoán đổi stablecoin ở tab Ví và chọn kUSDT. Trang của Trestly mở ngay trong K, kết nối với địa chỉ bạn chọn.</string>
     <string name="kp_more_stablecoins_will_show_here_kc">Các stablecoin khác sẽ hiện ở đây khi K thêm vào.</string>
-    <string name="kp_notifies_you_when_this_account_kc">Thông báo cho bạn khi tài khoản này nhận Kaspa.</string>
     <string name="kp_on_trestly_inside_kachat_kc">Trên Trestly, ngay trong K</string>
-    <string name="kp_puts_the_extended_public_key_kc">Sao chép khóa công khai mở rộng vào bộ nhớ tạm.</string>
     <string name="kp_reveals_next_unused_address_account_kc">Hiện địa chỉ chưa dùng tiếp theo của tài khoản này.</string>
     <string name="kp_scan_it_into_another_device_kc">Quét trên thiết bị khác để theo dõi tài khoản này ở đó.</string>
     <string name="kp_scan_this_on_your_kassigner_kc">Quét mã này trên KasSigner của bạn</string>
     <string name="kp_selected_one_utxo_kc">Đã chọn: %1$s (1 UTXO)</string>
     <string name="kp_selected_utxos_kc">Đã chọn: %1$s (%2$d UTXO)</string>
-    <string name="kp_show_kpub_qr_kc">Hiện QR kpub</string>
     <string name="kp_something_went_wrong_kc">Đã xảy ra lỗi</string>
-    <string name="kp_stops_notifying_when_this_account_kc">Ngừng thông báo khi tài khoản này nhận Kaspa. Các tài khoản khác giữ nguyên.</string>
     <string name="kp_this_only_removes_it_from_kachat_watch_list_kc">Điều này chỉ xóa nó khỏi danh sách theo dõi của K. Nó không ảnh hưởng đến thiết bị KasSigner hoặc bất kỳ khoản tiền nào nó nắm giữ.</string>
     <string name="kp_token_empty_state_swap_kc">Nhận vào một địa chỉ mới, hoặc mua bằng Hoán đổi stablecoin ở tab Ví.</string>
     <string name="kp_trestly_asks_kachat_to_kc">Trestly yêu cầu K</string>
@@ -296,8 +282,5 @@
     <string name="kp_trestly_site_kc">Trang Trestly</string>
     <string name="kp_trestly_site_url_kc">URL trang Trestly</string>
     <string name="kp_trestly_swap_note_kc">Được tạo và kiểm tra bởi chính mã của Trestly trong K. Nếu pool thay đổi trước, giá sẽ được tính lại: chỉ tiếp tục ở giá này hoặc tốt hơn, hỏi lại nếu thấp hơn và không bao giờ dưới mức tối thiểu của trang.</string>
-    <string name="kp_turn_off_receive_notifications_kc">Tắt thông báo khi nhận</string>
-    <string name="kp_turn_on_receive_notifications_kc">Bật thông báo khi nhận</string>
-    <string name="cold_copy_kpub_reveals_all_addresses">Sao chép kpub của tài khoản này vào bộ nhớ tạm. Nó để lộ mọi địa chỉ của tài khoản.</string>
     <string name="cold_not_a_valid_kpub">Không phải kpub hợp lệ</string>
 </resources>

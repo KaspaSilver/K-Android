@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification and banner previews (iOS 01f71184, audit 2026-11-27 R7). -->
+<resources>
+    <string name="rel_bell_reacted_to_your_message">הגיב/ה %1$s להודעה שלך</string>
+    <string name="rel_bell_removed_reaction">הסיר/ה את התגובה %1$s</string>
+    <string name="rel_bell_replied_to_message">השיב/ה להודעה</string>
+    <string name="rel_bell_edited_message">ערך/ה הודעה</string>
+    <string name="rel_bell_reacted">הגיב/ה %1$s</string>
+</resources>

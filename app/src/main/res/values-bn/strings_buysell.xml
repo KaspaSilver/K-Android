@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">কিনুন</string>
+    <string name="buysell_sell">বিক্রি করুন</string>
+    <string name="buysell_history">কেনা/বেচার ইতিহাস</string>
+    <string name="buysell_buy_kaspa">Kaspa কিনুন</string>
+    <string name="buysell_sell_kaspa">ক্যাসপা বিক্রি করুন</string>
+    <string name="buysell_buy_with_crypto">ক্রিপ্টো দিয়ে ক্যাসপা কিনুন</string>
+    <string name="buysell_buy_with_crypto_sub">অন্য কয়েন দিয়ে পেমেন্ট করুন, যেমন kUSDT বা বিটকয়েন।</string>
+    <string name="buysell_buy_with_debit_card">ডেবিট কার্ডে Kaspa কিনুন</string>
+    <string name="buysell_debit_card_sub">কার্ডে পেমেন্ট করুন। এটি kUSDT হিসেবে আসে, তারপর এটি দিয়ে ক্যাসপা কিনুন।</string>
+    <string name="buysell_pay_with_question">আপনি কী দিয়ে পেমেন্ট করতে চান?</string>
+    <string name="buysell_sell_for_question">আপনার ক্যাসপার বদলে কী চান?</string>
+    <string name="buysell_sell_kaspa_for">%1$s-এর বদলে ক্যাসপা বিক্রি করুন</string>
+    <string name="buysell_buy_kaspa_with">%1$s দিয়ে ক্যাসপা কিনুন</string>
+    <string name="buysell_on_networks">%2$d নেটওয়ার্কে %1$s</string>
+    <string name="buysell_you_pay">আপনি দেবেন</string>
+    <string name="buysell_where_land">আপনার ক্যাসপা কোথায় যাবে?</string>
+    <string name="buysell_kusdt_one_address">kUSDT একটি ঠিকানা থেকে পরিশোধ হয়, আর আপনার ক্যাসপা সেই ঠিকানাতেই আসে।</string>
+    <string name="buysell_fresh_note">একটি নতুন ঠিকানা যা কখনো ব্যবহার হয়নি, যাতে এই কেনাকাটা আপনার ইউজারনেম ও চ্যাট থেকে আলাদা থাকে।</string>
+    <string name="buysell_send_payment">পেমেন্ট পাঠান</string>
+    <string name="buysell_send_amount_coin">%1$s %2$s পাঠান</string>
+    <string name="buysell_to_buy_kaspa">ক্যাসপা কিনতে</string>
+    <string name="buysell_to_sell_for">%1$s-এর বদলে বিক্রি করতে</string>
+    <string name="buysell_copy_amount">পরিমাণ কপি করুন</string>
+    <string name="buysell_amount_copied">পরিমাণ কপি হয়েছে</string>
+    <string name="buysell_send_kas_from_k">K থেকে KAS পাঠান</string>
+    <string name="buysell_transaction_id">লেনদেন আইডি</string>
+    <string name="buysell_copy_id">আইডি কপি করুন</string>
+    <string name="buysell_you_get_about">আপনি প্রায় %1$s %2$s পাবেন, %3$s-এ পাঠানো হবে।</string>
+    <string name="buysell_payment_received">পেমেন্ট পাওয়া গেছে</string>
+    <string name="buysell_waiting_confirm">নিশ্চিত হওয়ার অপেক্ষায়।</string>
+    <string name="buysell_converting">ChangeNOW আপনার কয়েন রূপান্তর করছে।</string>
+    <string name="buysell_sending_your">আপনার %1$s পাঠানো হচ্ছে</string>
+    <string name="buysell_almost_done">প্রায় শেষ।</string>
+    <string name="buysell_failed_detail">ChangeNOW এই অর্ডার শেষ করতে পারেনি। ChangeNOW-এ দেখুন।</string>
+    <string name="buysell_refunded_detail">ChangeNOW কয়েন ফেরত পাঠিয়েছে।</string>
+    <string name="buysell_expired_detail">সময়মতো কিছু আসেনি। নতুন অর্ডার শুরু করুন।</string>
+    <string name="buysell_verifying_detail">ChangeNOW এই অর্ডার যাচাই করছে।</string>
+    <string name="buysell_waiting_payment">পেমেন্টের অপেক্ষায়</string>
+    <string name="buysell_waiting_payment_detail">উপরের পরিমাণ পাঠান। এই স্ক্রিন নিজে থেকেই আপডেট হয়।</string>
+    <string name="buysell_purchase_complete">কেনা সম্পন্ন</string>
+    <string name="buysell_sale_complete">বিক্রি সম্পন্ন</string>
+    <string name="buysell_you_paid">আপনি %1$s %2$s পরিশোধ করেছেন</string>
+    <string name="buysell_you_got_about">আপনি প্রায় %1$s %2$s পেয়েছেন</string>
+    <string name="buysell_added_to_portfolio">পোর্টফোলিওতে যোগ হয়েছে</string>
+    <string name="buysell_order_sent">অর্ডার পাঠানো হয়েছে</string>
+</resources>

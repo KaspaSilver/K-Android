@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS d88891ea, audit 2026-11-27: Swap's deposit sent from K (M1), Kasshi sign-in that couldn't connect (L1) -->
+<resources>
+    <string name="audit_money_sent_from_k">Đã gửi từ K</string>
+    <string name="audit_money_signin_failed_title">Không thể đăng nhập</string>
+    <string name="audit_money_signin_failed_message">K không thể dùng địa chỉ này để đăng nhập. Hãy thử địa chỉ khác.</string>
+</resources>

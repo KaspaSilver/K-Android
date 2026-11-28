@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">Beli Kaspa</string>
+    <string name="buykaspa_swap_to_kaspa">Tukar ke Kaspa</string>
+    <string name="buykaspa_waiting_payment">Menunggu pembayaran Anda</string>
+    <string name="buykaspa_paid">Sudah dibayar. USDC Anda sedang dalam perjalanan.</string>
+    <string name="buykaspa_bridging">Dijembatani ke Kaspa sebagai kUSDT, biasanya sekitar 20 menit</string>
+    <string name="buykaspa_arrived">%1$s sudah tiba. Tukar dengan Kaspa.</string>
+    <string name="buykaspa_sign_again">Buka untuk menandatangani jembatan lagi</string>
+    <string name="buykaspa_rejected">Stripe menolak pembelian ini. Tidak ada yang ditagih.</string>
+    <string name="buykaspa_refunded">Jembatan tidak dapat berjalan, jadi USDC dikembalikan. Buka untuk menjembataninya lagi.</string>
+    <string name="buykaspa_expired">Belum dibayar. Tidak ada yang ditagih.</string>
+    <string name="buykaspa_where_land">Ke mana kUSDT Anda harus masuk?</string>
+    <string name="buykaspa_needs_words">K memerlukan kata pemulihan akun ini di ponsel ini untuk membeli dengan kartu.</string>
+    <string name="buykaspa_stripe_note">Stripe menjual kepada pembeli di AS dan UE. Biaya kartu dan biaya jaringan ditampilkan di halaman berikutnya, sebelum Anda membayar.</string>
+    <string name="buykaspa_lands_on_format">kUSDT masuk ke: %1$s</string>
+    <string name="buykaspa_can_close">Anda bisa menutup ini. K terus mengikuti pesanan Anda di tab Dompet.</string>
+    <string name="buykaspa_approve_bridge">Setujui Jembatan</string>
+    <string name="buykaspa_sign_explainer">Satu tanda tangan mengizinkan jembatan Trestly mengambil hingga sebanyak ini USDC dari alamat Ethereum K dan menyetorkannya ke Kaspa sebagai kUSDT. Tidak perlu ETH, dan tidak ada Kaspa yang keluar dari dompet Anda.</string>
+    <string name="buykaspa_up_to">Hingga</string>
+    <string name="buykaspa_lands_on">kUSDT masuk ke</string>
+    <string name="buykaspa_ends">Berakhir</string>
+    <string name="buykaspa_bridge">Jembatan</string>
+    <string name="buykaspa_eth_note">Alamat Ethereum K berasal dari kata-kata akun ini, sama seperti yang akan dibuat dompet Ethereum mana pun.</string>
+    <string name="buykaspa_fresh_note">Alamat baru yang belum pernah dipakai, agar pembelian ini terpisah dari nama pengguna dan obrolan Anda.</string>
+    <string name="buykaspa_chatting_note">Alamat tempat orang mengirimi Anda pesan dan pembayaran.</string>
+    <string name="buykaspa_fresh_address">Alamat Baru</string>
+    <string name="buykaspa_reload">Muat ulang</string>
+</resources>

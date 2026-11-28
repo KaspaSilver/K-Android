@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">このアドレスとその残高はKaspaネットワーク上で誰でも見られますが、メッセージは読めません。チャットとユーザー名にだけ使ってください。</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... またはユーザー名</string>
     <string name="shell54_looking_up_username">ユーザー名を検索中...</string>
-    <string name="shell54_portfolio_add_address_footer">Kaspaアドレス、またはname.kachatのようなユーザー名を入力してください。このアドレスで受け取った取引はすべて購入、送った取引はすべて売却として、その日の過去のKAS価格で記録されます。後で同じアドレスを再度追加すると、前回のインポート以降の取引だけが取り込まれます。</string>
+    <string name="shell54_portfolio_add_address_footer">Kaspaアドレス、または@nameのようなユーザー名を入力してください。このアドレスで受け取った取引はすべて購入、送った取引はすべて売却として、その日の過去のKAS価格で記録されます。後で同じアドレスを再度追加すると、前回のインポート以降の取引だけが取り込まれます。</string>
     <string name="shell54_report_copied">報告をコピーしました</string>
     <string name="shell54_report_no_mail_app">メールアプリで開けませんでした。報告を%1$s宛てのメールに貼り付けてください。</string>
     <string name="shell54_show_amounts">金額を表示</string>

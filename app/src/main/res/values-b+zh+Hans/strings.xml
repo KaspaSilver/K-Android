@@ -50,7 +50,6 @@
     <string name="close">关闭</string>
     <string name="confirm">确认</string>
     <string name="confirm_selection">确认所选项</string>
-    <string name="connect_to_a_node">连接到节点</string>
     <string name="connected_only_to_this_node">仅连接到此节点</string>
     <string name="connection_settings">连接设置</string>
     <string name="connection_status">连接状态</string>
@@ -75,7 +74,6 @@
     <string name="failed_to_send">发送失败</string>
     <string name="fee_kas">手续费 (KAS)</string>
     <string name="from">发件人</string>
-    <string name="fund_your_chatting_address">为您的聊天地址充值</string>
     <string name="group_info">群组信息</string>
     <string name="group_name_2">群组名称</string>
     <string name="hidden_addresses">隐藏的地址</string>
@@ -84,7 +82,6 @@
     <string name="import_account">导入账户</string>
     <string name="import_existing_account">导入现有账户</string>
     <string name="incoming_notifications">传入通知</string>
-    <string name="kachat_needs_to_connect_to_a">K 需要连接到一个节点。您希望如何连接?</string>
     <string name="kaspa_explorer">Kaspa 浏览器</string>
     <string name="label_optional">标签(可选)</string>
     <string name="last_message">最后留言</string>
@@ -185,7 +182,6 @@
     <string name="created">创建时间</string>
     <string name="customization">自定义</string>
     <string name="diagnostics">诊断</string>
-    <string name="discover_addresses">发现地址</string>
     <string name="email">邮箱</string>
     <string name="explorer">浏览器</string>
     <string name="github">GitHub</string>
@@ -236,14 +232,8 @@
     <string name="how_kachat_uses_kaspa">K 如何使用 Kaspa</string>
     <string name="kachat_lets_you_send_and_receive">K 让您可以直接在 Kaspa 网络上发送和接收消息。发送消息时需要使用 Kaspa 支付手续费。您支付的手续费将支付给保护网络安全的矿工。</string>
     <string name="finish">完成</string>
-    <string name="recommended">推荐</string>
-    <string name="connect_your_own_node">连接您自己的节点</string>
-    <string name="enter_a_node_address_you_trust">输入您信任的节点地址</string>
-    <string name="auto_search_for_nodes">自动搜索节点</string>
-    <string name="most_taxing_on_the_device_not_as">对设备负担最大，可靠性也较低 - 取决于您所在的地区</string>
     <string name="choose_your_language">选择您的语言</string>
     <string name="select_the_language_youd_like_to">选择您想在 K 中使用的语言。</string>
-    <string name="best">最佳</string>
     <string name="receive_kaspa">接收 Kaspa</string>
     <string name="currency">货币</string>
     <string name="choose_your_currency">选择您的货币</string>
@@ -319,7 +309,6 @@
     <string name="new_message_request">新的消息请求</string>
     <string name="wants_to_chat_with_you">%1$s 想和你聊天。</string>
     <!-- Welcome Guide: .kachat and Message Requests (iOS 5c15ca0) -->
-    <string name="welcome_fund_chatting_body">5 Kaspa 大约可发送 2500 条消息。</string>
     <!-- Testnet (iOS bdae4b7, 0c1af03, 9858bd1, 0bda85e, af8ec68, f38cac2) -->
     <string name="testnet">测试网</string>
     <string name="testnet_restart_to_testnet">请完全关闭 K 后重新打开，以完成切换到测试网。</string>
@@ -646,7 +635,7 @@
     <string name="ab_export_failed">导出失败。无法写入文件。</string>
     <string name="ab_already_up_to_date">已是最新。文件中的地址都已保存。</string>
     <string name="ab_imported_counts">已导入：新增 %1$d 个，更新 %2$d 个。</string>
-    <string name="ab_err_not_an_export">该文件不是 KaChat 联系人导出文件。</string>
+    <string name="ab_err_not_an_export">该文件不是 K 联系人导出文件。</string>
     <string name="ab_err_export_empty">该联系人导出文件中没有联系人。</string>
     <!-- .kachat: fees, busy network, progress receipt (iOS e426432) -->
     <string name="kn_step_sent">已发送到网络</string>
@@ -874,7 +863,6 @@
     <string name="wallet_spending">支出</string>
     <string name="wallet_send">发送</string>
     <string name="wallet_receive">接收</string>
-    <string name="wallet_request">请求</string>
     <string name="profile_share_profile">分享个人资料</string>
     <string name="settings_back_up_account">备份账户</string>
     <string name="settings_complete_your_backup">完成备份</string>
@@ -1403,12 +1391,9 @@
     <string name="chess_tc_1_1_subtitle">每方一分钟，每步加一秒。</string>
     <string name="chess_tc_casual">休闲</string>
     <string name="chess_tc_no_timer">不计时。</string>
-    <string name="check_off_every_address_you_want_on_the_list">一次勾选所有你想放进列表的地址。</string>
-    <string name="close_and_keep_scanning">关闭并继续扫描</string>
     <string name="recents">最近使用</string>
     <string name="initial_sync_starting">正在启动</string>
     <string name="initial_sync_finished">已完成</string>
-    <string name="downloading_message_history">正在下载消息记录</string>
     <string name="wiping_incoming_messages">正在清除收到的消息...</string>
     <string name="finishing_up">正在收尾...</string>
     <string name="re_syncing_chats_progress">正在重新同步... 第 %1$d 个，共 %2$d 个聊天</string>
@@ -1459,12 +1444,7 @@
     <string name="notification_mode_default">默认（%1$s）</string>
     <string name="checking_address_n">正在检查地址 #%1$d</string>
     <string name="n_found_so_far">目前已找到 %1$d 个</string>
-    <string name="checks_the_first_thousand_addresses">无论中间有无空档，都会检查前一千个地址，之后只要还能找到就继续检查。</string>
     <string name="first_sync_all_set">一切就绪</string>
-    <string name="first_sync_up_to_date">你的聊天和历史记录都是最新的。</string>
-    <string name="first_sync_setting_up">正在设置你的账户</string>
-    <string name="first_sync_downloading_footer">正在下载此账户在链上的全部内容。只有这一次需要这么久。</string>
-    <string name="first_sync_continue_anyway">仍然继续</string>
     <string name="nc_use_all_files">使用所有文件</string>
     <string name="nc_use_this_folder">使用此文件夹</string>
     <string name="nc_no_subfolders">没有子文件夹。</string>
@@ -1540,10 +1520,6 @@
     <string name="connection_trestly">Trestly</string>
     <string name="copy_share_link">复制分享链接</string>
     <string name="share_link_copied">已复制分享链接。</string>
-    <string name="generate_non_quantum_address">生成非量子地址</string>
-    <string name="generate_non_quantum_address_subtitle">普通地址，和“收款”给出的一样。适用于一切，包括 kUSDT。</string>
-    <string name="generate_quantum_resistant_address">生成抗量子地址</string>
-    <string name="generate_quantum_resistant_address_subtitle">在花费前一直隐藏密钥。仅限 Kaspa：无法从此地址交易 kUSDT。</string>
     <string name="kaspa">Kaspa</string>
     <string name="kusdt_balances">kUSDT 余额</string>
     <string name="kusdt_listed_stays_here">此地址在你的 kUSDT 列表中，因此会保留在这里。请先在“管理 kUSDT”中隐藏它。</string>
@@ -1568,14 +1544,12 @@
     <string name="tap_to_manage">轻点以管理</string>
     <string name="token_about_kusdt">kUSDT 是来自 Ethereum 和 BNB Chain 的 USDT，以 1:1 存放在 Trestly 的金库中，并作为代币在 Kaspa 上发行。它不是由 Tether 发行的，只有 Trestly 能把它换回 USDT。</string>
     <string name="token_about_title">关于 %1$s</string>
-    <string name="token_actions_title">%1$s 操作</string>
     <string name="token_activity_bridged_in">跨链转入</string>
     <string name="token_activity_combined_coins">已合并币</string>
     <string name="token_activity_swapped">已兑换</string>
     <string name="token_add_for_fee_and_change">添加 %1$s 用于手续费和找零币</string>
     <string name="token_add_for_network_fee">添加 %1$s 用于网络费</string>
     <string name="token_add_more">再添加 %1$s</string>
-    <string name="token_address_visibility_subtitle">勾选要在列表中显示的持有 kUSDT 的地址。</string>
     <string name="token_address_visibility_title">%1$s 地址显示</string>
     <string name="token_amount_accessibility">金额（%1$s）</string>
     <string name="token_available">可用：%1$s</string>
@@ -1592,23 +1566,20 @@
     <string name="token_combine_explainer">每个 %1$s 币都持有 %2$s。将它们合并为一个币后，多出的 KAS 会扣除网络费，以普通 KAS 退回此地址。你的 %3$s 数量不变。</string>
     <string name="token_combine_limit">每次最多合并 %1$d 个币。其余的请再合并一次。</string>
     <string name="token_combined">合并数量</string>
-    <string name="token_couldnt_check">暂时无法核对 %1$@：%2$@ 下拉重试。</string>
-    <string name="token_discover_addresses">查找 kUSDT 地址</string>
-    <string name="token_discover_addresses_subtitle">查找你持有 kUSDT 的地址。</string>
+    <string name="token_couldnt_check">暂时无法核对 %1$s：%2$s 下拉重试。</string>
     <string name="token_every_coin_goes_to_recipient">每枚 %1$s 含有 %2$s。这些 KAS 会随 %3$s 一起转给收款人，因此不会丢失。</string>
     <string name="token_every_coin_holds_kas">每枚 kUSDT 含有 1.5 KAS。发送 kUSDT 时，这些 KAS 会一起发送。</string>
     <string name="token_fee">手续费 %1$s</string>
     <string name="token_fee_from_token_kas">此地址没有 KAS，因此网络费从随 kUSDT 一起转出的 KAS 中扣除。</string>
     <string name="token_fee_same_address_note">手续费的 KAS 来自同一地址，因此这次发送不会把它与你的其他地址关联起来。</string>
-    <string name="token_found_addresses">找到 %1$d 个持有 %2$@ 的地址。</string>
+    <string name="token_found_addresses">找到 %1$d 个持有 %2$s 的地址。</string>
     <string name="token_fund_hint">选择从哪个地址转出 KAS，上滑发送，然后回到这里。</string>
-    <string name="token_generate_new_address_subtitle">向此列表添加一个全新的普通地址。</string>
     <string name="token_goes_with_it">随附</string>
     <string name="token_held_on">存放于</string>
     <string name="token_held_with_it">随附 %1$s</string>
     <string name="token_hidden_count">已隐藏 %1$d 个：仍计入总额。</string>
     <string name="token_hide_address_subtitle">从此列表中移除。可在“%1$s 地址显示”中重新启用。</string>
-    <string name="token_hide_all_message">“管理 %1$@”将重新开始，只保留你的聊天地址。不会丢失任何东西：可在这里恢复任意地址，其 %2$@ 仍计入你的总额。</string>
+    <string name="token_hide_all_message">“管理 %1$s”将重新开始，只保留你的聊天地址。不会丢失任何东西：可在这里恢复任意地址，其 %2$s 仍计入你的总额。</string>
     <string name="token_history_from_now_on">从现在起，此手机上的发送、接收和合并会显示在这里。</string>
     <string name="token_history_title">%1$s 记录</string>
     <string name="token_kas_for_send">用于 %1$s 发送的 KAS</string>
@@ -1627,8 +1598,6 @@
     <string name="token_receive_no_usdt_warning">不要从以太坊、BNB Chain 或交易所向此地址发送 USDT：会丢失。请先在 Trestly 上跨链到 Kaspa。</string>
     <string name="token_receive_only">这里只能接收 Kaspa 上的 %1$s 或 KAS。</string>
     <string name="token_receive_title">接收 %1$s</string>
-    <string name="token_rename_label_placeholder">标签</string>
-    <string name="token_rename_message">给这个地址加个标签,方便您识别。</string>
     <string name="token_script_address_error">%1$s 只能发送到普通 Kaspa 地址，不能发送到抗量子地址或其他脚本地址。</string>
     <string name="token_send_title">发送 %1$s</string>
     <string name="token_send_to_chatting_subtitle">将此地址的 kUSDT 转到你的聊天地址。</string>

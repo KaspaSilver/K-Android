@@ -1483,7 +1483,7 @@ class NextcloudService @Inject constructor(
     suspend fun downloadBackup(onProgress: ((receivedBytes: Long, totalBytes: Long?) -> Unit)? = null): String {
         val account = requireAccount()
         val body = readBackupBody(account, backupFolderPath, onProgress)
-            ?: throw IOException("No KaChat backup was found on this Nextcloud server.")
+            ?: throw IOException("No K backup was found on this Nextcloud server.")
         return body.takeIf { it.isNotEmpty() } ?: throw IOException("Unexpected response from the Nextcloud server.")
     }
 

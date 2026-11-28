@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- K 5.4, iOS 01f71184 (release audit 2026-11-27): chat, group and Explorer screens. Translated from the iPhone's Localizable.strings, same keys. -->
+<resources>
+    <string name="rs_group_refresh_invites">در حال خواندن دوباره دعوت‌های گروه</string>
+    <string name="rs_group_refresh_control">در حال خواندن دوباره فهرست اعضا و کلیدهای دوره</string>
+    <string name="rs_group_refresh_messages">در حال دریافت دوباره پیام‌ها (%1$d از %2$d عضو)</string>
+    <string name="rs_group_refresh_decrypting">در حال رمزگشایی تاریخچه</string>
+    <string name="rs_group_you_changed_photo">شما عکس گروه را تغییر دادید</string>
+    <string name="rs_group_you_removed_photo">شما عکس گروه را حذف کردید</string>
+    <string name="rs_group_you_renamed">شما نام گروه را به «%1$s» تغییر دادید</string>
+    <string name="rs_group_changed_photo">%1$s عکس گروه را تغییر داد</string>
+    <string name="rs_group_removed_photo">%1$s عکس گروه را حذف کرد</string>
+    <string name="rs_group_renamed">%1$s نام گروه را به «%2$s» تغییر داد</string>
+    <string name="rs_own_account_not_contact">این آدرس متعلق به یکی از حساب‌های خودتان است، بنابراین نمی‌توان آن را به‌عنوان مخاطب افزود.</string>
+    <string name="ex_kind_kaposts">پست‌ها</string>
+</resources>

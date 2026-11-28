@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">সংযুক্ত, এবং এতে এই রুমের বার্তা আছে।</string>
     <string name="kpui_room_indexer_footer">পাবলিক চ্যাট Kaspa blockDAG-তে থাকে, তাই একই নেটওয়ার্ক দেখা যেকোনো ইনডেক্সার একই রুম দেখায়। এটিকে যেখানে খুশি সেট করুন - নিজের বা অন্য কারও - অন্য সব রুম যে ইনডেক্সার ব্যবহার করে তা না বদলেই।</string>
     <string name="kpui_use_app_indexer">অ্যাপের ইনডেক্সার ব্যবহার করুন</string>
-    <string name="kpui_room_switched_off_footer">বন্ধ করা রুম আর পাবলিক চ্যাটে দেখা যায় না এবং কখনো নোটিফিকেশন পাঠায় না। যেকোনো সময় আবার চালু করুন।</string>
-    <string name="kpui_languages">ভাষা</string>
-    <string name="kpui_languages_footer">বন্ধ থাকলে প্রতিটি ভাষার রুম পাবলিক চ্যাট থেকে সরে যায়। চালু থাকলে, যেগুলো চান না সেগুলো বন্ধ করে দিন।</string>
     <string name="kpui_notifications_off">নোটিফিকেশন বন্ধ</string>
     <string name="kpui_notifications_on">নোটিফিকেশন চালু</string>
     <string name="kpui_room_notified_closed">এখানকার নতুন বার্তার নোটিফিকেশন পান, অ্যাপ বন্ধ থাকলেও।</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">এখানে এখনো কিছু নেই</string>
     <string name="kpui_engagement_empty">কেউ এই পোস্টে সাড়া দিলে সে এখানে দেখা যাবে।</string>
     <string name="kpui_instant_tip_limit">তাৎক্ষণিক টিপ 10 KAS পর্যন্ত সীমিত। এটি পাঠাতে ওপরে সোয়াইপ করুন।</string>
-    <string name="kpui_kapost_settings">KaPost সেটিংস</string>
     <string name="kpui_cool_down">পোস্ট করার আগে একটু অপেক্ষা করুন</string>
     <string name="kpui_cooldown_on">পোস্ট, মন্তব্য, লাইক, রিপোস্ট, ভোট, এডিট ও ডিলিট চেইনে যাওয়ার আগে 5 সেকেন্ড অপেক্ষা করে, আনডু করার সুযোগসহ।</string>
     <string name="kpui_cooldown_off">পোস্ট, মন্তব্য, লাইক, রিপোস্ট, ভোট, এডিট ও ডিলিট সঙ্গে সঙ্গে চেইনে চলে যায়, আনডু করার সুযোগ থাকে না।</string>

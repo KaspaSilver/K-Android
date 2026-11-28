@@ -45,9 +45,6 @@
     <string name="kpui_indexer_connected_has">متصل، ولديه رسائل هذه الغرفة.</string>
     <string name="kpui_room_indexer_footer">تعيش المحادثة العامة على Kaspa blockDAG، لذا يقدّم أي مفهرس يراقب الشبكة نفسها الغرفة نفسها. وجّه هذه الغرفة إلى أي مفهرس تريده - مفهرسك أو مفهرس غيرك - دون تغيير المفهرس الذي تستخدمه كل الغرف الأخرى.</string>
     <string name="kpui_use_app_indexer">استخدم مفهرس التطبيق</string>
-    <string name="kpui_room_switched_off_footer">الغرفة المُوقَفة لا تظهر في المحادثات العامة ولا ترسل أي إشعار. يمكنك تشغيلها مجددًا في أي وقت.</string>
-    <string name="kpui_languages">اللغات</string>
-    <string name="kpui_languages_footer">إيقافه يُخرج كل غرف اللغات من المحادثات العامة. عند تشغيله، أوقف الغرف التي لا تريدها.</string>
     <string name="kpui_notifications_off">الإشعارات متوقفة</string>
     <string name="kpui_notifications_on">الإشعارات مفعّلة</string>
     <string name="kpui_room_notified_closed">يصلك إشعار بالرسائل الجديدة هنا، حتى عندما يكون التطبيق مغلقًا.</string>
@@ -143,7 +140,6 @@
     <string name="kpui_nothing_here_yet">لا شيء هنا بعد</string>
     <string name="kpui_engagement_empty">عندما يتفاعل أحد مع هذا المنشور، سيظهر هنا.</string>
     <string name="kpui_instant_tip_limit">الإكراميات الفورية محدودة بـ 10 KAS. اسحب لأعلى لإرسال هذه الإكرامية.</string>
-    <string name="kpui_kapost_settings">إعدادات KaPost</string>
     <string name="kpui_cool_down">مهلة قبل النشر</string>
     <string name="kpui_cooldown_on">المنشورات والتعليقات والإعجابات وإعادات النشر والأصوات والتعديلات والحذف تنتظر ٥ ثوانٍ، مع إمكانية التراجع، قبل تسجيلها على السلسلة.</string>
     <string name="kpui_cooldown_off">المنشورات والتعليقات والإعجابات وإعادات النشر والأصوات والتعديلات والحذف تُسجَّل على السلسلة فورًا، دون تراجع.</string>

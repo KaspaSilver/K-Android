@@ -104,8 +104,8 @@ android {
         // permanent and per app, and unlike iOS it does NOT reset when versionName changes
         // (4.1's builds ran 35..47). A device will not treat a rebuild as an update unless it
         // moves, so it goes up with every handed-out build too, alongside the build number.
-        val kachatBuildNumber = 6
-        versionCode = 148
+        val kachatBuildNumber = 7
+        versionCode = 149
         versionName = "5.4"
         buildConfigField("int", "KACHAT_BUILD_NUMBER", kachatBuildNumber.toString())
         buildConfigField("String", "CHANGENOW_API_KEY", "\"${changeNowApiKey.replace("\\", "").replace("\"", "")}\"")
@@ -211,6 +211,12 @@ android {
         // body) is one the codebase does not use: coroutines start from LaunchedEffect or a
         // view-model scope.
         disable += "CoroutineCreationDuringComposition"
+
+        // A call newer than minSdk is a NoSuchMethodError on older phones, and the JVM unit tests
+        // can't catch it (their Java has the method). Fatal, so the release build's lintVital
+        // stops on one: BigInteger.longValueExact (API 31) crashed Trestly on Android 11, and
+        // SortedSet.reversed (API 35, from JDK 21's SequencedCollection) sat in photo prep.
+        fatal += "NewApi"
 
         // MissingTranslation is an error by default, and the 18 locale files are deliberately
         // partial - a key with no translation falls back to the English string, which is correct

@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">このアドレスはすでにこのアカウントにあります。</string>
     <string name="coldq_error_in_other_account">このアドレスはすでに Cold Storage アカウント「%1$s」にあります。</string>
     <string name="coldq_added_toast">耐量子アドレスを追加しました。</string>
-    <string name="coldq_add_action">耐量子アドレスを追加</string>
     <string name="coldq_add_action_subtitle">KasSigner のアドレス画面から KCC-3 アドレスをスキャンしてください。</string>
     <string name="coldq_stop_watching">ウォッチを停止</string>
     <string name="coldq_stop_watching_subtitle">この量子アドレスをアカウントから削除します。もう一度スキャンすると追加し直せます。</string>

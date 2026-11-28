@@ -929,77 +929,6 @@ class KachatNamesRegistry @Inject constructor(
         }
     }
 
-    /** A count or amount over the last 24 hours, the last 7 days and all time. */
-    data class Totals(val last24h: Long, val last7d: Long, val total: Long)
-
-    /**
-     * How many .kachat transactions there were and what they paid, across the registry - for
-     * KaChat Stats and the market's Activity page (iOS f5d34f4). An indexer reports both
-     * (`GET /names/activity/stats`, else `GET /stats/names`: fees = what each transaction paid
-     * miners, the registry's price included, since that is how the price is paid). Neither
-     * answering (mainnet's `/stats/names` is a 503 today), or read from the chain instead, the
-     * events are counted and each registration, extension and renewal priced at the registry's
-     * fixed prices (iOS 4a0f256). The fees are null where they can't be worked out (an indexer
-     * too old to record them).
-     */
-    suspend fun activityTotals(): Pair<Totals, Totals?> {
-        val m = prepare()
-        return when (val src = _source.value) {
-            is Source.Indexer -> {
-                // `/names/activity/stats` first: a proxy may send /stats/* to a server without the
-                // names module (mainnet today). Neither answering, the activity feed is counted.
-                suspend fun stats(path: String): IndexerApi.StatsJson? = try {
-                    IndexerApi.StatsJson.parse(get(src.base, path))
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (_: Exception) {
-                    null
-                }
-                val j = stats("/names/activity/stats") ?: stats("/stats/names")
-                    ?: return totals(allIndexerEvents(src.base), m.params)
-                val fees = j.fees?.let { f ->
-                    val t = f.total.toLongOrNull()
-                    val d = f.last24h.toLongOrNull()
-                    val w = f.last7d.toLongOrNull()
-                    if (t != null && d != null && w != null) Totals(last24h = d, last7d = w, total = t) else null
-                }
-                val t = j.transactions
-                if (t != null) {
-                    Totals(last24h = t.last24h, last7d = t.last7d, total = t.total) to fees
-                } else {
-                    // an indexer from before `transactions`: the per-kind figures, added up
-                    // (saturating, a negative figure as none: a server's numbers must never wrap;
-                    // iOS audit 2026-11-21 #20)
-                    val kinds = j.activity.orEmpty().values
-                    fun sum(value: (IndexerApi.StatsJson.Counts) -> Long): Long =
-                        kinds.fold(0L) { acc, kind -> KachatNames.clampedSum(acc, value(kind).coerceAtLeast(0L)) }
-                    Totals(
-                        last24h = sum { it.last24h },
-                        last7d = sum { it.last7d },
-                        total = sum { it.total },
-                    ) to fees
-                }
-            }
-            else -> totals(_chainState.value?.events ?: emptyList(), m.params)
-        }
-    }
-
-    /** Every registry event an indexer's `/names/activity` holds, newest first, page by page (at
-     *  most 50 pages of 200; iOS 4a0f256). */
-    private suspend fun allIndexerEvents(base: String): List<Event> {
-        val events = ArrayList<Event>()
-        var cursor: String? = null
-        for (i in 0 until 50) {
-            var path = "/names/activity?length=200"
-            if (cursor != null) path += "&cursor=$cursor"
-            val (page, next) = IndexerApi.EventJson.parseEventsPage(get(base, path))
-            events += page
-            if (next.isNullOrEmpty() || page.isEmpty()) break
-            cursor = next
-        }
-        return events
-    }
-
     /**
      * The fixed prices (registry v4, baked into the pinned templates; iOS c8f1086): sompi for a
      * name's first period, and for every further one, by length 1, 2, 3, 4, 5+ bytes. Null until a
@@ -1920,49 +1849,6 @@ class KachatNamesRegistry @Inject constructor(
          *  94ed3a35 ContactsManager.identityName). */
         fun kachatName(address: String): String? =
             cachedIdentityOf(address)?.label?.let(com.kachat.app.models.KachatNameLabel::display)
-
-        /** Counts and prices registry events ([activityTotals] without an indexer's figures), one
-         *  per transaction: registrations, extensions and renewals at the registry's fixed prices
-         *  (iOS f5d34f4, 4a0f256 `totals(of:params:)`). */
-        fun totals(
-            events: List<Event>,
-            params: Params,
-            nowMs: Long = KachatNames.nowMs(),
-        ): Pair<Totals, Totals?> {
-            val d1 = nowMs - 86_400_000L
-            val d7 = nowMs - 7 * 86_400_000L
-            val at = HashMap<String, Long>()
-            val paid = HashMap<String, Long>()
-            for (e in events) {
-                at[e.txId] = maxOf(at[e.txId] ?: 0L, e.at ?: 0L)
-                val name = e.name ?: continue
-                val rawYears = e.years ?: continue
-                if (rawYears <= 0) continue
-                // `years` can come from an indexer: a name holds a handful of periods, so anything
-                // past 1000 is nonsense, clamped before any math, and every sum and product holds
-                // at the top instead of wrapping or throwing (iOS 428a797b, audit 2026-11-21 #20).
-                val years = minOf(rawYears, 1000L)
-                val length = name.toByteArray(Charsets.UTF_8).size
-                val cost = when (e.op) {
-                    "register" -> KachatNames.clampedSum(
-                        params.registerPrice(forLength = length),
-                        KachatNames.clampedProduct(params.renewPrice(forLength = length), years - 1),
-                    )
-                    "extend", "renew" -> KachatNames.clampedProduct(params.renewPrice(forLength = length), years)
-                    else -> null
-                }
-                if (cost != null) paid[e.txId] = KachatNames.clampedSum(paid[e.txId] ?: 0L, cost)
-            }
-            var txTotal = 0L; var tx7 = 0L; var tx1 = 0L
-            var feeTotal = 0L; var fee7 = 0L; var fee1 = 0L
-            for ((tx, time) in at) {
-                val fee = paid[tx] ?: 0L
-                txTotal += 1; feeTotal = KachatNames.clampedSum(feeTotal, fee)
-                if (time > d7) { tx7 += 1; fee7 = KachatNames.clampedSum(fee7, fee) }
-                if (time > d1) { tx1 += 1; fee1 = KachatNames.clampedSum(fee1, fee) }
-            }
-            return Totals(last24h = tx1, last7d = tx7, total = txTotal) to Totals(last24h = fee1, last7d = fee7, total = feeTotal)
-        }
 
         // Addresses
 

@@ -5,7 +5,6 @@
     <string name="coldq_error_already_added">Alamat itu sudah ada di akun ini.</string>
     <string name="coldq_error_in_other_account">Alamat itu sudah ada di akun Cold Storage-mu “%1$s”.</string>
     <string name="coldq_added_toast">Alamat tahan kuantum ditambahkan.</string>
-    <string name="coldq_add_action">Tambah Alamat Tahan Kuantum</string>
     <string name="coldq_add_action_subtitle">Pindai alamat KCC-3 dari layar alamat KasSigner.</string>
     <string name="coldq_stop_watching">Berhenti Memantau</string>
     <string name="coldq_stop_watching_subtitle">Menghapus alamat kuantum ini dari akun. Pindai lagi untuk menambahkannya kembali.</string>

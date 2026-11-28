@@ -49,8 +49,9 @@ interface KaChatSiteWalletDeps {
 }
 
 /** One [KaChatSiteWallet] for this browser, or null when [url]'s host isn't a site that gets one
- *  (iOS 48f5c357 `KaChatSiteWallet.isAllowed(host: url.host) ? siteWallet : nil`). Closing the
- *  browser declines what's pending and drops the connection. */
+ *  (iOS 48f5c357 `KaChatSiteWallet.isAllowed(host: url.host) ? siteWallet : nil`). The browser
+ *  closes it ([KaChatSiteWallet.close]) when its web view is torn down, not when it is merely
+ *  hidden (iOS b49a021d `InAppWebView.dismantleUIView`), and reopens it whenever it shows. */
 @Composable
 fun rememberSiteWallet(url: String): KaChatSiteWallet? {
     val context = LocalContext.current
@@ -64,7 +65,6 @@ fun rememberSiteWallet(url: String): KaChatSiteWallet? {
                 .make()
         }.getOrNull()
     }
-    androidx.compose.runtime.DisposableEffect(wallet) { onDispose { wallet?.close() } }
     return wallet
 }
 
@@ -74,11 +74,19 @@ fun rememberSiteWallet(url: String): KaChatSiteWallet? {
  * back to the page. Closed without an answer, it's declined.
  */
 @Composable
-fun SiteWalletSheetHost(wallet: KaChatSiteWallet) {
+fun SiteWalletSheetHost(
+    wallet: KaChatSiteWallet,
+    /** K's own sign-in sheet is up ([SiteSignInSheet]): it answers a connect itself, and anything
+     *  else shows once it closes (iOS d88891ea, audit 2026-11-27 L1). */
+    held: Boolean = false,
+) {
     val pending by wallet.pending.collectAsState()
     var sheet by remember { mutableStateOf<KaChatSiteWallet.Request?>(null) }
-    LaunchedEffect(pending?.id) {
-        pending?.let {
+    LaunchedEffect(pending?.id, held) {
+        if (held) return@LaunchedEffect
+        // the sign-in sheet just closed: its key check may still answer the page's connect
+        wallet.awaitPreConnect()
+        wallet.pending.value?.let {
             wallet.sheetOpen = true
             sheet = it
         }
@@ -157,8 +165,45 @@ private fun SiteWalletSheet(wallet: KaChatSiteWallet, request: KaChatSiteWallet.
                 lockedSource = connection.source,
                 siteHost = request.host,
                 onSent = { txId -> wallet.sent(txId) },
+                // its answer was lost: "may have been sent" (4002) with the txid, never "rejected"
+                // (iOS d88891ea, audit 2026-11-27 M3)
+                onOutcomeUnknown = { txId -> wallet.maybeSent(txId, request.host) },
             )
         }
+    }
+}
+
+/**
+ * K's own "Sign In to Kasshi" sheet, up as Kasshi opens from Kaspa Hub, before the page asks (iOS
+ * b49a021d `InAppBrowserScreen(signInFirst:)`, owner 2026-11-27): which address signs you in. The
+ * pick connects at once ([KaChatSiteWallet.preConnect]), so the site's connect answers with no
+ * sheet and its sign-in is signed with no second sheet. Cancel (or a swipe down) browses signed out.
+ */
+@Composable
+fun SiteSignInSheet(
+    wallet: KaChatSiteWallet,
+    host: String,
+    onDone: () -> Unit,
+    /** The picked address couldn't connect: nothing signed in (iOS d88891ea, audit 2026-11-27 L1). */
+    onFailed: () -> Unit = {},
+) {
+    IosFullSheet(onDismissed = onDone, swipeToDismiss = true) { close ->
+        val walletViewModel = rememberActivityWalletViewModel()
+        if (walletViewModel == null) {
+            LaunchedEffect(Unit) { close() }
+            return@IosFullSheet
+        }
+        SiteConnectView(
+            host = host,
+            wallet = wallet,
+            walletViewModel = walletViewModel,
+            signIn = true,
+            onConnect = { source ->
+                wallet.preConnect(source, host.lowercase(), onFailed = onFailed)
+                close()
+            },
+            onDecline = close,
+        )
     }
 }
 
@@ -206,6 +251,8 @@ private fun SiteConnectView(
     host: String,
     wallet: KaChatSiteWallet,
     walletViewModel: WalletViewModel,
+    /** K's own "Sign In to Kasshi" step (before the site asks) words it as signing in (iOS b49a021d). */
+    signIn: Boolean = false,
     onConnect: (SendSource) -> Unit,
     onDecline: () -> Unit,
 ) {
@@ -221,9 +268,9 @@ private fun SiteConnectView(
         choosing = true
     }
     SendStepScreen(
-        title = stringResource(R.string.site_connect_to_k),
+        title = stringResource(if (signIn) R.string.site_signin_title else R.string.site_connect_to_k),
         onCancel = onDecline,
-        continueTitle = stringResource(R.string.nc_connect),
+        continueTitle = stringResource(if (signIn) R.string.site_signin_button else R.string.nc_connect),
         canContinue = !(choosing && source is SendSource.Chatting),
         onContinue = { onConnect(source) },
     ) {
@@ -234,8 +281,8 @@ private fun SiteConnectView(
             onChoosingFromChange = { choosing = it },
             balanceSompi = chattingBalance,
             walletViewModel = walletViewModel,
-            header = { SiteHeader(host, stringResource(R.string.site_connect_note)) },
-            question = stringResource(R.string.site_connect_question),
+            header = { SiteHeader(host, stringResource(if (signIn) R.string.site_signin_note else R.string.site_connect_note)) },
+            question = stringResource(if (signIn) R.string.site_signin_question else R.string.site_connect_question),
             pickNote = stringResource(R.string.site_connect_other_note),
             excludeQuantum = true,
         )

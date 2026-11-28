@@ -397,17 +397,18 @@ class BroadcastViewModel @Inject constructor(
         }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     /**
-     * "Delete" from the room list. A room you added is left for good ([leaveChannel], its messages
-     * go). A default room cannot really be deleted - it is simply switched off, the same as its
-     * toggle in Public Chats settings, and that toggle brings it back (iOS e08c4cc).
+     * "Delete" from the room list: the room is left ([leaveChannel]), default rooms too since iOS
+     * 824a30bb. One the indexer keeps can be added again from Add Room.
      */
     fun removeFromList(channelName: String) {
-        if (channelName in FeaturedBroadcastChannels.CURATED_NAMES) setCuratedRoomShown(channelName, false)
-        else leaveChannel(channelName)
+        leaveChannel(channelName)
     }
 
     /** This wallet's own address, for "You" on the rows it sent. Null while there is none. */
     fun myAddress(): String? = runCatching { walletManager.getAddress() }.getOrNull()
+
+    /** [myAddress], observable: the active account's address as it signs in, switches or goes. */
+    val myAddressFlow: StateFlow<String?> get() = walletManager.activeAddressFlow
 
     /**
      * Opening a room is reading it (iOS 369794e `markChannelRead`): up to the newest message seen,
@@ -433,44 +434,6 @@ class BroadcastViewModel @Inject constructor(
         readState.markUnread(channelName)
     }
 
-    /** Default rooms switched off in Public Chats settings, for this wallet. */
-    val hiddenCuratedRooms: StateFlow<Set<String>> = readState.state
-        .map { it.hiddenCurated }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
-
-    /**
-     * Public Chats settings: shows or hides one of the default rooms. Off takes the room out of
-     * the list and turns its notifications off, which also takes it off the push service's watch
-     * list. On brings it back silenced, as every room starts (iOS 8cb4c88e, owner 2026-11-24).
-     */
-    fun setCuratedRoomShown(channelName: String, shown: Boolean) {
-        if (channelName !in FeaturedBroadcastChannels.CURATED_NAMES) return
-        readState.setCuratedShown(channelName, shown)
-        val joined = joinedChannels.value.any { it.channelName == channelName }
-        if (!joined) {
-            // A switch that is on means the room is in the Chats circles: switching on a room not
-            // joined yet joins it (a local subscription - nothing on chain), so it appears at once,
-            // with its bell off (iOS PublicChatService.setCuratedChannel).
-            if (shown) viewModelScope.launch { broadcastRepository.joinDefaultChannel(channelName) }
-            return
-        }
-        if (!shown) setNotifyEnabled(channelName, false)
-    }
-
-    /**
-     * The Languages switch on the customize sheet: every language room off at once (out of the
-     * list, bells off), or all back on - each then switched off one by one if only some are
-     * wanted (iOS KaPosts setAllLanguageChannels, d37f64d).
-     */
-    fun setAllLanguageRoomsShown(shown: Boolean) {
-        val hidden = readState.state.value.hiddenCurated
-        val joined = joinedChannels.value.map { it.channelName }.toSet()
-        for (name in FeaturedBroadcastChannels.LANGUAGE_NAMES) {
-            val on = name !in hidden && name in joined
-            if (on != shown) setCuratedRoomShown(name, shown)
-        }
-    }
-
     /**
      * Every default room listed from the start, as soon as the wallet's read state is loaded
      * (iOS KaPosts ensureDefaultChannelsJoined, 865c9ab). Every room joins silenced, bell off
@@ -484,9 +447,9 @@ class BroadcastViewModel @Inject constructor(
     }
 
     /**
-     * Edit Default Public Chats opened: the app-wide indexer's rooms are asked for again if the
-     * last answer is over a minute old, so a room just added there shows under More Rooms (and
-     * joins) within a minute (iOS 961fc05a `refreshIndexerTrackedRooms(maxAge: 60)`).
+     * Add Room opened: the app-wide indexer's rooms are asked for again if the last answer is over
+     * a minute old, so a room just added there shows within a minute (iOS 824a30bb
+     * `refreshIndexerTrackedRooms(maxAge: 60)`).
      */
     fun refreshIndexerRoomsSoon() {
         viewModelScope.launch { runCatching { broadcastRepository.refreshIndexerTrackedRooms(maxAgeMs = 60_000L) } }
@@ -595,17 +558,25 @@ class BroadcastViewModel @Inject constructor(
                 // until the app is active again (iOS gates the same poll on applicationState).
                 // Signed out: no rooms to poll (iOS b78fdb0).
                 if (notificationHelper.isAppInForeground && broadcastRepository.isSignedIn()) {
-                    broadcastRepository.backfillFromIndexer(channelName)
-                    val now = System.currentTimeMillis()
-                    if (now - lastRoomPruneAt >= ROOM_PRUNE_INTERVAL_MS) {
-                        // Every five minutes while the room is open and the app in front, so a
-                        // message goes soon after it expires (iOS PublicChatChannelView's
-                        // pruneNowAndRefresh task).
-                        lastRoomPruneAt = now
-                        runCatching { broadcastScanningService.pruneIfDue(force = true) }
-                    } else {
-                        // gated by its own interval: a few minutes at most between runs
-                        runCatching { broadcastScanningService.pruneIfDue() }
+                    // One failed pass (indexer error, a bad row) is logged and the next one runs
+                    // on time; uncaught, it ended the room's poll until it was reopened.
+                    try {
+                        broadcastRepository.backfillFromIndexer(channelName)
+                        val now = System.currentTimeMillis()
+                        if (now - lastRoomPruneAt >= ROOM_PRUNE_INTERVAL_MS) {
+                            // Every five minutes while the room is open and the app in front, so a
+                            // message goes soon after it expires (iOS PublicChatChannelView's
+                            // pruneNowAndRefresh task).
+                            lastRoomPruneAt = now
+                            runCatching { broadcastScanningService.pruneIfDue(force = true) }
+                        } else {
+                            // gated by its own interval: a few minutes at most between runs
+                            runCatching { broadcastScanningService.pruneIfDue() }
+                        }
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w("BroadcastViewModel", "Room poll pass failed for $channelName", e)
                     }
                 } else if (!notificationHelper.isAppInForeground) {
                     // Asleep until the app is back, not waking every 8 s (audit 2026-11-25 B10).
@@ -681,17 +652,36 @@ class BroadcastViewModel @Inject constructor(
     }
 
     /**
-     * A room handed over from outside (a tapped notification, a room link): the name is checked
-     * again, and a room with no row yet gets one first (iOS `openRoomFromHandoff`). [open] runs
-     * with the checked name; nothing happens for a name that fails the gate.
+     * A room handed over from outside (a tapped notification, a room link, an @mention in
+     * Profile's bell): the name is checked again (iOS `openRoomFromHandoff`). A room in the list
+     * opens ([open]); one not in it is asked about first ([ask], iOS 824a30bb: no room is added
+     * unasked) - a link has already asked and joined by the time it lands here. Nothing happens
+     * for a name that fails the gate.
      */
-    fun openRoomFromHandoff(rawName: String, open: (String) -> Unit) {
+    fun openRoomFromHandoff(rawName: String, open: (String) -> Unit, ask: (String) -> Unit) {
         val name = com.kachat.app.services.publicchats.PublicChatLink.normalizeAndValidateChannel(rawName) ?: return
         viewModelScope.launch {
-            if (joinedChannels.value.none { it.channelName == name }) {
-                runCatching { broadcastRepository.joinChannel(name) }
+            val joined = joinedChannels.value.any { it.channelName == name } ||
+                runCatching { broadcastRepository.isJoined(name) }.getOrDefault(false)
+            if (joined) open(name) else ask(name)
+        }
+    }
+
+    /**
+     * Add Room's Join (iOS 824a30bb `PublicRoomBrowserView.roomRow`): the room joins with its bell
+     * on, as every room the person adds; [onJoined] once it is in the list.
+     */
+    fun joinFromRoomBrowser(name: String, onJoined: () -> Unit = {}) {
+        if (!MessageProtocol.isValidChannelName(name)) return
+        viewModelScope.launch {
+            try {
+                broadcastRepository.joinChannel(name)
+                onJoined()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("BroadcastViewModel", "Could not join $name", e)
             }
-            open(name)
         }
     }
 

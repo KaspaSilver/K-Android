@@ -7,7 +7,7 @@
     <string name="shell54_what_others_can_see_caption">Siapa pun dapat melihat alamat ini dan saldonya di jaringan Kaspa, tetapi tidak dapat membaca pesan Anda. Gunakan hanya untuk mengobrol dan nama pengguna.</string>
     <string name="shell54_kaspa_qr_or_username">kaspa:qr... atau nama pengguna</string>
     <string name="shell54_looking_up_username">Mencari nama pengguna...</string>
-    <string name="shell54_portfolio_add_address_footer">Masukkan alamat Kaspa atau nama pengguna seperti name.kachat. Setiap transaksi yang diterima di alamat ini menjadi pembelian, setiap transaksi yang dikirim menjadi penjualan, dihargai dengan harga KAS historis hari itu. Menambahkan alamat yang sama lagi nanti hanya mengimpor transaksi yang ditemukan sejak impor terakhir.</string>
+    <string name="shell54_portfolio_add_address_footer">Masukkan alamat Kaspa atau nama pengguna seperti @name. Setiap transaksi yang diterima di alamat ini menjadi pembelian, setiap transaksi yang dikirim menjadi penjualan, dihargai dengan harga KAS historis hari itu. Menambahkan alamat yang sama lagi nanti hanya mengimpor transaksi yang ditemukan sejak impor terakhir.</string>
     <string name="shell54_report_copied">Laporan Disalin</string>
     <string name="shell54_report_no_mail_app">Tidak ada aplikasi email yang bisa membukanya. Tempel laporan ke email ke %1$s.</string>
     <string name="shell54_show_amounts">Tampilkan jumlah</string>

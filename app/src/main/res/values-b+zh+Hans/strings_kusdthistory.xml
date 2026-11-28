@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- kUSDT swaps in Buy/Sell History (iOS b49a021d) -->
+<resources>
+    <string name="swap_swapped_through">兑换渠道</string>
+    <string name="swap_trestly_kusdt_pool">Trestly 在 Kaspa 上的 kUSDT 池</string>
+    <string name="swap_couldnt_reach_network">无法连接网络，请重试</string>
+</resources>

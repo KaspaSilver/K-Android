@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Buy / Sell step by step, the Wallet's Buy and Sell, the funding card's Buy Kaspa -->
+<resources>
+    <string name="buysell_buy">شراء</string>
+    <string name="buysell_sell">بيع</string>
+    <string name="buysell_history">سجل الشراء/البيع</string>
+    <string name="buysell_buy_kaspa">شراء Kaspa</string>
+    <string name="buysell_sell_kaspa">بيع كاسبا</string>
+    <string name="buysell_buy_with_crypto">شراء كاسبا بالعملات الرقمية</string>
+    <string name="buysell_buy_with_crypto_sub">ادفع بعملة أخرى، مثل kUSDT أو بيتكوين.</string>
+    <string name="buysell_buy_with_debit_card">شراء Kaspa ببطاقة الخصم</string>
+    <string name="buysell_debit_card_sub">ادفع بالبطاقة. تصل بصيغة kUSDT، ثم تشتري بها كاسبا.</string>
+    <string name="buysell_pay_with_question">بماذا تريد أن تدفع؟</string>
+    <string name="buysell_sell_for_question">ماذا تريد مقابل كاسبا؟</string>
+    <string name="buysell_sell_kaspa_for">بيع كاسبا مقابل %1$s</string>
+    <string name="buysell_buy_kaspa_with">شراء كاسبا بـ %1$s</string>
+    <string name="buysell_on_networks">%1$s على %2$d شبكات</string>
+    <string name="buysell_you_pay">ستدفع</string>
+    <string name="buysell_where_land">أين يجب أن تصل كاسبا الخاصة بك؟</string>
+    <string name="buysell_kusdt_one_address">يُدفع kUSDT من عنوان واحد، وتصل كاسبا إلى العنوان نفسه.</string>
+    <string name="buysell_fresh_note">عنوان جديد لم يُستخدم من قبل، ليبقى هذا الشراء منفصلاً عن اسم المستخدم ومحادثاتك.</string>
+    <string name="buysell_send_payment">إرسال دفعة</string>
+    <string name="buysell_send_amount_coin">أرسل %1$s %2$s</string>
+    <string name="buysell_to_buy_kaspa">لشراء كاسبا</string>
+    <string name="buysell_to_sell_for">لبيعها مقابل %1$s</string>
+    <string name="buysell_copy_amount">نسخ المبلغ</string>
+    <string name="buysell_amount_copied">تم نسخ المبلغ</string>
+    <string name="buysell_send_kas_from_k">أرسل KAS من K</string>
+    <string name="buysell_transaction_id">معرّف المعاملة</string>
+    <string name="buysell_copy_id">نسخ المعرّف</string>
+    <string name="buysell_you_get_about">ستحصل على نحو %1$s %2$s، تُرسل إلى %3$s.</string>
+    <string name="buysell_payment_received">تم استلام الدفعة</string>
+    <string name="buysell_waiting_confirm">بانتظار تأكيدها.</string>
+    <string name="buysell_converting">تقوم ChangeNOW بتحويل عملاتك.</string>
+    <string name="buysell_sending_your">جارٍ إرسال %1$s</string>
+    <string name="buysell_almost_done">أوشكنا على الانتهاء.</string>
+    <string name="buysell_failed_detail">تعذّر على ChangeNOW إتمام هذا الطلب. تحقّق منه على ChangeNOW.</string>
+    <string name="buysell_refunded_detail">أعادت ChangeNOW العملات.</string>
+    <string name="buysell_expired_detail">لم يصل شيء في الوقت المحدد. ابدأ طلبًا جديدًا.</string>
+    <string name="buysell_verifying_detail">تتحقق ChangeNOW من هذا الطلب.</string>
+    <string name="buysell_waiting_payment">بانتظار الدفع</string>
+    <string name="buysell_waiting_payment_detail">أرسل المبلغ أعلاه. تتحدّث هذه الشاشة تلقائيًا.</string>
+    <string name="buysell_purchase_complete">اكتمل الشراء</string>
+    <string name="buysell_sale_complete">اكتمل البيع</string>
+    <string name="buysell_you_paid">دفعت %1$s %2$s</string>
+    <string name="buysell_you_got_about">حصلت على نحو %1$s %2$s</string>
+    <string name="buysell_added_to_portfolio">أُضيفت إلى المحفظة الاستثمارية</string>
+    <string name="buysell_order_sent">تم إرسال الطلب</string>
+</resources>

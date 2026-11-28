@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Expired usernames (iOS b49a021d): the red pill on a name in grace, and the count on Your Usernames. -->
+<resources>
+    <string name="expn_badge_renew_before_grace">समाप्त: ग्रेस खत्म होने से पहले नवीनीकरण करें</string>
+    <string name="expn_one_expired">1 समाप्त</string>
+    <string name="expn_count_expired">%1$d समाप्त</string>
+</resources>

@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">この下書きの対象の投稿が現在見つからないため、まだ投稿できません。下書きに残ります。</string>
     <string name="kaposts_likes">いいね</string>
     <string name="kaposts_no_tips_yet">まだチップはありません。</string>
-    <string name="kaposts_not_on_testnet">KaPost はまだテストネットでは利用できません</string>
-    <string name="kaposts_not_on_testnet_sub">テストネット用の KaPost インデクサーはありません。メインネットで閲覧・投稿するには、設定 > 接続 でテストネットをオフにしてください。</string>
+    <string name="kaposts_not_on_testnet">投稿はまだテストネットでは利用できません</string>
+    <string name="kaposts_not_on_testnet_sub">テストネット用の投稿インデクサーはありません。メインネットで閲覧・投稿するには、設定 &gt; 接続設定 でテストネットをオフにしてください。</string>
     <string name="kaposts_poll_days_left">残り%1$d日</string>
     <string name="kaposts_poll_final_results">%1$s · 最終結果</string>
     <string name="kaposts_poll_hours_left">残り%1$d時間</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">この投稿は現在送信中のため、キャンセルできません。</string>
     <string name="kaposts_scheduled_reminder_title">予約投稿</string>
     <string name="kaposts_scheduled_sending_soon">ネットワークが応答し次第送信します</string>
-    <string name="kaposts_server_not_answering">KaPostのサーバーが応答していません。保存済みの投稿とネットワークからの新しい投稿を表示しています。</string>
+    <string name="kaposts_server_not_answering">投稿のサーバーが応答していません。保存済みの投稿とネットワークからの新しい投稿を表示しています。</string>
     <string name="kaposts_thread_not_confirmed">スレッドの一部がネットワークで確認されなかったため、残りは送信されませんでした。残りを下書きとして保存しますか？最初の投稿はすでに送信されている可能性があるため、再度投稿する前に確認してください。</string>
     <string name="kaposts_tip_from_chatting_note">Chatting Addressからのチップは投稿にカウントされ、チップを送った人として表示されます。</string>
     <string name="kaposts_tip_from_private_note">別のアドレスからのチップは非公開です。投稿者は受け取り、チャットで確認できますが、投稿にはカウントされず、あなたの名前も出ません。</string>

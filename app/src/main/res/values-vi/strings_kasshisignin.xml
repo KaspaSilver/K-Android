@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS b49a021d: K's own "Sign In to Kasshi" sheet before the site asks (KaChatSiteWallet.preConnect) -->
+<resources>
+    <string name="site_signin_title">Đăng nhập Kasshi</string>
+    <string name="site_signin_button">Đăng nhập</string>
+    <string name="site_signin_note">K đăng nhập Kasshi cho bạn bằng địa chỉ bạn chọn: Kasshi thấy địa chỉ và số dư. Thanh toán vẫn hỏi bạn ở đây trước.</string>
+    <string name="site_signin_question">Bạn muốn đăng nhập bằng địa chỉ nào?</string>
+</resources>

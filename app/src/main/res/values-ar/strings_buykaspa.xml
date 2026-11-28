@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS bc0e6ba9 / 6d1971c8 / 896e8194 / 824a30bb: Buy Kaspa with Debit Card, the in-app websites' Reload -->
+<resources>
+    <string name="buykaspa_title">شراء Kaspa</string>
+    <string name="buykaspa_swap_to_kaspa">مبادلة إلى Kaspa</string>
+    <string name="buykaspa_waiting_payment">بانتظار دفعتك</string>
+    <string name="buykaspa_paid">تم الدفع. عملات USDC في الطريق إليك.</string>
+    <string name="buykaspa_bridging">جارٍ النقل إلى Kaspa بصيغة kUSDT، عادةً نحو 20 دقيقة</string>
+    <string name="buykaspa_arrived">وصلت %1$s. بادلها بـ Kaspa.</string>
+    <string name="buykaspa_sign_again">افتح لتوقيع الجسر من جديد</string>
+    <string name="buykaspa_rejected">رفضت Stripe عملية الشراء هذه. لم يُخصم أي مبلغ.</string>
+    <string name="buykaspa_refunded">تعذّر تشغيل الجسر، لذا أُعيدت عملات USDC. افتح لنقلها من جديد.</string>
+    <string name="buykaspa_expired">لم يتم الدفع. لم يُخصم أي مبلغ.</string>
+    <string name="buykaspa_where_land">إلى أين يجب أن تصل عملات kUSDT؟</string>
+    <string name="buykaspa_needs_words">يحتاج K إلى كلمات الاسترداد لهذا الحساب على هذا الهاتف للشراء بالبطاقة.</string>
+    <string name="buykaspa_stripe_note">تبيع Stripe للمشترين في الولايات المتحدة والاتحاد الأوروبي. تظهر رسوم البطاقة ورسوم الشبكة في الصفحة التالية قبل أن تدفع.</string>
+    <string name="buykaspa_lands_on_format">تصل kUSDT إلى: %1$s</string>
+    <string name="buykaspa_can_close">يمكنك إغلاق هذا. يواصل K متابعة طلبك في تبويب المحفظة.</string>
+    <string name="buykaspa_approve_bridge">الموافقة على الجسر</string>
+    <string name="buykaspa_sign_explainer">توقيع واحد يسمح لجسر Trestly بأخذ ما يصل إلى هذا المبلغ من USDC من عنوان K على Ethereum وإيداعه في Kaspa بصيغة kUSDT. لا حاجة إلى ETH، ولا يغادر أي Kaspa محفظتك.</string>
+    <string name="buykaspa_up_to">حتى</string>
+    <string name="buykaspa_lands_on">تصل kUSDT إلى</string>
+    <string name="buykaspa_ends">ينتهي</string>
+    <string name="buykaspa_bridge">الجسر</string>
+    <string name="buykaspa_eth_note">يأتي عنوان K على Ethereum من كلمات هذا الحساب، كما تنشئه أي محفظة Ethereum.</string>
+    <string name="buykaspa_fresh_note">عنوان جديد لم يُستخدم من قبل، ليبقى هذا الشراء منفصلاً عن اسم المستخدم ومحادثاتك.</string>
+    <string name="buykaspa_chatting_note">العنوان الذي يراسلك الناس ويدفعون لك عليه.</string>
+    <string name="buykaspa_fresh_address">عنوان جديد</string>
+    <string name="buykaspa_reload">إعادة التحميل</string>
+</resources>

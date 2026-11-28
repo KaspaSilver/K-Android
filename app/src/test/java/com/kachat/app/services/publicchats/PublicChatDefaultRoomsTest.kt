@@ -2,6 +2,7 @@ package com.kachat.app.services.publicchats
 
 import com.kachat.app.models.FeaturedBroadcastChannels
 import com.kachat.app.repository.PushBannerFetch
+import com.kachat.app.ui.screens.bareUsernameSuggestion
 import com.kachat.app.ui.screens.selectedRoomNames
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -10,7 +11,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** iOS 961fc05a: #report-bugs, indexer-listed rooms, the dropped-room grace and the room push's
- *  wait for its message. */
+ *  wait for its message. iOS 824a30bb: Public Chats starts empty (the one-time clear, joins with
+ *  the bell on, Add Room's list). */
 class PublicChatDefaultRoomsTest {
     private val day = 86_400_000L
 
@@ -32,7 +34,7 @@ class PublicChatDefaultRoomsTest {
     }
 
     @Test
-    fun `indexer rooms leave out built-in and machinery rooms, kachat-bugs under More Rooms`() {
+    fun `indexer rooms leave out built-in and machinery rooms, kachat-bugs in Add Room`() {
         val reported = listOf("kaspa", "report-bugs", "kaspa-german", "chess-arena", "chess-bots",
             "kplay-arcade", "kachat-bugs", "miners", "dev-talk", "bad name")
         assertEquals(listOf("kachat-bugs", "miners", "dev-talk"), FeaturedBroadcastChannels.indexerDefaultNames(reported))
@@ -129,5 +131,87 @@ class PublicChatDefaultRoomsTest {
     @Test
     fun `Select on the rooms page reads the picked rooms`() {
         assertEquals(listOf("kaspa", "miners"), selectedRoomNames(setOf("r:miners", "c:kaspa:qq", "r:kaspa", "g:abc")))
+    }
+
+    // iOS 824a30bb `clearAutoAddedRoomsOnceIfNeeded`: the rooms older builds joined for everyone
+    // leave, unless the bell is on or the room is pinned.
+
+    private val curated = setOf("kaspa", "report-bugs", "kaspa-german", "miners")
+
+    @Test
+    fun `the one-time clear leaves default rooms nobody chose`() {
+        val left = AutoAddedRooms.toLeave(
+            joined = listOf("kaspa" to false, "kaspa-german" to false, "miners" to false),
+            curated = curated, switchedOff = emptySet(), pins = emptySet(),
+            service = setOf("chess-arena"),
+        )
+        assertEquals(listOf("kaspa", "kaspa-german", "miners"), left)
+    }
+
+    @Test
+    fun `a default room with its bell on or pinned stays`() {
+        val left = AutoAddedRooms.toLeave(
+            joined = listOf("kaspa" to true, "report-bugs" to false, "kaspa-german" to false),
+            curated = curated, switchedOff = emptySet(), pins = setOf("report-bugs"),
+            service = emptySet(),
+        )
+        assertEquals(listOf("kaspa-german"), left)
+    }
+
+    @Test
+    fun `a switched-off room goes even with a bell or a pin`() {
+        val left = AutoAddedRooms.toLeave(
+            joined = listOf("kaspa" to true, "old-indexer-room" to true),
+            curated = curated, switchedOff = setOf("kaspa", "old-indexer-room"), pins = setOf("kaspa"),
+            service = emptySet(),
+        )
+        assertEquals(listOf("kaspa", "old-indexer-room"), left)
+    }
+
+    @Test
+    fun `rooms joined by name and machinery rooms are never cleared`() {
+        val left = AutoAddedRooms.toLeave(
+            joined = listOf("my-own-room" to false, "chess-arena" to false, "kplay-arcade" to false),
+            curated = curated + "chess-arena", switchedOff = emptySet(), pins = emptySet(),
+            service = setOf("chess-arena", "kplay-arcade"),
+        )
+        assertTrue(left.isEmpty())
+    }
+
+    @Test
+    fun `a room the person adds joins with its bell on`() {
+        assertTrue(AutoAddedRooms.bellOnJoin("kaspa", alreadyJoined = false, notify = true))
+        assertTrue(AutoAddedRooms.bellOnJoin("my-own-room", alreadyJoined = false, notify = true))
+    }
+
+    @Test
+    fun `a room already joined keeps its bell, and machinery rooms stay silent`() {
+        assertFalse(AutoAddedRooms.bellOnJoin("kaspa", alreadyJoined = true, notify = true))
+        // the chess arena joins with notify false, and it's machinery anyway
+        assertFalse(AutoAddedRooms.bellOnJoin(FeaturedBroadcastChannels.ARENA_CHANNEL, alreadyJoined = false, notify = false))
+        assertFalse(AutoAddedRooms.bellOnJoin(FeaturedBroadcastChannels.ARENA_CHANNEL, alreadyJoined = false, notify = true))
+        for (room in FeaturedBroadcastChannels.HIDDEN_INDEXER_ROOMS) {
+            assertFalse(room, AutoAddedRooms.bellOnJoin(room, alreadyJoined = false, notify = true))
+        }
+        assertFalse(AutoAddedRooms.bellOnJoin("kaspa", alreadyJoined = false, notify = false))
+    }
+
+    @Test
+    fun `Add Room lists the featured rooms, then the indexer's`() {
+        assertEquals(
+            listOf("kaspa", "report-bugs", "kachat-bugs", "miners"),
+            com.kachat.app.ui.screens.addRoomBrowserRooms(FeaturedBroadcastChannels.NAMES, listOf("kachat-bugs", "kaspa", "miners")),
+        )
+    }
+
+    @Test
+    fun `Add Contact's username has no kachat ending`() {
+        val suggest = ::bareUsernameSuggestion
+        assertEquals("alice", suggest(null, "alice.kachat"))
+        assertEquals("Alice", suggest(null, " Alice.KACHAT "))
+        assertEquals("bob", suggest("bob", "alice.kachat"))
+        assertEquals("bob.kas", suggest("bob.kas", null))
+        assertNull(suggest(null, null))
+        assertNull(suggest(null, ".kachat"))
     }
 }

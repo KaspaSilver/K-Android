@@ -248,6 +248,19 @@ class GroupRepository @Inject constructor(
         return entry in settings.groupMutedMembers.first() || entry in settings.groupHiddenMembers.first()
     }
 
+    /**
+     * Whether the push registration watches every group of this account: a silenced group, or a
+     * group with a muted or hidden member, gets no push for them (PushRegistrationManager
+     * `collectWatchedGroupIds`), so the live poll then keeps every beat (iOS
+     * `pushCoversGroupTraffic`, audit 2026-11-27 B4). Whether push itself works is the caller's.
+     */
+    suspend fun pushWatchesEveryGroup(): Boolean {
+        val groups = getGroups().first()
+        val silent = settings.groupSilent.first()
+        val quiet = settings.groupMutedMembers.first() + settings.groupHiddenMembers.first()
+        return pushWatchesAllGroups(groups.map { it.groupId }, silent, quiet)
+    }
+
     /** The members hidden in [groupId] (their addresses), as the thread leaves them out. */
     private fun hiddenMembersIn(groupId: String): Flow<Set<String>> = settings.groupHiddenMembers.map { entries ->
         val prefix = "$groupId|"
@@ -255,8 +268,7 @@ class GroupRepository @Inject constructor(
     }.distinctUntilChanged()
 
     /** Marks a group's thread as read as of now - backs the Group Chats tab's unread badge. Call when its thread screen opens. */
-    suspend fun markGroupRead(groupId: String) {
-        val walletAddress = walletManager.getAddress()
+    suspend fun markGroupRead(groupId: String, walletAddress: String = walletManager.getAddress()) {
         database.groupDao().markGroupRead(groupId, walletAddress, System.currentTimeMillis())
     }
 
@@ -517,22 +529,25 @@ class GroupRepository @Inject constructor(
     }
 
     /**
-     * [decryptEntity] memoised by txId. A thread re-emits in full on every insert, so without
-     * this an open group re-ran ChaCha over its entire history for each arriving message. Rows
-     * are immutable once stored (only `deliveryStatus` changes, which is plaintext), so a hit is
-     * always valid; the cache is bounded and evicts oldest-first.
+     * [decryptEntity] memoised by wallet and txId. A thread re-emits in full on every insert, so
+     * without this an open group re-ran ChaCha over its entire history for each arriving message.
+     * The same transaction is a row under each account on this device that holds the group, with
+     * its own sender and direction, so the key carries the wallet and the plaintext columns are
+     * always taken from the row ([withRowState]): keyed by txId alone, a message showed after an
+     * account switch as the other account's (outgoing, or the wrong sender). Bounded, evicting
+     * oldest-first; a media part's large content isn't kept ([GROUP_DECRYPT_CACHE_MAX_CONTENT]).
      */
     private val decryptedCache = object : LinkedHashMap<String, GroupMessage>(256, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, GroupMessage>?): Boolean = size > 4000
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, GroupMessage>?): Boolean = size > GROUP_DECRYPT_CACHE_MAX_ENTRIES
     }
 
     private fun decryptCached(entity: GroupMessageEntity, bag: GroupBag, groupIdBytes: ByteArray): GroupMessage? {
-        synchronized(decryptedCache) { decryptedCache[entity.txId] }?.let { cached ->
-            // deliveryStatus is the one mutable field and is not part of the ciphertext.
-            return if (cached.deliveryStatus == entity.deliveryStatus) cached else cached.copy(deliveryStatus = entity.deliveryStatus)
-        }
+        val key = groupDecryptCacheKey(entity.walletAddress, entity.txId)
+        synchronized(decryptedCache) { decryptedCache[key] }?.let { cached -> return cached.withRowState(entity) }
         val decrypted = decryptEntity(entity, bag, groupIdBytes) ?: return null
-        synchronized(decryptedCache) { decryptedCache[entity.txId] = decrypted }
+        if (decrypted.content.length <= GROUP_DECRYPT_CACHE_MAX_CONTENT) {
+            synchronized(decryptedCache) { decryptedCache[key] = decrypted }
+        }
         return decrypted
     }
 
@@ -903,6 +918,8 @@ class GroupRepository @Inject constructor(
         database.messageEditDao().deleteAllForGroup(groupId, walletAddress)
         database.groupDao().deleteGroup(groupId, walletAddress)
         forgetGroupHistoryRecords(walletAddress, groupId)
+        // Its lanes' walk marks go too: joined again later, its history is walked from the start.
+        deepBackfilledGroupKeys.removeWhere(walletAddress) { it.startsWith("gcomm|$groupId|") }
         // Tombstone it so discovery/recovery never re-adds it, and publish an on-chain delete
         // marker (best-effort; the sync backfill retries) so the delete survives a seedless
         // re-import too. Local intent is recorded now; the chain write is best-effort.
@@ -1161,8 +1178,13 @@ class GroupRepository @Inject constructor(
 
         val nowMs = System.currentTimeMillis()
         val pendingId: String
-        if (retryOfTxId != null && database.groupDao().getMessage(retryOfTxId, walletAddress) != null) {
-            // Retry: the claimed row is the pending placeholder, in place.
+        if (retryOfTxId != null && database.groupDao().rekeyRetryPlaceholder(
+                retryOfTxId, walletAddress, senderId.toHexString(), bag.currentEpoch, msgId.toHexString(), ciphertext.toHexString(),
+            ) > 0
+        ) {
+            // Retry: the claimed row is the pending placeholder, in place - re-sealed first under
+            // the new msg_id, so the copy that comes back (or the next launch's settle) finds it
+            // and replaces it instead of leaving a second, Not confirmed bubble or resending it.
             pendingId = retryOfTxId
         } else {
             pendingId = "pending_${UUID.randomUUID()}"
@@ -1585,7 +1607,7 @@ class GroupRepository @Inject constructor(
                     // this one with readGroupMessagePush. Only a device with no push banners here.
                     // NotificationHelper's txId dedupe additionally collapses a racing FCM push
                     // for the same reaction.
-                    if (!alreadyApplied && senderAddress != walletAddress && !isBackfill(blockTimestamp) && !pushState.isActive) {
+                    if (!alreadyApplied && senderAddress != walletAddress && !isBackfill(blockTimestamp, walletAddress) && !pushState.isActive) {
                         val bannerText = groupReactionBannerText(group, reaction, senderAddress, walletAddress)
                         if (bannerText != null) {
                             notificationHelper.showGroup(
@@ -1649,10 +1671,17 @@ class GroupRepository @Inject constructor(
                 // the group, preserved across roster and epoch updates by upsertGroup's copy(),
                 // so an add or remove cannot re-arm the flood. Two minutes of slack for clock skew
                 // between devices. Matches iOS's floor in maybePostGroupLocalNotification.
-                if (isBackfill(blockTimestamp) || blockTimestamp < group.createdAt - 120_000L) {
-                    // History being backfilled: keep the group read and silent - only live
-                    // traffic notifies or counts unread.
-                    markGroupRead(group.groupId)
+                val backfill = isBackfill(blockTimestamp, walletAddress)
+                if (backfill || blockTimestamp < group.createdAt - 120_000L) {
+                    // History being backfilled: silent - only live traffic notifies. Its read
+                    // state is left alone: marking the group read as of now here wiped the
+                    // unread count of live messages that came in before it (an old message
+                    // turned up by a catch-up or a repair walk). A group never opened on this
+                    // device gets its marker at the account's import moment instead, so the
+                    // history before it doesn't count (iOS `seedImportReadMarker`).
+                    if (backfill) {
+                        database.groupDao().seedGroupReadMarker(group.groupId, walletAddress, settings.liveNotificationBaseline(walletAddress))
+                    }
                     return
                 }
                 // A message that @'s you: a row in Profile's bell, whatever the group's
@@ -1661,7 +1690,7 @@ class GroupRepository @Inject constructor(
                 if (notificationHelper.isViewingGroup(group.groupId)) {
                     // Already looking at this group's thread right now - keep it marked read
                     // instead of letting the badge tick up for a message arriving live.
-                    markGroupRead(group.groupId)
+                    markGroupRead(group.groupId, walletAddress)
                 }
                 // The remote push is the only banner source while push is active, foreground or
                 // background (iOS ChatService.localBannersEnabled): the FCM handler words this one
@@ -2158,7 +2187,7 @@ class GroupRepository @Inject constructor(
         // (iOS ChatService.localBannersEnabled), whichever of the two got here first.
         if (isNewInvite) {
             when {
-                isBackfill(blockTime) -> notificationHelper.markGroupInviteAnnounced(key)
+                isBackfill(blockTime, walletAddress) -> notificationHelper.markGroupInviteAnnounced(key)
                 !pushState.isActive -> notificationHelper.showGroupInvite(key, payload.name, dedupeTxId = txId)
                 txId != null -> {
                     if (invitesHeldByTx.size >= 256) invitesHeldByTx.clear()
@@ -2322,9 +2351,10 @@ class GroupRepository @Inject constructor(
 
     /** See [AppSettingsRepository.liveNotificationBaseline]: history older than this account's
      *  first sync on this device is backfill — kept read and silent. A null [blockTime]
-     *  (live block scan, no timestamp in hand) always counts as live. */
-    private suspend fun isBackfill(blockTime: Long?): Boolean {
-        val walletAddress = try { walletManager.getAddress() } catch (e: Exception) { return true }
+     *  (live block scan, no timestamp in hand) always counts as live. [owner]: the account the
+     *  row is filed under, which may no longer be the one signed in. */
+    private suspend fun isBackfill(blockTime: Long?, owner: String? = null): Boolean {
+        val walletAddress = owner ?: try { walletManager.getAddress() } catch (e: Exception) { return true }
         return (blockTime ?: Long.MAX_VALUE) < settings.liveNotificationBaseline(walletAddress)
     }
 
@@ -2461,7 +2491,7 @@ class GroupRepository @Inject constructor(
         // it has lost them, and the first root back may be an old one from the walk that restores
         // them, so what's stored is no baseline to report changes from.
         val existingEntity = database.groupDao().getGroup(payload.groupId, walletAddress)
-        val backfill = isBackfill(blockTime)
+        val backfill = isBackfill(blockTime, walletAddress)
         val previousForDiff = existingEntity?.takeIf { existingBag != null }
         val previousRosterForDiff: List<GroupMember>? = previousForDiff?.let(::membersOf)
 
@@ -2474,10 +2504,12 @@ class GroupRepository @Inject constructor(
             // carry over explicitly. Without this, every received root (rename, roster change,
             // epoch rotation, recovery root) reset lastReadAt to null and flipped the whole
             // thread's messages back to unread. A backfilled first-time join (group re-discovered
-            // during an import's history sync) stamps "now" so restored history never surfaces as
-            // an unread badge - only a genuinely live invite stays null ("new group" badge).
+            // during an import's history sync) is marked read at the import moment, so restored
+            // history never surfaces as an unread badge but what arrived after it still does
+            // (iOS `seedImportReadMarker`) - only a genuinely live invite stays null ("new group"
+            // badge).
             createdAt = existingEntity?.createdAt ?: System.currentTimeMillis(),
-            lastReadAt = existingEntity?.lastReadAt ?: if (backfill) System.currentTimeMillis() else null,
+            lastReadAt = existingEntity?.lastReadAt ?: if (backfill) settings.liveNotificationBaseline(walletAddress) else null,
             // Group photo rides a separate gctl_photo control, not the root - preserve any we hold.
             photoHex = existingEntity?.photoHex
         )
@@ -3108,7 +3140,7 @@ class GroupRepository @Inject constructor(
         for (key in controlKeys) database.groupDao().deleteGroupSyncCursorsWithPrefix(walletAddress, key)
         // Clear the one-shot deep-backfill marks too, or each walk stops at the first page
         // instead of going back through the whole stream.
-        deepBackfilledGroupKeys.removeAll { it.startsWith("gcomm|${group.groupId}|") || it in controlKeys }
+        deepBackfilledGroupKeys.removeWhere(walletAddress) { it.startsWith("gcomm|${group.groupId}|") || it in controlKeys }
     }
 
     /**
@@ -3215,7 +3247,7 @@ class GroupRepository @Inject constructor(
         // The first run per key starts from NOTHING, not the stored cursor - see
         // [deepBackfilledGroupKeys]. Everything a pre-paging sync skipped lives before that
         // cursor, and walking forward from it can never reach any of it.
-        val deep = syncKey !in deepBackfilledGroupKeys
+        val deep = !deepBackfilledGroupKeys.contains(walletAddress, syncKey)
         var cursor: String? = if (deep) null else database.groupDao().getGroupSyncCursor(syncKey, walletAddress)
         var pagesLeft = 40
         while (pagesLeft > 0) {
@@ -3227,7 +3259,7 @@ class GroupRepository @Inject constructor(
                 return
             }
             if (messages.isEmpty()) {
-                deepBackfilledGroupKeys.add(syncKey)
+                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
                 return
             }
             cursor = messages.lastOrNull()?.cursor
@@ -3244,7 +3276,7 @@ class GroupRepository @Inject constructor(
             // A short page is the last page. A FAILED fetch returns without marking, so a run
             // the indexer cut short retries from the beginning rather than leaving a hole behind.
             if (messages.size < 50) {
-                deepBackfilledGroupKeys.add(syncKey)
+                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
                 return
             }
         }
@@ -3252,7 +3284,7 @@ class GroupRepository @Inject constructor(
         // so resuming from it next run loses nothing - and marking the key is the only thing that
         // makes that resume happen. Without this, a stream longer than 2000 items restarted from
         // nothing every run and could never reach its own newest end.
-        deepBackfilledGroupKeys.add(syncKey)
+        deepBackfilledGroupKeys.mark(walletAddress, syncKey)
     }
 
     /**
@@ -3265,7 +3297,7 @@ class GroupRepository @Inject constructor(
         // Deep-backfilled once, like gcomm - and it matters more here. A skipped control message
         // is a skipped epoch root, and a member holding no root for the epoch an old message was
         // sent at cannot DECRYPT it, however many times it is fetched.
-        val deep = syncKey !in deepBackfilledGroupKeys
+        val deep = !deepBackfilledGroupKeys.contains(walletAddress, syncKey)
         var cursor: String? = if (deep) null else database.groupDao().getGroupSyncCursor(syncKey, walletAddress)
         var pagesLeft = 40
         while (pagesLeft > 0) {
@@ -3277,7 +3309,7 @@ class GroupRepository @Inject constructor(
                 return
             }
             if (messages.isEmpty()) {
-                deepBackfilledGroupKeys.add(syncKey)
+                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
                 return
             }
             cursor = messages.lastOrNull()?.cursor
@@ -3291,7 +3323,7 @@ class GroupRepository @Inject constructor(
             // good.
             advanceGroupSyncCursor(syncKey, walletAddress, cursor)
             if (messages.size < 50) {
-                deepBackfilledGroupKeys.add(syncKey)
+                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
                 return
             }
         }
@@ -3299,7 +3331,7 @@ class GroupRepository @Inject constructor(
         // so resuming from it next run loses nothing - and marking the key is the only thing that
         // makes that resume happen. Without this, a stream longer than 2000 items restarted from
         // nothing every run and could never reach its own newest end.
-        deepBackfilledGroupKeys.add(syncKey)
+        deepBackfilledGroupKeys.mark(walletAddress, syncKey)
     }
 
     /**
@@ -3310,7 +3342,7 @@ class GroupRepository @Inject constructor(
         val syncKey = "gctl-recipient|${walletAddress.lowercase()}"
         // Paged like the other two. This is the path a seedless import discovers groups through,
         // so a wallet in more than 50 lifetime invites would otherwise find only some of them.
-        val deep = syncKey !in deepBackfilledGroupKeys
+        val deep = !deepBackfilledGroupKeys.contains(walletAddress, syncKey)
         var cursor: String? = if (deep) null else database.groupDao().getGroupSyncCursor(syncKey, walletAddress)
         var pagesLeft = 40
         while (pagesLeft > 0) {
@@ -3322,7 +3354,7 @@ class GroupRepository @Inject constructor(
                 return
             }
             if (messages.isEmpty()) {
-                deepBackfilledGroupKeys.add(syncKey)
+                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
                 return
             }
             cursor = messages.lastOrNull()?.cursor
@@ -3336,7 +3368,7 @@ class GroupRepository @Inject constructor(
             // good.
             advanceGroupSyncCursor(syncKey, walletAddress, cursor)
             if (messages.size < 50) {
-                deepBackfilledGroupKeys.add(syncKey)
+                deepBackfilledGroupKeys.mark(walletAddress, syncKey)
                 return
             }
         }
@@ -3344,20 +3376,29 @@ class GroupRepository @Inject constructor(
         // so resuming from it next run loses nothing - and marking the key is the only thing that
         // makes that resume happen. Without this, a stream longer than 2000 items restarted from
         // nothing every run and could never reach its own newest end.
-        deepBackfilledGroupKeys.add(syncKey)
+        deepBackfilledGroupKeys.mark(walletAddress, syncKey)
     }
 
     /**
-     * Sync keys whose whole history has been walked from the beginning this launch.
+     * Sync keys whose whole history has been walked from the beginning, per wallet, kept across
+     * launches (iOS `kachat_group_deep_backfilled`, saved per account).
      *
      * A cursor only ever moves FORWARD, and until catch-up learned to page it advanced past a
      * whole 50-row page per sync - so on a device that synced while a group already had history,
      * everything before the cursor was skipped and walking forward can never reach it. The first
-     * run per key per launch starts from nothing instead, which the DAO's txId dedupe makes free
-     * to repeat.
+     * run per key starts from nothing instead, which the DAO's txId dedupe makes free to repeat.
+     * Kept in memory only, every launch re-walked every group's lanes and control streams from
+     * the beginning. Cleared with a repair's cursors, a deleted group and Delete Account.
      */
     // Concurrent: forceRefreshGroup's walk can overlap a catch-up (audit 2026-11-25 S10).
-    private val deepBackfilledGroupKeys: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+    private val deepBackfilledGroupKeys = GroupDeepBackfillMarks(
+        load = { wallet -> deepBackfilledPrefs.getStringSet(wallet, null)?.toSet().orEmpty() },
+        save = { wallet, keys ->
+            if (keys.isEmpty()) deepBackfilledPrefs.edit().remove(wallet).apply()
+            else deepBackfilledPrefs.edit().putStringSet(wallet, keys).apply()
+        },
+    )
+    private val deepBackfilledPrefs by lazy { context.getSharedPreferences("kachat_group_deep_backfilled", Context.MODE_PRIVATE) }
 
     /**
      * One fetched row's ingest, on its own: a row that throws is logged and skipped. Without this
@@ -3552,6 +3593,7 @@ class GroupRepository @Inject constructor(
         database.groupDao().deleteAllGroups(walletAddress)
         database.groupDao().deleteAllMessages(walletAddress)
         database.groupDao().deleteGroupSyncCursorsForWallet(walletAddress)
+        deepBackfilledGroupKeys.clearWallet(walletAddress)
         groupSecretStore.clearInviteData(walletAddress)
         withContext(Dispatchers.IO) { groupSeenMessages.forgetWallet(walletAddress) }
         chainCatchUpCursors.keys.removeAll { it.startsWith("$walletAddress|") }
@@ -3559,6 +3601,58 @@ class GroupRepository @Inject constructor(
         inviteStateChanged()
         withContext(Dispatchers.IO) { KaChatDatabase.emptyWriteAheadLog(database) }
     }
+}
+
+/** [GroupRepository.decryptedCache]'s bound: entries, and the longest content kept (a long
+ *  text fits; a media part's base64 is decrypted again when asked for, not held). */
+internal const val GROUP_DECRYPT_CACHE_MAX_ENTRIES = 2000
+internal const val GROUP_DECRYPT_CACHE_MAX_CONTENT = 16 * 1024
+
+/** The decrypt cache's key: the same transaction is a row under each account holding the group. */
+internal fun groupDecryptCacheKey(walletAddress: String, txId: String): String = "$walletAddress|$txId"
+
+/** A cached decrypt with [row]'s own plaintext columns - its sender, direction, status and time,
+ *  which are the account's and can change - over the cached ones. */
+internal fun GroupMessage.withRowState(row: GroupMessageEntity): GroupMessage =
+    if (senderAddress == row.senderAddress && isOutgoing == row.isOutgoing &&
+        deliveryStatus == row.deliveryStatus && blockTimestamp == row.blockTimestamp
+    ) this
+    else copy(senderAddress = row.senderAddress, isOutgoing = row.isOutgoing, deliveryStatus = row.deliveryStatus, blockTimestamp = row.blockTimestamp)
+
+/**
+ * Which group sync streams each wallet has walked from the beginning (see
+ * [GroupRepository]'s `deepBackfilledGroupKeys`): read from [load] the first time a wallet is
+ * asked about, every change written back through [save] whole.
+ */
+internal class GroupDeepBackfillMarks(
+    private val load: (wallet: String) -> Set<String>,
+    private val save: (wallet: String, keys: Set<String>) -> Unit,
+) {
+    private val byWallet = java.util.concurrent.ConcurrentHashMap<String, MutableSet<String>>()
+
+    private fun keysFor(wallet: String): MutableSet<String> = byWallet.computeIfAbsent(wallet) {
+        java.util.concurrent.ConcurrentHashMap.newKeySet<String>().apply { addAll(load(wallet)) }
+    }
+
+    fun contains(wallet: String, syncKey: String): Boolean = syncKey in keysFor(wallet)
+
+    fun mark(wallet: String, syncKey: String) {
+        val keys = keysFor(wallet)
+        if (keys.add(syncKey)) persist(wallet, keys)
+    }
+
+    fun removeWhere(wallet: String, predicate: (String) -> Boolean) {
+        val keys = keysFor(wallet)
+        if (keys.removeIf { predicate(it) }) persist(wallet, keys)
+    }
+
+    fun clearWallet(wallet: String) = synchronized(this) {
+        byWallet.remove(wallet)
+        save(wallet, emptySet())
+    }
+
+    // The snapshot is taken under the lock, so the last write always holds every mark made.
+    private fun persist(wallet: String, keys: Set<String>) = synchronized(this) { save(wallet, keys.toSet()) }
 }
 
 /** A queued group send whose turn came after another account was signed in (iOS 83806b3d
@@ -3617,3 +3711,11 @@ private const val FORMER_MEMBER_LANE_MS = 30L * 24 * 60 * 60 * 1000
 private const val MAX_PENDING_GROUP_INVITES = 50
 
 private const val MAX_PENDING_GROUP_INVITES_PER_ADMIN = 5
+
+/**
+ * Whether the push registration watches every one of [groupIds]: none is in [silent], and none
+ * has a member in [quietEntries] (`"<groupId>|<address>"`, muted or hidden) - those get no push
+ * (iOS `pushCoversGroupTraffic`, audit 2026-11-27 B4).
+ */
+internal fun pushWatchesAllGroups(groupIds: List<String>, silent: Set<String>, quietEntries: Set<String>): Boolean =
+    groupIds.all { id -> id !in silent && quietEntries.none { it.startsWith("$id|") } }

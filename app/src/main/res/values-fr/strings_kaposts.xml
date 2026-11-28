@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">La publication liée à ce brouillon est introuvable pour le moment, il ne peut donc pas encore être publié. Il reste dans vos brouillons.</string>
     <string name="kaposts_likes">J\'aime</string>
     <string name="kaposts_no_tips_yet">Pas encore de pourboires.</string>
-    <string name="kaposts_not_on_testnet">KaPost n\'est pas encore disponible sur le Testnet</string>
-    <string name="kaposts_not_on_testnet_sub">Il n\'existe pas d\'indexeur KaPost pour le testnet. Désactivez Testnet dans Réglages > Connexion pour lire et publier sur le mainnet.</string>
+    <string name="kaposts_not_on_testnet">Les posts ne sont pas encore disponibles sur le Testnet</string>
+    <string name="kaposts_not_on_testnet_sub">Il n\'existe pas d\'indexeur de Publications pour le testnet. Désactivez Testnet dans Réglages &gt; Paramètres de connexion pour lire et publier sur le mainnet.</string>
     <string name="kaposts_poll_days_left">%1$d j restants</string>
     <string name="kaposts_poll_final_results">%1$s · Résultats finaux</string>
     <string name="kaposts_poll_hours_left">%1$d h restantes</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">Cette publication est en cours d\'envoi, elle ne peut donc pas être annulée.</string>
     <string name="kaposts_scheduled_reminder_title">Publication programmée</string>
     <string name="kaposts_scheduled_sending_soon">Envoi dès que le réseau répondra</string>
-    <string name="kaposts_server_not_answering">Le serveur de KaPost ne répond pas. Affichage des publications enregistrées et des nouvelles venant du réseau.</string>
+    <string name="kaposts_server_not_answering">Le serveur des Publications ne répond pas. Affichage des publications enregistrées et des nouvelles venant du réseau.</string>
     <string name="kaposts_thread_not_confirmed">Le réseau n\'a pas confirmé une partie de votre fil, le reste n\'a donc pas été envoyé. Enregistrer ce qui reste comme brouillon ? Sa première publication est peut-être passée, vérifiez avant de la republier.</string>
     <string name="kaposts_tip_from_chatting_note">Depuis votre Chatting Address, le pourboire compte sur la publication et vous apparaissez parmi les donateurs.</string>
     <string name="kaposts_tip_from_private_note">Depuis une autre adresse, le pourboire est privé : l\'auteur le reçoit et le voit dans votre chat, mais il ne compte pas sur la publication et ne vous nomme pas.</string>

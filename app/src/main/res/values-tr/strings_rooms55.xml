@@ -2,14 +2,9 @@
 <!-- Public chats as the KaChat tab's second page, indexer-listed rooms (iOS 961fc05a). -->
 <resources>
     <string name="r55_search_public_chats">Herkese açık sohbetlerde ara</string>
-    <string name="r55_no_public_chats">Herkese Açık Sohbet Yok</string>
-    <string name="r55_no_public_chats_hint">Herkese açık bir odaya katılmak veya oda oluşturmak için + simgesine dokunun.</string>
     <string name="r55_page_cycle_hint">Sohbetlerinle herkese açık sohbetler arasında geçiş yapar</string>
-    <string name="r55_more_rooms">Diğer Odalar</string>
-    <string name="r55_more_rooms_footer">K\'nin herkese açık sohbetleri okuduğu dizinleyiciye eklenen odalar.</string>
     <string name="r55_delete_one_public_chat">1 herkese açık sohbet silinsin mi?</string>
     <string name="r55_delete_n_public_chats">%1$d herkese açık sohbet silinsin mi?</string>
-    <string name="r55_delete_public_chats_message">Varsayılan herkese açık sohbetler kapatılır (Varsayılan Herkese Açık Sohbetleri Düzenle\'den yeniden aç). Eklediğin odalar mesajlarıyla birlikte bu cihazdan silinir.</string>
     <string name="r55_delete_for_everyone">Herkesten Sil</string>
     <string name="r55_delete_for_everyone_subtitle">K kullanan herkes için bunu bu odadan kaldırır.</string>
     <string name="r55_delete_for_everyone_q">Herkesten silinsin mi?</string>

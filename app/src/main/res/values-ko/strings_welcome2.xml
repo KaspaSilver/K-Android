@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K을 사용하면 Kaspa 네트워크 자체에서 직접 메시지를 보내고 받을 수 있습니다. 메시지를 보낼 때 수수료를 지불하려면 Kaspa가 필요합니다. 지불하는 수수료는 네트워크를 보호하는 채굴자에게 전달됩니다. 5 Kaspa로 약 2,500개의 메시지를 보낼 수 있습니다.</string>
+    <string name="welcome2_get_username">사용자 이름 받기</string>
+    <string name="welcome2_get_username_caption">\@alice 같은 사용자 이름을 받으면 긴 주소 없이도 사람들이 찾아서 메시지를 보낼 수 있습니다. Kaspa Hub &gt; 사용자 이름에서 받으세요.</string>
+    <string name="welcome2_share_title">채팅 주소 공유</string>
+    <string name="welcome2_share_body">다른 사람에게 보내면 K에서 나를 찾아 메시지를 보낼 수 있습니다.</string>
+</resources>

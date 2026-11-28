@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Manage Addresses / Manage kUSDT address cards, the + sheet -->
+<resources>
+    <string name="addrcard_tap_to_view_history">Ketuk untuk Melihat Riwayat</string>
+    <string name="addrcard_quantum_protected">Terlindungi Kuantum</string>
+    <string name="addrcard_not_quantum_protected">Tidak Terlindungi Kuantum</string>
+    <string name="addrcard_new_address">Alamat Baru</string>
+    <string name="addrcard_regular_address">Alamat Biasa</string>
+    <string name="addrcard_regular_address_subtitle">Berfungsi untuk semuanya: Kaspa dan kUSDT.</string>
+    <string name="addrcard_quantum_protected_address">Alamat Terlindungi Kuantum</string>
+    <string name="addrcard_quantum_protected_address_subtitle">Menyembunyikan kuncinya sampai digunakan untuk mengirim. Hanya Kaspa.</string>
+    <string name="addrcard_no_kusdt_on_quantum">kUSDT tidak bisa dikirim ke atau diterima di alamat terlindungi kuantum.</string>
+</resources>

@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">이 임시 저장 글의 대상 게시물을 지금 찾을 수 없어 아직 게시할 수 없습니다. 임시 저장에 그대로 남아 있습니다.</string>
     <string name="kaposts_likes">좋아요</string>
     <string name="kaposts_no_tips_yet">아직 팁이 없습니다.</string>
-    <string name="kaposts_not_on_testnet">KaPost는 아직 테스트넷에서 사용할 수 없습니다</string>
-    <string name="kaposts_not_on_testnet_sub">테스트넷용 KaPost 인덱서가 없습니다. 메인넷에서 읽고 게시하려면 설정 > 연결에서 테스트넷을 끄세요.</string>
+    <string name="kaposts_not_on_testnet">게시물은 아직 테스트넷에서 사용할 수 없습니다</string>
+    <string name="kaposts_not_on_testnet_sub">테스트넷용 게시물 인덱서가 없습니다. 메인넷에서 읽고 게시하려면 설정 &gt; 연결 설정에서 테스트넷을 끄세요.</string>
     <string name="kaposts_poll_days_left">%1$d일 남음</string>
     <string name="kaposts_poll_final_results">%1$s · 최종 결과</string>
     <string name="kaposts_poll_hours_left">%1$d시간 남음</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">이 게시물은 지금 전송 중이라 취소할 수 없습니다.</string>
     <string name="kaposts_scheduled_reminder_title">예약된 게시물</string>
     <string name="kaposts_scheduled_sending_soon">네트워크가 응답하는 대로 보냅니다</string>
-    <string name="kaposts_server_not_answering">KaPost 서버가 응답하지 않습니다. 저장된 게시물과 네트워크의 새 게시물을 표시합니다.</string>
+    <string name="kaposts_server_not_answering">게시물 서버가 응답하지 않습니다. 저장된 게시물과 네트워크의 새 게시물을 보여 줍니다.</string>
     <string name="kaposts_thread_not_confirmed">네트워크에서 스레드 일부를 확인하지 못해 나머지는 전송되지 않았습니다. 남은 내용을 임시 저장할까요? 첫 번째 게시물은 이미 전송되었을 수 있으니 다시 게시하기 전에 확인하세요.</string>
     <string name="kaposts_tip_from_chatting_note">Chatting Address에서 보낸 팁은 게시물에 집계되고 팁을 보낸 사람으로 표시됩니다.</string>
     <string name="kaposts_tip_from_private_note">다른 주소에서 보낸 팁은 비공개입니다. 작성자는 받고 채팅에서 볼 수 있지만, 게시물에 집계되지 않고 이름도 나오지 않습니다.</string>

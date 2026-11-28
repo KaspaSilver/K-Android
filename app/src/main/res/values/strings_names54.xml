@@ -5,9 +5,8 @@
     <string name="names54_no_username_found">No username found</string>
     <string name="names54_use_their_username">Use Their Username</string>
     <string name="names54_kaspa_address_or_username">Kaspa Address or Username</string>
-    <string name="names54_enter_address_or_username_example">Enter a Kaspa address (kaspa:...) or a username (e.g. alice.kachat).</string>
+    <string name="names54_enter_address_or_username_example">Enter a Kaspa address (kaspa:...) or a username (e.g. @alice).</string>
     <string name="names54_members_footer">Pick people from your contacts, or add anyone by Kaspa address or username.</string>
-    <string name="names54_finds_addresses_balance_or_username">Finds addresses holding a balance or a username.</string>
     <string name="names54_no_addresses_balance_or_username_found">No addresses with a balance or username found.</string>
     <string name="names54_found_one_address_balance_username">Found 1 address with a balance or username.</string>
     <string name="names54_found_n_addresses_balance_username">Found %1$d addresses with a balance or username.</string>

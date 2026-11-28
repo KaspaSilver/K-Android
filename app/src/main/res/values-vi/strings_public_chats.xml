@@ -33,15 +33,11 @@
     <string name="pc_notifications_off_toast">Thông báo đã tắt cho cuộc trò chuyện công khai này</string>
     <string name="pc_notifications_on_closed_toast">Bạn sẽ nhận thông báo tin nhắn mới trong cuộc trò chuyện công khai này, kể cả khi ứng dụng đã đóng</string>
     <string name="pc_notifications_on_open_toast">Bạn sẽ nhận thông báo tin nhắn mới trong cuộc trò chuyện công khai này miễn là ứng dụng còn mở</string>
-    <string name="pc_default_room_off_toast">#%1$s đã tắt - bật lại trong Sửa trò chuyện công khai mặc định</string>
     <string name="pc_delete_room_title">Xóa #%1$s?</string>
     <string name="pc_delete_room_message">Mọi tin nhắn đã lưu của phòng này trên thiết bị này sẽ bị xóa. Không thể hoàn tác - tham gia lại sau này sẽ bắt đầu mà không có lịch sử.</string>
     <string name="pc_delete_room_row_subtitle">Xóa phòng này và tin nhắn của nó khỏi thiết bị này.</string>
     <string name="pc_keep">Giữ lại</string>
     <string name="pc_keep_subtitle">Giữ nguyên phòng.</string>
-    <string name="pc_new_public_chat">Phòng chat công khai mới</string>
-    <string name="pc_edit_default_public_chats">Sửa trò chuyện công khai mặc định</string>
-    <string name="pc_new_public_chat_explainer">Bất kỳ ai tham gia cùng tên kênh đều có thể xem và nhắn ở đó - không có chủ sở hữu và không cần lời mời.</string>
     <string name="pc_join">Tham gia</string>
     <string name="pc_channel_name_rules">Tên kênh phải từ 1-%1$d ký tự, không có khoảng trắng hay dấu hai chấm.</string>
     <string name="pc_join_failed">Đã xảy ra lỗi khi tham gia kênh đó.</string>
@@ -49,7 +45,7 @@
     <string name="pc_report_subtitle">Báo cáo nội dung lạm dụng hoặc phản cảm. Mở một email có đính kèm tin nhắn này.</string>
     <string name="pc_block_name">Block %1$s</string>
     <string name="pc_block_subtitle">Ẩn bài đăng và tin nhắn phòng của họ, và ngăn họ tương tác với bạn.</string>
-    <string name="pc_sender_view_profile_subtitle">Hồ sơ KaPost của họ: bài đăng, trả lời và người theo dõi.</string>
+    <string name="pc_sender_view_profile_subtitle">Hồ sơ: bài viết, trả lời và người theo dõi.</string>
     <string name="pc_sender_send_kaspa_subtitle">Gửi Kaspa đến địa chỉ của họ.</string>
     <string name="pc_sender_copy_address_subtitle">Sao chép địa chỉ Kaspa của họ.</string>
     <string name="pc_original_message_not_loaded">Chưa tải tin nhắn gốc</string>

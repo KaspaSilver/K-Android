@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Received KAS notices and in-app Posts banners in the app's language (iOS audit 2026-11-27 M10) -->
+    <string name="notice_received">%1$s دریافت شد</string>
+    <string name="notice_balance_increased">موجودی %1$s افزایش یافت</string>
+    <string name="notice_chatting_address">آدرس گفتگو %1$s</string>
+    <string name="notice_spending_address">آدرس خرج %1$s</string>
+    <string name="notice_cold_storage_address">آدرس ذخیره سرد %1$s (%2$s)</string>
+    <string name="notice_post_liked">پست شما را پسندید</string>
+    <string name="notice_post_disliked">پست شما را نپسندید</string>
+    <string name="notice_post_tipped">به پست شما انعام داد</string>
+    <string name="notice_post_tipped_amount">به پست شما انعام داد: %1$s</string>
+    <string name="notice_post_replied">به پست شما پاسخ داد</string>
+    <string name="notice_post_quoted">پست شما را نقل کرد</string>
+    <string name="notice_post_reposted">پست شما را بازنشر کرد</string>
+    <string name="notice_followed_you">شما را دنبال کرد</string>
+    <string name="notice_post_mentioned">در یک پست از شما نام برد</string>
+    <string name="notice_post_interacted">با پست شما تعامل کرد</string>
+</resources>

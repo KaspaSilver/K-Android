@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: the shorter Welcome Guide -->
+<resources>
+    <string name="welcome2_fees_body">K आपको सीधे Kaspa नेटवर्क पर संदेश भेजने और प्राप्त करने देता है। अपने संदेश भेजते समय शुल्क चुकाने के लिए Kaspa आवश्यक है। आप जो शुल्क चुकाते हैं वह नेटवर्क को सुरक्षित रखने वाले माइनर्स के पास जाता है। 5 कैस्पा से आप लगभग 2,500 संदेश भेज सकते हैं।</string>
+    <string name="welcome2_get_username">यूज़रनेम लें</string>
+    <string name="welcome2_get_username_caption">\@alice जैसा यूज़रनेम लें, ताकि लोग आपके लंबे पते के बिना आपको ढूँढकर संदेश भेज सकें। इसे Kaspa Hub &gt; उपयोगकर्ता नाम में पाएँ।</string>
+    <string name="welcome2_share_title">अपना चैटिंग पता शेयर करें</string>
+    <string name="welcome2_share_body">इसे किसी को भेजें ताकि वह K पर आपको ढूँढकर संदेश भेज सके।</string>
+</resources>

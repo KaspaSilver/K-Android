@@ -122,6 +122,16 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="kachat" android:host="hub" />
             </intent-filter>
+            <!-- K's own Explorer (iOS bfb902b7 ExplorerDeepLink): the K Explorer setting's
+                 "View in Explorer" links, kachat://explorer-tx/<id> and
+                 kachat://explorer-address/<address>, open that page in Kaspa Hub's Explorer. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kachat" android:host="explorer-tx" />
+                <data android:scheme="kachat" android:host="explorer-address" />
+            </intent-filter>
             <!-- The retired apps' own schemes, registered here since KaChat is the all-in-one app
                  again (iOS 148a5331 Info.plist): kaposts:// (KaPost: posts, rooms, compose),
                  kapay:// and kachatwallet:// (KaPay: profiles, payment requests, the market) and

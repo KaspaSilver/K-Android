@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -39,6 +38,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -208,16 +209,17 @@ fun AddressReceiveView(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            // the whole address, always: it wraps rather than truncates
-            SelectionContainer {
-                Text(
-                    address,
-                    color = colors.textPrimary,
-                    fontSize = 13.sp,
-                    fontFamily = FontFamily.Monospace,
-                    textAlign = TextAlign.Center,
-                )
-            }
+            // the whole address, always: it wraps rather than truncates, with no hyphen
+            // (`wrappingAnywhere`, iOS 824a30bb). The whole screen copies it, so no text
+            // selection, which would copy the invisible break marks too.
+            Text(
+                address.wrappingAnywhere(),
+                color = colors.textPrimary,
+                fontSize = 13.sp,
+                fontFamily = FontFamily.Monospace,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.semantics { contentDescription = address },
+            )
             if (privacyNote != null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Top) {
                     Icon(privacyNote.icon, contentDescription = null, tint = privacyNote.color(), modifier = Modifier.size(16.dp))

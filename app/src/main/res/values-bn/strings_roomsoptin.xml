@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iOS 824a30bb: Public Chats starts empty, Add Room -->
+<resources>
+    <string name="roomsoptin_add_room">রুম যোগ করুন</string>
+    <string name="roomsoptin_indexer_rooms_footer">ইনডেক্সার যে রুমগুলো রাখে: এদের ইতিহাস সংরক্ষিত থাকে এবং K বন্ধ থাকলেও এরা আপনাকে নোটিফাই করতে পারে।</string>
+    <string name="roomsoptin_other_languages">অন্যান্য ভাষা</string>
+    <string name="roomsoptin_create_title">আপনার তৈরি রুম কীভাবে কাজ করে</string>
+    <string name="roomsoptin_create_point_name">একই নাম যে-ই লেখে, সে একই রুমে যোগ দেয়। এর কোনো মালিক বা আমন্ত্রণ নেই।</string>
+    <string name="roomsoptin_create_point_history">কোনো ইনডেক্সার এর ইতিহাস রাখে না। রুম খোলা থাকলে K ক্যাসপা নেটওয়ার্ক থেকে পড়ে, আর আপনার ফোনে সর্বোচ্চ 3 দিন রাখে।</string>
+    <string name="roomsoptin_create_point_bell">K বন্ধ থাকলে কোনো নোটিফিকেশন নেই। ঘণ্টা চালু থাকলে K খোলা থাকলেই কেবল নোটিফাই করে।</string>
+    <string name="roomsoptin_create_point_public">সেখানে বলা সবকিছু সর্বজনীন: যে কেউ ক্যাসপা নেটওয়ার্কে পড়তে পারে।</string>
+    <string name="roomsoptin_create_room">রুম তৈরি করুন</string>
+    <string name="roomsoptin_name_your_room">আপনার রুমের নাম দিন</string>
+    <string name="roomsoptin_empty_title">এখনো কোনো পাবলিক চ্যাট নেই</string>
+    <string name="roomsoptin_empty_body">ইনডেক্সার যে রুম রাখে, যেমন #kaspa, যোগ করুন বা নিজেরটা তৈরি করুন। আপনি না বেছে নিলে কিছুই যোগ হয় না।</string>
+    <string name="roomsoptin_removed_toast">#%1$s সরানো হয়েছে। রুম যোগ করুন থেকে যেকোনো সময় আবার যোগ করুন।</string>
+    <string name="roomsoptin_bulk_delete_message">ইনডেক্সার যে রুম রাখে তা রুম যোগ করুন থেকে আবার যোগ করা যায়। আপনার তৈরি রুম এর মেসেজসহ এই ডিভাইস থেকে মুছে যায়।</string>
+    <string name="roomsoptin_not_in_list_add">এই রুমটি আপনার পাবলিক চ্যাটে নেই। যোগ করবেন?</string>
+    <string name="roomsoptin_room_info_curated">ইনডেক্সার যে রুম রাখে। আপনি এটি যোগ করেছেন, আর K-এর যে কেউ এখানে পোস্ট করতে পারে।</string>
+</resources>

@@ -5,5 +5,5 @@
     <string name="shell_tab_websites">ওয়েবসাইট</string>
     <string name="shell_kaspa_websites">Kaspa ওয়েবসাইট</string>
     <string name="shell_terms_of_use">ব্যবহারের শর্তাবলী</string>
-    <string name="shell_message_indexer_footer">KaPost, পাবলিক চ্যাট আর দাবাও এই ইনডেক্সার থেকে পড়া হয়।</string>
+    <string name="shell_message_indexer_footer">পোস্ট, পাবলিক চ্যাট ও দাবাও এই ইনডেক্সার থেকে পড়া হয়।</string>
 </resources>

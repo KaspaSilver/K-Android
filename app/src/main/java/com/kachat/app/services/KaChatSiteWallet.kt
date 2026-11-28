@@ -24,6 +24,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -75,8 +76,9 @@ class KaChatSiteWalletFactory @Inject constructor(
  */
 class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFactory) {
 
-    /** An answer the page gets as `{ code, message }` (iOS `SiteError`). */
-    class SiteError(val code: Int, override val message: String) : Exception(message)
+    /** An answer the page gets as `{ code, message }` (iOS `SiteError`); with 4002 ("may have
+     *  been sent") also `txid`, the transaction that may land (iOS d88891ea, audit 2026-11-27 M3). */
+    class SiteError(val code: Int, override val message: String, val txid: String? = null) : Exception(message)
 
     /** What the page is waiting on the person for, shown by the browser as a sheet (iOS `Request`). */
     class Request(val host: String, val kind: Kind) {
@@ -97,6 +99,9 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
         val publicKey: String,
     )
 
+    /** The sign-in signature approved in K's own sheet: on [host]'s site, until [untilMs]. */
+    data class SignInApproval(val host: String, val untilMs: Long)
+
     /** How the page script went in ([install]). */
     enum class Install { NONE, DOCUMENT_START, PAGE_STARTED }
 
@@ -113,6 +118,23 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
     var sheetOpen = false
 
     private var waitingAnswer: CompletableDeferred<Result<JsonElement?>>? = null
+    /** Signed in from K's own "Sign In to Kasshi" sheet ([preConnect]): the site's first
+     *  `signMessage` on this site before [SignInApproval.untilMs] is its sign-in, signed with no
+     *  second sheet (iOS b49a021d `signInApproved`, owner 2026-11-27: pick the address, then
+     *  straight in). */
+    private var signInApproved: SignInApproval? = null
+    /** [preConnect]'s key check, still running: the site's `requestAccounts` and `signMessage`
+     *  wait for it rather than open a sheet (iOS's preConnect is synchronous on the main actor). */
+    private var preConnecting: Job? = null
+    /** Page loads the approval may still see: one for the page still loading when the person
+     *  picked the address, none after that. A later navigation ends it (iOS d88891ea, audit
+     *  2026-11-27 M2). */
+    private var approvalLoadBudget = 0
+    /** The page K opened on has finished loading once. */
+    private var initialLoadDone = false
+    /** The send hold's key here: this K account and [host]'s site ([sendHoldKey]). */
+    private fun sendHoldKey(host: String): String =
+        sendHoldKey(deps.walletManager.getActiveAccount()?.address ?: "", host)
     private var declinedAt: Long? = null
     private var running = 0
     private var closed = false
@@ -162,9 +184,19 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
         view.evaluateJavascript(script, null)
     }
 
+    /** The browser is on screen again (iOS b49a021d `reopen`): a browser hidden and brought back
+     *  keeps its page; it must not stay "closed" and answer the site's next request with "K closed
+     *  this page." until something reloads it. */
+    fun reopen() {
+        closed = false
+    }
+
     /** The browser closed: a sheet still up is declined, and nothing more is answered. */
     fun close() {
         closed = true
+        signInApproved = null
+        preConnecting?.cancel()
+        preConnecting = null
         finish(Result.failure(SiteError(Code.REJECTED, "K closed this page.")))
         _pending.value = null
         _connection.value = null
@@ -183,7 +215,7 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
         if (data == null || data.length > MAX_MESSAGE_CHARS) return
         val message = TrestlyProvider.parseStrict(data)?.takeIf { it.isJsonObject }?.asJsonObject ?: return
         val id = message.get("id")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }?.let {
-            try { it.asBigDecimal.toBigIntegerExact().longValueExact() } catch (e: ArithmeticException) { null }
+            try { it.asBigDecimal.longValueExact() } catch (e: ArithmeticException) { null }
         } ?: return
         fun send(result: JsonElement?, error: SiteError?) {
             try { reply(answerJson(id, result, error)) } catch (e: Exception) { Log.w(TAG, "the page is gone: an answer was dropped") }
@@ -196,6 +228,13 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
         val method = message.get("method")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString
         if (method == null || method.length > 64) {
             send(null, SiteError(Code.INVALID, "Expected { method, params }."))
+            return
+        }
+        // The page's provider is up (its script says so once per page): events go to this page
+        // from now on, so [pageLoaded] reaches it before the page has asked anything (iOS
+        // evaluates its events in the page directly). No answer.
+        if (method == READY_METHOD) {
+            eventSink = reply
             return
         }
         val params = message.get("params")?.takeIf { it.isJsonArray }?.asJsonArray ?: JsonArray()
@@ -232,6 +271,8 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
             "getNetwork" -> if (_connection.value == null) JsonNull.INSTANCE else JsonPrimitive(networkName)
             "getAccounts" -> JsonArray().apply { _connection.value?.let { add(it.address) } }
             "requestAccounts" -> {
+                preConnecting?.join()
+                if (closed) throw SiteError(Code.UNAUTHORIZED, "K closed this page.")
                 _connection.value?.let { return JsonArray().apply { add(it.address) } }
                 ask(Kind.Connect, host)
                 val connected = _connection.value ?: throw SiteError(Code.REJECTED, "Request rejected in K.")
@@ -240,6 +281,7 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
             "getPublicKey" -> JsonPrimitive((_connection.value ?: throw notConnected()).publicKey)
             "getBalance" -> balance((_connection.value ?: throw notConnected()).address)
             "disconnect" -> {
+                signInApproved = null
                 if (_connection.value != null) {
                     _connection.value = null
                     emit("accountsChanged", JsonArray())
@@ -248,16 +290,45 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
                 JsonPrimitive(true)
             }
             "signMessage" -> {
+                preConnecting?.join()
+                if (closed) throw SiteError(Code.UNAUTHORIZED, "K closed this page.")
                 if (_connection.value == null) throw notConnected()
                 val text = params.firstOrNull()?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isString }?.asString
                 if (text.isNullOrEmpty()) throw SiteError(Code.INVALID, "signMessage: the message is required.")
                 if (com.kachat.app.models.PaymentRequest.characterCount(text) > MAX_MESSAGE_LENGTH) {
                     throw SiteError(Code.INVALID, "signMessage: messages are limited to 4096 characters.")
                 }
+                // KaPost actions are signed with this same scheme and key, and the indexer takes any
+                // signature that matches: a signed "delete:<post>" or "<base64>:[]" could be posted as
+                // you. Those shapes are never signed for a site (iOS 01f71184, release audit 2026-11-27 R3).
+                if (looksLikeKaPostAction(text)) {
+                    throw SiteError(Code.REJECTED, "K doesn't sign this message: it has the form of a K post or action.")
+                }
+                // The sign-in the person already agreed to in K's own sheet: once, only kasshi.io
+                // itself, and only Kasshi's own sign-in challenge for the connected address with a
+                // fresh timestamp. Anything else gets the Sign sheet (iOS d88891ea, audit 2026-11-27 M2).
+                val connected = _connection.value
+                val idle = _pending.value == null && waitingAnswer == null && !sheetOpen
+                val now = System.currentTimeMillis()
+                if (connected != null && signInApproved.coversSignIn(host, now, idle) &&
+                    isKasshiSignInChallenge(text, connected.address, now)
+                ) {
+                    signInApproved = null
+                    return try {
+                        JsonPrimitive(withContext(Dispatchers.Default) { sign(text, connected.source, connected.address) })
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        throw SiteError(Code.UNAVAILABLE, "K couldn't sign this message.")
+                    }
+                }
                 ask(Kind.Sign(text), host)
             }
             "sendKaspa" -> {
                 if (_connection.value == null) throw notConnected()
+                if (sendHeld(sendHolds[sendHoldKey(host)], System.currentTimeMillis())) {
+                    throw SiteError(Code.BUSY, "Your last payment from this page may still go through. Check it before paying again; K takes payments from this page again in a few minutes.")
+                }
                 val (to, sompi) = parseSendParams(params)
                 ask(Kind.Send(to, sompi), host)
             }
@@ -326,6 +397,82 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
             finish(Result.success(JsonArray().apply { add(connected.address) }))
             emit("accountsChanged", JsonArray().apply { add(connected.address) })
         }
+    }
+
+    /**
+     * K's own "Sign In to Kasshi" sheet, before the site asks (Kasshi from Kaspa Hub, iOS b49a021d
+     * `preConnect`, owner 2026-11-27): the picked address connects, so the site's `requestAccounts`
+     * answers with no sheet, and its sign-in message that follows within two minutes
+     * ([SIGN_IN_WINDOW_MS]) is signed with no sheet either. The key check runs off the main thread;
+     * the site's requests meanwhile wait for it. An address that can't connect leaves the page
+     * signed out and says so ([onFailed]; iOS d88891ea, audit 2026-11-27 L1: no silent `try?`).
+     */
+    fun preConnect(source: SendSource, host: String, onFailed: (() -> Unit)? = null) {
+        if (closed) return
+        preConnecting?.cancel()
+        preConnecting = scope.launch {
+            val connected = try {
+                withContext(Dispatchers.Default) { connectionFor(source) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "the sign-in address couldn't connect: ${e.javaClass.simpleName}")
+                null
+            }
+            if (closed) return@launch
+            if (connected == null) {
+                onFailed?.invoke()
+                return@launch
+            }
+            _connection.value = connected
+            rememberPick(source, host)
+            signInApproved = signInApproval(host, System.currentTimeMillis())
+            approvalLoadBudget = if (initialLoadDone) 0 else 1
+            // The page asked to connect while K's own sheet was up: it gets the picked address
+            // now. Left waiting, every later request answered "busy" (iOS d88891ea, audit
+            // 2026-11-27 L1).
+            if (_pending.value?.kind == Kind.Connect) {
+                _pending.value = null
+                finish(Result.success(JsonArray().apply { add(connected.address) }))
+            }
+            emit("accountsChanged", JsonArray().apply { add(connected.address) })
+        }
+    }
+
+    /** [preConnect]'s key check, if one is running, has finished (it may have answered the
+     *  page's pending connect). */
+    suspend fun awaitPreConnect() {
+        preConnecting?.join()
+    }
+
+    /** A page finished loading while connected ([preConnect] ran before it was there, or a link
+     *  within the site): `accountsChanged` with the address, so a site that listens can start its
+     *  sign-in by itself (iOS b49a021d `pageLoaded`). */
+    fun pageLoaded() {
+        // the sign-in approval lasts through the page it was given for, not a later navigation
+        // (iOS d88891ea, audit 2026-11-27 M2)
+        if (signInApproved != null) {
+            if (approvalLoadBudget > 0) approvalLoadBudget -= 1 else signInApproved = null
+        }
+        initialLoadDone = true
+        val connected = _connection.value ?: return
+        if (closed) return
+        emit("accountsChanged", JsonArray().apply { add(connected.address) })
+    }
+
+    /** The site's send went out but its answer was lost: the page hears "may have been sent"
+     *  (4002) with the txid, never "rejected", and can't ask for another payment for ten minutes
+     *  (iOS d88891ea `maybeSent`, audit 2026-11-27 M3). A send cancelled mid-submit has no txid:
+     *  still 4002, without one. */
+    fun maybeSent(txId: String?, host: String) {
+        val now = System.currentTimeMillis()
+        sendHolds.entries.removeAll { it.value <= now }
+        sendHolds[sendHoldKey(host)] = now + SEND_HOLD_MS
+        _pending.value = null
+        finish(Result.failure(SiteError(
+            Code.MAYBE_SENT, "This payment may have gone through. Check it before paying again.",
+            txid = txId?.takeIf { it.isNotBlank() },
+        )))
     }
 
     /** Sign approved: the connected address's key signs the text. */
@@ -461,6 +608,9 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
          *  origins, taken away by the script before the page's own scripts run. */
         const val BRIDGE_NAME = "kachatSite"
 
+        /** The script's one message as the provider goes in ([handle]): where events go. */
+        const val READY_METHOD = "_ready"
+
         /** Sites that get the provider: the host itself and its subdomains, https only (iOS
          *  `allowedHosts`). */
         val ALLOWED_HOSTS: List<String> = listOf("kasshi.io")
@@ -497,6 +647,93 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
 
         /** kasshi.io and www.kasshi.io are one site. */
         fun siteKey(host: String): String = ALLOWED_HOSTS.firstOrNull { host == it || host.endsWith(".$it") } ?: host
+
+        /** How long after "Sign In to Kasshi" the site's sign-in signature goes through with no
+         *  sheet (iOS b49a021d `Date().addingTimeInterval(120)`). */
+        const val SIGN_IN_WINDOW_MS = 120_000L
+
+        /** The sign-in approved in K's own sheet at [nowMs] on [host]'s site. */
+        fun signInApproval(host: String, nowMs: Long): SignInApproval =
+            SignInApproval(siteKey(host.lowercase()), nowMs + SIGN_IN_WINDOW_MS)
+
+        /** Whether this approval signs a `signMessage` from [host] at [nowMs] with no sheet: the
+         *  same site, only kasshi.io itself ([SIGN_IN_HOSTS], never a subdomain), before it runs
+         *  out, and with nothing else waiting on the person ([idle]). The text must also be
+         *  Kasshi's own challenge ([isKasshiSignInChallenge]). */
+        fun SignInApproval?.coversSignIn(host: String, nowMs: Long, idle: Boolean): Boolean =
+            this != null && idle && host.lowercase() in SIGN_IN_HOSTS &&
+                this.host == siteKey(host.lowercase()) && nowMs < untilMs
+
+        /** The hosts K's own sign-in sheet signs in to without a second sheet: the site itself,
+         *  never a subdomain (iOS d88891ea `signInHosts`, audit 2026-11-27 M2). */
+        val SIGN_IN_HOSTS: Set<String> = setOf("kasshi.io", "www.kasshi.io")
+
+        /** How long a site send whose answer was lost holds the page's next one (iOS: 600 s). */
+        const val SEND_HOLD_MS = 600_000L
+
+        /** A send hold ([maybeSent]) still on at [nowMs]. */
+        fun sendHeld(untilMs: Long?, nowMs: Long): Boolean = untilMs != null && nowMs < untilMs
+
+        /** The send holds ([maybeSent]), ms since 1970, by K account and site ([sendHoldKey]). Kept
+         *  outside the browser, so closing Kasshi and opening it again doesn't lift one (iOS
+         *  01f71184 `sendHolds`, release audit 2026-11-27, Low). */
+        private val sendHolds: MutableMap<String, Long> = java.util.concurrent.ConcurrentHashMap()
+
+        /** iOS `sendHoldKey(host:)`: the account's address, lowercased, "|", the site. */
+        fun sendHoldKey(account: String, host: String): String = account.lowercase() + "|" + siteKey(host.lowercase())
+
+        private val KAPOST_ACTION_PREFIXES = listOf(
+            "edit:", "delete:", "poll:", "pollvote:", "tip:", "schedule:",
+            "cancel-schedule:", "follow:", "unfollow:",
+        )
+
+        private fun isHexDigit(c: Char): Boolean = c in '0'..'9' || c in 'a'..'f' || c in 'A'..'F'
+
+        /** The strings K signs for KaPost (iOS 01f71184 `looksLikeKaPostAction`): the action
+         *  prefixes; a post, `<base64>:<mentions JSON>`; a reply, vote or quote, `<64-hex id>:...`;
+         *  an unquote, a bare 64-hex id. Checked as sent and trimmed, any case. */
+        fun looksLikeKaPostAction(text: String): Boolean {
+            for (candidate in linkedSetOf(text, text.trim())) {
+                val lower = candidate.lowercase()
+                if (KAPOST_ACTION_PREFIXES.any { lower.startsWith(it) }) return true
+                val head = lower.substringBefore(':')
+                // a post id (a txid) alone or first
+                if (head.length == 64 && head.all(::isHexDigit)) return true
+                // a post: base64 text, then the mentions array
+                val colon = candidate.indexOf(':')
+                if (colon >= 0) {
+                    val b64 = candidate.substring(0, colon)
+                    val rest = candidate.substring(colon + 1).trim()
+                    if (b64.all { it.code < 128 && (it.isLetterOrDigit() || it in "+/=") } &&
+                        (rest.firstOrNull() == '[' || rest.firstOrNull() == '{')
+                    ) return true
+                }
+            }
+            return false
+        }
+
+        /**
+         * Kasshi's sign-in challenge (`/api/wallet-auth/challenge`, checked 2026-11-27; iOS
+         * d88891ea `isKasshiSignInChallenge`): "Sign this message to authenticate with
+         * KasShi.\n\nAddress: <address>\nTimestamp: <ms>\nNonce: <hex>", for the connected
+         * [address], made within ten minutes of [nowMs].
+         */
+        fun isKasshiSignInChallenge(text: String, address: String, nowMs: Long = System.currentTimeMillis()): Boolean {
+            val lines = text.replace("\r\n", "\n").split("\n")
+            if (lines.size != 5 ||
+                lines[0] != "Sign this message to authenticate with KasShi." || lines[1].isNotEmpty() ||
+                !lines[2].startsWith("Address: ") || !lines[3].startsWith("Timestamp: ") || !lines[4].startsWith("Nonce: ")
+            ) return false
+            if (lines[2].removePrefix("Address: ").lowercase() != address.lowercase()) return false
+            // range-checked first: the page picks this number (iOS 01f71184, release audit R6)
+            val ms = lines[3].removePrefix("Timestamp: ").toLongOrNull() ?: return false
+            if (ms <= 0 || ms >= 100_000_000_000_000L) return false
+            // no abs(): a crafted Long.MIN_VALUE difference stays negative under it
+            val age = nowMs - ms
+            if (age >= 600_000L || age <= -600_000L) return false
+            val nonce = lines[4].removePrefix("Nonce: ")
+            return nonce.length in 8..128 && nonce.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+        }
 
         /** The remembered picks of one K account: `site_connections_<account address, lowercased>`
          *  in [PREFS_NAME] (iOS `kachat_site_connections_<address>`). */
@@ -549,6 +786,7 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
                 add("error", JsonObject().apply {
                     addProperty("code", error.code)
                     addProperty("message", error.message)
+                    error.txid?.let { addProperty("txid", it) }
                 })
             } else {
                 add("result", result ?: JsonNull.INSTANCE)
@@ -633,6 +871,7 @@ class KaChatSiteWallet internal constructor(private val deps: KaChatSiteWalletFa
                     });
                     Object.defineProperty(window, 'kachat', { value: provider, writable: false, configurable: false, enumerable: true });
                     window.dispatchEvent(new Event('kachat#initialized'));
+                    try { bridge.postMessage(JSON.stringify({ id: 0, method: '$READY_METHOD' })); } catch (e) {}
                   } catch (e) {}
                 })();
                 """.trimIndent()

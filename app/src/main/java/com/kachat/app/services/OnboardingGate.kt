@@ -30,6 +30,18 @@ class OnboardingGate @Inject constructor() {
 
     fun release() { _held.value = false }
 
+    /**
+     * Whether the Welcome Guide is up after an account was added. Nothing holds the sync for it any
+     * more (iOS 824a30bb, owner 2026-11-26: the first sync runs during the guide, and no progress
+     * screen follows); only what must not cover the guide (the battery explainer) waits on it.
+     */
+    private val _wizardShowing = MutableStateFlow(false)
+    val wizardShowing: StateFlow<Boolean> = _wizardShowing.asStateFlow()
+
+    fun wizardShown() { _wizardShowing.value = true }
+
+    fun wizardDone() { _wizardShowing.value = false }
+
     /** Suspends until the gate is open. Returns immediately when it already is. */
     suspend fun awaitOpen() {
         if (!_held.value) return

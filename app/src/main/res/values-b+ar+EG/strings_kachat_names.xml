@@ -31,7 +31,7 @@
     <string name="kg_use_body">عيّنه اسمًا أساسيًا وسيظهر به اسمك في كل مكان في K.</string>
     <string name="kg_use_find">الناس تقدر تلاقيك لما تكتب اسمك.</string>
     <string name="kg_use_link">رابط ملفك الشخصي يُظهر اسمك.</string>
-    <string name="kg_use_pay">يمكنهم إرسال Kaspa إلى yourname.kachat بدل عنوان طويل.</string>
+    <string name="kg_use_pay">يمكنهم إرسال Kaspa إلى @yourname بدل عنوان طويل.</string>
     <string name="kg_use_title">اجعله اسمك</string>
     <string name="kl_1d">يوم واحد</string>
     <string name="kl_3d">3 أيام</string>

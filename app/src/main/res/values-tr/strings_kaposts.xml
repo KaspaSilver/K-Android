@@ -40,8 +40,8 @@
     <string name="kaposts_draft_source_missing">Bu taslağın ilgili olduğu gönderi şu anda bulunamadı, bu yüzden henüz paylaşılamaz. Taslaklarınızda kalacak.</string>
     <string name="kaposts_likes">Beğeniler</string>
     <string name="kaposts_no_tips_yet">Henüz bahşiş yok.</string>
-    <string name="kaposts_not_on_testnet">KaPost henüz Testnet\'te kullanılamıyor</string>
-    <string name="kaposts_not_on_testnet_sub">Testnet için bir KaPost dizinleyicisi yok. Mainnet\'te okumak ve paylaşmak için Ayarlar > Bağlantı bölümünden Testnet\'i kapatın.</string>
+    <string name="kaposts_not_on_testnet">Gönderiler henüz Testnet\'te kullanılamıyor</string>
+    <string name="kaposts_not_on_testnet_sub">Testnet için bir Gönderiler dizinleyicisi yok. Mainnet\'te okumak ve paylaşmak için Ayarlar &gt; Bağlantı Ayarları bölümünden Testnet\'i kapatın.</string>
     <string name="kaposts_poll_days_left">%1$d g kaldı</string>
     <string name="kaposts_poll_final_results">%1$s · Kesin sonuçlar</string>
     <string name="kaposts_poll_hours_left">%1$d sa kaldı</string>
@@ -62,7 +62,7 @@
     <string name="kaposts_scheduled_on_its_way">Bu gönderi şu anda yolda, bu yüzden iptal edilemez.</string>
     <string name="kaposts_scheduled_reminder_title">Zamanlanmış gönderi</string>
     <string name="kaposts_scheduled_sending_soon">Ağ yanıt verir vermez gönderilecek</string>
-    <string name="kaposts_server_not_answering">KaPost sunucusu yanıt vermiyor. Kayıtlı gönderiler ve ağdan gelen yeni gönderiler gösteriliyor.</string>
+    <string name="kaposts_server_not_answering">Gönderiler sunucusu yanıt vermiyor. Kayıtlı gönderiler ve ağdan gelen yenileri gösteriliyor.</string>
     <string name="kaposts_thread_not_confirmed">Ağ, konunuzun bir kısmını onaylamadı, bu yüzden kalanı gönderilmedi. Kalanı taslak olarak kaydetmek ister misiniz? İlk gönderisi gitmiş olabilir, bu yüzden yeniden paylaşmadan önce kontrol edin.</string>
     <string name="kaposts_tip_from_chatting_note">Chatting Address\'inizden gönderilen bahşiş gönderide sayılır ve bahşiş verenler arasında görünürsünüz.</string>
     <string name="kaposts_tip_from_private_note">Başka bir adresten bahşiş gizlidir: yazar alır ve sohbetinizde görür, ama gönderide sayılmaz ve adınızı vermez.</string>

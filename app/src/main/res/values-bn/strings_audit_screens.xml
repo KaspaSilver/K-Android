@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Audit 2026-11-27 screens (iOS d88891ea): the Explorer's 64-character ids looked up only on Search (L5). -->
+<resources>
+    <string name="ex_look_up_this_id">এই আইডি খুঁজুন</string>
+    <string name="ex_own_private_key">এটি আপনার একটি প্রাইভেট কী। K এটি কোথাও পাঠায় না: এটি কারও সাথে শেয়ার করবেন না।</string>
+</resources>

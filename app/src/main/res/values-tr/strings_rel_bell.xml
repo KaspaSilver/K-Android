@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification and banner previews (iOS 01f71184, audit 2026-11-27 R7). -->
+<resources>
+    <string name="rel_bell_reacted_to_your_message">Mesajına %1$s ile tepki verdi</string>
+    <string name="rel_bell_removed_reaction">%1$s tepkisini kaldırdı</string>
+    <string name="rel_bell_replied_to_message">Bir mesaja yanıt verdi</string>
+    <string name="rel_bell_edited_message">Bir mesajı düzenledi</string>
+    <string name="rel_bell_reacted">%1$s ile tepki verdi</string>
+</resources>

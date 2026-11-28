@@ -1256,7 +1256,9 @@ fun KachatAddressLiveNamesList(
                     DomainNameCard(
                         title = n.display,
                         badge = kachatNameBadge(n, vm?.graceMs ?: 0L),
-                        modifier = Modifier.clickable { onOpen(n) }
+                        modifier = Modifier.clickable { onOpen(n) },
+                        // an expired name in grace: the badge in red (iOS b49a021d)
+                        badgeIsWarning = n.status(vm?.graceMs ?: 0L) == com.kachat.app.services.kachatnames.Status.GRACE,
                     )
                 }
             }

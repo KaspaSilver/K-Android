@@ -666,7 +666,8 @@ private fun KachatStatusPill(status: Status) {
     val colors = LocalAppColors.current
     val color = when (status) {
         Status.ACTIVE -> colors.success
-        Status.GRACE -> colors.warning
+        // red, not orange, so an expired name isn't missed (iOS b49a021d)
+        Status.GRACE -> colors.danger
         // past grace a name is free to claim (iOS eea52b2)
         Status.LAPSED -> colors.success
     }
@@ -1194,7 +1195,13 @@ fun KachatTxDoneSheet(done: KachatTxDone, onDismiss: () -> Unit, vm: KachatLiveV
 
                         Row(
                             Modifier.padding(top = 12.dp, start = 20.dp, end = 20.dp).fillMaxWidth().sendKaspaGlass(14.dp)
-                                .clickable(enabled = explorerUrl != null) { browserUrl = explorerUrl }
+                                .clickable(enabled = explorerUrl != null) {
+                                    // K's own Explorer (iOS bfb902b7): its page, not a website. The
+                                    // in-app browser takes only http(s): anything else showed a blank
+                                    // page there (iOS d88891ea, audit 2026-11-27 M9).
+                                    if (com.kachat.app.services.explorer.ExplorerDeepLink.openIfLink(explorerUrl)) onDismiss()
+                                    else if (com.kachat.app.services.explorer.ExplorerDeepLink.isWebLink(explorerUrl)) browserUrl = explorerUrl
+                                }
                                 .padding(horizontal = 14.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
@@ -4243,7 +4250,9 @@ fun KachatTransferSheet(info: NameInfo, onClose: () -> Unit, vm: KachatLiveViewM
 @Composable
 fun kachatNameBadge(n: NameInfo, graceMs: Long): String? = when (n.status(graceMs)) {
     Status.ACTIVE -> if (n.isListed) stringResource(R.string.kn_ev_listed) else null
-    Status.GRACE -> stringResource(R.string.kn_status_expired)
+    // red, so it isn't missed (iOS b49a021d, owner 2026-11-27): it says what to do, not only
+    // what happened
+    Status.GRACE -> stringResource(R.string.expn_badge_renew_before_grace)
     Status.LAPSED -> stringResource(R.string.kn_available)
 }
 
@@ -4475,6 +4484,8 @@ fun KachatLiveDomainsTab(
                                 badge = kachatNameBadge(n, vm?.graceMs ?: 0L),
                                 modifier = Modifier.clickable { onOpen(n) },
                                 footnote = kachatNameExpiryLine(n, vm?.graceMs ?: 0L),
+                                // an expired name in grace: the badge in red (iOS b49a021d)
+                                badgeIsWarning = n.status(vm?.graceMs ?: 0L) == Status.GRACE,
                             )
                         }
                     }
@@ -4814,11 +4825,22 @@ fun KachatProfileSaveSheet(
         ZeroBalanceFundingRefresh(rememberScreenRunning(), vm.addressActivity.utxoActivityEvents) {
             vm.wallet.refreshBalance()
         }
-        // iOS onChange: a change of the balance, not the one it opens with
+        // iOS onChange: a change of the balance, not the one it opens with. Never under its own
+        // Buy Kaspa flow (that would close the flow's last screens); once the flow is done instead
+        // (iOS 824a30bb).
         LaunchedEffect(Unit) {
             vm.wallet.balance.drop(1).collect { balance ->
-                if (vm.wallet.balanceKnown.value && balance >= FUNDED_SOMPI) reQuote()
+                if (vm.wallet.balanceKnown.value && balance >= FUNDED_SOMPI &&
+                    !com.kachat.app.ui.screens.tokens.BuyKaspaFlowPresence.isOpen
+                ) reQuote()
             }
+        }
+        LaunchedEffect(Unit) {
+            androidx.compose.runtime.snapshotFlow { com.kachat.app.ui.screens.tokens.BuyKaspaFlowPresence.isOpen }
+                .drop(1)
+                .collect { open ->
+                    if (!open && vm.wallet.balanceKnown.value && vm.wallet.balance.value >= FUNDED_SOMPI) reQuote()
+                }
         }
         ZeroBalanceFundingDialog(
             walletAddress = vm.actions.myAddress,
@@ -4864,69 +4886,25 @@ private const val PRIVACY_SEEN_KEY = "kachat_profile_privacy_seen"
 // MARK: - Expired names banner (Wallet)
 
 /**
- * This wallet's .kachat names that have expired and sit in their grace period, for the Wallet
- * tab's banner ([KachatExpiredNamesBanner]): renew before grace ends, or anyone can claim them. A
- * dismissal (the X) is per name and expiry, so a name that expires again brings it back (iOS
- * 6ac48a7 `KachatExpiredNamesModel`). Only where the registry is launched; elsewhere nothing here
- * builds it.
+ * Compose bridge to the app-wide [com.kachat.app.services.kachatnames.KachatExpiredNamesModel]
+ * (iOS b49a021d `KachatExpiredNamesModel.shared`): the Wallet tab's banner, the dock's Wallet dot
+ * and Your Usernames' "1 Expired" all read the one model. The shell's dock badge sync loads it.
  */
 @HiltViewModel
 class KachatExpiredNamesViewModel @Inject constructor(
-    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
-    private val registry: dagger.Lazy<KachatNamesRegistry>,
-    private val actions: dagger.Lazy<KachatNamesActions>,
-) : ViewModel() {
-    var expired by mutableStateOf<List<NameInfo>>(emptyList()); private set
-    private var dismissed by mutableStateOf<Set<String>>(emptySet())
-
-    val visible: List<NameInfo> get() = expired.filter { key(it) !in dismissed }
-
-    /** The registry's revision, to load again when it moves on - zero where it isn't launched. */
-    val revision: kotlinx.coroutines.flow.StateFlow<Int> =
-        if (KachatNamesService.isLaunched) registry.get().revision else kotlinx.coroutines.flow.MutableStateFlow(0)
-
-    val graceMs: Long get() = if (KachatNamesService.isLaunched) registry.get().graceMs else 0L
-
-    private fun key(n: NameInfo) = "${n.name}@${n.expiresAt}"
-    private val prefs get() = context.getSharedPreferences("kachat_expired_banner", android.content.Context.MODE_PRIVATE)
-    private fun storeKey(): String? = actions.get().myAddress?.let { "kachatExpiredBannerDismissed.$it" }
-
-    suspend fun load() {
-        val me = if (KachatNamesService.isLaunched) actions.get().myKey else null
-        val storeKey = storeKey()
-        if (me == null || storeKey == null) {
-            expired = emptyList()
-            return
-        }
-        val stored = prefs.getStringSet(storeKey, emptySet()).orEmpty().toSet()
-        if (stored != dismissed) dismissed = stored
-        val reg = registry.get()
-        // Profile's own loads use five minutes too: a shorter window here refreshed in between
-        // and restarted every Profile effect keyed on the registry's revision (iOS 9de981a).
-        reg.refreshIfStale(maxAgeMs = 300_000)
-        // a failed read keeps the banner as it is (iOS 2da5f4b)
-        val owned = runCatching { reg.names(me, includeInactive = true) }.getOrNull() ?: return
-        val inGrace = KachatNamesRegistry.inGracePeriod(owned, reg.graceMs)
-        // assigned only on a change
-        if (inGrace != expired) expired = inGrace
-    }
-
-    fun dismissAll() {
-        val storeKey = storeKey() ?: return
-        dismissed = dismissed + visible.map { key(it) }
-        // only names still in grace are worth remembering
-        prefs.edit().putStringSet(storeKey, dismissed.intersect(expired.map { key(it) }.toSet())).apply()
-    }
-}
+    val model: com.kachat.app.services.kachatnames.KachatExpiredNamesModel,
+) : ViewModel()
 
 /** The Wallet tab's banner while one of this wallet's .kachat names is in its grace period (iOS
  *  428a797b: attached at the top of Wallet). Tapping it opens the name (renew is there); the X
  *  hides it (iOS 6ac48a7 `KachatExpiredNamesBanner`). */
 @Composable
 fun KachatExpiredNamesBanner(walletAddress: String?, vm: KachatExpiredNamesViewModel = hiltViewModel()) {
-    val revision by vm.revision.collectAsState()
-    LaunchedEffect(walletAddress, revision) { vm.load() }
-    val visible = vm.visible
+    // loaded by the shell's dock badge sync (iOS b49a021d: not by the Wallet tab any more)
+    val model = vm.model
+    val expired by model.expired.collectAsState()
+    val dismissed by model.dismissed.collectAsState()
+    val visible = remember(expired, dismissed, walletAddress) { model.visible(expired, dismissed) }
     val n = visible.firstOrNull() ?: return
     val colors = LocalAppColors.current
     val orange = Color(0xFFFF9500)
@@ -4956,7 +4934,7 @@ fun KachatExpiredNamesBanner(walletAddress: String?, vm: KachatExpiredNamesViewM
                 color = colors.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
             )
             Text(
-                if (visible.size == 1) stringResource(R.string.kachat_expired_one_body, com.kachat.app.models.KachatNameLabel.display(n.name), KachatLive.day(kachatClampedSum(n.expiresAt, vm.graceMs)))
+                if (visible.size == 1) stringResource(R.string.kachat_expired_one_body, com.kachat.app.models.KachatNameLabel.display(n.name), KachatLive.day(kachatClampedSum(n.expiresAt, model.graceMs)))
                 else stringResource(R.string.kachat_expired_many_body),
                 color = colors.textSecondary, fontSize = 12.sp,
             )
@@ -4965,11 +4943,35 @@ fun KachatExpiredNamesBanner(walletAddress: String?, vm: KachatExpiredNamesViewM
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(28.dp)
-                .clickable(role = androidx.compose.ui.semantics.Role.Button) { vm.dismissAll() }
+                .clickable(role = androidx.compose.ui.semantics.Role.Button) { model.dismissAll() }
                 .semantics { contentDescription = tr(R.string.kcn_kp_dismiss_70afe) },
         ) {
             Icon(Icons.Default.Close, contentDescription = null, tint = colors.textSecondary, modifier = Modifier.size(14.dp))
         }
+    }
+}
+
+/** Your Usernames' red warning while names of yours are in grace (iOS b49a021d `YourDomainsCard`):
+ *  "1 Expired" / "2 Expired" with a warning sign, white on red. */
+@Composable
+fun KachatExpiredCountPill(count: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(LocalAppColors.current.danger)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+    ) {
+        // iOS "exclamationmark.triangle.fill"
+        Icon(Icons.Default.Warning, contentDescription = null, tint = Color.White, modifier = Modifier.size(12.dp))
+        Text(
+            if (count == 1) stringResource(R.string.expn_one_expired) else stringResource(R.string.expn_count_expired, count),
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+        )
     }
 }
 

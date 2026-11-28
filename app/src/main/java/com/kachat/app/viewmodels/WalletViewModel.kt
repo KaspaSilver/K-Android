@@ -121,10 +121,10 @@ class WalletViewModel @Inject constructor(
 
     fun markPendingWelcomeGuide() {
         _pendingWelcomeGuide.value = true
-        // Nothing syncs while the wizard is on screen: an import's from-genesis sync of every
-        // contact is what made typing through setup crawl. Released by the guide's Finish, or by
-        // KaChatApp if no guide ends up being shown.
-        onboardingGate.hold()
+        // The sync isn't held for the guide (iOS 824a30bb, owner 2026-11-26): the guide has no
+        // text field to slow down any more, so the first sync runs during it and sets up live
+        // updates and push from the start. Only what mustn't cover the guide waits for it.
+        onboardingGate.wizardShown()
     }
 
     fun consumePendingWelcomeGuide() {
@@ -679,6 +679,10 @@ class WalletViewModel @Inject constructor(
     /** See [WalletService.cachedSpendingAddressUsedState]. */
     fun cachedSpendingAddressUsedState(address: String): Boolean? = walletService.cachedSpendingAddressUsedState(address)
 
+    /** This phone's spend mark for a quantum address (iOS `isQuantumAddressSpentLocally`): a
+     *  quantum address that spent has its key on chain. */
+    fun isQuantumAddressSpentLocally(address: String): Boolean = walletManager.isQuantumAddressSpentLocally(address)
+
     /** See [WalletService.spendingAddressUsedState]. */
     suspend fun spendingAddressUsedState(address: String): Boolean? = walletService.spendingAddressUsedState(address)
 
@@ -1127,8 +1131,15 @@ class WalletViewModel @Inject constructor(
                     return@launch
                 }
                 val walletAddress = sweepAccount.owner
+                // At most four updates a second (and every new find): each one re-sorted the
+                // list (iOS 01f71184, smoothness audit L4).
+                var lastProgressMs = 0L
                 val matched = spendingAddressDiscovery.discoverFunded(sweepAccount) { progress ->
-                    _spendingDiscoveryProgress.value = progress
+                    val now = System.currentTimeMillis()
+                    if (discoveryProgressShows(progress.foundCount, _spendingDiscoveryProgress.value?.foundCount, now, lastProgressMs)) {
+                        lastProgressMs = now
+                        _spendingDiscoveryProgress.value = progress
+                    }
                 }
                 // IOS-107: the writes below go to the swept account whichever one is active now;
                 // they are dropped only if it was removed. Nothing between here and the quantum
@@ -2279,3 +2290,8 @@ class WalletViewModel @Inject constructor(
         viewModelScope.launch { settings.setShowSetupGuides(addr, enabled) }
     }
 }
+
+/** Whether Discover's progress shows now (iOS 01f71184, smoothness audit L4): every new find, else
+ *  at most four times a second. */
+internal fun discoveryProgressShows(foundCount: Int, shownFoundCount: Int?, nowMs: Long, lastShownMs: Long): Boolean =
+    foundCount != shownFoundCount || nowMs - lastShownMs >= 250L

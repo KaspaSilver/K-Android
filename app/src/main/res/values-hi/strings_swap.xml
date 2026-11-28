@@ -3,24 +3,18 @@
      Localizable.strings for the same keys. -->
 <resources>
     <string name="swap_title">स्वैप</string>
-    <string name="swap_history">स्वैप इतिहास</string>
-    <string name="swap_started">स्वैप शुरू हुआ</string>
     <string name="swap_failed">स्वैप विफल रहा</string>
     <string name="swap_couldnt_read_amounts">इस स्वैप की राशियाँ पढ़ी नहीं जा सकीं</string>
     <string name="swap_already_holds">इसमें यह स्वैप पहले से है - फिर से जोड़ने पर यह दो बार गिना जाएगा।</string>
     <string name="swap_lands_in_portfolio">स्वैप इस पोर्टफोलियो में जाएगा।</string>
     <string name="swap_delete_title">यह स्वैप हटाएं?</string>
     <string name="swap_delete_message">यह इसे सिर्फ़ आपके लोकल इतिहास से हटाता है - असली एक्सचेंज पर कोई असर नहीं पड़ता।</string>
-    <string name="swap_you_send">आप भेजते हैं</string>
     <string name="swap_you_get">आपको मिलेगा</string>
-    <string name="swap_switch_direction">दिशा बदलें</string>
-    <string name="swap_get_deposit_address">जमा पता पाएं</string>
     <string name="swap_receive_coin_at">%1$s यहाँ प्राप्त करें</string>
     <string name="swap_destination_tag_optional">डेस्टिनेशन टैग (वैकल्पिक)</string>
     <string name="swap_destination_tag_hint">केवल तभी जब पाने वाले पते को इसकी ज़रूरत हो, जैसा ज़्यादातर एक्सचेंजों में होता है। इसके बिना एक्सचेंज आपके कॉइन जमा नहीं कर सकता।</string>
     <string name="swap_from_kusdt_lands">किस पते से स्वैप (kUSDT यहाँ आएँगे)</string>
     <string name="swap_from_kas_lands">किस पते से स्वैप (KAS यहाँ आएँगे)</string>
-    <string name="swap_receiving_kas_at">KAS यहाँ प्राप्त होंगे</string>
     <string name="swap_change">बदलें</string>
     <string name="swap_powered_by_trestly">Trestly द्वारा संचालित</string>
     <string name="swap_powered_by_changenow">ChangeNOW द्वारा संचालित</string>
@@ -28,8 +22,6 @@
     <string name="swap_portfolio_sell_prompt">%2$s पर %1$s KAS की बिक्री - चुनें कि इसे किस पोर्टफोलियो में जोड़ना है।</string>
     <string name="swap_rate">दर</string>
     <string name="swap_unavailable">उपलब्ध नहीं</string>
-    <string name="swap_go_to_spending_addresses">खर्च वाले पतों पर जाएँ</string>
-    <string name="swap_send_coin_to_address">इस पते पर %1$s भेजें</string>
     <string name="swap_amount_to_send">भेजने की राशि</string>
     <string name="swap_destination_tag_copied">डेस्टिनेशन टैग कॉपी हुआ</string>
     <string name="swap_payout_address">भुगतान पता</string>
@@ -56,17 +48,9 @@
     <string name="swap_deposit_address">जमा पता</string>
     <string name="swap_couldnt_reach_changenow">ChangeNOW तक नहीं पहुंच सके - फिर से कोशिश करें</string>
     <string name="swap_details">स्वैप विवरण</string>
-    <string name="swap_picker_footer">स्वैप ऐसे पते पर भुगतान करता है जिसे आपने पहले कभी इस्तेमाल नहीं किया, ताकि भुगतान को आपकी पिछली गतिविधि से जोड़ा न जा सके। कोई खाली न हो तो एक बनाएँ।</string>
-    <string name="swap_picker_all_used">यहाँ हर पता इस्तेमाल हो चुका है। ऊपर एक नया बनाएँ।</string>
-    <string name="swap_unused_addresses">इस्तेमाल न हुए पते</string>
-    <string name="swap_choose_address">पता चुनें</string>
     <string name="swap_used">इस्तेमाल हुआ</string>
     <string name="swap_unused">इस्तेमाल नहीं हुआ</string>
-    <string name="swap_check_history_before">इस पर स्वैप भेजने से पहले इसका इतिहास जाँच लें।</string>
-    <string name="swap_use_for_this_swap">इस स्वैप के लिए इस्तेमाल करें</string>
-    <string name="swap_changenow_pays_out_here">ChangeNOW स्वैप किए गए KAS इसी पते पर भेजता है।</string>
     <string name="swap_search_coins">कॉइन खोजें</string>
-    <string name="swap_choose_coin">कॉइन चुनें</string>
     <string name="swap_agreements_intro">स्वैप दो ऐसी सेवाओं का इस्तेमाल करता है जिन्हें K नहीं चलाता। आगे बढ़ने से पहले दोनों को पढ़ें और सहमति दें।</string>
     <string name="swap_coins_on_other_networks">दूसरे नेटवर्क के कॉइन</string>
     <string name="swap_changenow_agreement">Kaspa और दूसरे नेटवर्क के कॉइन (Bitcoin, Ethereum, USDC, USDT और अन्य) के बीच स्वैप ChangeNOW करता है, जो एक थर्ड-पार्टी एक्सचेंज है। K, ChangeNOW से सिर्फ़ एक कोट और एक डिपॉज़िट पता माँगता है और स्वैप की स्थिति दिखाता है; एक्सचेंज ChangeNOW करता है और कॉइन भी वही भेजता है। विफल, देरी से हुए या खोए हुए स्वैप के लिए K ज़िम्मेदार नहीं है। अगर कोई स्वैप पूरा न हो, तो ChangeNOW सपोर्ट से संपर्क करें।</string>
